@@ -16498,7 +16498,7 @@ sub jeebiespop_up{
                 $ptopframe->Label(
                         -text => 'Search mode:',
                 )->pack(-side => 'left', -padx => 2);
-                my %rbutton = {'Paranoid','p','Normal','','Tolerant','t'};
+                my %rbutton = ('Paranoid','p','Normal','','Tolerant','t');
                 for (keys %rbutton) {
                         $ptopframe->Radiobutton(
                                 -text => $_,
