@@ -2902,7 +2902,7 @@ sub oppopupdate{ # Update the Operations history
         $lglobal{oplistbox}->insert('end',@operations)
 }
 
-sub footnotepop{ # Pop up a widow where footnotes can be found, fixed and formatted. (heh)
+sub footnotepop{ # Pop up a window where footnotes can be found, fixed and formatted. (heh)
         push @operations, (localtime().' - Footnote Fixup');
         viewpagenums() if ($lglobal{seepagenums});
         oppopupdate() if $lglobal{oppop};
