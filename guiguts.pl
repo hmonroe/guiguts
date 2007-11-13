@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 
 # Guiguts.pl text editing script
-
-
+# $Id$
+  
 my $currentver = '.63';
 
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
@@ -1004,7 +1004,7 @@ sub openfile{           # and open it
                 foreach my $mark(keys %pagenumbers){
                         $markindex = $pagenumbers{$mark}{offset};
                         $textwindow->markSet($mark, $markindex);
-                        $textwindow->markGravity($mark, 'left');
+                        $textwindow->markGravity($mark, 'right');
                 }
                 for (1..5){
                         if ($bookmarks[$_]){
@@ -2170,83 +2170,83 @@ sub about_pop_up{               # A litle information about the program
         }
 }
 
-sub buildmenu{ # The main menu building code.
-        $menu->Cascade(-label => '~File', -tearoff => 0, -menuitems => 
-                [
-                        [Button => '~Open', -command => [\&fileopen]],
-                        '',
-                        map (
-                                [Button  => "$recentfile[$_]"||'*empty*',
-                                -command => [\&openfile, $recentfile[$_]],
-                                ],
-                                (0..9)
-                        ),
-                        '',
-                        [Button => '~Save', -command => \&savefile, -accelerator => 'Ctrl+s'],
-                        [Button => 'Save ~As', -command => sub{
-                                                                my ($name);
-                                                                $name = $textwindow->getSaveFile(-title => 'Save As', -initialdir => $globallastpath);
-                                                                if (defined($name) and length($name)){
-                                                                        my $binname = $name;
-                                                                        $binname =~ s/\.[^\.]*?$/\.bin/;
-                                                                        if ($binname eq $name){$binname .= '.bin'};
-                                                                        if (-e $binname){
-                                                                                my $warning = $top->Dialog(
-                                                                                        -text => "WARNING! A file already exists that will use the same .bin filename.\n".
-                                                                                                "It is highly recommended that a different file name is chosen to avoid\n".
-                                                                                                "corrupting the .bin files.\n\n Are you sure you want to continue?",
-                                                                                        -title => 'Bin File Collision!',
-                                                                                        -bitmap => 'warning',
-                                                                                        -buttons => [qw/Continue Cancel/],
-                                                                                        -default_button => qw/Cancel/,
-                                                                                );
-                                                                                my $answer = $warning->Show;
-                                                                                return unless ($answer eq 'Continue');
-                                                                        }
-                                                                        $textwindow->SaveUTF($name);
-                                                                        my ($fname, $extension, $filevar);
-                                                                        ($fname, $globallastpath, $extension) = fileparse($name);
-                                                                        $globallastpath = os_normal($globallastpath);
-                                                                        $name = os_normal($name);
-                                                                        $textwindow->FileName($name);
-                                                                        $lglobal{global_filename} = $name;
-                                                                        binsave();
-                                                                        recentupdate($name);
-                                                                }else{
-                                                                        return;
-                                                                }
-                                                                update_indicators()}],
-                        [Button => '~Include', -command => sub{my ($name);
-                                                                my $types = [
-                                                                ['Text Files',  ['.txt', '.text', '.ggp', 'htm', 'html']],
-                                                                ['All Files',   ['*']],
-                                                                ];
-                                                                return if $lglobal{global_filename} =~ /No File Loaded/;
-                                                                $name = $textwindow->getOpenFile(-filetypes => $types, -title => 'File Include', -initialdir => $globallastpath);
-                                                                $textwindow->IncludeFile($name) if defined($name) and length($name);
-                                                                update_indicators()}],
-                        [Button => '~Clear', -command => sub{return if (confirmempty() =~ /cancel/i); clearvars(); update_indicators()}],
-                        '',
-                        [Button => 'Import Prep Text Files', -command => sub{prep_import()}],
-                        [Button => 'Export As Prep Text Files', -command => sub{prep_export()}],
-                        '',
-                        [Button => '~Guess Page Markers', -command => \&guesswindow],
-                        [Button => 'Set Page ~Markers', -command => \&markpages],
-                        '',
-                        [Button => '~Exit', -command => \&myexit],
-                ]);
-        $menu->Cascade( -label => '~Edit', -tearoff => 1, -menuitems => 
-                [
-                        [Button => 'Undo', -command => sub{$textwindow->undo}, -accelerator => 'Ctrl+z'],
-                        [Button => 'Redo', -command => sub{$textwindow->redo}, -accelerator => 'Ctrl+y'], '',
-                        [Button => 'Cut', -command => sub{cut()}, -accelerator => 'Ctrl+x'],
-                        [Button => 'Copy', -command => sub{copy()},-accelerator => 'Ctrl+c'],
-                        [Button => 'Paste', -command => sub{paste()},-accelerator => 'Ctrl+v'],
-                        [Button => 'Col Paste', -command => sub{$textwindow->addGlobStart; $textwindow->clipboardColumnPaste; $textwindow->addGlobEnd;},-accelerator => 'Ctrl+`'],'',
-                        [Button => 'Select All', -command => sub{$textwindow->selectAll},-accelerator => 'Ctrl+/'],
-                        [Button => 'Unselect All', -command => sub{$textwindow->unselectAll},-accelerator => 'Ctrl+\\'],
-                ]);
-        $menu->Cascade(-label => 'Sea~rch', -tearoff => 1, -menuitems => [
+sub buildmenu{                  # The main menu building code.
+    $menu->Cascade(-label => '~File', -tearoff => 0, -menuitems => 
+                   [
+                    [Button => '~Open', -command => [\&fileopen]],
+                    '',
+                    map (
+                        [Button  => "$recentfile[$_]"||'*empty*',
+                         -command => [\&openfile, $recentfile[$_]],
+                        ],
+                        (0..9)
+                    ),
+                    '',
+                    [Button => '~Save', -command => \&savefile, -accelerator => 'Ctrl+s'],
+                    [Button => 'Save ~As', -command => sub{
+                        my ($name);
+                        $name = $textwindow->getSaveFile(-title => 'Save As', -initialdir => $globallastpath);
+                        if (defined($name) and length($name)){
+                            my $binname = $name;
+                            $binname =~ s/\.[^\.]*?$/\.bin/;
+                            if ($binname eq $name){$binname .= '.bin'};
+                            if (-e $binname){
+                                my $warning = $top->Dialog(
+                                    -text => "WARNING! A file already exists that will use the same .bin filename.\n".
+                                    "It is highly recommended that a different file name is chosen to avoid\n".
+                                    "corrupting the .bin files.\n\n Are you sure you want to continue?",
+                                    -title => 'Bin File Collision!',
+                                    -bitmap => 'warning',
+                                    -buttons => [qw/Continue Cancel/],
+                                    -default_button => qw/Cancel/,
+                                    );
+                                my $answer = $warning->Show;
+                                return unless ($answer eq 'Continue');
+                            }
+                            $textwindow->SaveUTF($name);
+                            my ($fname, $extension, $filevar);
+                            ($fname, $globallastpath, $extension) = fileparse($name);
+                            $globallastpath = os_normal($globallastpath);
+                            $name = os_normal($name);
+                            $textwindow->FileName($name);
+                            $lglobal{global_filename} = $name;
+                            binsave();
+                            recentupdate($name);
+                        }else{
+                            return;
+                        }
+                        update_indicators()}],
+                    [Button => '~Include', -command => sub{my ($name);
+                                                           my $types = [
+                                                               ['Text Files',  ['.txt', '.text', '.ggp', 'htm', 'html']],
+                                                               ['All Files',   ['*']],
+                                                               ];
+                                                           return if $lglobal{global_filename} =~ /No File Loaded/;
+                                                           $name = $textwindow->getOpenFile(-filetypes => $types, -title => 'File Include', -initialdir => $globallastpath);
+                                                           $textwindow->IncludeFile($name) if defined($name) and length($name);
+                                                           update_indicators()}],
+                    [Button => '~Clear', -command => sub{return if (confirmempty() =~ /cancel/i); clearvars(); update_indicators()}],
+                    '',
+                    [Button => 'Import Prep Text Files', -command => sub{prep_import()}],
+                    [Button => 'Export As Prep Text Files', -command => sub{prep_export()}],
+                    '',
+                    [Button => '~Guess Page Markers', -command => \&guesswindow],
+                    [Button => 'Set Page ~Markers', -command => \&markpages],
+                    '',
+                    [Button => '~Exit', -command => \&myexit],
+                   ]);
+    $menu->Cascade( -label => '~Edit', -tearoff => 1, -menuitems => 
+                    [
+                     [Button => 'Undo', -command => sub{$textwindow->undo}, -accelerator => 'Ctrl+z'],
+                     [Button => 'Redo', -command => sub{$textwindow->redo}, -accelerator => 'Ctrl+y'], '',
+                     [Button => 'Cut', -command => sub{cut()}, -accelerator => 'Ctrl+x'],
+                     [Button => 'Copy', -command => sub{copy()},-accelerator => 'Ctrl+c'],
+                     [Button => 'Paste', -command => sub{paste()},-accelerator => 'Ctrl+v'],
+                     [Button => 'Col Paste', -command => sub{$textwindow->addGlobStart; $textwindow->clipboardColumnPaste; $textwindow->addGlobEnd;},-accelerator => 'Ctrl+`'],'',
+                     [Button => 'Select All', -command => sub{$textwindow->selectAll},-accelerator => 'Ctrl+/'],
+                     [Button => 'Unselect All', -command => sub{$textwindow->unselectAll},-accelerator => 'Ctrl+\\'],
+                    ]);
+    $menu->Cascade(-label => 'Sea~rch', -tearoff => 1, -menuitems => [
                         [Button => 'Search & ~Replace', -command => \&searchpopup],
                         [Button => '~Stealth Scannos', -command => \&stealthscanno],
                         [Button => 'Spell ~Check', -command => \&spellchecker],
@@ -2272,28 +2272,28 @@ sub buildmenu{ # The main menu building code.
                         [Button => 'Highlight arbitrary characters in selection', -command => \&hilitepopup, -accelerator => 'Ctrl+Alt+h'],
                         [Button => 'Remove Highlights', -command => sub{$textwindow->tagRemove('highlight','1.0','end');
                                                                         $textwindow->tagRemove('quotemark','1.0','end')},
-                                                                -accelerator => 'Ctrl+0'],
-                ]);
-        $menu->Cascade(qw/-label ~Bookmarks -tearoff 1 -menuitems/ => 
-                [
-                        map (
-                                [Button  => "Set Bookmark $_",
-                                -command => [\&setbookmark, $_],
-                                -accelerator => "Ctrl+Shift+$_"
-                                ],
-                                (1..5)
-                        ),
-                        '',
-                        map (
-                                [Button  => "Go To Bookmark $_",
-                                -command => [\&gotobookmark, $_],
-                                -accelerator => "Ctrl+$_"
-                                ],
-                                (1..5)
-                        ),
-                ],
+                         -accelerator => 'Ctrl+0'],
+                   ]);
+    $menu->Cascade(qw/-label ~Bookmarks -tearoff 1 -menuitems/ => 
+                   [
+                    map (
+                        [Button  => "Set Bookmark $_",
+                         -command => [\&setbookmark, $_],
+                         -accelerator => "Ctrl+Shift+$_"
+                        ],
+                        (1..5)
+                    ),
+                    '',
+                    map (
+                        [Button  => "Go To Bookmark $_",
+                         -command => [\&gotobookmark, $_],
+                         -accelerator => "Ctrl+$_"
+                        ],
+                        (1..5)
+                    ),
+                   ],
         );
-        $menu->Cascade(-label => '~Selection', -tearoff => 1, -menuitems => [
+    $menu->Cascade(-label => '~Selection', -tearoff => 1, -menuitems => [
                         [Button => '~lowercase Selection', -command => sub{case('lc');}],
                         [Button => '~Sentence case Selection', -command => sub{case('sc');}],
                         [Button => '~Title Case Selection', -command => sub{case('tc');}],
@@ -2315,47 +2315,60 @@ sub buildmenu{ # The main menu building code.
                         [Button => 'Convert To Named/Numeric Entities', -command => sub{$textwindow->addGlobStart; tonamed(); $textwindow->addGlobEnd;}],
                         [Button => 'Convert From Named/Numeric Entities', -command => sub{$textwindow->addGlobStart; fromnamed(); $textwindow->addGlobEnd;}],
                         [Button => 'Convert Fractions', -command => sub{
-                                                                        my @ranges = $textwindow->tagRanges('sel');
-                                                                        $textwindow->addGlobStart;
-                                                                        if(@ranges){
-                                                                                while (@ranges){
-                                                                                        my $end = pop @ranges;
-                                                                                        my $start = pop @ranges;
-                                                                                        fracconv($start,$end);
-                                                                                }
-                                                                        }else{
-                                                                                fracconv('1.0','end');
-                                                                        }
-                                                                        $textwindow->addGlobEnd;
-                                                                }
+                            my @ranges = $textwindow->tagRanges('sel');
+                            $textwindow->addGlobStart;
+                            if(@ranges){
+                                while (@ranges){
+                                    my $end = pop @ranges;
+                                    my $start = pop @ranges;
+                                    fracconv($start,$end);
+                                }
+                            }else{
+                                fracconv('1.0','end');
+                            }
+                            $textwindow->addGlobEnd;
+                         }
                         ],
-                ]);
-        $menu->Cascade(-label => 'Fi~xup', -tearoff => 1, -menuitems => 
-                [
-                        [Button => 'Run ~Word Frequency Routine', -command => \&wordcount],
-                        '',
-                        [Button => 'Run ~Gutcheck', -command => \&gutcheck],
-                        [Button => 'Gutcheck options', -command => \&gutopts],
-                        [Button => 'Run ~Jeebies', -command => \&jeebiespop_up],
-                        '',
-                        [Button => 'Remove End-of-line Spaces', -command => sub{$textwindow->addGlobStart; endofline(); $textwindow->addGlobEnd;}],
-                        [Button => 'Run Fi~xup', -command => \&fixpopup],
-                        '',
-                        [Button => 'Fix ~Page Separators', -command => \&seperatorpopup],
-                        [Button => 'Remove Blank Lines Before Page Separators', -command => sub{$textwindow->addGlobStart; delblanklines(); $textwindow->addGlobEnd;}],
-                        '',
-                        [Button => '~Footnote Fixup', -command => \&footnotepop],
-                        [Button => '~HTML Fixup', -command => \&markpopup],
-                        [Button => '~Sidenote Fixup', -command => \&sidenotes],
-                        [Button => 'Reformat Poetry ~Line Numbers', -command => \&poetrynumbers],
-                        [Button => 'Convert Windows CP 1252 characters to Unicode', -command => \&cp1252toUni],
-                        '',
-                        [Button => 'ASCII Table Special Effects', -command => \&tablefx],
-                        '',
-                        [Button => 'Clean Up Rewrap ~Markers', -command => sub{$textwindow->addGlobStart; cleanup(); $textwindow->addGlobEnd;}],
-                        '',
-                        [Button => '~Add a Thought Break', -command => sub{$textwindow->addGlobStart; thoughtbreak(); $textwindow->addGlobEnd;}],
-                ]);
+                   ]);
+    $menu->Cascade(-label => 'Fi~xup', -tearoff => 1, -menuitems => 
+                   [
+                    [Button => 'Run ~Word Frequency Routine', -command => \&wordcount],
+                    '',
+                    [Button => 'Run ~Gutcheck', -command => \&gutcheck],
+                    [Button => 'Gutcheck options', -command => \&gutopts],
+                    [Button => 'Run ~Jeebies', -command => \&jeebiespop_up],
+                    '',
+                    [Button => 'Remove End-of-line Spaces', -command => sub{$textwindow->addGlobStart; endofline(); $textwindow->addGlobEnd;}],
+                    [Button => 'Run Fi~xup', -command => \&fixpopup],
+                    '',
+                    [Button => 'Fix ~Page Separators', -command => \&seperatorpopup],
+                    [Button => 'Remove Blank Lines Before Page Separators', -command => sub{$textwindow->addGlobStart; delblanklines(); $textwindow->addGlobEnd;}],
+                    '',
+                    [Button => '~Footnote Fixup', -command => \&footnotepop],
+                    [Button => '~HTML Fixup', -command => \&markpopup],
+                    [Button => '~Sidenote Fixup', -command => \&sidenotes],
+                    [Button => 'Reformat Poetry ~Line Numbers', -command => \&poetrynumbers],
+                    [Button => 'Convert Windows CP 1252 characters to Unicode', -command => \&cp1252toUni],
+                    '',
+                    [Button => 'ASCII Table Special Effects', -command => \&tablefx],
+                    '',
+                    [Button => 'Clean Up Rewrap ~Markers', 
+                     -command => sub
+                                 {
+                                     $textwindow->addGlobStart; cleanup(); $textwindow->addGlobEnd;
+                                 }],
+                    '',
+                    [Button => '~Add a Thought Break', 
+                     -command => sub
+                     {
+                         $textwindow->addGlobStart; thoughtbreak(); $textwindow->addGlobEnd;
+                     }],
+                    [Button => 'Convert <tb> to asterisk break', 
+                     -command => sub
+                     {
+                         $textwindow->addGlobStart; tb2text_convert(); $textwindow->addGlobEnd;
+                     }],
+]);
         $menu->Cascade( -label => '~Prefs', -tearoff => 1, -menuitems => 
                 [
                         [Button => 'Set Rewrap ~margins', -command => \&setmargins ],
@@ -6114,7 +6127,7 @@ sub selectrewrap{
                         $markindex = $textwindow->search('-regex','--','\x7f','1.0','end');
                         $textwindow->delete($markindex);                        #then remove the page markers
                         $textwindow->markSet($markname,$markindex);
-                        $textwindow->markGravity($markname,'left');
+                        $textwindow->markGravity($markname,'right');
                 }
         }
         if ($start eq '1.0'){                                                           #reinsert deleted top line if it was removed
@@ -9097,7 +9110,7 @@ sub markpages{
                 $pagemark = 'Pg'.$page;
                 $pagenumbers{$pagemark}{offset} = 1;
                 $textwindow->markSet($pagemark,$searchstartindex);
-                $textwindow->markGravity($pagemark,'left');
+                $textwindow->markGravity($pagemark,'right');
         }
         delete $proofers{''};
         $top->Unbusy(-recurse => 1);
@@ -9396,7 +9409,7 @@ sub guesswindow{
                                                 $number = sprintf '%03s',$pnum;
                                         }
                                         $textwindow->markSet('Pg'.$number, "$lnum.0");
-                                        $textwindow->markGravity("Pg$number",'left');
+                                        $textwindow->markGravity("Pg$number",'right');
                                 }
                                 $average = ((int($linex+.5))-(int($line25+.5)))/($pagex-25);
                                 for $pnum(1..$pagex-26){
@@ -9407,7 +9420,7 @@ sub guesswindow{
                                                 $number = sprintf '%03s', $pnum + 25;
                                         }
                                         $textwindow->markSet("Pg$number", "$lnum.0");
-                                        $textwindow->markGravity("Pg$number",'left');
+                                        $textwindow->markGravity("Pg$number",'right');
                                 }
                                 $average = ($end-int($linex+.5))/($totpages-$pagex);
                                 for $pnum(1..($totpages-$pagex)){
@@ -9418,7 +9431,7 @@ sub guesswindow{
                                                 $number = sprintf '%03s', $pnum + $pagex;
                                         }
                                         $textwindow->markSet("Pg$number", "$lnum.0");
-                                        $textwindow->markGravity("Pg$number", 'left');
+                                        $textwindow->markGravity("Pg$number", 'right');
                                 }
                                 $lglobal{pgpop}->destroy;
                                 undef $lglobal{pgpop}
@@ -9454,7 +9467,7 @@ sub joinlines{
         $textwindow->delete($searchstartindex,$searchendindex) if ($searchstartindex&&$searchendindex);
         $textwindow->markSet('page',$searchstartindex);
         $textwindow->markSet($pagemark,"$searchstartindex-1c");
-        $textwindow->markGravity($pagemark,'left');
+        $textwindow->markGravity($pagemark,'right');
         $textwindow->markSet('insert',"$searchstartindex+1c");
         $index = $textwindow->index('page');
         unless ($op eq 'd'){
@@ -15965,7 +15978,7 @@ sub pageadd{ # Add a page marker
         return 0 if ($textwindow->markExists($mark));
         viewpagenums() if $lglobal{seepagenums};
         $textwindow->markSet($mark,$insert);
-        $textwindow->markGravity($mark,'left');
+        $textwindow->markGravity($mark,'right');
         %pagenumbers =();
         my @marks = $textwindow->markNames;
         for (@marks){$pagenumbers{$_}{offset} = $textwindow->index($_) if $_ =~ /Pg\w+/;}
@@ -16027,7 +16040,7 @@ sub pgrenum{ # Re sequence page markers
                 $start = $textwindow->index($num);
                 $textwindow->markUnset($num);
                 $textwindow->markSet($mark,$start);
-                $textwindow->markGravity($mark,'left');
+                $textwindow->markGravity($mark,'right');
                 next if @marks;
                 last;
         }
@@ -16077,7 +16090,7 @@ sub pmoveup{ # move the page marker up a line
         }
         $textwindow->ntdelete($mark,$mark.' +'.length($pagenum).'c');
         $textwindow->markSet($mark,$index);
-        $textwindow->markGravity($mark,'left');
+        $textwindow->markGravity($mark,'right');
         $textwindow->ntinsert($mark,$pagenum);
         $textwindow->tagAdd('pagenum',$mark,$mark.' +'.length($pagenum).'c');
         $textwindow->see($mark);
@@ -16099,7 +16112,7 @@ sub pmoveleft{ # move the page marker left a character
         }
         $textwindow->ntdelete($mark,$mark.' +'.length($pagenum).'c');
         $textwindow->markSet($mark,$index);
-        $textwindow->markGravity($mark,'left');
+        $textwindow->markGravity($mark,'right');
         $textwindow->ntinsert($mark,$pagenum);
         $textwindow->tagAdd('pagenum',$mark,$mark.' +'.length($pagenum).'c');
         $textwindow->see($mark);
@@ -16122,7 +16135,7 @@ sub pmoveright{ # move the page marker left a character
         }
         $textwindow->ntdelete($mark,$mark.' +'.length($pagenum).'c');
         $textwindow->markSet($mark,$index);
-        $textwindow->markGravity($mark,'left');
+        $textwindow->markGravity($mark,'right');
         $textwindow->ntinsert($mark,$pagenum);
         $textwindow->tagAdd('pagenum',$mark,$mark.' +'.length($pagenum).'c');
         $textwindow->see($mark);
@@ -16144,7 +16157,7 @@ sub pmovedown{ # move the page marker down a line
         }
         $textwindow->ntdelete($mark,$mark.' +'.length($pagenum).'c');
         $textwindow->markSet($mark,$index);
-        $textwindow->markGravity($mark,'left');
+        $textwindow->markGravity($mark,'right');
         $textwindow->ntinsert($mark,$pagenum);
         $textwindow->tagAdd('pagenum',$mark,$mark.' +'.length($pagenum).'c');
         $textwindow->see($mark);
@@ -16647,3 +16660,14 @@ sub natural_sort_freq {         # Fast freqency sort with secondary natural sort
         $_->[2] =~ s/(\d+(,\d+)*)/pack 'aNa*', 0, length $1, $1/eg for (my @x = map { [$_[0]->{$_}, $_, lc deaccent $_ ]} keys %{$_[0]});
         map { $_->[1] } sort { $b->[0] <=> $a->[0] or $a->[2] cmp $b->[2] }@x;
 }
+
+## New functions -- vls Mon Nov 12 11:25:20 CST 2007
+
+# Convert <tb> to asterisk breaks. Needs a better name. ;-)
+
+sub tb2text_convert
+{
+    my $tb = '       *       *       *       *       *';
+    $textwindow -> FindAndReplaceAll('-exact', '-nocase', '<tb>', $tb);
+}
+
