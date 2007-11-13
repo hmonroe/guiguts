@@ -3,7 +3,7 @@
 # Guiguts.pl text editing script
 # $Id$
   
-my $currentver = '.63';
+my $currentver = '.64';
 
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
