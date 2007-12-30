@@ -40,8 +40,8 @@ sub Load{ # Custom File load routine; will automatically handle Unicode and line
                 $w->EmptyDocument;
                 my $count = 1;
                 my $progress;
-                my $line = <$fh>;
-                utf8::decode($line);
+                my $line = <$fh>;  
+		utf8::decode($line);
                 $line =~ s/^\x{FEFF}?//;
                 $line =~ s/\cM\cJ|\cM|\cJ/\n/g;
                 $line =~ s/[\t \xA0]+$//;
@@ -2368,6 +2368,11 @@ sub buildmenu{                  # The main menu building code.
                      {
                          $textwindow->addGlobStart; tb2text_convert(); $textwindow->addGlobEnd;
                      }],
+		    '',
+		    [Button => 'Find Greek',
+		     -command => \&findandextractgreek],
+		    [Button => 'Convert Greek [STUB - does nothing yet]',
+		     -command => \&convertgreek],
 ]);
         $menu->Cascade( -label => '~Prefs', -tearoff => 1, -menuitems => 
                 [
@@ -8928,27 +8933,36 @@ sub seperatorpopup{
                         -underline => 0,
                         -width => 18
                 )->pack(-side => 'left', -pady => 2, -padx => 2, -anchor => 'w');
-                my $blankbutton = $sf1->Button(
-                        -activebackground => $activecolor,
-                        -command => sub {joinlines('l')},
-                        -text => 'Blank Line',
-                        -underline => 6,
-                        -width => 18
-                )->pack(-side => 'left', -pady => 2, -padx => 2, -anchor => 'w');
-                my $sf2 = $lglobal{pagepop}->Frame->pack(-side => 'top', -anchor => 'n', -padx => 5);
-                my $joinhybutton = $sf2->Button(
+                my $joinhybutton = $sf1->Button(
                         -activebackground => $activecolor,
                         -command => sub {joinlines('k')},
                         -text => 'Join, Keep Hyphen',
                         -underline => 6,
                         -width => 18
                 )->pack(-side => 'left', -pady => 2, -padx => 2, -anchor => 'w');
+
+                my $sf2 = $lglobal{pagepop}->Frame->pack(-side => 'top', -anchor => 'n', -padx => 5);
+                my $blankbutton = $sf2->Button(
+                        -activebackground => $activecolor,
+                        -command => sub {joinlines('l')},
+                        -text => 'Blank Line',
+                        -underline => 6,
+                        -width => 12
+                )->pack(-side => 'left', -pady => 2, -padx => 2, -anchor => 'w');
+
+		my $sectjoinbutton = $sf2->Button(
+                        -activebackground => $activecolor,
+                        -command => sub {joinlines('t')},
+                        -text => 'New Section',
+                        -underline => 7,
+                        -width => 12
+                )->pack(-side => 'left', -pady => 2, -padx => 2, -anchor => 'w');
                 my $chjoinbutton = $sf2->Button(
                         -activebackground => $activecolor,
                         -command => sub {joinlines('h')},
                         -text => 'New Chapter',
                         -underline => 5,
-                        -width => 18
+                        -width => 12
                 )->pack(-side => 'left', -pady => 2, -padx => 2, -anchor => 'w');
                 my $sf3 = $lglobal{pagepop}->Frame->pack(-side => 'top', -anchor => 'n', -padx => 5);
                 my $jautobutton = $sf3->Checkbutton(
@@ -13382,6 +13396,78 @@ sub b2scroll{
         }
 }
 
+# -------------------------------------------------------------------------------
+sub convertgreek
+{
+    # does nothing yet
+}
+
+sub findmatchingclosebracket
+{
+    my ($startIndex) = @_;
+    my $indentLevel = 1;
+    my $closeIndex;
+
+    while ($indentLevel)
+    {
+	$closeIndex = $textwindow->search(']', $startIndex.'+1c', 'end');
+	my $openIndex = $textwindow->search('[', $startIndex.'+1c', 'end');
+	if (!$closeIndex)
+	{
+	    # no matching ]
+	    return $closeIndex;
+	}
+	if ($textwindow->compare($openIndex, '<', $closeIndex))
+	{
+	    $indentLevel++;
+	    $startIndex = $openIndex;
+	}
+	else
+	{
+	    $indentLevel--;
+	    $startIndex = $closeIndex;
+	}
+    }
+    return $closeIndex;
+}
+	   
+sub findgreek{
+    my ($startIndex) = @_; 
+    my $chars;
+    my $greekIndex = $textwindow->search('[Greek:',  $startIndex.'+5c', 'end');
+    if ($greekIndex)
+    { 
+	my $closeIndex = findmatchingclosebracket($greekIndex);
+	return ($greekIndex, $closeIndex);
+    }
+    else
+    {
+	return ($greekIndex, $greekIndex);
+    }
+}
+
+sub findandextractgreek{
+    $textwindow->tagRemove('highlight','1.0','end');
+    my ($greekIndex, $closeIndex) = findgreek('insert');
+    if ($closeIndex)
+    {
+	$textwindow->markSet('insert',$greekIndex);
+	$textwindow->tagAdd('highlight',$greekIndex, $greekIndex."+7c");
+	$textwindow->see('insert');
+	$textwindow->tagAdd('highlight',$greekIndex, $greekIndex."+1c");
+	if (!defined($lglobal{grpop}))
+	{
+	    greekpopup();
+	}
+	$textwindow->markSet('insert',$greekIndex.'+8c');
+	my $text = $textwindow->get($greekIndex.'+8c', $closeIndex);
+	$textwindow->delete($greekIndex.'+8c', $closeIndex);
+	$lglobal{grtext}->delete('1.0', 'end');
+	$lglobal{grtext}->insert('1.0', $text);
+    }
+}
+	
+
 sub greekpopup{
         my $buildlabel;
         my %attributes;
@@ -15001,6 +15087,11 @@ sub greekpopup{
                         -command => \&movegreek,
                         -text => 'Transfer',
                 )->grid(-row => 1, -column => 6);
+		$tframe->Button(
+                        -activebackground => $activecolor,
+		        -command => sub{ movegreek(); findandextractgreek(); },
+                        -text => 'Transfer and get next',
+                )->grid(-row => 1, -column => 7);
                 if ($Tk::version ge 8.4){
                 my $tframe2 = $lglobal{grpop}->Frame->pack(-expand => 'no' , -fill => 'none', -anchor => 'n', -pady => 3);
                 $tframe2->Button(
@@ -15330,6 +15421,8 @@ sub greekpopup{
                 }
 
                 $lglobal{grpop}->protocol('WM_DELETE_WINDOW' => sub{
+		        $textwindow->tagRemove('highlight','1.0','end');
+			movegreek();
                         for my $image(keys %attributes){
                                 my $pic = $lglobal{buttons}->{$image}->cget(-image);
                                 $pic->delete;
