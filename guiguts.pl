@@ -1004,7 +1004,7 @@ sub openfile{           # and open it
                 foreach my $mark(keys %pagenumbers){
                         $markindex = $pagenumbers{$mark}{offset};
                         $textwindow->markSet($mark, $markindex);
-                        $textwindow->markGravity($mark, 'right');
+                        $textwindow->markGravity($mark, 'left');
                 }
                 for (1..5){
                         if ($bookmarks[$_]){
@@ -6123,7 +6123,7 @@ sub selectrewrap{
                         $markindex = $textwindow->search('-regex','--','\x7f','1.0','end');
                         $textwindow->delete($markindex);                        #then remove the page markers
                         $textwindow->markSet($markname,$markindex);
-                        $textwindow->markGravity($markname,'right');
+                        $textwindow->markGravity($markname,'left');
                 }
         }
         if ($start eq '1.0'){                                                           #reinsert deleted top line if it was removed
@@ -9116,7 +9116,7 @@ sub markpages{
                 $pagemark = 'Pg'.$page;
                 $pagenumbers{$pagemark}{offset} = 1;
                 $textwindow->markSet($pagemark,$searchstartindex);
-                $textwindow->markGravity($pagemark,'right');
+                $textwindow->markGravity($pagemark,'left');
         }
         delete $proofers{''};
         $top->Unbusy(-recurse => 1);
@@ -9415,7 +9415,7 @@ sub guesswindow{
                                                 $number = sprintf '%03s',$pnum;
                                         }
                                         $textwindow->markSet('Pg'.$number, "$lnum.0");
-                                        $textwindow->markGravity("Pg$number",'right');
+                                        $textwindow->markGravity("Pg$number",'left');
                                 }
                                 $average = ((int($linex+.5))-(int($line25+.5)))/($pagex-25);
                                 for $pnum(1..$pagex-26){
@@ -9426,7 +9426,7 @@ sub guesswindow{
                                                 $number = sprintf '%03s', $pnum + 25;
                                         }
                                         $textwindow->markSet("Pg$number", "$lnum.0");
-                                        $textwindow->markGravity("Pg$number",'right');
+                                        $textwindow->markGravity("Pg$number",'left');
                                 }
                                 $average = ($end-int($linex+.5))/($totpages-$pagex);
                                 for $pnum(1..($totpages-$pagex)){
@@ -9437,7 +9437,7 @@ sub guesswindow{
                                                 $number = sprintf '%03s', $pnum + $pagex;
                                         }
                                         $textwindow->markSet("Pg$number", "$lnum.0");
-                                        $textwindow->markGravity("Pg$number", 'right');
+                                        $textwindow->markGravity("Pg$number", 'left');
                                 }
                                 $lglobal{pgpop}->destroy;
                                 undef $lglobal{pgpop}
@@ -9473,7 +9473,7 @@ sub joinlines{
         $textwindow->delete($searchstartindex,$searchendindex) if ($searchstartindex&&$searchendindex);
         $textwindow->markSet('page',$searchstartindex);
         $textwindow->markSet($pagemark,"$searchstartindex-1c");
-        $textwindow->markGravity($pagemark,'right');
+        $textwindow->markGravity($pagemark,'left');
         $textwindow->markSet('insert',"$searchstartindex+1c");
         $index = $textwindow->index('page');
         unless ($op eq 'd'){
@@ -16065,7 +16065,7 @@ sub pageadd{ # Add a page marker
         return 0 if ($textwindow->markExists($mark));
         viewpagenums() if $lglobal{seepagenums};
         $textwindow->markSet($mark,$insert);
-        $textwindow->markGravity($mark,'right');
+        $textwindow->markGravity($mark,'left');
         %pagenumbers =();
         my @marks = $textwindow->markNames;
         for (@marks){$pagenumbers{$_}{offset} = $textwindow->index($_) if $_ =~ /Pg\S+/;}
@@ -16127,7 +16127,7 @@ sub pgrenum{ # Re sequence page markers
                 $start = $textwindow->index($num);
                 $textwindow->markUnset($num);
                 $textwindow->markSet($mark,$start);
-                $textwindow->markGravity($mark,'right');
+                $textwindow->markGravity($mark,'left');
                 next if @marks;
                 last;
         }
@@ -16199,7 +16199,7 @@ sub pmoveleft{ # move the page marker left a character
         }
         $textwindow->ntdelete($mark,$mark.' +'.length($pagenum).'c');
         $textwindow->markSet($mark,$index);
-        $textwindow->markGravity($mark,'right');
+        $textwindow->markGravity($mark,'left');
         $textwindow->ntinsert($mark,$pagenum);
         $textwindow->tagAdd('pagenum',$mark,$mark.' +'.length($pagenum).'c');
         $textwindow->see($mark);
@@ -16222,7 +16222,7 @@ sub pmoveright{ # move the page marker left a character
         }
         $textwindow->ntdelete($mark,$mark.' +'.length($pagenum).'c');
         $textwindow->markSet($mark,$index);
-        $textwindow->markGravity($mark,'right');
+        $textwindow->markGravity($mark,'left');
         $textwindow->ntinsert($mark,$pagenum);
         $textwindow->tagAdd('pagenum',$mark,$mark.' +'.length($pagenum).'c');
         $textwindow->see($mark);
@@ -16244,7 +16244,7 @@ sub pmovedown{ # move the page marker down a line
         }
         $textwindow->ntdelete($mark,$mark.' +'.length($pagenum).'c');
         $textwindow->markSet($mark,$index);
-        $textwindow->markGravity($mark,'right');
+        $textwindow->markGravity($mark,'left');
         $textwindow->ntinsert($mark,$pagenum);
         $textwindow->tagAdd('pagenum',$mark,$mark.' +'.length($pagenum).'c');
         $textwindow->see($mark);
