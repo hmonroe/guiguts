@@ -1075,11 +1075,11 @@ sub prep_export{
         }
         $top->Busy(-recurse => 1);
         my @marks = $textwindow->markNames;
-        my @pages = sort grep (/^Pg\w+$/, @marks);
+        my @pages = sort grep (/^Pg\S+$/, @marks);
         my $unicode = $textwindow->search('-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0', 'end');
         while (@pages){
                 my $page = shift @pages;
-                my ($filename) = $page =~ /Pg(\w+)/;
+                my ($filename) = $page =~ /Pg(\S+)/;
                 $filename .= '.txt';
                 my $next;
                 if (@pages){
@@ -1180,7 +1180,7 @@ sub binsave{ # save the .bin file associated with the text file
         while ($textwindow->markPrevious($mark)){$mark = $textwindow->markPrevious($mark)};
         my $markindex;
         while ($mark){
-                if($mark =~ /Pg(\w+)/){
+                if($mark =~ /Pg(\S+)/){
                         $markindex = $textwindow->index($mark);
                         $pagenumbers{$mark}{offset} = $markindex;
                         $mark = $textwindow->markNext($mark);
@@ -1493,19 +1493,8 @@ sub update_indicators{ # Routine to update the status bar when somthing has chan
                 $lglobal{page_label}->configure(-text => ("Lbl: None ")) if defined $lglobal{page_label};
                 $mark = $textwindow->markPrevious($markindex);
                 while ($mark){
-                        if($mark =~ /Pg(\w+)/){
-                                $pnum = $1;
-                                while(1){
-                                        if (($pnum !~ /\D/) && defined $pagenumbers{'Pg'.(sprintf("%03s", ($pnum+1)))}){
-                                                if ($textwindow->index('Pg'.$pnum) eq $textwindow->index('Pg'.(sprintf("%03s", ($pnum+1))))){
-                                                        $pnum = sprintf("%03s", ($pnum+1));
-                                                }else{
-                                                        last;
-                                                }
-                                        }else{
-                                                last;
-                                        }
-                                }
+                        if($mark =~ /Pg(\S+)/){
+                                $pnum = $1;                               
                                 unless (defined($lglobal{page_num_label})){
                                         $lglobal{page_num_label} = $counter_frame->Label(
                                                 -text => "Img: $pnum",
@@ -1982,8 +1971,10 @@ sub tglprfbar{  # Make toolbar visible if invisible and vice versa
 sub openpng{            #Routine to handle image viewer file requests
         my ($pagenum, $number);
         $number = $lglobal{page_num_label}->cget(-text) if defined $lglobal{page_num_label};
-        $number =~ s/.+? (\w+)/$1/ if defined $lglobal{page_num_label};
+        $number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
         $pagenum = $number || '001';
+	print $lglobal{page_num_label}->cget(-text)."\n";
+	print $pagenum."\n";
         viewerpath() unless $globalviewerpath;
         my $dosfile;
         unless ($pngspath){
@@ -2544,7 +2535,7 @@ sub viewpagenums{ # Toggle visible page markers
                 $lglobal{seepagenums} = 0;
                 my @marks = $textwindow->markNames;
                 for (sort @marks){
-                        if ($_ =~ /Pg(\w+)/){
+                        if ($_ =~ /Pg(\S+)/){
                                 my $pagenum = " Pg$1 ";
                                 $textwindow->ntdelete($_, "$_ +@{[length $pagenum]}c");
                         }
@@ -2555,7 +2546,7 @@ sub viewpagenums{ # Toggle visible page markers
                 $lglobal{seepagenums} = 1;
                 my @marks = $textwindow->markNames;
                 for (sort @marks){
-                        if ($_ =~ /Pg(\w+)/){
+                        if ($_ =~ /Pg(\S+)/){
                                 my $pagenum = " Pg$1 ";
                                 $textwindow->ntinsert($_, $pagenum);
                                 $textwindow->tagAdd('pagenum',$_, "$_ +@{[length $pagenum]}c");
@@ -4307,7 +4298,7 @@ sub spellget_misspellings {                                     # get list of mi
         my ($word, @templist);
         $top->Busy (-recurse => 1);                                     # let user know something is going on
         my $section = $textwindow->get($lglobal{spellindexstart},$lglobal{spellindexend});# get selection
-        $section =~ s/-----*\s?File:\s?\w+.(png|jpg)---.*//g;
+        $section =~ s/-----*\s?File:\s?\S+.(png|jpg)---.*//g;
         open SAVE, '>:bytes', 'checkfil.chk';
         print SAVE $section;
         close SAVE;
@@ -5962,7 +5953,7 @@ sub selectrewrap{
                         shift @marklist;
                         $markname = shift @marklist;
                         $markindex = shift @marklist;
-                        if ($markname =~/Pg\w+/){
+                        if ($markname =~/Pg\S+/){
                                 $textwindow->insert($markindex, "\x7f");#mark the page breaks for rewrapping
                                 push @savelist, $markname;
                         }
@@ -8473,7 +8464,7 @@ sub htmlautoconvert{
                 my ($mark,$markindex);
                 my @marknames = sort $textwindow->markNames;
                 for $mark(@marknames){
-                        if($mark =~ /Pg(\w+)/){
+                        if($mark =~ /Pg(\S+)/){
                                 my $num = $pagenumbers{$mark}{label};
                                 $num =~ s/Pg // if defined $num;
                                 $num = $1 unless $pagenumbers{$mark}{action};
@@ -9113,12 +9104,13 @@ sub markpages{
         $searchstartindex = '1.0';
         $searchendindex = '1.0';
         while ($searchstartindex){
-                $searchstartindex = $textwindow->search('-nocase', '-regexp','--', '-*\s?File:\s?(\w+)\.(png|jpg)---.*$', $searchendindex, 'end');
+                $searchstartindex = $textwindow->search('-nocase', '-regexp','--', '-*\s?File:\s?(\S+)\.(png|jpg)---.*$', $searchendindex, 'end');
                 last unless $searchstartindex;
                 $searchendindex = $textwindow->index("$searchstartindex lineend");
                 $line = $textwindow->get($searchstartindex,$searchendindex);
-                $line =~ m/File:\s?(\w+)\./;
+                $line =~ m/File:\s?(\S+)\./;
                 $page = $1;
+		print $1."\n";
                 my @p = $line =~ m/(?<=\\)([^\\]*)\\/g;
                 @{$proofers{$page}} = (0, @p);
                 $pagemark = 'Pg'.$page;
@@ -9310,7 +9302,7 @@ sub delblanklines{
         $searchendindex = '2.0';
         $textwindow->Busy;
         while ($searchstartindex){
-                $searchstartindex = $textwindow->search('-nocase', '-regexp', '--', '^-----*\s*File:\s?(\w+)\.(png|jpg)---.*$', $searchendindex, 'end');
+                $searchstartindex = $textwindow->search('-nocase', '-regexp', '--', '^-----*\s*File:\s?(\S+)\.(png|jpg)---.*$', $searchendindex, 'end');
                 {
                         no warnings 'uninitialized';
                         $searchstartindex = '2.0' if $searchstartindex eq '1.0';
@@ -9474,7 +9466,7 @@ sub joinlines{
         $textwindow->update;
         my $pagesep = $textwindow->get($searchstartindex,$searchendindex) if ($searchstartindex&&$searchendindex);
         my $pagemark = $pagesep;
-        $pagesep =~ m/^-----*\s?File:\s?(\w+)\./;
+        $pagesep =~ m/^-----*\s?File:\s?(\S+)\./;
         return unless $1;
         $pagesep = " <!--Pg$1-->";
         $pagemark = 'Pg'.$1;
@@ -9511,6 +9503,8 @@ sub joinlines{
         }
         if ($op eq 'j'){
                 $index = $textwindow->index('page');
+		# Note: $line here and in similar cases actually seems to contain the 
+		# last _character_ on the previous page. 
                 $line = $textwindow->get("$index-1c");
                 my $hyphens = 0;
                 if ($line =~ /\//){
@@ -10729,7 +10723,7 @@ sub wordcount{
         open my $fh, '<', $filename;
         while (my $line = <$fh>){
                 utf8::decode($line);
-                next if $line =~ m/^-----*\s?File:\s?\w+\.(png|jpg)---/;
+                next if $line =~ m/^-----*\s?File:\s?\S+\.(png|jpg)---/;
                 $line =~ s/_/ /g;
                 $line =~ s/<!--//g;
                 $line =~ s/-->//g;
@@ -11017,7 +11011,7 @@ sub commark{
                 close $fh;
                 utf8::decode($wholefile);
         }
-        $wholefile =~ s/-----*\s?File:\s?\w+\.(png|jpg)---.*\r?\n?//g;
+        $wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
         while ($wholefile =~ m/(,"?\n*\s*"?\p{Upper}\p{Alnum}*)/g){
                 my $word = $1;
                 $wordw++;
@@ -11064,7 +11058,7 @@ sub itwords{
                 close $fh;
                 utf8::decode($wholefile);
         }
-        $wholefile =~ s/-----*\s?File:\s?\w+\.(png|jpg)---.*\r?\n?//g;
+        $wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
         $markupthreshold = 0 unless $markupthreshold;
         while ($wholefile =~ m/(<[iIbB]>)(.*?)(<\/[IiBb]>)/sg){
                 my $word = $1.$2.$3;
@@ -11113,7 +11107,7 @@ sub bangmark{
                 close $fh;
                 utf8::decode($wholefile);
         }
-        $wholefile =~ s/-----*\s?File:\s?\w+\.(png|jpg)---.*\r?\n?//g;
+        $wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
         while ($wholefile =~ m/(\p{Alnum}+\."?\n*\s*"?\p{Lower}\p{Alnum}*)/g){
                 my $word = $1;
                 $wordw++;
@@ -15553,7 +15547,6 @@ sub togreektr{
         $phrase =~ s/u/\x{03C5}/g;
         $phrase =~ s/Ô/\x{03A9}/g;
         $phrase =~ s/ô/\x{03C9}/g;
-	$phrase =~ s/;/\x{0387}/g;
         $phrase =~ s/\?/;/g;
         return $phrase;
 }
@@ -15635,7 +15628,6 @@ sub fromgreektr{
         $phrase =~ s/\x{03A5}/Y/g;
         $phrase =~ s/\x{03C5}/y/g;
         $phrase =~ s/;/?/g;
-	$phrase =~ s/\x{0387}/;/g;
         $phrase =~ s/(\p{Upper}\p{Lower}\p{Upper})/\U$1\E/g;
         $phrase =~ s/([AEIOUaeiou])y/$1u/g;
         return $phrase;
@@ -15725,7 +15717,7 @@ sub pageadjust{
                 $lglobal{padjpop}->raise;
         }else{
                 my @marks = $textwindow->markNames;
-                my @pages = sort grep (/^Pg\w+$/, @marks);
+                my @pages = sort grep (/^Pg\S+$/, @marks);
                 my %pagetrack;
 
                 $lglobal{padjpop} = $top->Toplevel;
@@ -15754,7 +15746,7 @@ sub pageadjust{
                                         my ($index, $label);
                                         my $style = 'Arabic';
                                         for my $page(@pages){
-                                                my ($num) = $page =~ /Pg(\w+)/;
+                                                my ($num) = $page =~ /Pg(\S+)/;
                                                 if($pagetrack{$num}[4]->cget(-text) eq 'Start @'){
                                                         $index = $pagetrack{$num}[5]->get;
                                                 }
@@ -15786,7 +15778,7 @@ sub pageadjust{
                         -command => sub{
                                                 %pagenumbers = ();
                                                 for my $page (@pages){
-                                                        my ($num) = $page =~ /Pg(\w+)/;
+                                                        my ($num) = $page =~ /Pg(\S+)/;
                                                         $pagenumbers{$page}{label} = $pagetrack{$num}[2]->cget(-text);
                                                         $pagenumbers{$page}{style} = $pagetrack{$num}[3]->cget(-text);
                                                         $pagenumbers{$page}{action} = $pagetrack{$num}[4]->cget(-text);
@@ -15808,7 +15800,7 @@ sub pageadjust{
                 $top->Busy(-recurse => 1);
                 my $row = 0;
                 for my $page (@pages){
-                        my ($num) = $page =~ /Pg(\w+)/;
+                        my ($num) = $page =~ /Pg(\S+)/;
                         $updatetemp++;
                         $lglobal{padjpop}->update if ($updatetemp == 20);
                         $pagetrack{$num}[0] = $frame1->Label(
@@ -15870,7 +15862,7 @@ sub pageadjust{
                 $top->Unbusy(-recurse => 1);
                 if(defined $pagenumbers{$pages[0]}{action} and length $pagenumbers{$pages[0]}{action}){
                                 for my $page (@pages){
-                                        my ($num) = $page =~ /Pg(\w+)/;
+                                        my ($num) = $page =~ /Pg(\S+)/;
                                         $pagetrack{$num}[2]->configure(-text => $pagenumbers{$page}{label});
                                         $pagetrack{$num}[3]->configure(-text => ($pagenumbers{$page}{style} or 'Arabic'));
                                         $pagetrack{$num}[4]->configure(-text => ($pagenumbers{$page}{action} or '+1'));
@@ -16040,7 +16032,7 @@ sub pageremove{ # Delete a page marker
         $textwindow->markUnset($num);
         %pagenumbers =();
         my @marks = $textwindow->markNames;
-        for (@marks){$pagenumbers{$_}{offset} = $textwindow->index($_) if $_ =~ /Pg\w+/;}
+        for (@marks){$pagenumbers{$_}{offset} = $textwindow->index($_) if $_ =~ /Pg\S+/;}
         viewpagenums();
 }
 
@@ -16050,7 +16042,7 @@ sub pageadd{ # Add a page marker
         $textwindow->markSet('insert','1.0');
         $prev = $insert;
         while($prev = $textwindow->markPrevious($prev)){
-                if ($prev =~ /Pg(\w+)/){
+                if ($prev =~ /Pg(\S+)/){
                         $mark = $1;
                         $length = length($1);
                         last;
@@ -16059,7 +16051,7 @@ sub pageadd{ # Add a page marker
         unless ($prev){
                 $prev = $insert;
                 while($prev = $textwindow->markNext($prev)){
-                        if ($prev =~ /Pg(\w+)/){
+                        if ($prev =~ /Pg(\S+)/){
                                 $mark = 0;
                                 $length = length($1);
                                 last;
@@ -16076,7 +16068,7 @@ sub pageadd{ # Add a page marker
         $textwindow->markGravity($mark,'right');
         %pagenumbers =();
         my @marks = $textwindow->markNames;
-        for (@marks){$pagenumbers{$_}{offset} = $textwindow->index($_) if $_ =~ /Pg\w+/;}
+        for (@marks){$pagenumbers{$_}{offset} = $textwindow->index($_) if $_ =~ /Pg\S+/;}
         $lglobal{seepagenums} = 0;
         viewpagenums();
         return 1;
@@ -16090,7 +16082,7 @@ sub pgrenum{ # Re sequence page markers
         if ($offset<0){
                 @marks = (sort(keys(%pagenumbers)));
                 $num = $start = $lglobal{pagenumentry}->get;
-                $start =~ s/Pg(\d+)/$1/;
+                $start =~ s/Pg(\d+)/$1/; 
                 while($num = $textwindow->markPrevious($num)){
                         if ($num =~ /Pg\d+/){
                                 $mark = $num;
@@ -16150,7 +16142,7 @@ sub pgprevious{ #move focus to previous page marker
         my $num = $lglobal{pagenumentry}->get;
         $num = $textwindow->index('insert') unless $num;
         $mark = $num;
-        while($num = $textwindow->markPrevious($num)){if ($num =~ /Pg\w+/){$mark = $num; last;}}
+        while($num = $textwindow->markPrevious($num)){if ($num =~ /Pg\S+/){$mark = $num; last;}}
         $lglobal{pagenumentry}->delete('0','end');
         $lglobal{pagenumentry}->insert('end',$mark);
         $textwindow->yviewMoveto('1.0');
@@ -16162,7 +16154,7 @@ sub pgnext{ #move focus to next page marker
         my $num = $lglobal{pagenumentry}->get;
         $num = $textwindow->index('insert') unless $num;
         $mark = $num;
-        while($num = $textwindow->markNext($num)){if ($num =~ /Pg\w+/){$mark = $num; last;}}
+        while($num = $textwindow->markNext($num)){if ($num =~ /Pg\S+/){$mark = $num; last;}}
         $lglobal{pagenumentry}->delete('0','end');
         $lglobal{pagenumentry}->insert('end',$mark);
         $textwindow->yviewMoveto('1.0');
@@ -16174,7 +16166,7 @@ sub pmoveup{ # move the page marker up a line
         my $num = $lglobal{pagenumentry}->get;
         $num = $textwindow->index('insert') unless $num;
         $mark = $num;
-        while($num = $textwindow->markPrevious($num)){last if $num =~ /Pg\w+/}
+        while($num = $textwindow->markPrevious($num)){last if $num =~ /Pg\S+/}
         $num = '1.0' unless $num;
         my $pagenum = " $mark ";
         my $index = $textwindow->index("$mark-1l");
@@ -16196,7 +16188,7 @@ sub pmoveleft{ # move the page marker left a character
         my $num = $lglobal{pagenumentry}->get;
         $num = $textwindow->index('insert') unless $num;
         $mark = $num;
-        while($num = $textwindow->markPrevious($num)){last if $num =~ /Pg\w+/}
+        while($num = $textwindow->markPrevious($num)){last if $num =~ /Pg\S+/}
         $num = '1.0' unless $num;
         my $pagenum = " $mark ";
         my $index = $textwindow->index("$mark-1c");
@@ -16218,7 +16210,7 @@ sub pmoveright{ # move the page marker left a character
         my $num = $lglobal{pagenumentry}->get;
         $num = $textwindow->index('insert') unless $num;
         $mark = $num;
-        while($num = $textwindow->markNext($num)){last if $num =~ /Pg\w+/}
+        while($num = $textwindow->markNext($num)){last if $num =~ /Pg\S+/}
         $num = $textwindow->index('end') unless $num;
         my $pagenum = " $mark ";
         my $index = $textwindow->index("$mark+1c");
@@ -16241,7 +16233,7 @@ sub pmovedown{ # move the page marker down a line
         my $num = $lglobal{pagenumentry}->get;
         $num = $textwindow->index('insert') unless $num;
         $mark = $num;
-        while($num = $textwindow->markNext($num)){last if $num =~ /Pg\w+/}
+        while($num = $textwindow->markNext($num)){last if $num =~ /Pg\S+/}
         $num = $textwindow->index('end') unless $num;
         my $pagenum = " $mark ";
         my $index = $textwindow->index("$mark+1l");
