@@ -15553,6 +15553,7 @@ sub togreektr{
         $phrase =~ s/u/\x{03C5}/g;
         $phrase =~ s/Ô/\x{03A9}/g;
         $phrase =~ s/ô/\x{03C9}/g;
+	$phrase =~ s/;/\x{0387}/g;
         $phrase =~ s/\?/;/g;
         return $phrase;
 }
@@ -15634,6 +15635,7 @@ sub fromgreektr{
         $phrase =~ s/\x{03A5}/Y/g;
         $phrase =~ s/\x{03C5}/y/g;
         $phrase =~ s/;/?/g;
+	$phrase =~ s/\x{0387}/;/g;
         $phrase =~ s/(\p{Upper}\p{Lower}\p{Upper})/\U$1\E/g;
         $phrase =~ s/([AEIOUaeiou])y/$1u/g;
         return $phrase;
