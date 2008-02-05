@@ -86,7 +86,7 @@ sub SaveUTF{ # Custom file save routine to handle unicode files
         if ($unicode){
                 my $bom = "\x{FEFF}";
                 utf8::encode($bom);
-                print $tempfh $bom;
+		print $tempfh $bom;
         }
         while ($w->compare($index, '<', $fileend)){
                 my $end = $w->index("$index lineend +1c");
@@ -1095,7 +1095,7 @@ sub prep_export{
                         $file = "\x{FEFF}".$file;
                         utf8::encode($file);
                 }
-                print $fh $file;
+#                print $fh $file;
         }
         $top->Unbusy(-recurse => 1);
 }
@@ -1973,8 +1973,6 @@ sub openpng{            #Routine to handle image viewer file requests
         $number = $lglobal{page_num_label}->cget(-text) if defined $lglobal{page_num_label};
         $number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
         $pagenum = $number || '001';
-	print $lglobal{page_num_label}->cget(-text)."\n";
-	print $pagenum."\n";
         viewerpath() unless $globalviewerpath;
         my $dosfile;
         unless ($pngspath){
@@ -5313,7 +5311,7 @@ sub replaceeval{
                         );
                         my $answer = $dialog->Show;
                         $lglobal{codewarn} = 0 if ($answer eq 'Warnings Off');
-                        return unless (($answer eq 'OK')||($answer eq 'Warnings Off'));
+                        return $replaceterm unless (($answer eq 'OK')||($answer eq 'Warnings Off'));
                 }
                 $replbuild = '';
                 if ($replaceterm =~ s/^\\C//) {
@@ -5336,27 +5334,7 @@ sub replaceeval{
                 }
                 $replaceterm = $replbuild;
                 $replbuild = '';
-        }
-        if ($replaceterm =~ /\\G/){
-                if ($replaceterm =~ s/^\\G//) {
-                        if ($replaceterm =~ s/\\G//){
-                                @replarray = split /\\G/, $replaceterm;
-                        }else{
-                                push @replarray, $replaceterm;
-                        }
-                }else{
-                        @replarray = split /\\G/, $replaceterm;
-                        $replbuild = shift @replarray;
-                };
-                while ($replaceseg = shift @replarray){
-                        $seg1 = $seg2 = '';
-                        ($seg1,$seg2) = split /\\E/, $replaceseg, 2;
-                        $replbuild .= betagreek('unicode',$seg1);
-                        $replbuild .= $seg2 if $seg2;
-                }
-                $replaceterm = $replbuild;
-                $replbuild = '';
-        }
+        }        
         if ($replaceterm =~ /\\L/){
                 if ($replaceterm =~ s/^\\L//) {
                         if ($replaceterm =~ s/\\L//){
@@ -5422,6 +5400,66 @@ sub replaceeval{
         }
         $replaceterm =~ s/\\n/\n/g;
         $replaceterm =~ s/\\t/\t/g;
+	if ($replaceterm =~ /\\GA/){
+                if ($replaceterm =~ s/^\\GA//) {
+                        if ($replaceterm =~ s/\\GA//){
+                                @replarray = split /\\GA/, $replaceterm;
+                        }else{
+                                push @replarray, $replaceterm;
+                        }
+                }else{
+                        @replarray = split /\\GA/, $replaceterm;
+                        $replbuild = shift @replarray;
+                };
+                while ($replaceseg = shift @replarray){
+                        $seg1 = $seg2 = '';
+                        ($seg1,$seg2) = split /\\E/, $replaceseg, 2;
+                        $replbuild .= betaascii($seg1);
+                        $replbuild .= $seg2 if $seg2;
+                }
+                $replaceterm = $replbuild;
+                $replbuild = '';
+        }
+	if ($replaceterm =~ /\\GB/){
+                if ($replaceterm =~ s/^\\GB//) {
+                        if ($replaceterm =~ s/\\GB//){
+                                @replarray = split /\\GB/, $replaceterm;
+                        }else{
+                                push @replarray, $replaceterm;
+                        }
+                }else{
+                        @replarray = split /\\GB/, $replaceterm;
+                        $replbuild = shift @replarray;
+                };
+                while ($replaceseg = shift @replarray){
+                        $seg1 = $seg2 = '';
+                        ($seg1,$seg2) = split /\\E/, $replaceseg, 2;
+                        $replbuild .= betagreek('beta',$seg1);
+                        $replbuild .= $seg2 if $seg2;
+                }
+                $replaceterm = $replbuild;
+                $replbuild = '';
+        }
+        if ($replaceterm =~ /\\G/){
+                if ($replaceterm =~ s/^\\G//) {
+                        if ($replaceterm =~ s/\\G//){
+                                @replarray = split /\\G/, $replaceterm;
+                        }else{
+                                push @replarray, $replaceterm;
+                        }
+                }else{
+                        @replarray = split /\\G/, $replaceterm;
+                        $replbuild = shift @replarray;
+                };
+                while ($replaceseg = shift @replarray){
+                        $seg1 = $seg2 = '';
+                        ($seg1,$seg2) = split /\\E/, $replaceseg, 2;
+                        $replbuild .= betagreek('unicode',$seg1);
+                        $replbuild .= $seg2 if $seg2;
+                }
+                $replaceterm = $replbuild;
+                $replbuild = '';
+        }
         if ($replaceterm =~ /\\A/){
                 if ($replaceterm =~ s/^\\A//) {
                         if ($replaceterm =~ s/\\A//){
@@ -9110,7 +9148,7 @@ sub markpages{
                 $line = $textwindow->get($searchstartindex,$searchendindex);
                 $line =~ m/File:\s?(\S+)\./;
                 $page = $1;
-		print $1."\n";
+#		print $1."\n";
                 my @p = $line =~ m/(?<=\\)([^\\]*)\\/g;
                 @{$proofers{$page}} = (0, @p);
                 $pagemark = 'Pg'.$page;
@@ -15476,7 +15514,7 @@ sub placechar{
 
 sub togreektr{
         my $phrase = shift;
-        $phrase =~ s/s(\W)/\x{03C2}$1/g;
+        $phrase =~ s/s($|\W)/\x{03C2}$1/g;
         $phrase =~ s/th/\x{03B8}/g;
         $phrase =~ s/nch/\x{03B3}\x{03C7}/g;
         $phrase =~ s/ch/\x{03C7}/g;
@@ -15553,7 +15591,7 @@ sub togreektr{
 
 sub fromgreektr{
         my $phrase = shift;
-        $phrase =~ s/\x{03C2}(\W)/s$1/g;
+        $phrase =~ s/\x{03C2}($|\W)/s$1/g;
         $phrase =~ s/\x{03B8}/th/g;
         $phrase =~ s/\x{03B3}\x{03B3}/ng/g;
         $phrase =~ s/\x{03B3}\x{03BA}/nk/g;
@@ -15710,6 +15748,19 @@ sub betagreek{
                 return fromgreektr($phrase)
         }
 }
+
+sub betaascii{
+        # Discards the accents
+        my ($phrase) = @_;
+	$phrase =~ s/[\)\/\\\|\~\+=_]//g;
+	$phrase =~ s/r\(/rh/g;
+	$phrase =~ s/([AEIOUYÊÔ])\(/H$1/g;
+	$phrase =~ s/([aeiouyêô]+)\(/h$1/g;
+	return $phrase;
+}		  
+			  
+	
+	
 
 sub pageadjust{
         if (defined $lglobal{padjpop}){
