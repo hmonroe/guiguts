@@ -6387,7 +6387,7 @@ sub asciipopup{
                 my $f0 = $lglobal{asciipop}->Frame->pack(-side => 'top', -anchor => 'n');
                 my $wlabel = $f0->Label(
                         -width => 16,
-                        -text => 'ACSII Box Width',
+                        -text => 'ASCII Box Width',
                 )->pack(-side => 'left', -pady => 2, -padx => 2, -anchor => 'n');
                 my $wmentry = $f0->Entry(
                         -width => 6,
@@ -8201,13 +8201,11 @@ sub htmlautoconvert{
                                 $textwindow->ntinsert("$step.end",'</i>');
                                 $ital = 1;
                         }
-                        if ($cl && ($cl < $op) && !$ital){
+                        if ($cl && ($op < $cl) && $ital){
+                            if ($op){
                                 $textwindow->ntinsert("$step.0",'<i>');
-                                $ital = 0;
-                        }
-                        if ($op && ($op < $cl) && $ital){
-                                $textwindow->ntinsert("$step.0",'<i>');
-                                $ital = 0;
+                            }
+                            $ital = 0;
                         }
                         $lglobal{classhash}->{$indent} = '    .poem span.i'.$indent.'     {display: block; margin-left: '.$indent.'em; padding-left: 3em; text-indent: -3em;}'."\n" if ($indent and ($indent != 2) and ($indent != 4));
                         $textwindow->ntinsert("$step.0","<span class=\"i$indent\">");
@@ -8305,13 +8303,11 @@ sub htmlautoconvert{
                                 $selection .= '</i>';
                                 $ital = 1;
                         }
-                        if ($cl && ($cl < $op) && !$ital){
+                        if ($cl && ($op < $cl) && $ital){
+                            if ($op){
                                 $selection = '<i>'.$selection;
-                                $ital = 0;
-                        }
-                        if ($op && ($op < $cl) && $ital){
-                                $selection = '<i>'.$selection;
-                                $ital = 0;
+                            }
+                            $ital = 0;
                         }
                         $textwindow->ntinsert("$step.0",'<li>'.$selection.'</li>');
                         push @last5, $selection;
@@ -8381,13 +8377,11 @@ sub htmlautoconvert{
                                         $selection .= '</i>';
                                         $ital = 1;
                                 }
-                                if ($cl && ($cl < $op) && !$ital){
+                                if ($cl && ($op < $cl) && $ital){
+                                    if ($op){
                                         $selection = '<i>'.$selection;
-                                        $ital = 0;
-                                }
-                                if ($op && ($op < $cl) && $ital){
-                                        $selection = '<i>'.$selection;
-                                        $ital = 0;
+                                    }
+                                    $ital = 0;
                                 }
                                 $selection = '<span style="margin-left: '.$indent.'em;">'.$selection.'</span>';
                                 $textwindow->ntdelete("$step.0",$thisend);
