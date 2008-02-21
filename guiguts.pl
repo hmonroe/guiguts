@@ -2455,7 +2455,7 @@ sub buildmenu{                  # The main menu building code.
                                                                                         saveset();
                                                                                 }
                         ],
-                        [Button => 'Seach History Size', -command => sub{
+                        [Button => 'Search History Size', -command => sub{
                                                                         searchsize();
                                                                         saveset();
                                                                         }
@@ -5327,6 +5327,7 @@ sub replaceeval{
                 while ($replaceseg = shift @replarray){
                         $seg1 = $seg2 = '';
                         ($seg1,$seg2) = split /\\E/, $replaceseg, 2;
+     
                         print "$seg1\n" if $DEBUG;
                         print eval $seg1 if $DEBUG;
                         $replbuild .= eval $seg1;
@@ -9058,6 +9059,7 @@ sub phelppopup{
                 "\nJoin Lines - join lines removing any spaces, asterisks and hyphens as necessary. - Hotkey j\n".
                 "Join, Keep hyphen - join lines removing any spaces and asterisks as necessary. - Hotkey k\n".
                 "Blank line - remove spaces as necessary. Keep one blank line. (paragraph break). - Hotkey l\n".
+                "New Section - remove spaces as necessary. Keep two blank lines (section break). - Hotkey h\n".
                 "New Chapter - remove spaces as necessary. Keep four blank lines (chapter break). - Hotkey h\n".
                 "Refresh - search for and center next page separator. - Hotkey r\n".
                 "Undo - undo the previous page seperator edit. - Hotkey u\n".
@@ -11194,7 +11196,7 @@ sub hyphencheck{
                         };
                 }
         }
-        $lglobal{saveheader} = "$wordw words with hyphens, $wordwo suspects.";
+        $lglobal{saveheader} = "$wordw words with hyphens, $wordwo suspects (marked ****).";
         sortwords(\%display);
         $top->Unbusy;
 }
@@ -11223,7 +11225,7 @@ sub dashcheck{
                         }
                 }
         }
-        $lglobal{saveheader} = "$wordw emdash phrases, $wordwo suspects.";
+        $lglobal{saveheader} = "$wordw emdash phrases, $wordwo suspects (marked with ****).";
         sortwords(\%display);
         searchoptset(qw /0 x x 0/);
         $top->Unbusy;
@@ -11341,7 +11343,7 @@ sub accentcheck{
                         $accent{$word}++;
                 };
         };
-        $lglobal{saveheader} = "$wordw accented words, $wordwo suspects.";
+        $lglobal{saveheader} = "$wordw accented words, $wordwo suspects (marked with ****).";
         sortwords(\%display);
         searchoptset(qw/0 x x 0/);
         $top->Unbusy;
