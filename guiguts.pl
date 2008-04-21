@@ -16797,6 +16797,8 @@ sub natural_sort_freq {         # Fast freqency sort with secondary natural sort
 
 ## New functions -- vls Mon Nov 12 11:25:20 CST 2007
 
+# Setup some standard regex
+our $tb =  '       *       *       *       *       *';
 # Convert <tb> to asterisk breaks. Needs a better name. ;-)
 
 sub tb2text_convert
