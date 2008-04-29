@@ -11,6 +11,7 @@ my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 require 5.008;
 use strict;
 use warnings;
+#use diagnostics;
 use Tk;
 #use Data::Dumper;
 
@@ -1065,37 +1066,37 @@ sub prep_import{
         $top->Unbusy(-recurse => 1);
 }
 
-sub prep_export{
+sub prep_export {
         my $directory = $top->chooseDirectory(
                 -title => 'Choose the directory to export the text files to.',
         );
         return 0 unless (defined $directory and $directory ne '');
-        unless (-e $directory){
+        unless (-e $directory) {
                 mkdir $directory or warn "Could not make directory $!\n" and return;
         }
         $top->Busy(-recurse => 1);
         my @marks = $textwindow->markNames;
         my @pages = sort grep (/^Pg\S+$/, @marks);
         my $unicode = $textwindow->search('-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0', 'end');
-        while (@pages){
+        while (@pages) {
                 my $page = shift @pages;
                 my ($filename) = $page =~ /Pg(\S+)/;
                 $filename .= '.txt';
                 my $next;
-                if (@pages){
+                if (@pages) {
                         $next = $pages[0];
-                }else{
+                } else {
                         $next = 'end';
                 }
                 my $file = $textwindow->get($page, $next);
                 $file =~ s/-{5,}File:.+?-{5}\n//;
                 $file =~ s/\n+$//;
                 open my $fh, '>', "$directory/$filename";
-                if ($unicode){
+                if ($unicode) {
                         $file = "\x{FEFF}".$file;
                         utf8::encode($file);
                 }
-#                print $fh $file;
+                print $fh $file; # vls 2008-04-28 -- Removed spurious comment
         }
         $top->Unbusy(-recurse => 1);
 }
@@ -2355,7 +2356,7 @@ sub buildmenu{                  # The main menu building code.
                     [Button => 'Convert <tb> to asterisk break', 
                      -command => sub
                      {
-                         $textwindow->addGlobStart; tb2text_convert(); $textwindow->addGlobEnd;
+                         $textwindow->addGlobStart; text_convert_tb(); $textwindow->addGlobEnd;
                      }],
 		    '',
 		    [Button => 'Find Greek',
@@ -6716,7 +6717,7 @@ sub markpopup{
                         -variable => \$lglobal{cssblockmarkup},
                         -selectcolor => $lglobal{checkcolor},
                         -command => sub{ if ($lglobal{cssblockmarkup}){
-                                                        $blockmarkup->configure('-text' => 'CSS blockquot');
+                                                        $blockmarkup->configure('-text' => 'CSS blockquote');
                                                 }else{
                                                         $blockmarkup->configure('-text' => 'Std. <blockquote>');
                                                 }
@@ -7907,140 +7908,180 @@ sub makeanchor{
         return $linkname;
 }
 
-sub htmlautoconvert{
-        viewpagenums() if ($lglobal{seepagenums});
-        my $thisblockstart ='1.0';
-        my $thisblockend;
-        my $thisblank = '';
-        my $selection = '';
-        my $inblock = 0;
-        my $intitle = 0;
-        my $blkquot = 0;
-        my $poetry = 0;
-        my $skip = 0;
-        my $listmark = 0;
-        my $incontents = '1.0';
-        my $ital = 0;
-        my @contents = ("<p>\n");
-        my $cflag = 0;
-        my @last5 = [1,1,1,1,1];
-        my ($ler,$lec,$step);
-        my $pgoffset = 0;
-        my $thisend = '';
-        my $aname = '';
-        my $indent = 0;
-        my $title;
-        my $author;
-        my $front;
-        my ($blkopen,$blkclose);
-        if ($lglobal{cssblockmarkup}){
-                $blkopen = '<div class="blockquot"><p>';
-                $blkclose = '</p></div>';
-        }else{
-                $blkopen = '<blockquote><p>';
-                $blkclose = '</p></blockquote>';
-        }
-        return if ($lglobal{global_filename} =~/No File Loaded/);
-        $textwindow->Busy;
-        my $savefn = $lglobal{global_filename};
-        $lglobal{global_filename} =~ s/\.[^\.]*?$//;
-        my $newfn = $lglobal{global_filename}.'-htmlbak.txt';
-        working("Saving backup of file\nto $newfn");
-        $textwindow->SaveUTF($newfn);
-        $lglobal{global_filename} = $newfn;
-        binsave();
-        $lglobal{global_filename} = $savefn;
-        $textwindow->FileName($savefn);
-        working("Converting Windows Codepage 1252\ncharacters to Unicode");
-        cp1252toUni();
-        working('Parsing Header');
-        my $headertext;
-        $selection = $textwindow->get('1.0','1.end');
-        if ($selection =~ /DOCTYPE/){
-                $step = 1;
-                while (1){
-                        $selection = $textwindow->get("$step.0","$step.end");
-                        $headertext .= ($selection."\n");
-                        $textwindow->ntdelete("$step.0", "$step.end");
-                        last if ($selection =~ /^\<body/);
-                        $step++;
-                        last if ($textwindow->compare("$step.0",'>','end'));
+# DP:vls -- Split this into separate functions, eventually into HTMLconvert.pm
+sub htmlautoconvert 
+{
+    viewpagenums() if ($lglobal{seepagenums});
+    my $thisblockstart ='1.0';
+    my $thisblockend;
+    my $thisblank = '';
+    my $selection = '';
+    my $inblock = 0;
+    my $intitle = 0;
+    my $blkquot = 0;
+    my $poetry = 0;
+    my $skip = 0;
+    my $listmark = 0;
+    my $incontents = '1.0';
+    my $ital = 0;
+    my @contents = ("<p>\n");
+    my $cflag = 0;
+    my @last5 = [1,1,1,1,1];
+    my ($ler,$lec,$step);
+    my $pgoffset = 0;
+    my $thisend = '';
+    my $aname = '';
+    my $indent = 0;
+    my $title;
+    my $author;
+    my $front;
+    my ($blkopen,$blkclose);
+    my $headertext;
+    if ($lglobal{cssblockmarkup}) {
+	$blkopen = '<div class="blockquote"><p>'; # DP:vls changed blockquot to blockquote because it bugs me. 2008-04-22
+	$blkclose = '</p></div>';
+    } else {
+	$blkopen = '<blockquote><p>';
+	$blkclose = '</p></blockquote>';
+    }
+    return if ($lglobal{global_filename} =~/No File Loaded/);
+
+# DP:vls -- We'll cut the autoconvert up in place; gonna take some work
+# to get all the variables sorted
+
+#DP:vls 2008-04-22 -- Make a backup file 
+sub htmlbackup 
+{
+    $textwindow->Busy; 
+    my $savefn = $lglobal{global_filename};
+    $lglobal{global_filename} =~ s/\.[^\.]*?$//; 
+    my $newfn = $lglobal{global_filename}.'-htmlbak.txt'; 
+    working("Saving backup of file\nto $newfn"); 
+    $textwindow->SaveUTF($newfn);
+    $lglobal{global_filename} = $newfn; 
+    binsave();
+    $lglobal{global_filename} = $savefn; 
+    $textwindow->FileName($savefn);
+} 
+
+htmlbackup();
+
+    working("Converting Windows Codepage 1252\ncharacters to Unicode");
+    cp1252toUni();
+
+# DP:vls 2008-04-22
+# FIXME: Lot's of nasty warnings.
+
+sub parseheader 
+{ 
+    working('Parsing Header');
+    $headertext;
+    $selection = $textwindow->get('1.0','1.end');
+    if ($selection =~ /DOCTYPE/) {
+	$step = 1;
+	while (1) {
+	    $selection = $textwindow->get("$step.0","$step.end");
+	    $headertext .= ($selection."\n");
+	    $textwindow->ntdelete("$step.0", "$step.end");
+	    last if ($selection =~ /^\<body/);
+	    $step++;
+	    last if ($textwindow->compare("$step.0",'>','end'));
+	}
+	$textwindow->ntdelete('1.0', "$step.0 +1c");
+    } else {
+	open my $infile, '<', 'header.txt' or warn "Could not open header file. $!\n";
+	while (<$infile>) {
+	    $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+	    $headertext .= $_;
+	}
+	close $infile;
+    }
+}
+     parseheader(); # DP:vls -- Seems okay so far but lots of nasty
+		    # warnings. Oh, well. Make it work, fix the crud
+		    # later.
+# DP:vls just a stub for now: sub html_set_title{}
+# Setting <title> tag in <header>
+    $step = 0;
+    while (1) {
+	$step++;
+	last if ($textwindow->compare("$step.0",'>','end'));
+	$selection = $textwindow->get("$step.0","$step.end");
+	next if ($selection =~ /^\[Illustr/i);
+	next if ($selection =~ /^\/[\$fF]/);
+	next unless length($selection);
+	$title = $selection;
+	$title =~ s/[,.]$//;
+	$title = lc($title);
+	$title =~ s/(^\W*\w)/\U$1\E/;
+	$title =~ s/([\s\n]+\W*\w)/\U$1\E/g;
+	last if $title;
+    }
+    if ($title) {
+	$headertext =~ s/TITLE/$title/ if $title;
+	$textwindow->ntinsert("$step.0",'<h1>');
+	$textwindow->ntinsert("$step.end",'</h1>');
+    }
+    while (1) {
+	$step++;
+	last if ($textwindow->compare("$step.0",'>','end'));
+	$selection = $textwindow->get("$step.0","$step.end");
+	if (($selection =~ /^by/i) and ($step<100)) {
+	    last if ($selection =~/[\/[Ff]/);
+		     if ($selection =~ /^by$/i) {
+			 $selection = '<h3>'.$selection.'</h3>';
+			 $textwindow->ntdelete("$step.0","$step.end");
+			 $textwindow->ntinsert("$step.0",$selection);
+			 do {
+			     $step++;
+			     $selection = $textwindow->get("$step.0","$step.end");
+			 } until ($selection ne "");
+			 $author = $selection;
+			 $author =~ s/,$//;
+		     } else {
+			 $author = $selection;
+			 $author =~ s/\s$//i;
+		     }
                 }
-                $textwindow->ntdelete('1.0', "$step.0 +1c");
-        }else{
-                open my $infile, '<', 'header.txt' or warn "Could not open header file. $!\n";
-                while (<$infile>){
-                        $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-                        $headertext .= $_;
-                }
-                close $infile;
+	    $selection = '<h2>'.$selection.'</h2>' if $author;
+	    $textwindow->ntdelete("$step.0","$step.end");
+	    $textwindow->ntinsert("$step.0",$selection);
+	    last if $author||($step>100);
         }
-        $step = 0;
-        while (1){
-                $step++;
-                last if ($textwindow->compare("$step.0",'>','end'));
-                $selection = $textwindow->get("$step.0","$step.end");
-                next if ($selection =~ /^\[Illustr/i);
-                next if ($selection =~ /^\/[\$fF]/);
-                next unless length($selection);
-                $title = $selection;
-                $title =~ s/[,.]$//;
-                $title = lc($title);
-                $title =~ s/(^\W*\w)/\U$1\E/;
-                $title =~ s/([\s\n]+\W*\w)/\U$1\E/g;
-                last if $title;
+        if ($author) {
+	    $author =~ s/^by //i;
+	    $author = ucfirst(lc($author));
+	    $author =~ s/(\W)(\w)/$1\U$2\E/g;
+	    $headertext =~ s/AUTHOR/$author/;
         }
-        if ($title){
-                $headertext =~ s/TITLE/$title/ if $title;
-                $textwindow->ntinsert("$step.0",'<h1>');
-                $textwindow->ntinsert("$step.end",'</h1>');
-        }
-        while (1){
-                $step++;
-                last if ($textwindow->compare("$step.0",'>','end'));
-                $selection = $textwindow->get("$step.0","$step.end");
-                if (($selection =~ /^by/i) and ($step<100)){
-                        last if ($selection =~/[\/[Ff]/);
-                        if ($selection =~ /^by$/i) {
-                                $selection = '<h3>'.$selection.'</h3>';
-                                $textwindow->ntdelete("$step.0","$step.end");
-                                $textwindow->ntinsert("$step.0",$selection);
-                                do{
-                                        $step++;
-                                        $selection = $textwindow->get("$step.0","$step.end");
-                                } until ($selection ne "");
-                                $author = $selection;
-                                $author =~ s/,$//;
-                        }else{
-                                $author = $selection;
-                                $author =~ s/\s$//i;
-                        }
-                }
-                $selection = '<h2>'.$selection.'</h2>' if $author;
-                $textwindow->ntdelete("$step.0","$step.end");
-                $textwindow->ntinsert("$step.0",$selection);
-                last if $author||($step>100);
-        }
-        if ($author){
-                $author =~ s/^by //i;
-                $author = ucfirst(lc($author));
-                $author =~ s/(\W)(\w)/$1\U$2\E/g;
-                $headertext =~ s/AUTHOR/$author/;
-        }
-        working("Converting Ampersands,\nand Emdashes");
-        named('&(?![\w#])','&amp;');
-        named('&$','&amp;');
-        named('& ','&amp; ');
-        named('&c\.','&amp;c.');
-        named('&c,','&amp;c.,');
-        named('&c ','&amp;c. ');
-        named('(?<=[^-!])--(?=[^>])','&mdash;');
-        named('(?<=[^<])!--(?=[^>])','!&mdash;');
-        named('(?<=[^-])--$','&mdash;');
-        named('^--(?=[^-])','&mdash;');
-        named("\x{A0}",'&nbsp;');
-        $lglobal{fnsecondpass}=0;
-        $lglobal{fnsearchlimit}=1;
+
+sub html_convert_ampersands 
+{ 
+    working("Converting Ampersands");
+    named('&(?![\w#])','&amp;');
+    named('&$','&amp;');
+    named('& ','&amp; ');
+    named('&c\.','&amp;c.');
+    named('&c,','&amp;c.,');
+    named('&c ','&amp;c. ');
+}
+
+html_convert_ampersands();
+
+sub html_convert_emdashes
+{
+    working("Converting Emdashes");
+    named('(?<=[^-!])--(?=[^>])','&mdash;');
+    named('(?<=[^<])!--(?=[^>])','!&mdash;');
+    named('(?<=[^-])--$','&mdash;');
+    named('^--(?=[^-])','&mdash;');
+    named("\x{A0}",'&nbsp;');
+}
+
+html_convert_emdashes();
+
+    $lglobal{fnsecondpass}=0;
+    $lglobal{fnsearchlimit}=1;
         working('Converting Footnotes');
         footnotefixup();
         getlz();
@@ -8049,62 +8090,62 @@ sub htmlautoconvert{
         $textwindow->see('1.0');
         $textwindow->update;
         $step = 0;
-        while (1){
-                $step++;
-                last if ($textwindow->compare("$step.0",'>','end'));
-                last unless $lglobal{fnarray}->[$step][0];
-                next unless $lglobal{fnarray}->[$step][3];
-                $textwindow->ntdelete('fne'."$step".'-1c','fne'."$step");
-                $textwindow->ntinsert('fne'."$step",'</p></div>');
-                $textwindow->ntinsert(('fns'."$step".'+'.(length($lglobal{fnarray}->[$step][4])+11)."c"),']</span></a>');
-                $textwindow->ntdelete('fns'."$step".'+'.(length($lglobal{fnarray}->[$step][4])+10).'c',"fns"."$step".'+'.(length($lglobal{fnarray}->[$step][4])+11).'c');
-                $textwindow->ntinsert('fns'."$step".'+10c',"<div class=\"footnote\"><p><a name=\"Footnote_".$lglobal{fnarray}->[$step][4].'_'.$step."\" id=\"Footnote_".$lglobal{fnarray}->[$step][4].'_'.$step."\"></a><a href=\"#FNanchor_".$lglobal{fnarray}->[$step][4].'_'.$step."\"><span class=\"label\">[");
-                $textwindow->ntdelete('fns'."$step",'fns'."$step".'+10c');
-                $textwindow->ntinsert('fnb'."$step",'</a>')if ($lglobal{fnarray}->[$step][3]);
-                $textwindow->ntinsert('fna'."$step","<a name=\"FNanchor_".$lglobal{fnarray}->[$step][4].'_'.$step."\" id=\"FNanchor_".$lglobal{fnarray}->[$step][4].'_'.$step."\"></a><a href=\"#Footnote_".$lglobal{fnarray}->[$step][4].'_'.$step."\" class=\"fnanchor\">")if ($lglobal{fnarray}->[$step][3]);
-                while ($thisblank = $textwindow->search('-regexp','--','^$','fns'."$step","fne"."$step")){$textwindow->ntinsert($thisblank,'</p><p>')}
+        while (1) {
+	    $step++;
+	    last if ($textwindow->compare("$step.0",'>','end'));
+	    last unless $lglobal{fnarray}->[$step][0];
+	    next unless $lglobal{fnarray}->[$step][3];
+	    $textwindow->ntdelete('fne'."$step".'-1c','fne'."$step");
+	    $textwindow->ntinsert('fne'."$step",'</p></div>');
+	    $textwindow->ntinsert(('fns'."$step".'+'.(length($lglobal{fnarray}->[$step][4])+11)."c"),']</span></a>');
+	    $textwindow->ntdelete('fns'."$step".'+'.(length($lglobal{fnarray}->[$step][4])+10).'c',"fns"."$step".'+'.(length($lglobal{fnarray}->[$step][4])+11).'c');
+	    $textwindow->ntinsert('fns'."$step".'+10c',"<div class=\"footnote\"><p><a name=\"Footnote_".$lglobal{fnarray}->[$step][4].'_'.$step."\" id=\"Footnote_".$lglobal{fnarray}->[$step][4].'_'.$step."\"></a><a href=\"#FNanchor_".$lglobal{fnarray}->[$step][4].'_'.$step."\"><span class=\"label\">[");
+	    $textwindow->ntdelete('fns'."$step",'fns'."$step".'+10c');
+	    $textwindow->ntinsert('fnb'."$step",'</a>')if ($lglobal{fnarray}->[$step][3]);
+	    $textwindow->ntinsert('fna'."$step","<a name=\"FNanchor_".$lglobal{fnarray}->[$step][4].'_'.$step."\" id=\"FNanchor_".$lglobal{fnarray}->[$step][4].'_'.$step."\"></a><a href=\"#Footnote_".$lglobal{fnarray}->[$step][4].'_'.$step."\" class=\"fnanchor\">")if ($lglobal{fnarray}->[$step][3]);
+	    while ($thisblank = $textwindow->search('-regexp','--','^$','fns'."$step","fne"."$step")){$textwindow->ntinsert($thisblank,'</p><p>')}
         }
         working('Converting Body');
         @last5 = ['1','1','1','1','1','1'];
         $step = 1;
         $thisblockend = $textwindow->index('end');
         ($ler,$lec) = split /\./, $thisblockend;
-        while ($step <= $ler){
-                unless ($step % 500){
+        while ($step <= $ler) {
+                unless ($step % 500) {
                         $textwindow->see("$step.0");
                         $textwindow->update;
                 }
                 $selection = $textwindow->get("$step.0", "$step.end");
                 $incontents = "$step.end" if (($step < 100 )&&($selection =~ /contents/i)&&($incontents eq '1.0'));
-                if ($selection =~ s/_\{([^}]+?)\}/<sub>$1<\/sub>/g){
+                if ($selection =~ s/_\{([^}]+?)\}/<sub>$1<\/sub>/g) {
                         $textwindow->ntdelete("$step.0","$step.end");
                         $textwindow->ntinsert("$step.0",$selection);
                 };
-                if ($selection =~ s/\^\{([^}]+?)\}/<sup>$1<\/sup>/g){
+                if ($selection =~ s/\^\{([^}]+?)\}/<sup>$1<\/sup>/g) {
                         $textwindow->ntdelete("$step.0","$step.end");
                         $textwindow->ntinsert("$step.0",$selection);
                 };
-                if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style='width: 45%;' \/>/){
-                        $textwindow->ntdelete("$step.0","$step.end");
-                        $textwindow->ntinsert("$step.0",$selection);
-                        next;
-                };
-                if ($selection =~ s/<tb>/<hr style='width: 45%;' \/>/){
+                if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style='width: 45%;' \/>/) {
                         $textwindow->ntdelete("$step.0","$step.end");
                         $textwindow->ntinsert("$step.0",$selection);
                         next;
                 };
-                if ($selection =~ /^\/[Xx]/){
+                if ($selection =~ s/<tb>/<hr style='width: 45%;' \/>/) {
+                        $textwindow->ntdelete("$step.0","$step.end");
+                        $textwindow->ntinsert("$step.0",$selection);
+                        next;
+                };
+                if ($selection =~ /^\/[Xx]/) {
                         $skip = 1;
                         $textwindow->ntdelete("$step.0","$step.end");
                         $textwindow->insert("$step.0",'<pre>');
-                        if (($last5[2])&&(!$last5[3])){
+                        if (($last5[2])&&(!$last5[3])) {
                                 $textwindow->ntinsert(($step-2).".end",'</p>') unless ($textwindow->get(($step-2).'.0',($step-2).'.end') =~ /<\/p>/);
                         }
                         $step++;
                         next;
                 }
-                if ($selection =~ /^[Xx]\//){
+                if ($selection =~ /^[Xx]\//) {
                         $skip = 0;
                         $textwindow->ntdelete("$step.0","$step.end");
                         $textwindow->ntinsert("$step.0",'</pre>');
@@ -8112,26 +8153,26 @@ sub htmlautoconvert{
                         $step++;
                         next;
                 }
-                if ($skip){
+                if ($skip) {
                         $step++;
                         next;
                 };
-                if ($selection =~ /^\/[Ff]/){
+                if ($selection =~ /^\/[Ff]/) {
                         $front = 1;
                         $textwindow->ntdelete("$step.0", "$step.end +1c");
-                        if (($last5[2])&&(!$last5[3])){
+                        if (($last5[2])&&(!$last5[3])) {
                                 $textwindow->ntinsert(($step-2).".end",'</p>') unless ($textwindow->get(($step-2).'.0',($step-2).'.end') =~ /<\/p>/);
                         }
                         next;
                 }
-                if ($front){
-                        if ($selection =~ /^[fF]\//){
+                if ($front) {
+                        if ($selection =~ /^[fF]\//) {
                                 $front = 0;
                                 $textwindow->ntdelete("$step.0", "$step.end +1c");
                                 $step++;
                                 next;
                         }
-                        if ($selection =~ /^<h/){
+                        if ($selection =~ /^<h/) {
                                 push @last5, $selection;
                                 shift @last5 while (scalar(@last5) > 4);
                                 $step++;
@@ -8144,13 +8185,13 @@ sub htmlautoconvert{
                         $step++;
                         next;
                 }
-                if ($lglobal{poetrynumbers}&&($selection =~ s/\s\s(\d+)$//)){
+                if ($lglobal{poetrynumbers}&&($selection =~ s/\s\s(\d+)$//)) {
                         $selection .= '<span class="linenum">'.$1.'</span>';
                         $textwindow->ntdelete("$step.0","$step.end");
                         $textwindow->ntinsert("$step.0",$selection);
                 }
-                if ($poetry){
-                        if ($selection =~ /^\x7f*[pP]\/<?/){
+                if ($poetry) {
+                        if ($selection =~ /^\x7f*[pP]\/<?/) {
                                 $poetry = 0;
                                 $selection = '</div></div>';
                                 $textwindow->ntdelete("$step.0", "$step.0 +2c");
@@ -8161,9 +8202,9 @@ sub htmlautoconvert{
                                 $step++;
                                 next;
                         }
-                        if ($selection =~ /^$/){
+                        if ($selection =~ /^$/) {
                                 $textwindow->ntinsert("$step.0",'</div><div class="stanza">');
-                                while (1){
+                                while (1) {
                                         $step++;
                                         $selection = $textwindow->get("$step.0", "$step.end");
                                         last if ($step ge $ler);
@@ -8172,7 +8213,7 @@ sub htmlautoconvert{
                                 }
                         next;
                         }
-                        if ($selection =~ s/\s{2,}(\d+)\s*$/<span class='linenum'>$1<\/span>/){
+                        if ($selection =~ s/\s{2,}(\d+)\s*$/<span class='linenum'>$1<\/span>/) {
                                 $textwindow->ntdelete("$step.0", "$step.end");
                                 $textwindow->ntinsert("$step.0", $selection);
                         }
@@ -8182,23 +8223,23 @@ sub htmlautoconvert{
                         $indent -= 4;
                         $indent = 0 if ($indent < 0);
                         my ($op, $cl) = (0,0);
-                        while ((my $temp = index $selection, '<i>', $op) > 0){
+                        while ((my $temp = index $selection, '<i>', $op) > 0) {
                                 $op = $temp + 3;
                         }
-                        while ((my $temp = index $selection, '</i>', $cl) > 0){
+                        while ((my $temp = index $selection, '</i>', $cl) > 0) {
                                 $cl = $temp + 4;
                         }
-                        if (!$cl && $ital){
+                        if (!$cl && $ital) {
                                 $textwindow->ntinsert("$step.end",'</i>');
                         }
-                        if (!$op && $ital){
+                        if (!$op && $ital) {
                                 $textwindow->ntinsert("$step.0",'<i>');
                         }
-                        if ($op && $cl && ($cl < $op) && $ital){
+                        if ($op && $cl && ($cl < $op) && $ital) {
                                 $textwindow->ntinsert("$step.0",'<i>');
                                 $textwindow->ntinsert("$step.end",'</i>');
                         }
-                        if ($op && ($cl < $op) && !$ital){
+                        if ($op && ($cl < $op) && !$ital) {
                                 $textwindow->ntinsert("$step.end",'</i>');
                                 $ital = 1;
                         }
@@ -8597,14 +8638,14 @@ sub tonamed{
         my $range_total = @ranges;
         if($range_total == 0){
                 return;
-        }else{
-                while (@ranges){
+        } else {
+                while (@ranges) {
                         my $end = pop @ranges;
                         my $start = pop @ranges;
                         $textwindow->markSet('srchend',$end);
                         my $thisblockstart;
                         named('&(?![\w#])','&amp;',$start,'srchend');
-                        named('&$','&amp;',$start,'srchend');
+				    named('&$','&amp;',$start,'srchend');
                         named('"','&quot;',$start,'srchend');
                         named('(?<=[^-!])--(?=[^>])','&mdash;',$start,'srchend');
                         named('(?<=[^-])--$','&mdash;',$start,'srchend');
@@ -8622,8 +8663,8 @@ sub tonamed{
                                 my $xchar = ord($textwindow->get($thisblockstart));
                                 $textwindow->ntdelete($thisblockstart,"$thisblockstart+1c");
                                 $textwindow->ntinsert($thisblockstart,"&#$xchar;");
-                        }
-                        $textwindow->markUnset('srchend');
+				    }
+				    $textwindow->markUnset('srchend');
                 }
         }
 }
@@ -16797,9 +16838,8 @@ sub natural_sort_freq {         # Fast freqency sort with secondary natural sort
 
 ## New functions -- vls Mon Nov 12 11:25:20 CST 2007
 
-# Convert <tb> to asterisk breaks. Needs a better name. ;-)
-
-sub tb2text_convert
+# Convert <tb> to asterisk breaks.
+sub text_convert_tb
 {
     my $tb = '       *       *       *       *       *';
     $textwindow -> FindAndReplaceAll('-exact', '-nocase', '<tb>', $tb);
