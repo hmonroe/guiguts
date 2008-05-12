@@ -2429,14 +2429,14 @@ sub buildmenu{                  # The main menu building code.
                                 [Button => 'Set Images Directory', -command => \&setpngspath],
                         ]],
                         [Checkbutton => 'Leave Bookmarks Highlighted', -variable => \$bkmkhl, -onvalue => 1, -offvalue => 0],
-                        [Checkbutton => 'Disable Quotes Highlighting', -variable => \$nohighlights, -onvalue => 1, -offvalue => 0],
+                        [Checkbutton => 'Enable Quotes Highlighting', -variable => \$nohighlights, -onvalue => 0, -offvalue => 1],
                         [Checkbutton => 'Keep Pop-ups On Top', -variable => \$stayontop, -onvalue => 1, -offvalue => 0],
-                        [Checkbutton => 'Disable Bell', -variable => \$nobell, -onvalue => 1, -offvalue => 0],
+                        [Checkbutton => 'Enable Bell', -variable => \$nobell, -onvalue => 0, -offvalue => 1],
                         [Checkbutton => 'Auto Set Page Markers On File Open', -variable => \$auto_page_marks, -onvalue => 1, -offvalue => 0],
                         [Checkbutton => 'Leave Space After End-Of-Line Hyphens During Rewrap', -variable => \$rwhyphenspace, -onvalue => 1, -offvalue => 0],
                         [Cascade => 'Toolbar Prefs', -tearoff => 1, -menuitems => 
                                 [
-                                        [Checkbutton => 'Disable Toolbar', -variable => \$notoolbar, -command => [\&toolbar_toggle], -onvalue => 1, -offvalue => 0],
+                                        [Checkbutton => 'Enable Toolbar', -variable => \$notoolbar, -command => [\&toolbar_toggle], -onvalue => 0, -offvalue => 1],
                                         [Radiobutton => 'Toolbar on Top', -variable => \$toolside, -command => sub{$lglobal{toptool}->destroy if $lglobal{toptool}; undef $lglobal{toptool}; toolbar_toggle()}, -value => 'top'],
                                         [Radiobutton => 'Toolbar on Bottom', -variable => \$toolside, -command => sub{$lglobal{toptool}->destroy if $lglobal{toptool}; undef $lglobal{toptool}; toolbar_toggle()}, -value => 'bottom'],
                                         [Radiobutton => 'Toolbar on Left', -variable => \$toolside, -command => sub{$lglobal{toptool}->destroy if $lglobal{toptool}; undef $lglobal{toptool}; toolbar_toggle()}, -value => 'left'],
@@ -2450,7 +2450,7 @@ sub buildmenu{                  # The main menu building code.
                                                                                 }
                         ],
                         [Button => 'Spellcheck Dictionary Select', -command => sub{spelloptions()}],
-                        [Checkbutton => 'Toggle Auto Save', -variable => \$autosave,
+                        [Checkbutton => 'Enable Auto Save', -variable => \$autosave,
                                                                 -command => sub{
                                                                         toggle_autosave();
                                                                         saveset();
@@ -2462,8 +2462,8 @@ sub buildmenu{                  # The main menu building code.
                                                                         set_autosave() if $autosave;
                                                                 }
                         ],
-                        [Checkbutton => 'Toggle Auto Backups', -variable => \$autobackup, -onvalue => 1, -offvalue => 0],
-                        [Checkbutton => 'Toggle Scanno Highlighting', -variable => \$lglobal{scanno_hl}, -onvalue => 1, -offvalue => 0, -command => \&hilitetgl],
+                        [Checkbutton => 'Enable Auto Backups', -variable => \$autobackup, -onvalue => 1, -offvalue => 0],
+                        [Checkbutton => 'Enable Scanno Highlighting', -variable => \$lglobal{scanno_hl}, -onvalue => 1, -offvalue => 0, -command => \&hilitetgl],
                         [Button => 'Set Scanno Highlight Color', -command => sub{
                                                                                         my $thiscolor = setcolor($highlightcolor);
                                                                                         $highlightcolor = $thiscolor if $thiscolor;
