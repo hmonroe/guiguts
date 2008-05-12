@@ -770,7 +770,7 @@ our $autobackup = 0;
 our $autosaveinterval = 5;
 our $spellindexbkmrk = '';
 our %scannoslist;
-our @recentfile = ('*empty*') x 10;
+our @recentfile;
 our @extops = (
                 {'label' => 'W3C Markup Validation Service',    'command' => 'start http://validator.w3.org/'},
                 {'label' => 'W3C CSS Validation Service',               'command' => 'start http://jigsaw.w3.org/css-validator/'},
@@ -1267,13 +1267,11 @@ sub binsave{ # save the .bin file associated with the text file
 
 sub recentupdate{       # Track recently open files for the menu
         my $name = shift;
-        my (@filetemp, $stepvar);
-        push @filetemp, $name;
-        for (0..9){
-                $recentfile[$_] =~ s/\\'/'/g;
-                push @filetemp, $recentfile[$_]||'*empty*' unless ($recentfile[$_] eq $name);
-        }
-        @recentfile = @filetemp;
+        # remove $name or any *empty* values from the list
+        @recentfile = grep(!/(?: \Q$name\E | \Q*empty*\E )/x, @recentfile);
+        # place $name at the top
+        unshift @recentfile, $name;
+        # limit the list to 10 entries
         pop @recentfile while ($#recentfile > 10);
         rebuildmenu();
 }
@@ -2183,10 +2181,10 @@ sub buildmenu{                  # The main menu building code.
                     [Button => '~Open', -command => [\&fileopen]],
                     '',
                     map (
-                        [Button  => "$recentfile[$_]"||'*empty*',
+                        [Button  => "$recentfile[$_]",
                          -command => [\&openfile, $recentfile[$_]],
                         ],
-                        (0..9)
+                        (0..scalar(@recentfile)-1)
                     ),
                     '',
                     [Button => '~Save', -command => \&savefile, -accelerator => 'Ctrl+s'],
