@@ -691,7 +691,6 @@ use Tk::Pane;
 use Tk::DropSite;
 use Tk::PNG;
 use Tk::JPEG;
-use Tk::ToolBar;
 use Tk::Font;
 use Tk::ProgressBar;
 use IPC::Open2;
@@ -796,6 +795,13 @@ if (eval {require Text::LevenshteinXS }) {
 }
 else {
         print "Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
+}
+
+# load Tk::ToolBar if it is installed
+if (eval {require Tk::ToolBar; 1;}) {
+        $lglobal{ToolBar} = 1;
+} else {
+        $lglobal{ToolBar} = 0;
 }
 
 my $DEBUG = 0;
@@ -1609,6 +1615,17 @@ sub toolbar_toggle{     # Set up / remove the tool bar
                 $lglobal{toptool}->destroy;
                 undef $lglobal{toptool};
         }elsif (!$notoolbar&&!$lglobal{toptool}){
+                # if Tk::ToolBar isn't available, show a message and disable the toolbar
+                if(!$lglobal{ToolBar}) {
+                        my $dbox = $top->Dialog(-text => 'Tk::ToolBar package not found, unable to create Toolbar. The toolbar will be disabled.',
+                                -title => 'Unable to create Toolbar.', -buttons => ['OK']);
+                        $dbox->Show;
+
+                        # disable toolbar in settings
+                        $notoolbar = 1;
+                        saveset();
+                        return;
+                }
                 $lglobal{toptool} = $top->ToolBar(-side => $toolside, -close => '30');
                 $lglobal{toolfont} = $top->Font(-family => 'Times', -slant => 'italic', -weight => 'bold', -size => 9);
                 $lglobal{toptool}->separator;
@@ -16845,3 +16862,4 @@ sub text_convert_tb
     $textwindow -> FindAndReplaceAll('-exact', '-nocase', '<tb>', $tb);
 }
 
+# vim: sw=8 ts=8 expandtab
