@@ -696,7 +696,6 @@ use Tk::ProgressBar;
 use IPC::Open2;
 use LWP::UserAgent;
 use Encode;
-use Image::Size qw/imgsize html_imgsize/;
 use File::Basename;
 use HTML::TokeParser;
 use charnames();
@@ -802,6 +801,13 @@ if (eval {require Tk::ToolBar; 1;}) {
         $lglobal{ToolBar} = 1;
 } else {
         $lglobal{ToolBar} = 0;
+}
+
+# load Image::Size if it is installed
+if (eval {require Image::Size; 1;}) {
+        $lglobal{ImageSize} = 1;
+} else {
+        $lglobal{ImageSize} = 0;
 }
 
 my $DEBUG = 0;
@@ -7501,10 +7507,11 @@ sub htmlimage{
                         -width => 10,
                         -validate => 'all',
                         -vcmd => sub{
+                                return 1 if(!$lglobal{ImageSize});
                                 return 1 unless $lglobal{htmlimgar};
                                 return 1 unless ($_[0] && $_[2]);
                                 return 0 unless (defined $_[1] && $_[1] =~ /\d/);
-                                my ($sizex,$sizey) = imgsize($lglobal{imgname}->get);
+                                my ($sizex,$sizey) = Image::Size::imgsize($lglobal{imgname}->get);
                                 $lglobal{heightent}->delete(0,'end');
                                 $lglobal{heightent}->insert('end', (int($sizey*($_[0]/$sizex))));
                                 return 1;
@@ -7515,10 +7522,11 @@ sub htmlimage{
                         -width => 10,
                         -validate => 'all',
                         -vcmd => sub{
+                                return 1 if(!$lglobal{ImageSize});
                                 return 1 unless $lglobal{htmlimgar};
                                 return 1 unless ($_[0] && $_[2]);
                                 return 0 unless (defined $_[1] && $_[1] =~ /\d/);
-                                my ($sizex,$sizey) = imgsize($lglobal{imgname}->get);
+                                my ($sizex,$sizey) = Image::Size::imgsize($lglobal{imgname}->get);
                                 $lglobal{widthent}->delete(0,'end');
                                 $lglobal{widthent}->insert('end', (int($sizex*($_[0]/$sizey))));
                                 return 1;
@@ -7639,11 +7647,17 @@ sub tnbrowse{
         my $name = $lglobal{htmlimpop}->getOpenFile(-filetypes => $types, -title => 'File Load', -initialdir => $globalimagepath);
         return unless ($name);
         my $xythumb = 200;
-        my ($sizex,$sizey) = imgsize($name);
-        $lglobal{widthent}->delete(0,'end');
-        $lglobal{heightent}->delete(0,'end');
-        $lglobal{widthent}->insert('end',$sizex);
-        $lglobal{heightent}->insert('end',$sizey);
+
+        if($lglobal{ImageSize}) {
+                my ($sizex,$sizey) = Image::Size::imgsize($name);
+                $lglobal{widthent}->delete(0,'end');
+                $lglobal{heightent}->delete(0,'end');
+                $lglobal{widthent}->insert('end',$sizex);
+                $lglobal{heightent}->insert('end',$sizey);
+                $lglobal{htmlimggeom}->configure(-text => "Actual image size: $sizex x $sizey pixels");
+        } else {
+                $lglobal{htmlimggeom}->configure(-text => "Actual image size: unknown");
+        }
         $lglobal{htmlorig}->blank;
         $lglobal{htmlthumb}->blank;
         $lglobal{imgname}->delete('0','end');
@@ -7668,7 +7682,6 @@ sub tnbrowse{
                 -text => 'Thumbnail',
                 -justify => 'center',
         );
-        $lglobal{htmlimggeom}->configure(-text => "Actual image size: $sizex x $sizey pixels");
 }
 
 sub linkcheck{
