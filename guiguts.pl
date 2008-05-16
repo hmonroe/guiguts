@@ -7967,7 +7967,7 @@ sub htmlautoconvert
     my ($blkopen,$blkclose);
     my $headertext;
     if ($lglobal{cssblockmarkup}) {
-	$blkopen = '<div class="blockquote"><p>'; # DP:vls changed blockquot to blockquote because it bugs me. 2008-04-22
+	$blkopen = '<div class="blockquot"><p>'; 
 	$blkclose = '</p></div>';
     } else {
 	$blkopen = '<blockquote><p>';
