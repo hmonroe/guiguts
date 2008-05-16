@@ -7997,13 +7997,13 @@ htmlbackup();
     working("Converting Windows Codepage 1252\ncharacters to Unicode");
     cp1252toUni();
 
-# DP:vls 2008-04-22
-# FIXME: Lot's of nasty warnings.
 
-sub parseheader 
-{ 
+# FIXME: vls -- Lot's of nasty warnings.
+
+#sub parseheader 
+
     working('Parsing Header');
-    $headertext;
+#    $headertext;
     $selection = $textwindow->get('1.0','1.end');
     if ($selection =~ /DOCTYPE/) {
 	$step = 1;
@@ -8024,11 +8024,13 @@ sub parseheader
 	}
 	close $infile;
     }
-}
-     parseheader(); # DP:vls -- Seems okay so far but lots of nasty
-		    # warnings. Oh, well. Make it work, fix the crud
-		    # later.
-# DP:vls just a stub for now: sub html_set_title{}
+ 
+#parseheader(); # FIXME:vls -- Seems okay so far but lots of nasty
+                   # warnings. Oh, well. Make it work, fix the crud later. Addendum --
+                   # Take this out for upcoming .66 release so we don't freak out end user with 
+                   # scary warnings.
+
+# FIXMe: vls just a stub for now: sub html_set_title{}
 # Setting <title> tag in <header>
     $step = 0;
     while (1) {
