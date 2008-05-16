@@ -1249,6 +1249,7 @@ sub binsave{ # save the .bin file associated with the text file
                 my ($page, $prfr);
                 delete $proofers{''};
                 foreach $page (sort keys %proofers) {
+                    no warnings 'uninitialized';
                         for my $round (1..$lglobal{numrounds}){
                                 if (defined $proofers{$page}->[$round]){
                                         print $bin '$proofers{\''.$page.'\'}['.$round.'] = \''.$proofers{$page}->[$round].'\';'."\n";
@@ -7997,9 +7998,6 @@ htmlbackup();
     working("Converting Windows Codepage 1252\ncharacters to Unicode");
     cp1252toUni();
 
-
-# FIXME: vls -- Lot's of nasty warnings.
-
 #sub parseheader 
 
     working('Parsing Header');
@@ -9794,7 +9792,7 @@ sub tidypop_up{
                         @tidylines = ();
                         }
                 );
-                $lglobal{tidypop}->Icon(-image => $icon);
+                $lglobal{tidypop}->Icon(-image => $icon);
                 BindMouseWheel($lglobal{tidylistbox});
                 $lglobal{tidylistbox}->eventAdd('<<view>>' => '<Button-1>','<Return>');
                 $lglobal{tidylistbox}->bind('<<view>>', sub {
