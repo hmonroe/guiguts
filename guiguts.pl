@@ -2,16 +2,16 @@
 
 # Guiguts.pl text editing script
 # $Id$
-  
-my $currentver = '.65';
+
+my $currentver = '.66';
 
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 require 5.008;
 use strict;
-use warnings;
-#use diagnostics;
+#use warnings;
+use diagnostics;
 use Tk;
 #use Data::Dumper;
 
@@ -41,7 +41,7 @@ sub Load{ # Custom File load routine; will automatically handle Unicode and line
                 $w->EmptyDocument;
                 my $count = 1;
                 my $progress;
-                my $line = <$fh>;  
+                my $line = <$fh>;
 		utf8::decode($line);
                 $line =~ s/^\x{FEFF}?//;
                 $line =~ s/\cM\cJ|\cM|\cJ/\n/g;
@@ -61,7 +61,7 @@ sub Load{ # Custom File load routine; will automatically handle Unicode and line
                 $w->markSet('insert' => '1.0');
                 $w->FileName($filename);
                 $w->MainWindow->Unbusy;
-        }else{
+        } else {
                 $w->BackTrace("Cannot open $filename:$!");
         }
 }
@@ -238,7 +238,7 @@ sub SelectTo{ # Modified selection routine to deal with block selections
                 if ($ecol < $scol){
                         ($scol, $ecol) = ($ecol, $scol);
                 }
-                if ("$erow.$ecol" eq $w->index("$erow.$ecol lineend")){ 
+                if ("$erow.$ecol" eq $w->index("$erow.$ecol lineend")){
                         for ($srow..$erow){
                                 $w->tagAdd('sel', "$_.$scol", "$_.$ecol lineend");
                         }
@@ -441,7 +441,8 @@ sub AutoScan{  # Modified to generate autoscroll events and accellerated scrolli
 # I cut out some unnecessary portions to reduce size and processing time.
 #
 ###############################################################################
-{package Tk::LineNumberText;
+{
+package Tk::LineNumberText;
 
 use Tk;
 use Tk::widgets qw(ROText);
@@ -677,99 +678,104 @@ sub _lineupdate{
 
 package main;
 
-use Tk::TextEdit;
-use Tk::Checkbutton;
-use Tk::DialogBox;
-use Tk::Dialog;
+use Tk::Balloon;
 use Tk::BrowseEntry;
-use Tk::Radiobutton;
+use Tk::Checkbutton;
+use Tk::Dialog;
+use Tk::DialogBox;
+use Tk::DropSite;
+use Tk::Font;
+use Tk::JPEG;
 use Tk::LabFrame;
 use Tk::Listbox;
-use Tk::Photo;
-use Tk::Balloon;
-use Tk::Pane;
-use Tk::DropSite;
 use Tk::PNG;
-use Tk::JPEG;
-use Tk::Font;
+use Tk::Pane;
+use Tk::Photo;
 use Tk::ProgressBar;
-use IPC::Open2;
-use LWP::UserAgent;
+use Tk::Radiobutton;
+use Tk::TextEdit;
+
+use Cwd;
 use Encode;
 use File::Basename;
-use HTML::TokeParser;
-use charnames();
 use File::Temp qw/tempfile/;
-use Cwd;
+use HTML::TokeParser;
+use IPC::Open2;
+use LWP::UserAgent;
+use charnames();
 
 $SIG{ALRM} = 'IGNORE';  # ignore any watchdog timer alarms. Subroutines that take a long time to complete can trip it
 $SIG{INT} = sub {myexit()};
 
-our @gcopt = (0, 0, 0, 0, 0, 0, 1, 0, 1);
-our @sopt = (1, 0, 0, 0);
-our $jeebiesmode = 'p';
-our $gutpath = '';
-our $jeebiespath ='';
-our $geometry;
-our $geometry2 = '';
-our $geometry3 = '';
-our $stayontop = 0;
-our $searchstartindex = '1.0';
-our $suspectindex;
-our $searchendindex = 'end';
-our $operationinterrupt;
-our %gc;
-our %jeeb;
-our $blockwrap;
-our @pageindex;
-our $rmargin = 72;
-our $lmargin = 1;
+our $activecolor = '#f2f818';
+our $auto_page_marks = 1;
+our $autobackup = 0;
+our $autosave = 0;
+our $autosaveinterval = 5;
+our $bkmkhl = '0';
 our $blocklmargin = 5;
 our $blockrmargin = 72;
+our $blockwrap;
 our $defaultindent = 0;
-our $globallastpath = '';
-our $globalimagepath ='';
-our $globalspellpath = '';
-our $globalspelldictopt = '';
+our $fontname = 'Courier New';
+our $fontsize = 10;
+our $fontweight = '';
+our $geometry2 = '';
+our $geometry3 = '';
+our $geometry;
 our $globalaspellmode = 'normal';
-our $globalviewerpath = '';
 our $globalbrowserstart = 'start';
+our $globalimagepath ='';
+our $globallastpath = '';
+our $globalspelldictopt = '';
+our $globalspellpath = '';
+our $globalviewerpath = '';
+our $gutpath = '';
+our $highlightcolor = '#a08dfc';
+our $history_size = 20;
+our $jeebiesmode = 'p';
+our $jeebiespath ='';
+our $lmargin = 1;
+our $markupthreshold = 4;
+our $nobell = 0;
+our $nohighlights = 0;
+our $notoolbar = 0;
+our $operationinterrupt;
 our $pngspath = '';
-our $scannospath = '';
+our $rmargin = 72;
+our $rwhyphenspace = 0;
 our $scannoslist = '';
 our $scannoslistpath = '';
-our $singleterm = 1;
-our %pagenumbers;
-our $fontname = 'Courier New';
-our $utffontname = 'Courier New';
-our $fontweight = '';
-our $fontsize = 10;
-our $utffontsize = 14;
-our %projectdict;
-our @operations;
-our %reghints = ();
-our %proofers;
-our $nohighlights = 0;
-our $nobell = 0;
-our $activecolor = '#f2f818';
-our $highlightcolor = '#a08dfc';
-our $bkmkhl = '0';
-our @bookmarks = (0, 0, 0, 0, 0, 0);
-our $auto_page_marks = 1;
-our $notoolbar = 0;
-our $toolside = 'bottom';
-our @mygcview;
-our $vislnnm = 0;
-our $markupthreshold = 4;
-our $tidycommand ='';
-our $autosave = 0;
-our $rwhyphenspace = 0;
+our $scannospath = '';
 our $scrollupdatespd = 40;
-our $autobackup = 0;
-our $autosaveinterval = 5;
+our $searchendindex = 'end';
+our $searchstartindex = '1.0';
+our $singleterm = 1;
 our $spellindexbkmrk = '';
+our $stayontop = 0;
+our $suspectindex;
+our $tidycommand ='';
+our $toolside = 'bottom';
+our $utffontname = 'Courier New';
+our $utffontsize = 14;
+our $vislnnm = 0;
+our %gc;
+our %jeeb;
+our %pagenumbers;
+our %projectdict;
+our %proofers;
+our %reghints = ();
 our %scannoslist;
+
+our @bookmarks = (0, 0, 0, 0, 0, 0);
+our @gcopt = (0, 0, 0, 0, 0, 0, 1, 0, 1);
+our @mygcview;
+our @operations;
+our @pageindex;
 our @recentfile;
+our @replace_history;
+our @search_history;
+our @sopt = (1, 0, 0, 0);
 our @extops = (
                 {'label' => 'W3C Markup Validation Service',    'command' => 'start http://validator.w3.org/'},
                 {'label' => 'W3C CSS Validation Service',               'command' => 'start http://jigsaw.w3.org/css-validator/'},
@@ -782,17 +788,12 @@ our @extops = (
                 {'label' => '',                                 'command' => ''},
                 {'label' => '',                                 'command' => ''},
 );
-our @search_history;
-our @replace_history;
-our $history_size = 20;
-
 
 my %lglobal; #All local global variables contained in one hash.
 
 if (eval {require Text::LevenshteinXS }) {
-        $lglobal{LevenshteinXS} = 1;
-}
-else {
+    $lglobal{LevenshteinXS} = 1;
+} else {
         print "Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
 }
 
@@ -816,12 +817,13 @@ my $top = MainWindow->new; # Set up main window
 
 initialize(); # Initialize a bunch of vars that need it.
 
+# FIXME: vls -- comment out and see what happens
 #############################################################
 # temporary change-over values until upgrades have been made.
-$fontweight = '' if $fontweight eq 'Medium';
-$fontweight = 'bold' if $fontweight eq 'Bold';
-$fontsize = $fontsize/10 if $fontsize > 100;
-$utffontsize = $utffontsize/10 if $utffontsize > 100;
+# $fontweight = '' if $fontweight eq 'Medium';
+# $fontweight = 'bold' if $fontweight eq 'Bold';
+# $fontsize = $fontsize/10 if $fontsize > 100;
+# $utffontsize = $utffontsize/10 if $utffontsize > 100;
 #############################################################
 
 $top->minsize(440, 90);
@@ -983,7 +985,7 @@ sub fileopen{           # Find a text file to open
         }
 }
 
-sub openfile{           # and open it
+sub openfile { # and open it
         my $name = shift;
         return if ($name eq '*empty*');
         return if (confirmempty() =~ /cancel/i);
@@ -1108,7 +1110,7 @@ sub prep_export {
                         $file = "\x{FEFF}".$file;
                         utf8::encode($file);
                 }
-                print $fh $file; # vls 2008-04-28 -- Removed spurious comment
+                print $fh $file;
         }
         $top->Unbusy(-recurse => 1);
 }
@@ -1186,90 +1188,90 @@ sub savefile{ # Determine which save routine to use and then use it
         update_indicators();
 }
 
-sub binsave{ # save the .bin file associated with the text file
-        push @operations, (localtime().' - File Saved');
-        oppopupdate() if $lglobal{oppop};
-        my $mark = '1.0';
-        while ($textwindow->markPrevious($mark)){$mark = $textwindow->markPrevious($mark)};
-        my $markindex;
-        while ($mark){
-                if($mark =~ /Pg(\S+)/){
-                        $markindex = $textwindow->index($mark);
-                        $pagenumbers{$mark}{offset} = $markindex;
-                        $mark = $textwindow->markNext($mark);
-                }else{
-                        $mark = $textwindow->markNext($mark)if $mark;
-                        next;
-                }
-        }
-        return if ($lglobal{global_filename} =~ /No File Loaded/);
-        my $binname = "$lglobal{global_filename}.bin";
-        if ($textwindow->markExists('spellbkmk')){
-                $spellindexbkmrk = $textwindow->index('spellbkmk')
+sub binsave {         # save the .bin file associated with the text file
+    push @operations, (localtime().' - File Saved');
+    oppopupdate() if $lglobal{oppop};
+    my $mark = '1.0';
+    while ($textwindow->markPrevious($mark)){$mark = $textwindow->markPrevious($mark)};
+    my $markindex;
+    while ($mark){
+        if($mark =~ /Pg(\S+)/){
+            $markindex = $textwindow->index($mark);
+            $pagenumbers{$mark}{offset} = $markindex;
+            $mark = $textwindow->markNext($mark);
         }else{
-                $spellindexbkmrk = '';
+            $mark = $textwindow->markNext($mark)if $mark;
+            next;
         }
-        my $bak = "$binname.bak";
-        if (-e $bak){
-                my $perms = (stat($bak))[2] & 07777;
-                unless ($perms & 0300){
-                        $perms = $perms | 0300;
-                        chmod $perms, $bak or warn "Can not back up .bin file: $!\n";
-                }
-                unlink $bak;
+    }
+    return if ($lglobal{global_filename} =~ /No File Loaded/);
+    my $binname = "$lglobal{global_filename}.bin";
+    if ($textwindow->markExists('spellbkmk')){
+        $spellindexbkmrk = $textwindow->index('spellbkmk')
+    }else{
+        $spellindexbkmrk = '';
+}
+    my $bak = "$binname.bak";
+    if (-e $bak){
+        my $perms = (stat($bak))[2] & 07777;
+        unless ($perms & 0300){
+            $perms = $perms | 0300;
+            chmod $perms, $bak or warn "Can not back up .bin file: $!\n";
         }
-        if (-e $binname){
-                my $perms = (stat($binname))[2] & 07777;
-                unless ($perms & 0300){
-                        $perms = $perms | 0300;
-                        chmod $perms, $binname or warn "Can not save .bin file: $!\n" and return;
-                }
-                rename $binname, $bak or warn "Can not back up .bin file: $!\n";;
+        unlink $bak;
+    }
+    if (-e $binname){
+        my $perms = (stat($binname))[2] & 07777;
+        unless ($perms & 0300){
+            $perms = $perms | 0300;
+            chmod $perms, $binname or warn "Can not save .bin file: $!\n" and return;
         }
-        if (open my $bin, '>', $binname){
-                print $bin "\%pagenumbers = (\n";
-                for my $page( sort {$a cmp $b} keys %pagenumbers){
-                        no warnings 'uninitialized';
-                        print $bin " '$page' => {";
-                        print $bin "'offset' => '$pagenumbers{$page}{offset}', ";
-                        print $bin "'label' => '$pagenumbers{$page}{label}', ";
-                        print $bin "'style' => '$pagenumbers{$page}{style}', ";
-                        print $bin "'action' => '$pagenumbers{$page}{action}', ";
-                        print $bin "'base' => '$pagenumbers{$page}{base}'},\n";
-                }
-                print $bin ");\n\n";
+        rename $binname, $bak or warn "Can not back up .bin file: $!\n";;
+    }
+    if (open my $bin, '>', $binname){
+        print $bin "\%pagenumbers = (\n";
+        for my $page( sort {$a cmp $b} keys %pagenumbers){
+            no warnings 'uninitialized';
+            print $bin " '$page' => {";
+            print $bin "'offset' => '$pagenumbers{$page}{offset}', ";
+            print $bin "'label' => '$pagenumbers{$page}{label}', ";
+            print $bin "'style' => '$pagenumbers{$page}{style}', ";
+            print $bin "'action' => '$pagenumbers{$page}{action}', ";
+            print $bin "'base' => '$pagenumbers{$page}{base}'},\n";
+        }
+        print $bin ");\n\n";
 
-                print $bin '$bookmarks[0] = \''.$textwindow->index('insert')."';\n";
-                for (1..5){
-                        print $bin '$bookmarks['.$_.'] = \''.$textwindow->index('bkmk'.$_)."';\n" if $bookmarks[$_];
-                }
-                if ($pngspath){
-                        print $bin "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n" ;
-                }
-                my ($page, $prfr);
-                delete $proofers{''};
-                foreach $page (sort keys %proofers) {
-                    no warnings 'uninitialized';
-                        for my $round (1..$lglobal{numrounds}){
-                                if (defined $proofers{$page}->[$round]){
-                                        print $bin '$proofers{\''.$page.'\'}['.$round.'] = \''.$proofers{$page}->[$round].'\';'."\n";
-                                }
-                        }
-                }
-                print $bin "\n\n";
-                print $bin "\@operations = (\n";
-                for $mark(@operations){
-                        $mark = escape_problems($mark);
-                        print $bin "'$mark',\n";
-                }
-                print $bin ");\n\n";
-                print $bin "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
-                print $bin "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
-                print $bin '1;';
-                close $bin;
-        }else{
-                $top->BackTrace("Cannot open $binname:$!");
+        print $bin '$bookmarks[0] = \''.$textwindow->index('insert')."';\n";
+        for (1..5){
+            print $bin '$bookmarks['.$_.'] = \''.$textwindow->index('bkmk'.$_)."';\n" if $bookmarks[$_];
         }
+        if ($pngspath){
+            print $bin "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n" ;
+        }
+        my ($page, $prfr);
+        delete $proofers{''};
+        foreach $page (sort keys %proofers) {
+            no warnings 'uninitialized';
+            for my $round (1..$lglobal{numrounds}){
+                if (defined $proofers{$page}->[$round]){
+                    print $bin '$proofers{\''.$page.'\'}['.$round.'] = \''.$proofers{$page}->[$round].'\';'."\n";
+                }
+            }
+        }
+        print $bin "\n\n";
+        print $bin "\@operations = (\n";
+        for $mark(@operations){
+            $mark = escape_problems($mark);
+            print $bin "'$mark',\n";
+        }
+        print $bin ");\n\n";
+        print $bin "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
+        print $bin "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
+        print $bin '1;';
+        close $bin;
+    }else{
+        $top->BackTrace("Cannot open $binname:$!");
+    }
 }
 
 sub recentupdate{       # Track recently open files for the menu
@@ -1506,7 +1508,7 @@ sub update_indicators{ # Routine to update the status bar when somthing has chan
                 $mark = $textwindow->markPrevious($markindex);
                 while ($mark){
                         if($mark =~ /Pg(\S+)/){
-                                $pnum = $1;                               
+                                $pnum = $1;
                                 unless (defined($lglobal{page_num_label})){
                                         $lglobal{page_num_label} = $counter_frame->Label(
                                                 -text => "Img: $pnum",
@@ -1749,7 +1751,7 @@ sub showversion{                # Display version information
         }
         my $dialog = $top->Dialog(-title => 'Versions',
                 -popover => $top,
-                -text => 
+                -text =>
                         "Currently Running :\n".
                         "$0\nVersion : $currentver\n".
                         "Platform : $os".
@@ -1763,33 +1765,36 @@ sub showversion{                # Display version information
         $dialog->Show;
 }
 
-sub cmdinterp{          # Command parsing for External command routine
-        my $command = shift;
-        my ($fname, $pagenum, $number, $pname);
-        if ($command =~ m/\$f|\$d|\$e/){
-                return ' ' if ($lglobal{global_filename} =~ m/No File Loaded/);
-                $fname = $lglobal{global_filename};
-                $fname = Win32::GetShortPathName($lglobal{global_filename}) if OS_Win;
-                my ($f, $d, $e) = fileparse($fname, qr{\.[^\.]*$});
-                $command =~ s/\$f/$f/ if $f;
-                $command =~ s/\$d/$d/ if $d;
-                $command =~ s/\$e/$e/ if $e;
-        }
-        if ($command =~ m/\$p/){
-                return unless $lglobal{page_num_label};
-                $number = $lglobal{page_num_label}->cget(-text);
-                $number =~ s/.+?(\d+).*/$1/;
-                $pagenum = $number;
-                return ' ' unless $pagenum;
-                $command =~ s/\$p/$number/;
-        }
-        if ($command =~ m/\$i/){
-                return ' ' unless $pngspath;
-                $pname = $pngspath;
-                $pname = Win32::GetShortPathName($pngspath) if OS_Win;
-                $command =~ s/\$i/$pngspath/;
-        }
-        return $command;
+# Command parsing for External command routine
+sub cmdinterp {
+    my $command = shift;
+    my ($fname, $pagenum, $number, $pname);
+    if ($command =~ m/\$f|\$d|\$e/){
+        return ' ' if ($lglobal{global_filename} =~ m/No File Loaded/);
+        $fname = $lglobal{global_filename};
+#DEBUG: vls -- original                $fname = Win32::GetShortPathName($lglobal{global_filename}) if OS_Win;
+        $fname = dos_path($lglobal{global_filename}) if OS_Win;
+        my ($f, $d, $e) = fileparse($fname, qr{\.[^\.]*$});
+        $command =~ s/\$f/$f/ if $f;
+        $command =~ s/\$d/$d/ if $d;
+        $command =~ s/\$e/$e/ if $e;
+    }
+    if ($command =~ m/\$p/){
+        return unless $lglobal{page_num_label};
+        $number = $lglobal{page_num_label}->cget(-text);
+        $number =~ s/.+?(\d+).*/$1/;
+        $pagenum = $number;
+        return ' ' unless $pagenum;
+        $command =~ s/\$p/$number/;
+    }
+    if ($command =~ m/\$i/){
+        return ' ' unless $pngspath;
+        $pname = $pngspath;
+# DEBUG: vls -- original                $pname = Win32::GetShortPathName($pngspath) if OS_Win;
+        $pname = dos_path($pngspath) if OS_Win;
+        $command =~ s/\$i/$pngspath/;
+    }
+    return $command;
 }
 
 sub setcolor{   # Color picking routine
@@ -1872,7 +1877,7 @@ sub externalpopup{      # Set up the external commands menu
         }else{
                 $lglobal{xtpop} = $top->Toplevel(-title => 'External programs',);
                 my $f0 = $lglobal{xtpop}->Frame->pack(-side => 'top', -anchor => 'n');
-                $f0->Label(-text => 
+                $f0->Label(-text =>
                 "You can set up external programs to be called from within guiguts here. Each line of entry boxes represent\n".
                 "a menu entry. The left box is the label that will show up under the menu. The right box is the calling parameters.\n".
                 "Format the calling parameters as they would be when entered into the \"Run\" entry under the Start button\n".
@@ -1991,64 +1996,64 @@ sub tglprfbar{  # Make toolbar visible if invisible and vice versa
         }
 }
 
-sub openpng{            #Routine to handle image viewer file requests
-        my ($pagenum, $number);
-        $number = $lglobal{page_num_label}->cget(-text) if defined $lglobal{page_num_label};
-        $number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
-        $pagenum = $number || '001';
-        viewerpath() unless $globalviewerpath;
-        my $dosfile;
-        unless ($pngspath){
-                if (OS_Win){
-                        $pngspath = "${globallastpath}pngs\\";
-                }else{
-                        $pngspath = "${globallastpath}pngs/";
-                }
-                setpngspath() unless (-e "$pngspath$pagenum.png");
+# Routine to handle image viewer file requests
+sub openpng {
+    my ($pagenum, $number);
+    $number = $lglobal{page_num_label}->cget(-text) if defined $lglobal{page_num_label};
+    $number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
+    $pagenum = $number || '001';
+    viewerpath() unless $globalviewerpath;
+    my $dosfile;
+    unless ($pngspath) {
+        if (OS_Win) {
+            $pngspath = "${globallastpath}pngs\\";
+        } else {
+            $pngspath = "${globallastpath}pngs/";
         }
-        if ($pngspath){
-                if ($globalviewerpath){
-                        my $dospath;
-                        $dospath = $globalviewerpath;
-                        $dosfile = "$pngspath$pagenum.png";
-                        unless (-e $dosfile){
-                                $dosfile = "$pngspath$pagenum.jpg";
-                                unless (-e $dosfile){
-                                        my $response = $top->messageBox(
-                                                -icon => 'error',
-                                                -message => "File $pngspath$pagenum.(png|jpg) not found.\nDo you need to change the path?",
-                                                -title => 'Problem with file',
-                                                -type => 'YesNo',
-                                        );
-                                        setpngspath() if $response =~ /yes/i;
-                                        return;
-                                }
-                        }
-                        if (OS_Win) {
-                                $dospath = Win32::GetShortPathName($dospath);
-                                $dosfile = Win32::GetShortPathName($dosfile);
-                        };
-                        runner($dospath, $dosfile);
+        setpngspath() unless (-e "$pngspath$pagenum.png");
+    }
+    if ($pngspath) {
+        if ($globalviewerpath) {
+            my $dospath;
+            $dospath = $globalviewerpath;
+            $dosfile = "$pngspath$pagenum.png";
+            unless (-e $dosfile) {
+                $dosfile = "$pngspath$pagenum.jpg";
+                unless (-e $dosfile) {
+                    my $response = $top->messageBox(-icon => 'error',
+                                                    -message => "File $pngspath$pagenum.(png|jpg) not found.\nDo you need to change the path?",
+                                                    -title => 'Problem with file',
+                                                    -type => 'YesNo',
+                        );
+                    setpngspath() if $response =~ /yes/i;
+                    return;
                 }
-        }else{
-                setpngspath();
+            }
+            if (OS_Win) {
+                $dospath = dos_path($dospath);
+                $dosfile = dos_path($dosfile);
+            };
+            runner($dospath, $dosfile);
         }
+    } else {
+        setpngspath();
+    }
 }
 
-sub setpngspath{        # Select directory where image files are located
-
-                my $path = $textwindow->chooseDirectory(
-                        -title => 'Choose the image file directory.',
-                        -initialdir => "$globallastpath"."pngs",
-                );
-                return unless defined $path and -e $path;
-                $path .= '/';
-                $path = os_normal($path);
-                $pngspath = $path;
-                openpng();
+# Select directory where image files are located
+sub setpngspath {
+    my $path = $textwindow->chooseDirectory(-title => 'Choose the image file directory.',
+                                            -initialdir => "$globallastpath"."pngs",
+        );
+    return unless defined $path and -e $path;
+    $path .= '/';
+    $path = os_normal($path);
+    $pngspath = $path;
+    openpng();
 }
 
-sub scannosfile{                # Routine to find highlight word list
+# Routine to find highlight word list
+sub scannosfile {
         $scannoslistpath = os_normal($scannoslistpath);
         $scannoslist = $top->getOpenFile( -title => 'Word file?', -initialdir => $scannoslistpath);
         if ($scannoslist){
@@ -2160,7 +2165,7 @@ sub about_pop_up{               # A litle information about the program
         }else{
                 $lglobal{aboutpop} = $top->Toplevel;
                 $lglobal{aboutpop}->title('About');
-                $lglobal{aboutpop}->Label(-text => 
+                $lglobal{aboutpop}->Label(-text =>
                 "Guiguts.pl post processing toolkit / interface to gutcheck.\n\n".
                 "Provides easy to use interface to gutcheck and an array of \n".
                 "other useful postprocessing functions.\n\n".
@@ -2183,7 +2188,7 @@ sub about_pop_up{               # A litle information about the program
 }
 
 sub buildmenu{                  # The main menu building code.
-    $menu->Cascade(-label => '~File', -tearoff => 0, -menuitems => 
+    $menu->Cascade(-label => '~File', -tearoff => 0, -menuitems =>
                    [
                     [Button => '~Open', -command => [\&fileopen]],
                     '',
@@ -2247,7 +2252,7 @@ sub buildmenu{                  # The main menu building code.
                     '',
                     [Button => '~Exit', -command => \&myexit],
                    ]);
-    $menu->Cascade( -label => '~Edit', -tearoff => 1, -menuitems => 
+    $menu->Cascade( -label => '~Edit', -tearoff => 1, -menuitems =>
                     [
                      [Button => 'Undo', -command => sub{$textwindow->undo}, -accelerator => 'Ctrl+z'],
                      [Button => 'Redo', -command => sub{$textwindow->redo}, -accelerator => 'Ctrl+y'], '',
@@ -2286,7 +2291,7 @@ sub buildmenu{                  # The main menu building code.
                                                                         $textwindow->tagRemove('quotemark','1.0','end')},
                          -accelerator => 'Ctrl+0'],
                    ]);
-    $menu->Cascade(qw/-label ~Bookmarks -tearoff 1 -menuitems/ => 
+    $menu->Cascade(qw/-label ~Bookmarks -tearoff 1 -menuitems/ =>
                    [
                     map (
                         [Button  => "Set Bookmark $_",
@@ -2342,7 +2347,7 @@ sub buildmenu{                  # The main menu building code.
                          }
                         ],
                    ]);
-    $menu->Cascade(-label => 'Fi~xup', -tearoff => 1, -menuitems => 
+    $menu->Cascade(-label => 'Fi~xup', -tearoff => 1, -menuitems =>
                    [
                     [Button => 'Run ~Word Frequency Routine', -command => \&wordcount],
                     '',
@@ -2364,18 +2369,18 @@ sub buildmenu{                  # The main menu building code.
                     '',
                     [Button => 'ASCII Table Special Effects', -command => \&tablefx],
                     '',
-                    [Button => 'Clean Up Rewrap ~Markers', 
+                    [Button => 'Clean Up Rewrap ~Markers',
                      -command => sub
                                  {
                                      $textwindow->addGlobStart; cleanup(); $textwindow->addGlobEnd;
                                  }],
                     '',
-                    [Button => '~Add a Thought Break', 
+                    [Button => '~Add a Thought Break',
                      -command => sub
                      {
                          $textwindow->addGlobStart; thoughtbreak(); $textwindow->addGlobEnd;
                      }],
-                    [Button => 'Convert <tb> to asterisk break', 
+                    [Button => 'Convert <tb> to asterisk break',
                      -command => sub
                      {
                          $textwindow->addGlobStart; text_convert_tb(); $textwindow->addGlobEnd;
@@ -2386,12 +2391,12 @@ sub buildmenu{                  # The main menu building code.
 		    [Button => 'Convert Greek [STUB - does nothing yet]',
 		     -command => \&convertgreek],
 ]);
-        $menu->Cascade( -label => '~Prefs', -tearoff => 1, -menuitems => 
+        $menu->Cascade( -label => '~Prefs', -tearoff => 1, -menuitems =>
                 [
                         [Button => 'Set Rewrap ~margins', -command => \&setmargins ],
                         [Button => '~Font', -command => \&fontsize],
                         [Button => 'Browser Start Command', -command => \&setbrowser],
-                        [Cascade => 'Set File ~Paths', -tearoff => 0, -menuitems => 
+                        [Cascade => 'Set File ~Paths', -tearoff => 0, -menuitems =>
                         [
                                 [Button => 'Locate Gutcheck Executable', -command => sub{
                                         my $types;
@@ -2441,7 +2446,7 @@ sub buildmenu{                  # The main menu building code.
                         [Checkbutton => 'Enable Bell', -variable => \$nobell, -onvalue => 0, -offvalue => 1],
                         [Checkbutton => 'Auto Set Page Markers On File Open', -variable => \$auto_page_marks, -onvalue => 1, -offvalue => 0],
                         [Checkbutton => 'Leave Space After End-Of-Line Hyphens During Rewrap', -variable => \$rwhyphenspace, -onvalue => 1, -offvalue => 0],
-                        [Cascade => 'Toolbar Prefs', -tearoff => 1, -menuitems => 
+                        [Cascade => 'Toolbar Prefs', -tearoff => 1, -menuitems =>
                                 [
                                         [Checkbutton => 'Enable Toolbar', -variable => \$notoolbar, -command => [\&toolbar_toggle], -onvalue => 0, -offvalue => 1],
                                         [Radiobutton => 'Toolbar on Top', -variable => \$toolside, -command => sub{$lglobal{toptool}->destroy if $lglobal{toptool}; undef $lglobal{toptool}; toolbar_toggle()}, -value => 'top'],
@@ -2484,7 +2489,7 @@ sub buildmenu{                  # The main menu building code.
                                                                         }
                         ],
                 ]);
-        $menu->Cascade(-label => '~Help', -tearoff => 1, -menuitems => 
+        $menu->Cascade(-label => '~Help', -tearoff => 1, -menuitems =>
                 [
                         [Button => '~About', -command => \&about_pop_up],
                         [Button => '~Versions', -command => [\&showversion, $top]],
@@ -2499,7 +2504,7 @@ sub buildmenu{                  # The main menu building code.
                         [Button => '~UTF Character entry', -command => \&utford],
                         [Button => '~UTF Character Search', -command => \&uchar],
                 ]);
-        $menu->Cascade(qw/-label Externa~l -tearoff 1 -menuitems/ => 
+        $menu->Cascade(qw/-label Externa~l -tearoff 1 -menuitems/ =>
                 [
                         [Button => 'Setup External Operations', -command => \&externalpopup],
                         '',
@@ -2514,7 +2519,7 @@ sub buildmenu{                  # The main menu building code.
                 my %utfsorthash;
                 for (keys %{$lglobal{utfblocks}}){$utfsorthash{$lglobal{utfblocks}{$_}->[0]} = $_};
                 if ($lglobal{utfrangesort}){
-                        $menu->Cascade(qw/-label ~Unicode -tearoff 0 -menuitems/ => 
+                        $menu->Cascade(qw/-label ~Unicode -tearoff 0 -menuitems/ =>
                         [       [Radiobutton => 'Sort by Name',
                                         -variable => \$lglobal{utfrangesort},
                                         -command => \&rebuildmenu,
@@ -2529,7 +2534,7 @@ sub buildmenu{                  # The main menu building code.
                         ],
                 );
                 }else{
-                $menu->Cascade(qw/-label ~Unicode -tearoff 0 -menuitems/ => 
+                $menu->Cascade(qw/-label ~Unicode -tearoff 0 -menuitems/ =>
                         [       [Radiobutton => 'Sort by Range',
                                         -variable => \$lglobal{utfrangesort},
                                         -command => \&rebuildmenu,
@@ -2800,98 +2805,110 @@ sub checkver{ # Check to see if this is the most recent version
         }
 }
 
-sub sidenotes{ # Find and reformat sidenotes
-        push @operations, (localtime().' - Sidenote Fixup');
-        viewpagenums() if ($lglobal{seepagenums});
-        oppopupdate() if $lglobal{oppop};
+# Find and reformat sidenotes
+sub sidenotes {
+    push @operations, (localtime().' - Sidenote Fixup');
+    viewpagenums() if ($lglobal{seepagenums});
+    oppopupdate() if $lglobal{oppop};
+    $textwindow->markSet('sidenote','1.0');
+    my ($bracketndx,
+        $nextbracketndx,
+        $bracketstartndx,
+        $bracketendndx,
+        $paragraphp,
+        $paragraphn,
+        $sidenote,
+        $sdnoteindexstart);
+
+    while (1){
+        $sdnoteindexstart = $textwindow->index('sidenote');
+        $bracketstartndx = $textwindow->search('-regexp','--','\[sidenote',$sdnoteindexstart,'end');
+        if ($bracketstartndx) {
+            $textwindow->replacewith("$bracketstartndx+1c","$bracketstartndx+2c",'S');
+            $textwindow->markSet('sidenote',"$bracketstartndx+1c");
+            next;
+        }
         $textwindow->markSet('sidenote','1.0');
-        my ($bracketndx, $nextbracketndx, $bracketstartndx, $bracketendndx, $paragraphp, $paragraphn, $sidenote,$sdnoteindexstart);
-        while (1){
-                $sdnoteindexstart = $textwindow->index('sidenote');
-                $bracketstartndx = $textwindow->search('-regexp','--','\[sidenote',$sdnoteindexstart,'end');
-                if ($bracketstartndx) {
-                        $textwindow->replacewith("$bracketstartndx+1c","$bracketstartndx+2c",'S');
-                        $textwindow->markSet('sidenote',"$bracketstartndx+1c");
-                        next;
-                }
-                $textwindow->markSet('sidenote','1.0');
-                last;
+        last;
+    }
+    while (1){
+        $sdnoteindexstart = $textwindow->index('sidenote');
+        $bracketstartndx = $textwindow->search('-regexp','--','\[Sidenote',$sdnoteindexstart,'end');
+        last unless $bracketstartndx;
+        $bracketndx = "$bracketstartndx+1c";
+        while(1){
+            $bracketendndx = $textwindow->search('--',']',$bracketndx,'end');
+            $bracketendndx = $textwindow->index("$bracketstartndx+9c") unless $bracketendndx;
+            $bracketendndx = $textwindow->index("$bracketendndx+1c")if $bracketendndx;
+            $nextbracketndx = $textwindow->search('--','[',$bracketndx,'end');
+            if (($nextbracketndx)&&($textwindow->compare($nextbracketndx,'<',$bracketendndx))){
+                $bracketndx = $bracketendndx;
+                next;
+            }
+            last;
         }
-        while (1){
-                $sdnoteindexstart = $textwindow->index('sidenote');
-                $bracketstartndx = $textwindow->search('-regexp','--','\[Sidenote',$sdnoteindexstart,'end');
-                last unless $bracketstartndx;
-                $bracketndx = "$bracketstartndx+1c";
-                while(1){
-                        $bracketendndx = $textwindow->search('--',']',$bracketndx,'end');
-                        $bracketendndx = $textwindow->index("$bracketstartndx+9c") unless $bracketendndx;
-                        $bracketendndx = $textwindow->index("$bracketendndx+1c")if $bracketendndx;
-                        $nextbracketndx = $textwindow->search('--','[',$bracketndx,'end');
-                        if (($nextbracketndx)&&($textwindow->compare($nextbracketndx,'<',$bracketendndx))){
-                                $bracketndx = $bracketendndx;
-                                next;
-                        }
-                        last;
-                }
-                $textwindow->markSet('sidenote',$bracketendndx);
-                $paragraphp = $textwindow->search('-backwards','-regexp','--','^$',$bracketstartndx,'1.0');
-                $paragraphn = $textwindow->search('-regexp','--','^$',$bracketstartndx,'end');
-                $sidenote = $textwindow->get($bracketstartndx,$bracketendndx);
-                if ($textwindow->get("$bracketstartndx-2c",$bracketstartndx) ne "\n\n"){
-                        if (($textwindow->get($bracketendndx,"$bracketendndx+1c") eq ' ')||($textwindow->get($bracketendndx,"$bracketendndx+1c") eq "\n")){
-                                $textwindow->delete($bracketendndx,"");
-                        }
-                        $textwindow->delete($bracketstartndx,$bracketendndx);
-                        $textwindow->see($bracketstartndx);
-                        $textwindow->insert("$paragraphp+1l",$sidenote."\n\n");
-                }elsif ($textwindow->compare("$bracketendndx+1c",'<',$paragraphn)){
-                        if (($textwindow->get($bracketendndx,"$bracketendndx+1c") eq ' ')||($textwindow->get($bracketendndx,"$bracketendndx+1c") eq "\n")){
-                                $textwindow->delete($bracketendndx,"$bracketendndx+1c");
-                        }
-                        $textwindow->see($bracketstartndx);
-                        $textwindow->insert($bracketendndx,"\n\n");
-                }
-                $sdnoteindexstart = "$bracketstartndx+10c";
+        $textwindow->markSet('sidenote',$bracketendndx);
+        $paragraphp = $textwindow->search('-backwards','-regexp','--','^$',$bracketstartndx,'1.0');
+        $paragraphn = $textwindow->search('-regexp','--','^$',$bracketstartndx,'end');
+        $sidenote = $textwindow->get($bracketstartndx,$bracketendndx);
+        if ($textwindow->get("$bracketstartndx-2c",$bracketstartndx) ne "\n\n"){
+            if (($textwindow->get($bracketendndx,"$bracketendndx+1c") eq ' ')||($textwindow->get($bracketendndx,"$bracketendndx+1c") eq "\n")){
+                $textwindow->delete($bracketendndx,"");
+            }
+            $textwindow->delete($bracketstartndx,$bracketendndx);
+            $textwindow->see($bracketstartndx);
+            $textwindow->insert("$paragraphp+1l",$sidenote."\n\n");
+        }elsif ($textwindow->compare("$bracketendndx+1c",'<',$paragraphn)){
+            if (($textwindow->get($bracketendndx,"$bracketendndx+1c") eq ' ')||($textwindow->get($bracketendndx,"$bracketendndx+1c") eq "\n")){
+                $textwindow->delete($bracketendndx,"$bracketendndx+1c");
+            }
+            $textwindow->see($bracketstartndx);
+            $textwindow->insert($bracketendndx,"\n\n");
         }
-        my $error = $textwindow->search('-regexp','--','(?<=[^\[])[Ss]idenote[: ]','1.0','end');
-        unless ($nobell){$textwindow->bell if $error};
-        $textwindow->see($error) if $error;
-        $textwindow->markSet('insert',$error) if $error;
+        $sdnoteindexstart = "$bracketstartndx+10c";
+    }
+    my $error = $textwindow->search('-regexp','--','(?<=[^\[])[Ss]idenote[: ]','1.0','end');
+    unless ($nobell){$textwindow->bell if $error};
+    $textwindow->see($error) if $error;
+    $textwindow->markSet('insert',$error) if $error;
 }
 
-sub cleanup{ # Remove any rewrap markup in the text
-        $top->Busy(-recurse => 1);
-        $searchstartindex = '1.0';
-        viewpagenums() if ($lglobal{seepagenums});
-        while(1){
-                $searchstartindex = $textwindow->search('-regexp', '--', '^\/[\*\$#pPfFLlXx]|^[Pp\*\$#fFLlXx]\/', $searchstartindex, 'end');
-                last unless $searchstartindex;
-                $textwindow->delete("$searchstartindex -1c","$searchstartindex lineend");
-        }
-        $top->Unbusy(-recurse => 1);
+# Remove any rewrap markup in the text
+sub cleanup {
+    $top->Busy(-recurse => 1);
+    $searchstartindex = '1.0';
+    viewpagenums() if ($lglobal{seepagenums});
+    while(1){
+        $searchstartindex = $textwindow->search('-regexp', '--', '^\/[\*\$#pPfFLlXx]|^[Pp\*\$#fFLlXx]\/', $searchstartindex, 'end');
+        last unless $searchstartindex;
+        $textwindow->delete("$searchstartindex -1c","$searchstartindex lineend");
+    }
+    $top->Unbusy(-recurse => 1);
 }
 
-sub poetrynumbers{ # Find and format poetry line numbers. They need to be to the right, at least 2 space from the text.
-        $searchstartindex = '1.0';
-        viewpagenums() if ($lglobal{seepagenums});
-        my ($linenum,$line,$spacer,$row,$col);
-        while(1){
-                $searchstartindex = $textwindow->search('-regexp', '--', '(?<=\S)\s\s+\d+$', $searchstartindex, 'end');
-                last unless $searchstartindex;
-                $textwindow->see($searchstartindex);
-                $textwindow->update;
-                update_indicators();
-                ($row,$col) = split/\./,$searchstartindex;
+# FIXME: vls -- Adapt this to handle abitrary text at eol, separated by
+# >2 spaces. Suggestion from jabber room
+sub poetrynumbers { # Find and format poetry line numbers. They need to be to the right, at least 2 space from the text.
+    $searchstartindex = '1.0';
+    viewpagenums() if ($lglobal{seepagenums});
+    my ($linenum,$line,$spacer,$row,$col);
+    while(1){
+        $searchstartindex = $textwindow->search('-regexp', '--', '(?<=\S)\s\s+\d+$', $searchstartindex, 'end');
+        last unless $searchstartindex;
+        $textwindow->see($searchstartindex);
+        $textwindow->update;
+        update_indicators();
+        ($row,$col) = split/\./,$searchstartindex;
                 $line = $textwindow->get("$row.0", "$row.end");
                 $line =~ s/(?<=\S)\s\s+(\d+)$//;
-                $linenum = $1;
-                $spacer = $rmargin - length($line) - length($linenum);
-                $spacer -= 2;
-                $line = '  '.(' ' x $spacer).$linenum;
-                $textwindow->delete($searchstartindex,"$searchstartindex lineend");
-                $textwindow->insert($searchstartindex,$line);
-                $searchstartindex = ++$row.'.0';
-        }
+        $linenum = $1;
+        $spacer = $rmargin - length($line) - length($linenum);
+        $spacer -= 2;
+        $line = '  '.(' ' x $spacer).$linenum;
+        $textwindow->delete($searchstartindex,"$searchstartindex lineend");
+        $textwindow->insert($searchstartindex,$line);
+        $searchstartindex = ++$row.'.0';
+    }
 }
 
 sub opspop_up{ # Pop up an "Operation" history. Track which functions have already been run.
@@ -4036,8 +4053,8 @@ sub spellchecker{                                               # Set up spell c
 }
 
 sub spelloptions{
-                if ($globalspellpath){
-                        OS_Win ? ($lglobal{spellexename} = Win32::GetShortPathName($globalspellpath)) : ($lglobal{spellexename} = $globalspellpath);
+                if ($globalspellpath) {
+                        OS_Win ? ($lglobal{spellexename} = dos_path($globalspellpath)) : ($lglobal{spellexename} = $globalspellpath);
                         aspellstart() unless $lglobal{spellpid};
                 };
                 my $dicts;
@@ -4055,7 +4072,9 @@ sub spelloptions{
                                         $spellpathentry->delete(0,'end');
                                         $spellpathentry->insert('end',$globalspellpath);
                                         saveset();
-                                        OS_Win ? ($lglobal{spellexename} = Win32::GetShortPathName($globalspellpath)) : ($lglobal{spellexename} = $globalspellpath);
+                                        
+                                        OS_Win ? ($lglobal{spellexename} = dos_path($globalspellpath))
+                                            : ($lglobal{spellexename} = $globalspellpath);
                                         open my $infile, '-|', "$lglobal{spellexename} dump dicts" or warn "Unable to access dictionaries. $!\n";
                                         while ($dicts = <$infile>){
                                                 chomp $dicts;
@@ -4080,7 +4099,7 @@ sub spelloptions{
                 $spelldictxt->insert('1.0',$globalspelldictopt);
                 $dictlist->insert('end',"<default>");
                 if ($globalspellpath) {
-                        OS_Win ? ($lglobal{spellexename} = Win32::GetShortPathName($globalspellpath)) : ($lglobal{spellexename} = $globalspellpath);
+                        OS_Win ? ($lglobal{spellexename} = dos_path($globalspellpath)) : ($lglobal{spellexename} = $globalspellpath);
                         open my $infile, '-|', "$lglobal{spellexename} dump dicts" or warn "Unable to access dictionaries. $!\n";
                         while ($dicts = <$infile>){
                                 chomp $dicts;
@@ -4113,9 +4132,10 @@ sub spelloptions{
                 $spellop->Show;
 }
 
-sub spellcheckfirst {                                                   # Initialize spellchecker
-        $lglobal{spellexename} = (OS_Win ? Win32::GetShortPathName($globalspellpath) : $globalspellpath);       # Make the exe path dos compliant
-        $lglobal{spellfilename} = (OS_Win ? Win32::GetShortPathName($lglobal{global_filename}) : $lglobal{global_filename});    # make the file path dos compliant
+# Initialize spellchecker
+sub spellcheckfirst {
+        $lglobal{spellexename} = (OS_Win ? dos_path($globalspellpath) : $globalspellpath);       # Make the exe path dos compliant
+        $lglobal{spellfilename} = (OS_Win ? dos_path($lglobal{global_filename}) : $lglobal{global_filename});    # make the file path dos compliant
         @{$lglobal{misspelledlist}} = ();
         viewpagenums() if ($lglobal{seepagenums});
         getprojectdic();
@@ -5350,7 +5370,7 @@ sub replaceeval{
                 while ($replaceseg = shift @replarray){
                         $seg1 = $seg2 = '';
                         ($seg1,$seg2) = split /\\E/, $replaceseg, 2;
-     
+
                         print "$seg1\n" if $DEBUG;
                         print eval $seg1 if $DEBUG;
                         $replbuild .= eval $seg1;
@@ -5358,7 +5378,7 @@ sub replaceeval{
                 }
                 $replaceterm = $replbuild;
                 $replbuild = '';
-        }        
+        }
         if ($replaceterm =~ /\\L/){
                 if ($replaceterm =~ s/^\\L//) {
                         if ($replaceterm =~ s/\\L//){
@@ -6407,7 +6427,7 @@ sub asciipopup{
                                 -textvariable => \${$lglobal{ascii}}[$_],
                         )->grid(-row => $row, -column => $col, -padx => 3, -pady => 3);
                 }
-                
+
                 my $f0 = $lglobal{asciipop}->Frame->pack(-side => 'top', -anchor => 'n');
                 my $wlabel = $f0->Label(
                         -width => 16,
@@ -7744,7 +7764,7 @@ sub linkcheck{
                 $lglobal{linkchkbox}->insert('end', "You need to save your file first.");
                 return;
         }
-        $fname = Win32::GetShortPathName($lglobal{global_filename}) if OS_Win;
+        $fname = dos_path($lglobal{global_filename}) if OS_Win;
         my ($f,$d,$e) = fileparse($fname,qr{\.[^\.]*$});
         my %imagefiles;
         my @ifiles = ();
@@ -7938,7 +7958,7 @@ sub makeanchor{
 }
 
 # DP:vls -- Split this into separate functions, eventually into HTMLconvert.pm
-sub htmlautoconvert 
+sub htmlautoconvert
 {
     viewpagenums() if ($lglobal{seepagenums});
     my $thisblockstart ='1.0';
@@ -7967,7 +7987,7 @@ sub htmlautoconvert
     my ($blkopen,$blkclose);
     my $headertext;
     if ($lglobal{cssblockmarkup}) {
-	$blkopen = '<div class="blockquot"><p>'; 
+	$blkopen = '<div class="blockquot"><p>';
 	$blkclose = '</p></div>';
     } else {
 	$blkopen = '<blockquote><p>';
@@ -7978,27 +7998,27 @@ sub htmlautoconvert
 # DP:vls -- We'll cut the autoconvert up in place; gonna take some work
 # to get all the variables sorted
 
-#DP:vls 2008-04-22 -- Make a backup file 
-sub htmlbackup 
+#DP:vls 2008-04-22 -- Make a backup file
+sub htmlbackup
 {
-    $textwindow->Busy; 
+    $textwindow->Busy;
     my $savefn = $lglobal{global_filename};
-    $lglobal{global_filename} =~ s/\.[^\.]*?$//; 
-    my $newfn = $lglobal{global_filename}.'-htmlbak.txt'; 
-    working("Saving backup of file\nto $newfn"); 
+    $lglobal{global_filename} =~ s/\.[^\.]*?$//;
+    my $newfn = $lglobal{global_filename}.'-htmlbak.txt';
+    working("Saving backup of file\nto $newfn");
     $textwindow->SaveUTF($newfn);
-    $lglobal{global_filename} = $newfn; 
+    $lglobal{global_filename} = $newfn;
     binsave();
-    $lglobal{global_filename} = $savefn; 
+    $lglobal{global_filename} = $savefn;
     $textwindow->FileName($savefn);
-} 
+}
 
 htmlbackup();
 
     working("Converting Windows Codepage 1252\ncharacters to Unicode");
     cp1252toUni();
 
-#sub parseheader 
+#sub parseheader
 
     working('Parsing Header');
 #    $headertext;
@@ -8022,10 +8042,10 @@ htmlbackup();
 	}
 	close $infile;
     }
- 
+
 #parseheader(); # FIXME:vls -- Seems okay so far but lots of nasty
                    # warnings. Oh, well. Make it work, fix the crud later. Addendum --
-                   # Take this out for upcoming .66 release so we don't freak out end user with 
+                   # Take this out for upcoming .66 release so we don't freak out end user with
                    # scary warnings.
 
 # FIXMe: vls just a stub for now: sub html_set_title{}
@@ -8083,8 +8103,8 @@ htmlbackup();
 	    $headertext =~ s/AUTHOR/$author/;
         }
 
-sub html_convert_ampersands 
-{ 
+sub html_convert_ampersands
+{
     working("Converting Ampersands");
     named('&(?![\w#])','&amp;');
     named('&$','&amp;');
@@ -9116,7 +9136,7 @@ sub seperatorpopup{
         $lglobal{pagepop}->transient($top) if $stayontop;
 }
 
-sub phelppopup{
+sub phelppopup {
         if (defined($lglobal{phelppop})){
                 $lglobal{phelppop}->deiconify;
                 $lglobal{phelppop}->raise;
@@ -9124,18 +9144,18 @@ sub phelppopup{
         }else{
                 $lglobal{phelppop} = $top->Toplevel;
                 $lglobal{phelppop}->title('Functions and Hotkeys');
-                $lglobal{phelppop}->Label(-text => 
+                $lglobal{phelppop}->Label(-text =>
                 "\nJoin Lines - join lines removing any spaces, asterisks and hyphens as necessary. - Hotkey j\n".
                 "Join, Keep hyphen - join lines removing any spaces and asterisks as necessary. - Hotkey k\n".
                 "Blank line - remove spaces as necessary. Keep one blank line. (paragraph break). - Hotkey l\n".
-                "New Section - remove spaces as necessary. Keep two blank lines (section break). - Hotkey h\n".
+                "New Section - remove spaces as necessary. Keep two blank lines (section break). - Hotkey t\n".
                 "New Chapter - remove spaces as necessary. Keep four blank lines (chapter break). - Hotkey h\n".
                 "Refresh - search for and center next page separator. - Hotkey r\n".
                 "Undo - undo the previous page seperator edit. - Hotkey u\n".
                 "Delete - delete the page seperator. Make no other edits. - Hotkey d\n".
                 "Full Auto - automatically search for and convert if possible the next page seperator. - Toggle - a\n".
                 "Semi Auto - automatically search for and center the next page seperator after an edit. - Toggle - s\n".
-                "HTML pg #s - insert page number as HTML comment at end of previous line with text.\n"
+                "HTML pg #s - insert page number as HTML comment at end of previous line with text.\n" # FIXME: vls -- Is this working?
                 )->pack;
                 my $button_ok = $lglobal{phelppop}->Button(
                         -activebackground => $activecolor,
@@ -9242,7 +9262,7 @@ sub showproofers{
                 $lglobal{prooferpop} = $top->Toplevel;
                 $lglobal{prooferpop}->title('Proofers For This File');
                 my $bframe = $lglobal{prooferpop}->Frame->pack;
-                
+
                 $bframe->Button(
                         -activebackground => $activecolor,
                         -command => sub{
@@ -9428,7 +9448,7 @@ sub delblanklines{
                         next;
                 }
                 $searchendindex = $r ? "$r.end" : '2.0';
-                
+
         }
         $textwindow->Unbusy;
 }
@@ -9614,8 +9634,8 @@ sub joinlines{
         }
         if ($op eq 'j'){
                 $index = $textwindow->index('page');
-		# Note: $line here and in similar cases actually seems to contain the 
-		# last _character_ on the previous page. 
+		# Note: $line here and in similar cases actually seems to contain the
+		# last _character_ on the previous page.
                 $line = $textwindow->get("$index-1c");
                 my $hyphens = 0;
                 if ($line =~ /\//){
@@ -9792,7 +9812,7 @@ sub tidypop_up{
                         @tidylines = ();
                         }
                 );
-                $lglobal{tidypop}->Icon(-image => $icon);
+                $lglobal{tidypop}->Icon(-image => $icon);
                 BindMouseWheel($lglobal{tidylistbox});
                 $lglobal{tidylistbox}->eventAdd('<<view>>' => '<Button-1>','<Return>');
                 $lglobal{tidylistbox}->bind('<<view>>', sub {
@@ -9886,7 +9906,7 @@ sub tidyrun{
         unless ($tidycommand){ $tidycommand = $textwindow->getOpenFile(-filetypes => $types, -title => 'Where is the Tidy executable?')};
         return unless $tidycommand;
         $tidycommand = os_normal($tidycommand);
-        $tidycommand = Win32::GetShortPathName($tidycommand) if OS_Win;
+        $tidycommand = dos_path($tidycommand) if OS_Win;
         saveset();
         $top->Busy(-recurse => 1);
         if ($tidyoptions =~ /\-m/){
@@ -9894,7 +9914,7 @@ sub tidyrun{
                 $title =~ s/ - edited$//;
                 $title = os_normal($title);
                 ($fname,$path,$extension) = fileparse($title,'\.[^\.]*$');
-                $title = Win32::GetShortPathName($title) if OS_Win;
+                $title = dos_path($title) if OS_Win;
                 $name = $title;
                 $name = "${path}tidy.$fname$extension";
         }else{
@@ -10016,7 +10036,7 @@ sub gutcheck{
         $title =~ s/Guiguts $currentver - //;
         $title =~ s/ - edited$//;
         $title = os_normal($title);
-        $title = Win32::GetShortPathName($title) if OS_Win;
+        $title = dos_path($title) if OS_Win;
         ($name,$path,$extension) = fileparse($title,'\.[^\.]*$');
         my $types = [
                 ['Executable',  ['.exe', ]],
@@ -10036,7 +10056,7 @@ sub gutcheck{
         if ($gcopt[8]){$gutcheckoptions .= 'd'}; # Ignore DP style page separators
         $gutcheckoptions .= ' ';
         $gutpath = os_normal($gutpath);
-        $gutpath = Win32::GetShortPathName($gutpath) if OS_Win;
+        $gutpath = dos_path($gutpath) if OS_Win;
         saveset();
         if ($lglobal{gcpop}){
                 $lglobal{gclistbox}->delete('0','end');
@@ -11332,7 +11352,7 @@ sub wfspellcheck{
         %{$lglobal{spellsort}} = ();
         getprojectdic();
         do "$lglobal{projectdictname}";
-        $lglobal{spellexename} = OS_Win ? Win32::GetShortPathName($globalspellpath) : $globalspellpath; # Make the exe path dos compliant
+        $lglobal{spellexename} = OS_Win ? dos_path($globalspellpath) : $globalspellpath; # Make the exe path dos compliant
         $lglobal{wclistbox}->delete('0','end');
         $lglobal{wclistbox}->insert('end','Please wait, building word list....');
         $lglobal{wclistbox}->update;
@@ -11692,148 +11712,151 @@ sub latinpopup{
         }
 }
 
-sub hotkeyshelp{
-        if (defined($lglobal{hotpop})){
-                $lglobal{hotpop}->deiconify;
-                $lglobal{hotpop}->raise;
-                $lglobal{hotpop}->focus;
-        }else{
-                $lglobal{hotpop} = $top->Toplevel;
-                $lglobal{hotpop}->title('Hot key combinations');
-                my $frame = $lglobal{hotpop}->Frame->pack
-                        (-anchor => 'nw', -expand => 'yes', -fill => 'both');
-                my $rotextbox = $frame->Scrolled('ROText',
-                        -scrollbars => 'se',
-                        -background => 'white',
-                        -font => '{Helvetica} 14',
-                        -width => 80,
-                        -height => 40,
-                        -wrap => 'none',
-                )->pack(-anchor => 'nw', -expand => 'yes', -fill => 'both');
-                drag($rotextbox);
-                $rotextbox->insert('end',
-                "\nMAIN WINDOW\n\n".
-                "<ctrl>+x -- cut or column cut\n".
-                "<ctrl>+c -- copy or column copy\n".
-                "<ctrl>+v -- paste\n".
-                "<ctrl>+` -- column paste\n".
-                "<ctrl>+a -- select all\n\n".
+sub hotkeyshelp {
+    if (defined($lglobal{hotpop})){
+        $lglobal{hotpop}->deiconify;
+        $lglobal{hotpop}->raise;
+        $lglobal{hotpop}->focus;
+    } else {            
+        $lglobal{hotpop} = $top->Toplevel;
+        $lglobal{hotpop}->title('Hot key combinations');
+        my $frame = $lglobal{hotpop}->Frame->pack(-anchor => 'nw',
+                                                  -expand => 'yes',
+                                                  -fill => 'both');
+        my $rotextbox = $frame->Scrolled('ROText',
+                                         -scrollbars => 'se',
+                                         -background => 'white',
+                                         -font => '{Helvetica} 14',
+                                         -width => 80,
+                                         -height => 40,
+                                         -wrap => 'none',
+            )->pack(-anchor => 'nw', -expand => 'yes', -fill => 'both');
+        drag($rotextbox);
+        $rotextbox->focus;
+        $rotextbox->insert('end',
+                           "\nMAIN WINDOW\n\n".
+                           "<ctrl>+x -- cut or column cut\n".
+                           "<ctrl>+c -- copy or column copy\n".
+                           "<ctrl>+v -- paste\n".
+                           "<ctrl>+` -- column paste\n".
+                           "<ctrl>+a -- select all\n\n".
 
-                "F1 -- column copy\n".
-                "F2 -- column cut\n".
-                "F3 -- column paste\n\n".
+                           "F1 -- column copy\n".
+                           "F2 -- column cut\n".
+                           "F3 -- column paste\n\n".
 
-                "F7 -- spell check selection (or document, if no selection made)\n\n".
+                           "F7 -- spell check selection (or document, if no selection made)\n\n".
 
-                "<ctrl>+z -- undo\n".
-                "<ctrl>+y -- redo\n\n".
+                           "<ctrl>+z -- undo\n".
+                           "<ctrl>+y -- redo\n\n".
 
-                "<ctrl>+/ -- select all\n".
-                "<ctrl>+\\ -- unselect all\n".
-                "<Esc> -- unselect all\n\n".
+                           "<ctrl>+/ -- select all\n".
+                           "<ctrl>+\\ -- unselect all\n".
+                           "<Esc> -- unselect all\n\n".
 
-                "<ctrl>+u -- Convert case of selection to upper case\n".
-                "<ctrl>+l -- Convert case of selection to lower case\n".
-                "<ctrl>+t -- Convert case of selection to title case\n\n".
+                           "<ctrl>+u -- Convert case of selection to upper case\n".
+                           "<ctrl>+l -- Convert case of selection to lower case\n".
+                           "<ctrl>+t -- Convert case of selection to title case\n\n".
 
-                "<ctrl>+i -- insert a tab character before cursor (Tab)\n".
-                "<ctrl>+j -- insert a newline character before cursor (Enter)\n".
-                "<ctrl>+o -- insert a newline character after cursor\n\n".
+                           "<ctrl>+i -- insert a tab character before cursor (Tab)\n".
+                           "<ctrl>+j -- insert a newline character before cursor (Enter)\n".
+                           "<ctrl>+o -- insert a newline character after cursor\n\n".
 
-                "<ctrl>+d -- delete character after cursor (Delete)\n".
-                "<ctrl>+h -- delete character to the left of the cursor (Backspace)\n".
-                "<ctrl>+k -- delete from cursor to end of line\n\n".
+                           "<ctrl>+d -- delete character after cursor (Delete)\n".
+                           "<ctrl>+h -- delete character to the left of the cursor (Backspace)\n".
+                           "<ctrl>+k -- delete from cursor to end of line\n\n".
 
-                "<ctrl>+e -- move cursor to end of current line. (End)\n".
-                "<ctrl>+b -- move cursor left one character (left arrow)\n".
-                "<ctrl>+p -- move cursor up one line (up arrow)\n".
-                "<ctrl>+n -- move cursor down one line (down arrow)\n\n".
+                           "<ctrl>+e -- move cursor to end of current line. (End)\n".
+                           "<ctrl>+b -- move cursor left one character (left arrow)\n".
+                           "<ctrl>+p -- move cursor up one line (up arrow)\n".
+                           "<ctrl>+n -- move cursor down one line (down arrow)\n\n".
 
-                "<ctrl>Home -- move cursor to the start of the text\n".
-                "<ctrl>End -- move cursor to end of the text\n".
-                "<ctrl>+right arrow -- move to the start of the next word\n".
-                "<ctrl>+left arrow -- move to the start of the previous word\n".
-                "<ctrl>+up arrow -- move to the start of the current paragraph\n".
-                "<ctrl>+down arrow -- move to the start of the next paragraph\n".
-                "<ctrl>+PgUp -- scroll left one screen\n\n".
-                "<ctrl>+PgDn -- scroll right one screen\n\n".
+                           "<ctrl>Home -- move cursor to the start of the text\n".
+                           "<ctrl>End -- move cursor to end of the text\n".
+                           "<ctrl>+right arrow -- move to the start of the next word\n".
+                           "<ctrl>+left arrow -- move to the start of the previous word\n".
+                           "<ctrl>+up arrow -- move to the start of the current paragraph\n".
+                           "<ctrl>+down arrow -- move to the start of the next paragraph\n".
+                           "<ctrl>+PgUp -- scroll left one screen\n\n".
+                           "<ctrl>+PgDn -- scroll right one screen\n\n".
 
-                "<shift>+Home -- adjust selection to beginning of current line\n".
-                "<shift>+End -- adjust selection to end of current line\n".
-                "<shift>+up arrow -- adjust selection up one line\n".
-                "<shift>+down arrow -- adjust selection down one line\n".
-                "<shift>+left arrow -- adjust selection left one character\n".
-                "<shift>+right arrow -- adjust selection right one character\n\n".
+                           "<shift>+Home -- adjust selection to beginning of current line\n".
+                           "<shift>+End -- adjust selection to end of current line\n".
+                           "<shift>+up arrow -- adjust selection up one line\n".
+                           "<shift>+down arrow -- adjust selection down one line\n".
+                           "<shift>+left arrow -- adjust selection left one character\n".
+                           "<shift>+right arrow -- adjust selection right one character\n\n".
 
-                "<shift><ctrl>Home -- adjust selection to the start of the text\n".
-                "<shift><ctrl>End -- adjust selection to end of the text\n".
-                "<shift><ctrl>+left arrow -- adjust selection to the start of the previous word\n".
-                "<shift><ctrl>+right arrow -- adjust selection to the start of the next word\n".
-                "<shift><ctrl>+up arrow -- adjust selection to the start of the current paragraph\n".
-                "<shift><ctrl>+down arrow -- adjust selection to the start of the next paragraph\n\n".
+                           "<shift><ctrl>Home -- adjust selection to the start of the text\n".
+                           "<shift><ctrl>End -- adjust selection to end of the text\n".
+                           "<shift><ctrl>+left arrow -- adjust selection to the start of the previous word\n".
+                           "<shift><ctrl>+right arrow -- adjust selection to the start of the next word\n".
+                           "<shift><ctrl>+up arrow -- adjust selection to the start of the current paragraph\n".
+                           "<shift><ctrl>+down arrow -- adjust selection to the start of the next paragraph\n\n".
 
-                "<ctrl>+' -- highlight all apostrophes in selection.\n".
-                "<ctrl>+\" -- highlight all double quotes in selection.\n".
-                "<ctrl>+0 -- remove all highlights.\n\n".
+                           "<ctrl>+' -- highlight all apostrophes in selection.\n".
+                           "<ctrl>+\" -- highlight all double quotes in selection.\n".
+                           "<ctrl>+0 -- remove all highlights.\n\n".
 
-                "<Insert> -- Toggle insert / overstrike mode\n\n".
+                           "<Insert> -- Toggle insert / overstrike mode\n\n".
 
-                "Double click left mouse button -- select word\n".
-                "Triple click left mouse button -- select line\n\n".
+                           "Double click left mouse button -- select word\n".
+                           "Triple click left mouse button -- select line\n\n".
 
-                "<shift> click left mouse button -- adjust selection to click point\n".
-                "<shift> Double click left mouse button -- adjust selection to include word clicked on\n".
-                "<shift> Triple click left mouse button -- adjust selection to include line clicked on\n".
+                           "<shift> click left mouse button -- adjust selection to click point\n".
+                           "<shift> Double click left mouse button -- adjust selection to include word clicked on\n".
+                           "<shift> Triple click left mouse button -- adjust selection to include line clicked on\n".
 
-                "Single click right mouse button -- pop up shortcut to menu bar\n\n".
+                           "Single click right mouse button -- pop up shortcut to menu bar\n\n".
 
-                "BOOKMARKS\n\n".
-                "<ctrl>+<shift>+1 -- set bookmark 1\n".
-                "<ctrl>+<shift>+2 -- set bookmark 1\n".
-                "<ctrl>+<shift>+3 -- set bookmark 3\n".
-                "<ctrl>+<shift>+4 -- set bookmark 4\n".
-                "<ctrl>+<shift>+5 -- set bookmark 5\n\n".
+                           "BOOKMARKS\n\n".
+                           "<ctrl>+<shift>+1 -- set bookmark 1\n".
+                           "<ctrl>+<shift>+2 -- set bookmark 1\n".
+                           "<ctrl>+<shift>+3 -- set bookmark 3\n".
+                           "<ctrl>+<shift>+4 -- set bookmark 4\n".
+                           "<ctrl>+<shift>+5 -- set bookmark 5\n\n".
 
-                "<ctrl>+1 -- go to bookmark 1\n".
-                "<ctrl>+2 -- go to bookmark 2\n".
-                "<ctrl>+3 -- go to bookmark 3\n".
-                "<ctrl>+4 -- go to bookmark 4\n".
-                "<ctrl>+5 -- go to bookmark 5\n\n".
+                           "<ctrl>+1 -- go to bookmark 1\n".
+                           "<ctrl>+2 -- go to bookmark 2\n".
+                           "<ctrl>+3 -- go to bookmark 3\n".
+                           "<ctrl>+4 -- go to bookmark 4\n".
+                           "<ctrl>+5 -- go to bookmark 5\n\n".
 
-                "MENUS\n\n".
-                "<alt>+f -- file menu\n".
-                "<alt>+e -- edit menu\n".
-                "<alt>+b -- bookmarks\n".
-                "<alt>+s -- search menu\n".
-                "<alt>+g -- gutcheck menu\n".
-                "<alt>+x -- fixup menu\n".
-                "<alt>+w -- word frequency menu\n\n".
+                           "MENUS\n\n".
+                           "<alt>+f -- file menu\n".
+                           "<alt>+e -- edit menu\n".
+                           "<alt>+b -- bookmarks\n".
+                           "<alt>+s -- search menu\n".
+                           "<alt>+g -- gutcheck menu\n".
+                           "<alt>+x -- fixup menu\n".
+                           "<alt>+w -- word frequency menu\n\n".
 
-                "\nSEARCH POPUP\n\n".
-                "<Enter> -- Search\n".
-                "<shift><Enter> -- Replace\n".
-                "<ctrl><Enter> -- Replace & Search\n".
-                "<ctrl><shift><Enter> -- Replace All\n".
-                "\nPAGE SEPARATOR POPUP\n\n".
-                "'j' -- Join Lines - join lines, remove all blank lines, spaces, asterisks and hyphens.\n".
-                "'k' -- Join, Keep Hyphen - join lines, remove all blank lines, spaces and asterisks, keep hyphen.\n".
-                "'l' -- Blank Line - leave one blank line. Close up any other whitespace. (Paragraph Break)\n".
-                "'h' -- New Chapter - leave four blank lines. Close up any other whitespace. (Chapter Break)\n".
-                "'r' -- Refresh - search for, highlight and re-center the next page seperator.\n".
-                "'u' -- Undo - undo the last edit. (Note: in Full Automatic mode,\n\tthis just single steps back through the undo buffer)\n".
-                "'d' -- Delete - delete the page separator. Make no other edits.\n".
-                "'v' -- View the current page in the image viewer.\n".
-                "'a' -- Toggle Full Automatic mode.\n".
-                "'s' -- Toggle Semi Automatic mode.\n".
-                "\n"
-                );
-                my $button_ok = $frame->Button(
-                        -activebackground => $activecolor, -text => 'OK',
-                        -command => sub {$lglobal{hotpop}->destroy; undef $lglobal{hotpop}}
-                )->pack(-pady => 8);
-                $lglobal{hotpop}->protocol('WM_DELETE_WINDOW' => sub{$lglobal{hotpop}->destroy; undef $lglobal{hotpop}});
-                $lglobal{hotpop}->Icon(-image => $icon);
-        }
+                           "\nSEARCH POPUP\n\n".
+                           "<Enter> -- Search\n".
+                           "<shift><Enter> -- Replace\n".
+                           "<ctrl><Enter> -- Replace & Search\n".
+                           "<ctrl><shift><Enter> -- Replace All\n".
+                           "\nPAGE SEPARATOR POPUP\n\n".
+                           "'j' -- Join Lines - join lines, remove all blank lines, spaces, asterisks and hyphens.\n".
+                           "'k' -- Join, Keep Hyphen - join lines, remove all blank lines, spaces and asterisks, keep hyphen.\n".
+                           "'l' -- Blank Line - leave one blank line. Close up any other whitespace. (Paragraph Break)\n".
+                           "'t' -- New Section - leave two blank lines. Close up any other whitespace. (Section Break)\n".
+                           "'h' -- New Chapter - leave four blank lines. Close up any other whitespace. (Chapter Break)\n".
+                           "'r' -- Refresh - search for, highlight and re-center the next page seperator.\n".
+                           "'u' -- Undo - undo the last edit. (Note: in Full Automatic mode,\n\tthis just single steps back through the undo buffer)\n".
+                           "'d' -- Delete - delete the page separator. Make no other edits.\n".
+                           "'v' -- View the current page in the image viewer.\n".
+                           "'a' -- Toggle Full Automatic mode.\n".
+                           "'s' -- Toggle Semi Automatic mode.\n".
+                           "\n"
+            );
+        my $button_ok = $frame->Button(
+            -activebackground => $activecolor, -text => 'OK',
+            -command => sub {$lglobal{hotpop}->destroy; undef $lglobal{hotpop}}
+            )->pack(-pady => 8);
+        $lglobal{hotpop}->protocol('WM_DELETE_WINDOW' => sub{$lglobal{hotpop}->destroy; undef $lglobal{hotpop}});
+        $lglobal{hotpop}->Icon(-image => $icon);
+    }
 }
 
 sub BindMouseWheel {
@@ -11851,10 +11874,10 @@ sub BindMouseWheel {
         }
 }
 
-sub working{
+sub working {
         my $msg = shift;
-        if (defined($lglobal{workpop})&&(defined $msg)){
-                $lglobal{worklabel}->configure(-text => 
+        if (defined($lglobal{workpop}) && (defined $msg)){
+                $lglobal{worklabel}->configure(-text =>
                         "\n\n\nWorking....\n$msg\nPlease wait.\n\n\n");
                 $lglobal{workpop}->update;
         }elsif (defined $lglobal{workpop}){
@@ -11864,7 +11887,7 @@ sub working{
                 $lglobal{workpop} = $top->Toplevel;
                 $lglobal{workpop}->transient($top);
                 $lglobal{workpop}->title('Working.....');
-                $lglobal{worklabel} = $lglobal{workpop}->Label(-text => 
+                $lglobal{worklabel} = $lglobal{workpop}->Label(-text =>
                         "\n\n\nWorking....\n$msg\nPlease wait.\n\n\n",
                 -font => '{helvetica} 20 bold',
                 -background => $activecolor,
@@ -12774,400 +12797,400 @@ sub utffontinit{
         $lglobal{utffont} = "{$utffontname} $utffontsize";
 }
 
-sub initialize{
+sub initialize {
 # Initialize a whole bunch of global values that used to be discrete variables
 # spread willy-nilly through the code. Refactored them into a global
 # hash and gathered them together in a single subroutine.
-        $lglobal{proofbarvisible} = 0;
-        $lglobal{visibleline} = '';
-        $lglobal{asciiwidth} = 64;
-        $lglobal{asciijustify} = 'center';
-        $lglobal{alignstring} = '.';
-        $lglobal{lastsearchterm} = '';
-        $lglobal{regaa} = 0;
-        $lglobal{zoneindex} = 0;
-        $lglobal{ignore_case} = 0;
-        $lglobal{alpha_sort} = 'f';
-        $lglobal{suspects_only} = 0;
-        $lglobal{seepagenums} = 0;
-        $lglobal{longordlabel} = 0;
-        $lglobal{utfrangesort} = 0;
-        $lglobal{codewarn} = 1;
-        $lglobal{ffchar} = '';
-        $lglobal{tblcoljustify} = 'l';
-        $lglobal{stepmaxwidth} = 70;
-        $lglobal{tblrwcol} = 1;
-        $lglobal{lastmatchindex} = '1.0';
-        $lglobal{cssblockmarkup} = 1;
-        $lglobal{footstyle} = 'end';
-        $lglobal{ftnoteindexstart} = '1.0';
-        $lglobal{selectionsearch} = 0;
-        @{$lglobal{ascii}} = qw/+ - + | | | + - +/;
-        @{$lglobal{fixopt}}=(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);
-        $lglobal{htmlimgar} = 1; #html image aspect ratio
-        $lglobal{groutp} = 'l';
-        $lglobal{uoutp} = 'h';
-        $lglobal{delay} = 50;
-        $lglobal{showblocksize} = 1;
+    $lglobal{proofbarvisible} = 0;
+    $lglobal{visibleline} = '';
+    $lglobal{asciiwidth} = 64;
+    $lglobal{asciijustify} = 'center';
+    $lglobal{alignstring} = '.';
+    $lglobal{lastsearchterm} = '';
+    $lglobal{regaa} = 0;
+    $lglobal{zoneindex} = 0;
+    $lglobal{ignore_case} = 0;
+    $lglobal{alpha_sort} = 'f';
+    $lglobal{suspects_only} = 0;
+    $lglobal{seepagenums} = 0;
+    $lglobal{longordlabel} = 0;
+    $lglobal{utfrangesort} = 0;
+    $lglobal{codewarn} = 1;
+    $lglobal{ffchar} = '';
+    $lglobal{tblcoljustify} = 'l';
+    $lglobal{stepmaxwidth} = 70;
+    $lglobal{tblrwcol} = 1;
+    $lglobal{lastmatchindex} = '1.0';
+    $lglobal{cssblockmarkup} = 1;
+    $lglobal{footstyle} = 'end';
+    $lglobal{ftnoteindexstart} = '1.0';
+    $lglobal{selectionsearch} = 0;
+    @{$lglobal{ascii}} = qw/+ - + | | | + - +/;
+    @{$lglobal{fixopt}}=(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);
+    $lglobal{htmlimgar} = 1;    #html image aspect ratio
+    $lglobal{groutp} = 'l';
+    $lglobal{uoutp} = 'h';
+    $lglobal{delay} = 50;
+    $lglobal{showblocksize} = 1;
 
-        if ($0 =~ m/\/|\\/){
-                my $dir = $0;
-                $dir =~ s/(\/|\\)[^\/\\]+$/$1/;
-                chdir $dir if length $dir;
+    if ($0 =~ m/\/|\\/){
+        my $dir = $0;
+        $dir =~ s/(\/|\\)[^\/\\]+$/$1/;
+        chdir $dir if length $dir;
+    }
+
+    unless(my $return = do 'setting.rc'){
+        if (-e 'setting.rc'){
+            open my $file, "<setting.rc" or warn "Could not open setting file\n";
+            my @file = <$file>;
+            close $file;
+            open $file, ">setting.err";
+            print $file @file;
+            close $file;
         }
+    }
 
-        unless(my $return = do 'setting.rc'){
-                if (-e 'setting.rc'){
-                        open my $file, "<setting.rc" or warn "Could not open setting file\n";
-                        my @file = <$file>;
-                        close $file;
-                        open $file, ">setting.err";
-                        print $file @file;
-                        close $file;
-                }
-        }
-
-        %{$lglobal{utfblocks}} = (
-                'Alphabetic Presentation Forms' => ['FB00', 'FB4F'],
-                'Arabic Presentation Forms-A' => ['FB50', 'FDCF'], #Really FDFF but there are illegal characters in fdc0-fdff
-                'Arabic Presentation Forms-B' => ['FE70', 'FEFF'],
-                'Arabic' => ['0600', '06FF'],
-                'Armenian' => ['0530', '058F'],
-                'Arrows' => ['2190', '21FF'],
-                'Bengali' => ['0980', '09FF'],
-                'Block Elements' => ['2580', '259F'],
-                #'Bopomofo Extended' => ['31A0', '31BF'],
-                #'Bopomofo' => ['3100', '312F'],
-                'Box Drawing' => ['2500', '257F'],
-                'Braille Patterns' => ['2800', '28FF'],
-                'Buhid' => ['1740', '175F'],
-                'Cherokee' => ['13A0', '13FF'],
-                #'CJK Compatibility Forms' => ['FE30', 'FE4F'],
-                #'CJK Compatibility Ideographs' => ['F900', 'FAFF'],
-                #'CJK Compatibility' => ['3300', '33FF'],
-                #'CJK Radicals Supplement' => ['2E80', '2EFF'],
-                #'CJK Symbols and Punctuation' => ['3000', '303F'],
-                #'CJK Unified Ideographs Extension A' => ['3400', '4DBF'],
-                #'CJK Unified Ideographs' => ['4E00', '9FFF'],
-                'Combining Diacritical Marks for Symbols' => ['20D0', '20FF'],
-                'Combining Diacritical Marks' => ['0300', '036F'],
-                'Combining Half Marks' => ['FE20', 'FE2F'],
-                'Control Pictures' => ['2400', '243F'],
-                'Currency Symbols' => ['20A0', '20CF'],
-                'Cyrillic Supplementary' => ['0500', '052F'],
-                'Cyrillic' => ['0400', '04FF'],
-                'Devanagari' => ['0900', '097F'],
-                'Dingbats' => ['2700', '27BF'],
-                'Enclosed Alphanumerics' => ['2460', '24FF'],
-                #'Enclosed CJK Letters and Months' => ['3200', '32FF'],
-                'Ethiopic' => ['1200', '137F'],
-                'General Punctuation' => ['2000', '206F'],
-                'Geometric Shapes' => ['25A0', '25FF'],
-                'Georgian' => ['10A0', '10FF'],
-                'Greek and Coptic' => ['0370', '03FF'],
-                'Greek Extended' => ['1F00', '1FFF'],
-                'Gujarati' => ['0A80', '0AFF'],
-                'Gurmukhi' => ['0A00', '0A7F'],
-                'Halfwidth and Fullwidth Forms' => ['FF00', 'FFEF'],
-                #'Hangul Compatibility Jamo' => ['3130', '318F'],
-                #'Hangul Jamo' => ['1100', '11FF'],
-                #'Hangul Syllables' => ['AC00', 'D7AF'],
-                #'Hanunoo' => ['1720', '173F'],
-                'Hebrew' => ['0590', '05FF'],
-                #'High Private Use Surrogates' => ['DB80', 'DBFF'],
-                #'High Surrogates' => ['D800', 'DB7F'],
-                #'Hiragana' => ['3040', '309F'],
-                #'Ideographic Description Characters' => ['2FF0', '2FFF'],
-                #'Kanbun' => ['3190', '319F'],
-                #'Kangxi Radicals' => ['2F00', '2FDF'],
-                'Kannada' => ['0C80', '0CFF'],
-                #'Katakana Phonetic Extensions' => ['31F0', '31FF'],
-                #'Katakana' => ['30A0', '30FF'],
-                #'Khmer Symbols' => ['19E0', '19FF'],
-                #'Khmer' => ['1780', '17FF'],
-                'Lao' => ['0E80', '0EFF'],
-                'Latin Extended Additional' => ['1E00', '1EFF'],
-                'Latin Extended-A' => ['0100', '017F'],
-                'Latin Extended-B' => ['0180', '024F'],
-                'Latin IPA Extensions' => ['0250', '02AF'],
-                'Letterlike Symbols' => ['2100', '214F'],
-                #'Limbu' => ['1900', '194F'],
-                #'Low Surrogates' => ['DC00', 'DFFF'],
-                'Malayalam' => ['0D00', '0D7F'],
-                'Mathematical Operators' => ['2200', '22FF'],
-                'Miscellaneous Mathematical Symbols-A' => ['27C0', '27EF'],
-                'Miscellaneous Mathematical Symbols-B' => ['2980', '29FF'],
-                'Miscellaneous Symbols and Arrows' => ['2B00', '2BFF'],
-                'Miscellaneous Symbols' => ['2600', '26FF'],
-                'Miscellaneous Technical' => ['2300', '23FF'],
-                'Mongolian' => ['1800', '18AF'],
-                'Myanmar' => ['1000', '109F'],
-                'Number Forms' => ['2150', '218F'],
-                'Ogham' => ['1680', '169F'],
-                'Optical Character Recognition' => ['2440', '245F'],
-                'Oriya' => ['0B00', '0B7F'],
-                'Phonetic Extensions' => ['1D00', '1D7F'],
-                'Runic' => ['16A0', '16FF'],
-                'Sinhala' => ['0D80', '0DFF'],
-                'Small Form Variants' => ['FE50', 'FE6F'],
-                'Spacing Modifier Letters' => ['02B0', '02FF'],
-                'Superscripts and Subscripts' => ['2070', '209F'],
-                'Supplemental Arrows-A' => ['27F0', '27FF'],
-                'Supplemental Arrows-B' => ['2900', '297F'],
-                'Supplemental Mathematical Operators' => ['2A00', '2AFF'],
-                'Syriac' => ['0700', '074F'],
-                'Tagalog' => ['1700', '171F'],
-                #'Tagbanwa' => ['1760', '177F'],
-                #'Tai Le' => ['1950', '197F'],
-                'Tamil' => ['0B80', '0BFF'],
-                'Telugu' => ['0C00', '0C7F'],
-                'Thaana' => ['0780', '07BF'],
-                'Thai' => ['0E00', '0E7F'],
-                #'Tibetan' => ['0F00', '0FFF'],
-                'Unified Canadian Aboriginal Syllabics' => ['1400', '167F'],
-                #'Variation Selectors' => ['FE00', 'FE0F'],
-                #'Yi Radicals' => ['A490', 'A4CF'],
-                #'Yi Syllables' => ['A000', 'A48F'],
-                #'Yijing Hexagram Symbols' => ['4DC0', '4DFF'],
+    %{$lglobal{utfblocks}} = (
+        'Alphabetic Presentation Forms' => ['FB00', 'FB4F'],
+        'Arabic Presentation Forms-A' => ['FB50', 'FDCF'], #Really FDFF but there are illegal characters in fdc0-fdff
+        'Arabic Presentation Forms-B' => ['FE70', 'FEFF'],
+        'Arabic' => ['0600', '06FF'],
+        'Armenian' => ['0530', '058F'],
+        'Arrows' => ['2190', '21FF'],
+        'Bengali' => ['0980', '09FF'],
+        'Block Elements' => ['2580', '259F'],
+        #'Bopomofo Extended' => ['31A0', '31BF'],
+        #'Bopomofo' => ['3100', '312F'],
+        'Box Drawing' => ['2500', '257F'],
+        'Braille Patterns' => ['2800', '28FF'],
+        'Buhid' => ['1740', '175F'],
+        'Cherokee' => ['13A0', '13FF'],
+        #'CJK Compatibility Forms' => ['FE30', 'FE4F'],
+        #'CJK Compatibility Ideographs' => ['F900', 'FAFF'],
+        #'CJK Compatibility' => ['3300', '33FF'],
+        #'CJK Radicals Supplement' => ['2E80', '2EFF'],
+        #'CJK Symbols and Punctuation' => ['3000', '303F'],
+        #'CJK Unified Ideographs Extension A' => ['3400', '4DBF'],
+        #'CJK Unified Ideographs' => ['4E00', '9FFF'],
+        'Combining Diacritical Marks for Symbols' => ['20D0', '20FF'],
+        'Combining Diacritical Marks' => ['0300', '036F'],
+        'Combining Half Marks' => ['FE20', 'FE2F'],
+        'Control Pictures' => ['2400', '243F'],
+        'Currency Symbols' => ['20A0', '20CF'],
+        'Cyrillic Supplementary' => ['0500', '052F'],
+        'Cyrillic' => ['0400', '04FF'],
+        'Devanagari' => ['0900', '097F'],
+        'Dingbats' => ['2700', '27BF'],
+        'Enclosed Alphanumerics' => ['2460', '24FF'],
+        #'Enclosed CJK Letters and Months' => ['3200', '32FF'],
+        'Ethiopic' => ['1200', '137F'],
+        'General Punctuation' => ['2000', '206F'],
+        'Geometric Shapes' => ['25A0', '25FF'],
+        'Georgian' => ['10A0', '10FF'],
+        'Greek and Coptic' => ['0370', '03FF'],
+        'Greek Extended' => ['1F00', '1FFF'],
+        'Gujarati' => ['0A80', '0AFF'],
+        'Gurmukhi' => ['0A00', '0A7F'],
+        'Halfwidth and Fullwidth Forms' => ['FF00', 'FFEF'],
+        #'Hangul Compatibility Jamo' => ['3130', '318F'],
+        #'Hangul Jamo' => ['1100', '11FF'],
+        #'Hangul Syllables' => ['AC00', 'D7AF'],
+        #'Hanunoo' => ['1720', '173F'],
+        'Hebrew' => ['0590', '05FF'],
+        #'High Private Use Surrogates' => ['DB80', 'DBFF'],
+        #'High Surrogates' => ['D800', 'DB7F'],
+        #'Hiragana' => ['3040', '309F'],
+        #'Ideographic Description Characters' => ['2FF0', '2FFF'],
+        #'Kanbun' => ['3190', '319F'],
+        #'Kangxi Radicals' => ['2F00', '2FDF'],
+        'Kannada' => ['0C80', '0CFF'],
+        #'Katakana Phonetic Extensions' => ['31F0', '31FF'],
+        #'Katakana' => ['30A0', '30FF'],
+        #'Khmer Symbols' => ['19E0', '19FF'],
+        #'Khmer' => ['1780', '17FF'],
+        'Lao' => ['0E80', '0EFF'],
+        'Latin Extended Additional' => ['1E00', '1EFF'],
+        'Latin Extended-A' => ['0100', '017F'],
+        'Latin Extended-B' => ['0180', '024F'],
+        'Latin IPA Extensions' => ['0250', '02AF'],
+        'Letterlike Symbols' => ['2100', '214F'],
+        #'Limbu' => ['1900', '194F'],
+        #'Low Surrogates' => ['DC00', 'DFFF'],
+        'Malayalam' => ['0D00', '0D7F'],
+        'Mathematical Operators' => ['2200', '22FF'],
+        'Miscellaneous Mathematical Symbols-A' => ['27C0', '27EF'],
+        'Miscellaneous Mathematical Symbols-B' => ['2980', '29FF'],
+        'Miscellaneous Symbols and Arrows' => ['2B00', '2BFF'],
+        'Miscellaneous Symbols' => ['2600', '26FF'],
+        'Miscellaneous Technical' => ['2300', '23FF'],
+        'Mongolian' => ['1800', '18AF'],
+        'Myanmar' => ['1000', '109F'],
+        'Number Forms' => ['2150', '218F'],
+        'Ogham' => ['1680', '169F'],
+        'Optical Character Recognition' => ['2440', '245F'],
+        'Oriya' => ['0B00', '0B7F'],
+        'Phonetic Extensions' => ['1D00', '1D7F'],
+        'Runic' => ['16A0', '16FF'],
+        'Sinhala' => ['0D80', '0DFF'],
+        'Small Form Variants' => ['FE50', 'FE6F'],
+        'Spacing Modifier Letters' => ['02B0', '02FF'],
+        'Superscripts and Subscripts' => ['2070', '209F'],
+        'Supplemental Arrows-A' => ['27F0', '27FF'],
+        'Supplemental Arrows-B' => ['2900', '297F'],
+        'Supplemental Mathematical Operators' => ['2A00', '2AFF'],
+        'Syriac' => ['0700', '074F'],
+        'Tagalog' => ['1700', '171F'],
+        #'Tagbanwa' => ['1760', '177F'],
+        #'Tai Le' => ['1950', '197F'],
+        'Tamil' => ['0B80', '0BFF'],
+        'Telugu' => ['0C00', '0C7F'],
+        'Thaana' => ['0780', '07BF'],
+        'Thai' => ['0E00', '0E7F'],
+        #'Tibetan' => ['0F00', '0FFF'],
+        'Unified Canadian Aboriginal Syllabics' => ['1400', '167F'],
+        #'Variation Selectors' => ['FE00', 'FE0F'],
+        #'Yi Radicals' => ['A490', 'A4CF'],
+        #'Yi Syllables' => ['A000', 'A48F'],
+        #'Yijing Hexagram Symbols' => ['4DC0', '4DFF'],
         );
 
-        %{$lglobal{grkbeta1}} = (
-                "\x{1F00}" => 'a)',
-                "\x{1F01}" => 'a(',
-                "\x{1F08}" => 'A)',
-                "\x{1F09}" => 'A(',
-                "\x{1FF8}" => 'O\\',
-                "\x{1FF9}" => 'O/',
-                "\x{1FFA}" => 'Ô\\',
-                "\x{1FFB}" => 'Ô/',
-                "\x{1FFC}" => 'Ô|',
-                "\x{1F10}" => 'e)',
-                "\x{1F11}" => 'e(',
-                "\x{1F18}" => 'E)',
-                "\x{1F19}" => 'E(',
-                "\x{1F20}" => 'ê)',
-                "\x{1F21}" => 'ê(',
-                "\x{1F28}" => 'Ê)',
-                "\x{1F29}" => 'Ê(',
-                "\x{1F30}" => 'i)',
-                "\x{1F31}" => 'i(',
-                "\x{1F38}" => 'I)',
-                "\x{1F39}" => 'I(',
-                "\x{1F40}" => 'o)',
-                "\x{1F41}" => 'o(',
-                "\x{1F48}" => 'O)',
-                "\x{1F49}" => 'O(',
-                "\x{1F50}" => 'y)',
-                "\x{1F51}" => 'y(',
-                "\x{1F59}" => 'Y(',
-                "\x{1F60}" => 'ô)',
-                "\x{1F61}" => 'ô(',
-                "\x{1F68}" => 'Ô)',
-                "\x{1F69}" => 'Ô(',
-                "\x{1F70}" => 'a\\',
-                "\x{1F71}" => 'a/',
-                "\x{1F72}" => 'e\\',
-                "\x{1F73}" => 'e/',
-                "\x{1F74}" => 'ê\\',
-                "\x{1F75}" => 'ê/',
-                "\x{1F76}" => 'i\\',
-                "\x{1F77}" => 'i/',
-                "\x{1F78}" => 'o\\',
-                "\x{1F79}" => 'o/',
-                "\x{1F7A}" => 'y\\',
-                "\x{1F7B}" => 'y/',
-                "\x{1F7C}" => 'ô\\',
-                "\x{1F7D}" => 'ô/',
-                "\x{1FB0}" => 'a=',
-                "\x{1FB1}" => 'a_',
-                "\x{1FB3}" => 'a|',
-                "\x{1FB6}" => 'a~',
-                "\x{1FB8}" => 'A=',
-                "\x{1FB9}" => 'A_',
-                "\x{1FBA}" => 'A\\',
-                "\x{1FBB}" => 'A/',
-                "\x{1FBC}" => 'A|',
-                "\x{1FC3}" => 'ê|',
-                "\x{1FC6}" => 'ê~',
-                "\x{1FC8}" => 'E\\',
-                "\x{1FC9}" => 'E/',
-                "\x{1FCA}" => 'Ê\\',
-                "\x{1FCB}" => 'Ê/',
-                "\x{1FCC}" => 'Ê|',
-                "\x{1FD0}" => 'i=',
-                "\x{1FD1}" => 'i_',
-                "\x{1FD6}" => 'i~',
-                "\x{1FD8}" => 'I=',
-                "\x{1FD9}" => 'I_',
-                "\x{1FDA}" => 'I\\',
-                "\x{1FDB}" => 'I/',
-                "\x{1FE0}" => 'y=',
-                "\x{1FE1}" => 'y_',
-                "\x{1FE4}" => 'r)',
-                "\x{1FE5}" => 'r(',
-                "\x{1FE6}" => 'y~',
-                "\x{1FE8}" => 'Y=',
-                "\x{1FE9}" => 'Y_',
-                "\x{1FEA}" => 'Y\\',
-                "\x{1FEB}" => 'Y/',
-                "\x{1FEC}" => 'R(',
-                "\x{1FF6}" => 'ô~',
-                "\x{1FF3}" => 'ô|',
-                "\x{03AA}" => 'I+',
-                "\x{03AB}" => 'Y+',
-                "\x{03CA}" => 'i+',
-                "\x{03CB}" => 'y+',
+    %{$lglobal{grkbeta1}} = (
+        "\x{1F00}" => 'a)',
+        "\x{1F01}" => 'a(',
+        "\x{1F08}" => 'A)',
+        "\x{1F09}" => 'A(',
+        "\x{1FF8}" => 'O\\',
+        "\x{1FF9}" => 'O/',
+        "\x{1FFA}" => 'Ô\\',
+        "\x{1FFB}" => 'Ô/',
+        "\x{1FFC}" => 'Ô|',
+        "\x{1F10}" => 'e)',
+        "\x{1F11}" => 'e(',
+        "\x{1F18}" => 'E)',
+        "\x{1F19}" => 'E(',
+        "\x{1F20}" => 'ê)',
+        "\x{1F21}" => 'ê(',
+        "\x{1F28}" => 'Ê)',
+        "\x{1F29}" => 'Ê(',
+        "\x{1F30}" => 'i)',
+        "\x{1F31}" => 'i(',
+        "\x{1F38}" => 'I)',
+        "\x{1F39}" => 'I(',
+        "\x{1F40}" => 'o)',
+        "\x{1F41}" => 'o(',
+        "\x{1F48}" => 'O)',
+        "\x{1F49}" => 'O(',
+        "\x{1F50}" => 'y)',
+        "\x{1F51}" => 'y(',
+        "\x{1F59}" => 'Y(',
+        "\x{1F60}" => 'ô)',
+        "\x{1F61}" => 'ô(',
+        "\x{1F68}" => 'Ô)',
+        "\x{1F69}" => 'Ô(',
+        "\x{1F70}" => 'a\\',
+        "\x{1F71}" => 'a/',
+        "\x{1F72}" => 'e\\',
+        "\x{1F73}" => 'e/',
+        "\x{1F74}" => 'ê\\',
+        "\x{1F75}" => 'ê/',
+        "\x{1F76}" => 'i\\',
+        "\x{1F77}" => 'i/',
+        "\x{1F78}" => 'o\\',
+        "\x{1F79}" => 'o/',
+        "\x{1F7A}" => 'y\\',
+        "\x{1F7B}" => 'y/',
+        "\x{1F7C}" => 'ô\\',
+        "\x{1F7D}" => 'ô/',
+        "\x{1FB0}" => 'a=',
+        "\x{1FB1}" => 'a_',
+        "\x{1FB3}" => 'a|',
+        "\x{1FB6}" => 'a~',
+        "\x{1FB8}" => 'A=',
+        "\x{1FB9}" => 'A_',
+        "\x{1FBA}" => 'A\\',
+        "\x{1FBB}" => 'A/',
+        "\x{1FBC}" => 'A|',
+        "\x{1FC3}" => 'ê|',
+        "\x{1FC6}" => 'ê~',
+        "\x{1FC8}" => 'E\\',
+        "\x{1FC9}" => 'E/',
+        "\x{1FCA}" => 'Ê\\',
+        "\x{1FCB}" => 'Ê/',
+        "\x{1FCC}" => 'Ê|',
+        "\x{1FD0}" => 'i=',
+        "\x{1FD1}" => 'i_',
+        "\x{1FD6}" => 'i~',
+        "\x{1FD8}" => 'I=',
+        "\x{1FD9}" => 'I_',
+        "\x{1FDA}" => 'I\\',
+        "\x{1FDB}" => 'I/',
+        "\x{1FE0}" => 'y=',
+        "\x{1FE1}" => 'y_',
+        "\x{1FE4}" => 'r)',
+        "\x{1FE5}" => 'r(',
+        "\x{1FE6}" => 'y~',
+        "\x{1FE8}" => 'Y=',
+        "\x{1FE9}" => 'Y_',
+        "\x{1FEA}" => 'Y\\',
+        "\x{1FEB}" => 'Y/',
+        "\x{1FEC}" => 'R(',
+        "\x{1FF6}" => 'ô~',
+        "\x{1FF3}" => 'ô|',
+        "\x{03AA}" => 'I+',
+        "\x{03AB}" => 'Y+',
+        "\x{03CA}" => 'i+',
+        "\x{03CB}" => 'y+',
         );
 
-        %{$lglobal{grkbeta2}} = (
-                "\x{1F02}" => 'a)\\',
-                "\x{1F03}" => 'a(\\',
-                "\x{1F04}" => 'a)/',
-                "\x{1F05}" => 'a(/',
-                "\x{1F06}" => 'a~)',
-                "\x{1F07}" => 'a~(',
-                "\x{1F0A}" => 'A)\\',
-                "\x{1F0B}" => 'A(\\',
-                "\x{1F0C}" => 'A)/',
-                "\x{1F0D}" => 'A(/',
-                "\x{1F0E}" => 'A~)',
-                "\x{1F0F}" => 'A~(',
-                "\x{1F12}" => 'e)\\',
-                "\x{1F13}" => 'e(\\',
-                "\x{1F14}" => 'e)/',
-                "\x{1F15}" => 'e(/',
-                "\x{1F1A}" => 'E)\\',
-                "\x{1F1B}" => 'E(\\',
-                "\x{1F1C}" => 'E)/',
-                "\x{1F1D}" => 'E(/',
-                "\x{1F22}" => 'ê)\\',
-                "\x{1F23}" => 'ê(\\',
-                "\x{1F24}" => 'ê)/',
-                "\x{1F25}" => 'ê(/',
-                "\x{1F26}" => 'ê~)',
-                "\x{1F27}" => 'ê~(',
-                "\x{1F2A}" => 'Ê)\\',
-                "\x{1F2B}" => 'Ê(\\',
-                "\x{1F2C}" => 'Ê)/',
-                "\x{1F2D}" => 'Ê(/',
-                "\x{1F2E}" => 'Ê~)',
-                "\x{1F2F}" => 'Ê~(',
-                "\x{1F32}" => 'i)\\',
-                "\x{1F33}" => 'i(\\',
-                "\x{1F34}" => 'i)/',
-                "\x{1F35}" => 'i(/',
-                "\x{1F36}" => 'i~)',
-                "\x{1F37}" => 'i~(',
-                "\x{1F3A}" => 'I)\\',
-                "\x{1F3B}" => 'I(\\',
-                "\x{1F3C}" => 'I)/',
-                "\x{1F3D}" => 'I(/',
-                "\x{1F3E}" => 'I~)',
-                "\x{1F3F}" => 'I~(',
-                "\x{1F42}" => 'o)\\',
-                "\x{1F43}" => 'o(\\',
-                "\x{1F44}" => 'o)/',
-                "\x{1F45}" => 'o(/',
-                "\x{1F4A}" => 'O)\\',
-                "\x{1F4B}" => 'O(\\',
-                "\x{1F4C}" => 'O)/',
-                "\x{1F4D}" => 'O(/',
-                "\x{1F52}" => 'y)\\',
-                "\x{1F53}" => 'y(\\',
-                "\x{1F54}" => 'y)/',
-                "\x{1F55}" => 'y(/',
-                "\x{1F56}" => 'y~)',
-                "\x{1F57}" => 'y~(',
-                "\x{1F5B}" => 'Y(\\',
-                "\x{1F5D}" => 'Y(/',
-                "\x{1F5F}" => 'Y~(',
-                "\x{1F62}" => 'ô)\\',
-                "\x{1F63}" => 'ô(\\',
-                "\x{1F64}" => 'ô)/',
-                "\x{1F65}" => 'ô(/',
-                "\x{1F66}" => 'ô~)',
-                "\x{1F67}" => 'ô~(',
-                "\x{1F6A}" => 'Ô)\\',
-                "\x{1F6B}" => 'Ô(\\',
-                "\x{1F6C}" => 'Ô)/',
-                "\x{1F6D}" => 'Ô(/',
-                "\x{1F6E}" => 'Ô~)',
-                "\x{1F6F}" => 'Ô~(',
-                "\x{1F80}" => 'a)|',
-                "\x{1F81}" => 'a(|',
-                "\x{1F88}" => 'A)|',
-                "\x{1F89}" => 'A(|',
-                "\x{1F90}" => 'ê)|',
-                "\x{1F91}" => 'ê(|',
-                "\x{1F98}" => 'Ê)|',
-                "\x{1F99}" => 'Ê(|',
-                "\x{1FA0}" => 'ô)|',
-                "\x{1FA1}" => 'ô(|',
-                "\x{1FA8}" => 'Ô)|',
-                "\x{1FA9}" => 'Ô(|',
-                "\x{1FB2}" => 'a\|',
-                "\x{1FB4}" => 'a/|',
-                "\x{1FB7}" => 'a~|',
-                "\x{1FC2}" => 'ê\|',
-                "\x{1FC4}" => 'ê/|',
-                "\x{1FC7}" => 'ê~|',
-                "\x{1FD2}" => 'i\+',
-                "\x{1FD3}" => 'i/+',
-                "\x{1FD7}" => 'i~+',
-                "\x{1FE2}" => 'y\+',
-                "\x{1FE3}" => 'y/+',
-                "\x{1FE7}" => 'y~+',
-                "\x{1FF2}" => 'ô\|',
-                "\x{1FF4}" => 'ô/|',
-                "\x{1FF7}" => 'ô~|',
-                "\x{0390}" => 'i/+',
-                "\x{03B0}" => 'y/+',
+    %{$lglobal{grkbeta2}} = (
+        "\x{1F02}" => 'a)\\',
+        "\x{1F03}" => 'a(\\',
+        "\x{1F04}" => 'a)/',
+        "\x{1F05}" => 'a(/',
+        "\x{1F06}" => 'a~)',
+        "\x{1F07}" => 'a~(',
+        "\x{1F0A}" => 'A)\\',
+        "\x{1F0B}" => 'A(\\',
+        "\x{1F0C}" => 'A)/',
+        "\x{1F0D}" => 'A(/',
+        "\x{1F0E}" => 'A~)',
+        "\x{1F0F}" => 'A~(',
+        "\x{1F12}" => 'e)\\',
+        "\x{1F13}" => 'e(\\',
+        "\x{1F14}" => 'e)/',
+        "\x{1F15}" => 'e(/',
+        "\x{1F1A}" => 'E)\\',
+        "\x{1F1B}" => 'E(\\',
+        "\x{1F1C}" => 'E)/',
+        "\x{1F1D}" => 'E(/',
+        "\x{1F22}" => 'ê)\\',
+        "\x{1F23}" => 'ê(\\',
+        "\x{1F24}" => 'ê)/',
+        "\x{1F25}" => 'ê(/',
+        "\x{1F26}" => 'ê~)',
+        "\x{1F27}" => 'ê~(',
+        "\x{1F2A}" => 'Ê)\\',
+        "\x{1F2B}" => 'Ê(\\',
+        "\x{1F2C}" => 'Ê)/',
+        "\x{1F2D}" => 'Ê(/',
+        "\x{1F2E}" => 'Ê~)',
+        "\x{1F2F}" => 'Ê~(',
+        "\x{1F32}" => 'i)\\',
+        "\x{1F33}" => 'i(\\',
+        "\x{1F34}" => 'i)/',
+        "\x{1F35}" => 'i(/',
+        "\x{1F36}" => 'i~)',
+        "\x{1F37}" => 'i~(',
+        "\x{1F3A}" => 'I)\\',
+        "\x{1F3B}" => 'I(\\',
+        "\x{1F3C}" => 'I)/',
+        "\x{1F3D}" => 'I(/',
+        "\x{1F3E}" => 'I~)',
+        "\x{1F3F}" => 'I~(',
+        "\x{1F42}" => 'o)\\',
+        "\x{1F43}" => 'o(\\',
+        "\x{1F44}" => 'o)/',
+        "\x{1F45}" => 'o(/',
+        "\x{1F4A}" => 'O)\\',
+        "\x{1F4B}" => 'O(\\',
+        "\x{1F4C}" => 'O)/',
+        "\x{1F4D}" => 'O(/',
+        "\x{1F52}" => 'y)\\',
+        "\x{1F53}" => 'y(\\',
+        "\x{1F54}" => 'y)/',
+        "\x{1F55}" => 'y(/',
+        "\x{1F56}" => 'y~)',
+        "\x{1F57}" => 'y~(',
+        "\x{1F5B}" => 'Y(\\',
+        "\x{1F5D}" => 'Y(/',
+        "\x{1F5F}" => 'Y~(',
+        "\x{1F62}" => 'ô)\\',
+        "\x{1F63}" => 'ô(\\',
+        "\x{1F64}" => 'ô)/',
+        "\x{1F65}" => 'ô(/',
+        "\x{1F66}" => 'ô~)',
+        "\x{1F67}" => 'ô~(',
+        "\x{1F6A}" => 'Ô)\\',
+        "\x{1F6B}" => 'Ô(\\',
+        "\x{1F6C}" => 'Ô)/',
+        "\x{1F6D}" => 'Ô(/',
+        "\x{1F6E}" => 'Ô~)',
+        "\x{1F6F}" => 'Ô~(',
+        "\x{1F80}" => 'a)|',
+        "\x{1F81}" => 'a(|',
+        "\x{1F88}" => 'A)|',
+        "\x{1F89}" => 'A(|',
+        "\x{1F90}" => 'ê)|',
+        "\x{1F91}" => 'ê(|',
+        "\x{1F98}" => 'Ê)|',
+        "\x{1F99}" => 'Ê(|',
+        "\x{1FA0}" => 'ô)|',
+        "\x{1FA1}" => 'ô(|',
+        "\x{1FA8}" => 'Ô)|',
+        "\x{1FA9}" => 'Ô(|',
+        "\x{1FB2}" => 'a\|',
+        "\x{1FB4}" => 'a/|',
+        "\x{1FB7}" => 'a~|',
+        "\x{1FC2}" => 'ê\|',
+        "\x{1FC4}" => 'ê/|',
+        "\x{1FC7}" => 'ê~|',
+        "\x{1FD2}" => 'i\+',
+        "\x{1FD3}" => 'i/+',
+        "\x{1FD7}" => 'i~+',
+        "\x{1FE2}" => 'y\+',
+        "\x{1FE3}" => 'y/+',
+        "\x{1FE7}" => 'y~+',
+        "\x{1FF2}" => 'ô\|',
+        "\x{1FF4}" => 'ô/|',
+        "\x{1FF7}" => 'ô~|',
+        "\x{0390}" => 'i/+',
+        "\x{03B0}" => 'y/+',
         );
 
-        %{$lglobal{grkbeta3}} = (
-                "\x{1F82}" => 'a)\|',
-                "\x{1F83}" => 'a(\|',
-                "\x{1F84}" => 'a)/|',
-                "\x{1F85}" => 'a(/|',
-                "\x{1F86}" => 'a~)|',
-                "\x{1F87}" => 'a~(|',
-                "\x{1F8A}" => 'A)\|',
-                "\x{1F8B}" => 'A(\|',
-                "\x{1F8C}" => 'A)/|',
-                "\x{1F8D}" => 'A(/|',
-                "\x{1F8E}" => 'A~)|',
-                "\x{1F8F}" => 'A~(|',
-                "\x{1F92}" => 'ê)\|',
-                "\x{1F93}" => 'ê(\|',
-                "\x{1F94}" => 'ê)/|',
-                "\x{1F95}" => 'ê(/|',
-                "\x{1F96}" => 'ê~)|',
-                "\x{1F97}" => 'ê~(|',
-                "\x{1F9A}" => 'Ê)\|',
-                "\x{1F9B}" => 'Ê(\|',
-                "\x{1F9C}" => 'Ê)/|',
-                "\x{1F9D}" => 'Ê(/|',
-                "\x{1F9E}" => 'Ê~)|',
-                "\x{1F9F}" => 'Ê~(|',
-                "\x{1FA2}" => 'ô)\|',
-                "\x{1FA3}" => 'ô(\|',
-                "\x{1FA4}" => 'ô)/|',
-                "\x{1FA5}" => 'ô(/|',
-                "\x{1FA6}" => 'ô~)|',
-                "\x{1FA7}" => 'ô~(|',
-                "\x{1FAA}" => 'Ô)\|',
-                "\x{1FAB}" => 'Ô(\|',
-                "\x{1FAC}" => 'Ô)/|',
-                "\x{1FAD}" => 'Ô(/|',
-                "\x{1FAE}" => 'Ô~)|',
-                "\x{1FAF}" => 'Ô~(|',
+    %{$lglobal{grkbeta3}} = (
+        "\x{1F82}" => 'a)\|',
+        "\x{1F83}" => 'a(\|',
+        "\x{1F84}" => 'a)/|',
+        "\x{1F85}" => 'a(/|',
+        "\x{1F86}" => 'a~)|',
+        "\x{1F87}" => 'a~(|',
+        "\x{1F8A}" => 'A)\|',
+        "\x{1F8B}" => 'A(\|',
+        "\x{1F8C}" => 'A)/|',
+        "\x{1F8D}" => 'A(/|',
+        "\x{1F8E}" => 'A~)|',
+        "\x{1F8F}" => 'A~(|',
+        "\x{1F92}" => 'ê)\|',
+        "\x{1F93}" => 'ê(\|',
+        "\x{1F94}" => 'ê)/|',
+        "\x{1F95}" => 'ê(/|',
+        "\x{1F96}" => 'ê~)|',
+        "\x{1F97}" => 'ê~(|',
+        "\x{1F9A}" => 'Ê)\|',
+        "\x{1F9B}" => 'Ê(\|',
+        "\x{1F9C}" => 'Ê)/|',
+        "\x{1F9D}" => 'Ê(/|',
+        "\x{1F9E}" => 'Ê~)|',
+        "\x{1F9F}" => 'Ê~(|',
+        "\x{1FA2}" => 'ô)\|',
+        "\x{1FA3}" => 'ô(\|',
+        "\x{1FA4}" => 'ô)/|',
+        "\x{1FA5}" => 'ô(/|',
+        "\x{1FA6}" => 'ô~)|',
+        "\x{1FA7}" => 'ô~(|',
+        "\x{1FAA}" => 'Ô)\|',
+        "\x{1FAB}" => 'Ô(\|',
+        "\x{1FAC}" => 'Ô)/|',
+        "\x{1FAD}" => 'Ô(/|',
+        "\x{1FAE}" => 'Ô~)|',
+        "\x{1FAF}" => 'Ô~(|',
         );
 
-        $lglobal{checkcolor} = (OS_Win) ? 'white' : $activecolor;
-        my $scroll_gif = 'R0lGODlhCAAQAIAAAAAAAP///yH5BAEAAAEALAAAAAAIABAAAAIUjAGmiMutopz0pPgwk7B6/3SZphQAOw==';
-        $lglobal{scrollgif} = $top->Photo(
-                -data => $scroll_gif,
-                -format => 'gif',
+    $lglobal{checkcolor} = (OS_Win) ? 'white' : $activecolor;
+    my $scroll_gif = 'R0lGODlhCAAQAIAAAAAAAP///yH5BAEAAAEALAAAAAAIABAAAAIUjAGmiMutopz0pPgwk7B6/3SZphQAOw==';
+    $lglobal{scrollgif} = $top->Photo(
+        -data => $scroll_gif,
+        -format => 'gif',
         );
 }
 
@@ -13535,13 +13558,13 @@ sub findmatchingclosebracket
     }
     return $closeIndex;
 }
-	   
+
 sub findgreek{
-    my ($startIndex) = @_; 
+    my ($startIndex) = @_;
     my $chars;
     my $greekIndex = $textwindow->search('[Greek:',  $startIndex.'+5c', 'end');
     if ($greekIndex)
-    { 
+    {
 	my $closeIndex = findmatchingclosebracket($greekIndex);
 	return ($greekIndex, $closeIndex);
     }
@@ -13571,7 +13594,7 @@ sub findandextractgreek{
 	$lglobal{grtext}->insert('1.0', $text);
     }
 }
-	
+
 
 sub greekpopup{
         my $buildlabel;
@@ -15830,10 +15853,10 @@ sub betaascii{
 	$phrase =~ s/([AEIOUYÊÔ])\(/H$1/g;
 	$phrase =~ s/([aeiouyêô]+)\(/h$1/g;
 	return $phrase;
-}		  
-			  
-	
-	
+}
+
+
+
 
 sub pageadjust{
         if (defined $lglobal{padjpop}){
@@ -16206,7 +16229,7 @@ sub pgrenum{ # Re sequence page markers
         if ($offset<0){
                 @marks = (sort(keys(%pagenumbers)));
                 $num = $start = $lglobal{pagenumentry}->get;
-                $start =~ s/Pg(\d+)/$1/; 
+                $start =~ s/Pg(\d+)/$1/;
                 while($num = $textwindow->markPrevious($num)){
                         if ($num =~ /Pg\d+/){
                                 $mark = $num;
@@ -16381,7 +16404,7 @@ sub saveset{
         my $savefile = $thispath.'setting.rc';
         $geometry = $top->geometry unless $geometry;
         if (open my $save_handle, '>', $savefile){
-                print $save_handle 
+                print $save_handle
 "# This file contains your saved settings for guiguts.
 # It is automatically generated when you save your settings.
 # If you delete it, all the settings will revert to defaults.
@@ -16442,15 +16465,16 @@ sub saveset{
         }
 }
 
-sub os_normal{
-        $_[0] =~ s|/|\\|g if OS_Win;
-        return $_[0];
+sub os_normal {
+    $_[0] =~ s|/|\\|g if OS_Win;
+#    print "os_normal: ", $_[0], "\n"; # DEBUG: vls -- Infinite loop! Don't know if it should.
+    return $_[0];
 }
 
-sub escape_problems{
-        $_[0] =~ s/\\+$/\\\\/g;
-        $_[0] =~ s/(?!<\\)'/\\'/g;
-        return $_[0];
+sub escape_problems {
+    $_[0] =~ s/\\+$/\\\\/g;
+    $_[0] =~ s/(?!<\\)'/\\'/g;
+    return $_[0];
 }
 
 sub uchar{
@@ -16665,31 +16689,34 @@ sub drag{
         });
 }
 
-sub jeebiesrun{
+sub jeebiesrun {
         my $listbox = shift;
         $listbox->delete('0','end');
         savefile() if ($textwindow->numberChanges);
         my $title = os_normal($lglobal{global_filename});
-        $title = Win32::GetShortPathName($title) if OS_Win;
+        $title = dos_path($title) if OS_Win; # FIXME vls -- put this in a sub
         my $types = [
                 ['Executable',  ['.exe', ]],
                 ['All Files',   ['*']],
         ];
-        unless ($jeebiespath){ $jeebiespath = $textwindow->getOpenFile(-filetypes => $types, -title => 'Where is the Jeebies executable?')};
+        unless ($jeebiespath){
+            $jeebiespath = $textwindow->getOpenFile(-filetypes => $types,
+                                                    -title => 'Where is the Jeebies executable?')
+        };
         return unless $jeebiespath;
         my $jeebiesoptions = "-$jeebiesmode".'e';
         $jeebiespath = os_normal($jeebiespath);
-        $jeebiespath = Win32::GetShortPathName($jeebiespath) if OS_Win;
+        $jeebiespath = dos_path($jeebiespath) if OS_Win;
         %jeeb = ();
         my $mark = 0;
         $top->Busy(-recurse => 1);
         $listbox->insert('end', '---------------- Please wait: Processing. ----------------');
         $listbox->update;
-        if(open my $fh, '-|', "$jeebiespath $jeebiesoptions $title"){
-                while (my $line = <$fh>){
+        if(open my $fh, '-|', "$jeebiespath $jeebiesoptions $title") {
+                while (my $line = <$fh>) {
                         $line =~ s/\n//;
                         $line =~ s/^\s+/  /;
-                        if ($line){
+                        if ($line) {
                                 $jeeb{$line} = '';
                                 my ($linenum, $colnum);
                                 $linenum = $1 if ($line =~ /Line (\d+)/);
@@ -16700,7 +16727,7 @@ sub jeebiesrun{
                                 $listbox->insert('end', $line);
                         }
                 };
-        }else{
+        } else {
                 warn "Unable to run Jeebies. $!";
         }
         $listbox->delete('0');
@@ -16879,6 +16906,13 @@ sub text_convert_tb
 {
     my $tb = '       *       *       *       *       *';
     $textwindow -> FindAndReplaceAll('-exact', '-nocase', '<tb>', $tb);
+}
+
+# vls -- This turns long Windows path to DOS path, e.g., C:\Program Files\ becomes C:\Progra~1\
+# Probably need this for DOS command window on Win98/95.
+sub dos_path {
+    $_[0] = Win32::GetShortPathName($_[0]);
+    return $_[0];
 }
 
 # vim: sw=8 ts=8 expandtab
