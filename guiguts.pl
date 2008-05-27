@@ -10,8 +10,8 @@ my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 require 5.008;
 use strict;
-#use warnings;
-use diagnostics;
+use warnings;
+#use diagnostics;
 use Tk;
 #use Data::Dumper;
 
