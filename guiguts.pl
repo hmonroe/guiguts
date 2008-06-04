@@ -9232,16 +9232,23 @@ sub markpages{
                 $searchendindex = $textwindow->index("$searchstartindex lineend");
                 $line = $textwindow->get($searchstartindex,$searchendindex);
 
-                # get the page name and list of proofers:
-                #  look for File: followed by zero or more spaces, then
-                #  non-greedily capture everything up to the first period
-                #  (the page), non-greedily ignore everything up to the
+                # get the page name - we do this separate from pulling the
+                # proofer names in case we did an Import Test Prep Files
+                # which does not include proofer names
+                #  look for one or more dashes followed by File: followed
+                #  by zero or more spaces, then non-greedily capture everything
+                #  up to the first period
+                if($line =~ /-+File:\s*(.*?)\./) {
+                        $page = $1;
+                }
+                # get list of proofers:
+                #  look for one or more dashes followed by File:, then
+                #  non-greedily ignore everything up to the
                 #  string of dashes, ignore the dashes, then capture
                 #  everything until the dashes begin again (proofer string)
-                if($line =~ /File:\s*(.*?)\..*?-+([^-]+)-+/) {
-                        $page = $1;
+                if($line =~ /-+File:.*?-+([^-]+)-+/) {
                         # split the proofer string into parts
-                        @{$proofers{$page}} = split("\Q\\\E", $2);
+                        @{$proofers{$page}} = split("\Q\\\E", $1);
                 }
 
                 $pagemark = 'Pg'.$page;
