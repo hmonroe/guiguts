@@ -44,7 +44,7 @@ sub Load{ # Custom File load routine; will automatically handle Unicode and line
                 my $line = <$fh>;
 		utf8::decode($line);
                 $line =~ s/^\x{FEFF}?//;
-                $line =~ s/\cM\cJ|\cM|\cJ/\n/g;
+                $line =~ s/\cM\cJ|\cM|\cJ/\n/g; # FIXME: sub this conversion
                 $line =~ s/[\t \xA0]+$//;
                 $w->ntinsert('end', $line);
                 while (<$fh>){
@@ -704,7 +704,8 @@ use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
 
-$SIG{ALRM} = 'IGNORE';  # ignore any watchdog timer alarms. Subroutines that take a long time to complete can trip it
+# ignore any watchdog timer alarms. Subroutines that take a long time to complete can trip it
+$SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub {myexit()};
 
 our $activecolor = '#f2f818';
@@ -965,7 +966,7 @@ sub updatesel{  # Update Last Selection readout in status bar
                 $msg = ' No Selection ';
         }
         my $msgln = length($msg);
-        no warnings 'uninitialized';
+        #no warnings 'uninitialized';
         $lglobal{selmaxlength} = $msgln if ($msgln > $lglobal{selmaxlength});
         $lglobal{selectionlabel}->configure(-text => $msg, -width => $lglobal{selmaxlength});
         update_indicators();
@@ -1231,7 +1232,7 @@ sub binsave {         # save the .bin file associated with the text file
     if (open my $bin, '>', $binname){
         print $bin "\%pagenumbers = (\n";
         for my $page( sort {$a cmp $b} keys %pagenumbers){
-            no warnings 'uninitialized';
+            #no warnings 'uninitialized';
             print $bin " '$page' => {";
             print $bin "'offset' => '$pagenumbers{$page}{offset}', ";
             print $bin "'label' => '$pagenumbers{$page}{label}', ";
@@ -1251,7 +1252,7 @@ sub binsave {         # save the .bin file associated with the text file
         my ($page, $prfr);
         delete $proofers{''};
         foreach $page (sort keys %proofers) {
-            no warnings 'uninitialized';
+            #no warnings 'uninitialized';
             for my $round (1..$lglobal{numrounds}){
                 if (defined $proofers{$page}->[$round]){
                     print $bin '$proofers{\''.$page.'\'}['.$round.'] = \''.$proofers{$page}->[$round].'\';'."\n";
@@ -1488,7 +1489,7 @@ sub update_indicators{ # Routine to update the status bar when somthing has chan
         if ($lglobal{longordlabel}){
                 my $msg = charnames::viacode($ordinal)||'';
                 my $msgln = length(" Dec $ordinal : Hex $hexi : $msg ");
-                no warnings 'uninitialized';
+                #no warnings 'uninitialized';
                 $lglobal{ordmaxlength} = $msgln if ($msgln > $lglobal{ordmaxlength});
                 $lglobal{ordinallabel}->configure(-text => " Dec $ordinal : Hex $hexi : $msg ", -width => $lglobal{ordmaxlength}, -justify => 'left');
 
@@ -1585,7 +1586,7 @@ sub update_indicators{ # Routine to update the status bar when somthing has chan
                                         $lglobal{statushelp}->attach($lglobal{proofbutton}, -balloonmsg => "Proofers for the current page.");
                         }
                         {
-                                no warnings 'uninitialized';
+                                #no warnings 'uninitialized';
                                 my ($pg, undef) = each %proofers;
                                 for my $round ( 1..8 ) {
                                         last unless defined $proofers{$pg}->[$round];
@@ -1971,7 +1972,7 @@ sub tglprfbar{  # Make toolbar visible if invisible and vice versa
                 $geom[1] += $counter_frame->height;
                 $top->geometry("$geom[0]x$geom[1]+$geom[2]+$geom[3]");
                 {
-                        no warnings 'uninitialized';
+                        #no warnings 'uninitialized';
                         my ($pg, undef) = each %proofers;
                         for my $round ( 1..8 ) {
                                 last unless defined $proofers{$pg}->[$round];
@@ -2242,7 +2243,7 @@ sub buildmenu{                  # The main menu building code.
                                                            $name = $textwindow->getOpenFile(-filetypes => $types, -title => 'File Include', -initialdir => $globallastpath);
                                                            $textwindow->IncludeFile($name) if defined($name) and length($name);
                                                            update_indicators()}],
-                    [Button => '~Clear', -command => sub{return if (confirmempty() =~ /cancel/i); clearvars(); update_indicators()}],
+                    [Button => '~Close', -command => sub{return if (confirmempty() =~ /cancel/i); clearvars(); update_indicators()}],
                     '',
                     [Button => 'Import Prep Text Files', -command => sub{prep_import()}],
                     [Button => 'Export As Prep Text Files', -command => sub{prep_export()}],
@@ -2700,44 +2701,46 @@ sub gotolabel{ # Pop up a window which will allow jumping directly to a specifie
         }
 }
 
-sub gotoline{ # Pop up a window which will allow jumping directly to a specified line
-        unless (defined($lglobal{gotolinepop})){
-                $lglobal{gotolinepop} = $top->DialogBox(
-                        -buttons => [qw[Ok Cancel]],
-                        -title => 'Goto Line Number',
-                        -popover => $top,
-                        -command => sub {
-                                if ($_[0] eq 'Ok'){
-                                        $lglobal{line_number} =~ s/[\D.]//g;
-                                        my ($last_line,$junk) = split(/\./, $textwindow->index('end'));
-                                        ($lglobal{line_number},$junk) = split(/\./, $textwindow->index('insert')) unless $lglobal{line_number};
-                                        $lglobal{line_number} =~ s/^\s+|\s+$//g;
-                                        if ($lglobal{line_number} > $last_line) {$lglobal{line_number} = $last_line; }
-                                        $textwindow->markSet('insert', "$lglobal{line_number}.0");
-                                        $textwindow->see('insert');
-                                        update_indicators();
-                                        $lglobal{gotolinepop}->destroy;
-                                        undef $lglobal{gotolinepop}
-                                }else{
-                                        $lglobal{gotolinepop}->destroy;
-                                        undef $lglobal{gotolinepop}
-                                }
-                        }
-                );
-                $lglobal{gotolinepop}->resizable('no','no');
-                my $frame = $lglobal{gotolinepop}->Frame->pack(-fill => 'x');
-                $frame->Label(-text => 'Enter Line number: ')->pack(-side => 'left');
-                my $entry = $frame->Entry(
-                        -background => 'white',
-                        -width => 25,
-                        -textvariable => \$lglobal{line_number},
-                )->pack(-side => 'left',-fill => 'x');
-                $lglobal{gotolinepop}->Advertise(entry => $entry);
-                $lglobal{gotolinepop}->Popup;
-                $lglobal{gotolinepop}->Subwidget('entry')->focus;
-                $lglobal{gotolinepop}->Subwidget('entry')->selectionRange(0,'end');
-                $lglobal{gotolinepop}->Wait;
-        }
+# Pop up a window which will allow jumping directly to a specified line
+sub gotoline {
+    unless (defined($lglobal{gotolinepop})){
+        $lglobal{gotolinepop} = $top->DialogBox(
+            -buttons => [qw[Ok Cancel]],
+            -title => 'Goto Line Number',
+            -popover => $top,
+            -command => sub {
+                #no warnings 'uninitialized';
+                if ($_[0] eq 'Ok'){ # FIXME: uninitialized warning $_[0]
+                    $lglobal{line_number} =~ s/[\D.]//g;
+                    my ($last_line,$junk) = split(/\./, $textwindow->index('end'));
+                    ($lglobal{line_number},$junk) = split(/\./, $textwindow->index('insert')) unless $lglobal{line_number};
+                    $lglobal{line_number} =~ s/^\s+|\s+$//g;
+                    if ($lglobal{line_number} > $last_line) {$lglobal{line_number} = $last_line; }
+                    $textwindow->markSet('insert', "$lglobal{line_number}.0");
+                    $textwindow->see('insert');
+                    update_indicators();
+                    $lglobal{gotolinepop}->destroy;
+                    undef $lglobal{gotolinepop}
+                }else{
+                    $lglobal{gotolinepop}->destroy;
+                    undef $lglobal{gotolinepop}
+                }
+            }
+            );
+        $lglobal{gotolinepop}->resizable('no','no');
+        my $frame = $lglobal{gotolinepop}->Frame->pack(-fill => 'x');
+        $frame->Label(-text => 'Enter Line number: ')->pack(-side => 'left');
+        my $entry = $frame->Entry(
+            -background => 'white',
+            -width => 25,
+            -textvariable => \$lglobal{line_number},
+            )->pack(-side => 'left',-fill => 'x');
+        $lglobal{gotolinepop}->Advertise(entry => $entry);
+        $lglobal{gotolinepop}->Popup;
+        $lglobal{gotolinepop}->Subwidget('entry')->focus;
+        $lglobal{gotolinepop}->Subwidget('entry')->selectionRange(0,'end');
+        $lglobal{gotolinepop}->Wait;
+    }
 }
 
 sub saveinterval{ # Pop up a window where you can adjust the auto save interval
@@ -2779,30 +2782,31 @@ sub saveinterval{ # Pop up a window where you can adjust the auto save interval
         }
 }
 
-sub checkver{ # Check to see if this is the most recent version
-        my ($dbox,$answer);
-        my $ua = LWP::UserAgent->new(env_proxy => 1,
-                                keep_alive => 1,
-                                timeout => 30,
-                                );
-        my $response = $ua->get('http://mywebpages.comcast.net/thundergnat/guiguts.txt');
-        unless ($response->content){
-                $dbox = $top->Dialog(-text => 'Could not check for updates, unable to connect to server.',
-                        -bitmap => 'error', -title => 'Could not connect.', -buttons => ['Ok']);
-                $dbox->Show;
-                        return;
-        };
-        if ($response->content gt $currentver){ # print $response->content;
-                $dbox = $top->Dialog(-text => "A newer version is available.\nDo you want to go to the home page?",
-                        -title => 'Newer version available.', -buttons => ['Ok','Cancel']);
-        }else{
-                $dbox = $top->Dialog(-text => 'This is the most current version.',
-                        -title => 'Up to date.', -buttons => ['Cancel']);
-        }
-        $answer = $dbox->Show;
-        if ($answer =~/ok/i){
-                runner("$globalbrowserstart http://mywebpages.comcast.net/thundergnat/guiguts.html");
-        }
+# Check to see if this is the most recent version
+sub checkver {
+    my ($dbox,$answer);
+    my $ua = LWP::UserAgent->new(env_proxy => 1,
+                                 keep_alive => 1,
+                                 timeout => 30,
+        );
+    my $response = $ua->get('http://mywebpages.comcast.net/thundergnat/guiguts.txt');
+    unless ($response->content){
+        $dbox = $top->Dialog(-text => 'Could not check for updates, unable to connect to server.',
+                             -bitmap => 'error', -title => 'Could not connect.', -buttons => ['Ok']);
+        $dbox->Show;
+        return;
+    };
+    if ($response->content gt $currentver){ # print $response->content;
+        $dbox = $top->Dialog(-text => "A newer version is available.\nDo you want to go to the home page?",
+                             -title => 'Newer version available.', -buttons => ['Ok','Cancel']);
+    }else{
+        $dbox = $top->Dialog(-text => 'This is the most current version.',
+                             -title => 'Up to date.', -buttons => ['Cancel']);
+    }
+    $answer = $dbox->Show;
+    if ($answer =~/ok/i){
+        runner("$globalbrowserstart http://mywebpages.comcast.net/thundergnat/guiguts.html");
+    }
 }
 
 # Find and reformat sidenotes
@@ -8486,7 +8490,7 @@ html_convert_emdashes();
                         next;
                 };
                 {
-                        no warnings qw/uninitialized/;
+                        #no warnings qw/uninitialized/;
                         if ((!$last5[0])&&(!$last5[1])&&(!$last5[2])&&(!$last5[3])&&($selection)){
                                 $textwindow->ntinsert(($step-1).'.0',"<hr style=\"width: 65%;\" />") unless ($selection =~ /<[ph]/);
                                 $aname =~ s/<\/?[hscalup].*?>//g;
@@ -9251,7 +9255,7 @@ sub markpages{
                         @{$proofers{$page}} = split("\Q\\\E", $1);
                 }
 
-                $pagemark = 'Pg'.$page;
+                $pagemark = 'Pg'.$page; # FIXME: 'uninitialize value $page' from 'Import Prep text files'
                 $pagenumbers{$pagemark}{offset} = 1;
                 $textwindow->markSet($pagemark,$searchstartindex);
                 $textwindow->markGravity($pagemark,'left');
@@ -9442,7 +9446,7 @@ sub delblanklines{
         while ($searchstartindex){
                 $searchstartindex = $textwindow->search('-nocase', '-regexp', '--', '^-----*\s*File:\s?(\S+)\.(png|jpg)---.*$', $searchendindex, 'end');
                 {
-                        no warnings 'uninitialized';
+                        #no warnings 'uninitialized';
                         $searchstartindex = '2.0' if $searchstartindex eq '1.0';
                 }
                 last unless $searchstartindex;
@@ -9873,7 +9877,7 @@ sub tidypop_up{
         while ($line = <RESULTS>){
                 $line =~ s/^\s//g;
                 chomp $line;
-                no warnings 'uninitialized';
+                #no warnings 'uninitialized';
                 if (($line =~ /^[lI\d]/) and ($line ne $tidylines[-1])){
                 push @tidylines, $line ;
                 $tidy{$line} = '';
@@ -9894,7 +9898,7 @@ sub tidypop_up{
         $lglobal{tidylistbox}->yview('scroll', -1,'units');
 }
 
-sub tidyrun{
+sub tidyrun {
         my $tidyoptions = shift;
         push @operations, (localtime().' - Tidy');
         viewpagenums() if ($lglobal{seepagenums});
@@ -10166,7 +10170,7 @@ sub gcheckpop_up{
                 chomp $line;
                 $line =~ s/^(File: )gutchk.tmp/$1$lglobal{global_filename}/g;
                 {
-                no warnings 'uninitialized';
+                #no warnings 'uninitialized';
                 next if $line eq $gclines[-1];
                 }
                 push @gclines,$line;
@@ -12808,37 +12812,37 @@ sub initialize {
 # Initialize a whole bunch of global values that used to be discrete variables
 # spread willy-nilly through the code. Refactored them into a global
 # hash and gathered them together in a single subroutine.
-    $lglobal{proofbarvisible} = 0;
-    $lglobal{visibleline} = '';
-    $lglobal{asciiwidth} = 64;
-    $lglobal{asciijustify} = 'center';
     $lglobal{alignstring} = '.';
-    $lglobal{lastsearchterm} = '';
-    $lglobal{regaa} = 0;
-    $lglobal{zoneindex} = 0;
-    $lglobal{ignore_case} = 0;
     $lglobal{alpha_sort} = 'f';
-    $lglobal{suspects_only} = 0;
-    $lglobal{seepagenums} = 0;
-    $lglobal{longordlabel} = 0;
-    $lglobal{utfrangesort} = 0;
+    $lglobal{asciijustify} = 'center';
+    $lglobal{asciiwidth} = 64;
     $lglobal{codewarn} = 1;
-    $lglobal{ffchar} = '';
-    $lglobal{tblcoljustify} = 'l';
-    $lglobal{stepmaxwidth} = 70;
-    $lglobal{tblrwcol} = 1;
-    $lglobal{lastmatchindex} = '1.0';
     $lglobal{cssblockmarkup} = 1;
+    $lglobal{delay} = 50;
+    $lglobal{ffchar} = '';
     $lglobal{footstyle} = 'end';
     $lglobal{ftnoteindexstart} = '1.0';
+    $lglobal{groutp} = 'l';
+    $lglobal{htmlimgar} = 1;    #html image aspect ratio
+    $lglobal{ignore_case} = 0;
+    $lglobal{lastmatchindex} = '1.0';
+    $lglobal{lastsearchterm} = '';
+    $lglobal{longordlabel} = 0;
+    $lglobal{proofbarvisible} = 0;
+    $lglobal{regaa} = 0;
+    $lglobal{seepagenums} = 0;
     $lglobal{selectionsearch} = 0;
+    $lglobal{showblocksize} = 1;
+    $lglobal{stepmaxwidth} = 70;
+    $lglobal{suspects_only} = 0;
+    $lglobal{tblcoljustify} = 'l';
+    $lglobal{tblrwcol} = 1;
+    $lglobal{uoutp} = 'h';
+    $lglobal{utfrangesort} = 0;
+    $lglobal{visibleline} = '';
+    $lglobal{zoneindex} = 0;
     @{$lglobal{ascii}} = qw/+ - + | | | + - +/;
     @{$lglobal{fixopt}}=(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);
-    $lglobal{htmlimgar} = 1;    #html image aspect ratio
-    $lglobal{groutp} = 'l';
-    $lglobal{uoutp} = 'h';
-    $lglobal{delay} = 50;
-    $lglobal{showblocksize} = 1;
 
     if ($0 =~ m/\/|\\/){
         my $dir = $0;
@@ -16851,7 +16855,7 @@ sub distance {
         if ($lglobal{LevenshteinXS}){
                 return Text::LevenshteinXS::distance(@_);
         }
-        no warnings;
+        #no warnings;
         my $word1 = shift;
         my $word2 = shift;
 
@@ -16909,14 +16913,14 @@ sub natural_sort_freq {         # Fast freqency sort with secondary natural sort
 ## New functions -- vls Mon Nov 12 11:25:20 CST 2007
 
 # Convert <tb> to asterisk breaks.
-sub text_convert_tb
-{
+sub text_convert_tb {
     my $tb = '       *       *       *       *       *';
     $textwindow -> FindAndReplaceAll('-exact', '-nocase', '<tb>', $tb);
 }
 
+
 # vls -- This turns long Windows path to DOS path, e.g., C:\Program Files\ becomes C:\Progra~1\
-# Probably need this for DOS command window on Win98/95.
+# Probably need this for DOS command window on Win98/95. Needed for XP also.
 sub dos_path {
     $_[0] = Win32::GetShortPathName($_[0]);
     return $_[0];
