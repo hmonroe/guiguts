@@ -44,15 +44,15 @@ $| = 1;
             my $progress;
             my $line = <$fh>;
             utf8::decode($line);
-            $line =~ s/^\x{FEFF}?//;
-            $line = main::convert_eol($line);
+            $line =~ s/^\x{FEFF}?//; # Defuse the BOM
+            $line = main::eol_convert($line);
             #$line =~ s/\cM\cJ|\cM|\cJ/\n/g;
             $line = main::eol_whitespace($line);
             $w->ntinsert( 'end', $line );
 
             while (<$fh>) {
                 utf8::decode($_);
-                main::convert_eol($_);
+                $_ = main::eol_convert($_);
                 #$_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
                 $_ =~ s/[\t \xA0]+$//;
                 $w->ntinsert( 'end', $_ );
@@ -152,14 +152,14 @@ $| = 1;
             utf8::decode($line);
             $line =~ s/^\x{FFEF}?//;
             #$line =~ s/\cM\cJ|\cM|\cJ/\n/g;
-            $line = convert_eol($line); 
+            $line = eol_convert($line); 
             $line =~ s/[\t \xA0]+$//;
             $w->insert( 'insert', $line );
 
             while (<$fh>) {
                 utf8::decode($_);
                 #$_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-                $_ = convert_eol($_);
+                $_ = eol_convert($_);
                 $_ =~ s/[\t \xA0]+$//;
                 $w->insert( 'insert', $_ );
                 if ( ( $count++ % 1000 ) == 0 ) {
@@ -1209,7 +1209,7 @@ sub prep_import {
                 utf8::decode($line);
                 $line =~ s/^\x{FEFF}?//;
                 #$line =~ s/\cM\cJ|\cM|\cJ/\n/g;
-                $line = convert_eol($line);
+                $line = eol_convert($line);
                 $line =~ s/[\t \xA0]+$//smg;
                 $textwindow->ntinsert( 'end', $line );
                 close $file;
@@ -9141,7 +9141,7 @@ sub markpopup {
                 my $headertext;
                 while (<$infile>) {
                     #$_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-                    $_ = convert_eol($_); 
+                    $_ = eol_convert($_); 
                     $headertext .= $_;
                 }
                 $textwindow->insert( '1.0', $headertext );
@@ -10483,7 +10483,7 @@ sub htmlautoconvert {
             or warn "Could not open header file. $!\n";
         while (<$infile>) {
             #$_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-            $_ = convert_eol($_);
+            $_ = eol_convert($_);
             $headertext .= $_;
         }
         close $infile;
@@ -15511,7 +15511,7 @@ sub regexref {
             if ( open my $ref, '<', 'regref.txt' ) {
                 while (<$ref>) {
                     #$_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-                    $_ = convert_eol($_);
+                    $_ = eol_convert($_);
                     $regtext->insert( 'end', $_ );
                 }
             } else {
@@ -20898,7 +20898,7 @@ sub dos_path {
 }
 
 # Normalize line endings
-sub convert_eol {
+sub eol_convert {
     my $regex = qr(\cM\cJ|\cM|\cJ); # Windows/Mac/Unix
     my $line = shift(@_);
     $line =~ s/$regex/\n/g;
