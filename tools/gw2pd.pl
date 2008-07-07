@@ -27,10 +27,9 @@ $dict = new FileHandle "> $dict.dic";
     print $dict '%projectdict = (';
 
     while (<$gw>) {
-        chomp $_;
-
-        $_ =~ s/'/\\'/g;
-        $_ =~ s/(^.+$)/'$1' => '',/; 
+        $_ =~ s/(?:\cM\cJ|\cM|\cJ)$//g; # We have to handle eol's explicitly.
+        $_ =~ s/'/\\'/g; # Escape single quote/apostrophe
+        $_ =~ s/(^.+$)/'$1' => '',/;
         
         print $dict $_  unless $_ =~ /^$/;
     }
