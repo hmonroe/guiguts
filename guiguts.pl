@@ -300,7 +300,7 @@ $| = 1;
         }
     }
 
-#modified Column Cut & Copy routine to handle block selection
+# modified Column Cut & Copy routine to handle block selection
     sub Column_Copy_or_Cut
     {    
         my ( $w, $cut ) = @_;
@@ -15124,9 +15124,9 @@ sub hotkeyshelp {
             'ROText',
             -scrollbars => 'se',
             -background => 'white',
-            -font       => '{Helvetica} 14',
+            -font       => '{Helvetica} 10',
             -width      => 80,
-            -height     => 40,
+            -height     => 25,
             -wrap       => 'none',
         )->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
         drag($rotextbox);
@@ -20883,7 +20883,7 @@ sub natural_sort_freq
 
 # Convert <tb> to asterisk breaks.
 sub text_convert_tb {
-    my $tb = '       *       *       *       *       *';
+    my $tb = '       *     *     *     *     *';
     $textwindow->FindAndReplaceAll( '-exact', '-nocase', '<tb>', $tb );
 }
 
@@ -20898,6 +20898,7 @@ sub dos_path {
     return $_[0];
 }
 
+## FIXME: These are barfing on Unix systems, apparently.
 # Normalize line endings
 #sub eol_convert {
 #    my $regex = qr(\cM\cJ|\cM|\cJ); # Windows/Mac/Unix
