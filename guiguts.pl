@@ -3,7 +3,7 @@
 # Guiguts.pl text editing script
 # $Id$
 
-my $currentver = '.69';
+my $currentver = '0.1.0';
 
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
@@ -3347,7 +3347,8 @@ sub buildmenu {    # The main menu building code.
                         if ( -e 'guiguts.html' );
                     }
             ],
-            [ Button => 'Check For ~Updates',     -command => \&checkver ],
+# FIXME: Disable update check until it works
+#[ Button => 'Check For ~Updates',     -command => \&checkver ],
             [ Button => '~Hot keys',              -command => \&hotkeyshelp ],
             [ Button => '~Function History',      -command => \&opspop_up ],
             [ Button => '~Greek Transliteration', -command => \&greekpopup ],
@@ -3638,7 +3639,7 @@ sub checkver {
         timeout    => 30,
     );
     my $response
-        = $ua->get('http://mywebpages.comcast.net/thundergnat/guiguts.txt');
+        = $ua->get('http://guiguts.sourceforge.net/ggversion.txt');
     unless ( $response->content ) {
         $dbox = $top->Dialog(
             -text =>
@@ -3650,7 +3651,7 @@ sub checkver {
         $dbox->Show;
         return;
     }
-    if ( $response->content gt $currentver ) {    # print $response->content;
+    if ( $response->content gt $currentver ) {     print $response->content;
         $dbox = $top->Dialog(
             -text =>
                 "A newer version is available.\nDo you want to go to the home page?",
@@ -3667,7 +3668,7 @@ sub checkver {
     $answer = $dbox->Show;
     if ( $answer =~ /ok/i ) {
         runner(
-            "$globalbrowserstart http://mywebpages.comcast.net/thundergnat/guiguts.html"
+            "$globalbrowserstart http://guiguts.sourceforge.net/"
         );
     }
 }
@@ -11743,7 +11744,7 @@ sub hilitepopup {
 
 sub hilite {
     my $mark = shift;
-    $mark = quotemeta($mark) if $lglobal{hilitemode} eq 'exact';
+    $mark = quotemeta($mark) if $lglobal{hilitemode} eq 'exact'; # FIXME: uninitialized 'hilitemode'
     my @ranges      = $textwindow->tagRanges('sel');
     my $range_total = @ranges;
     my ( $index, $lastindex );
