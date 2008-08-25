@@ -12,6 +12,7 @@ my $yes_proofer_url
 require 5.008;
 use strict;
 use warnings;
+use lib "lib";
 use Tk;
 
 #use Data::Dumper;
@@ -20,741 +21,6 @@ use constant OS_Win => $^O =~ /Win/;
 
 $| = 1;
 
-
-#######################################################################
-{
-    package TextUnicode;
-
-    use base qw(Tk::TextEdit);
-    use File::Temp qw/tempfile/;
-    use File::Basename;
-    use constant OS_Win => $^O =~ /Win/;
-
-    Construct Tk::Widget 'TextUnicode';
-
-# Custom File load routine; will automatically handle Unicode and line endings
-    sub Load { 
-        my ( $w, $filename ) = @_;
-        $filename = $w->FileName unless ( defined($filename) );
-        return 0 unless defined $filename;
-        if ( open my $fh, '<', $filename ) {
-            $w->MainWindow->Busy;
-            $w->EmptyDocument;
-            my $count = 1;
-            my $progress;
-            my $line = <$fh>;
-            utf8::decode($line);
-            $line =~ s/^\x{FEFF}?//; # Defuse the BOM
-            #$line = main::eol_convert($line);
-            $line =~ s/\cM\cJ|\cM|\cJ/\n/g;
-            #$line = main::eol_whitespace($line);
-            $line =~ s/[\t \xA0]+$//;
-            $w->ntinsert( 'end', $line );
-
-            while (<$fh>) {
-                utf8::decode($_);
-                #$_ = main::eol_convert($_);
-                $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-                $_ =~ s/[\t \xA0]+$//;
-                $w->ntinsert( 'end', $_ );
-                if ( ( $count++ % 1000 ) == 0 ) {
-                    $progress = $w->TextUndoFileProgress(
-                        Loading => $filename,
-                        $count, tell($fh), -s $filename
-                    );
-                }
-            }
-            close($fh);
-            $progress->withdraw if defined $progress;
-            $w->markSet( 'insert' => '1.0' );
-            $w->FileName($filename);
-            $w->MainWindow->Unbusy;
-        } else {
-            $w->BackTrace("Cannot open $filename:$!");
-        }
-    }
-
-    # Custom file save routine to handle unicode files
-    sub SaveUTF {
-        my ( $w, $filename ) = @_;
-        $filename = $w->FileName unless defined $filename;
-        my $dir   = dirname($filename);
-        my $perms = ( stat($dir) )[2] & 07777;
-        unless ( $perms & 0200 ) {
-            $perms = $perms | 0200;
-            chmod $perms, $dir
-                or $w->BackTrace("Can not write to directory $dir: $!\n")
-                and return;
-        }
-        my ( $tempfh, $tempfilename ) = tempfile( DIR => $dir );
-        my $status;
-        my $count = 0;
-        my $index = '1.0';
-        my $progress;
-        my $unicode = 0;
-        my $fileend = $w->index('end -1c');
-        my ($lines) = $fileend =~ /^(\d+)\./;
-        $unicode = $w->search( '-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0',
-            'end' );
-
-        if ($unicode) {
-            my $bom = "\x{FEFF}";
-            utf8::encode($bom);
-            print $tempfh $bom;
-        }
-        while ( $w->compare( $index, '<', $fileend ) ) {
-            my $end = $w->index("$index lineend +1c");
-            my $line = $w->get( $index, $end );
-            $line =~ s/[\t \xA0]+$//;
-            $line =~ s/\cM\cJ|\cM|\cJ/\cM\cJ/g if (OS_Win);
-            utf8::encode($line) if $unicode;
-            $w->BackTrace("Cannot write to temp file:$!\n") and return
-                unless print $tempfh $line;
-            $index = $end;
-            if ( ( $count++ % 1000 ) == 0 ) {
-                $progress = $w->TextUndoFileProgress(
-                    Saving => $filename,
-                    $count, $count, $lines
-                );
-            }
-        }
-        $progress->withdraw if defined $progress;
-        close $tempfh;
-        if ( -e $filename ) {
-            chmod 0777, $filename;
-            unlink $filename;
-        }
-        if ( rename( $tempfilename, $filename ) ) {
-            $w->ResetUndo;
-            $w->FileName($filename);
-            return 1;
-        } else {
-            $w->BackTrace(
-                "Cannot save $filename:$!. Text is in the temporary file $tempfilename"
-            );
-            return 0;
-        }
-    }
-
-#Custom File Include routine to handle Unicode and line ends
-    sub IncludeFile
-    {    
-        my ( $w, $filename ) = @_;
-        unless ( defined($filename) ) {
-            $w->BackTrace('filename not specified');
-            return;
-        }
-        if ( open my $fh, '<', $filename ) {
-            $w->Busy;
-            my $count = 1;
-            $w->addGlobStart;
-            my $progress;
-            my $line = <$fh>;
-            utf8::decode($line);
-            $line =~ s/^\x{FFEF}?//;
-            $line =~ s/\cM\cJ|\cM|\cJ/\n/g;
-            #$line = eol_convert($line); 
-            $line =~ s/[\t \xA0]+$//;
-            $w->insert( 'insert', $line );
-
-            while (<$fh>) {
-                utf8::decode($_);
-                $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-                #$_ = eol_convert($_);
-                $_ =~ s/[\t \xA0]+$//;
-                $w->insert( 'insert', $_ );
-                if ( ( $count++ % 1000 ) == 0 ) {
-                    $progress = $w->TextUndoFileProgress(
-                        Including => $filename,
-                        $count, tell($fh), -s $filename
-                    );
-                }
-            }
-            $progress->withdraw if defined $progress;
-            $w->addGlobEnd;
-            close $fh;
-            $w->Unbusy;
-        } else {
-            $w->BackTrace("Cannot open $filename:$!");
-        }
-    }
-
-    sub ntinsert {    # no undo tracking insert
-        my ( $w, $index, $string ) = @_;
-        $w->Tk::Text::insert( $index, $string );
-    }
-
-    sub ntdelete {    # no undo tracking delete
-        my ( $w, $start, $end ) = @_;
-        $end = "$start +1c" unless $end;
-        $w->Tk::Text::delete( $start, $end );
-    }
-
-    sub replacewith {    #One step cut and insert without undo tracking
-        my ( $w, $start, $end, $string ) = @_;
-        $w->tagRemove( 'sel', '1.0', 'end' );
-        $w->tagAdd( 'sel', $start, $end );
-        $w->ReplaceSelectionsWith($string);
-    }
-
-    sub shiftB1_Motion {    # Alternate selection mode, for block selection
-        my ($w) = @_;
-        return unless defined $Tk::mouseMoved;
-        my $Ev = $w->XEvent;
-        $Tk::x = $Ev->x;
-        $Tk::y = $Ev->y;
-        $w->SelectTo( $Ev->xy, 'block' );
-        Tk::break;
-    }
-
-    sub Button1 {
-        my ( $w, $x, $y ) = @_;
-        $w->eventGenerate('<<ScrollDismiss>>');
-        $Tk::selectMode = 'char';
-        $Tk::mouseMoved = 0;
-        $w->SetCursor("\@$x,$y");
-        $w->markSet( 'anchor', 'insert' );
-        $w->focus if ( $w->cget('-state') eq 'normal' );
-    }
-
-    sub SelectTo {  # Modified selection routine to deal with block selections
-        my ( $w, $index, $mode ) = @_;
-        $Tk::selectMode = $mode if defined $mode;
-        my $cur = $w->index($index);
-        my $anchor = Tk::catch { $w->index('anchor') };
-        if ( !defined $anchor ) {
-            $w->markSet( 'anchor', $anchor = $cur );
-            $Tk::mouseMoved = 0;
-        } elsif ( $w->compare( $cur, '!=', $anchor ) ) {
-            $Tk::mouseMoved = 1;
-        }
-        $Tk::selectMode = 'char' unless ( defined $Tk::selectMode );
-        $mode = $Tk::selectMode;
-        my ( $first, $last );
-        if ( $mode eq 'char' ) {
-            if ( $w->compare( $cur, '<', 'anchor' ) ) {
-                $first = $cur;
-                $last  = 'anchor';
-            } else {
-                $first = 'anchor';
-                $last  = $cur;
-            }
-        } elsif ( $mode eq 'word' ) {
-            if ( $w->compare( $cur, '<', 'anchor' ) ) {
-                $first = $w->index("$cur wordstart");
-                $last  = $w->index('anchor - 1c wordend');
-            } else {
-                $first = $w->index('anchor wordstart');
-                $last  = $w->index("$cur wordend");
-            }
-        } elsif ( $mode eq 'line' ) {
-            if ( $w->compare( $cur, '<', 'anchor' ) ) {
-                $first = $w->index("$cur linestart");
-                $last  = $w->index('anchor - 1c lineend + 1c');
-            } else {
-                $first = $w->index('anchor linestart');
-                $last  = $w->index("$cur lineend + 1c");
-            }
-        } elsif ( $mode eq 'block' ) {
-            my ( $srow, $scol, $erow, $ecol );
-            $w->tagRemove( 'sel', '1.0', 'end' );
-            if ( $w->compare( $cur, '<', 'anchor' ) ) {
-                ( $srow, $scol ) = split /\./, $cur;
-                ( $erow, $ecol ) = split /\./, $w->index('anchor');
-            } else {
-                ( $erow, $ecol ) = split /\./, $cur;
-                ( $srow, $scol ) = split /\./, $w->index('anchor');
-            }
-            if ( $ecol < $scol ) {
-                ( $scol, $ecol ) = ( $ecol, $scol );
-            }
-            if ( "$erow.$ecol" eq $w->index("$erow.$ecol lineend") ) {
-                for ( $srow .. $erow ) {
-                    $w->tagAdd( 'sel', "$_.$scol", "$_.$ecol lineend" );
-                }
-            } else {
-                for ( $srow .. $erow ) {
-                    $w->tagAdd( 'sel', "$_.$scol", "$_.$ecol" );
-                }
-            }
-            $w->idletasks;
-            $first = "$srow.$scol";
-            $last  = "$erow.$ecol";
-            $w->markSet( 'selstart', $first );
-            $w->markSet( 'selend',   $last );
-        }
-        if ( ( $Tk::mouseMoved || $Tk::selectMode ne 'char' )
-            && $Tk::selectMode ne 'block' )
-        {
-            $w->tagRemove( 'sel', '1.0', $first );
-            $w->tagAdd( 'sel', $first, $last );
-            $w->tagRemove( 'sel', $last, 'end' );
-            $w->markSet( 'selstart', $first );
-            $w->markSet( 'selend',   $last );
-            $w->idletasks;
-        }
-        if ( $w->compare( $cur, '<', $last ) ) {
-            $w->markSet( 'insert', $cur );
-        } else {
-            $w->markSet( 'insert', $last );
-        }
-    }
-
-# modified Column Cut & Copy routine to handle block selection
-    sub Column_Copy_or_Cut
-    {    
-        my ( $w, $cut ) = @_;
-        my @ranges = $w->tagRanges('sel');
-        return unless @ranges;
-        my $start = $ranges[0];
-        $w->clipboardClear;
-        while (@ranges) {
-            my $start_index = shift @ranges;
-            my $end_index   = shift @ranges;
-            my $string      = $w->get( $start_index, $end_index );
-            $w->clipboardAppend( $string . "\n" );
-            if ($cut) {
-                my $replace
-                    = $w->{'OVERSTRIKE_MODE'} ? ' ' x length $string : '';
-                $w->replacewith( $start_index, $end_index, $replace );
-            }
-        }
-        $w->markSet( 'insert', $start );
-    }
-
-    #modified Column Paste routine to handle block selection
-    sub clipboardColumnPaste {
-        my ($w)           = @_;
-        my $current_index = $w->index('insert');
-        my @ranges        = $w->tagRanges('sel');
-        if (@ranges) {
-            for (@ranges) {
-                my $end   = pop @ranges;
-                my $start = pop @ranges;
-                if ( $w->OverstrikeMode ) {
-                    $w->replacewith( $start, $end,
-                        ( ' ' x ( length $w->get( $start, $end ) ) ) );
-                } else {
-                    $w->delete( $start, $end );
-                }
-            }
-        }
-        my $clipboard_text;
-        eval {
-            $clipboard_text = $w->SelectionGet( -selection => "CLIPBOARD" );
-        };
-        return unless ( defined $clipboard_text and length $clipboard_text );
-        my ( $current_line, $current_column ) = split /\./, $current_index;
-        my @clipboard_lines = split /\n/, $clipboard_text;
-        foreach my $line (@clipboard_lines) {
-            my $lineend = $w->index("$current_line.$current_column lineend");
-            my ( $lerow, $lecol ) = split( /\./, $lineend );
-            if ( $lecol < $current_column ) {
-                $w->insert( $lineend,
-                    ( ' ' x ( $current_column - $lecol ) ) );
-                $lineend = $w->index("$current_line.$current_column lineend");
-            }
-            if ( $w->OverstrikeMode ) {
-                my $string
-                    = $w->get( "$current_line.$current_column", $lineend );
-                if ( ( length $string ) >= ( length $line ) ) {
-                    $w->replacewith(
-                        "$current_line.$current_column",
-                        (   $w->index(
-                                "$current_line.$current_column +@{[length $line]}c"
-                            )
-                        ),
-                        $line
-                    );
-                } else {
-                    $w->delete( "$current_line.$current_column", $lineend );
-                    $w->insert( "$current_line.$current_column", $line );
-                }
-            } else {
-                $w->insert( "$current_line.$current_column", $line );
-            }
-            $current_line++;
-        }
-        $w->markSet( 'insert', $current_index );
-    }
-
-    sub UpDownLine {
-        my ( $w, $n ) = @_;
-        $w->see('insert');
-        my $i = $w->index('insert');
-
-        my ( $line, $char ) = split( /\./, $i );
-
-        my $testX;    #used to check the "new" position
-        my $testY;    #used to check the "new" position
-
-        my ( $bx, $by, $bw, $bh ) = $w->bbox($i);
-        my ( $lx, $ly, $lw, $lh ) = $w->dlineinfo($i);
-        if ( ( $n == -1 ) and ( $by <= $bh ) ) {
-
-            #On first display line.. so scroll up and recalculate..
-            $w->yview( 'scroll', -1, 'units' );
-            unless ( ( $w->yview )[0] ) {
-
-                #first line of entire text - keep same position.
-                return $i;
-            }
-            ( $bx, $by, $bw, $bh ) = $w->bbox($i);
-            ( $lx, $ly, $lw, $lh ) = $w->dlineinfo($i);
-        } elsif (
-            ( $n == 1 )
-            and ( $ly + $lh ) > (
-                      $w->height 
-                    - 2 * $w->cget( -bd )
-                    - 2 * $w->cget( -highlightthickness )
-                    - $lh + 1
-            )
-            )
-        {
-
-            #On last display line.. so scroll down and recalculate..
-            $w->yview( 'scroll', 1, 'units' );
-            ( $bx, $by, $bw, $bh ) = $w->bbox($i);
-            ( $lx, $ly, $lw, $lh ) = $w->dlineinfo($i);
-        }
-
-        # Calculate the vertical position of the next display line
-        my $Yoffset = 0;
-        $Yoffset = $by - $ly + 1       if ( $n == -1 );
-        $Yoffset = $ly + $lh + 1 - $by if ( $n == 1 );
-        $Yoffset *= $n;
-        $testY = $by + $Yoffset;
-
-        # Save the original 'x' position of the insert cursor if:
-        # 1. This is the first time through -- or --
-        # 2. The insert cursor position has changed from the previous
-        #    time the up or down key was pressed -- or --
-        # 3. The cursor has reached the beginning or end of the widget.
-
-        if ( not defined $w->{'origx'} or ( $w->{'lastindex'} != $i ) ) {
-            $w->{'origx'} = $bx;
-        }
-
-        # Try to keep the same column if possible
-        $testX = $w->{'origx'};
-
-        # Get the coordinates of the possible new position
-        my $testindex = $w->index("\@$testX,$testY");
-        $w->see($testindex);
-        my ( $nx, $ny, $nw, $nh ) = $w->bbox($testindex);
-
-        # Which side of the character should we position the cursor -
-        # mainly for a proportional font
-        if ( $testX > $nx + $nw / 2 ) {
-            $testX = $nx + $nw + 1;
-        }
-
-        my $newindex = $w->index("\@$testX,$testY");
-
-        return $i
-            if ( $w->compare( $newindex, '==', 'end - 1 char' )
-            and ( $ny == $ly ) );
-
-        # Then we are trying to the 'end' of the text from
-        # the same display line - don't do that
-
-        $w->{'lastindex'} = $newindex;
-        $w->see($newindex);
-        return $newindex;
-    }
-
-    sub InsertKeypress {  # Supress inserting control characters into the text
-        my ( $w, $char ) = @_;
-        $w->SUPER::InsertKeypress($char) if ( ord($char) > 26 );
-        $w->eventGenerate('<<ScrollDismiss>>');
-    }
-
-    # Modified to generate autoscroll events and accellerated scrolling.
-    sub AutoScan {
-        my ($w) = @_;
-        $w->eventGenerate('<<autoscroll>>');
-        if ( $Tk::y >= $w->height ) {
-            my $scroll = int( ( $Tk::y - $w->height )**2 / 1000 );
-            $w->yview( 'scroll', $scroll, 'units' );
-        } elsif ( $Tk::y < 0 ) {
-            my $scroll = int( ( $Tk::y - $w->height )**2 / 1000 );
-            $w->yview( 'scroll', -$scroll, 'units' );
-        } elsif ( $Tk::x >= $w->width ) {
-            $w->xview( 'scroll', 2, 'units' );
-        } elsif ( $Tk::x < 0 ) {
-            $w->xview( 'scroll', -2, 'units' );
-        } else {
-            return;
-        }
-        $w->SelectTo( '@' . $Tk::x . ',' . $Tk::y );
-        $w->RepeatId( $w->after( 70, [ 'AutoScan', $w ] ) );
-    }
-
-    # End package TextUnicode
-    1;
-} ###############################################################################
-
-# Tk::LineNumberText is a modified version of the Tk:LineNumberText
-# by Jack Dunnigan availible on CPAN. http://search.cpan.org/~dunniganj/
-#
-# I inlined the module because I needed to modify it to work with guiguts and
-# I cut out some unnecessary portions to reduce size and processing time.
-#
-###############################################################################
-{
-
-    package Tk::LineNumberText;
-
-    use Tk;
-    use Tk::widgets qw(ROText);
-    use base qw(Tk::Frame);
-    use Carp;
-
-    Construct Tk::Widget 'LineNumberText';
-
-    sub Populate {
-        my ( $self, $args ) = @_;
-        $self->SUPER::Populate($args);
-        $self->{'minwidth'}       = 5;
-        $self->{'linenumshowing'} = 0;
-        my $widget;
-        if ( $widget = delete $args->{-widget} ) {
-            $widget = 'TextUnicode';
-        } else {
-            $widget = 'Text';
-        }
-        my $ltext = $self->ROText(
-            -takefocus => 0,
-            -cursor    => 'X_cursor',
-            -bd        => 2,
-            -relief    => 'flat',
-            -width     => $self->{'minwidth'},
-            -wrap      => 'none',
-        );
-        $ltext->{_MENU_} = ();
-        $self->{'ltext'} = $ltext;
-        $ltext->tagConfigure( 'CURLINE', -data    => 1 );
-        $ltext->tagConfigure( 'RIGHT',   -justify => 'right' );
-        my $ftext = $self->Scrolled($widget)
-            ->grid( -row => 0, -column => 1, -sticky => 'nsew' );
-        $self->{'rtext'} = my $rtext = $ftext->Subwidget('scrolled');
-        $self->gridColumnconfigure( 1, -weight => 1 );
-        $self->gridRowconfigure( 0, -weight => 1 );
-        $self->Advertise( 'yscrollbar', $ftext->Subwidget('yscrollbar') );
-        $self->Advertise( 'xscrollbar', $ftext->Subwidget('xscrollbar') );
-        $self->Advertise( 'corner',     $ftext->Subwidget('corner') );
-        $self->Advertise( 'frame',      $ftext );
-        $self->Advertise( 'scrolled',   $rtext );
-        $self->Advertise( 'text',       $rtext );
-        $self->Advertise( 'linenum',    $ltext );
-
-        # Set scrolling command to run the lineupdate..
-        my $yscroll       = $self->Subwidget('yscrollbar');
-        my $scrollcommand = $yscroll->cget( -command );
-
-        $yscroll->configure(
-            -command => sub {
-                $scrollcommand->Call(@_);
-                $self->_lineupdate;
-            }
-        );
-
-        $self->ConfigSpecs(
-            -linenumside => [ 'METHOD', undef,       undef,       'left' ],
-            -linenumbg   => [ 'METHOD', 'numlinebg', 'numLinebg', '#eaeaea' ],
-            -linenumfg   => [ 'METHOD', 'numlinefg', 'numLinefg', '#000000' ],
-            -curlinehighlight => [ 'PASSIVE', undef, undef, 1 ],
-            -curlinebg        => [ 'METHOD',  undef, undef, '#00ffff' ],
-            -curlinefg        => [ 'METHOD',  undef, undef, '#000000' ],
-            -background       => [ $ftext,    undef, undef, undef ],
-            -foreground       => [ $ftext,    undef, undef, undef ],
-            -scrollbars       => [ $ftext,    undef, undef, 'se' ],
-            -font             => ['CHILDREN'],
-            -spacing1         => ['CHILDREN'],
-            -spacing2         => ['CHILDREN'],
-            -spacing3         => ['CHILDREN'],
-            'DEFAULT'         => [$rtext],
-        );
-
-        $self->Delegates( 'DEFAULT' => 'scrolled' );
-
-        #Bindings
-        $ltext->bind( '<FocusIn>', sub { $rtext->focus } );
-        $ltext->bind( '<Map>',     sub { $self->_lineupdate } );
-
-        $rtext->bind( '<Configure>', sub { $self->_lineupdate } );
-        $rtext->bind( '<KeyPress>',  sub { $self->_lineupdate } );
-        $rtext->bind(
-            '<ButtonPress>',
-            sub {
-                $self->{'rtext'}->{'origx'} = undef;
-                $self->_lineupdate;
-            }
-        );
-        $rtext->bind( '<Return>',          sub { $self->_lineupdate } );
-        $rtext->bind( '<ButtonRelease-2>', sub { $self->_lineupdate } );
-        $rtext->bind( '<B2-Motion>',       sub { $self->_lineupdate } );
-        $rtext->bind( '<B1-Motion>',       sub { $self->_lineupdate } );
-        $rtext->bind( '<<autoscroll>>',    sub { $self->_lineupdate } );
-        $rtext->bind( '<MouseWheel>',      sub { $self->_lineupdate } );
-        if ( $Tk::platform eq 'unix' ) {
-            $rtext->bind( '<4>', sub { $self->_lineupdate } );
-            $rtext->bind( '<5>', sub { $self->_lineupdate } );
-        }
-
-        my @textMethods
-            = qw/insert delete Delete deleteBefore Contents deleteSelected
-            deleteTextTaggedwith deleteToEndofLine FindAndReplaceAll GotoLineNumber
-            Insert InsertKeypress InsertSelection insertTab openLine yview ReplaceSelectionsWith
-            Transpose see/;
-
-        if ( ref($rtext) eq 'TextUnicode' ) {
-            push( @textMethods,
-                'Load',     'SaveUTF',  'IncludeFile',
-                'ntinsert', 'ntdelete', 'replacewith' );
-        }
-        for my $method (@textMethods) {
-            no strict 'refs';
-            *{$method} = sub {
-                my $cw  = shift;
-                my @arr = $cw->{'rtext'}->$method(@_);
-                $cw->_lineupdate;
-                @arr;
-            };
-        }
-    }    # end Populate
-
-    # Configure methods
-    # ------------------------------------------
-    sub linenumside {
-        my ( $w, $side ) = @_;
-        return unless defined $side;
-        $side = lc($side);
-        return unless ( $side eq 'left' or $side eq 'right' );
-        $w->{'side'} = $side;
-        $w->hidelinenum;
-        $w->showlinenum;
-    }
-
-    sub linenumbg {
-        return shift->{'ltext'}->configure( -bg => @_ );
-    }
-
-    sub linenumfg {
-        return shift->{'ltext'}->configure( -fg => @_ );
-    }
-
-    sub curlinebg {
-        return shift->{'ltext'}->tagConfigure( 'CURLINE', -background => @_ );
-    }
-
-    sub curlinefg {
-        return shift->{'ltext'}->tagConfigure( 'CURLINE', -foreground => @_ );
-    }
-
-    # Public Methods
-    # ------------------------------------------
-    sub showlinenum {
-        my ($w) = @_;
-        return if ( $w->{'linenumshowing'} );
-        my $col;
-        ( $w->{'side'} eq 'right' ) ? ( $col = 2 ) : ( $col = 0 );
-        $w->{'ltext'}->grid( -row => 0, -column => $col, -sticky => 'ns' );
-        $w->{'linenumshowing'} = 1;
-    }
-
-    sub hidelinenum {
-        my ($w) = @_;
-        return unless ( $w->{'linenumshowing'} );
-        $w->{'ltext'}->gridForget;
-        $w->{'linenumshowing'} = 0;
-    }
-
-    #Private Methods
-    # ------------------------------------------
-    sub _lineupdate {
-        my ($w) = @_;
-        return
-            unless ( $w->{'ltext'}->ismapped )
-            ;    # Don't bother continuing if line numbers cannot be displayed
-        my @xsave = $w->{'rtext'}->xview;
-        my $idx1  = $w->{'rtext'}->index('@0,0')
-            ;    # First visible line in text widget
-        $w->{'rtext'}->see($idx1);
-        my ( $dummy, $ypix ) = $w->{'rtext'}->dlineinfo($idx1);
-
-        my $theight = $w->{'rtext'}->height;
-        my $oldy = my $lastline = -99;  #ensure at least one number gets shown
-        $w->{'ltext'}->delete( '1.0', 'end' );
-
-        my @LineNum;
-        my $insertidx = $w->{'rtext'}->index('insert');
-        my ($insertLine) = split( /\./, $insertidx );
-        my $font = $w->{'ltext'}->cget( -font );
-
-        my $ltextline = 0;
-
-        while (1) {
-            my $idx = $w->{'rtext'}->index( '@0,' . "$ypix" );
-            ( my $realline ) = split( /\./, $idx );
-            my ( $x, $y, $wi, $he ) = $w->{'rtext'}->dlineinfo($idx);
-            last unless defined $he;
-
-            last if ( $oldy == $y );    #line is the same as the last one
-            $oldy = $y;
-            $ypix += $he;
-            last
-                if $ypix >= ( $theight - 1 )
-            ;    #we have reached the end of the display
-            last if ( $y == $ypix );
-
-            $ltextline++;
-            if ( $realline == $lastline ) {
-                push( @LineNum, "\n" );
-            } else {
-                push( @LineNum, "$realline\n" );
-            }
-            $lastline = $realline;
-        }
-
-        #ensure proper width for large line numbers (over 5 digits)
-        my $neededwidth = length($lastline) + 1;
-        my $ltextwidth  = $w->{'ltext'}->cget( -width );
-        if ( $neededwidth > $ltextwidth ) {
-            $w->{'ltext'}->configure( -width => $neededwidth );
-        } elsif ( $ltextwidth > $w->{'minwidth'}
-            && $neededwidth <= $w->{'minwidth'} )
-        {
-            $w->{'ltext'}->configure( -width => $w->{'minwidth'} );
-        } elsif ( $neededwidth < $ltextwidth
-            and $neededwidth > $w->{'minwidth'} )
-        {
-            $w->{'ltext'}->configure( -width => $neededwidth );
-        }
-
-        #Finally insert the linenumbers..
-        my $i = 1;
-        my $highlightline;
-        foreach my $ln (@LineNum) {
-            $w->{'ltext'}->insert( 'end', $ln );
-            if ( $ln =~ /\d+/ and $ln == $insertLine ) {
-                $highlightline = $i;
-            }
-            $i++;
-        }
-
-        if ( $highlightline and $w->cget( -curlinehighlight ) ) {
-            $w->{'ltext'}->tagAdd( 'CURLINE', "$highlightline\.0",
-                "$highlightline\.end" );
-        }
-        $w->{'ltext'}->tagAdd( 'RIGHT', '1.0', 'end' );
-        $w->{'rtext'}->xviewMoveto( $xsave[0] );
-    }
-    1;
-}
-###################################################################################
-
-package main;
 
 use Tk::Balloon;
 use Tk::BrowseEntry;
@@ -781,6 +47,9 @@ use HTML::TokeParser;
 use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
+# Custom Guigut modules
+use LineNumberText;
+use TextUnicode;
 
 # ignore any watchdog timer alarms. Subroutines that take a long time to complete can trip it
 $SIG{ALRM} = 'IGNORE';
@@ -838,6 +107,11 @@ our $toolside    = 'bottom';
 our $utffontname = 'Courier New';
 our $utffontsize = 14;
 our $vislnnm     = 0;
+
+# FIXME: Some new variables
+our $italic_char = "_";
+our $bold_char = "=";
+
 our %gc;
 our %jeeb;
 our %pagenumbers;
@@ -1099,7 +373,7 @@ sub fileopen {    # Find a text file to open
     ];
     $name = $textwindow->getOpenFile(
         -filetypes  => $types,
-        -title      => 'File Load',
+        -title      => 'Open File',
         -initialdir => $globallastpath
     );
     if ( defined($name) and length($name) ) {
@@ -1742,7 +1016,7 @@ sub update_indicators {
         );
     }
     if ( $textwindow->numberChanges ) { $edit_flag = '- edited' }
-    $top->configure( -title => "Guiguts $currentver - $filename $edit_flag" );
+    $top->configure( -title => "Guiguts" . "-" . $currentver . " " . $edit_flag . "-" . $filename);
     $lglobal{global_filename} = $filename;
     $textwindow->idletasks;
     my ( $mark, $pnum );
@@ -2781,7 +2055,10 @@ sub buildmenu {    # The main menu building code.
             [   Button => '~Which Line?',
                 -command => sub { $textwindow->WhatLineNumberPopUp }
             ],
+            
             '',
+            
+            [ Button => "Find Proofer Comments", -command => \&find_proofer_comment ],
             [   Button => 'Find next /*..*/ block',
                 -command => [ \&nextblock, 'default', 'forward' ]
             ],
@@ -3007,21 +2284,6 @@ sub buildmenu {    # The main menu building code.
                     }
             ],
             '',
-            [   Button   => '~Add a Thought Break',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    thoughtbreak();
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-            [   Button   => 'Convert <tb> to asterisk break',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    text_convert_tb();
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-            '',
             [    Button  => 'Find Greek',
                 -command => \&findandextractgreek
             ],
@@ -3030,6 +2292,32 @@ sub buildmenu {    # The main menu building code.
             ],
         ]
     );
+
+     $menu->Cascade(
+        -label    => 'Text Processing',
+        -tearoff => 1,
+        -menuitems => [
+                [ Button => "Convert Italics", -command => \&text_convert_italic ],
+                [ Button => "Convert Bold", -command => \&text_convert_bold ],
+                #[ Button => "Convert Smallcaps", -command => \&text_convert_smcap ],
+                [ Button   => '~Add a Thought Break', -command => sub {
+                    $textwindow->addGlobStart;
+                    thoughtbreak();
+                    $textwindow->addGlobEnd;
+                    }],
+                [ Button   => 'Convert <tb> to asterisk break',
+                               -command => sub {
+                                                $textwindow->addGlobStart;
+                                                text_convert_tb();
+                                                $textwindow->addGlobEnd;
+                                                }],
+
+                [ Button => "Options", -command => \&text_convert_options ],
+                                                ]);
+
+   
+
+
 
        $menu->Cascade(
         qw/-label Externa~l -tearoff 1 -menuitems/ => [
@@ -3334,7 +2622,6 @@ sub buildmenu {    # The main menu building code.
             ],
         ]
     );
-
     $menu->Cascade(
         -label     => '~Help',
         -tearoff   => 1,
@@ -3342,7 +2629,7 @@ sub buildmenu {    # The main menu building code.
             [ Button => '~About',    -command => \&about_pop_up ],
             [ Button => '~Versions', -command => [ \&showversion, $top ] ],
             [   Button   => '~Manual',
-                -command => sub {
+                -command => sub { # FIXME: sub this out.
                     runner("$globalbrowserstart guiguts.html")
                         if ( -e 'guiguts.html' );
                     }
@@ -4183,8 +3470,6 @@ sub footnotepop
             next unless ( $start =~ /^fns/ );
             $end = $start;
             $end =~ s/^fns/fne/;
-
-            #print "$start|$end|\n";
             $textwindow->tagAdd( 'footnote', $start, $end );
         }
         $lglobal{footnotenumber}->configure( -text => $lglobal{fncount} );
@@ -4666,8 +3951,6 @@ sub footnotefixup {
                 = $textwindow->search( '-backwards', '--', "[$pointer]",
                 $start, '1.0' )
                 if $pointer;
-
-            #print "$pointer|$anchor\n";
         } else {
             $anchor
                 = $textwindow->search( '-backwards', '--', "[$pointer]",
@@ -13361,7 +12644,7 @@ sub gcviewops {
         'Mismatched curly brackets',
         'Mismatched quotes',
         'Mismatched round brackets',
-        'Mismatched single quotes',
+        'Mismatched singlequotes',
         'Mismatched square brackets',
         'Mismatched underscores',
         'Missing space',
@@ -20280,7 +19563,7 @@ sub saveset {
             qw/activecolor auto_page_marks autobackup autosave autosaveinterval blocklmargin blockrmargin
             defaultindent fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
             highlightcolor history_size jeebiesmode lmargin nobell nohighlights notoolbar rmargin
-            rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm/
+            rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm italic_char bold_char/
             )
         {
             print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
@@ -20882,12 +20165,62 @@ sub natural_sort_freq
 
 ## text file processing
 
-# Convert <tb> to asterisk breaks.
+#FIXME: Not quite right
+sub find_proofer_comment {
+   my $pattern = "[**";
+   my $index = $textwindow->search($pattern, "insert");
+   $textwindow->SetCursor($index);
+}
+
+# functions specific to text version processing
 sub text_convert_tb {
-    my $tb = '       *     *     *     *     *';
+    my $tb = '       *       *       *       *       *';
     $textwindow->FindAndReplaceAll( '-exact', '-nocase', '<tb>', $tb );
 }
 
+sub text_convert_italic {
+    my $italic = qr/<\/?i>/;
+    my $replace = $italic_char;
+    $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $italic, $replace);
+}
+
+sub text_convert_bold {
+    my $bold = qr/<\/?b>/;
+    my $replace = "$bold_char";
+    $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $bold, $replace);
+}
+
+#sub text_convert_smcap { }
+
+# Popup for choosing replacement characters, etc.
+sub text_convert_options {
+
+    my $options = $top->DialogBox(
+        -title => "Text Processing Options",
+        -buttons => ["OK"],);
+
+    my $italic_frame = $options->add( 'Frame' )
+    ->pack( -side => 'top', -padx => 5, -pady => 3 );
+    my $italic_label = $italic_frame->Label( -width => 25, -text => "Italic Replace Character")->pack(-side => 'left' );
+    my $italic_entry = $italic_frame->Entry(
+        -width        => 6,
+        -background   => 'white',
+        -relief       => 'sunken',
+        -textvariable => \$italic_char,
+    )->pack( -side => 'left' );
+
+    my $bold_frame = $options->add( 'Frame' )
+    ->pack( -side => 'top', -padx => 5, -pady => 3 );
+    my $bold_label = $bold_frame->Label( -width => 25, -text => "Bold Replace Character")->pack(-side => 'left' );
+    my $bold_entry = $bold_frame->Entry(
+        -width        => 6,
+        -background   => 'white',
+        -relief       => 'sunken',
+        -textvariable => \$bold_char,
+    )->pack( -side => 'left' );
+    $options->Show;
+    saveset();
+}
 
 ## Low level file processing functions
 
