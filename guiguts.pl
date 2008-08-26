@@ -3,7 +3,7 @@
 # Guiguts.pl text editing script
 # $Id$
 
-my $currentver = '0.1.0';
+my $currentver = '0.1.1';
 
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
@@ -12272,7 +12272,7 @@ sub gutcheck {
         $dialog->Show;
         return;
     }
-    $title =~ s/Guiguts $currentver - //;
+    $title =~ s/Guiguts-$currentver -//; #FIXME: patch from DP user
     $title =~ s/ - edited$//;
     $title = os_normal($title);
     $title = dos_path($title) if OS_Win;
