@@ -191,15 +191,6 @@ my $top = MainWindow->new;    # Set up main window
 
 initialize();                 # Initialize a bunch of vars that need it.
 
-# FIXME: vls -- comment out and see what happens
-#############################################################
-# temporary change-over values until upgrades have been made.
-# $fontweight = '' if $fontweight eq 'Medium';
-# $fontweight = 'bold' if $fontweight eq 'Bold';
-# $fontsize = $fontsize/10 if $fontsize > 100;
-# $utffontsize = $utffontsize/10 if $utffontsize > 100;
-#############################################################
-
 $top->minsize( 440, 90 );
 
 $top->bind(
