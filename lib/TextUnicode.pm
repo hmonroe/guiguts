@@ -1,6 +1,5 @@
 #$Id$
 
-
 package TextUnicode;
 
 print "DEBUG: Loading TextUnicode\n";
@@ -13,7 +12,7 @@ use constant OS_Win => $^O =~ /Win/;
 Construct Tk::Widget 'TextUnicode';
 
 # Custom File load routine; will automatically handle Unicode and line endings
-sub Load { 
+sub Load {
     my ( $w, $filename ) = @_;
     $filename = $w->FileName unless ( defined($filename) );
     return 0 unless defined $filename;
@@ -25,8 +24,10 @@ sub Load {
         my $line = <$fh>;
         utf8::decode($line);
         $line =~ s/^\x{FEFF}?//;
+
         #$line = main::eol_convert($line);
         $line =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
         #$line = main::eol_whitespace($line);
 
         $w->ntinsert( 'end', $line );
@@ -34,8 +35,10 @@ sub Load {
         while (<$fh>) {
             utf8::decode($_);
             $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
             #$_ = main::eol_convert($_);
             $_ =~ s/[\t \xA0]+$//;
+
             #$_ = main::eol_whitespace($_);
             $w->ntinsert( 'end', $_ );
             if ( ( $count++ % 1000 ) == 0 ) {
@@ -50,7 +53,8 @@ sub Load {
         $w->markSet( 'insert' => '1.0' );
         $w->FileName($filename);
         $w->MainWindow->Unbusy;
-    } else {
+    }
+    else {
         $w->BackTrace("Cannot open $filename:$!");
     }
 }
@@ -75,8 +79,8 @@ sub SaveUTF {
     my $unicode = 0;
     my $fileend = $w->index('end -1c');
     my ($lines) = $fileend =~ /^(\d+)\./;
-    $unicode = $w->search( '-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0',
-        'end' );
+    $unicode
+        = $w->search( '-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0', 'end' );
 
     if ($unicode) {
         my $bom = "\x{FEFF}";
@@ -87,11 +91,12 @@ sub SaveUTF {
         my $end = $w->index("$index lineend +1c");
         my $line = $w->get( $index, $end );
         $line =~ s/[\t \xA0]+$//;
+
         #$line = main::eol_whitespace($line);
         $line =~ s/\cM\cJ|\cM|\cJ/\cM\cJ/g if (OS_Win);
         utf8::encode($line) if $unicode;
         $w->BackTrace("Cannot write to temp file:$!\n") and return
-        unless print $tempfh $line;
+            unless print $tempfh $line;
         $index = $end;
         if ( ( $count++ % 1000 ) == 0 ) {
             $progress = $w->TextUndoFileProgress(
@@ -110,7 +115,8 @@ sub SaveUTF {
         $w->ResetUndo;
         $w->FileName($filename);
         return 1;
-    } else {
+    }
+    else {
         $w->BackTrace(
             "Cannot save $filename:$!. Text is in the temporary file $tempfilename"
         );
@@ -119,8 +125,7 @@ sub SaveUTF {
 }
 
 #Custom File Include routine to handle Unicode and line ends
-sub IncludeFile
-{    
+sub IncludeFile {
     my ( $w, $filename ) = @_;
     unless ( defined($filename) ) {
         $w->BackTrace('filename not specified');
@@ -135,16 +140,20 @@ sub IncludeFile
         utf8::decode($line);
         $line =~ s/^\x{FFEF}?//;
         $line =~ s/\cM\cJ|\cM|\cJ/\n/g;
-        #$line = main::eol_convert($line); 
+
+        #$line = main::eol_convert($line);
         $line =~ s/[\t \xA0]+$//;
+
         #$line = main::eol_whitespace($line);
         $w->insert( 'insert', $line );
 
         while (<$fh>) {
             utf8::decode($_);
             $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
             #$_ = main::eol_convert($_);
             $_ =~ s/[\t \xA0]+$//;
+
             #$_ = main::eol_whitespace($_);
             $w->insert( 'insert', $_ );
             if ( ( $count++ % 1000 ) == 0 ) {
@@ -158,7 +167,8 @@ sub IncludeFile
         $w->addGlobEnd;
         close $fh;
         $w->Unbusy;
-    } else {
+    }
+    else {
         $w->BackTrace("Cannot open $filename:$!");
     }
 }
@@ -201,7 +211,7 @@ sub Button1 {
     $w->focus if ( $w->cget('-state') eq 'normal' );
 }
 
-sub SelectTo {  # Modified selection routine to deal with block selections
+sub SelectTo {    # Modified selection routine to deal with block selections
     my ( $w, $index, $mode ) = @_;
     $Tk::selectMode = $mode if defined $mode;
     my $cur = $w->index($index);
@@ -209,7 +219,8 @@ sub SelectTo {  # Modified selection routine to deal with block selections
     if ( !defined $anchor ) {
         $w->markSet( 'anchor', $anchor = $cur );
         $Tk::mouseMoved = 0;
-    } elsif ( $w->compare( $cur, '!=', $anchor ) ) {
+    }
+    elsif ( $w->compare( $cur, '!=', $anchor ) ) {
         $Tk::mouseMoved = 1;
     }
     $Tk::selectMode = 'char' unless ( defined $Tk::selectMode );
@@ -219,33 +230,40 @@ sub SelectTo {  # Modified selection routine to deal with block selections
         if ( $w->compare( $cur, '<', 'anchor' ) ) {
             $first = $cur;
             $last  = 'anchor';
-        } else {
+        }
+        else {
             $first = 'anchor';
             $last  = $cur;
         }
-    } elsif ( $mode eq 'word' ) {
+    }
+    elsif ( $mode eq 'word' ) {
         if ( $w->compare( $cur, '<', 'anchor' ) ) {
             $first = $w->index("$cur wordstart");
             $last  = $w->index('anchor - 1c wordend');
-        } else {
+        }
+        else {
             $first = $w->index('anchor wordstart');
             $last  = $w->index("$cur wordend");
         }
-    } elsif ( $mode eq 'line' ) {
+    }
+    elsif ( $mode eq 'line' ) {
         if ( $w->compare( $cur, '<', 'anchor' ) ) {
             $first = $w->index("$cur linestart");
             $last  = $w->index('anchor - 1c lineend + 1c');
-        } else {
+        }
+        else {
             $first = $w->index('anchor linestart');
             $last  = $w->index("$cur lineend + 1c");
         }
-    } elsif ( $mode eq 'block' ) {
+    }
+    elsif ( $mode eq 'block' ) {
         my ( $srow, $scol, $erow, $ecol );
         $w->tagRemove( 'sel', '1.0', 'end' );
         if ( $w->compare( $cur, '<', 'anchor' ) ) {
             ( $srow, $scol ) = split /\./, $cur;
             ( $erow, $ecol ) = split /\./, $w->index('anchor');
-        } else {
+        }
+        else {
             ( $erow, $ecol ) = split /\./, $cur;
             ( $srow, $scol ) = split /\./, $w->index('anchor');
         }
@@ -256,7 +274,8 @@ sub SelectTo {  # Modified selection routine to deal with block selections
             for ( $srow .. $erow ) {
                 $w->tagAdd( 'sel', "$_.$scol", "$_.$ecol lineend" );
             }
-        } else {
+        }
+        else {
             for ( $srow .. $erow ) {
                 $w->tagAdd( 'sel', "$_.$scol", "$_.$ecol" );
             }
@@ -279,14 +298,14 @@ sub SelectTo {  # Modified selection routine to deal with block selections
     }
     if ( $w->compare( $cur, '<', $last ) ) {
         $w->markSet( 'insert', $cur );
-    } else {
+    }
+    else {
         $w->markSet( 'insert', $last );
     }
 }
 
 #modified Column Cut & Copy routine to handle block selection
-sub Column_Copy_or_Cut
-{    
+sub Column_Copy_or_Cut {
     my ( $w, $cut ) = @_;
     my @ranges = $w->tagRanges('sel');
     return unless @ranges;
@@ -298,8 +317,7 @@ sub Column_Copy_or_Cut
         my $string      = $w->get( $start_index, $end_index );
         $w->clipboardAppend( $string . "\n" );
         if ($cut) {
-            my $replace
-            = $w->{'OVERSTRIKE_MODE'} ? ' ' x length $string : '';
+            my $replace = $w->{'OVERSTRIKE_MODE'} ? ' ' x length $string : '';
             $w->replacewith( $start_index, $end_index, $replace );
         }
     }
@@ -318,15 +336,14 @@ sub clipboardColumnPaste {
             if ( $w->OverstrikeMode ) {
                 $w->replacewith( $start, $end,
                     ( ' ' x ( length $w->get( $start, $end ) ) ) );
-            } else {
+            }
+            else {
                 $w->delete( $start, $end );
             }
         }
     }
     my $clipboard_text;
-    eval {
-        $clipboard_text = $w->SelectionGet( -selection => "CLIPBOARD" );
-    };
+    eval { $clipboard_text = $w->SelectionGet( -selection => "CLIPBOARD" ); };
     return unless ( defined $clipboard_text and length $clipboard_text );
     my ( $current_line, $current_column ) = split /\./, $current_index;
     my @clipboard_lines = split /\n/, $clipboard_text;
@@ -334,13 +351,11 @@ sub clipboardColumnPaste {
         my $lineend = $w->index("$current_line.$current_column lineend");
         my ( $lerow, $lecol ) = split( /\./, $lineend );
         if ( $lecol < $current_column ) {
-            $w->insert( $lineend,
-                ( ' ' x ( $current_column - $lecol ) ) );
+            $w->insert( $lineend, ( ' ' x ( $current_column - $lecol ) ) );
             $lineend = $w->index("$current_line.$current_column lineend");
         }
         if ( $w->OverstrikeMode ) {
-            my $string
-            = $w->get( "$current_line.$current_column", $lineend );
+            my $string = $w->get( "$current_line.$current_column", $lineend );
             if ( ( length $string ) >= ( length $line ) ) {
                 $w->replacewith(
                     "$current_line.$current_column",
@@ -350,11 +365,13 @@ sub clipboardColumnPaste {
                     ),
                     $line
                 );
-            } else {
+            }
+            else {
                 $w->delete( "$current_line.$current_column", $lineend );
                 $w->insert( "$current_line.$current_column", $line );
             }
-        } else {
+        }
+        else {
             $w->insert( "$current_line.$current_column", $line );
         }
         $current_line++;
@@ -385,15 +402,16 @@ sub UpDownLine {
         }
         ( $bx, $by, $bw, $bh ) = $w->bbox($i);
         ( $lx, $ly, $lw, $lh ) = $w->dlineinfo($i);
-    } elsif (
+    }
+    elsif (
         ( $n == 1 )
-            and ( $ly + $lh ) > (
-            $w->height 
-            - 2 * $w->cget( -bd )
-            - 2 * $w->cget( -highlightthickness )
-            - $lh + 1
+        and ( $ly + $lh ) > (
+                  $w->height 
+                - 2 * $w->cget( -bd )
+                - 2 * $w->cget( -highlightthickness )
+                - $lh + 1
         )
-    )
+        )
     {
 
         #On last display line.. so scroll down and recalculate..
@@ -436,8 +454,8 @@ sub UpDownLine {
     my $newindex = $w->index("\@$testX,$testY");
 
     return $i
-    if ( $w->compare( $newindex, '==', 'end - 1 char' )
-            and ( $ny == $ly ) );
+        if ( $w->compare( $newindex, '==', 'end - 1 char' )
+        and ( $ny == $ly ) );
 
     # Then we are trying to the 'end' of the text from
     # the same display line - don't do that
@@ -447,7 +465,7 @@ sub UpDownLine {
     return $newindex;
 }
 
-sub InsertKeypress {  # Supress inserting control characters into the text
+sub InsertKeypress {    # Supress inserting control characters into the text
     my ( $w, $char ) = @_;
     $w->SUPER::InsertKeypress($char) if ( ord($char) > 26 );
     $w->eventGenerate('<<ScrollDismiss>>');
@@ -460,14 +478,18 @@ sub AutoScan {
     if ( $Tk::y >= $w->height ) {
         my $scroll = int( ( $Tk::y - $w->height )**2 / 1000 );
         $w->yview( 'scroll', $scroll, 'units' );
-    } elsif ( $Tk::y < 0 ) {
+    }
+    elsif ( $Tk::y < 0 ) {
         my $scroll = int( ( $Tk::y - $w->height )**2 / 1000 );
         $w->yview( 'scroll', -$scroll, 'units' );
-    } elsif ( $Tk::x >= $w->width ) {
+    }
+    elsif ( $Tk::x >= $w->width ) {
         $w->xview( 'scroll', 2, 'units' );
-    } elsif ( $Tk::x < 0 ) {
+    }
+    elsif ( $Tk::x < 0 ) {
         $w->xview( 'scroll', -2, 'units' );
-    } else {
+    }
+    else {
         return;
     }
     $w->SelectTo( '@' . $Tk::x . ',' . $Tk::y );

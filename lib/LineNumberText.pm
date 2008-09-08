@@ -19,7 +19,8 @@ sub Populate {
     my $widget;
     if ( $widget = delete $args->{-widget} ) {
         $widget = 'TextUnicode';
-    } else {
+    }
+    else {
         $widget = 'Text';
     }
     my $ltext = $self->ROText(
@@ -35,7 +36,7 @@ sub Populate {
     $ltext->tagConfigure( 'CURLINE', -data    => 1 );
     $ltext->tagConfigure( 'RIGHT',   -justify => 'right' );
     my $ftext = $self->Scrolled($widget)
-    ->grid( -row => 0, -column => 1, -sticky => 'nsew' );
+        ->grid( -row => 0, -column => 1, -sticky => 'nsew' );
     $self->{'rtext'} = my $rtext = $ftext->Subwidget('scrolled');
     $self->gridColumnconfigure( 1, -weight => 1 );
     $self->gridRowconfigure( 0, -weight => 1 );
@@ -102,10 +103,10 @@ sub Populate {
     }
 
     my @textMethods
-    = qw/insert delete Delete deleteBefore Contents deleteSelected
-    deleteTextTaggedwith deleteToEndofLine FindAndReplaceAll GotoLineNumber
-    Insert InsertKeypress InsertSelection insertTab openLine yview ReplaceSelectionsWith
-    Transpose see/;
+        = qw/insert delete Delete deleteBefore Contents deleteSelected
+        deleteTextTaggedwith deleteToEndofLine FindAndReplaceAll GotoLineNumber
+        Insert InsertKeypress InsertSelection insertTab openLine yview ReplaceSelectionsWith
+        Transpose see/;
 
     if ( ref($rtext) eq 'TextUnicode' ) {
         push( @textMethods,
@@ -174,16 +175,16 @@ sub hidelinenum {
 sub _lineupdate {
     my ($w) = @_;
     return
-    unless ( $w->{'ltext'}->ismapped )
-    ;    # Don't bother continuing if line numbers cannot be displayed
+        unless ( $w->{'ltext'}->ismapped )
+        ;    # Don't bother continuing if line numbers cannot be displayed
     my @xsave = $w->{'rtext'}->xview;
-    my $idx1  = $w->{'rtext'}->index('@0,0')
-    ;    # First visible line in text widget
+    my $idx1
+        = $w->{'rtext'}->index('@0,0');    # First visible line in text widget
     $w->{'rtext'}->see($idx1);
     my ( $dummy, $ypix ) = $w->{'rtext'}->dlineinfo($idx1);
 
     my $theight = $w->{'rtext'}->height;
-    my $oldy = my $lastline = -99;  #ensure at least one number gets shown
+    my $oldy = my $lastline = -99;    #ensure at least one number gets shown
     $w->{'ltext'}->delete( '1.0', 'end' );
 
     my @LineNum;
@@ -203,14 +204,15 @@ sub _lineupdate {
         $oldy = $y;
         $ypix += $he;
         last
-        if $ypix >= ( $theight - 1 )
-        ;    #we have reached the end of the display
+            if $ypix
+                >= ( $theight - 1 );   #we have reached the end of the display
         last if ( $y == $ypix );
 
         $ltextline++;
         if ( $realline == $lastline ) {
             push( @LineNum, "\n" );
-        } else {
+        }
+        else {
             push( @LineNum, "$realline\n" );
         }
         $lastline = $realline;
@@ -221,12 +223,14 @@ sub _lineupdate {
     my $ltextwidth  = $w->{'ltext'}->cget( -width );
     if ( $neededwidth > $ltextwidth ) {
         $w->{'ltext'}->configure( -width => $neededwidth );
-    } elsif ( $ltextwidth > $w->{'minwidth'}
+    }
+    elsif ($ltextwidth > $w->{'minwidth'}
         && $neededwidth <= $w->{'minwidth'} )
     {
         $w->{'ltext'}->configure( -width => $w->{'minwidth'} );
-    } elsif ( $neededwidth < $ltextwidth
-            and $neededwidth > $w->{'minwidth'} )
+    }
+    elsif ( $neededwidth < $ltextwidth
+        and $neededwidth > $w->{'minwidth'} )
     {
         $w->{'ltext'}->configure( -width => $neededwidth );
     }
@@ -243,8 +247,8 @@ sub _lineupdate {
     }
 
     if ( $highlightline and $w->cget( -curlinehighlight ) ) {
-        $w->{'ltext'}->tagAdd( 'CURLINE', "$highlightline\.0",
-            "$highlightline\.end" );
+        $w->{'ltext'}
+            ->tagAdd( 'CURLINE', "$highlightline\.0", "$highlightline\.end" );
     }
     $w->{'ltext'}->tagAdd( 'RIGHT', '1.0', 'end' );
     $w->{'rtext'}->xviewMoveto( $xsave[0] );

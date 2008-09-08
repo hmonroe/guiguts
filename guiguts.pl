@@ -1,26 +1,32 @@
 #!/usr/bin/perl
 
-# Guiguts.pl text editing script
 # $Id$
 
-my $currentver = '0.1.1';
+# GuiGuts text editor
 
-my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
-my $yes_proofer_url
-    = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
+#Copyright (C) 2008 V. L. Simpson <vlsimpson@gmail.com>
+
+#This program is free software; you can redistribute it and/or
+#modify it under the terms of the GNU General Public License
+#as published by the Free Software Foundation; either version 2
+#of the License, or (at your option) any later version.
+
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License
+#along with this program; if not, write to the Free Software
+#Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 require 5.008;
 use strict;
 use warnings;
-use lib "lib";
+use FindBin;
+use lib $FindBin::Bin . "/lib";
 use Tk;
-
 #use Data::Dumper;
-
-use constant OS_Win => $^O =~ /Win/;
-
-$| = 1;
-
 
 use Tk::Balloon;
 use Tk::BrowseEntry;
@@ -47,13 +53,22 @@ use HTML::TokeParser;
 use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
+
 # Custom Guigut modules
 use LineNumberText;
 use TextUnicode;
 
+use constant OS_Win => $^O =~ /Win/;
+
 # ignore any watchdog timer alarms. Subroutines that take a long time to complete can trip it
 $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { myexit() };
+
+my $DEBUG = 0; # FIXME: this can go.
+my $currentver = '0.1.1';
+my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
+my $yes_proofer_url
+    = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 our $activecolor      = '#f2f818';
 our $auto_page_marks  = 1;
@@ -64,6 +79,7 @@ our $bkmkhl           = '0';
 our $blocklmargin     = 5;
 our $blockrmargin     = 72;
 our $blockwrap;
+our $bold_char = "=";
 our $defaultindent = 0;
 our $fontname      = 'Courier New';
 our $fontsize      = 10;
@@ -81,6 +97,7 @@ our $globalviewerpath   = '';
 our $gutpath            = '';
 our $highlightcolor     = '#a08dfc';
 our $history_size       = 20;
+our $italic_char = "_";
 our $jeebiesmode        = 'p';
 our $jeebiespath        = '';
 our $lmargin            = 1;
@@ -107,10 +124,6 @@ our $toolside    = 'bottom';
 our $utffontname = 'Courier New';
 our $utffontsize = 14;
 our $vislnnm     = 0;
-
-# FIXME: Some new variables
-our $italic_char = "_";
-our $bold_char = "=";
 
 our %gc;
 our %jeeb;
@@ -172,8 +185,6 @@ if ( eval { require Image::Size; 1; } ) {
 } else {
     $lglobal{ImageSize} = 0;
 }
-
-my $DEBUG = 0;
 
 my $top = MainWindow->new;    # Set up main window
 
@@ -1177,6 +1188,7 @@ sub update_indicators {
         saveset();
         $lglobal{geometryupdate} = 0;
     }
+    # FIXME: Can this go? Maybe.
     if ( $autosave and $lglobal{autosaveinterval} and $DEBUG ) {
         my $elapsed
             = $autosaveinterval * 60 - ( time - $lglobal{autosaveinterval} );
@@ -1371,8 +1383,6 @@ sub cmdinterp {
     if ( $command =~ m/\$f|\$d|\$e/ ) {
         return ' ' if ( $lglobal{global_filename} =~ m/No File Loaded/ );
         $fname = $lglobal{global_filename};
-
-#DEBUG: vls -- original                $fname = Win32::GetShortPathName($lglobal{global_filename}) if OS_Win;
         $fname = dos_path( $lglobal{global_filename} ) if OS_Win;
         my ( $f, $d, $e ) = fileparse( $fname, qr{\.[^\.]*$} );
         $command =~ s/\$f/$f/ if $f;
@@ -1986,7 +1996,7 @@ sub buildmenu {    # The main menu building code.
             [ Button => '~Guess Page Markers', -command => \&guesswindow ],
             [ Button => 'Set Page ~Markers',   -command => \&markpages ],
             '',
-            [ Button => '~Exit', -command => \&myexit ],
+            [ Button => 'E~xit', -command => \&myexit ],
         ]
     );
 
@@ -2645,14 +2655,6 @@ sub buildmenu {    # The main menu building code.
             [ Button => '~UTF Character Search',  -command => \&uchar ],
         ]
     );
- 
-    if ($DEBUG) {
-        $menu->Command(
-            -label   => 'Test',
-            -command => sub {
-            }
-        );
-    }
 }
 
 sub viewpagenums {    # Toggle visible page markers
@@ -6428,7 +6430,6 @@ sub replaceeval {
     $searchterm =~ s/\Q(?<=\E.*?\)//;
     $searchterm =~ s/\Q(?=\E.*?\)//;
     $found      =~ m/$searchterm/m;
-    print "$searchterm, $replaceterm, $found\n" if $DEBUG;
     $m1 = $1;
     $m2 = $2;
     $m3 = $3;
@@ -6481,9 +6482,6 @@ sub replaceeval {
         while ( $replaceseg = shift @replarray ) {
             $seg1 = $seg2 = '';
             ( $seg1, $seg2 ) = split /\\E/, $replaceseg, 2;
-
-            print "$seg1\n"  if $DEBUG;
-            print eval $seg1 if $DEBUG;
             $replbuild .= eval $seg1;
             $replbuild .= $seg2 if $seg2;
         }
@@ -6840,6 +6838,7 @@ sub brackets {
             -value       => '«|»',
             -text        => 'Angle quotes « »',
         )->grid( -row => 2, -column => 2, -pady => 5 );
+        # FIXME: Lost the reverse angle quote on a revert, Put back in after testing.
         my $frame2     = $lglobal{brkpop}->Frame->pack;
         my $brsearchbt = $frame2->Button(
             -activebackground => $activecolor,
@@ -7588,7 +7587,6 @@ sub wrapper {
     my $firstmargin = shift;
     my $rightmargin = shift;
     my $paragraph   = shift;
-    print $paragraph if $DEBUG;
     $leftmargin--    if $leftmargin;
     $firstmargin--   if $firstmargin;
     $rightmargin++;
@@ -8214,7 +8212,22 @@ sub markpopup {
             -pady   => 2,
             -sticky => 'w'
             );
-        $blockmarkup = $f0->Checkbutton(
+
+        # FIXME: Deuglify the popup. 
+            my $latin1_convert = $f0->Checkbutton(
+            -variable    => \$lglobal{keep_latin1},
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Keep Latin 1 Chars',
+            -anchor      => 'w',
+            )->grid(
+            -row    => 3,
+            -column => 4,
+            -padx   => 1,
+            -pady   => 2,
+            -sticky => 'w'
+            );
+        
+            $blockmarkup = $f0->Checkbutton(
             -variable    => \$lglobal{cssblockmarkup},
             -selectcolor => $lglobal{checkcolor},
             -command     => sub {
@@ -8764,7 +8777,7 @@ sub markup {
                 }
             }
         } elsif ( $mark eq 'hr' ) {
-            $textwindow->insert( 'insert', "<hr style=\"width: 95%;\" />" );
+            $textwindow->insert( 'insert', '<hr style="width: 95%;" />' );
         } elsif ( $mark eq '&nbsp;' ) {
             my ( $lsr, $lsc, $ler, $lec, $step );
             ( $lsr, $lsc ) = split /\./, $thisblockstart;
@@ -9926,13 +9939,13 @@ sub htmlautoconvert {
             $textwindow->ntdelete( "$step.0", "$step.end" );
             $textwindow->ntinsert( "$step.0", $selection );
         }
-        if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style='width: 45%;' \/>/ )
+        if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ )
         {
             $textwindow->ntdelete( "$step.0", "$step.end" );
             $textwindow->ntinsert( "$step.0", $selection );
             next;
         }
-        if ( $selection =~ s/<tb>/<hr style='width: 45%;' \/>/ ) {
+        if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {
             $textwindow->ntdelete( "$step.0", "$step.end" );
             $textwindow->ntinsert( "$step.0", $selection );
             next;
@@ -10315,7 +10328,7 @@ sub htmlautoconvert {
                 && ($selection) )
             {
                 $textwindow->ntinsert( ( $step - 1 ) . '.0',
-                    "<hr style=\"width: 65%;\" />" )
+                    '<hr style="width: 65%;" />' )
                     unless ( $selection =~ /<[ph]/ );
                 $aname =~ s/<\/?[hscalup].*?>//g;
                 $aname = makeanchor( deaccent($selection) );
@@ -10453,6 +10466,7 @@ sub htmlautoconvert {
             last;
         }
     }
+    
 
     working("Converting\nSidenotes");
     my $thisnoteend;
@@ -10575,10 +10589,16 @@ sub htmlautoconvert {
     working("Converting Named\n and Numeric Characters");
     named( ' >', ' &gt;' );
     named( '< ', '&lt; ' );
-    for ( 128 .. 255 ) {
-        my $from = lc sprintf( "%x", $_ );
-        named( '\x' . $from, entity( '\x' . $from ) );
-    }
+
+    # FIXME: Reverse this to an if; Keep the chars by default, i.e., convert to CER on user request.
+    # unless ( $lglobal{keep_latin1} ) { html_convert_latin1(); }
+    unless ( $lglobal{keep_latin1} ) { html_convert_latin1(); }
+
+    # FIXME: Disable latin-1 conversion; make an option on the HTML popup.
+#    for ( 128 .. 255 ) {
+#        my $from = lc sprintf( "%x", $_ );
+#        named( '\x' . $from, entity( '\x' . $from ) );
+#    }
     if ( $lglobal{leave_utf} ) {
         $thisblockstart
             = $textwindow->search( '-exact', '--', 'charset=iso-8859-1',
@@ -12272,7 +12292,7 @@ sub gutcheck {
         $dialog->Show;
         return;
     }
-    $title =~ s/Guiguts-$currentver -//; #FIXME: patch from DP user
+    $title =~ s/Guiguts-$currentver -//;
     $title =~ s/ - edited$//;
     $title = os_normal($title);
     $title = dos_path($title) if OS_Win;
@@ -12827,8 +12847,6 @@ sub gutwindowpopulate {
 
 sub gutcheckrun {
     my ( $gutcheckstart, $gutcheckoptions, $thisfile ) = @_;
-    print qq/$gutcheckstart $gutcheckoptions $thisfile > gutrslts.txt/, "\n"
-        if $DEBUG;
     system(qq/$gutcheckstart $gutcheckoptions $thisfile > gutrslts.txt/);
 }
 
@@ -20287,4 +20305,10 @@ sub html_convert_emdashes {
     named( "\x{A0}",               '&nbsp;' );
 }
 
-
+# convert latin1 charactes to HTML Character Entity Reference's.
+sub html_convert_latin1 {
+    for ( 128 .. 255 ) {
+        my $from = lc sprintf( "%x", $_ );
+        named( '\x' . $from, entity( '\x' . $from ) );
+    }
+}
