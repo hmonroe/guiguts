@@ -2,8 +2,6 @@
 
 package TextConvert;
 
-print "DEBUG: Loading TextConvert\n";
-
 use warnings;
 use strict;
 

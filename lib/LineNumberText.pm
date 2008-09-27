@@ -2,8 +2,6 @@
 
 package LineNumberText;
 
-print "DEBUG: Loading LineNumberText\n";
-
 use Tk;
 use Tk::widgets qw(ROText);
 use base qw(Tk::Frame);

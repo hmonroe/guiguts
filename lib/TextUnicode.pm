@@ -2,8 +2,6 @@
 
 package TextUnicode;
 
-print "DEBUG: Loading TextUnicode\n";
-
 use base qw(Tk::TextEdit);
 use File::Temp qw/tempfile/;
 use File::Basename;
