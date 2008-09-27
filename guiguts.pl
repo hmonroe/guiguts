@@ -57,6 +57,7 @@ use charnames();
 # Custom Guigut modules
 use LineNumberText;
 use TextUnicode;
+require TextConvert;
 
 use constant OS_Win => $^O =~ /Win/;
 
@@ -65,7 +66,8 @@ $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { myexit() };
 
 my $DEBUG = 0; # FIXME: this can go.
-my $currentver = '0.1.1';
+my $VERSION = "0.2.0";
+my $currentver = '0.2.0';
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
     = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
@@ -189,15 +191,6 @@ if ( eval { require Image::Size; 1; } ) {
 my $top = MainWindow->new;    # Set up main window
 
 initialize();                 # Initialize a bunch of vars that need it.
-
-# FIXME: vls -- comment out and see what happens
-#############################################################
-# temporary change-over values until upgrades have been made.
-# $fontweight = '' if $fontweight eq 'Medium';
-# $fontweight = 'bold' if $fontweight eq 'Bold';
-# $fontsize = $fontsize/10 if $fontsize > 100;
-# $utffontsize = $utffontsize/10 if $utffontsize > 100;
-#############################################################
 
 $top->minsize( 440, 90 );
 
@@ -10429,12 +10422,16 @@ sub htmlautoconvert {
         $textwindow->ntdelete( $thisblockstart, "$thisblockstart+4c" );
         $textwindow->ntinsert( $thisblockstart, '</span>' );
     }
+
+    #FIXME: This can just go with FindAndReplaceAll
+    # html_convert_sc();
     while ( $thisblockstart
         = $textwindow->search( '-exact', '--', '<sc>', '1.0', 'end' ) )
     {
         $textwindow->ntdelete( $thisblockstart, "$thisblockstart+4c" );
         $textwindow->ntinsert( $thisblockstart, '<span class="smcap">' );
     }
+    # FIXME: and this too.
     while ( $thisblockstart
         = $textwindow->search( '-exact', '--', '</sc>', '1.0', 'end' ) )
     {
@@ -20196,15 +20193,15 @@ sub text_convert_tb {
     $textwindow->FindAndReplaceAll( '-exact', '-nocase', '<tb>', $tb );
 }
 
-sub text_convert_italic {
-    my $italic = qr/<\/?i>/;
-    my $replace = $italic_char;
-    $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $italic, $replace);
-}
+#sub text_convert_italic {
+#    my $italic = qr/<\/?i>/;
+#    my $replace = $italic_char;
+#    $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $italic, $replace);
+#}
 
 sub text_convert_bold {
-    my $bold = qr/<\/?b>/;
-    my $replace = "$bold_char";
+    my $bold = qr"</?b>"i;
+    my $replace = $bold_char;
     $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $bold, $replace);
 }
 
@@ -20312,3 +20309,16 @@ sub html_convert_latin1 {
         named( '\x' . $from, entity( '\x' . $from ) );
     }
 }
+
+
+# convert <sc></sc> to <span class="smcap"></span>
+sub html_convert_open_sc {
+    my $sc = qr"<sc>"i;
+    $textwindow->FindAndReplaceAll ('-regexp', '--', $sc, '<span class="smcap">');
+}
+
+sub html_convert_close_sc {
+    my $sc = qr"</sc>"i;
+    $textwindow->FindAndReplaceAll ('-regexp', '--', $sc, '</span>');
+}
+
