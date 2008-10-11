@@ -65,8 +65,8 @@ $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { myexit() };
 
 my $DEBUG = 0; # FIXME: this can go.
-my $VERSION = "0.2.0";
-my $currentver = '0.2.0';
+my $VERSION = "0.2.1";
+my $currentver = '0.2.1';
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
     = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
