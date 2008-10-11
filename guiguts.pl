@@ -237,8 +237,7 @@ $top->geometry($geometry) if $geometry;
 
 # Set up Main window layout
 my $text_frame
-    = $top->Frame->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' )
-    ;          # autosizing
+    = $top->Frame->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' ) ;          # autosizing
 my $counter_frame = $text_frame->Frame->pack(
     -side   => 'bottom',
     -anchor => 'sw',
@@ -299,8 +298,7 @@ textbindings(); # Set up the key bindings for the text widget
 
 buildstatusbar();    # Build the status bar
 
-$top->Icon( -image => $icon )
-    ;  # Load the icon ito the window bar. Needs to happen late in the process
+$top->Icon( -image => $icon ) ;  # Load the icon ito the window bar. Needs to happen late in the process
 
 $textwindow->focus;
 
@@ -342,9 +340,9 @@ sub updatesel {    # Update Last Selection readout in status bar
             my ( $srow, $scol ) = split /\./, $ranges[0];
             my ( $erow, $ecol ) = split /\./, $ranges[-1];
             $msg
-                = ' R:'
-                . abs( $erow - $srow + 1 ) . ' C:'
-                . abs( $ecol - $scol ) . ' ';
+            = ' R:'
+            . abs( $erow - $srow + 1 ) . ' C:'
+            . abs( $ecol - $scol ) . ' ';
         } else {
             $msg = " $ranges[0]--$ranges[-1] ";
             if ( $lglobal{selectionpop} ) {
@@ -362,7 +360,7 @@ sub updatesel {    # Update Last Selection readout in status bar
     no warnings 'uninitialized';
     $lglobal{selmaxlength} = $msgln if ( $msgln > $lglobal{selmaxlength} );
     $lglobal{selectionlabel}
-        ->configure( -text => $msg, -width => $lglobal{selmaxlength} );
+    ->configure( -text => $msg, -width => $lglobal{selmaxlength} );
     update_indicators();
     $textwindow->_lineupdate;
 }
@@ -1019,7 +1017,7 @@ sub update_indicators {
         );
     }
     if ( $textwindow->numberChanges ) { $edit_flag = '- edited' }
-    $top->configure( -title => "Guiguts" . "-" . $currentver . " " . $edit_flag . "-" . $filename);
+    $top->configure( -title => "Guiguts" . "-" . $currentver . " " . $edit_flag . "-" . $filename); #FIXME: need some logic behind this
     $lglobal{global_filename} = $filename;
     $textwindow->idletasks;
     my ( $mark, $pnum );
@@ -4292,34 +4290,22 @@ sub alpha {
     return ( $triple . $double . $single );
 }
 
-sub roman
-{ # Roman numeral conversion taken directly from the Roman.pm module Copyright (c) 1995 OZAWA Sakuro. Done to avoid users
-    my %roman_digit = qw(1 IV 10 XL 100 CD 1000 MMMMMM)
-        ;    # having to install downloadable modules.
-    my @figure = reverse sort keys %roman_digit;
-    grep( $roman_digit{$_} = [ split( //, $roman_digit{$_}, 2 ) ], @figure );
-    my $arg = shift;
-    return undef unless defined $arg;
-    0 < $arg and $arg < 4000 or return undef;
-    my ( $x, $roman );
-    foreach (@figure) {
-        my ( $digit, $i, $v ) = ( int( $arg / $_ ), @{ $roman_digit{$_} } );
-        if ( 1 <= $digit and $digit <= 3 ) {
-            $roman .= $i x $digit;
-        } elsif ( $digit == 4 ) {
-            $roman .= "$i$v";
-        } elsif ( $digit == 5 ) {
-            $roman .= $v;
-        } elsif ( 6 <= $digit and $digit <= 8 ) {
-            $roman .= $v . $i x ( $digit - 5 );
-        } elsif ( $digit == 9 ) {
-            $roman .= "$i$x";
-        }
-        $arg -= $digit * $_;
-        $x = $i;
-    }
-    return "$roman.";
-}
+# Roman numeral conversion taken directly from the Roman.pm module Copyright
+# (c) 1995 OZAWA Sakuro. Done to avoid users having to install downloadable
+# modules.
+
+sub roman { 
+    my %roman_digit = qw(1 IV 10 XL 100 CD 1000 MMMMMM) ; my @figure =
+    reverse sort keys %roman_digit; grep( $roman_digit{$_} = [ split( //,
+            $roman_digit{$_}, 2 ) ], @figure ); my $arg = shift; return undef
+    unless defined $arg; 0 < $arg and $arg < 4000 or return undef; my ( $x,
+        $roman ); foreach (@figure) { my ( $digit, $i, $v ) = ( int( $arg / $_
+            ), @{ $roman_digit{$_} } ); if ( 1 <= $digit and $digit <= 3 ) {
+            $roman .= $i x $digit; } elsif ( $digit == 4 ) { $roman .= "$i$v";
+        } elsif ( $digit == 5 ) { $roman .= $v; } elsif ( 6 <= $digit and
+            $digit <= 8 ) { $roman .= $v . $i x ( $digit - 5 ); } elsif (
+            $digit == 9 ) { $roman .= "$i$x"; } $arg -= $digit * $_; $x = $i; }
+    return "$roman."; }
 
 sub arabic {
     my $arg = shift;
@@ -4789,10 +4775,10 @@ sub spelloptions {
 # Initialize spellchecker
 sub spellcheckfirst {
     $lglobal{spellexename}
-        = ( OS_Win ? dos_path($globalspellpath) : $globalspellpath )
-        ;    # Make the exe path dos compliant
+    = ( OS_Win ? dos_path($globalspellpath) : $globalspellpath )
+    ;    # Make the exe path dos compliant
     $lglobal{spellfilename}
-        = ( OS_Win
+    = ( OS_Win
         ? dos_path( $lglobal{global_filename} )
         : $lglobal{global_filename} );    # make the file path dos compliant
     @{ $lglobal{misspelledlist} } = ();
@@ -4805,7 +4791,7 @@ sub spellcheckfirst {
     my $term = $lglobal{misspelledlist}[0];    # get first mispelled term
     $lglobal{misspelledentry}->delete( '0', 'end' );
     $lglobal{misspelledentry}->insert( 'end', $term )
-        ;    # put it in the appropriate text box
+    ;    # put it in the appropriate text box
     $lglobal{suggestionlabel}->configure( -text => 'Suggestions:' );
     return unless $term;    # no mispellings found, bail
     $lglobal{matchlength} = '0';
@@ -4815,8 +4801,8 @@ sub spellcheckfirst {
         $term, $lglobal{spellindexstart}, 'end'
     );                      # search for the mispelled word in the text
     $lglobal{lastmatchindex}
-        = spelladjust_index( $lglobal{matchindex}, $term )
-        ;                   # find the index of the end of the match
+    = spelladjust_index( $lglobal{matchindex}, $term )
+    ;                   # find the index of the end of the match
     spelladdtexttags();     # highlight the word in the text
     update_indicators();    # update the status bar
     aspellstart();          # initialize the guess function
@@ -4825,7 +4811,7 @@ sub spellcheckfirst {
 
     if ( scalar( $lglobal{seen} ) ) {
         $lglobal{misspelledlabel}->configure( -text =>
-                "Not in Dictionary:  -  $lglobal{seen}->{$term} in text." );
+            "Not in Dictionary:  -  $lglobal{seen}->{$term} in text." );
     }
     $lglobal{nextmiss} = 0;
 }
@@ -9710,7 +9696,7 @@ sub makeanchor {
     return $linkname;
 }
 
-# DP:vls -- Split this into separate functions, eventually into HTMLconvert.pm
+# FIXME: Split this into separate functions, eventually into HTMLconvert.pm
 sub htmlautoconvert {
     viewpagenums() if ( $lglobal{seepagenums} );
     my $aname    = '';
@@ -9751,11 +9737,8 @@ sub htmlautoconvert {
 
     html_convert_codepage();
 
-    #sub html_parse_header();
-
     working('Parsing Header');
 
-    #    $headertext;
     $selection = $textwindow->get( '1.0', '1.end' );
     if ( $selection =~ /DOCTYPE/ ) {
         $step = 1;
@@ -9942,7 +9925,7 @@ sub htmlautoconvert {
             $textwindow->ntinsert( "$step.0", $selection );
             next;
         }
-        if ( $selection =~ /^\/[Xx]/ ) {
+        if ( $selection =~ m"^/x"i ) {
             $skip = 1;
             $textwindow->ntdelete( "$step.0", "$step.end" );
             $textwindow->insert( "$step.0", '<pre>' );
@@ -9956,7 +9939,7 @@ sub htmlautoconvert {
             $step++;
             next;
         }
-        if ( $selection =~ /^[Xx]\// ) {
+        if ( $selection =~ m"^x/"i ) {
             $skip = 0;
             $textwindow->ntdelete( "$step.0", "$step.end" );
             $textwindow->ntinsert( "$step.0", '</pre>' );
@@ -9968,7 +9951,7 @@ sub htmlautoconvert {
             $step++;
             next;
         }
-        if ( $selection =~ /^\/[Ff]/ ) {
+        if ( $selection =~ m"^/f"i ) {
             $front = 1;
             $textwindow->ntdelete( "$step.0", "$step.end +1c" );
             if ( ( $last5[2] ) && ( !$last5[3] ) ) {
@@ -9981,7 +9964,7 @@ sub htmlautoconvert {
             next;
         }
         if ($front) {
-            if ( $selection =~ /^[fF]\// ) {
+            if ( $selection =~ m"^f/"i ) {
                 $front = 0;
                 $textwindow->ntdelete( "$step.0", "$step.end +1c" );
                 $step++;
@@ -10583,14 +10566,8 @@ sub htmlautoconvert {
     named( '< ', '&lt; ' );
 
     # FIXME: Reverse this to an if; Keep the chars by default, i.e., convert to CER on user request.
-    # unless ( $lglobal{keep_latin1} ) { html_convert_latin1(); }
     unless ( $lglobal{keep_latin1} ) { html_convert_latin1(); }
 
-    # FIXME: Disable latin-1 conversion; make an option on the HTML popup.
-#    for ( 128 .. 255 ) {
-#        my $from = lc sprintf( "%x", $_ );
-#        named( '\x' . $from, entity( '\x' . $from ) );
-#    }
     if ( $lglobal{leave_utf} ) {
         $thisblockstart
             = $textwindow->search( '-exact', '--', 'charset=iso-8859-1',
@@ -11345,7 +11322,7 @@ sub markpages {
         if ( $line =~ /-+File:.*?-+([^-]+)-+/ ) {
 
             # split the proofer string into parts
-            @{ $proofers{$page} } = split( "\Q\\\E", $1 );
+            @{ $proofers{$page} } = split( "\Q\\\E", $1 ); #FIXME: Bin file page number barf, possibly.
         }
 
         $pagemark = 'Pg' . $page;
@@ -12145,8 +12122,8 @@ sub tidyrun {
     saveset();
     $top->Busy( -recurse => 1 );
     if ( $tidyoptions =~ /\-m/ ) {
-        $title =~ s/Guiguts $currentver - //;
-        $title =~ s/ - edited$//;
+        $title =~ s/Guiguts-$currentver -//; # FIXME: duped in gutcheck code
+        $title =~ s/ edited-//; 
         $title = os_normal($title);
         ( $fname, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
         $title = dos_path($title) if OS_Win;
@@ -12284,8 +12261,8 @@ sub gutcheck {
         $dialog->Show;
         return;
     }
-    $title =~ s/Guiguts-$currentver -//;
-    $title =~ s/ - edited$//;
+    $title =~ s/Guiguts-$currentver -//; #FIXME: sub this out; this and next in the tidy code
+    $title =~ s/ edited-//;
     $title = os_normal($title);
     $title = dos_path($title) if OS_Win;
     ( $name, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
@@ -14010,7 +13987,7 @@ sub wfspellcheck {
     $lglobal{wclistbox}->update;
     my ( $words, $uwords );
     my $wordw = 0;
-
+    searchoptset(qw/1 x x 0/); # FIXME: Test for whole word search setting
     foreach ( sort ( keys %{ $lglobal{seen} } ) ) {
         if ( $_ !~ /[\x{100}-\x{FFEF}]/ ) {
             $words .= "$_\n";
@@ -20299,6 +20276,7 @@ sub html_convert_emdashes {
 
 # convert latin1 charactes to HTML Character Entity Reference's.
 sub html_convert_latin1 {
+    working("Converting Latin 1 Characters...");
     for ( 128 .. 255 ) {
         my $from = lc sprintf( "%x", $_ );
         named( '\x' . $from, entity( '\x' . $from ) );
