@@ -11961,17 +11961,17 @@ sub tidypop_up {
             -padx   => 2,
             -anchor => 'n'
             );
-        my $opsbutton2 = $ptopframe->Button(
-            -activebackground => $activecolor,
-            -command          => sub { tidyrun(' -f tidyerr.err -m '); },
-            -text             => 'Generate Tidied File',
-            -width            => 16
-            )->pack(
-            -side   => 'left',
-            -pady   => 10,
-            -padx   => 2,
-            -anchor => 'n'
-            );
+#        my $opsbutton2 = $ptopframe->Button(
+#            -activebackground => $activecolor,
+#            -command          => sub { tidyrun(' -f tidyerr.err -m '); },
+#            -text             => 'Generate Tidied File',
+#            -width            => 16
+#            )->pack(
+#            -side   => 'left',
+#            -pady   => 10,
+#            -padx   => 2,
+#            -anchor => 'n'
+#            );
         my $pframe = $lglobal{tidypop}
             ->Frame->pack( -fill => 'both', -expand => 'both', );
         $lglobal{tidylistbox} = $pframe->Scrolled(
