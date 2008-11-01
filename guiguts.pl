@@ -64,6 +64,7 @@ use constant OS_Win => $^O =~ /Win/;
 $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { myexit() };
 
+
 my $DEBUG = 0; # FIXME: this can go.
 my $VERSION = "0.2.1";
 my $currentver = '0.2.1';
@@ -125,6 +126,7 @@ our $toolside    = 'bottom';
 our $utffontname = 'Courier New';
 our $utffontsize = 14;
 our $vislnnm     = 0;
+our $window_title = "Guiguts-" . $currentver;
 
 our %gc;
 our %jeeb;
@@ -1016,8 +1018,12 @@ sub update_indicators {
             -width => 18
         );
     }
-    if ( $textwindow->numberChanges ) { $edit_flag = '- edited' }
-    $top->configure( -title => "Guiguts" . "-" . $currentver . " " . $edit_flag . "-" . $filename); #FIXME: need some logic behind this
+    if ( $textwindow->numberChanges ) { $edit_flag = 'edited' }
+    
+# window label format: GG-version - [edited] - [file name]
+    if ( $edit_flag) { $top->configure( -title => $window_title . " - ". $edit_flag . " - " . $filename) } 
+    else { $top->configure( -title => $window_title . " - " . $filename) } #FIXME: need some logic behind this 
+        
     $lglobal{global_filename} = $filename;
     $textwindow->idletasks;
     my ( $mark, $pnum );
@@ -12122,8 +12128,8 @@ sub tidyrun {
     saveset();
     $top->Busy( -recurse => 1 );
     if ( $tidyoptions =~ /\-m/ ) {
-        $title =~ s/Guiguts-$currentver -//; # FIXME: duped in gutcheck code
-        $title =~ s/ edited-//; 
+        $title =~ s/$window_title - //; # FIXME: duped in gutcheck code
+        $title =~ s/edited - //; 
         $title = os_normal($title);
         ( $fname, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
         $title = dos_path($title) if OS_Win;
@@ -12261,8 +12267,8 @@ sub gutcheck {
         $dialog->Show;
         return;
     }
-    $title =~ s/Guiguts-$currentver -//; #FIXME: sub this out; this and next in the tidy code
-    $title =~ s/ edited-//;
+    $title =~ s/$window_title - //; #FIXME: sub this out; this and next in the tidy code
+    $title =~ s/edited - //;
     $title = os_normal($title);
     $title = dos_path($title) if OS_Win;
     ( $name, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
