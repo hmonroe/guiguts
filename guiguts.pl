@@ -9762,7 +9762,7 @@ sub htmlautoconvert {
             or warn "Could not open header file. $!\n";
         while (<$infile>) {
             $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-            #$_ = eol_convert($_);
+            # FIXME: $_ = eol_convert($_);
             $headertext .= $_;
         }
         close $infile;
@@ -10501,13 +10501,14 @@ sub htmlautoconvert {
                     $markindex . 'linestart +4c'
                 );
                 if ( $check =~ /<h[12]>/ ) {
-                    $markindex = $textwindow->index("$mark-1l lineend");
+                    $markindex = $textwindow->index("$mark-1l lineend"); # FIXME: HTML page number hangs here
                 }
                 $textwindow->ntinsert( $markindex,
                     "<span class='pagenum'><a name=\"Page_$num\" id=\"Page_$num\">[Pg $num]</a></span>"
                 ) if $lglobal{pageanch};
 
 #$textwindow->ntinsert($markindex,"<span class='pagenum' id=\"Page_".$num."\">[Pg $num]</span>") if $lglobal{pageanch};
+                # FIXME: this is hanging up somewhere.
                 $textwindow->ntinsert( $markindex,
                     '<!-- Page ' . $num . ' -->' )
                     if ( $lglobal{pagecmt} and $num );
@@ -15603,7 +15604,7 @@ sub initialize {
     $lglobal{asciijustify}     = 'center';
     $lglobal{asciiwidth}       = 64;
     $lglobal{codewarn}         = 1;
-    $lglobal{cssblockmarkup}   = 1;
+    $lglobal{cssblockmarkup}   = 0;
     $lglobal{delay}            = 50;
     $lglobal{ffchar}           = '';
     $lglobal{footstyle}        = 'end';
