@@ -4,7 +4,7 @@
 
 # GuiGuts text editor
 
-#Copyright (C) 2008 V. L. Simpson <vlsimpson@gmail.com>
+#Copyright (C) 2008 V. L. Simpson <vlsimpson@users.sourceforge.net>
 
 #This program is free software; you can redistribute it and/or
 #modify it under the terms of the GNU General Public License
