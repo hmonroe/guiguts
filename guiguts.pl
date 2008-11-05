@@ -5901,7 +5901,7 @@ sub regedit {
             print REG "'$srch' => '$repl',\n";
         }
         print REG ");\n\n";
-        print REG
+        print REG # FIXME: here doc or just stuff in a text file and suck that out.
             '# For a hint, use the regex expression EXACTLY as it appears in the %scannoslist hash'
             . "\n";
         print REG
@@ -6213,10 +6213,10 @@ sub searchtext {
             : ( $searchendindex = "$start+1c" );
     }
     {
-        local ($^W)
-            ; # Turn off warnings temporarily since $searchterm is undefined on first search
-        unless ( length($searchterm) ) {
-            $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
+            no warnings;
+            # Turn off warnings temporarily since $searchterm is undefined on first search
+            unless ( length($searchterm) ) {
+                    $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
         }
     }
     return ('') unless length($searchterm);
@@ -14409,7 +14409,7 @@ sub hotkeyshelp {
         )->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
         drag($rotextbox);
         $rotextbox->focus;
-        $rotextbox->insert(
+        $rotextbox->insert( #FIXME: Make this a here doc.
             'end',
             "\nMAIN WINDOW\n\n"
                 . "<ctrl>+x -- cut or column cut\n"
