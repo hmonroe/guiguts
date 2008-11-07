@@ -66,8 +66,8 @@ $SIG{INT} = sub { myexit() };
 
 
 my $DEBUG = 0; # FIXME: this can go.
-my $VERSION = "0.2.1";
-my $currentver = '0.2.1';
+my $VERSION = "0.2.2";
+my $currentver = '0.2.2';
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
     = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
@@ -5077,7 +5077,7 @@ sub spellget_misspellings {    # get list of misspelled words
     my $section = $textwindow->get( $lglobal{spellindexstart},
         $lglobal{spellindexend} );    # get selection
     $section =~ s/-----*\s?File:\s?\S+.(png|jpg)---.*//g;
-    open SAVE, '>:bytes', 'checkfil.chk';
+    open SAVE, '>:bytes', 'checkfil.txt';
     print SAVE $section;
     close SAVE;
     my $spellopt
@@ -5085,7 +5085,7 @@ sub spellget_misspellings {    # get list of misspelled words
         ? "-l "
         : "list --encoding=utf-8 ";
     $spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
-    @templist = `$lglobal{spellexename} $spellopt < "checkfil.chk"`
+    @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
         ;    # feed the text to aspell, get an array of misspelled words out
     chomp @templist;    # get rid of any newlines
 
@@ -14006,13 +14006,13 @@ sub wfspellcheck {
     }
     if ($words) {
         utf8::decode($words);
-        open( my $file, ">:bytes", "checkfil.chk" )
+        open( my $file, ">:bytes", "checkfil.txt" )
             ;    #save it to a file temporarily
         print $file $words;
         close $file;
         my $spellopt = get_spellchecker_version() lt "0.6" ? "-l " : "list ";
         $spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
-        my @templist = `$lglobal{spellexename} $spellopt < "checkfil.chk"`
+        my @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
             ;  # feed the text to aspell, get an array of misspelled words out
         chomp @templist;    # get rid of any newlines
 
@@ -14021,7 +14021,7 @@ sub wfspellcheck {
             $lglobal{spellsort}->{$word} = $lglobal{seen}->{$word} || '0';
             $wordw++;
         }
-        unlink 'checkfil.chk';    # get rid of the temp file
+        unlink 'checkfil.txt';    # get rid of the temp file
     }
     $lglobal{saveheader} = "$wordw words not recognised by the spellchecker.";
     sortwords( \%{ $lglobal{spellsort} } );
