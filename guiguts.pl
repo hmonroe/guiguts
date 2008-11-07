@@ -530,7 +530,7 @@ sub prep_export {
         $file =~ s/\n+$//;
         open my $fh, '>', "$directory/$filename";
         if ($unicode) {
-            $file = "\x{FEFF}" . $file;
+            $file = "\x{FEFF}" . $file; # Add the BOM to beginning of file.
             utf8::encode($file);
         }
         print $fh $file;
@@ -9912,14 +9912,17 @@ sub htmlautoconvert {
             if ( ( $step < 100 )
             && ( $selection =~ /contents/i )
             && ( $incontents eq '1.0' ) );
+    # Subscripts
         if ( $selection =~ s/_\{([^}]+?)\}/<sub>$1<\/sub>/g ) {
             $textwindow->ntdelete( "$step.0", "$step.end" );
             $textwindow->ntinsert( "$step.0", $selection );
         }
+        # Superscripts
         if ( $selection =~ s/\^\{([^}]+?)\}/<sup>$1<\/sup>/g ) {
             $textwindow->ntdelete( "$step.0", "$step.end" );
             $textwindow->ntinsert( "$step.0", $selection );
         }
+        # Thought break conversion
         if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ )
         {
             $textwindow->ntdelete( "$step.0", "$step.end" );
@@ -9931,6 +9934,7 @@ sub htmlautoconvert {
             $textwindow->ntinsert( "$step.0", $selection );
             next;
         }
+        # /x|/X gets <pre>
         if ( $selection =~ m"^/x"i ) {
             $skip = 1;
             $textwindow->ntdelete( "$step.0", "$step.end" );
@@ -9945,6 +9949,7 @@ sub htmlautoconvert {
             $step++;
             next;
         }
+        # and end tag gets </pre>
         if ( $selection =~ m"^x/"i ) {
             $skip = 0;
             $textwindow->ntdelete( "$step.0", "$step.end" );
@@ -20289,3 +20294,10 @@ sub html_convert_latin1 {
         named( '\x' . $from, entity( '\x' . $from ) );
     }
 }
+
+# Set <head><title></title></head>
+#sub html_set_title { }
+
+# Set author name in <title></title>
+#sub html_set_author { }
+
