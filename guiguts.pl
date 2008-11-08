@@ -10580,8 +10580,7 @@ sub htmlautoconvert {
     named( ' >', ' &gt;' );
     named( '< ', '&lt; ' );
 
-    # FIXME: Reverse this to an if; Keep the chars by default, i.e., convert to CER on user request.
-    unless ( $lglobal{keep_latin1} ) { html_convert_latin1(); }
+    if ( ! $lglobal{keep_latin1} ) { html_convert_latin1(); }
 
     if ( $lglobal{leave_utf} ) {
         $thisblockstart
