@@ -166,6 +166,9 @@ our @extops = (
     { 'label' => '', 'command' => '' },
 );
 
+# Regular Expressions
+our $dp_pg_div = qr/-----File:.+/i;
+
 my %lglobal;    #All local global variables contained in one hash.
 
 if ( eval { require Text::LevenshteinXS } ) {
@@ -5076,7 +5079,7 @@ sub spellget_misspellings {    # get list of misspelled words
     $top->Busy( -recurse => 1 );    # let user know something is going on
     my $section = $textwindow->get( $lglobal{spellindexstart},
         $lglobal{spellindexend} );    # get selection
-    $section =~ s/-----*\s?File:\s?\S+.(png|jpg)---.*//g;
+    $section =~ s/$dp_pg_div//g;
     open SAVE, '>:bytes', 'checkfil.txt';
     print SAVE $section;
     close SAVE;
@@ -11238,7 +11241,7 @@ EOM
     }
 }
 
-sub convertfilnum {
+sub convertfilnum { 
     viewpagenums() if ( $lglobal{seepagenums} );
     $lglobal{joinundo} = 0;
     my ( $filenum, $line, $rnd1, $rnd2, $page );
@@ -11301,6 +11304,7 @@ sub convertfilnum {
         if $searchstartindex;
 }
 
+# FIXME: This is converting dp page separators to internal mark
 sub markpages {
     $top->Busy( -recurse => 1 );
     viewpagenums() if ( $lglobal{seepagenums} );
@@ -15617,6 +15621,7 @@ sub initialize {
     $lglobal{groutp}           = 'l';
     $lglobal{htmlimgar}        = 1;          #html image aspect ratio
     $lglobal{ignore_case}      = 0;
+    $lglobal{keep_latin1} = 1;
     $lglobal{lastmatchindex}   = '1.0';
     $lglobal{lastsearchterm}   = '';
     $lglobal{longordlabel}     = 0;
