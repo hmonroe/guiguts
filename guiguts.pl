@@ -6826,6 +6826,13 @@ sub brackets {
             -text        => 'Angle quotes « »',
         )->grid( -row => 2, -column => 2, -pady => 5 );
         # FIXME: Lost the reverse angle quote on a revert, Put back in after testing.
+
+        my $gqusel = $frame3->Radiobutton(
+            -variable    => \$lglobal{brsel},
+            -selectcolor => $lglobal{checkcolor},
+            -value       => '»|«',
+            -text        => 'German Angle quotes » «',
+        )->grid( -row => 3, -column => 2, -pady => 5 );
         my $frame2     = $lglobal{brkpop}->Frame->pack;
         my $brsearchbt = $frame2->Button(
             -activebackground => $activecolor,
