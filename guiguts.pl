@@ -6824,15 +6824,15 @@ sub brackets {
             -selectcolor => $lglobal{checkcolor},
             -value       => '«|»',
             -text        => 'Angle quotes « »',
-        )->grid( -row => 2, -column => 2, -pady => 5 );
-        # FIXME: Lost the reverse angle quote on a revert, Put back in after testing.
+        )->grid( -row => 2, -column => 2, -pady => 5 ); 
 
         my $gqusel = $frame3->Radiobutton(
             -variable    => \$lglobal{brsel},
             -selectcolor => $lglobal{checkcolor},
             -value       => '»|«',
             -text        => 'German Angle quotes » «',
-        )->grid( -row => 3, -column => 2, -pady => 5 );
+        )->grid( -row => 3, -column => 2 );
+
         my $frame2     = $lglobal{brkpop}->Frame->pack;
         my $brsearchbt = $frame2->Button(
             -activebackground => $activecolor,
@@ -12250,6 +12250,7 @@ sub gutopts {
 }
 
 sub gutcheck {
+    no warnings;
     push @operations, ( localtime() . ' - Gutcheck' );
     viewpagenums() if ( $lglobal{seepagenums} );
     oppopupdate()  if $lglobal{oppop};
@@ -12259,7 +12260,7 @@ sub gutcheck {
     my $title = $top->cget('title');
     return if ( $title =~ /No File Loaded/ );
     $top->Busy( -recurse => 1 );
-
+    # FIXME: wide character in print warning next line with unicode
     if ( open my $gc, ">:bytes", 'gutchk.tmp' ) {
         my $count = 0;
         my $index = '1.0';
@@ -14715,7 +14716,9 @@ sub utfpopup {
             my $cname = charnames::viacode($name);
             $msg .= ", $cname" if $cname;
             $name = 0 unless $cname;
-            $buttons[ ( $y * 16 ) + $x ] = $frame->Button(
+        # FIXME: See Todo
+        $buttons[ ( $y * 16 ) + $x ] = $frame->Button(
+                #    $buttons( ( $y * 16 ) + $x ) = $frame->Button(
                 -activebackground   => $activecolor,
                 -text               => chr($name),
                 -font               => $lglobal{utffont},
