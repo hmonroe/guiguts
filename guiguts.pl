@@ -25,9 +25,9 @@ use strict;
 use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
-use Tk;
-#use Data::Dumper;
+use Data::Dump;
 
+use Tk;
 use Tk::Balloon;
 use Tk::BrowseEntry;
 use Tk::Checkbutton;
@@ -67,7 +67,7 @@ $SIG{INT} = sub { myexit() };
 
 my $DEBUG = 0; # FIXME: this can go.
 my $VERSION = "0.2.2";
-my $currentver = '0.2.2';
+my $currentver = $VERSION;
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
     = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
@@ -1025,7 +1025,8 @@ sub update_indicators {
     
 # window label format: GG-version - [edited] - [file name]
     if ( $edit_flag) { $top->configure( -title => $window_title . " - ". $edit_flag . " - " . $filename) } 
-    else { $top->configure( -title => $window_title . " - " . $filename) } #FIXME: need some logic behind this 
+    else { $top->configure( -title => $window_title . " - " . $filename) } 
+#FIXME: need some logic behind this 
         
     $lglobal{global_filename} = $filename;
     $textwindow->idletasks;
@@ -12261,6 +12262,8 @@ sub gutcheck {
     return if ( $title =~ /No File Loaded/ );
     $top->Busy( -recurse => 1 );
     # FIXME: wide character in print warning next line with unicode
+    # Figure out how to determine encoding. See scratchpad.pl
+    # open my $gc, ">:encoding(UTF-8)", "gutchk.tmp");
     if ( open my $gc, ">:bytes", 'gutchk.tmp' ) {
         my $count = 0;
         my $index = '1.0';
