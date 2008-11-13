@@ -1,5 +1,6 @@
 #!/usr/local/bin/perl
 # $Id$
+
 #FIXME: This is a jumping off point for GuiGuts rewrite.
 
 # GuiGuts text editor
@@ -26,13 +27,22 @@ use strict;
 #use warnings;
 use diagnostics;
 use FindBin;
-use lib "$FindBin::Bin/lib";
+use lib $FindBin::Bin . "/lib";
 use Data::Dumper;
+use FileHandle;
+use File::Basename;
+use Cwd;
+use Encode;
+use File::Temp qw/tempfile/;
+use IPC::Open2;
+use charnames();
 use locale;
 
 use Tk;
 use Tk::widgets qw(TextEdit);
-use File::Basename;
+
+
+my $VERSION = "1.0.0";
 
 ###########################################
 # check command line parameter.
@@ -40,38 +50,48 @@ use File::Basename;
 # if -help, print help
 # if filename, open file or die
 # note, wildcard automatically gets handled by perl interpreter,
-#	so that @ARGV contains list of matches.
+#       so that @ARGV contains list of matches.
 ###########################################
 my $argcount = @ARGV;
-my ($global_filename) = @ARGV;
 
-if	($argcount>1)
-	{
-	print "\n";
-	print "ERROR: too many files specified. \n";
-	die "\n";
-	}
+
+my %local_global; # Global variables contained in one hash.
+$local_global{filename} = shift @ARGV;
+print "DEBUG: ", $local_global{filename};
+
+# Get the directory for the project file.
+$local_global{cwd} = dirname($local_global{filename});
+
+# FIXME: Turns this into a switch type block 
+{
+        local $\ = "\n";
+        if      ($argcount>1)
+        {
+                print "ERROR: too many files specified. ", die $!;
+        }
+}
+
 
 if ($argcount == 0)
-	{$global_filename = 'NoName';}
+        {$local_global{filename} = 'New File';}
 
 if (
-	($global_filename eq 'help') ||
-	($global_filename eq '-help') ||
-	($global_filename eq '-h') ||
-	($global_filename eq '-?')
+        ($local_global{filename} eq 'help') ||
+        ($local_global{filename} eq '-help') ||
+        ($local_global{filename} eq '-h') ||
+        ($local_global{filename} eq '-?')
     )
-	{
-	print "\n";
-	print "$0 expects one command line argument: \n";
-	print " the name of the file to edit \n";
-	die "\n";
-	}
+        {
+        local $\ = "\n"; 
+        print "$0 expects one command line argument: ";
+        print " the name of the file to edit. ", die $!;
+        die "\n";
+        }
 
 
 # want FileSelect to use the last used directory as the starting directory
 # store directory in $global_directory.
-my $global_directory = dirname($global_filename);
+my $global_directory = dirname($local_global{filename});
 
 ##############################################
 ##############################################
@@ -84,7 +104,7 @@ my $top = MainWindow->new();
 
 # my $menu_frame = $top->Frame->pack(-anchor=>'nw');
 my $text_frame = $top->Frame->pack
-	(-anchor=>'nw', -expand=>'yes', -fill => 'both'); # autosizing
+        (-anchor=>'nw', -expand=>'yes', -fill => 'both'); # autosizing
 my $counter_frame = $top->Frame->pack(-anchor=>'nw');
 
 ##############################################
@@ -99,24 +119,24 @@ my $counter_frame = $top->Frame->pack(-anchor=>'nw');
 ## set up for autosizing.
 
 my $textwindow = $text_frame->Scrolled(
-	'TextEdit',
-	exportselection => 'true',  # 'sel' tag is associated with selections
-	# initial height, if it isnt 1, then autosizing fails
-	# once window shrinks below height
-	# and the line counters go off the screen.
-	# seems to be a problem with the Tk::pack command;
-	height => 1,
-	-background => 'white',
-	-wrap=> 'none',
-	-setgrid => 'true', # use this for autosizing
-	-scrollbars =>'se')
-	-> pack(-expand => 'yes' , -fill => 'both');	# autosizing
+        'TextEdit',
+        exportselection => 'true',  # 'sel' tag is associated with selections
+        # initial height, if it isnt 1, then autosizing fails
+        # once window shrinks below height
+        # and the line counters go off the screen.
+        # seems to be a problem with the Tk::pack command;
+        height => 1,
+        -background => 'white',
+        -wrap=> 'none',
+        -setgrid => 'true', # use this for autosizing
+        -scrollbars =>'se')
+        -> pack(-expand => 'yes' , -fill => 'both');    # autosizing
 
-#$textwindow->FileName($global_filename);
+#$textwindow->FileName($local_global{filename});
 
 
 $top->protocol('WM_DELETE_WINDOW'=>
- sub{$textwindow->ConfirmExit;}
+ sub {$textwindow->ConfirmExit;}
  );
 
 $SIG{INT} = sub {$textwindow->ConfirmExit;};
@@ -127,44 +147,44 @@ $SIG{INT} = sub {$textwindow->ConfirmExit;};
 ##############################################
 ##############################################
 my $current_line_label = $counter_frame
-	-> Label(-text=>'line: 1')
-	-> grid(-row=>1,-column=>1, -sticky=>'nw' );
+        -> Label(-text=>'line: 1')
+        -> grid(-row=>1,-column=>1, -sticky=>'nw' );
 
 my $total_line_label = $counter_frame
-	-> Label(-text=>'total lines: 1')
-	-> grid(-row=>2,-column=>1, -sticky=>'nw' );
+        -> Label(-text=>'total lines: 1')
+        -> grid(-row=>2,-column=>1, -sticky=>'nw' );
 
 my $current_column_label = $counter_frame
-	-> Label(-text=>'column: 0')
-	-> grid(-row=>3,-column=>1, -sticky=>'nw' );
+        -> Label(-text=>'column: 0')
+        -> grid(-row=>3,-column=>1, -sticky=>'nw' );
 
 my $insert_overstrike_mode_label = $counter_frame
-	-> Label(-text=>' ')
-	-> grid(-row=>5,-column=>1, -sticky=>'nw' );
+        -> Label(-text=>' ')
+        -> grid(-row=>5,-column=>1, -sticky=>'nw' );
 
 sub update_indicators
 {
-	my ($line,$column)= split(/\./,$textwindow->index('insert'));
-	$current_line_label->configure (-text=> "line: $line");
-	$current_column_label->configure (-text=> "column: $column");
+        my ($line,$column)= split(/\./,$textwindow->index('insert'));
+        $current_line_label->configure (-text=> "line: $line");
+        $current_column_label->configure (-text=> "column: $column");
 
-	my ($last_line,$last_col) = split(/\./,$textwindow->index('end'));
-	$total_line_label->configure (-text=> "total lines: $last_line");
+        my ($last_line,$last_col) = split(/\./,$textwindow->index('end'));
+        $total_line_label->configure (-text=> "total lines: $last_line");
 
-	my $mode = $textwindow->OverstrikeMode;
-	my $overstrke_insert='Insert Mode';
-	if ($mode)
-		{$overstrke_insert='Overstrike Mode';}
-	$insert_overstrike_mode_label->configure
-		(-text=> "$overstrke_insert");
+        my $mode = $textwindow->OverstrikeMode;
+        my $overstrke_insert='Insert Mode';
+        if ($mode)
+                {$overstrke_insert='Overstrike Mode';}
+        $insert_overstrike_mode_label->configure
+                (-text=> "$overstrke_insert");
 
-	my $filename = $textwindow->FileName;
-	$filename = 'NoName' unless(defined($filename));
-	my $edit_flag='';
-	if($textwindow->numberChanges)
- 		{$edit_flag='edited';}
-	$top->configure(-title => "Gedi  $edit_flag $filename");
-	$textwindow->idletasks;
+        my $filename = $textwindow->FileName;
+        $filename = 'New File' unless (defined($local_global{filename}));
+        my $edit_flag='';
+        if($textwindow->numberChanges)
+                {$edit_flag='edited';}
+        $top->configure(-title => "GuiGuts  $edit_flag $filename");
+        $textwindow->idletasks;
 
 }
 
@@ -186,37 +206,37 @@ $textwindow->SetGUICallbacks (
 my $about_pop_up_reference;
 sub about_pop_up
 {
-	my $name = ref($about_pop_up_reference);
-	if (defined($about_pop_up_reference))
-		{
-		$about_pop_up_reference->raise;
-		$about_pop_up_reference->focus;
-		}
-	else
-		{
-		my $pop = $top->Toplevel();
-		$pop->title("About");
+        my $name = ref($about_pop_up_reference);
+        if (defined($about_pop_up_reference))
+                {
+                $about_pop_up_reference->raise;
+                $about_pop_up_reference->focus;
+                }
+        else
+                {
+                my $pop = $top->Toplevel();
+                $pop->title("About");
 
-		$pop->Label(text=>"Gedi (Gregs EDItor)")->pack();
-		$pop->Label(text=>"Ver. 1.0")->pack();
-		$pop->Label(text=>"Copyright 1999")->pack();
-		$pop->Label(text=>"Greg London")->pack();
-		$pop->Label(text=>"All Rights Reserved.")->pack();
-		$pop->Label(text=>"This program is free software.")->pack();
-		$pop->Label(text=>"You can redistribute it and/or")->pack();
-		$pop->Label(text=>"modify it under the same terms")->pack();
-		$pop->Label(text=>"as Perl itself.")->pack();
-		$pop->Label(text=>"Special Thanks to")->pack();
-		$pop->Label(text=>"Nick Ing-Simmons.")->pack();
+                $pop->Label(text=>"Gedi (Gregs EDItor)")->pack();
+                $pop->Label(text=>"Ver. 1.0")->pack();
+                $pop->Label(text=>"Copyright 1999")->pack();
+                $pop->Label(text=>"Greg London")->pack();
+                $pop->Label(text=>"All Rights Reserved.")->pack();
+                $pop->Label(text=>"This program is free software.")->pack();
+                $pop->Label(text=>"You can redistribute it and/or")->pack();
+                $pop->Label(text=>"modify it under the same terms")->pack();
+                $pop->Label(text=>"as Perl itself.")->pack();
+                $pop->Label(text=>"Special Thanks to")->pack();
+                $pop->Label(text=>"Nick Ing-Simmons.")->pack();
 
-		my $button_ok = $pop->Button(text=>'OK',
-			command => sub {$pop->destroy();
-			$about_pop_up_reference = undef;
-			} )
-			->pack();
-		$pop->resizable('no','no');
-		$about_pop_up_reference = $pop;
-		}
+                my $button_ok = $pop->Button(text=>'OK',
+                        command => sub {$pop->destroy();
+                        $about_pop_up_reference = undef;
+                        } )
+                        ->pack();
+                $pop->resizable('no','no');
+                $about_pop_up_reference = $pop;
+                }
 }
 
 ##############################################
@@ -240,53 +260,53 @@ my $help_menu = $menu->cascade(-label=>'~Help', -tearoff => 0, -menuitems => [
 ##############################################
 
 if (0)
-	{
-	my $debug_menu = $menu->cascade(-label=>'debug', -underline=>0);
+        {
+        my $debug_menu = $menu->cascade(-label=>'debug', -underline=>0);
 
 
-	$debug_menu->command(-label => 'Tag names', -underline=> 0 ,
-		-command =>
-		sub{
-		my @tags = $textwindow->tagNames();
-		print " @tags\n";
+        $debug_menu->command(-label => 'Tag names', -underline=> 0 ,
+                -command =>
+                sub{
+                my @tags = $textwindow->tagNames();
+                print " @tags\n";
 
-		foreach my $tag (@tags)
-			{
-			my @ranges = $textwindow->tagRanges($tag);
-			print "tag: $tag  ranges: @ranges \n";
-			}
+                foreach my $tag (@tags)
+                        {
+                        my @ranges = $textwindow->tagRanges($tag);
+                        print "tag: $tag  ranges: @ranges \n";
+                        }
 
-		print "\n\n\n";
-		my @marks = $textwindow->markNames;
-		print " @marks \n";
-		foreach my $mark (@marks)
-			{
-			my $mark_location = $textwindow->index($mark);
-			print "$mark is at $mark_location\n";
-			}
+                print "\n\n\n";
+                my @marks = $textwindow->markNames;
+                print " @marks \n";
+                foreach my $mark (@marks)
+                        {
+                        my $mark_location = $textwindow->index($mark);
+                        print "$mark is at $mark_location\n";
+                        }
 
 
-		print "\n\n\n";
-		my @dump = $textwindow->dump ( '-tag', '1.0', '465.0' );
-		print "@dump \n";
+                print "\n\n\n";
+                my @dump = $textwindow->dump ( '-tag', '1.0', '465.0' );
+                print "@dump \n";
 
-		print "\n\n\n";
-		print "showing tops children:";
-		my @children = $top->children();
-		print "@children\n";
+                print "\n\n\n";
+                print "showing tops children:";
+                my @children = $top->children();
+                print "@children\n";
 
-		foreach my $child (@children)
-			{
-			my $junk = ref($child);
-			print "ref of $child is $junk \n";
-			}
+                foreach my $child (@children)
+                        {
+                        my $junk = ref($child);
+                        print "ref of $child is $junk \n";
+                        }
 
-		my $overstrike = $textwindow->OverstrikeMode;
-		print "Overstrike is $overstrike \n";
+                my $overstrike = $textwindow->OverstrikeMode;
+                print "Overstrike is $overstrike \n";
 
-		$textwindow->dump_array($textwindow);
-		});
-	}
+                $textwindow->dump_array($textwindow);
+                });
+        }
 
 ##############################################
 # set the window to a normal size and set the minimum size
@@ -309,15 +329,15 @@ $top->geometry("80x24");
 ## fill the text window with initial file.
 
 if ($argcount)
-	{
-	if (-e $global_filename) # if it doesn't exist, make it empty
-		{
-		# it may be a big file, draw the window, and then load it
-		# so that we know something is happening.
-		$top->update;
-		$textwindow->Load($global_filename);
-		}
-	}
+        {
+        if (-e $local_global{filename}) # if it doesn't exist, make it empty
+                {
+                # it may be a big file, draw the window, and then load it
+                # so that we know something is happening.
+                $top->update;
+                $textwindow->Load($local_global{filename});
+                }
+        }
 
 
 ##############################################

@@ -296,7 +296,7 @@ $textwindow->SetGUICallbacks(
             }
     ]
 );
-
+sub no_highlights { return if $nohighlights; }
 buildmenu();    # Set up the custom menus
 
 textbindings(); # Set up the key bindings for the text widget
