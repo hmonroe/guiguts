@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 # $Id$
+
 use warnings;
 use strict;
 
@@ -15,13 +16,12 @@ my $IS_AQUA = Tkx::tk_windowingsystem() eq "aqua";
 Tkx::package_require("style");
 Tkx::style__use("as", -priority => 70);
 
-
 $mw = Tkx::widget->new(".");
 $mw->g_wm_title( $win_title ); 
 $mw->configure(-menu => mk_menu($mw));
 
 
-$tw = $mw->new_tk__text( -width => 80, -height => 24);
+$tw = $mw->new_tk__text( -width => 80, -height => 24 );
 $tw->g_grid;
 $tw->insert("1.0", "I don't work yet!");
 
@@ -95,7 +95,7 @@ sub about {
         -type => "ok",
         -icon => "info",
         -message => "$progname v$VERSION\n" .
-        "Copyright 2005 ActiveState. " .
+        "Copyright 2008 V. L. Simpson. " .
         "All rights reserved.",
     );
 }
