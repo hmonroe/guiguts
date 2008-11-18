@@ -1,0 +1,13 @@
+Installation Instructions
+*************************
+
+Copyright (C) 2008 V. L. Simpson
+
+This file is free documentation; the Free Software Foundation gives
+unlimited permission to copy, distribute and modify it.
+
+Basic Installation
+==================
+
+Installation instructions for Linux, Mac OS X and Windows are
+available here: http://www.pgdp.net/wiki/PPTools/Guiguts/Install
