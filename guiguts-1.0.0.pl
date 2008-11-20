@@ -17,21 +17,29 @@
 #along with this program; if not, write to the Free Software
 #Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+
 use warnings;
 use strict;
 
+use FindBin;
+use lib "$FindBin::Bin/lib";
+use Data::Dump;
+
 use Tkx;
-$Tkx::TRACE = 0;
+$Tkx::TRACE = 1;
 
-my $VERSION = "1.0.0";
 
+
+# Main window container
 my ($mw, $tw);
 $mw = Tkx::widget->new(".");
 
+$mw->configure(-menu => mk_menu($mw));
+
+# Our text widget
 $tw = $mw->new_text(
     -width => 40, 
     -height => 10 );
-
 $tw->g_pack;
 $tw->g_focus;
 
@@ -39,4 +47,23 @@ $tw->insert("1.0", "If you can read this it worked.");
 
 Tkx::MainLoop();
 exit;
+
+## Functions
+
+# GUI building routines
+sub mk_menu {
+    my $mw = shift(@_);
+    my $menu = $mw->new_menu;
+
+    my $file = $menu->new_menu( -tearoff => 0,
+    );
+    $menu->add_cascade(
+        -label => "File",
+        -underline => 0,
+        -menu => $file,
+    );
+
+    return $menu;
+}
+
 
