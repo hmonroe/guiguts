@@ -21,11 +21,21 @@ use warnings;
 use strict;
 
 use Tkx;
+$Tkx::TRACE = 0;
 
 my $VERSION = "1.0.0";
-my ($mw);
 
+my ($mw, $tw);
 $mw = Tkx::widget->new(".");
+
+$tw = $mw->new_text(
+    -width => 40, 
+    -height => 10 );
+
+$tw->g_pack;
+$tw->g_focus;
+
+$tw->insert("1.0", "If you can read this it worked.");
 
 Tkx::MainLoop();
 exit;

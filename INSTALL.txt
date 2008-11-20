@@ -1,13 +1,28 @@
-Installation Instructions
-*************************
+Installation Instructions GuiGuts
+*********************************
 
 Copyright (C) 2008 V. L. Simpson
 
-This file is free documentation; the Free Software Foundation gives
-unlimited permission to copy, distribute and modify it.
-
 Basic Installation
 ==================
+GuiGuts is a Perl/Tk application.
+
+Installing Perl
+---------------
 
 Installation instructions for Linux, Mac OS X and Windows are
 available here: http://www.pgdp.net/wiki/PPTools/Guiguts/Install
+
+Dependencies
+------------
+Perl Modules:
+Tkx
+Tk
+Tcl
+
+Windows: The ActivePerl Perl distribution contains all necessary modules to run GuiGuts.
+
+Unix like: Required modules may need to be installed separately from CPAN. Search your repositories Perl modules Tkx, Tk, Tcl.
+
+Install if available. If not then a CPAN installition is required.
+
