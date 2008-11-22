@@ -22,7 +22,7 @@ use strict;
 
 use Tkx;
 
-$Tkx::TRACE = 0;
+$Tkx::TRACE = 1;
 
 our $VERSION = "1.0.0";
 
@@ -35,7 +35,7 @@ $mw->configure(-menu => mk_menu($mw));
 $tw = $mw->new_text(
     -width => 40, 
     -height => 10 );
-$tw->g_pack;
+$tw->g_pack( -anchor => "center", -expand => 1, -fill => "both" );
 $tw->g_focus;
 
 $tw->insert("end", "If you can read this it worked");
