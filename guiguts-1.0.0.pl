@@ -20,19 +20,11 @@
 use warnings;
 use strict;
 
-use FindBin;
-use lib "$FindBin::Bin/lib";
-use Data::Dump;
-
 use Tkx;
 
 $Tkx::TRACE = 0;
 
 our $VERSION = "1.0.0";
-
-(my $progname = $0) =~ s,.*[\\/],,;
-my $IS_AQUA = Tkx::tk_windowingsystem() eq "aqua";
-
 
 # Main window container
 my ($mw, $tw);
@@ -91,7 +83,7 @@ sub mk_menu {
         -label   => "Exit",
         -underline => 1,
         -command => [\&Tkx::destroy, $mw],
-    ) unless $IS_AQUA;
+    );
 
     # Search menu item
     my $search = $menu->new_menu(
@@ -119,40 +111,30 @@ sub mk_menu {
         -underline => 0,
         -menu => $help,
     );
-    $help->add_command(
-        -label => "\u$progname Manual",
-        -command => \&show_manual,
-    );
-
-    my $about_menu = $help;
-    if ($IS_AQUA) {
-        # On Mac OS we want about box to appear in the application
-        # menu.  Anything added to a menu with the name "apple" will
-        # appear in this menu.
-        $about_menu = $menu->new_menu(
-            -name => "apple",
-        );
-        $menu->add_cascade(
-            -menu => $about_menu,
-        );
-    }
-    $about_menu->add_command(
-        -label => "About \u$progname",
-        -command => \&about,
-    );
+    # FIXME:
+#    $help->add_command(
+#        -label => "\u$progname Manual",
+#        -command => \&show_manual,
+#    );
+#
+#    my $about_menu = $help;
+#    $about_menu->add_command(
+#        -label => "About # FIXME:\u$progname",
+#        -command => \&about,
+#    );
 
     return $menu;
 }
 
-
-sub about {
-    Tkx::tk___messageBox(
-        -parent => $mw,
-        -title => "About \u$progname",
-        -type => "ok",
-        -icon => "info",
-        -message => "$progname v$VERSION\nV. L. Simpson 2008.  All rights reserved.",
-    );
-}
+# FIXME:
+#sub about {
+#    Tkx::tk___messageBox(
+#        -parent => $mw,
+#        -title => "About \u$progname",
+#        -type => "ok",
+#        -icon => "info",
+#        -message => "$progname v$VERSION\nV. L. Simpson 2008.  All rights reserved.",
+#    );
+#}
 
 
