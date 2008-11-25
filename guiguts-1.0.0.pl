@@ -31,7 +31,7 @@ my ($mw, $tw);
 # Main window container
 $mw = Tkx::widget->new(".");
 $mw->configure(-menu => mk_menu($mw));
-Tkx::wm_title($mw, "GuiGuts-$VERSION");
+Tkx::wm_title($mw, "GutThing-$VERSION");
 
 # Our text widget
 my ($height, $width, $wrap) = (20, 80, "none");
