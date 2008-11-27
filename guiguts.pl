@@ -20185,6 +20185,7 @@ sub natural_sort_freq
 sub find_proofer_comment {
    my $pattern = "[**";
    my $index = $textwindow->search($pattern, "insert");
+   $index = $textwindow->index( "$index +1c");
    $textwindow->SetCursor($index);
 }
 
