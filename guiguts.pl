@@ -5111,6 +5111,7 @@ sub spellget_misspellings {    # get list of misspelled words
                 . ' | No Misspelled Words Found.' );
     }
     $top->Unbusy( -recurse => 0 );    # done processing
+    unlink 'checkfil.txt';
 }
 
 sub spellignoreall {                  # remove ignored words from checklist
@@ -14039,11 +14040,11 @@ sub wfspellcheck {
             $lglobal{spellsort}->{$word} = $lglobal{seen}->{$word} || '0';
             $wordw++;
         }
-        unlink 'checkfil.txt';    # get rid of the temp file
     }
     $lglobal{saveheader} = "$wordw words not recognised by the spellchecker.";
     sortwords( \%{ $lglobal{spellsort} } );
     $top->Unbusy;
+    unlink 'checkfil.txt';    # FIXME: Not deleting
 }
 
 sub alphanumcheck {
