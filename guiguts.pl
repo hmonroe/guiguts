@@ -167,7 +167,10 @@ our @extops = (
 );
 
 # Regular Expressions
-our $dp_pg_div = qr/-----File:.+/i;
+
+# DP page separator: -----File: 001.png---\user\user\user\user\user\-----
+my $dp_pg_div = qr/^-+File:.+$/;
+my $eol = qr/\cM\cJ|\cM|\cJ/; # Windows, Mac, Unix
 
 my %lglobal;    #All local global variables contained in one hash.
 
@@ -9048,11 +9051,7 @@ sub markup {
                 || '';
             $linkname = makeanchor( deaccent($selection) );
             $done
-                = "<a name=\""
-                . $linkname
-                . "\" id=\""
-                . $linkname
-                . "\"></a>";
+                = "<a name=\"" . $linkname . "\" id=\"" . $linkname . "\"></a>";
             $textwindow->insert( $thisblockstart, $done );
         } elsif ( $mark =~ /h\d/ ) {
             $selection = $textwindow->get( $thisblockstart, $thisblockend );
@@ -10520,10 +10519,10 @@ sub htmlautoconvert {
                     $markindex = $textwindow->index("$mark-1l lineend"); # FIXME: HTML page number hangs here
                 }
                 $textwindow->ntinsert( $markindex,
-                    "<span class='pagenum'><a name=\"Page_$num\" id=\"Page_$num\">[Pg $num]</a></span>"
+                    "<span class=\"pagenum\"><a name=\"Page_$num\" id=\"Page_$num\">[Pg $num]</a></span>"
                 ) if $lglobal{pageanch};
 
-#$textwindow->ntinsert($markindex,"<span class='pagenum' id=\"Page_".$num."\">[Pg $num]</span>") if $lglobal{pageanch};
+#$textwindow->ntinsert($markindex,"<span class="pagenum" id=\"Page_".$num."\">[Pg $num]</span>") if $lglobal{pageanch};
                 # FIXME: this is hanging up somewhere.
                 $textwindow->ntinsert( $markindex,
                     '<!-- Page ' . $num . ' -->' )
