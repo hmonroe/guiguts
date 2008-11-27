@@ -8640,7 +8640,7 @@ sub autotable {
         $textwindow->delete( $start, $end );
         $textwindow->insert( $start, $selection );
         $textwindow->insert( $start,
-                  "\n<div class='center'>\n"
+                  "\n<div class=\"center\">\n"
                 . '<table border="0" cellpadding="4" cellspacing="0" summary="">'
                 . "\n" )
             if $table;
@@ -10041,7 +10041,7 @@ sub htmlautoconvert {
                 next;
             }
             if ( $selection
-                =~ s/\s{2,}(\d+)\s*$/<span class='linenum'>$1<\/span>/ )
+                =~ s/\s{2,}(\d+)\s*$/<span class="linenum">$1<\/span>/ )
             {
                 $textwindow->ntdelete( "$step.0", "$step.end" );
                 $textwindow->ntinsert( "$step.0", $selection );
@@ -10266,7 +10266,7 @@ sub htmlautoconvert {
                 $selection =~ s/^\s+//;
                 $selection =~ s/  /&nbsp; /g;
                 $selection
-                    =~ s/(&nbsp; ){1,}\s?(<span class='linenum'>)/ $2/g;
+                    =~ s/(&nbsp; ){1,}\s?(<span class="linenum">)/ $2/g;
                 my ( $op, $cl ) = ( 0, 0 );
                 while ( ( my $temp = index $selection, '<i>', $op ) > 0 ) {
                     $op = $temp + 3;
@@ -14044,7 +14044,7 @@ sub wfspellcheck {
     $lglobal{saveheader} = "$wordw words not recognised by the spellchecker.";
     sortwords( \%{ $lglobal{spellsort} } );
     $top->Unbusy;
-    unlink 'checkfil.txt';    # FIXME: Not deleting
+    unlink 'checkfil.txt';
 }
 
 sub alphanumcheck {
