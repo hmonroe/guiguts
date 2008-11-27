@@ -8198,6 +8198,7 @@ sub markpopup {
             -pady   => 2,
             -sticky => 'w'
             );
+
         my $utfconvert = $f0->Checkbutton(
             -variable    => \$lglobal{leave_utf},
             -selectcolor => $lglobal{checkcolor},
@@ -8211,11 +8212,10 @@ sub markpopup {
             -sticky => 'w'
             );
 
-        # FIXME: Deuglify the popup. 
             my $latin1_convert = $f0->Checkbutton(
             -variable    => \$lglobal{keep_latin1},
             -selectcolor => $lglobal{checkcolor},
-            -text        => 'Keep Latin 1 Chars',
+            -text        => 'Keep Latin-1 Chars',
             -anchor      => 'w',
             )->grid(
             -row    => 3,
