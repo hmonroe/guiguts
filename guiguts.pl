@@ -6903,6 +6903,10 @@ sub brackets {
                 (      ( $lglobal{brbrackets}[0] =~ /[\[\(\{\<«]/ )
                     && ( $lglobal{brbrackets}[1] =~ /[\]\)\}\>»]/ )
                 )
+                ||
+                (      ( $lglobal{brbrackets}[0] =~ /[\[\(\{\<»]/ )
+                    && ( $lglobal{brbrackets}[1] =~ /[\]\)\}\>«]/ )
+                )
                 || (   ( $lglobal{brbrackets}[0] =~ /^\x7f*\/\*/ )
                     && ( $lglobal{brbrackets}[1] =~ /^\x7f*\*\// ) )
                 || (   ( $lglobal{brbrackets}[0] =~ /^\x7f*\/\$/ )
