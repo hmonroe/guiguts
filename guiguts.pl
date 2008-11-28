@@ -66,7 +66,7 @@ $SIG{INT} = sub { myexit() };
 
 
 my $DEBUG = 0; # FIXME: this can go.
-my $VERSION = "0.2.2";
+my $VERSION = "0.2.3";
 my $currentver = $VERSION;
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
