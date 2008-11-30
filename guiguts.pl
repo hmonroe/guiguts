@@ -9743,7 +9743,7 @@ sub htmlautoconvert {
     my $thisend  = '';
     my $title;
     my ( $blkopen, $blkclose );
-    my ( $ler, $lec, $step );
+    my ( $ler, $lec, $step ); #FIXME: WTF is ler and lec supposed to mean?
     my @contents   = ("<p>\n");
     my @last5      = [ 1, 1, 1, 1, 1 ];
     if ( $lglobal{cssblockmarkup} ) {
@@ -10393,30 +10393,31 @@ sub htmlautoconvert {
     }
     push @contents, '</p>';
     
-    
-    working("Cleaning up\nblock Markers");
-    while ( $thisblockstart
-        = $textwindow->search( '-regexp', '--', '^\/[\*\$\#]', '1.0', 'end' )
-        )
-    {
-        ( $ler, $lec ) = split /\./, $thisblockstart;
-        $thisblockend = "$ler.end";
-        $textwindow->ntdelete( "$thisblockstart-1c", $thisblockend );
-    }
-    while ( $thisblockstart
-        = $textwindow->search( '-regexp', '--', '^[\*\$\#]\/', '1.0', 'end' )
-        )
-    {
-        ( $ler, $lec ) = split /\./, $thisblockstart;
-        $thisblockend = "$ler.end";
-        $textwindow->ntdelete( "$thisblockstart-1c", $thisblockend );
-    }
-    while ( $thisblockstart
-        = $textwindow->search( '-regexp', '--', '<\/h\d><br />', '1.0',
-            'end' ) )
-    {
-        $textwindow->ntdelete( "$thisblockstart+5c", "$thisblockstart+9c" );
-    }
+    html_cleanup_markers ($thisblockstart, $ler, $lec, $thisblockend);
+
+#    working("Cleaning up\nblock Markers");
+#    while ( $thisblockstart
+#        = $textwindow->search( '-regexp', '--', '^\/[\*\$\#]', '1.0', 'end' )
+#        )
+#    {
+#        ( $ler, $lec ) = split /\./, $thisblockstart;
+#        $thisblockend = "$ler.end";
+#        $textwindow->ntdelete( "$thisblockstart-1c", $thisblockend );
+#    }
+#    while ( $thisblockstart
+#        = $textwindow->search( '-regexp', '--', '^[\*\$\#]\/', '1.0', 'end' )
+#        )
+#    {
+#        ( $ler, $lec ) = split /\./, $thisblockstart;
+#        $thisblockend = "$ler.end";
+#        $textwindow->ntdelete( "$thisblockstart-1c", $thisblockend );
+#    }
+#    while ( $thisblockstart
+#        = $textwindow->search( '-regexp', '--', '<\/h\d><br />', '1.0',
+#            'end' ) )
+#    {
+#        $textwindow->ntdelete( "$thisblockstart+5c", "$thisblockstart+9c" );
+#    }
     
     working("Converting underscore and small caps markup");
     while ( $thisblockstart
@@ -20322,4 +20323,34 @@ sub html_convert_latin1 {
 
 # Set author name in <title></title>
 #sub html_set_author { }
+
+sub html_cleanup_markers { 
+    my ($blockstart, $xler, $xlec, $blockend) = @_;
+
+    working("Cleaning up\nblock Markers");
+
+    while ( $blockstart
+        = $textwindow->search( '-regexp', '--', '^\/[\*\$\#]', '1.0', 'end' )
+        )
+    {
+        ( $xler, $xlec ) = split /\./, $blockstart;
+        $blockend = "$xler.end";
+        $textwindow->ntdelete( "$blockstart-1c", $blockend );
+    }
+    while ( $blockstart
+        = $textwindow->search( '-regexp', '--', '^[\*\$\#]\/', '1.0', 'end' )
+        )
+    {
+        ( $xler, $xlec ) = split /\./, $blockstart;
+        $blockend = "$xler.end";
+        $textwindow->ntdelete( "$blockstart-1c", $blockend );
+    }
+    while ( $blockstart
+        = $textwindow->search( '-regexp', '--', '<\/h\d><br />', '1.0',
+            'end' ) )
+    {
+        $textwindow->ntdelete( "$blockstart+5c", "$blockstart+9c" );
+    }
+    
+}
 
