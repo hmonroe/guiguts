@@ -10595,28 +10595,30 @@ sub htmlautoconvert {
     named( '< ', '&lt; ' );
 
     if ( ! $lglobal{keep_latin1} ) { html_convert_latin1(); }
+    
+    html_convert_utf( $thisblockstart );
 
-    if ( $lglobal{leave_utf} ) {
-        $thisblockstart
-            = $textwindow->search( '-exact', '--', 'charset=iso-8859-1',
-            '1.0', 'end' );
-        if ($thisblockstart) {
-            $textwindow->ntdelete( $thisblockstart, "$thisblockstart+18c" );
-            $textwindow->ntinsert( $thisblockstart, 'charset=UTF-8' );
-        }
-    }
-    unless ( $lglobal{leave_utf} ) {
-        while (
-            $thisblockstart = $textwindow->search(
-                '-regexp', '--', '[\x{100}-\x{65535}]', '1.0', 'end'
-            )
-            )
-        {
-            my $xchar = ord( $textwindow->get($thisblockstart) );
-            $textwindow->ntdelete($thisblockstart);
-            $textwindow->ntinsert( $thisblockstart, "&#$xchar;" );
-        }
-    }
+#    if ( $lglobal{leave_utf} ) {
+#        $thisblockstart
+#            = $textwindow->search( '-exact', '--', 'charset=iso-8859-1',
+#            '1.0', 'end' );
+#        if ($thisblockstart) {
+#            $textwindow->ntdelete( $thisblockstart, "$thisblockstart+18c" );
+#            $textwindow->ntinsert( $thisblockstart, 'charset=UTF-8' );
+#        }
+#    }
+#    unless ( $lglobal{leave_utf} ) {
+#        while (
+#            $thisblockstart = $textwindow->search(
+#                '-regexp', '--', '[\x{100}-\x{65535}]', '1.0', 'end'
+#            )
+#            )
+#        {
+#            my $xchar = ord( $textwindow->get($thisblockstart) );
+#            $textwindow->ntdelete($thisblockstart);
+#            $textwindow->ntinsert( $thisblockstart, "&#$xchar;" );
+#        }
+#    }
 
     fracconv( '1.0', 'end' ) if $lglobal{autofraction};
     $textwindow->ntinsert( '1.0', $headertext );
@@ -20309,13 +20311,40 @@ sub html_convert_emdashes {
     named( "\x{A0}",               '&nbsp;' );
 }
 
-# convert latin1 charactes to HTML Character Entity Reference's.
+# convert latin1 and utf charactes to HTML Character Entity Reference's.
 sub html_convert_latin1 {
-    working("Converting Latin 1 Characters...");
+    working("Converting Latin-1 Characters...");(
     for ( 128 .. 255 ) {
         my $from = lc sprintf( "%x", $_ );
         named( '\x' . $from, entity( '\x' . $from ) );
     }
+}
+
+sub html_convert_utf {
+    my $blockstart = @_;
+    working("Converting UTF-8...");
+    if ( $lglobal{leave_utf} ) {
+        $thisblockstart
+        = $textwindow->search( '-exact', '--', 'charset=iso-8859-1',
+            '1.0', 'end' );
+        if ($thisblockstart) {
+            $textwindow->ntdelete( $thisblockstart, "$thisblockstart+18c" );
+            $textwindow->ntinsert( $thisblockstart, 'charset=UTF-8' );
+        }
+    }
+    unless ( $lglobal{leave_utf} ) {
+        while (
+            $thisblockstart = $textwindow->search(
+                '-regexp', '--', '[\x{100}-\x{65535}]', '1.0', 'end'
+            )
+        )
+        {
+            my $xchar = ord( $textwindow->get($thisblockstart) );
+            $textwindow->ntdelete($thisblockstart);
+            $textwindow->ntinsert( $thisblockstart, "&#$xchar;" );
+        }
+    }
+
 }
 
 # Set <head><title></title></head>
