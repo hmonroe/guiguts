@@ -20324,24 +20324,24 @@ sub html_convert_utf {
     my $blockstart = @_;
     working("Converting UTF-8...");
     if ( $lglobal{leave_utf} ) {
-        $thisblockstart
+        $blockstart
         = $textwindow->search( '-exact', '--', 'charset=iso-8859-1',
             '1.0', 'end' );
-        if ($thisblockstart) {
-            $textwindow->ntdelete( $thisblockstart, "$thisblockstart+18c" );
+        if ($blockstart) {
+            $textwindow->ntdelete( $blockstart, "$blockstart+18c" );
             $textwindow->ntinsert( $thisblockstart, 'charset=UTF-8' );
         }
     }
     unless ( $lglobal{leave_utf} ) {
         while (
-            $thisblockstart = $textwindow->search(
+            $blockstart = $textwindow->search(
                 '-regexp', '--', '[\x{100}-\x{65535}]', '1.0', 'end'
             )
         )
         {
-            my $xchar = ord( $textwindow->get($thisblockstart) );
-            $textwindow->ntdelete($thisblockstart);
-            $textwindow->ntinsert( $thisblockstart, "&#$xchar;" );
+            my $xchar = ord( $textwindow->get($blockstart) );
+            $textwindow->ntdelete($blockstart);
+            $textwindow->ntinsert( $blockstart, "&#$xchar;" );
         }
     }
 
