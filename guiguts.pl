@@ -8364,19 +8364,19 @@ sub markpopup {
             -text        => 'left',
             -selectcolor => $lglobal{checkcolor},
             -variable    => \$lglobal{tablecellalign},
-            -value       => " align='left'",
+            -value       => ' align="left"',
         )->grid( -row => 2, -column => 1 );
         my $censelect = $f4->Radiobutton(
             -text        => 'center',
             -selectcolor => $lglobal{checkcolor},
             -variable    => \$lglobal{tablecellalign},
-            -value       => " align='center'",
+            -value       => ' align="center"',
         )->grid( -row => 2, -column => 2 );
         my $rghtselect = $f4->Radiobutton(
             -text        => 'right',
             -selectcolor => $lglobal{checkcolor},
             -variable    => \$lglobal{tablecellalign},
-            -value       => " align='right'",
+            -value       => ' align="right"',
         )->grid( -row => 2, -column => 3 );
         $leftselect->select;
         $unorderselect->select;
@@ -8620,11 +8620,11 @@ sub autotable {
                 while (@$_) {
                     if ( $cformat[$cellcnt] ) {
                         if ( $cformat[$cellcnt] eq '>' ) {
-                            $cellalign = " align='right'";
+                            $cellalign = ' align="right"';
                         } elsif ( $cformat[$cellcnt] eq '|' ) {
-                            $cellalign = " align='center'";
+                            $cellalign = ' align="center"';
                         } else {
-                            $cellalign = " align='left'";
+                            $cellalign = ' align="left"';
                         }
                     } else {
                         $cellalign = $lglobal{tablecellalign};
@@ -9789,8 +9789,8 @@ sub htmlautoconvert {
         $step++;
         last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
         $selection = $textwindow->get( "$step.0", "$step.end" );
-        next if ( $selection =~ /^\[Illustr/i );
-        next if ( $selection =~ /^\/[\$fF]/ );
+        next if ( $selection =~ /^\[Illustr/i ); # Skip Illustrations
+        next if ( $selection =~ /^\/[\$f]/i ); # Skip /$|/F tags
         next unless length($selection);
         $title = $selection;
         $title =~ s/[,.]$//;
