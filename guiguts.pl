@@ -47,6 +47,7 @@ use Tk::TextEdit;
 
 use Cwd;
 use Encode;
+# use File::Spec::Functions qw/:ALL/ # FIXME: use this for file path processing
 use File::Basename;
 use File::Temp qw/tempfile/;
 use HTML::TokeParser;
