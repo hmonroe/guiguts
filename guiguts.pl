@@ -20353,6 +20353,8 @@ sub html_convert_utf {
 # Set author name in <title></title>
 #sub html_set_author { }
 
+
+# FIXME: Seems /p p/ (and other GG markup) is done somewhere else. Move it here.
 sub html_cleanup_markers { 
     my ($blockstart, $xler, $xlec, $blockend) = @_;
 
