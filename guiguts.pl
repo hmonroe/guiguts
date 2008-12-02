@@ -9759,30 +9759,31 @@ sub htmlautoconvert {
 
     html_convert_codepage();
 
-    working('Parsing Header');
-
-    $selection = $textwindow->get( '1.0', '1.end' );
-    if ( $selection =~ /DOCTYPE/ ) {
-        $step = 1;
-        while (1) {
-            $selection = $textwindow->get( "$step.0", "$step.end" );
-            $headertext .= ( $selection . "\n" );
-            $textwindow->ntdelete( "$step.0", "$step.end" );
-            last if ( $selection =~ /^\<body/ );
-            $step++;
-            last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
-        }
-        $textwindow->ntdelete( '1.0', "$step.0 +1c" );
-    } else {
-        open my $infile, '<', 'header.txt'
-            or warn "Could not open header file. $!\n";
-        while (<$infile>) {
-            $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-            # FIXME: $_ = eol_convert($_);
-            $headertext .= $_;
-        }
-        close $infile;
-    }
+    html_parse_header( $selection, $headertext, $title, $author); 
+#    working('Parsing Header');
+#
+#    $selection = $textwindow->get( '1.0', '1.end' );
+#    if ( $selection =~ /DOCTYPE/ ) {
+#        $step = 1;
+#        while (1) {
+#            $selection = $textwindow->get( "$step.0", "$step.end" );
+#            $headertext .= ( $selection . "\n" );
+#            $textwindow->ntdelete( "$step.0", "$step.end" );
+#            last if ( $selection =~ /^\<body/ );
+#            $step++;
+#            last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
+#        }
+#        $textwindow->ntdelete( '1.0', "$step.0 +1c" );
+#    } else {
+#        open my $infile, '<', 'header.txt'
+#            or warn "Could not open header file. $!\n";
+#        while (<$infile>) {
+#            $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+#            # FIXME: $_ = eol_convert($_);
+#            $headertext .= $_;
+#        }
+#        close $infile;
+#    }
 
    $step = 0;
     while (1) {
@@ -20302,6 +20303,7 @@ sub html_convert_ampersands {
     named( '&c ',        '&amp;c. ' );
 }
 
+# double hyphens go to character entity ref. FIXME: Add option for real emdash.
 sub html_convert_emdashes {
     working("Converting Emdashes");
     named( '(?<=[^-!])--(?=[^>])', '&mdash;' );
@@ -20313,7 +20315,7 @@ sub html_convert_emdashes {
 
 # convert latin1 and utf charactes to HTML Character Entity Reference's.
 sub html_convert_latin1 {
-    working("Converting Latin-1 Characters...");(
+    working("Converting Latin-1 Characters...");
     for ( 128 .. 255 ) {
         my $from = lc sprintf( "%x", $_ );
         named( '\x' . $from, entity( '\x' . $from ) );
@@ -20383,5 +20385,33 @@ sub html_cleanup_markers {
         $textwindow->ntdelete( "$blockstart+5c", "$blockstart+9c" );
     }
     
+}
+
+html_parse_header {
+
+    working('Parsing Header');
+
+    $selection = $textwindow->get( '1.0', '1.end' );
+    if ( $selection =~ /DOCTYPE/ ) {
+        $step = 1;
+        while (1) {
+            $selection = $textwindow->get( "$step.0", "$step.end" );
+            $headertext .= ( $selection . "\n" );
+            $textwindow->ntdelete( "$step.0", "$step.end" );
+            last if ( $selection =~ /^\<body/ );
+            $step++;
+            last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
+        }
+        $textwindow->ntdelete( '1.0', "$step.0 +1c" );
+    } else {
+        open my $infile, '<', 'header.txt'
+            or warn "Could not open header file. $!\n";
+        while (<$infile>) {
+            $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+            # FIXME: $_ = eol_convert($_);
+            $headertext .= $_;
+        }
+        close $infile;
+    }
 }
 
