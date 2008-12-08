@@ -9841,7 +9841,8 @@ sub htmlautoconvert {
     html_convert_ampersands();
 
     html_convert_emdashes();
-
+    
+    # Footnotes
     $lglobal{fnsecondpass}  = 0;
     $lglobal{fnsearchlimit} = 1;
     working('Converting Footnotes');
@@ -9929,16 +9930,19 @@ sub htmlautoconvert {
             if ( ( $step < 100 )
             && ( $selection =~ /contents/i )
             && ( $incontents eq '1.0' ) );
+
     # Subscripts
         if ( $selection =~ s/_\{([^}]+?)\}/<sub>$1<\/sub>/g ) {
             $textwindow->ntdelete( "$step.0", "$step.end" );
             $textwindow->ntinsert( "$step.0", $selection );
         }
+
         # Superscripts
         if ( $selection =~ s/\^\{([^}]+?)\}/<sup>$1<\/sup>/g ) {
             $textwindow->ntdelete( "$step.0", "$step.end" );
             $textwindow->ntinsert( "$step.0", $selection );
         }
+
         # Thought break conversion
         if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ )
         {
@@ -9951,6 +9955,7 @@ sub htmlautoconvert {
             $textwindow->ntinsert( "$step.0", $selection );
             next;
         }
+
         # /x|/X gets <pre>
         if ( $selection =~ m"^/x"i ) {
             $skip = 1;
@@ -20324,7 +20329,6 @@ sub html_convert_latin1 {
 
 sub html_convert_utf {
     my $blockstart = @_;
-    working("Converting UTF-8...");
     if ( $lglobal{leave_utf} ) {
         $blockstart
         = $textwindow->search( '-exact', '--', 'charset=iso-8859-1',
@@ -20335,6 +20339,7 @@ sub html_convert_utf {
         }
     }
     unless ( $lglobal{leave_utf} ) {
+        working("Converting UTF-8...");
         while (
             $blockstart = $textwindow->search(
                 '-regexp', '--', '[\x{100}-\x{65535}]', '1.0', 'end'
@@ -20356,7 +20361,7 @@ sub html_convert_utf {
 #sub html_set_author { }
 
 
-# FIXME: Seems /p p/ (and other GG markup) is done somewhere else. Move it here.
+# FIXME: Should be a general purpose function
 sub html_cleanup_markers { 
     my ($blockstart, $xler, $xlec, $blockend) = @_;
 
