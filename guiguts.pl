@@ -25,7 +25,7 @@ use strict;
 use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
-use Data::Dump;
+#use Data::Dump;
 
 use Tk;
 use Tk::Balloon;
