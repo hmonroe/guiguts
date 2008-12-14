@@ -25,7 +25,7 @@ use strict;
 use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
-use Data::Dump;
+#use Data::Dump;
 
 use Tk;
 use Tk::Balloon;
@@ -167,11 +167,12 @@ our @extops = (
     { 'label' => '', 'command' => '' },
 );
 
-# Regular Expressions
+## Regular Expressions
 
 # DP page separator: -----File: 001.png---\user\user\user\user\user\-----
 my $dp_pg_div = qr/^-+File:.+$/;
 my $eol = qr/\cM\cJ|\cM|\cJ/; # Windows, Mac, Unix
+
 
 my %lglobal;    #All local global variables contained in one hash.
 
