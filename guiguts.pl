@@ -25,7 +25,7 @@ use strict;
 use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
-#use Data::Dump;
+#use Data::Dumper;
 
 use Tk;
 use Tk::Balloon;
@@ -167,14 +167,6 @@ our @extops = (
     { 'label' => '', 'command' => '' },
 );
 
-## Regular Expressions
-
-# DP page separator: -----File: 001.png---\user\user\user\user\user\-----
-my $dp_pg_div = qr/^-+File:.+$/;
-my $pg_num = qr/^-+File: (.*)(?:00)(\d+)(.*)\./; # Capture page number, prefix or suffix
-
-my $prf_comm = qr"\Q[**\E.+\]"; # [**Proofer Comment]
-my $eol = qr/\cM\cJ|\cM|\cJ/; # Windows, Mac, Unix line ends. 
 
 my %lglobal;    #All local global variables contained in one hash.
 
@@ -14199,7 +14191,7 @@ sub charsortcheck {
 
     while ( my $line = <$fh> ) {
         utf8::decode($line);
-        $line =~ s/^\x{FEFF}?// if ( $. < 2 );
+        $line =~ s/^\x{FEFF}?// if ( $. < 2 ); # Drop the BOM!
         if ( $lglobal{ignore_case} ) { $line = lc($line) }
         my @words = split( //, $line );
         foreach (@words) {
