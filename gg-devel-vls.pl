@@ -171,8 +171,10 @@ our @extops = (
 
 # DP page separator: -----File: 001.png---\user\user\user\user\user\-----
 my $dp_pg_div = qr/^-+File:.+$/;
-my $eol = qr/\cM\cJ|\cM|\cJ/; # Windows, Mac, Unix
+my $pg_num = qr/^-+File: (.*)(?:00)(\d+)(.*)\./; # Capture page number, prefix or suffix
 
+my $prf_comm = qr"\Q[**\E.+\]"; # [**Proofer Comment]
+my $eol = qr/\cM\cJ|\cM|\cJ/; # Windows, Mac, Unix line ends. 
 
 my %lglobal;    #All local global variables contained in one hash.
 
@@ -2329,11 +2331,6 @@ sub buildmenu {    # The main menu building code.
 
                 [ Button => "Options", -command => \&text_convert_options ],
                                                 ]);
-
-   
-
-
-
        $menu->Cascade(
         qw/-label Externa~l -tearoff 1 -menuitems/ => [
             [    Button  => 'Setup External Operations',
@@ -11360,7 +11357,7 @@ sub markpages {
         if ( $line =~ /-+File:.*?-+([^-]+)-+/ ) {
 
             # split the proofer string into parts
-            @{ $proofers{$page} } = split( "\Q\\\E", $1 ); #FIXME: Bin file page number barf, possibly.
+            @{ $proofers{$page} } = split( "\Q\\\E", $1 ); 
         }
 
         $pagemark = 'Pg' . $page;
