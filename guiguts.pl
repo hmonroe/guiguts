@@ -71,7 +71,7 @@ my $VERSION = "0.2.4";
 my $currentver = $VERSION;
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
-    = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
+= 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 our $activecolor      = '#f2f818';
 our $auto_page_marks  = 1;
@@ -174,7 +174,7 @@ if ( eval { require Text::LevenshteinXS } ) {
     $lglobal{LevenshteinXS} = 1;
 } else {
     print
-        "Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
+    "Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
 }
 
 # load Tk::ToolBar if it is installed
@@ -207,30 +207,30 @@ $top->bind(
 my $icon = $top->Photo(
     -format => 'gif',
     -data   => '
-R0lGODdhIAAgAPcAAAAAAAAAQAAAgAAA/wAgAAAgQAAggAAg/wBAAABAQABAgABA/wBgAABgQABg
-gABg/wCAAACAQACAgACA/wCgAACgQACggACg/wDAAADAQADAgADA/wD/AAD/QAD/gAD//yAAACAA
-QCAAgCAA/yAgACAgQCAggCAg/yBAACBAQCBAgCBA/yBgACBgQCBggCBg/yCAACCAQCCAgCCA/yCg
-ACCgQCCggCCg/yDAACDAQCDAgCDA/yD/ACD/QCD/gCD//0AAAEAAQEAAgEAA/0AgAEAgQEAggEAg
-/0BAAEBAQEBAgEBA/0BgAEBgQEBggEBg/0CAAECAQECAgECA/0CgAECgQECggECg/0DAAEDAQEDA
-gEDA/0D/AED/QED/gED//2AAAGAAQGAAgGAA/2AgAGAgQGAggGAg/2BAAGBAQGBAgGBA/2BgAGBg
-QGBggGBg/2CAAGCAQGCAgGCA/2CgAGCgQGCggGCg/2DAAGDAQGDAgGDA/2D/AGD/QGD/gGD//4AA
-AIAAQIAAgIAA/4AgAIAgQIAggIAg/4BAAIBAQIBAgIBA/4BgAIBgQIBggIBg/4CAAICAQICAgICA
-/4CgAICgQICggICg/4DAAIDAQIDAgIDA/4D/AID/QID/gID//6AAAKAAQKAAgKAA/6AgAKAgQKAg
-gKAg/6BAAKBAQKBAgKBA/6BgAKBgQKBggKBg/6CAAKCAQKCAgKCA/6CgAKCgQKCggKCg/6DAAKDA
-QKDAgKDA/6D/AKD/QKD/gKD//8AAAMAAQMAAgMAA/8AgAMAgQMAggMAg/8BAAMBAQMBAgMBA/8Bg
-AMBgQMBggMBg/8CAAMCAQMCAgMCA/8CgAMCgQMCggMCg/8DAAMDAQMDAgMDA/8D/AMD/QMD/gMD/
-//8AAP8AQP8AgP8A//8gAP8gQP8ggP8g//9AAP9AQP9AgP9A//9gAP9gQP9ggP9g//+AAP+AQP+A
-gP+A//+gAP+gQP+ggP+g///AAP/AQP/AgP/A////AP//QP//gP///yH5BAAAAAAALAAAAAAgACAA
-AAj/AP8JHEiwoMGDCBMqXMiwIUNJJCJKnDixDQlJD5PYErito8ePHictMYERYRtb225NWsmypctJ
-b04IaHMwyS2Vb5bo3Mmzp84TMpMUPHkrJ9CjSJMmNSAgAE2OSbZNQrpEqdKqR5sC2Cawzc2YJ56s
-VPnE6ptJl1RW1fqUxDeRJ85q60e3n62kcybNrSvJQAAAJASSkLpE7N66/bIdPYu4bqS/AAQT1ks3
-W5I2tRILOLFkUja6tS5/fgwg8r/BYyuXCGDCgJISmyfZAh1AQOskASBLXvm53+qrk1RvPuq39O5L
-dCOZKPymecw3s/u1We48p+7TUveOtaUtm/danumO19XW3Xsb49jDZ7vVuC77ftqit/+7G3TvynWj
-u2ncuxb99MkpEUkbJbgRXD+1vJeEG5EkUQJ0dOFmGmrJGXCCCXLRVYKCJnTIWGLXUdhPPs2ttNdj
-b1T2Rl7IRRiiSvJ5V1c2sJ1w3339xJIbem0oMckTmTVWS41A4Zhcbn89tU0AT1TVRiy11BLJasMd
-hVmUBNYGGVddmUCcAGBWuVSYFrJVUAlAMWVAh2y26WZrWgVmEGx+IWnnnXgCllAbSJbm55+A+vlU
-QttYFOihgLXBpUOMNuqoQQEBADs=
-'
+    R0lGODdhIAAgAPcAAAAAAAAAQAAAgAAA/wAgAAAgQAAggAAg/wBAAABAQABAgABA/wBgAABgQABg
+    gABg/wCAAACAQACAgACA/wCgAACgQACggACg/wDAAADAQADAgADA/wD/AAD/QAD/gAD//yAAACAA
+    QCAAgCAA/yAgACAgQCAggCAg/yBAACBAQCBAgCBA/yBgACBgQCBggCBg/yCAACCAQCCAgCCA/yCg
+    ACCgQCCggCCg/yDAACDAQCDAgCDA/yD/ACD/QCD/gCD//0AAAEAAQEAAgEAA/0AgAEAgQEAggEAg
+    /0BAAEBAQEBAgEBA/0BgAEBgQEBggEBg/0CAAECAQECAgECA/0CgAECgQECggECg/0DAAEDAQEDA
+    gEDA/0D/AED/QED/gED//2AAAGAAQGAAgGAA/2AgAGAgQGAggGAg/2BAAGBAQGBAgGBA/2BgAGBg
+    QGBggGBg/2CAAGCAQGCAgGCA/2CgAGCgQGCggGCg/2DAAGDAQGDAgGDA/2D/AGD/QGD/gGD//4AA
+    AIAAQIAAgIAA/4AgAIAgQIAggIAg/4BAAIBAQIBAgIBA/4BgAIBgQIBggIBg/4CAAICAQICAgICA
+    /4CgAICgQICggICg/4DAAIDAQIDAgIDA/4D/AID/QID/gID//6AAAKAAQKAAgKAA/6AgAKAgQKAg
+    gKAg/6BAAKBAQKBAgKBA/6BgAKBgQKBggKBg/6CAAKCAQKCAgKCA/6CgAKCgQKCggKCg/6DAAKDA
+    QKDAgKDA/6D/AKD/QKD/gKD//8AAAMAAQMAAgMAA/8AgAMAgQMAggMAg/8BAAMBAQMBAgMBA/8Bg
+    AMBgQMBggMBg/8CAAMCAQMCAgMCA/8CgAMCgQMCggMCg/8DAAMDAQMDAgMDA/8D/AMD/QMD/gMD/
+    //8AAP8AQP8AgP8A//8gAP8gQP8ggP8g//9AAP9AQP9AgP9A//9gAP9gQP9ggP9g//+AAP+AQP+A
+    gP+A//+gAP+gQP+ggP+g///AAP/AQP/AgP/A////AP//QP//gP///yH5BAAAAAAALAAAAAAgACAA
+    AAj/AP8JHEiwoMGDCBMqXMiwIUNJJCJKnDixDQlJD5PYErito8ePHictMYERYRtb225NWsmypctJ
+    b04IaHMwyS2Vb5bo3Mmzp84TMpMUPHkrJ9CjSJMmNSAgAE2OSbZNQrpEqdKqR5sC2Cawzc2YJ56s
+    VPnE6ptJl1RW1fqUxDeRJ85q60e3n62kcybNrSvJQAAAJASSkLpE7N66/bIdPYu4bqS/AAQT1ks3
+    W5I2tRILOLFkUja6tS5/fgwg8r/BYyuXCGDCgJISmyfZAh1AQOskASBLXvm53+qrk1RvPuq39O5L
+    dCOZKPymecw3s/u1We48p+7TUveOtaUtm/danumO19XW3Xsb49jDZ7vVuC77ftqit/+7G3TvynWj
+    u2ncuxb99MkpEUkbJbgRXD+1vJeEG5EkUQJ0dOFmGmrJGXCCCXLRVYKCJnTIWGLXUdhPPs2ttNdj
+    b1T2Rl7IRRiiSvJ5V1c2sJ1w3339xJIbem0oMckTmTVWS41A4Zhcbn89tU0AT1TVRiy11BLJasMd
+    hVmUBNYGGVddmUCcAGBWuVSYFrJVUAlAMWVAh2y26WZrWgVmEGx+IWnnnXgCllAbSJbm55+A+vlU
+    QttYFOihgLXBpUOMNuqoQQEBADs=
+    '
 );
 
 fontinit();    # Initialize the fonts for the two windows
@@ -241,7 +241,7 @@ $top->geometry($geometry) if $geometry;
 
 # Set up Main window layout
 my $text_frame
-    = $top->Frame->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' ) ;          # autosizing
+= $top->Frame->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' ) ;          # autosizing
 my $counter_frame = $text_frame->Frame->pack(
     -side   => 'bottom',
     -anchor => 'sw',
@@ -249,7 +249,7 @@ my $counter_frame = $text_frame->Frame->pack(
     -expand => 0
 );
 my $proofer_frame = $text_frame
-    ->Frame;    # Frame to hold proofer names. Pack it when necessary.
+->Frame;    # Frame to hold proofer names. Pack it when necessary.
 
 # The actual text widget
 my $textwindow = $text_frame->LineNumberText(
@@ -260,19 +260,19 @@ my $textwindow = $text_frame->LineNumberText(
     -font      => $lglobal{font},
     -wrap      => 'none',
     -curlinebg => $activecolor,
-    )->pack(
+)->pack(
     -side   => 'bottom',
     -anchor => 'nw',
     -expand => 'yes',
     -fill   => 'both'
-    );
+);
 
 # Enable Drag & Drop. You can drag a text file into the open window and it
 # will auto load. Kind of gimicky, but fun to play with.
 $top->DropSite(
     -dropcommand => \&handleDND,
     -droptypes =>
-        ( OS_Win or ( $^O eq 'cygwin' and $Tk::platform eq 'MSWin32' ) )
+    ( OS_Win or ( $^O eq 'cygwin' and $Tk::platform eq 'MSWin32' ) )
     ? ['Win32']
     : [qw/XDND Sun/]
 );
@@ -285,14 +285,14 @@ $top->configure( -menu => $menu );
 
 $textwindow->SetGUICallbacks(
     [    # routines to call every time the text is edited
-        \&update_indicators,
-        sub {
-            return if $nohighlights;
-            $textwindow->HighlightAllPairsBracketingCursor;
-        },
-        sub {
-            $textwindow->hidelinenum unless $vislnnm;
-            }
+    \&update_indicators,
+    sub {
+        return if $nohighlights;
+        $textwindow->HighlightAllPairsBracketingCursor;
+    },
+    sub {
+        $textwindow->hidelinenum unless $vislnnm;
+    }
     ]
 );
 
@@ -319,7 +319,7 @@ if (@ARGV) {
     $lglobal{global_filename} = shift @ARGV;
     if ( -e $lglobal{global_filename} ) {
         $top->update
-            ;    # it may be a big file, draw the window, and then load it
+        ;    # it may be a big file, draw the window, and then load it
         openfile( $lglobal{global_filename} );
     }
 } else {
@@ -373,8 +373,8 @@ sub fileopen {    # Find a text file to open
     my ($name);
     return if ( confirmempty() =~ /cancel/i );
     my $types = [
-        [ 'Text Files', [qw/.txt .text .ggp .htm .html .bk1 .bk2/] ],
-        [ 'All Files',  ['*'] ],
+    [ 'Text Files', [qw/.txt .text .ggp .htm .html .bk1 .bk2/] ],
+    [ 'All Files',  ['*'] ],
     ];
     $name = $textwindow->getOpenFile(
         -filetypes  => $types,
@@ -449,7 +449,7 @@ sub openfile {    # and open it
         $bookmarks[0] ||= '1.0';
         $textwindow->markSet( 'insert',    $bookmarks[0] );
         $textwindow->markSet( 'spellbkmk', $spellindexbkmrk )
-            if $spellindexbkmrk;
+        if $spellindexbkmrk;
         $textwindow->see( $bookmarks[0] );
     }
     recentupdate($name);
@@ -464,11 +464,11 @@ sub openfile {    # and open it
 sub prep_import {
     return if ( confirmempty() =~ /cancel/i );
     my $directory
-        = $top->chooseDirectory( -title =>
-            'Choose the directory containing the text files to be imported.',
-        );
+    = $top->chooseDirectory( -title =>
+        'Choose the directory containing the text files to be imported.',
+    );
     return 0
-        unless ( -d $directory and defined $directory and $directory ne '' );
+    unless ( -d $directory and defined $directory and $directory ne '' );
     $top->Busy( -recurse => 1 );
     my $pwd = getcwd();
     chdir $directory;
@@ -515,7 +515,7 @@ sub prep_export {
     my @marks = $textwindow->markNames;
     my @pages = sort grep ( /^Pg\S+$/, @marks );
     my $unicode
-        = $textwindow->search( '-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0',
+    = $textwindow->search( '-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0',
         'end' );
     while (@pages) {
         my $page = shift @pages;
@@ -548,20 +548,20 @@ sub set_autosave {
         ( $autosaveinterval * 60000 ),
         sub {
             savefile()
-                if $textwindow->numberChanges
-                    and $lglobal{global_filename} !~ /No File Loaded/;
+            if $textwindow->numberChanges
+                and $lglobal{global_filename} !~ /No File Loaded/;
         }
     );
     $lglobal{saveflashid} = $top->after(
         ( $autosaveinterval * 60000 - 10000 ),
         sub {
             flash_save()
-                if $lglobal{global_filename} !~ /No File Loaded/;
+            if $lglobal{global_filename} !~ /No File Loaded/;
         }
     );
     $lglobal{savetool}
-        ->configure( -background => 'green', -activebackground => 'green' )
-        unless $notoolbar;
+    ->configure( -background => 'green', -activebackground => 'green' )
+    unless $notoolbar;
     $lglobal{autosaveinterval} = time;
 }
 
@@ -703,17 +703,17 @@ sub binsave {    # save the .bin file associated with the text file
         print $bin ");\n\n";
 
         print $bin '$bookmarks[0] = \''
-            . $textwindow->index('insert') . "';\n";
+        . $textwindow->index('insert') . "';\n";
         for ( 1 .. 5 ) {
             print $bin '$bookmarks[' 
-                . $_ 
-                . '] = \''
-                . $textwindow->index( 'bkmk' . $_ ) . "';\n"
-                if $bookmarks[$_];
+            . $_ 
+            . '] = \''
+            . $textwindow->index( 'bkmk' . $_ ) . "';\n"
+            if $bookmarks[$_];
         }
         if ($pngspath) {
             print $bin
-                "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
+            "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
         }
         my ( $page, $prfr );
         delete $proofers{''};
@@ -723,10 +723,10 @@ sub binsave {    # save the .bin file associated with the text file
             for my $round ( 1 .. $lglobal{numrounds} ) {
                 if ( defined $proofers{$page}->[$round] ) {
                     print $bin '$proofers{\'' 
-                        . $page . '\'}[' 
-                        . $round
-                        . '] = \''
-                        . $proofers{$page}->[$round] . '\';' . "\n";
+                    . $page . '\'}[' 
+                    . $round
+                    . '] = \''
+                    . $proofers{$page}->[$round] . '\';' . "\n";
                 }
             }
         }
@@ -739,7 +739,7 @@ sub binsave {    # save the .bin file associated with the text file
         print $bin ");\n\n";
         print $bin "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
         print $bin
-            "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
+        "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
         print $bin '1;';
         close $bin;
     } else {
@@ -814,11 +814,11 @@ sub utford {
         $lglobal{ordpop}->title('Ordinal to Char');
         $lglobal{ordpop}->resizable( 'yes', 'no' );
         my $frame = $lglobal{ordpop}
-            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+        ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
         my $frame2 = $lglobal{ordpop}
-            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+        ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
         $frame->Label( -text => 'Ordinal of char.' )
-            ->grid( -row => 1, -column => 1 );
+        ->grid( -row => 1, -column => 1 );
         my $charlbl = $frame2->Label( -text => '', -width => 50 )->pack;
         my ( $inentry, $outentry );
         $frame->Radiobutton(
@@ -5074,7 +5074,7 @@ sub spellget_misspellings {    # get list of misspelled words
     $top->Busy( -recurse => 1 );    # let user know something is going on
     my $section = $textwindow->get( $lglobal{spellindexstart},
         $lglobal{spellindexend} );    # get selection
-    $section =~ s/$dp_pg_div//g;
+    $section =~ s/^-----File:.*//g;
     open SAVE, '>:bytes', 'checkfil.txt';
     print SAVE $section;
     close SAVE;
@@ -9928,18 +9928,19 @@ sub htmlautoconvert {
     html_convert_superscripts($selection, $step);
 
     # Thought break conversion
-        if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ )
-        {
-            $textwindow->ntdelete( "$step.0", "$step.end" );
-            $textwindow->ntinsert( "$step.0", $selection );
-            next;
-        }
-        if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {
-            $textwindow->ntdelete( "$step.0", "$step.end" );
-            $textwindow->ntinsert( "$step.0", $selection );
-            next;
-        }
-
+    html_convert_tb($selection, $step);
+#    if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ )
+#        {
+#            $textwindow->ntdelete( "$step.0", "$step.end" );
+#            $textwindow->ntinsert( "$step.0", $selection );
+#            next;
+#        }
+#        if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {
+#            $textwindow->ntdelete( "$step.0", "$step.end" );
+#            $textwindow->ntinsert( "$step.0", $selection );
+#            next;
+#        }
+#
         # /x|/X gets <pre>
         if ( $selection =~ m"^/x"i ) {
             $skip = 1;
@@ -20424,3 +20425,19 @@ sub html_convert_superscripts {
     }
 }
 
+sub html_convert_tb {
+    no warnings; # FIXME: Warning-- Exiting subroutine via next
+    my ($selection, $step) = @_;
+
+    if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ )
+    {
+        $textwindow->ntdelete( "$step.0", "$step.end" );
+        $textwindow->ntinsert( "$step.0", $selection );
+        next;
+    }
+    if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {
+        $textwindow->ntdelete( "$step.0", "$step.end" );
+        $textwindow->ntinsert( "$step.0", $selection );
+        next;
+    }
+}
