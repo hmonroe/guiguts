@@ -9930,18 +9930,12 @@ sub htmlautoconvert {
             && ( $incontents eq '1.0' ) );
 
     # Subscripts
-        if ( $selection =~ s/_\{([^}]+?)\}/<sub>$1<\/sub>/g ) {
-            $textwindow->ntdelete( "$step.0", "$step.end" );
-            $textwindow->ntinsert( "$step.0", $selection );
-        }
+    html_convert_subscripts($selection, $step);
 
-        # Superscripts
-        if ( $selection =~ s/\^\{([^}]+?)\}/<sup>$1<\/sup>/g ) {
-            $textwindow->ntdelete( "$step.0", "$step.end" );
-            $textwindow->ntinsert( "$step.0", $selection );
-        }
+    # Superscripts
+    html_convert_superscripts($selection, $step);
 
-        # Thought break conversion
+    # Thought break conversion
         if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ )
         {
             $textwindow->ntdelete( "$step.0", "$step.end" );
@@ -20417,4 +20411,24 @@ sub html_cleanup_markers {
 #        close $infile;
 #    }
 #}
+
+
+sub html_convert_subscripts {
+    my ($selection, $step) = @_;
+
+    if ( $selection =~ s/_\{([^}]+?)\}/<sub>$1<\/sub>/g ) {
+        $textwindow->ntdelete( "$step.0", "$step.end" );
+        $textwindow->ntinsert( "$step.0", $selection );
+    }
+}
+
+# FIXME: Doesn't convert Gen^rl; workaround Gen^{rl}
+sub html_convert_superscripts {
+    my ($selection, $step) = @_;
+
+    if ( $selection =~ s/\^\{([^}]+?)\}/<sup>$1<\/sup>/g ) {
+        $textwindow->ntdelete( "$step.0", "$step.end" );
+        $textwindow->ntinsert( "$step.0", $selection );
+    }
+}
 
