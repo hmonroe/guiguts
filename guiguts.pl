@@ -6304,7 +6304,7 @@ sub searchtext {
         $lglobal{lastsearchterm} = 'reset' unless $mark;
     } else {
         my $exactsearch = $searchterm;
-        $exactsearch =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g
+        $exactsearch =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g #FIXME: use \Q\E here.
             ;    # escape metacharacters for whole word matching
         $searchterm = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
             if $sopt[0];
