@@ -20435,9 +20435,11 @@ sub html_convert_tb {
         $textwindow->ntinsert( "$step.0", $selection );
         next;
     }
+
     if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {
         $textwindow->ntdelete( "$step.0", "$step.end" );
         $textwindow->ntinsert( "$step.0", $selection );
         next;
     }
+
 }
