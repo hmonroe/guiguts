@@ -18953,8 +18953,13 @@ sub pageadjust {
                     } elsif ( $pagetrack{$num}[3]->cget( -text ) eq 'Roman' )
                     {
                         $style = 'Roman';
-                    }
-                    if ( $style eq 'Roman' ) {
+                    } elsif ( $pagetrack{$num}[3]->cget( -text ) eq 'Literal' )
+		    {
+                        $style = 'Literal';
+		    }
+		    if ( $style eq 'Literal' ) {
+			$label = $pagetrack{$num}[5]->get;
+		    } elsif ( $style eq 'Roman' ) {
                         $label = lc( roman($index) );
                         $label =~ s/\.//;
                     } else {
@@ -18962,7 +18967,9 @@ sub pageadjust {
                         $label =~ s/^0+// if $label and length $label;
                     }
 
-                    if ( $pagetrack{$num}[4]->cget( -text ) eq 'No Count' ) {
+		    if ( $style eq 'Literal' ) {
+			$pagetrack{$num}[2]->configure( -text => "$label" );
+                    } elsif ( $pagetrack{$num}[4]->cget( -text ) eq 'No Count' ) {
                         $pagetrack{$num}[2]->configure( -text => '' );
                     } else {
                         $pagetrack{$num}[2]
@@ -19046,6 +19053,11 @@ sub pageadjust {
                             $pagetrack{ $_[0] }[3]->cget( -text ) eq '"' )
                         {
                             $pagetrack{ $_[0] }[3]
+                                ->configure( -text => 'Literal' );
+                        } elsif (
+                            $pagetrack{ $_[0] }[3]->cget( -text ) eq 'Literal' )
+                        {
+                            $pagetrack{ $_[0] }[3]
                                 ->configure( -text => 'Arabic' );
                         } else {
                             $pagetrack{ $_[0] }[3]->configure( -text => '"' );
@@ -19084,8 +19096,8 @@ sub pageadjust {
             )->grid( -row => $row, -column => 4, -padx => 2 );
             $pagetrack{$num}[5] = $frame1->Entry(
                 -width    => 8,
-                -validate => 'all',
-                -vcmd     => sub { return 0 if ( $_[0] =~ /\D/ ); return 1; }
+#                -validate => 'all',
+#                -vcmd     => sub { return 0 if ( $_[0] =~ /\D/ ); return 1; }
             )->grid( -row => $row, -column => 5, -padx => 2 );
             if ( $page eq $pages[0] ) {
                 $pagetrack{$num}[5]->insert( 'end', $num );
