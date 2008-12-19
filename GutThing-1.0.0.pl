@@ -59,3 +59,40 @@ use Tk::widgets qw/Balloon
 use LineNumberText;
 use TextUnicode;
 
+my $VERSION = "1.0.0";
+
+
+# ignore any watchdog timer alarms. Subroutines that take a long time to complete can trip it
+$SIG{ALRM} = 'IGNORE';
+$SIG{INT} = sub { myexit() };
+
+
+my $mw = MainWindow->new;    # Set up main window
+$mw->minsize( 440, 90 );
+
+my $text_frame = $mw->Frame->pack( -anchor => 'nw',
+    -expand => 'yes', 
+    -fill => 'both' ) ;          # autosizing
+
+my $textwindow = $text_frame->LineNumberText(
+    -widget => 'TextUnicode',
+    -exportselection => 'true',     # 'sel' tag is associated with selections
+    -background      => 'white',
+    -relief          => 'sunken',
+#    -font      => $lglobal{font},
+    -wrap      => 'none',
+#    -curlinebg => $activecolor,
+)->pack(
+    -side   => 'bottom',
+    -anchor => 'nw',
+    -expand => 'yes',
+    -fill   => 'both'
+);
+
+MainLoop;
+
+## Functions and subroutines
+
+sub myexit { }
+sub confirmdiscard { }
+
