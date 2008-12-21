@@ -29,7 +29,6 @@ use Data::Dumper;
 
 use Cwd;
 use Encode;
-use File::Spec::Functions qw/:ALL/;
 use File::Basename;
 use File::Temp qw/tempfile/;
 use HTML::TokeParser;
@@ -60,15 +59,19 @@ use LineNumberText;
 use TextUnicode;
 
 my $VERSION = "1.0.0";
+my $ggdir = "$FindBin::Bin"; # Get the GuiGuts directory.
+my $window_title = "GutThing - " . $VERSION;
 
 
 # ignore any watchdog timer alarms. Subroutines that take a long time to complete can trip it
 $SIG{ALRM} = 'IGNORE';
-$SIG{INT} = sub { myexit() };
+$SIG{INT} = sub { myexit() }; # FIXME: Can this be \&myexit;?
+
 
 
 my $mw = MainWindow->new;    # Set up main window
 $mw->minsize( 440, 90 );
+$mw->configure(-title => $window_title);
 
 my $text_frame = $mw->Frame->pack( -anchor => 'nw',
     -expand => 'yes', 

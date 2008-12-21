@@ -25,7 +25,7 @@ use strict;
 use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
-#use Data::Dumper;
+use Data::Dumper;
 
 use Tk;
 use Tk::Balloon;
@@ -47,7 +47,6 @@ use Tk::TextEdit;
 
 use Cwd;
 use Encode;
-# use File::Spec::Functions qw/:ALL/ # FIXME: use this for file path processing
 use File::Basename;
 use File::Temp qw/tempfile/;
 use HTML::TokeParser;
