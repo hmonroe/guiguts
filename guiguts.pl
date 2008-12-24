@@ -20314,7 +20314,7 @@ sub html_convert_emdashes {
     named( "\x{A0}",               '&nbsp;' );
 }
 
-# convert latin1 and utf charactes to HTML Character Entity Reference's.
+# convert latin1 and utf characters to HTML Character Entity Reference's.
 sub html_convert_latin1 {
     working("Converting Latin-1 Characters...");
     for ( 128 .. 255 ) {
