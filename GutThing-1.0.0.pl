@@ -93,8 +93,6 @@ my $textwindow = $text_frame->LineNumberText(
     -fill   => 'both'
   );
 
-# Set up menus
-
 $mw->configure( -menu => my $menubar =
       $mw->Menu( -menuitems => menubar_menuitems() ) );
 
@@ -112,6 +110,7 @@ else {
 }
 
 $textwindow->focus;
+
 MainLoop;
 
 ## Functions and subroutines
@@ -187,9 +186,78 @@ sub edit_menuitems      {
     ];
 }
     
-sub search_menuitems    { }
-sub bookmark_menuitems  { }
-sub selection_menuitems { }
+sub search_menuitems    { 
+    [
+        ['command', 'Search & Replace',],
+        ['command', 'Stealth Scannos',],
+        ['command', 'Spell Check',],
+        ['command', 'Goto Line',],
+        ['command', 'Goto Page'],
+        ['command', 'Which Line?',],
+        '',
+        ['command', 'Find Proofer Comments',],
+        ['command', 'Find next /*..*/ block',],
+        ['command', 'Find previous /*..*/ block',],
+        ['command', 'Find next /#..#/ block',],
+        ['command', 'Find previous /#..#/ block',],
+        ['command', 'Find next /$..$/ block',],
+        ['command', 'Find previous /$..$/ block',],
+        ['command', 'Find next /p..p/ block',],
+        ['command', 'Find previous /p..p/ block',],
+        ['command', 'Find next indented block',],
+        ['command', 'Find previous indented block',],
+        '',
+        ['command', 'Find Orphaned Brackets & Markup',],
+        '',
+        ['command', 'Highlight double quotes in selection',],
+        ['command', 'Highlight single quotes in selection',],
+        ['command', 'Highlight arbitrary characters in selection',],
+        ['command', 'Remove Highlights',],
+
+    ];
+}
+sub bookmark_menuitems  { 
+    [
+        ['command', 'Set Bookmark 1',],
+        ['command', 'Set Bookmark 2',],
+        ['command', 'Set Bookmark 3',],
+        ['command', 'Set Bookmark 4',],
+        ['command', 'Set Bookmark 5',],
+        '',
+
+        ['command', 'Goto Bookmark 1',],
+        ['command', 'Goto Bookmark 2',],
+        ['command', 'Goto Bookmark 3',],
+        ['command', 'Goto Bookmark 4',],
+        ['command', 'Goto Bookmark 5',],
+    ];
+}
+sub selection_menuitems { 
+[
+['command', 'lowercase Selection'],
+['command', 'Sentence case selection'],
+['command', 'Title Case Selection'],
+['command', 'UPPERCASE Selection'],
+'',
+['command', 'Surround Selectin With...'],
+['command', 'Flood Fill Selection With...'],
+'',
+['command', 'Indent Selection 1'],
+['command', 'Indent Selection -1'],
+'',
+['command', 'Rewrap Selection'],
+['command', 'Block Rewrap Selection'],
+['command', 'Interrupt Rewrap'],
+'',
+['command', 'ASCII Boxes'],
+['command', 'Align text on string'],
+'',
+['command', 'Convert to Named/Numeric Entities'],
+['command', 'Convert From Named/Numeric Entities'],
+['command', 'Convert Fractions'],
+];
+}
+
 sub fixup_menuitems     { }
 sub text_menuitems      { }
 sub html_menuitems      { }
