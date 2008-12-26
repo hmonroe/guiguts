@@ -2,7 +2,7 @@
 
 # $Id$
 
-# GuiGuts text editor
+# GutThing text editor
 
 #Copyright (C) 2008 V. L. Simpson <vlsimpson@gmail.com>
 
@@ -81,7 +81,7 @@ my $textwindow = $text_frame->LineNumberText(
     -exportselection => 'true',     # 'sel' tag is associated with selections
     -background      => 'white',
     -relief          => 'sunken',
-#    -font      => $lglobal{font},
+#    -font      => $global{font},
     -wrap      => 'none',
 #    -curlinebg => $activecolor,
 )->pack(
@@ -94,13 +94,19 @@ my $textwindow = $text_frame->LineNumberText(
 # Set up menus
 
 $mw->configure( -menu => my $menubar = $mw->Menu );
-map {$menubar->cascade( -tearoff => 0, -label => '~' . $_->[0], -menuitems => $_->[1] ) }
+map {$menubar->cascade( -tearoff => 0, -label => $_->[0], -menuitems => $_->[1] ) }
 ['File', file_menuitems()],
 ['Edit', edit_menuitems()],
+['Search', search_menuitems()],
+['Bookmarks', bookmark_menuitems()],
+['Selection', selection_menuitems()],
+['Fixup', fixup_menuitems()],
+['Text Processing', text_menuitems()],
+['HTML', html_menuitems()],
+['External', external_menuitems()],
+['Unicode', unicode_menuitems()],
+['Prefs', prefs_menuitems()],
 ['Help', help_menuitems()];
-
-$textwindow->focus;
-
 
 
 die "ERROR: too many files specified. \n" if ( @ARGV > 1 );
@@ -118,25 +124,42 @@ if (@ARGV) {
 
 
 
+$textwindow->focus; 
 MainLoop;
 
 ## Functions and subroutines
 
-
 # Menu functions
 sub file_menuitems {
     [
-        ['command', 'Open', -command => \&file_open],
+        ['command', 'Open', -command => \&file_open, -underline => 0,
+        -accelerator => 'Ctrl+o'],
         '',
-        ['command', 'Exit', -command => \&myexit],
+        ['command', 'Save', -command => \&file_save, -underline => 0,
+        -accelerator => 'Ctrl+s'],
+        ['command', 'Save As', -command => \&file_saveas, -underline => 5, ],
+        '',
+        ['command', 'Exit', -command => \&myexit, -underline => 1, -accelerator => 'Ctrl+q' ],
     ];
 }
 
+# Base menu items
 sub edit_menuitems { }
+sub search_menuitems { }
+sub bookmark_menuitems { }
+sub selection_menuitems { }
+sub fixup_menuitems { }
+sub text_menuitems { }
+sub html_menuitems { }
+sub external_menuitems { }
+sub unicode_menuitems { }
+sub prefs_menuitems { }
 sub help_menuitems { }
 
 # File functions
 sub file_open { }
+sub file_save { }
+sub file_saveas { }
 
 # Exit functions
 sub myexit { exit } # This is really Tk::exit
