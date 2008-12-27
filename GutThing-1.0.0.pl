@@ -37,21 +37,21 @@ use charnames();
 
 use Tk;
 use Tk::widgets qw/Balloon
-  BrowseEntry
-  Checkbutton
-  Dialog
-  DialogBox
-  DropSite
-  Font
-  JPEG
-  LabFrame
-  Listbox
-  PNG
-  Pane
-  Photo
-  ProgressBar
-  Radiobutton
-  TextEdit/;
+    BrowseEntry
+    Checkbutton
+    Dialog
+    DialogBox
+    DropSite
+    Font
+    JPEG
+    LabFrame
+    Listbox
+    PNG
+    Pane
+    Photo
+    ProgressBar
+    Radiobutton
+    TextEdit/;
 
 # Custom Guigut modules
 use LineNumberText;
@@ -86,15 +86,15 @@ my $textwindow = $text_frame->LineNumberText(
     -wrap => 'none',
 
     #    -curlinebg => $activecolor,
-  )->pack(
+    )->pack(
     -side   => 'bottom',
     -anchor => 'nw',
     -expand => 'yes',
     -fill   => 'both'
-  );
+    );
 
-$mw->configure( -menu => my $menubar =
-      $mw->Menu( -menuitems => menubar_menuitems() ) );
+$mw->configure( -menu => my $menubar
+        = $mw->Menu( -menuitems => menubar_menuitems() ) );
 
 die "ERROR: too many files specified. \n" if ( @ARGV > 1 );
 
@@ -117,8 +117,7 @@ MainLoop;
 
 # Menu functions
 sub menubar_menuitems {
-    [
-        map [ 'cascade', $_->[0], -menuitems => $_->[1] ],
+    [   map [ 'cascade', $_->[0], -menuitems => $_->[1] ],
         [ 'File',            file_menuitems() ],
         [ 'Edit',            edit_menuitems() ],
         [ 'Search',          search_menuitems() ],
@@ -136,34 +135,34 @@ sub menubar_menuitems {
 
 # Base menu items
 sub file_menuitems {
-    [
-        [
-            'command', 'Open',
+    [   [   'command', 'Open',
             -command     => \&file_open,
             -underline   => 0,
             -accelerator => 'Ctrl+o'
         ],
         '',
-        [
-            'command', 'Save',
+        [   'command', 'Save',
             -command     => \&file_save,
             -underline   => 0,
             -accelerator => 'Ctrl+s'
         ],
-        [ 'command', 'Save As', -command => \&file_saveas, -underline => 5, ],
+        [ 'command', 'Save As', -command => \&file_saveas,  -underline => 5, ],
         [ 'command', 'Include', -command => \&file_include, -underline => 0, ],
-        [ 'command', 'Close', -command => \&file_close, -underline => 0, ],
+        [ 'command', 'Close',   -command => \&file_close,   -underline => 0, ],
         '',
-        [ 'command', 'Import Prep Text Files', -command => \&prep_import, ],
+        [ 'command', 'Import Prep Text Files',    -command => \&prep_import, ],
         [ 'command', 'Export As Prep Text Files', -command => \&prep_export, ],
         '',
-        [ 'command', 'Guess Page Markers', -command => \&guess_pagemarks,
-        -underline => 0,],
-        [ 'command', 'Set Page Markers', -command => \&set_pagemarks, -underline
-        => 9, ],
+        [   'command', 'Guess Page Markers',
+            -command   => \&guess_pagemarks,
+            -underline => 0,
+        ],
+        [   'command', 'Set Page Markers',
+            -command   => \&set_pagemarks,
+            -underline => 9,
+        ],
         '',
-        [
-            'command', 'Exit',
+        [   'command', 'Exit',
             -command     => \&myexit,
             -underline   => 1,
             -accelerator => 'Ctrl+q'
@@ -171,9 +170,8 @@ sub file_menuitems {
     ];
 }
 
-sub edit_menuitems      {
-    [
-        [ 'command', 'Undo', ],
+sub edit_menuitems {
+    [   [ 'command', 'Undo', ],
         [ 'command', 'Redo', ],
         '',
         [ 'command', 'Cut', ],
@@ -185,103 +183,116 @@ sub edit_menuitems      {
         [ 'command', 'Unselect All', ],
     ];
 }
-    
-sub search_menuitems    { 
-    [
-        ['command', 'Search & Replace',],
-        ['command', 'Stealth Scannos',],
-        ['command', 'Spell Check',],
-        ['command', 'Goto Line',],
-        ['command', 'Goto Page'],
-        ['command', 'Which Line?',],
-        '',
-        ['command', 'Find Proofer Comments',],
-        ['command', 'Find next /*..*/ block',],
-        ['command', 'Find previous /*..*/ block',],
-        ['command', 'Find next /#..#/ block',],
-        ['command', 'Find previous /#..#/ block',],
-        ['command', 'Find next /$..$/ block',],
-        ['command', 'Find previous /$..$/ block',],
-        ['command', 'Find next /p..p/ block',],
-        ['command', 'Find previous /p..p/ block',],
-        ['command', 'Find next indented block',],
-        ['command', 'Find previous indented block',],
-        '',
-        ['command', 'Find Orphaned Brackets & Markup',],
-        '',
-        ['command', 'Highlight double quotes in selection',],
-        ['command', 'Highlight single quotes in selection',],
-        ['command', 'Highlight arbitrary characters in selection',],
-        ['command', 'Remove Highlights',],
 
+sub search_menuitems {
+    [   [ 'command', 'Search & Replace', ],
+        [ 'command', 'Stealth Scannos', ],
+        [ 'command', 'Spell Check', ],
+        [ 'command', 'Goto Line', ],
+        [ 'command', 'Goto Page' ],
+        [ 'command', 'Which Line?', ],
+        '',
+        [ 'command', 'Find Proofer Comments', ],
+        [ 'command', 'Find next /*..*/ block', ],
+        [ 'command', 'Find previous /*..*/ block', ],
+        [ 'command', 'Find next /#..#/ block', ],
+        [ 'command', 'Find previous /#..#/ block', ],
+        [ 'command', 'Find next /$..$/ block', ],
+        [ 'command', 'Find previous /$..$/ block', ],
+        [ 'command', 'Find next /p..p/ block', ],
+        [ 'command', 'Find previous /p..p/ block', ],
+        [ 'command', 'Find next indented block', ],
+        [ 'command', 'Find previous indented block', ],
+        '',
+        [ 'command', 'Find Orphaned Brackets & Markup', ],
+        '',
+        [ 'command', 'Highlight double quotes in selection', ],
+        [ 'command', 'Highlight single quotes in selection', ],
+        [ 'command', 'Highlight arbitrary characters in selection', ],
+        [ 'command', 'Remove Highlights', ],
     ];
 }
-sub bookmark_menuitems  { 
-    [
-        ['command', 'Set Bookmark 1',],
-        ['command', 'Set Bookmark 2',],
-        ['command', 'Set Bookmark 3',],
-        ['command', 'Set Bookmark 4',],
-        ['command', 'Set Bookmark 5',],
-        '',
 
-        ['command', 'Goto Bookmark 1',],
-        ['command', 'Goto Bookmark 2',],
-        ['command', 'Goto Bookmark 3',],
-        ['command', 'Goto Bookmark 4',],
-        ['command', 'Goto Bookmark 5',],
+sub bookmark_menuitems {
+    [   [ 'command', 'Set Bookmark 1', ],
+        [ 'command', 'Set Bookmark 2', ],
+        [ 'command', 'Set Bookmark 3', ],
+        [ 'command', 'Set Bookmark 4', ],
+        [ 'command', 'Set Bookmark 5', ],
+        '',
+        [ 'command', 'Goto Bookmark 1', ],
+        [ 'command', 'Goto Bookmark 2', ],
+        [ 'command', 'Goto Bookmark 3', ],
+        [ 'command', 'Goto Bookmark 4', ],
+        [ 'command', 'Goto Bookmark 5', ],
     ];
 }
-sub selection_menuitems { 
-[
-['command', 'lowercase Selection'],
-['command', 'Sentence case selection'],
-['command', 'Title Case Selection'],
-['command', 'UPPERCASE Selection'],
-'',
-['command', 'Surround Selectin With...'],
-['command', 'Flood Fill Selection With...'],
-'',
-['command', 'Indent Selection 1'],
-['command', 'Indent Selection -1'],
-'',
-['command', 'Rewrap Selection'],
-['command', 'Block Rewrap Selection'],
-['command', 'Interrupt Rewrap'],
-'',
-['command', 'ASCII Boxes'],
-['command', 'Align text on string'],
-'',
-['command', 'Convert to Named/Numeric Entities'],
-['command', 'Convert From Named/Numeric Entities'],
-['command', 'Convert Fractions'],
-];
+
+sub selection_menuitems {
+    [   [ 'command', 'lowercase Selection' ],
+        [ 'command', 'Sentence case selection' ],
+        [ 'command', 'Title Case Selection' ],
+        [ 'command', 'UPPERCASE Selection' ],
+        '',
+        [ 'command', 'Surround Selectin With...' ],
+        [ 'command', 'Flood Fill Selection With...' ],
+        '',
+        [ 'command', 'Indent Selection 1' ],
+        [ 'command', 'Indent Selection -1' ],
+        '',
+        [ 'command', 'Rewrap Selection' ],
+        [ 'command', 'Block Rewrap Selection' ],
+        [ 'command', 'Interrupt Rewrap' ],
+        '',
+        [ 'command', 'ASCII Boxes' ],
+        [ 'command', 'Align text on string' ],
+        '',
+        [ 'command', 'Convert to Named/Numeric Entities' ],
+        [ 'command', 'Convert From Named/Numeric Entities' ],
+        [ 'command', 'Convert Fractions' ],
+    ];
 }
 
-sub fixup_menuitems     { }
-sub text_menuitems      { }
-sub html_menuitems      { }
-sub external_menuitems  { }
-sub unicode_menuitems   { }
-sub prefs_menuitems     { }
-sub help_menuitems      { }
+sub fixup_menuitems    { 
+    [   [ 'command', '' ],
+        [ 'command', '' ],    
+    ];
+}
+
+sub text_menuitems     { }
+
+sub html_menuitems     { }
+
+sub external_menuitems { }
+
+sub unicode_menuitems  { }
+
+sub prefs_menuitems    { }
+
+sub help_menuitems     { }
 
 # File functions
-sub file_open   { }
-sub file_save   { }
-sub file_saveas { }
-sub file_include { }
-sub file_close { }
+sub file_open    { }
 
-# Guiprep texts processing 
+sub file_save    { }
+
+sub file_saveas  { }
+
+sub file_include { }
+
+sub file_close   { }
+
+# Guiprep texts processing
 sub prep_import { }
+
 sub prep_export { }
 
 # Page Markers
 sub guess_pagemarks { }
-sub set_pagemarks { }
+
+sub set_pagemarks   { }
 
 # Exit functions
-sub myexit         { exit }    # This is really Tk::exit
+sub myexit         {exit}    # This is really Tk::exit
 sub confirmdiscard { }
 
