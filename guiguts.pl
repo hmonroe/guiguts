@@ -601,7 +601,7 @@ sub toggle_autosave {
 }
 
 sub savefile {    # Determine which save routine to use and then use it
-    viewpagenums() if ( $lglobal{seepagenums} );
+    viewpagenums() if ( $lglobal{seepagenums} ); # FIXME: Can this go in setGUIcallbacks?
     if ( $lglobal{global_filename} =~ /No File Loaded/ ) {
         if ( $textwindow->numberChanges == 0 ) {
             return;

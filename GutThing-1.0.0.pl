@@ -63,10 +63,18 @@ $SIG{INT} = sub { myexit() };    # FIXME: Can this be \&myexit;?
 
 my $VERSION      = "1.0.0";
 my $gg_dir       = "$FindBin::Bin";            # Get the GuiGuts directory.
+my $proj_dir = ''; # Get the PP project file directory
+
 my $window_title = "GutThing - " . $VERSION;
 
 my %globals;    #All local global variables contained in one hash.
 
+# Set some default global variables
+our $globallastpath = ''; # FIXME: needs better name; This last dir in the open/save dialogs
+our $activecolor = '';
+
+
+# Build up the basic editor
 my $mw = tkinit( -title => $window_title );
 $mw->minsize( 440, 90 );
 
@@ -81,11 +89,9 @@ my $textwindow = $text_frame->LineNumberText(
     -exportselection => 'true',        # 'sel' tag is associated with selections
     -background      => 'white',
     -relief          => 'sunken',
-
-    #    -font      => $global{font},
+    #-font      => $global{font},
     -wrap => 'none',
-
-    #    -curlinebg => $activecolor,
+    -curlinebg => $activecolor,
     )->pack(
     -side   => 'bottom',
     -anchor => 'nw',
@@ -94,7 +100,7 @@ my $textwindow = $text_frame->LineNumberText(
     );
 
 $mw->configure( -menu => my $menubar
-        = $mw->Menu( -menuitems => menubar_menuitems(), -tearoff => 0, ) );
+        = $mw->Menu( -menuitems => menubar_menuitems() ) );
 
 die "ERROR: too many files specified. \n" if ( @ARGV > 1 );
 
@@ -118,17 +124,17 @@ MainLoop;
 # Menu functions
 sub menubar_menuitems {
     [   map [ 'cascade', $_->[0], -menuitems => $_->[1], -tearoff => $_->[2] ],
-        [ 'File',            file_menuitems(), 0 ],
-        [ 'Edit',            edit_menuitems(), 0 ],
-        [ 'Search',          search_menuitems(), 1 ],
-        [ 'Bookmarks',       bookmark_menuitems(), 0 ],
+        [ 'File',            file_menuitems(),      0 ],
+        [ 'Edit',            edit_menuitems(),      0 ],
+        [ 'Search',          search_menuitems(),    1 ],
+        [ 'Bookmarks',       bookmark_menuitems(),  0 ],
         [ 'Selection',       selection_menuitems(), 1 ],
-        [ 'Fixup',           fixup_menuitems(), 1 ],
-        [ 'Text Processing', text_menuitems(), 1 ],
-        [ 'External',        external_menuitems(), 0 ],
-        [ 'Unicode',         unicode_menuitems(), 0 ],
-        [ 'Prefs',           prefs_menuitems(), 0 ],
-        [ 'Help',            help_menuitems(), 0 ],
+        [ 'Fixup',           fixup_menuitems(),     1 ],
+        [ 'Text Processing', text_menuitems(),      1 ],
+        [ 'External',        external_menuitems(),  0 ],
+        [ 'Unicode',         unicode_menuitems(),   0 ],
+        [ 'Prefs',           prefs_menuitems(),     0 ],
+        [ 'Help',            help_menuitems(),      0 ],
     ];
 }
 
@@ -252,20 +258,20 @@ sub selection_menuitems {
     ];
 }
 
-sub fixup_menuitems    { 
+sub fixup_menuitems {
     [   [ 'command', 'Run Word Frequency' ],
         [ 'command', 'Run ~Gutcheck' ],
-        [ 'command', 'Gutcheck options'],
+        [ 'command', 'Gutcheck options' ],
         [ 'command', 'Run Jeebies' ],
         '',
         [ 'command', 'Remove End-of-line Spaces' ],
         [ 'command', 'Run Fixup' ],
         '',
         [ 'command', 'Fix Page Separators' ],
-        ['command', 'Remove Blank Lines Before Page Separators' ],
+        [ 'command', 'Remove Blank Lines Before Page Separators' ],
         '',
-        [ 'command', 'Footnote Fixup',],
-        [ 'command', 'HTML Fixup',    ],
+        [ 'command', 'Footnote Fixup', ],
+        [ 'command', 'HTML Fixup', ],
         [ 'command', 'Sidenote Fixup', ],
         [ 'command', 'Reformat Poetry Line Numbers', ],
         [ 'command', 'Convert Win CP 1252 Chars to Unicode', ],
@@ -275,39 +281,35 @@ sub fixup_menuitems    {
         [ 'command', 'Clean Up Rewrap Markers', ],
         '',
         [ 'command', 'Find Greek', ],
+
         # FIXME: Doesn't work yet[ 'command', 'Convert Greek', ],
     ];
 }
 
-sub text_menuitems     { 
+sub text_menuitems {
     [   [ 'command', 'Convert Italics' ],
-        [ 'command', 'Convert Bold' ],    
-        [ 'command', 'Add Thought Break' ],    
-        [ 'command', 'Convert <tb>' ],    
-        [ 'command', 'Convert <sc>' ],    
-        [ 'command', 'Options' ],    
+        [ 'command', 'Convert Bold' ],
+        [ 'command', 'Add Thought Break' ],
+        [ 'command', 'Convert <tb>' ],
+        [ 'command', 'Convert <sc>' ],
+        [ 'command', 'Options' ],
     ];
 }
 
 # FIXME: Need to adapt orginal gg function
-sub external_menuitems { 
-    [   [ 'command', '' ],
-        [ 'command', '' ],    
-    ];
+sub external_menuitems {
+    [ [ 'command', '' ], [ 'command', '' ], ];
 }
 
 # FIXME: Need to adapt orginal gg function
-sub unicode_menuitems  {
-    [   [ 'command', '' ],
-        [ 'command', '' ],    
-    ];
+sub unicode_menuitems {
+    [ [ 'command', '' ], [ 'command', '' ], ];
 }
 
-sub prefs_menuitems    { 
-    [   
-        [ 'command', 'Set Rewrap Margins' ],
-        [ 'command', 'Font' ],
-        [ 'command', 'Browser Start Command' ],
+sub prefs_menuitems {
+    [   [ 'command',     'Set Rewrap Margins' ],
+        [ 'command',     'Font' ],
+        [ 'command',     'Browser Start Command' ],
         [ 'Checkbutton', 'Leave Bookmarks Highlighted' ],
         [ 'Checkbutton', 'Enable Quotes Highlighting' ],
         [ 'Checkbutton', 'Keep Pop-ups On Top' ],
@@ -317,27 +319,26 @@ sub prefs_menuitems    {
     ];
 }
 
-sub help_menuitems     { 
+sub help_menuitems {
     [   [ 'command', 'Hot Keys' ],
-        [ 'command', 'Function History' ],    
-        [ 'command', 'Greek Transliteration' ],    
-        [ 'command', 'Latin1 Chart' ],    
-        [ 'command', 'Regex Quick Reference' ],    
-        [ 'command', 'UTF Character Entry' ],    
-        [ 'command', 'UTF Character Search' ],    
+        [ 'command', 'Function History' ],
+        [ 'command', 'Greek Transliteration' ],
+        [ 'command', 'Latin1 Chart' ],
+        [ 'command', 'Regex Quick Reference' ],
+        [ 'command', 'UTF Character Entry' ],
+        [ 'command', 'UTF Character Search' ],
     ];
 }
-    
 
 # File functions
-my $globallastpath;
 
-sub file_open    { 
+sub file_open {
     my ($name);
-#FIXME:    return if ( confirmempty() =~ /cancel/i );
+
+    #FIXME:    return if ( confirmempty() =~ /cancel/i );
     my $types = [
-    [ 'Text Files', [qw/.txt .text .ggp .htm .html .bk1 .bk2/] ],
-    [ 'All Files',  ['*'] ],
+        [ 'Text Files', [qw/.txt .text .ggp .htm .html .bk1 .bk2/] ],
+        [ 'All Files',  ['*'] ],
     ];
     $name = $textwindow->getOpenFile(
         -filetypes  => $types,
@@ -349,12 +350,12 @@ sub file_open    {
     }
 }
 
-sub open_file { 
+sub open_file {
     my $name = shift;
     $textwindow->Load($name);
 }
 
-sub file_save    { 
+sub file_save {
     my ($name);
     $name = $textwindow->getSaveFile(
         -title      => 'Save As',
@@ -363,11 +364,11 @@ sub file_save    {
     $textwindow->SaveUTF($name);
 }
 
-sub file_saveas  { }
+sub file_saveas { }
 
 sub file_include { }
 
-sub file_close   { }
+sub file_close { }
 
 # Guiprep texts processing
 sub prep_import { }
@@ -377,10 +378,10 @@ sub prep_export { }
 # Page Markers
 sub guess_pagemarks { }
 
-sub set_pagemarks   { }
+sub set_pagemarks { }
 
 # Exit functions
-sub myexit         {exit}    # This is really Tk::exit
+sub myexit {exit}    # This is really Tk::exit
 
 sub confirmdiscard { }
 
