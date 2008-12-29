@@ -94,7 +94,7 @@ my $textwindow = $text_frame->LineNumberText(
     );
 
 $mw->configure( -menu => my $menubar
-        = $mw->Menu( -menuitems => menubar_menuitems() ) );
+        = $mw->Menu( -menuitems => menubar_menuitems(), -tearoff => 0, ) );
 
 die "ERROR: too many files specified. \n" if ( @ARGV > 1 );
 
@@ -117,19 +117,18 @@ MainLoop;
 
 # Menu functions
 sub menubar_menuitems {
-    [   map [ 'cascade', $_->[0], -menuitems => $_->[1] ],
-        [ 'File',            file_menuitems() ],
-        [ 'Edit',            edit_menuitems() ],
-        [ 'Search',          search_menuitems() ],
-        [ 'Bookmarks',       bookmark_menuitems() ],
-        [ 'Selection',       selection_menuitems() ],
-        [ 'Fixup',           fixup_menuitems() ],
-        [ 'Text Processing', text_menuitems() ],
-        [ 'HTML',            html_menuitems() ],
-        [ 'External',        external_menuitems() ],
-        [ 'Unicode',         unicode_menuitems() ],
-        [ 'Prefs',           prefs_menuitems() ],
-        [ 'Help',            help_menuitems() ],
+    [   map [ 'cascade', $_->[0], -menuitems => $_->[1], -tearoff => $_->[2] ],
+        [ 'File',            file_menuitems(), 0 ],
+        [ 'Edit',            edit_menuitems(), 0 ],
+        [ 'Search',          search_menuitems(), 1 ],
+        [ 'Bookmarks',       bookmark_menuitems(), 0 ],
+        [ 'Selection',       selection_menuitems(), 1 ],
+        [ 'Fixup',           fixup_menuitems(), 1 ],
+        [ 'Text Processing', text_menuitems(), 1 ],
+        [ 'External',        external_menuitems(), 0 ],
+        [ 'Unicode',         unicode_menuitems(), 0 ],
+        [ 'Prefs',           prefs_menuitems(), 0 ],
+        [ 'Help',            help_menuitems(), 0 ],
     ];
 }
 
@@ -254,25 +253,106 @@ sub selection_menuitems {
 }
 
 sub fixup_menuitems    { 
+    [   [ 'command', 'Run Word Frequency' ],
+        [ 'command', 'Run ~Gutcheck' ],
+        [ 'command', 'Gutcheck options'],
+        [ 'command', 'Run Jeebies' ],
+        '',
+        [ 'command', 'Remove End-of-line Spaces' ],
+        [ 'command', 'Run Fixup' ],
+        '',
+        [ 'command', 'Fix Page Separators' ],
+        ['command', 'Remove Blank Lines Before Page Separators' ],
+        '',
+        [ 'command', 'Footnote Fixup',],
+        [ 'command', 'HTML Fixup',    ],
+        [ 'command', 'Sidenote Fixup', ],
+        [ 'command', 'Reformat Poetry Line Numbers', ],
+        [ 'command', 'Convert Win CP 1252 Chars to Unicode', ],
+        '',
+        [ 'command', 'ASCII Table Special Effects', ],
+        '',
+        [ 'command', 'Clean Up Rewrap Markers', ],
+        '',
+        [ 'command', 'Find Greek', ],
+        # FIXME: Doesn't work yet[ 'command', 'Convert Greek', ],
+    ];
+}
+
+sub text_menuitems     { 
+    [   [ 'command', 'Convert Italics' ],
+        [ 'command', 'Convert Bold' ],    
+        [ 'command', 'Add Thought Break' ],    
+        [ 'command', 'Convert <tb>' ],    
+        [ 'command', 'Convert <sc>' ],    
+        [ 'command', 'Options' ],    
+    ];
+}
+
+# FIXME: Need to adapt orginal gg function
+sub external_menuitems { 
     [   [ 'command', '' ],
         [ 'command', '' ],    
     ];
 }
 
-sub text_menuitems     { }
+# FIXME: Need to adapt orginal gg function
+sub unicode_menuitems  {
+    [   [ 'command', '' ],
+        [ 'command', '' ],    
+    ];
+}
 
-sub html_menuitems     { }
+sub prefs_menuitems    { 
+    [   
+        [ 'command', 'Set Rewrap Margins' ],
+        [ 'command', 'Font' ],
+        [ 'command', 'Browser Start Command' ],
+        [ 'Checkbutton', 'Leave Bookmarks Highlighted' ],
+        [ 'Checkbutton', 'Enable Quotes Highlighting' ],
+        [ 'Checkbutton', 'Keep Pop-ups On Top' ],
+        [ 'Checkbutton', 'Enable Bell' ],
+        [ 'Checkbutton', 'Auto Set Page Markers' ],
+        [ 'Checkbutton', 'Leave Space Afer End-of-Line Hyphens During Rewrap' ],
+    ];
+}
 
-sub external_menuitems { }
-
-sub unicode_menuitems  { }
-
-sub prefs_menuitems    { }
-
-sub help_menuitems     { }
+sub help_menuitems     { 
+    [   [ 'command', 'Hot Keys' ],
+        [ 'command', 'Function History' ],    
+        [ 'command', 'Greek Transliteration' ],    
+        [ 'command', 'Latin1 Chart' ],    
+        [ 'command', 'Regex Quick Reference' ],    
+        [ 'command', 'UTF Character Entry' ],    
+        [ 'command', 'UTF Character Search' ],    
+    ];
+}
+    
 
 # File functions
-sub file_open    { }
+my $globallastpath;
+
+sub file_open    { 
+    my ($name);
+#FIXME:    return if ( confirmempty() =~ /cancel/i );
+    my $types = [
+    [ 'Text Files', [qw/.txt .text .ggp .htm .html .bk1 .bk2/] ],
+    [ 'All Files',  ['*'] ],
+    ];
+    $name = $textwindow->getOpenFile(
+        -filetypes  => $types,
+        -title      => 'Open File',
+        -initialdir => $globallastpath
+    );
+    if ( defined($name) and length($name) ) {
+        open_file($name);
+    }
+}
+
+sub open_file { 
+    my $name = shift;
+    $textwindow->Load($name);
+}
 
 sub file_save    { }
 
@@ -294,5 +374,6 @@ sub set_pagemarks   { }
 
 # Exit functions
 sub myexit         {exit}    # This is really Tk::exit
+
 sub confirmdiscard { }
 
