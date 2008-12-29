@@ -357,10 +357,6 @@ sub open_file {
 
 sub file_save {
     my ($name);
-    $name = $textwindow->getSaveFile(
-        -title      => 'Save As',
-        -initialdir => $globallastpath
-    );
     $textwindow->SaveUTF($name);
 }
 
