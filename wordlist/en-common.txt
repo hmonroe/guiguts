@@ -21,6 +21,7 @@ beads
 bear
 beard
 been
+begin
 bit
 bo
 boon
