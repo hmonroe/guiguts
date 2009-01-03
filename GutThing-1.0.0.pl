@@ -25,7 +25,7 @@ use strict;
 use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
-
+use FileHandle;
 use Cwd;
 use Encode;
 use File::Basename;
@@ -57,13 +57,16 @@ use Tk::widgets qw/Balloon
 use LineNumberText;
 use TextUnicode;
 
+die "ERROR: GutThing can only work with one file at a time. \n" if ( @ARGV > 1 ); # Crash now if more
+                                                            #than one file specified.
+
 # ignore any watchdog timer alarms. Subroutines that take a long time to complete can trip it
 $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { myexit() };    # FIXME: Can this be \&myexit;?
 
 my $VERSION      = "1.0.0";
 my $gg_dir       = "$FindBin::Bin";            # Get the GuiGuts directory.
-my $proj_dir = ''; # Get the PP project file directory
+my $proj_dir = ''; # FIXME: Get the PP project file directory;
 
 my $window_title = "GutThing - " . $VERSION;
 
@@ -82,7 +85,7 @@ my $text_frame = $mw->Frame->pack(
     -anchor => 'nw',
     -expand => 'yes',
     -fill   => 'both'
-);              # autosizing
+);
 
 my $textwindow = $text_frame->LineNumberText(
     -widget          => 'TextUnicode',
@@ -102,13 +105,12 @@ my $textwindow = $text_frame->LineNumberText(
 $mw->configure( -menu => my $menubar
         = $mw->Menu( -menuitems => menubar_menuitems() ) );
 
-die "ERROR: too many files specified. \n" if ( @ARGV > 1 );
 
 if (@ARGV) {
     $globals{global_filename} = shift @ARGV;
     if ( -e $globals{global_filename} ) {
         $mw->update;   # it may be a big file, draw the window, and then load it
-        openfile( $globals{global_filename} );
+        open_file( $globals{global_filename} );
     }
 }
 else {
@@ -310,12 +312,12 @@ sub prefs_menuitems {
     [   [ 'command',     'Set Rewrap Margins' ],
         [ 'command',     'Font' ],
         [ 'command',     'Browser Start Command' ],
-        [ 'Checkbutton', 'Leave Bookmarks Highlighted' ],
-        [ 'Checkbutton', 'Enable Quotes Highlighting' ],
-        [ 'Checkbutton', 'Keep Pop-ups On Top' ],
-        [ 'Checkbutton', 'Enable Bell' ],
-        [ 'Checkbutton', 'Auto Set Page Markers' ],
-        [ 'Checkbutton', 'Leave Space Afer End-of-Line Hyphens During Rewrap' ],
+        [ 'checkbutton', 'Leave Bookmarks Highlighted' ],
+        [ 'checkbutton', 'Enable Quotes Highlighting' ],
+        [ 'checkbutton', 'Keep Pop-ups On Top' ],
+        [ 'checkbutton', 'Enable Bell' ],
+        [ 'checkbutton', 'Auto Set Page Markers' ],
+        [ 'checkbutton', 'Leave Space Afer End-of-Line Hyphens During Rewrap' ],
     ];
 }
 
