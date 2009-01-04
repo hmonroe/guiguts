@@ -73,9 +73,99 @@ my $window_title = "GutThing - " . $VERSION;
 my %globals;    #All local global variables contained in one hash.
 
 # Set some default global variables
-our $globallastpath = ''; # FIXME: needs better name; This last dir in the open/save dialogs
-our $activecolor = '';
 
+our $activecolor      = '#f2f818';
+our $auto_page_marks  = 1;
+our $autobackup       = 0;
+our $autosave         = 0;
+our $autosaveinterval = 5;
+our $bkmkhl           = '0';
+our $blocklmargin     = 5;
+our $blockrmargin     = 72;
+our $blockwrap;
+our $bold_char = "=";
+our $defaultindent = 0;
+our $fontname      = 'Courier New';
+our $fontsize      = 10;
+our $fontweight    = '';
+our $geometry2     = '';
+our $geometry3     = '';
+our $geometry;
+our $globalaspellmode   = 'normal';
+our $globalbrowserstart = 'start';
+our $globalimagepath    = '';
+our $globallastpath     = '';
+our $globalspelldictopt = '';
+our $globalspellpath    = '';
+our $globalviewerpath   = '';
+our $gutpath            = '';
+our $highlightcolor     = '#a08dfc';
+our $history_size       = 20;
+our $italic_char = "_";
+our $jeebiesmode        = 'p';
+our $jeebiespath        = '';
+our $lmargin            = 1;
+our $markupthreshold    = 4;
+our $nobell             = 0;
+our $nohighlights       = 0;
+our $notoolbar          = 0;
+our $operationinterrupt;
+our $pngspath         = '';
+our $rmargin          = 72;
+our $rwhyphenspace    = 0;
+our $scannoslist      = '';
+our $scannoslistpath  = '';
+our $scannospath      = '';
+our $scrollupdatespd  = 40;
+our $searchendindex   = 'end';
+our $searchstartindex = '1.0';
+our $singleterm       = 1;
+our $spellindexbkmrk  = '';
+our $stayontop        = 0;
+our $suspectindex;
+our $tidycommand = '';
+our $toolside    = 'bottom';
+our $utffontname = 'Courier New';
+our $utffontsize = 14;
+our $vislnnm     = 0;
+
+our %gc;
+our %jeeb;
+our %pagenumbers;
+our %projectdict;
+our %proofers;
+our %reghints = ();
+our %scannoslist;
+
+our @bookmarks = ( 0, 0, 0, 0, 0, 0 );
+our @gcopt = ( 0, 0, 0, 0, 0, 0, 1, 0, 1 );
+our @mygcview;
+our @operations;
+our @pageindex;
+our @recentfile;
+our @replace_history;
+our @search_history;
+our @sopt = ( 1, 0, 0, 0 );
+our @extops = (
+    {   'label'   => 'W3C Markup Validation Service',
+        'command' => 'start http://validator.w3.org/'
+    },
+    {   'label'   => 'W3C CSS Validation Service',
+        'command' => 'start http://jigsaw.w3.org/css-validator/'
+    },
+    {   'label'   => 'NPL Dictionary Search',
+        'command' => 'start http://www.puzzlers.org/wordlists/grepdict.php'
+    },
+    {   'label'   => 'Pass open file to default handler',
+        'command' => 'start $d$f$e'
+    },
+    { 'label' => '', 'command' => '' },
+    { 'label' => '', 'command' => '' },
+    { 'label' => '', 'command' => '' },
+    { 'label' => '', 'command' => '' },
+    { 'label' => '', 'command' => '' },
+    { 'label' => '', 'command' => '' },
+);
 
 # Build up the basic editor
 my $mw = tkinit( -title => $window_title );
