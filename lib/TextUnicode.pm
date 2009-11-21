@@ -1,5 +1,6 @@
 #$Id$
 
+
 package TextUnicode;
 
 use base qw(Tk::TextEdit);
