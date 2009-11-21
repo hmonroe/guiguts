@@ -24,6 +24,7 @@ use strict;
 use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
+
 #use Data::Dumper;
 use Cwd;
 use Encode;
@@ -36,22 +37,22 @@ use charnames();
 
 use Tk;
 use Tk::widgets qw/Balloon
-                   BrowseEntry
-                   Checkbutton
-                   Dialog
-                   DialogBox
-                   DropSite
-                   Font
-                   JPEG
-                   LabFrame
-                   Listbox
-                   PNG
-                   Pane
-                   Photo
-                   ProgressBar
-                   Radiobutton
-                   TextEdit
-                  /;
+    BrowseEntry
+    Checkbutton
+    Dialog
+    DialogBox
+    DropSite
+    Font
+    JPEG
+    LabFrame
+    Listbox
+    PNG
+    Pane
+    Photo
+    ProgressBar
+    Radiobutton
+    TextEdit
+    /;
 
 # Custom Guigut modules
 use LineNumberText;
@@ -63,11 +64,12 @@ use constant OS_Win => $^O =~ /Win/;
 $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { myexit() };
 
-my $DEBUG; # FIXME: This and all references can go.
-my $VERSION = "0.3.0";
-my $currentver = $VERSION;
+my $DEBUG;    # FIXME: This and all references can go.
+my $VERSION        = "0.3.0";
+my $currentver     = $VERSION;
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
-my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
+my $yes_proofer_url
+    = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 our $activecolor      = '#f2f818';
 our $auto_page_marks  = 1;
@@ -78,7 +80,7 @@ our $bkmkhl           = '0';
 our $blocklmargin     = 5;
 our $blockrmargin     = 72;
 our $blockwrap;
-our $bold_char = "=";
+our $bold_char     = "=";
 our $defaultindent = 0;
 our $fontname      = 'Courier New';
 our $fontsize      = 10;
@@ -96,7 +98,7 @@ our $globalviewerpath   = '';
 our $gutpath            = '';
 our $highlightcolor     = '#a08dfc';
 our $history_size       = 20;
-our $italic_char = "_";
+our $italic_char        = "_";
 our $jeebiesmode        = 'p';
 our $jeebiespath        = '';
 our $lmargin            = 1;
@@ -170,22 +172,25 @@ my %lglobal;
 
 if ( eval { require Text::LevenshteinXS } ) {
     $lglobal{LevenshteinXS} = 1;
-} else {
+}
+else {
     print
-    "Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
+        "Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
 }
 
 # load Tk::ToolBar if it is installed
 if ( eval { require Tk::ToolBar; 1; } ) {
     $lglobal{ToolBar} = 1;
-} else {
+}
+else {
     $lglobal{ToolBar} = 0;
 }
 
 # load Image::Size if it is installed
 if ( eval { require Image::Size; 1; } ) {
     $lglobal{ImageSize} = 1;
-} else {
+}
+else {
     $lglobal{ImageSize} = 0;
 }
 
@@ -197,7 +202,6 @@ my $mw = tkinit( -title => $window_title );
 initialize();
 
 $mw->minsize( 440, 90 );
-
 
 # Detect geometry changes for tracking
 $mw->bind(
@@ -248,7 +252,7 @@ $mw->configure( -menu => my $menubar
 
 # Build the guts of our GUI.
 my $text_frame
-= $mw->Frame->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' ) ;
+    = $mw->Frame->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
 
 my $counter_frame = $text_frame->Frame->pack(
     -side   => 'bottom',
@@ -257,7 +261,7 @@ my $counter_frame = $text_frame->Frame->pack(
     -expand => 0
 );
 my $proofer_frame = $text_frame
-->Frame;    # Frame to hold proofer names. Pack it when necessary.
+    ->Frame;    # Frame to hold proofer names. Pack it when necessary.
 
 # The actual text widget
 my $text_window = $text_frame->LineNumberText(
@@ -268,34 +272,34 @@ my $text_window = $text_frame->LineNumberText(
     -font      => $lglobal{font},
     -wrap      => 'none',
     -curlinebg => $activecolor,
-)->pack(
+    )->pack(
     -side   => 'bottom',
     -anchor => 'nw',
     -expand => 'yes',
     -fill   => 'both'
-);
+    );
 
 $mw->protocol( 'WM_DELETE_WINDOW' => \&myexit );
 
 $text_window->SetGUICallbacks(
     [    # routines to call every time the text is edited
-    \&update_indicators,
-    sub {
-        return if $nohighlights;
-        $text_window->HighlightAllPairsBracketingCursor;
-    },
-    sub {
-        $text_window->hidelinenum unless $vislnnm;
-    }
+        \&update_indicators,
+        sub {
+            return if $nohighlights;
+            $text_window->HighlightAllPairsBracketingCursor;
+        },
+        sub {
+            $text_window->hidelinenum unless $vislnnm;
+            }
     ]
 );
 
+textbindings();    # Set up the key bindings for the text widget
 
-textbindings(); # Set up the key bindings for the text widget
+buildstatusbar();  # Build the status bar
 
-buildstatusbar();    # Build the status bar
-
-$mw->Icon( -image => $icon ) ;  # Load the icon ito the window bar. Needs to happen late in the process
+$mw->Icon( -image => $icon )
+    ;  # Load the icon ito the window bar. Needs to happen late in the process
 
 $text_window->focus;
 
@@ -311,11 +315,11 @@ die "ERROR: too many files specified. \n" if ( @ARGV > 1 );
 if (@ARGV) {
     $lglobal{global_filename} = shift @ARGV;
     if ( -e $lglobal{global_filename} ) {
-        $mw->update
-        ;    # it may be a big file, draw the window, and then load it
+        $mw->update; # it may be a big file, draw the window, and then load it
         openfile( $lglobal{global_filename} );
     }
-} else {
+}
+else {
     $lglobal{global_filename} = 'No File Loaded';
 }
 
@@ -329,6 +333,7 @@ $mw->repeat( 200, \&updatesel );
 ### Subroutines
 
 sub initialize {
+
 # Initialize a whole bunch of global values that used to be discrete variables
 # spread willy-nilly through the code. Refactored them into a global
 # hash and gathered them together in a single subroutine.
@@ -345,7 +350,7 @@ sub initialize {
     $lglobal{groutp}           = 'l';
     $lglobal{htmlimgar}        = 1;          #html image aspect ratio
     $lglobal{ignore_case}      = 0;
-    $lglobal{keep_latin1} = 1;
+    $lglobal{keep_latin1}      = 1;
     $lglobal{lastmatchindex}   = '1.0';
     $lglobal{lastsearchterm}   = '';
     $lglobal{longordlabel}     = 0;
@@ -737,7 +742,7 @@ sub initialize {
         -data   => $scroll_gif,
         -format => 'gif',
     );
-  }
+}
 
 sub fontinit {
     $lglobal{font} = "{$fontname} $fontsize $fontweight";
@@ -747,9 +752,8 @@ sub utffontinit {
     $lglobal{utffont} = "{$utffontname} $utffontsize";
 }
 
-
 # Routine to update the status bar when somthing has changed.
-sub update_indicators {    
+sub update_indicators {
     my ( $last_line, $last_col ) = split( /\./, $text_window->index('end') );
     my ( $line, $column ) = split( /\./, $text_window->index('insert') );
     $lglobal{current_line_label}->configure(
@@ -783,19 +787,25 @@ sub update_indicators {
             -justify => 'left'
         );
 
-    } else {
+    }
+    else {
         $lglobal{ordinallabel}->configure(
             -text  => " Dec $ordinal : Hex $hexi ",
             -width => 18
         );
     }
     if ( $text_window->numberChanges ) { $edit_flag = 'edited' }
-    
-# window label format: GG-version - [edited] - [file name]
-    if ( $edit_flag) { $mw->configure( -title => $window_title . " - ". $edit_flag . " - " . $filename) } 
-    else { $mw->configure( -title => $window_title . " - " . $filename) } 
-#FIXME: need some logic behind this 
-        
+
+    # window label format: GG-version - [edited] - [file name]
+    if ($edit_flag) {
+        $mw->configure( -title => $window_title . " - "
+                . $edit_flag . " - "
+                . $filename );
+    }
+    else { $mw->configure( -title => $window_title . " - " . $filename ) }
+
+    #FIXME: need some logic behind this
+
     $lglobal{global_filename} = $filename;
     $text_window->idletasks;
     my ( $mark, $pnum );
@@ -894,12 +904,14 @@ sub update_indicators {
                 if ( defined $label && length $label ) {
                     $lglobal{page_label}
                         ->configure( -text => ("Lbl: $label ") );
-                } else {
+                }
+                else {
                     $lglobal{page_label}
                         ->configure( -text => ("Lbl: None ") );
                 }
                 last;
-            } else {
+            }
+            else {
                 if ( $text_window->index('insert')
                     > ( $text_window->index($mark) + 400 ) )
                 {
@@ -956,13 +968,14 @@ sub update_indicators {
         saveset();
         $lglobal{geometryupdate} = 0;
     }
+
     # FIXME: Can this go? Maybe.
     if ( $autosave and $lglobal{autosaveinterval} ) {
         my $elapsed
             = $autosaveinterval * 60 - ( time - $lglobal{autosaveinterval} );
         printf "%d:%02d\n", int( $elapsed / 60 ), $elapsed % 60;
     }
-  }
+}
 
 sub textbindings {
 
@@ -1044,13 +1057,16 @@ sub textbindings {
                 }
                 $text_window->addGlobEnd;
                 $mw->break;
-            } else {
+            }
+            else {
                 $text_window->Delete;
             }
         }
     );
-    $text_window->bind( 'TextUnicode', '<Control-l>' => sub { case ('lc'); } );
-    $text_window->bind( 'TextUnicode', '<Control-u>' => sub { case ('uc'); } );
+    $text_window->bind( 'TextUnicode',
+        '<Control-l>' => sub { case ('lc'); } );
+    $text_window->bind( 'TextUnicode',
+        '<Control-u>' => sub { case ('uc'); } );
     $text_window->bind( 'TextUnicode',
         '<Control-t>' => sub { case ('tc'); $mw->break } );
     $text_window->bind(
@@ -1150,7 +1166,8 @@ sub textbindings {
             if ($DEBUG) {
                 $DEBUG = 0;
                 rebuildmenu();
-            } else {
+            }
+            else {
                 $DEBUG = 1;
                 rebuildmenu();
             }
@@ -1169,7 +1186,8 @@ sub textbindings {
     );
     $text_window->bind( 'TextUnicode',
         '<Control-Alt-r>' => sub { regexref() } );
-    $text_window->bind( 'TextUnicode', '<Shift-B1-Motion>', 'shiftB1_Motion' );
+    $text_window->bind( 'TextUnicode', '<Shift-B1-Motion>',
+        'shiftB1_Motion' );
     $text_window->eventAdd(
         '<<FindNext>>' => '<Control-Key-G>',
         '<Control-Key-g>'
@@ -1183,17 +1201,22 @@ sub textbindings {
             if ( $lglobal{search} ) {
                 my $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
                 searchtext($searchterm);
-            } else {
+            }
+            else {
                 searchpopup();
             }
         }
     );
     if (OS_Win) {
-        $text_window->bind( 'TextUnicode',
-            '<3>' =>
-                sub { scrolldismiss(); $menubar->Popup( -popover => 'cursor' ) }
+        $text_window->bind(
+            'TextUnicode',
+            '<3>' => sub {
+                scrolldismiss();
+                $menubar->Popup( -popover => 'cursor' );
+            }
         );
-    } else {
+    }
+    else {
         $text_window->bind( 'TextUnicode', '<3>' => sub { scrolldismiss() } )
             ;    # Try to trap odd right click error under OSX and Linux
     }
@@ -1252,7 +1275,8 @@ sub buildstatusbar {
         sub {
             if ( $lglobal{showblocksize} ) {
                 $lglobal{showblocksize} = 0;
-            } else {
+            }
+            else {
                 $lglobal{showblocksize} = 1;
             }
         }
@@ -1295,9 +1319,10 @@ sub buildstatusbar {
             if ( $lglobal{scanno_hl} ) {
                 $lglobal{scanno_hl}          = 0;
                 $lglobal{highlighttempcolor} = 'gray';
-            } else {
+            }
+            else {
                 scannosfile() unless $scannoslist;
-                return        unless $scannoslist;
+                return unless $scannoslist;
                 $lglobal{scanno_hl}          = 1;
                 $lglobal{highlighttempcolor} = $highlightcolor;
             }
@@ -1337,7 +1362,8 @@ sub buildstatusbar {
                 ->configure( -relief => 'sunken' );
             if ( $text_window->OverstrikeMode ) {
                 $text_window->OverstrikeMode(0);
-            } else {
+            }
+            else {
                 $text_window->OverstrikeMode(1);
             }
         }
@@ -1393,7 +1419,8 @@ sub drag {
         sub {
             if (OS_Win) {
                 $corner->configure( -cursor => 'size_nw_se' );
-            } else {
+            }
+            else {
                 $corner->configure( -cursor => 'sizing' );
             }
         }
@@ -1453,7 +1480,8 @@ sub toolbar_toggle {    # Set up / remove the tool bar
     if ( $notoolbar && $lglobal{toptool} ) {
         $lglobal{toptool}->destroy;
         undef $lglobal{toptool};
-    } elsif ( !$notoolbar && !$lglobal{toptool} ) {
+    }
+    elsif ( !$notoolbar && !$lglobal{toptool} ) {
 
       # if Tk::ToolBar isn't available, show a message and disable the toolbar
         if ( !$lglobal{ToolBar} ) {
@@ -1687,10 +1715,11 @@ sub updatesel {    # Update Last Selection readout in status bar
             my ( $srow, $scol ) = split /\./, $ranges[0];
             my ( $erow, $ecol ) = split /\./, $ranges[-1];
             $msg
-            = ' R:'
-            . abs( $erow - $srow + 1 ) . ' C:'
-            . abs( $ecol - $scol ) . ' ';
-        } else {
+                = ' R:'
+                . abs( $erow - $srow + 1 ) . ' C:'
+                . abs( $ecol - $scol ) . ' ';
+        }
+        else {
             $msg = " $ranges[0]--$ranges[-1] ";
             if ( $lglobal{selectionpop} ) {
                 $lglobal{selsentry}->delete( '0', 'end' );
@@ -1699,7 +1728,8 @@ sub updatesel {    # Update Last Selection readout in status bar
                 $lglobal{seleentry}->insert( 'end', $ranges[-1] );
             }
         }
-    } else {
+    }
+    else {
         $msg = ' No Selection ';
     }
     my $msgln = length($msg);
@@ -1707,7 +1737,7 @@ sub updatesel {    # Update Last Selection readout in status bar
     no warnings 'uninitialized';
     $lglobal{selmaxlength} = $msgln if ( $msgln > $lglobal{selmaxlength} );
     $lglobal{selectionlabel}
-    ->configure( -text => $msg, -width => $lglobal{selmaxlength} );
+        ->configure( -text => $msg, -width => $lglobal{selmaxlength} );
     update_indicators();
     $text_window->_lineupdate;
 }
@@ -1770,8 +1800,6 @@ sub file_menuitems {
         ],
     ];
 }
-
-
 
 sub file_save {
     my ($name);
@@ -1964,7 +1992,8 @@ sub confirmdiscard {
         );
         if ( $ans =~ /yes/i ) {
             savefile();
-        } else {
+        }
+        else {
             return $ans;
         }
     }
