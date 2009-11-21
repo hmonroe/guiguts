@@ -1863,14 +1863,16 @@ Guiguts.pl post processing toolkit/interface to gutcheck.
 Provides easy to use interface to gutcheck and an array of
 other useful postprocessing functions.
 
-Written by Stephen Schulze
+The current code has been produced by a number of volunteers.
+See the included THANKS file for specifics.
 
 This program may be freely used, modified and distributed.
 No guarantees are made as to its fitness for any purpose.
 Any damages or losses resulting from the use of this software
 are the responsibility of the user.
 
-Partially based on the Gedi editor - Gregs editor.
+Based on original code from Stephen Schulze, in turn 
+based on the Gedi editor - Gregs editor.
 Copyright 1999, 2003 - Greg London
 EOM
 
