@@ -11997,66 +11997,6 @@ sub tidyrun {
     tidypop_up();
 }
 
-sub gutopts {
-    my $gcdialog
-        = $top->DialogBox( -title => 'Gutcheck Options', -buttons => ['OK'] );
-    my $gcopt6 = $gcdialog->add(
-        'Checkbutton',
-        -variable    => \$gcopt[6],
-        -selectcolor => $lglobal{checkcolor},
-        -text        => '-v Enable verbose mode (Recommended).',
-    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-    my $gcopt0 = $gcdialog->add(
-        'Checkbutton',
-        -variable    => \$gcopt[0],
-        -selectcolor => $lglobal{checkcolor},
-        -text        => '-t Disable check for common typos.',
-    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-    my $gcopt1 = $gcdialog->add(
-        'Checkbutton',
-        -variable    => \$gcopt[1],
-        -selectcolor => $lglobal{checkcolor},
-        -text        => '-x Disable paranoid mode.',
-    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-    my $gcopt2 = $gcdialog->add(
-        'Checkbutton',
-        -variable    => \$gcopt[2],
-        -selectcolor => $lglobal{checkcolor},
-        -text        => '-p Report ALL unbalanced double quotes.',
-    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-    my $gcopt3 = $gcdialog->add(
-        'Checkbutton',
-        -variable    => \$gcopt[3],
-        -selectcolor => $lglobal{checkcolor},
-        -text        => '-s Report ALL unbalanced single quotes.',
-    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-    my $gcopt4 = $gcdialog->add(
-        'Checkbutton',
-        -variable    => \$gcopt[4],
-        -selectcolor => $lglobal{checkcolor},
-        -text        => '-m Interpret HTML markup.',
-    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-    my $gcopt5 = $gcdialog->add(
-        'Checkbutton',
-        -variable    => \$gcopt[5],
-        -selectcolor => $lglobal{checkcolor},
-        -text        => '-l Do not report non DOS newlines.',
-    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-    my $gcopt7 = $gcdialog->add(
-        'Checkbutton',
-        -variable    => \$gcopt[7],
-        -selectcolor => $lglobal{checkcolor},
-        -text        => '-u Flag words from the .typ file.',
-    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-    my $gcopt8 = $gcdialog->add(
-        'Checkbutton',
-        -variable    => \$gcopt[8],
-        -selectcolor => $lglobal{checkcolor},
-        -text        => '-d Ignore DP style page separators.',
-    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-    $gcdialog->Show;
-    saveset();
-}
 
 
 
@@ -13748,30 +13688,6 @@ sub hotkeyshelp {
     }
 }
 
-sub BindMouseWheel {
-    my ($w) = @_;
-    if (OS_Win) {
-        $w->bind(
-            '<MouseWheel>' => [
-                sub {
-                    $_[0]->yview( 'scroll', -( $_[1] / 120 ) * 3, 'units' );
-                },
-                Ev('D')
-            ]
-        );
-    } else {
-        $w->bind(
-            '<4>' => sub {
-                $_[0]->yview( 'scroll', -3, 'units' ) unless $Tk::strictMotif;
-            }
-        );
-        $w->bind(
-            '<5>' => sub {
-                $_[0]->yview( 'scroll', +3, 'units' ) unless $Tk::strictMotif;
-            }
-        );
-    }
-}
 
 sub working {
     my $msg = shift;
@@ -18743,6 +18659,7 @@ sub pmovedown {    # move the page marker down a line
     $textwindow->see($mark);
 }
 
+# FIXME: rename save_settings
 sub saveset {
     my ( $index, $savethis );
     my $thispath = $0;
@@ -18808,7 +18725,7 @@ sub saveset {
             print $save_handle qq/\t"$index",\n/;
         }
         print $save_handle ");\n\n";
-
+        if
         print $save_handle ("\@replace_history = (\n");
 
         @array = @replace_history;
@@ -18822,12 +18739,14 @@ sub saveset {
 
 sub os_normal {
     $_[0] =~ s|/|\\|g if OS_Win;
+
     return $_[0];
 }
 
 sub escape_problems {
     $_[0] =~ s/\\+$/\\\\/g;
     $_[0] =~ s/(?!<\\)'/\\'/g;
+    print "DEBUG: escape_problems: $_[0]\n";
     return $_[0];
 }
 
@@ -19424,15 +19343,6 @@ sub text_convert_options {
     saveset();
 }
 
-## Low level file processing functions
-
-# This turns long Windows path to DOS path, e.g., C:\Program Files\ 
-# becomes C:\Progra~1\.
-# Probably need this for DOS command window on Win98/95. Needed for XP also.
-sub dos_path {
-    $_[0] = Win32::GetShortPathName( $_[0] );
-    return $_[0];
-}
 
 ## FIXME: These are barfing on Unix systems, apparently.
 # Normalize line endings

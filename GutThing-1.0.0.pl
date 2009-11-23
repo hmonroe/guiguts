@@ -196,7 +196,7 @@ else {
     $lglobal{ImageSize} = 0;
 }
 
-# Build the main window.
+### Build the main window.
 
 my $window_title = "GutThing-" . $VERSION;
 my $mw = tkinit( -title => $window_title );
@@ -318,7 +318,7 @@ if (@ARGV) {
     $lglobal{global_filename} = shift @ARGV;
     if ( -e $lglobal{global_filename} ) {
         $mw->update; # it may be a big file, draw the window, and then load it
-        openfile( $lglobal{global_filename} );
+        file_open( $lglobal{global_filename} );
     }
 }
 else {
@@ -330,7 +330,6 @@ set_autosave() if $autosave;
 $text_window->CallNextGUICallback;
 
 $mw->repeat( 200, \&updatesel );
-### End window build
 
 ### Subroutines
 
@@ -1442,11 +1441,11 @@ sub drag {
         '<B1-Motion>',
         sub {
             my $x
-                = $scrolledwidget->toplevel->width 
+                = $scrolledwidget->toplevel->width
                 - $lglobal{x}
                 + $scrolledwidget->toplevel->pointerx;
             my $y
-                = $scrolledwidget->toplevel->height 
+                = $scrolledwidget->toplevel->height
                 - $lglobal{y}
                 + $scrolledwidget->toplevel->pointery;
             ( $lglobal{x}, $lglobal{y} ) = (
@@ -1620,94 +1619,7 @@ sub toolbar_toggle {    # Set up / remove the tool bar
     saveset();
 }
 
-sub os_normal {
-    $_[0] =~ s|/|\\|g if OS_Win;
-    return $_[0];
-}
 
-# Writes setting.rc file
-sub saveset {
-    my ( $index, $savethis );
-    my $thispath = $0;
-    $thispath =~ s/[^\\]*$//;
-    my $savefile = $thispath . 'setting.rc';
-    $geometry = $mw->geometry unless $geometry;
-    if ( open my $save_handle, '>', $savefile ) {
-        print $save_handle
-            "# This file contains your saved settings for guiguts.
-# It is automatically generated when you save your settings.
-# If you delete it, all the settings will revert to defaults.
-# You shouldn't ever have to edit this file manually.\n\n"
-            ;
-
-        print $save_handle '@gcopt = (';
-        print $save_handle "$_," || '0,' for @gcopt;
-        print $save_handle ");\n\n";
-
-        for (
-            qw/activecolor auto_page_marks autobackup autosave autosaveinterval blocklmargin blockrmargin
-            defaultindent fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
-            highlightcolor history_size jeebiesmode lmargin nobell nohighlights notoolbar rmargin
-            rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm italic_char bold_char/
-            )
-        {
-            print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
-                eval '$' . $_, "';\n";
-        }
-        print $save_handle "\n";
-
-        for (
-            qw/globallastpath globalspellpath globalspelldictopt globalviewerpath globalbrowserstart
-            gutpath jeebiespath scannospath tidycommand/
-            )
-        {
-            print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
-                escape_problems( os_normal( eval '$' . $_ ) ), "';\n";
-        }
-
-        print $save_handle ("\n\@recentfile = (\n");
-        for (@recentfile) {
-            print $save_handle "\t'", escape_problems($_), "',\n";
-        }
-        print $save_handle (");\n\n");
-
-        print $save_handle ("\@extops = (\n");
-        for $index ( 0 .. $#extops ) {
-            my $label   = escape_problems( $extops[$index]{label} );
-            my $command = escape_problems( $extops[$index]{command} );
-            print $save_handle
-                "\t{'label' => '$label', 'command' => '$command'},\n";
-        }
-        print $save_handle ");\n\n";
-
-        print $save_handle '@mygcview = (';
-        for (@mygcview) { print $save_handle "$_," }
-        print $save_handle (");\n\n");
-
-        print $save_handle ("\@search_history = (\n");
-        my @array = @search_history;
-        for $index (@array) {
-            $index =~ s/([^A-Za-z0-9 ])/'\x{'.(sprintf "%x", ord $1).'}'/eg;
-            print $save_handle qq/\t"$index",\n/;
-        }
-        print $save_handle ");\n\n";
-
-        print $save_handle ("\@replace_history = (\n");
-
-        @array = @replace_history;
-        for $index (@array) {
-            $index =~ s/([^A-Za-z0-9 ])/'\x{'.(sprintf "%x", ord $1).'}'/eg;
-            print $save_handle qq/\t"$index",\n/;
-        }
-        print $save_handle ");\n\n1;\n";
-    }
-}
-
-sub escape_problems {
-    $_[0] =~ s/\\+$/\\\\/g;
-    $_[0] =~ s/(?!<\\)'/\\'/g;
-    return $_[0];
-}
 
 sub updatesel {    # Update Last Selection readout in status bar
     my @ranges = $text_window->tagRanges('sel');
@@ -1755,7 +1667,7 @@ sub scrolldismiss {
 }
 
 
-# Menus
+### Menus
 sub menubar_menuitems {
     [   map [ 'cascade', $_->[0],
             -menuitems => $_->[1],
@@ -1788,7 +1700,7 @@ sub file_menuitems {
             -underline   => 0,
             -accelerator => 'Ctrl+s'
         ],
-        [ 'command', 'Save As', 
+        [ 'command', 'Save As',
           -command => \&file_saveas,
           -underline => 5,
         ],
@@ -1801,7 +1713,7 @@ sub file_menuitems {
           -underline => 0,
         ],
         '',
-        [ 'command', 'Import Prep Text Files', 
+        [ 'command', 'Import Prep Text Files',
           -command => \&file_prep_import,
         ],
         [   'command', 'Export As Prep Text Files',
@@ -1943,108 +1855,6 @@ sub file_saveas {    # Determine which save routine to use and then use it
     update_indicators();
 }
 
-# save the .bin file associated with the text file
-sub file_bin_save {
-    push @operations, ( localtime() . ' - File Saved' );
-    oppopupdate() if $lglobal{oppop};
-    my $mark = '1.0';
-    while ( $text_window->markPrevious($mark) ) {
-        $mark = $text_window->markPrevious($mark);
-    }
-    my $markindex;
-    while ($mark) {
-        if ( $mark =~ /Pg(\S+)/ ) {
-            $markindex                  = $text_window->index($mark);
-            $pagenumbers{$mark}{offset} = $markindex;
-            $mark                       = $text_window->markNext($mark);
-        } else {
-            $mark = $text_window->markNext($mark) if $mark;
-            next;
-        }
-    }
-    return if ( $lglobal{global_filename} =~ /No File Loaded/ );
-    my $binname = "$lglobal{global_filename}.bin";
-    if ( $text_window->markExists('spellbkmk') ) {
-        $spellindexbkmrk = $text_window->index('spellbkmk');
-    } else {
-        $spellindexbkmrk = '';
-    }
-    my $bak = "$binname.bak";
-    if ( -e $bak ) {
-        my $perms = ( stat($bak) )[2] & 07777;
-        unless ( $perms & 0300 ) {
-            $perms = $perms | 0300;
-            chmod $perms, $bak or warn "Can not back up .bin file: $!\n";
-        }
-        unlink $bak;
-    }
-    if ( -e $binname ) {
-        my $perms = ( stat($binname) )[2] & 07777;
-        unless ( $perms & 0300 ) {
-            $perms = $perms | 0300;
-            chmod $perms, $binname
-                or warn "Can not save .bin file: $!\n" and return;
-        }
-        rename $binname, $bak or warn "Can not back up .bin file: $!\n";
-    }
-    if ( open my $bin, '>', $binname ) {
-        print $bin "\%pagenumbers = (\n";
-        for my $page ( sort { $a cmp $b } keys %pagenumbers ) {
-
-            no warnings 'uninitialized';
-            print $bin " '$page' => {";
-            print $bin "'offset' => '$pagenumbers{$page}{offset}', ";
-            print $bin "'label' => '$pagenumbers{$page}{label}', ";
-            print $bin "'style' => '$pagenumbers{$page}{style}', ";
-            print $bin "'action' => '$pagenumbers{$page}{action}', ";
-            print $bin "'base' => '$pagenumbers{$page}{base}'},\n";
-        }
-        print $bin ");\n\n";
-
-        print $bin '$bookmarks[0] = \''
-        . $text_window->index('insert') . "';\n";
-        for ( 1 .. 5 ) {
-            print $bin '$bookmarks[' 
-            . $_ 
-            . '] = \''
-            . $text_window->index( 'bkmk' . $_ ) . "';\n"
-            if $bookmarks[$_];
-        }
-        if ($pngspath) {
-            print $bin
-            "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
-        }
-        my ( $page, $prfr );
-        delete $proofers{''};
-        foreach $page ( sort keys %proofers ) {
-
-            no warnings 'uninitialized';
-            for my $round ( 1 .. $lglobal{numrounds} ) {
-                if ( defined $proofers{$page}->[$round] ) {
-                    print $bin '$proofers{\'' 
-                    . $page . '\'}[' 
-                    . $round
-                    . '] = \''
-                    . $proofers{$page}->[$round] . '\';' . "\n";
-                }
-            }
-        }
-        print $bin "\n\n";
-        print $bin "\@operations = (\n";
-        for $mark (@operations) {
-            $mark = escape_problems($mark);
-            print $bin "'$mark',\n";
-        }
-        print $bin ");\n\n";
-        print $bin "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
-        print $bin
-        "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
-        print $bin '1;';
-        close $bin;
-    } else {
-        $mw->BackTrace("Cannot open $binname:$!");
-    }
-}
 
 
 sub file_include    { }
@@ -2145,12 +1955,15 @@ sub selection_menuitems {
     ];
 }
 
+
+### Fixup Menu
 sub fixup_menuitems {
     [   [ 'command', 'Run Word Frequency' ],
         [ 'command', 'Run ~Gutcheck',
-          -command => \&gutcheck, 
+          -command => \&gutcheck,
         ],
-        [ 'command', 'Gutcheck options' ],
+        [ 'command', 'Gutcheck options',
+        -command => \&gutopts],
         [ 'command', 'Run Jeebies' ],
         '',
         [ 'command', 'Remove End-of-line Spaces' ],
@@ -2271,6 +2084,7 @@ sub gcheckpop_up {
         $lglobal{gcpop}->title('Gutcheck');
         $lglobal{gcpop}->geometry($geometry2) if $geometry2;
         $lglobal{gcpop}->transient($mw)      if $stayontop;
+
         my $ptopframe = $lglobal{gcpop}->Frame->pack;
         my $opsbutton = $ptopframe->Button(
             -activebackground => $activecolor,
@@ -2314,6 +2128,7 @@ sub gcheckpop_up {
             -font        => $lglobal{font},
             -selectmode  => 'single',
             -activestyle => 'none',
+            -takefocus => 1,
             )->pack(
             -anchor => 'nw',
             -fill   => 'both',
@@ -2766,9 +2581,71 @@ sub gutcheckrun {
     my ( $gutcheckstart, $gutcheckoptions, $thisfile ) = @_;
     system(qq/$gutcheckstart $gutcheckoptions $thisfile > gutrslts.txt/);
 }
+
+sub gutopts {
+    my $gcdialog
+        = $mw->DialogBox( -title => 'Gutcheck Options', -buttons => ['OK'] );
+    my $gcopt6 = $gcdialog->add(
+        'Checkbutton',
+        -variable    => \$gcopt[6],
+        -selectcolor => $lglobal{checkcolor},
+        -text        => '-v Enable verbose mode (Recommended).',
+    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+    my $gcopt0 = $gcdialog->add(
+        'Checkbutton',
+        -variable    => \$gcopt[0],
+        -selectcolor => $lglobal{checkcolor},
+        -text        => '-t Disable check for common typos.',
+    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+    my $gcopt1 = $gcdialog->add(
+        'Checkbutton',
+        -variable    => \$gcopt[1],
+        -selectcolor => $lglobal{checkcolor},
+        -text        => '-x Disable paranoid mode.',
+    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+    my $gcopt2 = $gcdialog->add(
+        'Checkbutton',
+        -variable    => \$gcopt[2],
+        -selectcolor => $lglobal{checkcolor},
+        -text        => '-p Report ALL unbalanced double quotes.',
+    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+    my $gcopt3 = $gcdialog->add(
+        'Checkbutton',
+        -variable    => \$gcopt[3],
+        -selectcolor => $lglobal{checkcolor},
+        -text        => '-s Report ALL unbalanced single quotes.',
+    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+    my $gcopt4 = $gcdialog->add(
+        'Checkbutton',
+        -variable    => \$gcopt[4],
+        -selectcolor => $lglobal{checkcolor},
+        -text        => '-m Interpret HTML markup.',
+    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+    my $gcopt5 = $gcdialog->add(
+        'Checkbutton',
+        -variable    => \$gcopt[5],
+        -selectcolor => $lglobal{checkcolor},
+        -text        => '-l Do not report non DOS newlines.',
+    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+    my $gcopt7 = $gcdialog->add(
+        'Checkbutton',
+        -variable    => \$gcopt[7],
+        -selectcolor => $lglobal{checkcolor},
+        -text        => '-u Flag words from the .typ file.',
+    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+    my $gcopt8 = $gcdialog->add(
+        'Checkbutton',
+        -variable    => \$gcopt[8],
+        -selectcolor => $lglobal{checkcolor},
+        -text        => '-d Ignore DP style page separators.',
+    )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+    $gcdialog->Show;
+    saveset();
+}
+
 ## End GutCheck
 
-
+### Text Processing Menu
 sub text_menuitems {
     [   [ 'command', 'Convert Italics' ],
         [ 'command', 'Convert Bold' ],
@@ -2778,6 +2655,14 @@ sub text_menuitems {
         [ 'command', 'Options' ],
     ];
 }
+
+### Text Processing
+sub thoughtbreak {    # Insert a "Thought break" (duh)
+    $text_window->insert( ( $text_window->index('insert') ) . ' lineend',
+        '       *' x 5 );
+}
+
+
 
 sub external_menuitems {
     [ [ 'command', '' ], [ 'command', '' ], ];
@@ -2837,7 +2722,7 @@ No guarantees are made as to its fitness for any purpose.
 Any damages or losses resulting from the use of this software
 are the responsibility of the user.
 
-Based on original code from Stephen Schulze, in turn 
+Based on original code from Stephen Schulze, in turn
 based on the Gedi editor - Gregs editor.
 Copyright 1999, 2003 - Greg London
 EOM
@@ -2849,8 +2734,8 @@ EOM
     } else {
         $lglobal{aboutpop} = $mw->Toplevel;
         $lglobal{aboutpop}->title('About');
-        $lglobal{aboutpop}->Label( 
-            -justify => "left", 
+        $lglobal{aboutpop}->Label(
+            -justify => "left",
             -text => $about_text)->pack;
         my $button_ok = $lglobal{aboutpop}->Button(
             -activebackground => $activecolor,
@@ -2867,17 +2752,7 @@ EOM
 }
 
 
-
-
-
-
-### Text Processing
-sub thoughtbreak {    # Insert a "Thought break" (duh)
-    $text_window->insert( ( $text_window->index('insert') ) . ' lineend',
-        '       *' x 5 );
-}
-
-# Missing module popups
+### Missing module popups
 sub no_modules {
   my $optional_msg = "Some optional modules are missing. Install for added functionality.\n\n";
   my $leven_msg;
@@ -2889,7 +2764,7 @@ sub no_modules {
   if (!$lglobal{ImageSize} ) {
     $image_size_msg = "Missing Image::Size module.\n\n";
   }
-  
+
   if ( !$lglobal{LevenshteinXS} or !$lglobal{ImageSize} ) {
     my $dbox = $mw->Dialog(
                            -text => "$optional_msg $leven_msg $image_size_msg",
@@ -2900,5 +2775,247 @@ sub no_modules {
   }
 }
 no_modules();
+
+
+### Low level file processing functions
+
+# This turns long Windows path to DOS path, e.g., C:\Program Files\
+# becomes C:\Progra~1\.
+sub dos_path {
+    $_[0] = Win32::GetShortPathName( $_[0] );
+    return $_[0];
+}
+
+sub os_normal {
+    $_[0] =~ s|/|\\|g if OS_Win;
+    print "DEBUG: os_normal: $_[0]\n";
+    return $_[0];
+}
+
+sub escape_problems {
+    $_[0] =~ s/\\+$/\\\\/g;
+    $_[0] =~ s/(?!<\\)'/\\'/g;
+    print "DEBUG: escape_problems: $_[0]\n";
+    return $_[0];
+}
+
+### Miscellaneous (for now)
+sub BindMouseWheel {
+    my ($w) = @_;
+    if (OS_Win) {
+        $w->bind(
+            '<MouseWheel>' => [
+                sub {
+                    $_[0]->yview( 'scroll', -( $_[1] / 120 ) * 3, 'units' );
+                },
+                Ev('D')
+            ]
+        );
+    } else {
+        $w->bind(
+            '<4>' => sub {
+                $_[0]->yview( 'scroll', -3, 'units' ) unless $Tk::strictMotif;
+            }
+        );
+        $w->bind(
+            '<5>' => sub {
+                $_[0]->yview( 'scroll', +3, 'units' ) unless $Tk::strictMotif;
+            }
+        );
+    }
+}
+
+# save the .bin file associated with the text file
+sub file_bin_save {
+    push @operations, ( localtime() . ' - File Saved' );
+    oppopupdate() if $lglobal{oppop};
+    my $mark = '1.0';
+    while ( $text_window->markPrevious($mark) ) {
+        $mark = $text_window->markPrevious($mark);
+    }
+    my $markindex;
+    while ($mark) {
+        if ( $mark =~ /Pg(\S+)/ ) {
+            $markindex                  = $text_window->index($mark);
+            $pagenumbers{$mark}{offset} = $markindex;
+            $mark                       = $text_window->markNext($mark);
+        } else {
+            $mark = $text_window->markNext($mark) if $mark;
+            next;
+        }
+    }
+    return if ( $lglobal{global_filename} =~ /No File Loaded/ );
+    my $binname = "$lglobal{global_filename}.bin";
+    if ( $text_window->markExists('spellbkmk') ) {
+        $spellindexbkmrk = $text_window->index('spellbkmk');
+    } else {
+        $spellindexbkmrk = '';
+    }
+    my $bak = "$binname.bak";
+    if ( -e $bak ) {
+        my $perms = ( stat($bak) )[2] & 07777;
+        unless ( $perms & 0300 ) {
+            $perms = $perms | 0300;
+            chmod $perms, $bak or warn "Can not back up .bin file: $!\n";
+        }
+        unlink $bak;
+    }
+    if ( -e $binname ) {
+        my $perms = ( stat($binname) )[2] & 07777;
+        unless ( $perms & 0300 ) {
+            $perms = $perms | 0300;
+            chmod $perms, $binname
+                or warn "Can not save .bin file: $!\n" and return;
+        }
+        rename $binname, $bak or warn "Can not back up .bin file: $!\n";
+    }
+    if ( open my $bin, '>', $binname ) {
+        print $bin "\%pagenumbers = (\n";
+        for my $page ( sort { $a cmp $b } keys %pagenumbers ) {
+
+            no warnings 'uninitialized';
+            print $bin " '$page' => {";
+            print $bin "'offset' => '$pagenumbers{$page}{offset}', ";
+            print $bin "'label' => '$pagenumbers{$page}{label}', ";
+            print $bin "'style' => '$pagenumbers{$page}{style}', ";
+            print $bin "'action' => '$pagenumbers{$page}{action}', ";
+            print $bin "'base' => '$pagenumbers{$page}{base}'},\n";
+        }
+        print $bin ");\n\n";
+
+        print $bin '$bookmarks[0] = \''
+        . $text_window->index('insert') . "';\n";
+        for ( 1 .. 5 ) {
+            print $bin '$bookmarks['
+            . $_
+            . '] = \''
+            . $text_window->index( 'bkmk' . $_ ) . "';\n"
+            if $bookmarks[$_];
+        }
+        if ($pngspath) {
+            print $bin
+            "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
+        }
+        my ( $page, $prfr );
+        delete $proofers{''};
+        foreach $page ( sort keys %proofers ) {
+
+            no warnings 'uninitialized';
+            for my $round ( 1 .. $lglobal{numrounds} ) {
+                if ( defined $proofers{$page}->[$round] ) {
+                    print $bin '$proofers{\''
+                    . $page . '\'}['
+                    . $round
+                    . '] = \''
+                    . $proofers{$page}->[$round] . '\';' . "\n";
+                }
+            }
+        }
+        print $bin "\n\n";
+        print $bin "\@operations = (\n";
+        for $mark (@operations) {
+            $mark = escape_problems($mark);
+            print $bin "'$mark',\n";
+        }
+        print $bin ");\n\n";
+        print $bin "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
+        print $bin
+        "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
+        print $bin '1;';
+        close $bin;
+    } else {
+        $mw->BackTrace("Cannot open $binname:$!");
+    }
+}
+
+# Writes setting.rc file
+# FIXME: rename save_settings
+sub saveset {
+    my ( $index, $savethis );
+    my $thispath = $0;
+    $thispath =~ s/[^\\]*$//;
+    my $savefile = $thispath . 'setting.rc';
+    $geometry = $mw->geometry unless $geometry;
+    if ( open my $save_handle, '>', $savefile ) {
+        print $save_handle
+            "# This file contains your saved settings for guiguts.
+# It is automatically generated when you save your settings.
+# If you delete it, all the settings will revert to defaults.
+# You shouldn't ever have to edit this file manually.\n\n"
+            ;
+
+        print $save_handle '@gcopt = (';
+        print $save_handle "$_," || '0,' for @gcopt;
+        print $save_handle ");\n\n";
+
+        for (
+            qw/activecolor
+               auto_page_marks
+               autobackup autosave autosaveinterval
+               blocklmargin blockrmargin
+               defaultindent fontname fontsize
+               fontweight geometry geometry2 geometry3
+               globalaspellmode
+               highlightcolor history_size jeebiesmode
+               lmargin nobell nohighlights notoolbar rmargin
+               rwhyphenspace singleterm stayontop
+               toolside utffontname utffontsize vislnnm
+               italic_char bold_char/
+            )
+        {
+            print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
+                eval '$' . $_, "';\n";
+        }
+        print $save_handle "\n";
+
+        for (
+            qw/globallastpath globalspellpath 
+               globalspelldictopt globalviewerpath 
+               globalbrowserstart gutpath jeebiespath 
+               scannospath tidycommand/
+            )
+        {
+            print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
+                escape_problems( os_normal( eval '$' . $_ ) ), "';\n";
+        }
+
+        print $save_handle ("\n\@recentfile = (\n");
+        for (@recentfile) {
+            print $save_handle "\t'", escape_problems($_), "',\n";
+        }
+        print $save_handle (");\n\n");
+
+        print $save_handle ("\@extops = (\n");
+        for $index ( 0 .. $#extops ) {
+            my $label   = escape_problems( $extops[$index]{label} );
+            my $command = escape_problems( $extops[$index]{command} );
+            print $save_handle
+                "\t{'label' => '$label', 'command' => '$command'},\n";
+        }
+        print $save_handle ");\n\n";
+
+        print $save_handle '@mygcview = (';
+        for (@mygcview) { print $save_handle "$_," }
+        print $save_handle (");\n\n");
+
+        print $save_handle ("\@search_history = (\n");
+        my @array = @search_history;
+        for $index (@array) {
+            $index =~ s/([^A-Za-z0-9 ])/'\x{'.(sprintf "%x", ord $1).'}'/eg;
+            print $save_handle qq/\t"$index",\n/;
+        }
+        print $save_handle ");\n\n";
+
+        print $save_handle ("\@replace_history = (\n");
+
+        @array = @replace_history;
+        for $index (@array) {
+            $index =~ s/([^A-Za-z0-9 ])/'\x{'.(sprintf "%x", ord $1).'}'/eg;
+            print $save_handle qq/\t"$index",\n/;
+        }
+        print $save_handle ");\n\n1;\n";
+    }
+}
+
 
 MainLoop;
