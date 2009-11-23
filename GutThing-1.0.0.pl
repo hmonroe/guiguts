@@ -60,10 +60,12 @@ use TextUnicode;
 
 use constant OS_Win => $^O =~ /Win/;
 
-# ignore any watchdog timer alarms. Subroutines that take a long time to complete can trip it
+# ignore any watchdog timer alarms. Subroutines that take a long time to
+# complete can trip it
 $SIG{ALRM} = 'IGNORE';
-$SIG{INT} = sub { myexit() };
+$SIG{INT} = sub { gt_exit() };
 
+$|++;
 my $DEBUG;    # FIXME: This and all references can go.
 my $VERSION        = "0.3.0";
 my $currentver     = $VERSION;
@@ -279,7 +281,7 @@ my $text_window = $text_frame->LineNumberText(
     -fill   => 'both'
     );
 
-$mw->protocol( 'WM_DELETE_WINDOW' => \&myexit );
+$mw->protocol( 'WM_DELETE_WINDOW' => \&gt_exit );
 
 $text_window->SetGUICallbacks(
     [    # routines to call every time the text is edited
@@ -1742,6 +1744,17 @@ sub updatesel {    # Update Last Selection readout in status bar
     $text_window->_lineupdate;
 }
 
+sub scrolldismiss {
+    return unless $lglobal{scroller};
+    $text_window->configure( -cursor => $lglobal{oldcursor} );
+    $lglobal{scroller}->destroy;
+    $lglobal{scroller} = '';
+    $lglobal{scroll_id}->cancel if $lglobal{scroll_id};
+    $lglobal{scroll_id}     = '';
+    $lglobal{scrolltrigger} = 0;
+}
+
+
 # Menus
 sub menubar_menuitems {
     [   map [ 'cascade', $_->[0],
@@ -1768,56 +1781,288 @@ sub file_menuitems {
             -accelerator => 'Ctrl+o'
         ],
         '',
+        # FIXME: file_recent here
+        '',
         [   'command', 'Save',
             -command     => \&file_save,
             -underline   => 0,
             -accelerator => 'Ctrl+s'
         ],
-        [ 'command', 'Save As', -command => \&file_saveas, -underline => 5, ],
+        [ 'command', 'Save As', 
+          -command => \&file_saveas,
+          -underline => 5,
+        ],
         [   'command', 'Include',
             -command   => \&file_include,
             -underline => 0,
         ],
-        [ 'command', 'Close', -command => \&file_close, -underline => 0, ],
+        [ 'command', 'Close',
+          -command => \&file_close,
+          -underline => 0,
+        ],
         '',
-        [ 'command', 'Import Prep Text Files', -command => \&prep_import, ],
-        [   'command', 'Export As Prep Text Files', -command => \&prep_export,
+        [ 'command', 'Import Prep Text Files', 
+          -command => \&file_prep_import,
+        ],
+        [   'command', 'Export As Prep Text Files',
+            -command => \&file_prep_export,
         ],
         '',
         [   'command', 'Guess Page Markers',
-            -command   => \&guess_pagemarks,
+            -command   => \&file_guess_pagemarks,
             -underline => 0,
         ],
         [   'command', 'Set Page Markers',
-            -command   => \&set_pagemarks,
+            -command   => \&file_set_pagemarks,
             -underline => 9,
         ],
         '',
         [   'command', 'Exit',
-            -command     => \&gg_exit,
+            -command     => \&gt_exit,
             -underline   => 1,
             -accelerator => 'Ctrl+q'
         ],
     ];
 }
 
+#We'll keep relevant code near our menu build procedures.
+# File Open
+
+# Open file if command line arg present.
+if ( @ARGV == 1 ) { $text_window->Load( shift @ARGV ); }
+
+sub confirmdiscard {
+    if ( $text_window->numberChanges ) {
+        my $ans = $mw->messageBox(
+            -icon    => 'warning',
+            -type    => 'YesNoCancel',
+            -default => 'yes',
+            -message =>
+                'The text has been modified without being saved. Save edits?'
+        );
+        if ( $ans =~ /yes/i ) {
+            savefile();
+        }
+        else {
+            return $ans;
+        }
+    }
+    return 'no';
+}
+
+sub confirmempty {
+    my $answer = confirmdiscard();
+    if ( $answer =~ /no/i ) {
+        if ( $lglobal{page_num_label} ) {
+            $lglobal{page_num_label}->destroy;
+            undef $lglobal{page_num_label};
+        }
+        if ( $lglobal{pagebutton} ) {
+            $lglobal{pagebutton}->destroy;
+            undef $lglobal{pagebutton};
+        }
+        if ( $lglobal{proofbutton} ) {
+            $lglobal{proofbutton}->destroy;
+            undef $lglobal{proofbutton};
+        }
+        $text_window->EmptyDocument;
+    }
+    return $answer;
+}
+
+sub file_open {
+    my ($name);
+
+    return if ( confirmempty() =~ /cancel/i );
+    my $types = [
+        [ 'Text Files', [qw/.txt .text .ggp .htm .html .bk1 .bk2/] ],
+        [ 'All Files',  ['*'] ],
+    ];
+    $name = $text_window->getOpenFile(
+        -filetypes  => $types,
+        -title      => 'Open File',
+        -initialdir => $globallastpath,
+    );
+    if ( defined($name) and length($name) ) {
+        open_file($name);
+    }
+}
+
+sub open_file {
+    my $name = shift;
+    $text_window->Load($name);
+}
+
+# File Save
 sub file_save {
     my ($name);
     $text_window->SaveUTF($name);
 }
 
-sub file_saveas     { }
+sub file_saveas {    # Determine which save routine to use and then use it
+    viewpagenums() if ( $lglobal{seepagenums} ); # FIXME: Does this really belong here?
+    if ( $lglobal{global_filename} =~ /No File Loaded/ ) {
+        if ( $text_window->numberChanges == 0 ) {
+            return;
+        }
+        my ($name);
+        $name = $text_window->getSaveFile(
+            -title      => 'Save As',
+            -initialdir => $globallastpath
+        );
+        if ( defined($name) and length($name) ) {
+            $text_window->SaveUTF($name);
+            $name = os_normal($name);
+            recentupdate($name);
+        } else {
+            return;
+        }
+    } else {
+        if ($autobackup) {
+            if ( -e $lglobal{global_filename} ) {
+                if ( -e "$lglobal{global_filename}.bk2" ) {
+                    unlink "$lglobal{global_filename}.bk2";
+                }
+                if ( -e "$lglobal{global_filename}.bk1" ) {
+                    rename(
+                        "$lglobal{global_filename}.bk1",
+                        "$lglobal{global_filename}.bk2"
+                    );
+                }
+                rename(
+                    $lglobal{global_filename},
+                    "$lglobal{global_filename}.bk1"
+                );
+            }
+        }
+        $text_window->SaveUTF;
+    }
+    $text_window->ResetUndo;
+    file_bin_save();
+    set_autosave() if $autosave;
+    update_indicators();
+}
+
+# save the .bin file associated with the text file
+sub file_bin_save {
+    push @operations, ( localtime() . ' - File Saved' );
+    oppopupdate() if $lglobal{oppop};
+    my $mark = '1.0';
+    while ( $text_window->markPrevious($mark) ) {
+        $mark = $text_window->markPrevious($mark);
+    }
+    my $markindex;
+    while ($mark) {
+        if ( $mark =~ /Pg(\S+)/ ) {
+            $markindex                  = $text_window->index($mark);
+            $pagenumbers{$mark}{offset} = $markindex;
+            $mark                       = $text_window->markNext($mark);
+        } else {
+            $mark = $text_window->markNext($mark) if $mark;
+            next;
+        }
+    }
+    return if ( $lglobal{global_filename} =~ /No File Loaded/ );
+    my $binname = "$lglobal{global_filename}.bin";
+    if ( $text_window->markExists('spellbkmk') ) {
+        $spellindexbkmrk = $text_window->index('spellbkmk');
+    } else {
+        $spellindexbkmrk = '';
+    }
+    my $bak = "$binname.bak";
+    if ( -e $bak ) {
+        my $perms = ( stat($bak) )[2] & 07777;
+        unless ( $perms & 0300 ) {
+            $perms = $perms | 0300;
+            chmod $perms, $bak or warn "Can not back up .bin file: $!\n";
+        }
+        unlink $bak;
+    }
+    if ( -e $binname ) {
+        my $perms = ( stat($binname) )[2] & 07777;
+        unless ( $perms & 0300 ) {
+            $perms = $perms | 0300;
+            chmod $perms, $binname
+                or warn "Can not save .bin file: $!\n" and return;
+        }
+        rename $binname, $bak or warn "Can not back up .bin file: $!\n";
+    }
+    if ( open my $bin, '>', $binname ) {
+        print $bin "\%pagenumbers = (\n";
+        for my $page ( sort { $a cmp $b } keys %pagenumbers ) {
+
+            no warnings 'uninitialized';
+            print $bin " '$page' => {";
+            print $bin "'offset' => '$pagenumbers{$page}{offset}', ";
+            print $bin "'label' => '$pagenumbers{$page}{label}', ";
+            print $bin "'style' => '$pagenumbers{$page}{style}', ";
+            print $bin "'action' => '$pagenumbers{$page}{action}', ";
+            print $bin "'base' => '$pagenumbers{$page}{base}'},\n";
+        }
+        print $bin ");\n\n";
+
+        print $bin '$bookmarks[0] = \''
+        . $text_window->index('insert') . "';\n";
+        for ( 1 .. 5 ) {
+            print $bin '$bookmarks[' 
+            . $_ 
+            . '] = \''
+            . $text_window->index( 'bkmk' . $_ ) . "';\n"
+            if $bookmarks[$_];
+        }
+        if ($pngspath) {
+            print $bin
+            "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
+        }
+        my ( $page, $prfr );
+        delete $proofers{''};
+        foreach $page ( sort keys %proofers ) {
+
+            no warnings 'uninitialized';
+            for my $round ( 1 .. $lglobal{numrounds} ) {
+                if ( defined $proofers{$page}->[$round] ) {
+                    print $bin '$proofers{\'' 
+                    . $page . '\'}[' 
+                    . $round
+                    . '] = \''
+                    . $proofers{$page}->[$round] . '\';' . "\n";
+                }
+            }
+        }
+        print $bin "\n\n";
+        print $bin "\@operations = (\n";
+        for $mark (@operations) {
+            $mark = escape_problems($mark);
+            print $bin "'$mark',\n";
+        }
+        print $bin ");\n\n";
+        print $bin "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
+        print $bin
+        "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
+        print $bin '1;';
+        close $bin;
+    } else {
+        $mw->BackTrace("Cannot open $binname:$!");
+    }
+}
+
+
 sub file_include    { }
 sub file_close      { }
-sub prep_import     { }
-sub prep_export     { }
-sub guess_pagemarks { }
-sub set_pagemarks   { }
-sub gg_exit         { exit; }
+sub file_prep_import     { }
+sub file_prep_export     { }
+sub file_guess_pagemarks { }
+sub file_set_pagemarks   { }
+sub gt_exit {
+    if ( confirmdiscard() =~ /no/i ) {
+        aspellstop() if $lglobal{spellpid};
+        $mw->destroy;
+    }
+}
 
 sub edit_menuitems {
-    [   [ 'command', 'Undo', -command => \&gg_undo, ],
-        [ 'command', 'Redo', -command => \&gg_redo, ],
+    [   [ 'command', 'Undo', -command => \&file_undo, ],
+        [ 'command', 'Redo', -command => \&file_redo, ],
         '',
         [ 'command', 'Cut', ],
         [ 'command', 'Copy', ],
@@ -1828,8 +2073,8 @@ sub edit_menuitems {
         [ 'command', 'Unselect All', ],
     ];
 }
-sub gg_undo { $text_window->undo; }
-sub gg_redo { $text_window->redo; }
+sub file_undo { $text_window->undo; }
+sub file_redo { $text_window->redo; }
 
 sub search_menuitems {
     [   [ 'command', 'Search & Replace', ],
@@ -1958,13 +2203,15 @@ sub prefs_menuitems {
         [   'checkbutton',
             'Leave Space Afer End-of-Line Hyphens During Rewrap'
         ],
-        [   'command',
-            'Toggle Line Numbers',
-            -command => \&toggle_line_numbers,
-        ],
+        # [   'command',
+        #     'Toggle Line Numbers',
+        #     -command => \&toggle_line_numbers,
+        # ],
     ];
 }
-sub toggle_line_numbers { $text_window->togglelinenum; }
+
+# FIXME: togglelinenum missing. sub toggle_line_numbers {
+# $text_window->togglelinenum; }
 
 sub help_menuitems {
     [   [ 'command', 'Hot Keys' ],
@@ -1974,73 +2221,78 @@ sub help_menuitems {
         [ 'command', 'Regex Quick Reference' ],
         [ 'command', 'UTF Character Entry' ],
         [ 'command', 'UTF Character Search' ],
+        [ 'command', 'About GutThing', -command => \&about_pop_up],
     ];
 }
 
-# "File Open Routines
+# A litle information about the program
+sub about_pop_up {
+    my $about_text = <<EOM;
+Guiguts.pl post processing toolkit/interface to gutcheck.
 
-if ( @ARGV == 1 ) { $text_window->Load( shift @ARGV ); }
+Provides easy to use interface to gutcheck and an array of
+other useful postprocessing functions.
 
-sub confirmdiscard {
-    if ( $text_window->numberChanges ) {
-        my $ans = $mw->messageBox(
-            -icon    => 'warning',
-            -type    => 'YesNoCancel',
-            -default => 'yes',
-            -message =>
-                'The text has been modified without being saved. Save edits?'
+The current code has been produced by a number of volunteers.
+See the included THANKS file for specifics.
+
+This program may be freely used, modified and distributed.
+No guarantees are made as to its fitness for any purpose.
+Any damages or losses resulting from the use of this software
+are the responsibility of the user.
+
+Based on original code from Stephen Schulze, in turn 
+based on the Gedi editor - Gregs editor.
+Copyright 1999, 2003 - Greg London
+EOM
+
+    if ( defined( $lglobal{aboutpop} ) ) {
+        $lglobal{aboutpop}->deiconify;
+        $lglobal{aboutpop}->raise;
+        $lglobal{aboutpop}->focus;
+    } else {
+        $lglobal{aboutpop} = $mw->Toplevel;
+        $lglobal{aboutpop}->title('About');
+        $lglobal{aboutpop}->Label( 
+            -justify => "left", 
+            -text => $about_text)->pack;
+        my $button_ok = $lglobal{aboutpop}->Button(
+            -activebackground => $activecolor,
+            -text             => 'OK',
+            -command =>
+                sub { $lglobal{aboutpop}->destroy; undef $lglobal{aboutpop} }
+        )->pack( -pady => 6 );
+        $lglobal{aboutpop}->resizable( 'no', 'no' );
+        $lglobal{aboutpop}->protocol( 'WM_DELETE_WINDOW' =>
+                sub { $lglobal{aboutpop}->destroy; undef $lglobal{aboutpop} }
         );
-        if ( $ans =~ /yes/i ) {
-            savefile();
-        }
-        else {
-            return $ans;
-        }
-    }
-    return 'no';
-}
-
-sub confirmempty {
-    my $answer = confirmdiscard();
-    if ( $answer =~ /no/i ) {
-        if ( $lglobal{page_num_label} ) {
-            $lglobal{page_num_label}->destroy;
-            undef $lglobal{page_num_label};
-        }
-        if ( $lglobal{pagebutton} ) {
-            $lglobal{pagebutton}->destroy;
-            undef $lglobal{pagebutton};
-        }
-        if ( $lglobal{proofbutton} ) {
-            $lglobal{proofbutton}->destroy;
-            undef $lglobal{proofbutton};
-        }
-        $text_window->EmptyDocument;
-    }
-    return $answer;
-}
-
-sub file_open {
-    my ($name);
-
-    return if ( confirmempty() =~ /cancel/i );
-    my $types = [
-        [ 'Text Files', [qw/.txt .text .ggp .htm .html .bk1 .bk2/] ],
-        [ 'All Files',  ['*'] ],
-    ];
-    $name = $text_window->getOpenFile(
-        -filetypes  => $types,
-        -title      => 'Open File',
-        -initialdir => $globallastpath,
-    );
-    if ( defined($name) and length($name) ) {
-        open_file($name);
+        $lglobal{aboutpop}->Icon( -image => $icon );
     }
 }
 
-sub open_file {
-    my $name = shift;
-    $text_window->Load($name);
+
+# Missing module popups
+sub no_modules {
+  my $optional_msg = "Some optional modules are missing. Install for added functionality.\n\n";
+  my $leven_msg;
+  my $image_size_msg;
+
+  if ( !$lglobal{LevenshteinXS} ) {
+    $leven_msg = "Missing Text::LevenshteinXS module. \n\n";
+  }
+  if (!$lglobal{ImageSize} ) {
+    $image_size_msg = "Missing Image::Size module.\n\n";
+  }
+  
+  if ( !$lglobal{LevenshteinXS} or !$lglobal{ImageSize} ) {
+    my $dbox = $mw->Dialog(
+                           -text => "$optional_msg $leven_msg $image_size_msg",
+                           -title   => 'Missing Modules',
+                           -buttons => ['OK']
+                          );
+    $dbox->Show;
+  }
 }
+no_modules();
 
 MainLoop;
