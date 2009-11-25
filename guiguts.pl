@@ -60,7 +60,8 @@ use TextUnicode;
 
 use constant OS_Win => $^O =~ /Win/;
 
-# ignore any watchdog timer alarms. Subroutines that take a long time to complete can trip it
+# ignore any watchdog timer alarms. Subroutines that take a long time to
+# complete can trip it
 $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { myexit() };
 
