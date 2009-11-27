@@ -48,56 +48,79 @@ use constant OS_Win => $^O =~ /Win/;
 $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { gt_exit() };
 
-
+# File global variables stored here.
 my %lglobal;
 
-my $win_title = "GutThing"; 
-my $mw = tkinit(-title => $win_title,);
-$mw->minsize(440, 90);
+# Some constants (more or less).
+my $VERSION    = "0.3.0";
+my $currentver = $VERSION;
+my $win_title  = "GutThing-" . $VERSION;
 
+# Application global variables
 our $geometry;
-$mw->bind('<Configure>' => sub {
-            $geometry = $mw->geometry;
-            $lglobal{geometryupdate} = 1;
-            }
+our $activecolor = '#f2f818';    # FIXME: hunt down if not used.
+our $nohighlights;
+our $vislnnm;
+
+# Build main window.
+my $mw = tkinit(
+    -class => "GutThing",
+    -name  => "gutthing",
+    -title => $win_title,
 );
 
-# Set up Main window layout 
-my $text_frame = $mw->Frame->pack( -anchor => 'nw',
-                                    -expand => 'yes',
-                                    -fill => 'both' ) ; # autosizing 
+$mw->minsize( 440, 90 );
+$mw->bind(
+    '<Configure>' => sub {
+        $geometry = $mw->geometry;
+        $lglobal{geometryupdate} = 1;
+    }
+);
+
+# Set up Main window layout
+my $text_frame = $mw->Frame->pack(
+    -anchor => 'nw',
+    -expand => 'yes',
+    -fill   => 'both'
+);
+
+# class = Frame, name = frame
 
 # The actual text widget
+# FIXME: Long line scrolling is foo_barred. Possibly in LineNumber module.
+# class = LineNumberText, name = linenumbertext
 my $text_window = $text_frame->LineNumberText(
-                                             -widget => 'TextUnicode',
-                                             -exportselection => 'true', # 'sel' tag is associated with selections
-                                             # FIXME: -background      => 'white',
-                                             -relief          => 'sunken',
-                                             # FIXME: -font      => $lglobal{font},
-                                             -wrap      => 'none',
-                                             # FIXME: -curlinebg => $activecolor,
-                                            )->pack(
-                                                    -side   => 'bottom',
-                                                    -anchor => 'nw',
-                                                    -expand => 'yes',
-                                                    -fill   => 'both'
-                                                   );
+    -widget => 'TextUnicode',
+    -exportselection => 'true',
+    -relief          => 'sunken',
+
+    # FIXME: -font      => $lglobal{font},
+    -wrap => 'none',
+    )->pack(
+    -side   => 'bottom',
+    -anchor => 'nw',
+    -expand => 'yes',
+    -fill   => 'both'
+    );
+
+# FIXME: $mw->optionAdd( "*linenumbertext.font", "Courier");
+
 sub gt_exit { exit; }
 
 $mw->protocol( 'WM_DELETE_WINDOW' => \&gt_exit );
 
-our $nohighlights;
-our $vislnnm;
+# routines to call every time the text is edited
 $text_window->SetGUICallbacks(
-    [    # routines to call every time the text is edited
-    # FIXME: \&update_indicators,
-    sub {
-        return if $nohighlights;
-        $text_window->HighlightAllPairsBracketingCursor;
-    },
-    sub {
-        $text_window->hidelinenum unless $vislnnm;
-    }
+    [
+
+        # FIXME: \&update_indicators,
+        sub {
+            return if $nohighlights;
+            $text_window->HighlightAllPairsBracketingCursor;
+        },
+        sub {
+            $text_window->hidelinenum unless $vislnnm;
+            }
     ]
 );
 
