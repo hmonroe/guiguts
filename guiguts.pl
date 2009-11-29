@@ -66,7 +66,7 @@ $SIG{INT} = sub { myexit() };
 
 
 my $DEBUG = 0; # FIXME: this can go.
-my $VERSION = "0.2.4";
+my $VERSION = "0.2.5";
 my $currentver = $VERSION;
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
@@ -4692,6 +4692,17 @@ sub spelloptions {
         }
     )->pack( -pady => 4 );
     $spellpathentry->insert( 'end', $globalspellpath );
+
+    my $spellencodinglabel = $spellop->add( 'Label',
+                                            -text => 'Set encoding: default = iso8859-1'
+                                          )->pack;
+
+    my $spellencodingentry = $spellop->add( 'Entry',
+                                            -width => 30,
+                                            -textvariable => \$lglobal{spellencoding},
+                                          )->pack;
+# FIXME: Switching to utf-8 is barfola. Probably down in the checkfil.txt thingy.
+
     my $dictlabel
         = $spellop->add( 'Label', -text => 'Dictionary files' )->pack;
     $dictlist = $spellop->add(
@@ -4991,7 +5002,7 @@ sub aspellstart
 {  # start aspell in interactive mode, repipe stdin and stdout to file handles
     aspellstop();
     my @cmd = (# FIXME: Need to see what options are going to aspell
-        $lglobal{spellexename}, '--encoding=iso8859-1', '-a', '-S', '--sug-mode', $globalaspellmode
+        $lglobal{spellexename}, '-a', '-S', '--sug-mode', $globalaspellmode
     );
     push @cmd, '-d', $globalspelldictopt if $globalspelldictopt;
     $lglobal{spellpid} = open2( \*IN, \*OUT, @cmd );
@@ -5075,12 +5086,12 @@ sub spellget_misspellings {    # get list of misspelled words
         $lglobal{spellindexend} );    # get selection
     $section =~ s/^-----File:.*//g;
     open SAVE, '>:bytes', 'checkfil.txt';
-    print SAVE $section;
+    print SAVE $section; # FIXME: probably encode before printing.
     close SAVE;
     my $spellopt
         = get_spellchecker_version() lt "0.6"
-        ? "-l --encoding=iso8859-1 "
-        : "list --encoding=iso8859-1 "; # FIXME: was utf-8
+        ? "-l --encoding=$lglobal{spellencoding} "
+        : "list --encoding=$lglobal{spellencoding} ";
     $spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
     @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
         ;    # feed the text to aspell, get an array of misspelled words out
@@ -5101,7 +5112,7 @@ sub spellget_misspellings {    # get list of misspelled words
                 . ' | No Misspelled Words Found.' );
     }
     $top->Unbusy( -recurse => 0 );    # done processing
-    unlink 'checkfil.txt';
+# FIXME: uncomment for production use    unlink 'checkfil.txt';
 }
 
 sub spellignoreall {                  # remove ignored words from checklist
@@ -15640,6 +15651,7 @@ sub initialize {
     $lglobal{seepagenums}      = 0;
     $lglobal{selectionsearch}  = 0;
     $lglobal{showblocksize}    = 1;
+    $lglobal{spellencoding}    = "iso8859-1";
     $lglobal{stepmaxwidth}     = 70;
     $lglobal{suspects_only}    = 0;
     $lglobal{tblcoljustify}    = 'l';
