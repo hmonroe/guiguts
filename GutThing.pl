@@ -177,7 +177,7 @@ else {
 }
 
 # load Tk::ToolBar if it is installed
-if ( eval { require Tk::ToolBar; 1; } ) {
+if ( eval { require ToolBar; 1; } ) {
     $lglobal{ToolBar} = 1;
 }
 else {
