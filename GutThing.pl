@@ -20,7 +20,6 @@
 #along with this program; if not, write to the Free Software
 #Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-require 5.008;
 use strict;
 use warnings;
 use FindBin;
@@ -28,23 +27,7 @@ use lib $FindBin::Bin . "/lib";
 
 #use Data::Dumper;
 
-use Tk;
-use Tk::Balloon;
-use Tk::BrowseEntry;
-use Tk::Checkbutton;
-use Tk::Dialog;
-use Tk::DialogBox;
-use Tk::DropSite;
-use Tk::Font;
-use Tk::JPEG;
-use Tk::LabFrame;
-use Tk::Listbox;
-use Tk::PNG;
-use Tk::Pane;
-use Tk::Photo;
-use Tk::ProgressBar;
-use Tk::Radiobutton;
-use Tk::TextEdit;
+
 
 use Cwd;
 use Encode;
@@ -55,13 +38,34 @@ use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
 
+
+use Tk;
+use Tk::widgets qw/Balloon
+    BrowseEntry
+    Checkbutton
+    Dialog
+    DialogBox
+    DropSite
+    Font
+    JPEG
+    LabFrame
+    Listbox
+    PNG
+    Pane
+    Photo
+    ProgressBar
+    Radiobutton
+    TextEdit
+    /;
+
 # Custom Guigut modules
 use LineNumberText;
 use TextUnicode;
 
 use constant OS_Win => $^O =~ /Win/;
 
-# ignore any watchdog timer alarms. Subroutines that take a long time to complete can trip it
+# ignore any watchdog timer alarms. Subroutines that take a long time to
+# complete can trip it
 $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { myexit() };
 
@@ -168,6 +172,7 @@ our @extops = (
 
 my %lglobal;    #All local global variables contained in one hash.
 
+# FIXME: Build a popup message about these.
 if ( eval { require Text::LevenshteinXS } ) {
     $lglobal{LevenshteinXS} = 1;
 }
@@ -177,6 +182,7 @@ else {
 }
 
 # load Tk::ToolBar if it is installed
+# FIXME: Don't need this anymore
 if ( eval { require ToolBar; 1; } ) {
     $lglobal{ToolBar} = 1;
 }
@@ -192,7 +198,7 @@ else {
     $lglobal{ImageSize} = 0;
 }
 
-my $top = MainWindow->new;    # Set up main window
+my $top = tkinit(-title => $window_title,); 
 
 initialize();                 # Initialize a bunch of vars that need it.
 
