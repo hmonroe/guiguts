@@ -4991,7 +4991,7 @@ sub aspellstart
 {  # start aspell in interactive mode, repipe stdin and stdout to file handles
     aspellstop();
     my @cmd = (# FIXME: Need to see what options are going to aspell
-        $lglobal{spellexename}, '--encoding=iso8859-1', '-a', '-S', '--sug-mode', $globalaspellmode
+        $lglobal{spellexename}, '-a', '-S', '--sug-mode', $globalaspellmode
     );
     push @cmd, '-d', $globalspelldictopt if $globalspelldictopt;
     $lglobal{spellpid} = open2( \*IN, \*OUT, @cmd );
@@ -5079,8 +5079,8 @@ sub spellget_misspellings {    # get list of misspelled words
     close SAVE;
     my $spellopt
         = get_spellchecker_version() lt "0.6"
-        ? "-l --encoding=iso8859-1 "
-        : "list --encoding=iso8859-1 "; # FIXME: was utf-8
+        ? "-l "
+        : "list "; # FIXME: was utf-8 --encoding=iso8859-1
     $spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
     @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
         ;    # feed the text to aspell, get an array of misspelled words out
