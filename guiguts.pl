@@ -60,8 +60,7 @@ use TextUnicode;
 
 use constant OS_Win => $^O =~ /Win/;
 
-# ignore any watchdog timer alarms. Subroutines that take a long time to
-# complete can trip it
+# ignore any watchdog timer alarms. Subroutines that take a long time to complete can trip it
 $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { myexit() };
 
@@ -4991,8 +4990,8 @@ sub spellclearvars {
 sub aspellstart
 {  # start aspell in interactive mode, repipe stdin and stdout to file handles
     aspellstop();
-    my @cmd = (
-        $lglobal{spellexename}, '-a', '-S', '--sug-mode', $globalaspellmode
+    my @cmd = (# FIXME: Need to see what options are going to aspell
+        $lglobal{spellexename}, '--encoding=iso8859-1', '-a', '-S', '--sug-mode', $globalaspellmode
     );
     push @cmd, '-d', $globalspelldictopt if $globalspelldictopt;
     $lglobal{spellpid} = open2( \*IN, \*OUT, @cmd );
@@ -5080,8 +5079,8 @@ sub spellget_misspellings {    # get list of misspelled words
     close SAVE;
     my $spellopt
         = get_spellchecker_version() lt "0.6"
-        ? "-l "
-        : "list --encoding=utf-8 ";
+        ? "-l --encoding=iso8859-1 "
+        : "list --encoding=iso8859-1 "; # FIXME: was utf-8
     $spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
     @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
         ;    # feed the text to aspell, get an array of misspelled words out
