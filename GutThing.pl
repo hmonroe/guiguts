@@ -247,9 +247,11 @@ utffontinit();
 $top->geometry($geometry) if $geometry;
 
 # Set up Main window layout
-my $text_frame
-    = $top->Frame->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' )
-    ;          # autosizing
+my $text_frame = $top->Frame->pack( -anchor => 'nw',
+                                    -expand => 'yes',
+                                    -fill => 'both' 
+);
+
 my $counter_frame = $text_frame->Frame->pack(
     -side   => 'bottom',
     -anchor => 'sw',
