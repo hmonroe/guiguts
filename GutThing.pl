@@ -26,9 +26,6 @@ use FindBin;
 use lib $FindBin::Bin . "/lib";
 
 #use Data::Dumper;
-
-
-
 use Cwd;
 use Encode;
 use File::Basename;
@@ -37,7 +34,6 @@ use HTML::TokeParser;
 use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
-
 
 use Tk;
 use Tk::widgets qw/Balloon
@@ -61,6 +57,7 @@ use Tk::widgets qw/Balloon
 # Custom Guigut modules
 use LineNumberText;
 use TextUnicode;
+use ToolBar;
 
 use constant OS_Win => $^O =~ /Win/;
 
@@ -170,7 +167,8 @@ our @extops = (
     { 'label' => '', 'command' => '' },
 );
 
-my %lglobal;    #All local global variables contained in one hash.
+#All local global variables contained in one hash.
+my %lglobal;
 
 # FIXME: Build a popup message about these.
 if ( eval { require Text::LevenshteinXS } ) {
@@ -179,15 +177,6 @@ if ( eval { require Text::LevenshteinXS } ) {
 else {
     print
         "Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
-}
-
-# load Tk::ToolBar if it is installed
-# FIXME: Don't need this anymore
-if ( eval { require ToolBar; 1; } ) {
-    $lglobal{ToolBar} = 1;
-}
-else {
-    $lglobal{ToolBar} = 0;
 }
 
 # load Image::Size if it is installed
@@ -1254,21 +1243,23 @@ sub toolbar_toggle {    # Set up / remove the tool bar
     }
     elsif ( !$notoolbar && !$lglobal{toptool} ) {
 
-      # if Tk::ToolBar isn't available, show a message and disable the toolbar
-        if ( !$lglobal{ToolBar} ) {
-            my $dbox = $top->Dialog(
-                -text =>
-                    'Tk::ToolBar package not found, unable to create Toolbar. The toolbar will be disabled.',
-                -title   => 'Unable to create Toolbar.',
-                -buttons => ['OK']
-            );
-            $dbox->Show;
+      # FIXME: if Tk::ToolBar isn't available, show a message and disable
+      # the toolbar
+        # if ( !$lglobal{ToolBar} ) {
+        #     my $dbox = $top->Dialog(
+        #         -text =>
+        #             'Tk::ToolBar package not found, unable to create Toolbar. The toolbar will be disabled.',
+        #         -title   => 'Unable to create Toolbar.',
+        #         -buttons => ['OK']
+        #     );
+        #     $dbox->Show;
 
-            # disable toolbar in settings
-            $notoolbar = 1;
-            saveset();
-            return;
-        }
+        #     # disable toolbar in settings
+        #     $notoolbar = 1;
+        #     saveset();
+        #     return;
+        #}
+
         $lglobal{toptool}
             = $top->ToolBar( -side => $toolside, -close => '30' );
         $lglobal{toolfont} = $top->Font(
@@ -15999,6 +15990,7 @@ sub initialize {
     $lglobal{suspects_only}    = 0;
     $lglobal{tblcoljustify}    = 'l';
     $lglobal{tblrwcol}         = 1;
+    $lglobal{ToolBar}          = 1;
     $lglobal{uoutp}            = 'h';
     $lglobal{utfrangesort}     = 0;
     $lglobal{visibleline}      = '';
