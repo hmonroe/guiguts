@@ -14257,45 +14257,6 @@ sub myexit {
     }
 }
 
-sub confirmdiscard {
-    if ( $text_window->numberChanges ) {
-        my $ans = $mw->messageBox(
-            -icon    => 'warning',
-            -type    => 'YesNoCancel',
-            -default => 'yes',
-            -message =>
-                'The text has been modified without being saved. Save edits?'
-        );
-        if ( $ans =~ /yes/i ) {
-            savefile();
-        }
-        else {
-            return $ans;
-        }
-    }
-    return 'no';
-}
-
-sub confirmempty {
-    my $answer = confirmdiscard();
-    if ( $answer =~ /no/i ) {
-        if ( $lglobal{page_num_label} ) {
-            $lglobal{page_num_label}->destroy;
-            undef $lglobal{page_num_label};
-        }
-        if ( $lglobal{pagebutton} ) {
-            $lglobal{pagebutton}->destroy;
-            undef $lglobal{pagebutton};
-        }
-        if ( $lglobal{proofbutton} ) {
-            $lglobal{proofbutton}->destroy;
-            undef $lglobal{proofbutton};
-        }
-        $text_window->EmptyDocument;
-    }
-    return $answer;
-}
-
 sub setbookmark {
     my $index    = '';
     my $indexb   = '';
