@@ -64,8 +64,9 @@ use constant OS_Win => $^O =~ /Win/;
 # ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
 $SIG{ALRM} = 'IGNORE';
-$SIG{INT} = sub { myexit() };
+$SIG{INT} = sub { gg_exit() };
 
+### File Globals
 my $DEBUG      = 0;          # FIXME: this can go.
 my $VERSION    = "0.2.5";
 my $currentver = $VERSION;
@@ -73,6 +74,7 @@ my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
     = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
+### Application Globals
 our $activecolor      = '#f2f818';
 our $auto_page_marks  = 1;
 our $autobackup       = 0;
@@ -187,20 +189,8 @@ else {
     $lglobal{ImageSize} = 0;
 }
 
-my $mw = tkinit(-title => $window_title,);
-
-# Initialize a bunch of vars that need it.
-initialize();
-
-$mw->minsize( 440, 90 );
-
-$mw->bind(
-    '<Configure>' => sub {    # Detect geometry changes for tracking
-        $geometry = $mw->geometry;
-        $lglobal{geometryupdate} = 1;
-    }
-);
-
+### Main Window
+my $mw = tkinit( -title => $window_title, );
 my $icon = $mw->Photo(
     -format => 'gif',
     -data   => '
@@ -230,36 +220,52 @@ my $icon = $mw->Photo(
     '
 );
 
-fontinit();    # Initialize the fonts for the two windows
+# Initialize a bunch of vars that need it.
+initialize();
 
+$mw->minsize( 440, 90 );
+
+# Detect geometry changes for tracking
+$mw->bind(
+    '<Configure>' => sub {
+        $geometry = $mw->geometry;
+        $lglobal{geometryupdate} = 1;
+    }
+);
+
+# Initialize the fonts for the two windows
+fontinit();
 utffontinit();
 
 $mw->geometry($geometry) if $geometry;
 
 # Set up Main window layout
-my $text_frame = $mw->Frame->pack( -anchor => 'nw',
-                                    -expand => 'yes',
-                                    -fill => 'both'
+my $text_frame = $mw->Frame->pack(
+    -anchor => 'nw',
+    -expand => 'yes',
+    -fill   => 'both'
 );
 
+# Status Bar Container
 my $counter_frame = $text_frame->Frame->pack(
     -side   => 'bottom',
     -anchor => 'sw',
     -pady   => 2,
     -expand => 0
 );
-my $proofer_frame = $text_frame
-    ->Frame;    # Frame to hold proofer names. Pack it when necessary.
 
-# The actual text widget
+# Frame to hold proofer names. Pack it when necessary.
+my $proofer_frame = $text_frame->Frame;
+
+# Text Widget
 my $text_window = $text_frame->LineNumberText(
-    -widget => 'TextUnicode',
-    -exportselection => 'true',     # 'sel' tag is associated with selections
+    -widget          => 'TextUnicode',
+    -exportselection => 'true',
     -background      => 'white',
     -relief          => 'sunken',
-    -font      => $lglobal{font},
-    -wrap      => 'none',
-    -curlinebg => $activecolor,
+    -font            => $lglobal{font},
+    -wrap            => 'none',
+    -curlinebg       => $activecolor,
     )->pack(
     -side   => 'bottom',
     -anchor => 'nw',
@@ -267,6 +273,7 @@ my $text_window = $text_frame->LineNumberText(
     -fill   => 'both'
     );
 
+# FIXME: Should dump this; no one will miss it.
 # Enable Drag & Drop. You can drag a text file into the open window and it
 # will auto load. Kind of gimicky, but fun to play with.
 $mw->DropSite(
@@ -277,15 +284,15 @@ $mw->DropSite(
     : [qw/XDND Sun/]
 );
 
-$mw->protocol( 'WM_DELETE_WINDOW' => \&myexit );
+$mw->protocol( 'WM_DELETE_WINDOW' => \&gg_exit );
 
-
+# Initialize menus
 $mw->configure( -menu => my $menubar
         = $mw->Menu( -menuitems => menubar_menuitems() ) );
 
+# routines to call every time the text is edited
 $text_window->SetGUICallbacks(
-    [    # routines to call every time the text is edited
-        \&update_indicators,
+    [   \&update_indicators,
         sub {
             return if $nohighlights;
             $text_window->HighlightAllPairsBracketingCursor;
@@ -296,16 +303,15 @@ $text_window->SetGUICallbacks(
     ]
 );
 
-
 # Set up the key bindings for the text widget
-textbindings(); 
-# Build the status bar
-buildstatusbar();    
+textbindings();
 
-# Load the icon ito the window bar. 
+# Build the status bar
+buildstatusbar();
+
+# Load the icon ito the window bar.
 #Needs to happen late in the process
-$mw->Icon( -image => $icon )
-    ;  
+$mw->Icon( -image => $icon );
 
 $text_window->focus;
 
@@ -315,14 +321,16 @@ toolbar_toggle();
 
 $mw->geometry($geometry) if $geometry;
 
+# Open file if command line arg present.
+#if ( @ARGV == 1 ) { $text_window->Load( shift @ARGV ); }
+
 ( $lglobal{global_filename} ) = @ARGV;
 die "ERROR: too many files specified. \n" if ( @ARGV > 1 );
 
 if (@ARGV) {
     $lglobal{global_filename} = shift @ARGV;
     if ( -e $lglobal{global_filename} ) {
-        $mw->update
-            ;    # it may be a big file, draw the window, and then load it
+        $mw->update;
         openfile( $lglobal{global_filename} );
     }
 }
@@ -336,11 +344,10 @@ $text_window->CallNextGUICallback;
 
 $mw->repeat( 200, \&updatesel );
 
-
-
 ############################################################################################
 
-sub updatesel {    # Update Last Selection readout in status bar
+# Update Last Selection readout in status bar
+sub updatesel {
     my @ranges = $text_window->tagRanges('sel');
     my $msg;
     if (@ranges) {
@@ -719,8 +726,8 @@ sub binsave {    # save the .bin file associated with the text file
         print $bin '$bookmarks[0] = \''
             . $text_window->index('insert') . "';\n";
         for ( 1 .. 5 ) {
-            print $bin '$bookmarks['
-                . $_
+            print $bin '$bookmarks[' 
+                . $_ 
                 . '] = \''
                 . $text_window->index( 'bkmk' . $_ ) . "';\n"
                 if $bookmarks[$_];
@@ -736,8 +743,8 @@ sub binsave {    # save the .bin file associated with the text file
             no warnings 'uninitialized';
             for my $round ( 1 .. $lglobal{numrounds} ) {
                 if ( defined $proofers{$page}->[$round] ) {
-                    print $bin '$proofers{\''
-                        . $page . '\'}['
+                    print $bin '$proofers{\'' 
+                        . $page . '\'}[' 
                         . $round
                         . '] = \''
                         . $proofers{$page}->[$round] . '\';' . "\n";
@@ -1246,16 +1253,16 @@ sub toolbar_toggle {    # Set up / remove the tool bar
     }
     elsif ( !$notoolbar && !$lglobal{toptool} ) {
 
-      # FIXME: if Tk::ToolBar isn't available, show a message and disable
-      # the toolbar
-        # if ( !$lglobal{ToolBar} ) {
-        #     my $dbox = $mw->Dialog(
-        #         -text =>
-        #             'Tk::ToolBar package not found, unable to create Toolbar. The toolbar will be disabled.',
-        #         -title   => 'Unable to create Toolbar.',
-        #         -buttons => ['OK']
-        #     );
-        #     $dbox->Show;
+# FIXME: if Tk::ToolBar isn't available, show a message and disable
+# the toolbar
+# if ( !$lglobal{ToolBar} ) {
+#     my $dbox = $mw->Dialog(
+#         -text =>
+#             'Tk::ToolBar package not found, unable to create Toolbar. The toolbar will be disabled.',
+#         -title   => 'Unable to create Toolbar.',
+#         -buttons => ['OK']
+#     );
+#     $dbox->Show;
 
         #     # disable toolbar in settings
         #     $notoolbar = 1;
@@ -1383,30 +1390,6 @@ sub toolbar_toggle {    # Set up / remove the tool bar
     saveset();
 }
 
-sub showversion {    # Display version information
-    my ($mw) = @_;
-    my $os = $^O;
-    $os =~ s/^([^\[]+)\[.+/$1/;
-    my $winver = "\n";
-    if (OS_Win) {
-        $winver = `ver`;
-        $winver =~ s/([\s\w]* Windows \w+) .*/$1/;
-    }
-    my $dialog = $mw->Dialog(
-        -title   => 'Versions',
-        -popover => $mw,
-        -text    => "Currently Running :\n"
-            . "$0\nVersion : $currentver\n"
-            . "Platform : $os"
-            . $winver
-            . ( sprintf "Perl v%vd\n", $^V )
-            . "perl/Tk Version : $Tk::VERSION\n"
-            . "Tk patchLevel : $Tk::patchLevel\n"
-            . "Tk libraries : $Tk::library\n",
-        -justify => 'center'
-    );
-    $dialog->Show;
-}
 
 # Command parsing for External command routine
 sub cmdinterp {
@@ -1832,7 +1815,8 @@ sub highlightscannos {   #routine to automatically highlight words in the text
             last if ( $lglobal{hl_index} > $fileend );
         }
     }
-    my $idx1 = $text_window->index('@0,0'); # First visible line in text widget
+    my $idx1
+        = $text_window->index('@0,0');    # First visible line in text widget
 
     $lglobal{visibleline} = $idx1;
     $text_window->tagRemove(
@@ -1869,7 +1853,8 @@ sub highlightscannos {   #routine to automatically highlight words in the text
                     $indx = $index + length($word);
                     if ( $index > 0 ) {
                         next
-                            if ( $text_window->get("$realline.@{[$index - 1]}")
+                            if (
+                            $text_window->get("$realline.@{[$index - 1]}")
                             =~ /\p{Alnum}/ );
                     }
                     next
@@ -1897,7 +1882,6 @@ sub highlightscannos {   #routine to automatically highlight words in the text
     }
 }
 
-
 # Menus
 sub menubar_menuitems {
     [   map [ 'cascade', $_->[0],
@@ -1924,6 +1908,7 @@ sub file_menuitems {
             -accelerator => 'Ctrl+o'
         ],
         '',
+
         # FIXME: file_recent here
         '',
         [   'command', 'Save',
@@ -1931,23 +1916,25 @@ sub file_menuitems {
             -underline   => 0,
             -accelerator => 'Ctrl+s'
         ],
-        [ 'command', 'Save As', 
-          -command => \&file_saveas,
-          -underline => 5,
+        [   'command', 'Save As',
+            -command   => \&file_saveas,
+            -underline => 5,
         ],
         [   'command', 'Include',
             -command   => \&file_include,
             -underline => 0,
         ],
-        [ 'command', 'Close',
-          -command => \&file_close,
-          -underline => 0,
+        [   'command', 'Close',
+            -command   => \&file_close,
+            -underline => 0,
         ],
         '',
-        [ 'command', 'Import Prep Text Files', 
-          -command => \&file_prep_import,
+        [   'command',
+            'Import Prep Text Files',
+            -command => \&file_prep_import,
         ],
-        [   'command', 'Export As Prep Text Files',
+        [   'command',
+            'Export As Prep Text Files',
             -command => \&file_prep_export,
         ],
         '',
@@ -1970,9 +1957,6 @@ sub file_menuitems {
 
 #We'll keep relevant code near our menu build procedures.
 # File Open
-
-# Open file if command line arg present.
-if ( @ARGV == 1 ) { $text_window->Load( shift @ARGV ); }
 
 sub confirmdiscard {
     if ( $text_window->numberChanges ) {
@@ -2043,7 +2027,8 @@ sub file_save {
 }
 
 sub file_saveas {    # Determine which save routine to use and then use it
-    viewpagenums() if ( $lglobal{seepagenums} ); # FIXME: Does this really belong here?
+    viewpagenums()
+        if ( $lglobal{seepagenums} );   # FIXME: Does this really belong here?
     if ( $lglobal{global_filename} =~ /No File Loaded/ ) {
         if ( $text_window->numberChanges == 0 ) {
             return;
@@ -2057,10 +2042,12 @@ sub file_saveas {    # Determine which save routine to use and then use it
             $text_window->SaveUTF($name);
             $name = os_normal($name);
             recentupdate($name);
-        } else {
+        }
+        else {
             return;
         }
-    } else {
+    }
+    else {
         if ($autobackup) {
             if ( -e $lglobal{global_filename} ) {
                 if ( -e "$lglobal{global_filename}.bk2" ) {
@@ -2100,7 +2087,8 @@ sub file_bin_save {
             $markindex                  = $text_window->index($mark);
             $pagenumbers{$mark}{offset} = $markindex;
             $mark                       = $text_window->markNext($mark);
-        } else {
+        }
+        else {
             $mark = $text_window->markNext($mark) if $mark;
             next;
         }
@@ -2109,7 +2097,8 @@ sub file_bin_save {
     my $binname = "$lglobal{global_filename}.bin";
     if ( $text_window->markExists('spellbkmk') ) {
         $spellindexbkmrk = $text_window->index('spellbkmk');
-    } else {
+    }
+    else {
         $spellindexbkmrk = '';
     }
     my $bak = "$binname.bak";
@@ -2145,17 +2134,17 @@ sub file_bin_save {
         print $bin ");\n\n";
 
         print $bin '$bookmarks[0] = \''
-        . $text_window->index('insert') . "';\n";
+            . $text_window->index('insert') . "';\n";
         for ( 1 .. 5 ) {
             print $bin '$bookmarks[' 
-            . $_ 
-            . '] = \''
-            . $text_window->index( 'bkmk' . $_ ) . "';\n"
-            if $bookmarks[$_];
+                . $_ 
+                . '] = \''
+                . $text_window->index( 'bkmk' . $_ ) . "';\n"
+                if $bookmarks[$_];
         }
         if ($pngspath) {
             print $bin
-            "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
+                "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
         }
         my ( $page, $prfr );
         delete $proofers{''};
@@ -2165,10 +2154,10 @@ sub file_bin_save {
             for my $round ( 1 .. $lglobal{numrounds} ) {
                 if ( defined $proofers{$page}->[$round] ) {
                     print $bin '$proofers{\'' 
-                    . $page . '\'}[' 
-                    . $round
-                    . '] = \''
-                    . $proofers{$page}->[$round] . '\';' . "\n";
+                        . $page . '\'}[' 
+                        . $round
+                        . '] = \''
+                        . $proofers{$page}->[$round] . '\';' . "\n";
                 }
             }
         }
@@ -2181,21 +2170,22 @@ sub file_bin_save {
         print $bin ");\n\n";
         print $bin "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
         print $bin
-        "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
+            "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
         print $bin '1;';
         close $bin;
-    } else {
+    }
+    else {
         $mw->BackTrace("Cannot open $binname:$!");
     }
 }
 
-
-sub file_include    { }
-sub file_close      { }
+sub file_include         { }
+sub file_close           { }
 sub file_prep_import     { }
 sub file_prep_export     { }
 sub file_guess_pagemarks { }
 sub file_set_pagemarks   { }
+
 sub gt_exit {
     if ( confirmdiscard() =~ /no/i ) {
         aspellstop() if $lglobal{spellpid};
@@ -2291,7 +2281,7 @@ sub selection_menuitems {
 sub fixup_menuitems {
     [   [ 'command', 'Run Word Frequency' ],
         [ 'command', 'Run ~Gutcheck',
-          -command => \&gutcheck, 
+            -command => \&gutcheck,
         ],
         [ 'command', 'Gutcheck options' ],
         [ 'command', 'Run Jeebies' ],
@@ -2318,18 +2308,18 @@ sub fixup_menuitems {
     ];
 }
 
-
 ### GutCheck
 sub gutcheck {
-  push @operations, (localtime() . ' - Gutcheck');
-  viewpagenums() if ( $lglobal{seepagenums} );
-  oppopupdate() if $lglobal{oppop};
-  my ( $name, $path, $extension, @path );
-  $text_window->focus;
+    push @operations, ( localtime() . ' - Gutcheck' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    oppopupdate()  if $lglobal{oppop};
+    my ( $name, $path, $extension, @path );
+    $text_window->focus;
     update_indicators();
     my $title = $mw->cget('title');
     return if ( $title =~ /No File Loaded/ );
     $mw->Busy( -recurse => 1 );
+
     if ( open my $gc, ">:bytes", 'gutchk.tmp' ) {
         my $count = 0;
         my $index = '1.0';
@@ -2340,7 +2330,8 @@ sub gutcheck {
             $index = $end;
         }
         close $gc;
-    } else {
+    }
+    else {
         warn "Could not open temp file for writing. $!";
         my $dialog = $mw->Dialog(
             -text => 'Could not write to the '
@@ -2353,7 +2344,8 @@ sub gutcheck {
         $dialog->Show;
         return;
     }
-    $title =~ s/$window_title - //; #FIXME: sub this out; this and next in the tidy code
+    $title =~ s/$window_title - //
+        ;    #FIXME: sub this out; this and next in the tidy code
     $title =~ s/edited - //;
     $title = os_normal($title);
     $title = dos_path($title) if OS_Win;
@@ -2409,11 +2401,12 @@ sub gcheckpop_up {
     if ( $lglobal{gcpop} ) {
         $lglobal{gcpop}->deiconify;
         $lglobal{gclistbox}->delete( '0', 'end' );
-    } else {
+    }
+    else {
         $lglobal{gcpop} = $mw->Toplevel;
         $lglobal{gcpop}->title('Gutcheck');
         $lglobal{gcpop}->geometry($geometry2) if $geometry2;
-        $lglobal{gcpop}->transient($mw)      if $stayontop;
+        $lglobal{gcpop}->transient($mw)       if $stayontop;
         my $ptopframe = $lglobal{gcpop}->Frame->pack;
         my $opsbutton = $ptopframe->Button(
             -activebackground => $activecolor,
@@ -2584,7 +2577,8 @@ sub gcheckpop_up {
                         "$linenum.$colnum +4c" );
                     $colnum += 4;
                 }
-            } else {
+            }
+            else {
                 if ( $line =~ /Query digit in ([\w\d]+)/ ) {
                     $word   = $1;
                     $lincol = $text_window->search( '--', $word, "$linenum.0",
@@ -2639,7 +2633,8 @@ sub gcheckpop_up {
                             = $text_window->search( '-regexp', '--',
                             '(?<!\p{Alnum})' . $word . '(?!\p{Alnum})',
                             "$linenum.0", "$linenum.0 +1l" );
-                    } elsif ( $word eq 'i' ) {
+                    }
+                    elsif ( $word eq 'i' ) {
                         $lincol = $text_window->search(
                             '-regexp',              '--',
                             ' ' . $word . '[^a-z]', "$linenum.0",
@@ -2652,7 +2647,8 @@ sub gcheckpop_up {
                             unless $lincol;
                         $lincol = $text_window->index("$lincol +1c")
                             if ($lincol);
-                    } else {
+                    }
+                    else {
                         $lincol = $text_window->search(
                             '-regexp',           '--',
                             '\b' . $word . '\b', "$linenum.0",
@@ -2678,7 +2674,8 @@ sub gcheckpop_up {
             $mark++;
             if ($lincol) {
                 $text_window->markSet( "g$mark", $lincol );
-            } else {
+            }
+            else {
                 $colnum = '0' unless $colnum;
                 $text_window->markSet( "g$mark", "$linenum.$colnum" );
             }
@@ -2703,6 +2700,7 @@ sub gcview {
     $lglobal{gcpop}->raise;
     $geometry2 = $lglobal{gcpop}->geometry;
 }
+
 sub gcviewops {
     my $linesref = shift;
     my @gsoptions;
@@ -2765,7 +2763,8 @@ sub gcviewops {
         $lglobal{viewpop}->deiconify;
         $lglobal{viewpop}->raise;
         $lglobal{viewpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{viewpop} = $mw->Toplevel;
         $lglobal{viewpop}->title('Gutcheck view options');
         my $pframe = $lglobal{viewpop}->Frame->pack;
@@ -2837,7 +2836,8 @@ sub gcviewops {
                 for ( 0 .. $#mygcview ) {
                     if ( $mygcview[$_] ) {
                         $gsoptions[$_]->select;
-                    } else {
+                    }
+                    else {
                         $gsoptions[$_]->deselect;
                     }
                 }
@@ -2911,7 +2911,6 @@ sub gutcheckrun {
 }
 ## End GutCheck
 
-
 sub text_menuitems {
     [   [ 'command', 'Convert Italics' ],
         [ 'command', 'Convert Bold' ],
@@ -2942,6 +2941,7 @@ sub prefs_menuitems {
         [   'checkbutton',
             'Leave Space Afer End-of-Line Hyphens During Rewrap'
         ],
+
         # [   'command',
         #     'Toggle Line Numbers',
         #     -command => \&toggle_line_numbers,
@@ -2960,11 +2960,12 @@ sub help_menuitems {
         [ 'command', 'Regex Quick Reference' ],
         [ 'command', 'UTF Character Entry' ],
         [ 'command', 'UTF Character Search' ],
-        [ 'command', 'About GutThing', -command => \&about_pop_up],
+        [ 'command', 'About GutThing', -command => \&about_pop_up ],
+        [ 'command', 'Versions', -command => [ \&showversion, $mw ] ],
     ];
 }
 
-# A litle information about the program
+# FIXME: Can we factor this and showversions into one base command?
 sub about_pop_up {
     my $about_text = <<EOM;
 Guiguts.pl post processing toolkit/interface to gutcheck.
@@ -2989,12 +2990,14 @@ EOM
         $lglobal{aboutpop}->deiconify;
         $lglobal{aboutpop}->raise;
         $lglobal{aboutpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{aboutpop} = $mw->Toplevel;
         $lglobal{aboutpop}->title('About');
-        $lglobal{aboutpop}->Label( 
-            -justify => "left", 
-            -text => $about_text)->pack;
+        $lglobal{aboutpop}->Label(
+            -justify => "left",
+            -text    => $about_text
+        )->pack;
         my $button_ok = $lglobal{aboutpop}->Button(
             -activebackground => $activecolor,
             -text             => 'OK',
@@ -3007,6 +3010,31 @@ EOM
         );
         $lglobal{aboutpop}->Icon( -image => $icon );
     }
+}
+
+sub showversion {    # Display version information
+    my ($mw) = @_;
+    my $os = $^O;
+    $os =~ s/^([^\[]+)\[.+/$1/;
+    my $winver = "\n";
+    if (OS_Win) {
+        $winver = `ver`;
+        $winver =~ s/([\s\w]* Windows \w+) .*/$1/;
+    }
+    my $dialog = $mw->Dialog(
+        -title   => 'Versions',
+        -popover => $mw,
+        -text    => "Currently Running :\n"
+            . "$0\nVersion : $currentver\n"
+            . "Platform : $os"
+            . $winver
+            . ( sprintf "Perl v%vd\n", $^V )
+            . "perl/Tk Version : $Tk::VERSION\n"
+            . "Tk patchLevel : $Tk::patchLevel\n"
+            . "Tk libraries : $Tk::library\n",
+        -justify => 'center'
+    );
+    $dialog->Show;
 }
 
 ### Text Processing
@@ -3046,7 +3074,6 @@ sub viewpagenums {    # Toggle visible page markers
         pnumadjust();
     }
 }
-
 
 # Pop up a window which will allow jumping directly to a specified page
 sub gotopage {
@@ -3317,7 +3344,7 @@ sub checkver {
     }
     $answer = $dbox->Show;
     if ( $answer =~ /ok/i ) {
-        runner( "$globalbrowserstart http://guiguts.sourceforge.net/" );
+        runner("$globalbrowserstart http://guiguts.sourceforge.net/");
     }
 }
 
@@ -3332,7 +3359,8 @@ sub sidenotes {
 
     while (1) {
         $sdnoteindexstart = $text_window->index('sidenote');
-        $bracketstartndx = $text_window->search( '-regexp', '--', '\[sidenote',
+        $bracketstartndx
+            = $text_window->search( '-regexp', '--', '\[sidenote',
             $sdnoteindexstart, 'end' );
         if ($bracketstartndx) {
             $text_window->replacewith( "$bracketstartndx+1c",
@@ -3345,7 +3373,8 @@ sub sidenotes {
     }
     while (1) {
         $sdnoteindexstart = $text_window->index('sidenote');
-        $bracketstartndx = $text_window->search( '-regexp', '--', '\[Sidenote',
+        $bracketstartndx
+            = $text_window->search( '-regexp', '--', '\[Sidenote',
             $sdnoteindexstart, 'end' );
         last unless $bracketstartndx;
         $bracketndx = "$bracketstartndx+1c";
@@ -3381,11 +3410,11 @@ sub sidenotes {
         if ( $text_window->get( "$bracketstartndx-2c", $bracketstartndx ) ne
             "\n\n" )
         {
-            if ((   $text_window->get( $bracketendndx, "$bracketendndx+1c" ) eq
-                    ' '
+            if ((   $text_window->get( $bracketendndx, "$bracketendndx+1c" )
+                    eq ' '
                 )
-                || ($text_window->get( $bracketendndx, "$bracketendndx+1c" ) eq
-                    "\n" )
+                || ( $text_window->get( $bracketendndx, "$bracketendndx+1c" )
+                    eq "\n" )
                 )
             {
                 $text_window->delete( $bracketendndx, "" );
@@ -3397,11 +3426,11 @@ sub sidenotes {
         elsif (
             $text_window->compare( "$bracketendndx+1c", '<', $paragraphn ) )
         {
-            if ((   $text_window->get( $bracketendndx, "$bracketendndx+1c" ) eq
-                    ' '
+            if ((   $text_window->get( $bracketendndx, "$bracketendndx+1c" )
+                    eq ' '
                 )
-                || ($text_window->get( $bracketendndx, "$bracketendndx+1c" ) eq
-                    "\n" )
+                || ( $text_window->get( $bracketendndx, "$bracketendndx+1c" )
+                    eq "\n" )
                 )
             {
                 $text_window->delete( $bracketendndx, "$bracketendndx+1c" );
@@ -3460,14 +3489,15 @@ sub poetrynumbers {
         $spacer  = $rmargin - length($line) - length($linenum);
         $spacer -= 2;
         $line = '  ' . ( ' ' x $spacer ) . $linenum;
-        $text_window->delete( $searchstartindex, "$searchstartindex lineend" );
+        $text_window->delete( $searchstartindex,
+            "$searchstartindex lineend" );
         $text_window->insert( $searchstartindex, $line );
         $searchstartindex = ++$row . '.0';
     }
 }
 
-sub opspop_up
-{ # Pop up an "Operation" history. Track which functions have already been run.
+### Function History
+sub opspop_up {
     if ( $lglobal{oppop} ) {
         $lglobal{oppop}->deiconify;
         $lglobal{oppop}->raise;
@@ -3516,8 +3546,8 @@ sub oppopupdate {    # Update the Operations history
     $lglobal{oplistbox}->insert( 'end', @operations );
 }
 
-sub footnotepop
-{   # Pop up a window where footnotes can be found, fixed and formatted. (heh)
+### Footnote Fixup
+sub footnotepop {
     push @operations, ( localtime() . ' - Footnote Fixup' );
     viewpagenums() if ( $lglobal{seepagenums} );
     oppopupdate()  if $lglobal{oppop};
@@ -3913,7 +3943,7 @@ sub fnview
         $lglobal{footviewpop}->Icon( -image => $icon );
         for my $findex ( 1 .. $lglobal{fntotal} ) {
             $ftext->insert( 'end',
-                      'footnote #'
+                      'footnote #' 
                     . $findex
                     . '  line.column - '
                     . $lglobal{fnarray}->[$findex][0]
@@ -3957,8 +3987,9 @@ sub fnview
     }
 }
 
-sub footnotetidy
-{ # Clean up footnotes in ASCII version of text. Note: destructive. Use only at end of editing.
+# Clean up footnotes in ASCII version of text. Note: destructive. Use only
+# at end of editing.
+sub footnotetidy {
     my ( $begin, $end, $colon );
     $lglobal{fnsecondpass} = 0;
     footnotefixup();
@@ -4010,7 +4041,8 @@ sub footnotemove {
             if ( $text_window->get("fne$lglobal{fnindex} +1c") eq "\n" );
         $text_window->delete("fns$lglobal{fnindex} -1c")
             if ( $text_window->get("fns$lglobal{fnindex} -1c") eq "\n" );
-        $text_window->delete( "fns$lglobal{fnindex}", "fne$lglobal{fnindex}" );
+        $text_window->delete( "fns$lglobal{fnindex}",
+            "fne$lglobal{fnindex}" );
         $lglobal{fnindex}--;
     }
     $zone = 0;
@@ -4149,7 +4181,8 @@ sub setanchor {
             $text_window->index( 'fns' . $lglobal{fnindex} ),
             $text_window->index( 'fne' . $lglobal{fnindex} )
         );
-        $text_window->insert( $text_window->index("fna$lglobal{fnindex}"), $fn )
+        $text_window->insert( $text_window->index("fna$lglobal{fnindex}"),
+            $fn )
             if $text_window->compare(
             $text_window->index("fna$lglobal{fnindex}"),
             '>', $text_window->index("fns$lglobal{fnindex}") );
@@ -4157,7 +4190,8 @@ sub setanchor {
             $text_window->index("fns$lglobal{fnindex}"),
             $text_window->index("fne$lglobal{fnindex}")
         );
-        $text_window->insert( $text_window->index("fna$lglobal{fnindex}"), $fn )
+        $text_window->insert( $text_window->index("fna$lglobal{fnindex}"),
+            $fn )
             if $text_window->compare(
             $text_window->index("fna$lglobal{fnindex}"),
             '<=', $text_window->index("fns$lglobal{fnindex}") );
@@ -4425,7 +4459,7 @@ sub footnoteshow {
         my $widget = $text_window->{rtext};
         my ( $lx, $ly, $lw, $lh ) = $widget->dlineinfo($line);
         my $bottom = int(
-            (         $widget->height
+            (         $widget->height 
                     - 2 * $widget->cget( -bd )
                     - 2 * $widget->cget( -highlightthickness )
             ) / $lh / 2
@@ -4514,8 +4548,8 @@ sub fnjoin {
     my $end = $lglobal{fnarray}->[ $lglobal{fnindex} ][1] . '-1c';
     $text_window->delete( $lglobal{fnarray}->[ $lglobal{fnindex} - 1 ][1] )
         if (
-        $text_window->get( $lglobal{fnarray}->[ $lglobal{fnindex} - 1 ][1] ) eq
-        '*' );
+        $text_window->get( $lglobal{fnarray}->[ $lglobal{fnindex} - 1 ][1] )
+        eq '*' );
     $text_window->insert(
         $lglobal{fnarray}->[ $lglobal{fnindex} - 1 ][1] . '-1c',
         "\n" . $text_window->get( "$start+2c", $end )
@@ -4633,7 +4667,8 @@ sub footnotefind {
     return ( 0, 0 ) unless $bracketstartndx;
     $bracketndx = "$bracketstartndx+1c";
     while (1) {
-        $bracketendndx = $text_window->search( '--', ']', $bracketndx, 'end' );
+        $bracketendndx
+            = $text_window->search( '--', ']', $bracketndx, 'end' );
         $bracketendndx = $text_window->index("$bracketstartndx+9c")
             unless $bracketendndx;
         $bracketendndx = $text_window->index("$bracketendndx+1c")
@@ -4641,8 +4676,8 @@ sub footnotefind {
         $nextbracketndx
             = $text_window->search( '--', '[', $bracketndx, 'end' );
         if ( ($nextbracketndx)
-            && ($text_window->compare( $nextbracketndx, '<', $bracketendndx ) )
-            )
+            && ( $text_window->compare( $nextbracketndx, '<', $bracketendndx )
+            ) )
         {
             $bracketndx = $bracketendndx;
             next;
@@ -4675,8 +4710,7 @@ sub alpha {
 
 sub roman {
     my %roman_digit = qw(1 IV 10 XL 100 CD 1000 MMMMMM);
-    my @figure
-        = reverse sort keys %roman_digit;
+    my @figure      = reverse sort keys %roman_digit;
     grep( $roman_digit{$_} = [ split( //, $roman_digit{$_}, 2 ) ], @figure );
     my $arg = shift;
     return undef
@@ -4794,7 +4828,9 @@ sub fontsize {
     }
 }
 
-sub spellchecker {    # Set up spell check window
+### Spell Check
+# Set up spell check window
+sub spellchecker {
     push @operations, ( localtime() . ' - Spellcheck' );
     viewpagenums() if ( $lglobal{seepagenums} );
     oppopupdate()  if $lglobal{oppop};
@@ -5434,7 +5470,7 @@ sub aspellstop
 }
 
 sub spellguesses {    #feed aspell a word to get a list of guess
-    my $word = shift;     # word to get guesses for
+    my $word = shift;      # word to get guesses for
     $text_window->Busy;    # let the user know something is happening
     @{ $lglobal{guesslist} } = ();    # clear the guesslist
     print OUT $word, "\n";    # send the word to the stdout file handle
@@ -5447,7 +5483,7 @@ sub spellguesses {    #feed aspell a word to get a list of guess
     @{ $lglobal{guesslist} }
         = ( split /, /, $list );    # split the words into an array
     $list = <IN>;                   # throw away extra newline
-    $text_window->Unbusy;            # done processing
+    $text_window->Unbusy;           # done processing
 }
 
 sub spellshow_guesses {             # load the guesses into the guess list box
@@ -5517,7 +5553,7 @@ sub spellget_misspellings {    # get list of misspelled words
     unlink 'checkfil.txt';
 }
 
-sub spellignoreall {                  # remove ignored words from checklist
+sub spellignoreall {                 # remove ignored words from checklist
     my $next;
     my $word = $lglobal{misspelledentry}->get;   # get word you want to ignore
     $text_window->bell unless ( $word || $nobell );
@@ -6600,7 +6636,8 @@ sub searchtext {
     my $foundone    = 1;
     my @ranges      = $text_window->tagRanges('sel');
     my $range_total = @ranges;
-    $searchstartindex = $text_window->index('insert') unless $searchstartindex;
+    $searchstartindex = $text_window->index('insert')
+        unless $searchstartindex;
 
     if ( $range_total == 0 && $lglobal{selectionsearch} ) {
         $start = $text_window->index('insert');
@@ -6761,13 +6798,15 @@ sub searchtext {
             unless $length;
         $text_window->markSet( 'insert', $searchstartindex )
             if $searchstartindex;    # position the cursor at the index
-        $text_window->tagAdd( 'highlight', $searchstartindex, $searchendindex )
+        $text_window->tagAdd( 'highlight', $searchstartindex,
+            $searchendindex )
             if $searchstartindex;    # highlight the text
         $text_window->yviewMoveto(1);
         $text_window->see($searchstartindex)
             if ( $searchendindex && $sopt[2] )
             ;    # scroll text box, if necessary, to make found text visible
-        $text_window->see($searchendindex) if ( $searchendindex && !$sopt[2] );
+        $text_window->see($searchendindex)
+            if ( $searchendindex && !$sopt[2] );
         $searchendindex = $searchstartindex unless $length;
     }
     unless ($searchstartindex) {
@@ -7665,7 +7704,7 @@ sub indent {
             if ( $indent eq 'up' ) {
                 my $temp = $end, $end = $start;
                 $start = $temp;
-                if ( $text_window->compare( "$start linestart", '==', '1.0' ) )
+                if ($text_window->compare( "$start linestart", '==', '1.0' ) )
                 {
                     push @selarray, ( $start, $end );
                     push @selarray, @ranges;
@@ -7680,7 +7719,8 @@ sub indent {
                     {
                         $text_window->insert( "$end-1l lineend", ' ' );
                     }
-                    my $templine = $text_window->get( "$start-1l", "$end-1l" );
+                    my $templine
+                        = $text_window->get( "$start-1l", "$end-1l" );
                     $text_window->replacewith( "$start-1l", "$end-1l",
                         ( $text_window->get( $start, $end ) ) );
                     push @selarray, ( "$start-1l", "$end-1l" );
@@ -7713,7 +7753,8 @@ sub indent {
                     {
                         $text_window->insert( "$end+1l lineend", ' ' );
                     }
-                    my $templine = $text_window->get( "$start+1l", "$end+1l" );
+                    my $templine
+                        = $text_window->get( "$start+1l", "$end+1l" );
                     $text_window->replacewith( "$start+1l", "$end+1l",
                         ( $text_window->get( $start, $end ) ) );
                     push @selarray, ( "$start+1l", "$end+1l" );
@@ -7829,7 +7870,8 @@ sub selectrewrap {
                 $thisblockend = $end;
             }
             ;    #or end of text if end of selection
-            my $selection = $text_window->get( $thisblockstart, $thisblockend )
+            my $selection
+                = $text_window->get( $thisblockstart, $thisblockend )
                 if $thisblockend;    #get the paragraph of text
             unless ($selection) {
                 $thisblockstart = $thisblockend;
@@ -7842,8 +7884,8 @@ sub selectrewrap {
             }
             last
                 if ( ( $thisblockend eq $lastend )
-                || ( $text_window->compare( $thisblockend, '<', $lastend ) ) )
-                ;    #quit if the search isn't advancing
+                || ( $text_window->compare( $thisblockend, '<', $lastend ) )
+                );    #quit if the search isn't advancing
             $text_window->see($thisblockend);
             $text_window->update;
 
@@ -7854,7 +7896,7 @@ sub selectrewrap {
                 $firstmargin = $blocklmargin + 1;
                 $rightmargin = $blockrmargin;
                 if ( $selection =~ /^\x7f*\/#\[(\d+)/ )
-                {    #check for block rewrapping with parameter markup
+                {     #check for block rewrapping with parameter markup
                     if ($1) { $leftmargin = $1 + 1 }
                     $firstmargin = $leftmargin;
                 }
@@ -7884,7 +7926,8 @@ sub selectrewrap {
             {     #skip rewrap if paragraph is a thought break
                 if ($inblock) {
                     if ($enableindent) {
-                        $indentblockend = $text_window->search( '-regex', '--',
+                        $indentblockend
+                            = $text_window->search( '-regex', '--',
                             '^\x7f*[pP\*Ll]\/', $thisblockstart, $end );
                         $indentblockend = $indentblockend || $end;
                         $text_window->markSet( 'rewrapend', $indentblockend );
@@ -7926,7 +7969,8 @@ sub selectrewrap {
                                             "$line.@{[abs $indent]}" ) =~ /\S/
                                         )
                                     {
-                                        while ( $text_window->get("$line.0") eq
+                                        while (
+                                            $text_window->get("$line.0") eq
                                             ' ' )
                                         {
                                             $text_window->delete("$line.0");
@@ -8029,7 +8073,8 @@ sub selectrewrap {
                 $markindex
                     = $text_window->search( '-regex', '--', '\x7f', '1.0',
                     'end' );
-                $text_window->delete($markindex); #then remove the page markers
+                $text_window->delete($markindex)
+                    ;               #then remove the page markers
                 $text_window->markSet( $markname, $markindex );
                 $text_window->markGravity( $markname, 'left' );
             }
@@ -8909,7 +8954,8 @@ sub markpopup {
         $f6->Button(
             -activebackground => $activecolor,
             -command =>
-                sub { markup( 'span', $spanentry->get ); $text_window->focus },
+                sub { markup( 'span', $spanentry->get ); $text_window->focus }
+            ,
             -text  => 'span',
             -width => 8
         )->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
@@ -9040,7 +9086,8 @@ sub poetryhtml {
                 $ital = 0;
             }
             if ($indent) {
-                $text_window->insert( "$step.0", "<span class=\"i$indent\">" );
+                $text_window->insert( "$step.0",
+                    "<span class=\"i$indent\">" );
             }
             else {
                 $text_window->insert( "$step.0", '<span>' );
@@ -9429,7 +9476,7 @@ sub markup {
                 $lglobal{linkpop} = $mw->Toplevel;
                 $lglobal{linkpop}->title('Internal Links');
                 $lglobal{linkpop}->geometry($geometry2) if $geometry2;
-                $lglobal{linkpop}->transient($mw)      if $stayontop;
+                $lglobal{linkpop}->transient($mw)       if $stayontop;
                 $lglobal{fnlinks} = 1;
                 my $tframe = $lglobal{linkpop}->Frame->pack;
                 $tframe->Checkbutton(
@@ -9802,7 +9849,7 @@ sub htmlimage {
                         $text_window->delete( 'thisblockstart',
                             'thisblockend' );
                         $text_window->insert( 'thisblockstart',
-                                  "<div class=\"figleft\" style=\"width: "
+                                  "<div class=\"figleft\" style=\"width: " 
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -9811,7 +9858,7 @@ sub htmlimage {
                         $text_window->delete( 'thisblockstart',
                             'thisblockend' );
                         $text_window->insert( 'thisblockstart',
-                                  "<div class=\"figright\" style=\"width: "
+                                  "<div class=\"figright\" style=\"width: " 
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -10183,9 +10230,8 @@ sub linkcheck {
 
 sub htmlimages {
     my $length;
-    my $start
-        = $text_window->search( '-regexp', '--', '(<p>)?\[Illustration', '1.0',
-        'end' );
+    my $start = $text_window->search( '-regexp', '--', '(<p>)?\[Illustration',
+        '1.0', 'end' );
     return unless $start;
     $text_window->see($start);
     my $end = $text_window->search(
@@ -10618,13 +10664,13 @@ sub htmlautoconvert {
                 $ital = 0;
             }
             $lglobal{classhash}->{$indent}
-                = '    .poem span.i'
+                = '    .poem span.i' 
                 . $indent
                 . '     {display: block; margin-left: '
                 . $indent
                 . 'em; padding-left: 3em; text-indent: -3em;}' . "\n"
                 if ( $indent and ( $indent != 2 ) and ( $indent != 4 ) );
-            $text_window->ntinsert( "$step.0",   "<span class=\"i$indent\">" );
+            $text_window->ntinsert( "$step.0", "<span class=\"i$indent\">" );
             $text_window->ntinsert( "$step.end", '<br /></span>' );
             push @last5, $selection;
             shift @last5 while ( scalar(@last5) > 4 );
@@ -10745,7 +10791,8 @@ sub htmlautoconvert {
                 }
                 $ital = 0;
             }
-            $text_window->ntinsert( "$step.0", '<li>' . $selection . '</li>' );
+            $text_window->ntinsert( "$step.0",
+                '<li>' . $selection . '</li>' );
             push @last5, $selection;
             shift @last5 while ( scalar(@last5) > 4 );
             $step++;
@@ -10834,7 +10881,7 @@ sub htmlautoconvert {
                     $ital = 0;
                 }
                 $selection
-                    = '<span style="margin-left: '
+                    = '<span style="margin-left: ' 
                     . $indent . 'em;">'
                     . $selection
                     . '</span>';
@@ -10869,7 +10916,7 @@ sub htmlautoconvert {
                 $aname =~ s/<\/?[hscalup].*?>//g;
                 $aname = makeanchor( deaccent($selection) );
                 $text_window->ntinsert( "$step.0",
-                          "<h2><a name=\""
+                          "<h2><a name=\"" 
                         . $aname
                         . "\" id=\""
                         . $aname
@@ -10882,7 +10929,7 @@ sub htmlautoconvert {
                     $selection =~ s/<[^>]+>//g;
                     $selection = "<b>$selection</b>";
                     push @contents,
-                          "<a href=\"#"
+                          "<a href=\"#" 
                         . $aname . "\">"
                         . $selection
                         . "</a><br />\n";
@@ -11040,7 +11087,8 @@ sub htmlautoconvert {
     while ( $thisblockstart
         = $text_window->search( '--', '</div></div></p>', '1.0', 'end' ) )
     {
-        $text_window->ntdelete( "$thisblockstart+12c", "$thisblockstart+16c" );
+        $text_window->ntdelete( "$thisblockstart+12c",
+            "$thisblockstart+16c" );
     }
     if ( $lglobal{pageanch} || $lglobal{pagecmt} ) {
 
@@ -11103,8 +11151,8 @@ sub htmlautoconvert {
                     'end' )
                     || 'end';
                 $pend
-                    = $text_window->search( '-exact', '--', '</p>', $anchorend,
-                    'end' )
+                    = $text_window->search( '-exact', '--', '</p>',
+                    $anchorend, 'end' )
                     || 'end';
                 $sstart
                     = $text_window->search( '-exact', '--', '<div ',
@@ -11137,27 +11185,27 @@ sub htmlautoconvert {
 
     html_convert_utf($thisblockstart);
 
- #    if ( $lglobal{leave_utf} ) {
- #        $thisblockstart
- #            = $text_window->search( '-exact', '--', 'charset=iso-8859-1',
- #            '1.0', 'end' );
- #        if ($thisblockstart) {
- #            $text_window->ntdelete( $thisblockstart, "$thisblockstart+18c" );
- #            $text_window->ntinsert( $thisblockstart, 'charset=UTF-8' );
- #        }
- #    }
- #    unless ( $lglobal{leave_utf} ) {
- #        while (
- #            $thisblockstart = $text_window->search(
- #                '-regexp', '--', '[\x{100}-\x{65535}]', '1.0', 'end'
- #            )
- #            )
- #        {
- #            my $xchar = ord( $text_window->get($thisblockstart) );
- #            $text_window->ntdelete($thisblockstart);
- #            $text_window->ntinsert( $thisblockstart, "&#$xchar;" );
- #        }
- #    }
+#    if ( $lglobal{leave_utf} ) {
+#        $thisblockstart
+#            = $text_window->search( '-exact', '--', 'charset=iso-8859-1',
+#            '1.0', 'end' );
+#        if ($thisblockstart) {
+#            $text_window->ntdelete( $thisblockstart, "$thisblockstart+18c" );
+#            $text_window->ntinsert( $thisblockstart, 'charset=UTF-8' );
+#        }
+#    }
+#    unless ( $lglobal{leave_utf} ) {
+#        while (
+#            $thisblockstart = $text_window->search(
+#                '-regexp', '--', '[\x{100}-\x{65535}]', '1.0', 'end'
+#            )
+#            )
+#        {
+#            my $xchar = ord( $text_window->get($thisblockstart) );
+#            $text_window->ntdelete($thisblockstart);
+#            $text_window->ntinsert( $thisblockstart, "&#$xchar;" );
+#        }
+#    }
 
     fracconv( '1.0', 'end' ) if $lglobal{autofraction};
     $text_window->ntinsert( '1.0', $headertext );
@@ -12157,9 +12205,11 @@ sub delblanklines {
         }
         last unless $searchstartindex;
         ( $r, $c ) = split /\./, $searchstartindex;
-        if ($text_window->get( ( $r - 1 ) . '.0', ( $r - 1 ) . '.end' ) eq '' )
+        if ( $text_window->get( ( $r - 1 ) . '.0', ( $r - 1 ) . '.end' ) eq
+            '' )
         {
-            $text_window->delete( "$searchstartindex -1c", $searchstartindex );
+            $text_window->delete( "$searchstartindex -1c",
+                $searchstartindex );
             $searchendindex = $text_window->index("$searchstartindex -2l");
             $text_window->see($searchstartindex);
             $text_window->update;
@@ -12484,8 +12534,8 @@ sub joinlines {
 
             #$text_window->delete($index);
             $lglobal{joinundo}++;
-            $index
-                = $text_window->search( '-regexp', '--', '\s', $index, 'end' );
+            $index = $text_window->search( '-regexp', '--', '\s', $index,
+                'end' );
             $text_window->delete($index);
             $lglobal{joinundo}++;
         }
@@ -12544,7 +12594,7 @@ sub tidypop_up {
         $lglobal{tidypop} = $mw->Toplevel;
         $lglobal{tidypop}->title('Tidy');
         $lglobal{tidypop}->geometry($geometry2) if $geometry2;
-        $lglobal{tidypop}->transient($mw)      if $stayontop;
+        $lglobal{tidypop}->transient($mw)       if $stayontop;
         my $ptopframe = $lglobal{tidypop}->Frame->pack;
         my $opsbutton = $ptopframe->Button(
             -activebackground => $activecolor,
@@ -13009,7 +13059,7 @@ sub fixup {
         }
         $text_window->markSet( 'insert', $index ) if $update;
         $text_window->update if ( $edited || $update );
-        update_indicators() if ( $edited || $update );
+        update_indicators()  if ( $edited || $update );
         $edited    = 0;
         $update    = 0;
         $lastindex = $index;
@@ -14028,7 +14078,8 @@ sub wfspellcheck {
         close $file;
 
         # FIXME: spellopt is getting set all over the joint
-        my $spellopt = get_spellchecker_version() lt "0.6" ? "list " : "list ";
+        my $spellopt
+            = get_spellchecker_version() lt "0.6" ? "list " : "list ";
         $spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
         my @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
             ;  # feed the text to aspell, get an array of misspelled words out
@@ -14250,7 +14301,7 @@ sub stealthcheck {
     $mw->Unbusy;
 }
 
-sub myexit {
+sub gg_exit {
     if ( confirmdiscard() =~ /no/i ) {
         aspellstop() if $lglobal{spellpid};
         $mw->destroy;
@@ -15129,7 +15180,8 @@ sub tblspace {
     else {
         $text_window->addGlobStart;
         my $cursor = $text_window->index('insert');
-        my ( $erow, $ecol ) = split( /\./, ( $text_window->index('tblend') ) );
+        my ( $erow, $ecol )
+            = split( /\./, ( $text_window->index('tblend') ) );
         my ( $srow, $scol )
             = split( /\./, ( $text_window->index('tblstart') ) );
         my $tline = $text_window->get( "$srow.0", "$srow.end" );
@@ -15156,7 +15208,8 @@ sub tblcompress {
     else {
         $text_window->addGlobStart;
         my $cursor = $text_window->index('insert');
-        my ( $erow, $ecol ) = split( /\./, ( $text_window->index('tblend') ) );
+        my ( $erow, $ecol )
+            = split( /\./, ( $text_window->index('tblend') ) );
         my ( $srow, $scol )
             = split( /\./, ( $text_window->index('tblstart') ) );
         while ( $erow >= $srow ) {
@@ -15193,7 +15246,8 @@ sub insertline {
             my $rowlen = $text_window->index("$_.end");
             my ( $lrow, $lcol ) = split( /\./, $rowlen );
             if ( $lcol < $col ) {
-                $text_window->ntinsert( "$_.end", ( ' ' x ( $col - $lcol ) ) );
+                $text_window->ntinsert( "$_.end",
+                    ( ' ' x ( $col - $lcol ) ) );
             }
             if ( $op eq 'a' ) {
                 $text_window->delete("$_.$col")
@@ -16117,8 +16171,10 @@ sub textbindings {
             }
         }
     );
-    $text_window->bind( 'TextUnicode', '<Control-l>' => sub { case ('lc'); } );
-    $text_window->bind( 'TextUnicode', '<Control-u>' => sub { case ('uc'); } );
+    $text_window->bind( 'TextUnicode',
+        '<Control-l>' => sub { case ('lc'); } );
+    $text_window->bind( 'TextUnicode',
+        '<Control-u>' => sub { case ('uc'); } );
     $text_window->bind( 'TextUnicode',
         '<Control-t>' => sub { case ('tc'); $mw->break } );
     $text_window->bind(
@@ -16238,7 +16294,8 @@ sub textbindings {
     );
     $text_window->bind( 'TextUnicode',
         '<Control-Alt-r>' => sub { regexref() } );
-    $text_window->bind( 'TextUnicode', '<Shift-B1-Motion>', 'shiftB1_Motion' );
+    $text_window->bind( 'TextUnicode', '<Shift-B1-Motion>',
+        'shiftB1_Motion' );
     $text_window->eventAdd(
         '<<FindNext>>' => '<Control-Key-G>',
         '<Control-Key-g>'
@@ -16259,9 +16316,12 @@ sub textbindings {
         }
     );
     if (OS_Win) {
-        $text_window->bind( 'TextUnicode',
-            '<3>' =>
-                sub { scrolldismiss(); $menubar->Popup( -popover => 'cursor' ) }
+        $text_window->bind(
+            'TextUnicode',
+            '<3>' => sub {
+                scrolldismiss();
+                $menubar->Popup( -popover => 'cursor' );
+            }
         );
     }
     else {
@@ -19919,11 +19979,11 @@ sub drag {
         '<B1-Motion>',
         sub {
             my $x
-                = $scrolledwidget->toplevel->width
+                = $scrolledwidget->toplevel->width 
                 - $lglobal{x}
                 + $scrolledwidget->toplevel->pointerx;
             my $y
-                = $scrolledwidget->toplevel->height
+                = $scrolledwidget->toplevel->height 
                 - $lglobal{y}
                 + $scrolledwidget->toplevel->pointery;
             ( $lglobal{x}, $lglobal{y} ) = (
@@ -19994,7 +20054,7 @@ sub jeebiespop_up {
         $lglobal{jeepop} = $mw->Toplevel;
         $lglobal{jeepop}->title('Jeebies');
         $lglobal{jeepop}->geometry($geometry2) if $geometry2;
-        $lglobal{jeepop}->transient($mw)      if $stayontop;
+        $lglobal{jeepop}->transient($mw)       if $stayontop;
         my $ptopframe = $lglobal{jeepop}->Frame->pack;
         $ptopframe->Label( -text => 'Search mode:', )
             ->pack( -side => 'left', -padx => 2 );
@@ -20215,7 +20275,7 @@ sub find_proofer_comment {
     $text_window->SetCursor($index);
 }
 
-# functions specific to text version processing
+### Text Processing
 sub text_convert_tb {
     my $tb = '       *       *       *       *       *';
     $text_window->FindAndReplaceAll( '-exact', '-nocase', '<tb>', $tb );
@@ -20224,7 +20284,8 @@ sub text_convert_tb {
 sub text_convert_italic {
     my $italic  = qr/<\/?i>/;
     my $replace = $italic_char;
-    $text_window->FindAndReplaceAll( '-regexp', '-nocase', $italic, $replace );
+    $text_window->FindAndReplaceAll( '-regexp', '-nocase', $italic,
+        $replace );
 }
 
 sub text_convert_bold {
@@ -20258,8 +20319,10 @@ sub text_convert_options {
 
     my $bold_frame = $options->add('Frame')
         ->pack( -side => 'top', -padx => 5, -pady => 3 );
-    my $bold_label = $bold_frame->Label( -width => 25,
-        -text => "Bold Replace Character" )->pack( -side => 'left' );
+    my $bold_label = $bold_frame->Label(
+        -width => 25,
+        -text  => "Bold Replace Character"
+    )->pack( -side => 'left' );
     my $bold_entry = $bold_frame->Entry(
         -width        => 6,
         -background   => 'white',
@@ -20296,7 +20359,7 @@ sub dos_path {
 #    return $line;
 #}
 
-## HTML processing routines
+### HTML processing routines
 sub htmlbackup {
     $text_window->Busy;
     my $savefn = $lglobal{global_filename};
@@ -20399,9 +20462,11 @@ sub html_cleanup_markers {
         $blockend = "$xler.end";
         $text_window->ntdelete( "$blockstart-1c", $blockend );
     }
-    while ( $blockstart
-        = $text_window->search( '-regexp', '--', '<\/h\d><br />', '1.0',
-            'end' ) )
+    while (
+        $blockstart = $text_window->search(
+            '-regexp', '--', '<\/h\d><br />', '1.0', 'end'
+        )
+        )
     {
         $text_window->ntdelete( "$blockstart+5c", "$blockstart+9c" );
     }
