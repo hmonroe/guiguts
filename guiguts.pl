@@ -282,8 +282,9 @@ my $menu = $top->Menu( -type => 'menubar' );
 
 $top->configure( -menu => $menu );
 
+# routines to call every time the text is edited
 $textwindow->SetGUICallbacks(
-    [    # routines to call every time the text is edited
+    [    
         \&update_indicators,
         sub {
             return if $nohighlights;
@@ -295,14 +296,16 @@ $textwindow->SetGUICallbacks(
     ]
 );
 
-buildmenu();    # Set up the custom menus
+# Set up the custom menus
+buildmenu();    
 
-textbindings(); # Set up the key bindings for the text widget
+# Set up the key bindings for the text widget
+textbindings(); 
 
-buildstatusbar();    # Build the status bar
+buildstatusbar();
 
-$top->Icon( -image => $icon )
-    ;  # Load the icon ito the window bar. Needs to happen late in the process
+# Load the icon ito the window bar. Needs to happen late in the process
+$top->Icon( -image => $icon );  
 
 $textwindow->focus;
 
@@ -332,8 +335,6 @@ set_autosave() if $autosave;
 $textwindow->CallNextGUICallback;
 
 $top->repeat( 200, \&updatesel );
-
-MainLoop;
 
 ############################################################################################
 
@@ -4795,7 +4796,8 @@ sub spelloptions {
         -textvariable => \$lglobal{spellencoding},
     )->pack;
 
-# FIXME: Switching to utf-8 is barfola. Probably down in the checkfil.txt thingy.
+# FIXME: Switching to utf-8 is barfola. Probably down in the checkfil.txt
+# thingy.
 
     my $dictlabel
         = $spellop->add( 'Label', -text => 'Dictionary files' )->pack;
@@ -20813,3 +20815,5 @@ sub html_convert_tb {
     }
 
 }
+
+MainLoop;
