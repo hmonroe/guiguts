@@ -586,27 +586,6 @@ sub butbind {    # Bindings to make label in status bar act like buttons
         sub { $widget->configure( -relief => 'raised' ) } );
 }
 
-# Special paste routine that will respond differently
-# for overstrike/insert modes
-sub paste {
-    if ( $textwindow->OverstrikeMode ) {
-        my @ranges = $textwindow->tagRanges('sel');
-        if (@ranges) {
-            my $end   = pop @ranges;
-            my $start = pop @ranges;
-            $textwindow->delete( $start, $end );
-        }
-        my $text    = $textwindow->clipboardGet;
-        my $lineend = $textwindow->get( 'insert', 'insert lineend' );
-        my $length  = length $text;
-        $length = length $lineend if ( length $lineend < length $text );
-        $textwindow->delete( 'insert', 'insert +' . ($length) . 'c' );
-        $textwindow->insert( 'insert', $text );
-    }
-    else {
-        $textwindow->clipboardPaste;
-    }
-}
 
 # Pop up window to allow entering Unicode characters by ordinal number
 sub utford {
@@ -1858,7 +1837,7 @@ sub buildmenu {    # The main menu building code.
                 -accelerator => 'Ctrl+v'
             ],
             [   Button   => 'Col Paste',
-                -command => sub {
+                -command => sub { # FIXME: sub edit_column_paste
                     $textwindow->addGlobStart;
                     $textwindow->clipboardColumnPaste;
                     $textwindow->addGlobEnd;
@@ -19812,32 +19791,7 @@ sub utfchar_bind {
     );
 }
 
-sub copy {
-    my @ranges      = $textwindow->tagRanges('sel');
-    my $range_total = @ranges;
-    return unless $range_total;
-    $textwindow->clipboardClear;
-    if ( $range_total == 2 ) {
-        $textwindow->clipboardCopy;
-    }
-    else {
-        $textwindow->clipboardColumnCopy;
-    }
-}
 
-sub cut {
-    my @ranges      = $textwindow->tagRanges('sel');
-    my $range_total = @ranges;
-    return unless $range_total;
-    if ( $range_total == 2 ) {
-        $textwindow->clipboardCut;
-    }
-    else {
-        $textwindow->addGlobStart;
-        $textwindow->clipboardColumnCut;
-        $textwindow->addGlobEnd;
-    }
-}
 
 sub drag {
     my $scrolledwidget = shift;
@@ -20827,5 +20781,73 @@ sub markpages {
 }
 
 ### Edit Menu
+sub cut {
+    my @ranges      = $textwindow->tagRanges('sel');
+    my $range_total = @ranges;
+    return unless $range_total;
+    if ( $range_total == 2 ) {
+        $textwindow->clipboardCut;
+    }
+    else {
+        $textwindow->addGlobStart;
+        $textwindow->clipboardColumnCut;
+        $textwindow->addGlobEnd;
+    }
+}
+
+sub copy {
+    my @ranges      = $textwindow->tagRanges('sel');
+    my $range_total = @ranges;
+    return unless $range_total;
+    $textwindow->clipboardClear;
+    if ( $range_total == 2 ) {
+        $textwindow->clipboardCopy;
+    }
+    else {
+        $textwindow->clipboardColumnCopy;
+    }
+}
+
+# Special paste routine that will respond differently
+# for overstrike/insert modes
+sub paste {
+    if ( $textwindow->OverstrikeMode ) {
+        my @ranges = $textwindow->tagRanges('sel');
+        if (@ranges) {
+            my $end   = pop @ranges;
+            my $start = pop @ranges;
+            $textwindow->delete( $start, $end );
+        }
+        my $text    = $textwindow->clipboardGet;
+        my $lineend = $textwindow->get( 'insert', 'insert lineend' );
+        my $length  = length $text;
+        $length = length $lineend if ( length $lineend < length $text );
+        $textwindow->delete( 'insert', 'insert +' . ($length) . 'c' );
+        $textwindow->insert( 'insert', $text );
+    }
+    else {
+        $textwindow->clipboardPaste;
+    }
+}
+
+### Search
+
+### Bookmarks
+
+### Selection
+
+### Fixup
+
+### Text Processing
+
+### External
+
+### Unicode
+
+### Prefs
+
+### Help
+
+
 
 MainLoop;
