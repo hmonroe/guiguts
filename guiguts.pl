@@ -20,31 +20,12 @@
 #along with this program; if not, write to the Free Software
 #Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-require 5.008;
 use strict;
 use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
+
 #use Data::Dumper;
-
-use Tk;
-use Tk::Balloon;
-use Tk::BrowseEntry;
-use Tk::Checkbutton;
-use Tk::Dialog;
-use Tk::DialogBox;
-use Tk::DropSite;
-use Tk::Font;
-use Tk::JPEG;
-use Tk::LabFrame;
-use Tk::Listbox;
-use Tk::PNG;
-use Tk::Pane;
-use Tk::Photo;
-use Tk::ProgressBar;
-use Tk::Radiobutton;
-use Tk::TextEdit;
-
 use Cwd;
 use Encode;
 use File::Basename;
@@ -54,23 +35,43 @@ use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
 
+use Tk;
+use Tk::widgets qw/Balloon
+    BrowseEntry
+    Checkbutton
+    Dialog
+    DialogBox
+    DropSite
+    Font
+    JPEG
+    LabFrame
+    Listbox
+    PNG
+    Pane
+    Photo
+    ProgressBar
+    Radiobutton
+    TextEdit
+    /;
+
 # Custom Guigut modules
 use LineNumberText;
 use TextUnicode;
+use ToolBar;
 
 use constant OS_Win => $^O =~ /Win/;
 
-# ignore any watchdog timer alarms. Subroutines that take a long time to complete can trip it
+# ignore any watchdog timer alarms. Subroutines that take a long time to
+# complete can trip it
 $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { myexit() };
 
-
-my $DEBUG = 0; # FIXME: this can go.
-my $VERSION = "0.2.4";
+my $DEBUG      = 0;          # FIXME: this can go.
+my $VERSION    = "0.2.5";
 my $currentver = $VERSION;
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
-= 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
+    = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 our $activecolor      = '#f2f818';
 our $auto_page_marks  = 1;
@@ -81,7 +82,7 @@ our $bkmkhl           = '0';
 our $blocklmargin     = 5;
 our $blockrmargin     = 72;
 our $blockwrap;
-our $bold_char = "=";
+our $bold_char     = "=";
 our $defaultindent = 0;
 our $fontname      = 'Courier New';
 our $fontsize      = 10;
@@ -99,7 +100,7 @@ our $globalviewerpath   = '';
 our $gutpath            = '';
 our $highlightcolor     = '#a08dfc';
 our $history_size       = 20;
-our $italic_char = "_";
+our $italic_char        = "_";
 our $jeebiesmode        = 'p';
 our $jeebiespath        = '';
 our $lmargin            = 1;
@@ -121,11 +122,11 @@ our $singleterm       = 1;
 our $spellindexbkmrk  = '';
 our $stayontop        = 0;
 our $suspectindex;
-our $tidycommand = '';
-our $toolside    = 'bottom';
-our $utffontname = 'Courier New';
-our $utffontsize = 14;
-our $vislnnm     = 0;
+our $tidycommand  = '';
+our $toolside     = 'bottom';
+our $utffontname  = 'Courier New';
+our $utffontsize  = 14;
+our $vislnnm      = 0;
 our $window_title = "Guiguts-" . $currentver;
 
 our %gc;
@@ -166,31 +167,27 @@ our @extops = (
     { 'label' => '', 'command' => '' },
 );
 
+#All local global variables contained in one hash.
+my %lglobal;
 
-my %lglobal;    #All local global variables contained in one hash.
-
+# FIXME: Build a popup message about these.
 if ( eval { require Text::LevenshteinXS } ) {
     $lglobal{LevenshteinXS} = 1;
-} else {
-    print
-    "Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
 }
-
-# load Tk::ToolBar if it is installed
-if ( eval { require Tk::ToolBar; 1; } ) {
-    $lglobal{ToolBar} = 1;
-} else {
-    $lglobal{ToolBar} = 0;
+else {
+    print
+        "Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
 }
 
 # load Image::Size if it is installed
 if ( eval { require Image::Size; 1; } ) {
     $lglobal{ImageSize} = 1;
-} else {
+}
+else {
     $lglobal{ImageSize} = 0;
 }
 
-my $top = MainWindow->new;    # Set up main window
+my $top = tkinit(-title => $window_title,); 
 
 initialize();                 # Initialize a bunch of vars that need it.
 
@@ -239,8 +236,11 @@ utffontinit();
 $top->geometry($geometry) if $geometry;
 
 # Set up Main window layout
-my $text_frame
-= $top->Frame->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' ) ;          # autosizing
+my $text_frame = $top->Frame->pack( -anchor => 'nw',
+                                    -expand => 'yes',
+                                    -fill => 'both' 
+);
+
 my $counter_frame = $text_frame->Frame->pack(
     -side   => 'bottom',
     -anchor => 'sw',
@@ -248,7 +248,7 @@ my $counter_frame = $text_frame->Frame->pack(
     -expand => 0
 );
 my $proofer_frame = $text_frame
-->Frame;    # Frame to hold proofer names. Pack it when necessary.
+    ->Frame;    # Frame to hold proofer names. Pack it when necessary.
 
 # The actual text widget
 my $textwindow = $text_frame->LineNumberText(
@@ -259,19 +259,19 @@ my $textwindow = $text_frame->LineNumberText(
     -font      => $lglobal{font},
     -wrap      => 'none',
     -curlinebg => $activecolor,
-)->pack(
+    )->pack(
     -side   => 'bottom',
     -anchor => 'nw',
     -expand => 'yes',
     -fill   => 'both'
-);
+    );
 
 # Enable Drag & Drop. You can drag a text file into the open window and it
 # will auto load. Kind of gimicky, but fun to play with.
 $top->DropSite(
     -dropcommand => \&handleDND,
     -droptypes =>
-    ( OS_Win or ( $^O eq 'cygwin' and $Tk::platform eq 'MSWin32' ) )
+        ( OS_Win or ( $^O eq 'cygwin' and $Tk::platform eq 'MSWin32' ) )
     ? ['Win32']
     : [qw/XDND Sun/]
 );
@@ -284,14 +284,14 @@ $top->configure( -menu => $menu );
 
 $textwindow->SetGUICallbacks(
     [    # routines to call every time the text is edited
-    \&update_indicators,
-    sub {
-        return if $nohighlights;
-        $textwindow->HighlightAllPairsBracketingCursor;
-    },
-    sub {
-        $textwindow->hidelinenum unless $vislnnm;
-    }
+        \&update_indicators,
+        sub {
+            return if $nohighlights;
+            $textwindow->HighlightAllPairsBracketingCursor;
+        },
+        sub {
+            $textwindow->hidelinenum unless $vislnnm;
+            }
     ]
 );
 
@@ -301,7 +301,8 @@ textbindings(); # Set up the key bindings for the text widget
 
 buildstatusbar();    # Build the status bar
 
-$top->Icon( -image => $icon ) ;  # Load the icon ito the window bar. Needs to happen late in the process
+$top->Icon( -image => $icon )
+    ;  # Load the icon ito the window bar. Needs to happen late in the process
 
 $textwindow->focus;
 
@@ -318,10 +319,11 @@ if (@ARGV) {
     $lglobal{global_filename} = shift @ARGV;
     if ( -e $lglobal{global_filename} ) {
         $top->update
-        ;    # it may be a big file, draw the window, and then load it
+            ;    # it may be a big file, draw the window, and then load it
         openfile( $lglobal{global_filename} );
     }
-} else {
+}
+else {
     $lglobal{global_filename} = 'No File Loaded';
 }
 
@@ -343,10 +345,11 @@ sub updatesel {    # Update Last Selection readout in status bar
             my ( $srow, $scol ) = split /\./, $ranges[0];
             my ( $erow, $ecol ) = split /\./, $ranges[-1];
             $msg
-            = ' R:'
-            . abs( $erow - $srow + 1 ) . ' C:'
-            . abs( $ecol - $scol ) . ' ';
-        } else {
+                = ' R:'
+                . abs( $erow - $srow + 1 ) . ' C:'
+                . abs( $ecol - $scol ) . ' ';
+        }
+        else {
             $msg = " $ranges[0]--$ranges[-1] ";
             if ( $lglobal{selectionpop} ) {
                 $lglobal{selsentry}->delete( '0', 'end' );
@@ -355,7 +358,8 @@ sub updatesel {    # Update Last Selection readout in status bar
                 $lglobal{seleentry}->insert( 'end', $ranges[-1] );
             }
         }
-    } else {
+    }
+    else {
         $msg = ' No Selection ';
     }
     my $msgln = length($msg);
@@ -363,7 +367,7 @@ sub updatesel {    # Update Last Selection readout in status bar
     no warnings 'uninitialized';
     $lglobal{selmaxlength} = $msgln if ( $msgln > $lglobal{selmaxlength} );
     $lglobal{selectionlabel}
-    ->configure( -text => $msg, -width => $lglobal{selmaxlength} );
+        ->configure( -text => $msg, -width => $lglobal{selmaxlength} );
     update_indicators();
     $textwindow->_lineupdate;
 }
@@ -372,8 +376,8 @@ sub fileopen {    # Find a text file to open
     my ($name);
     return if ( confirmempty() =~ /cancel/i );
     my $types = [
-    [ 'Text Files', [qw/.txt .text .ggp .htm .html .bk1 .bk2/] ],
-    [ 'All Files',  ['*'] ],
+        [ 'Text Files', [qw/.txt .text .ggp .htm .html .bk1 .bk2/] ],
+        [ 'All Files',  ['*'] ],
     ];
     $name = $textwindow->getOpenFile(
         -filetypes  => $types,
@@ -448,7 +452,7 @@ sub openfile {    # and open it
         $bookmarks[0] ||= '1.0';
         $textwindow->markSet( 'insert',    $bookmarks[0] );
         $textwindow->markSet( 'spellbkmk', $spellindexbkmrk )
-        if $spellindexbkmrk;
+            if $spellindexbkmrk;
         $textwindow->see( $bookmarks[0] );
     }
     recentupdate($name);
@@ -463,11 +467,11 @@ sub openfile {    # and open it
 sub prep_import {
     return if ( confirmempty() =~ /cancel/i );
     my $directory
-    = $top->chooseDirectory( -title =>
-        'Choose the directory containing the text files to be imported.',
-    );
+        = $top->chooseDirectory( -title =>
+            'Choose the directory containing the text files to be imported.',
+        );
     return 0
-    unless ( -d $directory and defined $directory and $directory ne '' );
+        unless ( -d $directory and defined $directory and $directory ne '' );
     $top->Busy( -recurse => 1 );
     my $pwd = getcwd();
     chdir $directory;
@@ -488,6 +492,7 @@ sub prep_import {
                 utf8::decode($line);
                 $line =~ s/^\x{FEFF}?//;
                 $line =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
                 #$line = eol_convert($line);
                 $line =~ s/[\t \xA0]+$//smg;
                 $textwindow->ntinsert( 'end', $line );
@@ -514,7 +519,7 @@ sub prep_export {
     my @marks = $textwindow->markNames;
     my @pages = sort grep ( /^Pg\S+$/, @marks );
     my $unicode
-    = $textwindow->search( '-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0',
+        = $textwindow->search( '-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0',
         'end' );
     while (@pages) {
         my $page = shift @pages;
@@ -523,7 +528,8 @@ sub prep_export {
         my $next;
         if (@pages) {
             $next = $pages[0];
-        } else {
+        }
+        else {
             $next = 'end';
         }
         my $file = $textwindow->get( $page, $next );
@@ -531,7 +537,7 @@ sub prep_export {
         $file =~ s/\n+$//;
         open my $fh, '>', "$directory/$filename";
         if ($unicode) {
-            $file = "\x{FEFF}" . $file; # Add the BOM to beginning of file.
+            $file = "\x{FEFF}" . $file;    # Add the BOM to beginning of file.
             utf8::encode($file);
         }
         print $fh $file;
@@ -547,20 +553,20 @@ sub set_autosave {
         ( $autosaveinterval * 60000 ),
         sub {
             savefile()
-            if $textwindow->numberChanges
-                and $lglobal{global_filename} !~ /No File Loaded/;
+                if $textwindow->numberChanges
+                    and $lglobal{global_filename} !~ /No File Loaded/;
         }
     );
     $lglobal{saveflashid} = $top->after(
         ( $autosaveinterval * 60000 - 10000 ),
         sub {
             flash_save()
-            if $lglobal{global_filename} !~ /No File Loaded/;
+                if $lglobal{global_filename} !~ /No File Loaded/;
         }
     );
     $lglobal{savetool}
-    ->configure( -background => 'green', -activebackground => 'green' )
-    unless $notoolbar;
+        ->configure( -background => 'green', -activebackground => 'green' )
+        unless $notoolbar;
     $lglobal{autosaveinterval} = time;
 }
 
@@ -573,7 +579,8 @@ sub flash_save {
                     -background       => 'green',
                     -activebackground => 'green'
                 ) unless $notoolbar;
-            } else {
+            }
+            else {
                 $lglobal{savetool}->configure(
                     -background       => 'yellow',
                     -activebackground => 'yellow'
@@ -586,7 +593,8 @@ sub flash_save {
 sub toggle_autosave {
     if ($autosave) {
         set_autosave();
-    } else {
+    }
+    else {
         $lglobal{autosaveid}->cancel;
         undef $lglobal{autosaveid};
         $lglobal{saveflashid}->cancel;
@@ -615,10 +623,12 @@ sub savefile {    # Determine which save routine to use and then use it
             $textwindow->SaveUTF($name);
             $name = os_normal($name);
             recentupdate($name);
-        } else {
+        }
+        else {
             return;
         }
-    } else {
+    }
+    else {
         if ($autobackup) {
             if ( -e $lglobal{global_filename} ) {
                 if ( -e "$lglobal{global_filename}.bk2" ) {
@@ -657,7 +667,8 @@ sub binsave {    # save the .bin file associated with the text file
             $markindex                  = $textwindow->index($mark);
             $pagenumbers{$mark}{offset} = $markindex;
             $mark                       = $textwindow->markNext($mark);
-        } else {
+        }
+        else {
             $mark = $textwindow->markNext($mark) if $mark;
             next;
         }
@@ -666,7 +677,8 @@ sub binsave {    # save the .bin file associated with the text file
     my $binname = "$lglobal{global_filename}.bin";
     if ( $textwindow->markExists('spellbkmk') ) {
         $spellindexbkmrk = $textwindow->index('spellbkmk');
-    } else {
+    }
+    else {
         $spellindexbkmrk = '';
     }
     my $bak = "$binname.bak";
@@ -702,17 +714,17 @@ sub binsave {    # save the .bin file associated with the text file
         print $bin ");\n\n";
 
         print $bin '$bookmarks[0] = \''
-        . $textwindow->index('insert') . "';\n";
+            . $textwindow->index('insert') . "';\n";
         for ( 1 .. 5 ) {
             print $bin '$bookmarks[' 
-            . $_ 
-            . '] = \''
-            . $textwindow->index( 'bkmk' . $_ ) . "';\n"
-            if $bookmarks[$_];
+                . $_ 
+                . '] = \''
+                . $textwindow->index( 'bkmk' . $_ ) . "';\n"
+                if $bookmarks[$_];
         }
         if ($pngspath) {
             print $bin
-            "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
+                "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
         }
         my ( $page, $prfr );
         delete $proofers{''};
@@ -722,10 +734,10 @@ sub binsave {    # save the .bin file associated with the text file
             for my $round ( 1 .. $lglobal{numrounds} ) {
                 if ( defined $proofers{$page}->[$round] ) {
                     print $bin '$proofers{\'' 
-                    . $page . '\'}[' 
-                    . $round
-                    . '] = \''
-                    . $proofers{$page}->[$round] . '\';' . "\n";
+                        . $page . '\'}[' 
+                        . $round
+                        . '] = \''
+                        . $proofers{$page}->[$round] . '\';' . "\n";
                 }
             }
         }
@@ -738,10 +750,11 @@ sub binsave {    # save the .bin file associated with the text file
         print $bin ");\n\n";
         print $bin "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
         print $bin
-        "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
+            "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
         print $bin '1;';
         close $bin;
-    } else {
+    }
+    else {
         $top->BackTrace("Cannot open $binname:$!");
     }
 }
@@ -782,7 +795,7 @@ sub butbind {    # Bindings to make label in status bar act like buttons
 
 # Special paste routine that will respond differently
 # for overstrike/insert modes
-sub paste { 
+sub paste {
     if ( $textwindow->OverstrikeMode ) {
         my @ranges = $textwindow->tagRanges('sel');
         if (@ranges) {
@@ -796,28 +809,30 @@ sub paste {
         $length = length $lineend if ( length $lineend < length $text );
         $textwindow->delete( 'insert', 'insert +' . ($length) . 'c' );
         $textwindow->insert( 'insert', $text );
-    } else {
+    }
+    else {
         $textwindow->clipboardPaste;
     }
 }
 
 # Pop up window to allow entering Unicode characters by ordinal number
-sub utford {    
+sub utford {
     my $ord;
     my $base = 'dec';
     if ( $lglobal{ordpop} ) {
         $lglobal{ordpop}->deiconify;
         $lglobal{ordpop}->raise;
-    } else {
+    }
+    else {
         $lglobal{ordpop} = $top->Toplevel;
         $lglobal{ordpop}->title('Ordinal to Char');
         $lglobal{ordpop}->resizable( 'yes', 'no' );
         my $frame = $lglobal{ordpop}
-        ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
         my $frame2 = $lglobal{ordpop}
-        ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
         $frame->Label( -text => 'Ordinal of char.' )
-        ->grid( -row => 1, -column => 1 );
+            ->grid( -row => 1, -column => 1 );
         my $charlbl = $frame2->Label( -text => '', -width => 50 )->pack;
         my ( $inentry, $outentry );
         $frame->Radiobutton(
@@ -849,7 +864,8 @@ sub utford {
                     return 0 unless ( $_[0] =~ /^[a-fA-F\d]{0,4}$/ );
                     $char = chr( hex( $_[0] ) );
                     $name = charnames::viacode( hex( $_[0] ) );
-                } elsif ( $base eq 'dec' ) {
+                }
+                elsif ( $base eq 'dec' ) {
                     return 0
                         unless ( ( $_[0] =~ /^\d{0,5}$/ )
                         && ( $_[0] < 65519 ) );
@@ -892,12 +908,13 @@ sub utford {
 }
 
 # Pop up window allowing tracking and auto reselection of last selection
-sub selection {    
+sub selection {
     my ( $start, $end );
     if ( $lglobal{selectionpop} ) {
         $lglobal{selectionpop}->deiconify;
         $lglobal{selectionpop}->raise;
-    } else {
+    }
+    else {
         $lglobal{selectionpop} = $top->Toplevel;
         $lglobal{selectionpop}->title('Select Line.Col');
         $lglobal{selectionpop}->resizable( 'no', 'no' );
@@ -969,7 +986,8 @@ sub selection {
         $lglobal{selsentry}->insert( 'end', $ranges[0] );
         $lglobal{seleentry}->delete( '0', 'end' );
         $lglobal{seleentry}->insert( 'end', $ranges[-1] );
-    } elsif ( $textwindow->markExists('selstart') ) {
+    }
+    elsif ( $textwindow->markExists('selstart') ) {
         $lglobal{selsentry}->delete( '0', 'end' );
         $lglobal{selsentry}->insert( 'end', $textwindow->index('selstart') );
         $lglobal{seleentry}->delete( '0', 'end' );
@@ -979,7 +997,7 @@ sub selection {
 }
 
 # Routine to update the status bar when somthing has changed.
-sub update_indicators {    
+sub update_indicators {
     my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
     my ( $line, $column ) = split( /\./, $textwindow->index('insert') );
     $lglobal{current_line_label}->configure(
@@ -1013,19 +1031,25 @@ sub update_indicators {
             -justify => 'left'
         );
 
-    } else {
+    }
+    else {
         $lglobal{ordinallabel}->configure(
             -text  => " Dec $ordinal : Hex $hexi ",
             -width => 18
         );
     }
     if ( $textwindow->numberChanges ) { $edit_flag = 'edited' }
-    
-# window label format: GG-version - [edited] - [file name]
-    if ( $edit_flag) { $top->configure( -title => $window_title . " - ". $edit_flag . " - " . $filename) } 
-    else { $top->configure( -title => $window_title . " - " . $filename) } 
-#FIXME: need some logic behind this 
-        
+
+    # window label format: GG-version - [edited] - [file name]
+    if ($edit_flag) {
+        $top->configure( -title => $window_title . " - "
+                . $edit_flag . " - "
+                . $filename );
+    }
+    else { $top->configure( -title => $window_title . " - " . $filename ) }
+
+    #FIXME: need some logic behind this
+
     $lglobal{global_filename} = $filename;
     $textwindow->idletasks;
     my ( $mark, $pnum );
@@ -1124,12 +1148,14 @@ sub update_indicators {
                 if ( defined $label && length $label ) {
                     $lglobal{page_label}
                         ->configure( -text => ("Lbl: $label ") );
-                } else {
+                }
+                else {
                     $lglobal{page_label}
                         ->configure( -text => ("Lbl: None ") );
                 }
                 last;
-            } else {
+            }
+            else {
                 if ( $textwindow->index('insert')
                     > ( $textwindow->index($mark) + 400 ) )
                 {
@@ -1186,6 +1212,7 @@ sub update_indicators {
         saveset();
         $lglobal{geometryupdate} = 0;
     }
+
     # FIXME: Can this go? Maybe.
     if ( $autosave and $lglobal{autosaveinterval} and $DEBUG ) {
         my $elapsed
@@ -1199,7 +1226,8 @@ sub hilitetgl {    # Enable / disable word highlighting in the text
         $lglobal{hl_index} = 1;
         highlightscannos();
         $lglobal{scanno_hlid} = $top->repeat( 400, \&highlightscannos );
-    } else {
+    }
+    else {
         $lglobal{scanno_hlid}->cancel if $lglobal{scanno_hlid};
         undef $lglobal{scanno_hlid};
         $textwindow->tagRemove( 'scannos', '1.0', 'end' );
@@ -1212,23 +1240,26 @@ sub toolbar_toggle {    # Set up / remove the tool bar
     if ( $notoolbar && $lglobal{toptool} ) {
         $lglobal{toptool}->destroy;
         undef $lglobal{toptool};
-    } elsif ( !$notoolbar && !$lglobal{toptool} ) {
+    }
+    elsif ( !$notoolbar && !$lglobal{toptool} ) {
 
-      # if Tk::ToolBar isn't available, show a message and disable the toolbar
-        if ( !$lglobal{ToolBar} ) {
-            my $dbox = $top->Dialog(
-                -text =>
-                    'Tk::ToolBar package not found, unable to create Toolbar. The toolbar will be disabled.',
-                -title   => 'Unable to create Toolbar.',
-                -buttons => ['OK']
-            );
-            $dbox->Show;
+      # FIXME: if Tk::ToolBar isn't available, show a message and disable
+      # the toolbar
+        # if ( !$lglobal{ToolBar} ) {
+        #     my $dbox = $top->Dialog(
+        #         -text =>
+        #             'Tk::ToolBar package not found, unable to create Toolbar. The toolbar will be disabled.',
+        #         -title   => 'Unable to create Toolbar.',
+        #         -buttons => ['OK']
+        #     );
+        #     $dbox->Show;
 
-            # disable toolbar in settings
-            $notoolbar = 1;
-            saveset();
-            return;
-        }
+        #     # disable toolbar in settings
+        #     $notoolbar = 1;
+        #     saveset();
+        #     return;
+        #}
+
         $lglobal{toptool}
             = $top->ToolBar( -side => $toolside, -close => '30' );
         $lglobal{toolfont} = $top->Font(
@@ -1414,9 +1445,9 @@ sub setcolor {    # Color picking routine
     );
 }
 
-# Routine to spawn another perl process and use it to execute an 
+# Routine to spawn another perl process and use it to execute an
 # external program
-sub runner { 
+sub runner {
     my $args;
     $args = join ' ', @_;
     unless ( -e 'spawn.pl' ) {
@@ -1425,7 +1456,8 @@ sub runner {
     }
     if (OS_Win) {
         $args = '"' . $args . '"';
-    } else {
+    }
+    else {
         $args .= ' &';
     }
     system "perl spawn.pl $args";
@@ -1435,7 +1467,8 @@ sub viewerpath {    #Find your image viewer
     my $types;
     if (OS_Win) {
         $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
-    } else {
+    }
+    else {
         $types = [ [ 'All Files', ['*'] ] ];
     }
     $lglobal{pathtemp} = $textwindow->getOpenFile(
@@ -1496,7 +1529,8 @@ sub externalpopup {    # Set up the external commands menu
     my $menutempvar;
     if ( $lglobal{xtpop} ) {
         $lglobal{xtpop}->deiconify;
-    } else {
+    }
+    else {
         $lglobal{xtpop} = $top->Toplevel( -title => 'External programs', );
         my $f0
             = $lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
@@ -1562,9 +1596,9 @@ sub externalpopup {    # Set up the external commands menu
     }
 }
 
-# Menus are not easily modifiable in place. Easier to just destroy and 
+# Menus are not easily modifiable in place. Easier to just destroy and
 # rebuild every time it is modified
-sub rebuildmenu { 
+sub rebuildmenu {
     for ( 0 .. 10 ) {
         $menu->delete('last');
     }
@@ -1602,7 +1636,8 @@ sub tglprfbar {    # Make toolbar visible if invisible and vice versa
         $geom[1] -= $counter_frame->height;
         $top->geometry("$geom[0]x$geom[1]+$geom[2]+$geom[3]");
         $lglobal{proofbarvisible} = 0;
-    } else {
+    }
+    else {
         my $pnum = $lglobal{page_num_label}->cget( -text );
         $pnum =~ s/\D+//g;
         $proofer_frame->pack(
@@ -1656,7 +1691,8 @@ sub openpng {
     unless ($pngspath) {
         if (OS_Win) {
             $pngspath = "${globallastpath}pngs\\";
-        } else {
+        }
+        else {
             $pngspath = "${globallastpath}pngs/";
         }
         setpngspath() unless ( -e "$pngspath$pagenum.png" );
@@ -1686,7 +1722,8 @@ sub openpng {
             }
             runner( $dospath, $dosfile );
         }
-    } else {
+    }
+    else {
         setpngspath();
     }
 }
@@ -1739,7 +1776,8 @@ sub highlightscannos {   #routine to automatically highlight words in the text
                     $lglobal{wordlist}->{$word} = '';
                 }
             }
-        } else {
+        }
+        else {
             warn "Cannot open $scannoslist: $!";
             return 0;
         }
@@ -1878,12 +1916,14 @@ EOM
         $lglobal{aboutpop}->deiconify;
         $lglobal{aboutpop}->raise;
         $lglobal{aboutpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{aboutpop} = $top->Toplevel;
         $lglobal{aboutpop}->title('About');
-        $lglobal{aboutpop}->Label( 
-            -justify => "left", 
-            -text => $about_text)->pack;
+        $lglobal{aboutpop}->Label(
+            -justify => "left",
+            -text    => $about_text
+        )->pack;
         my $button_ok = $lglobal{aboutpop}->Button(
             -activebackground => $activecolor,
             -text             => 'OK',
@@ -1905,7 +1945,7 @@ sub buildmenu {    # The main menu building code.
         -menuitems => [
             [ Button => '~Open', -command => [ \&fileopen ] ],
             '',
-            map ( [ Button => "$recentfile[$_]",
+            map ( [ Button   => "$recentfile[$_]",
                     -command => [ \&openfile, $recentfile[$_] ],
                 ],
                 ( 0 .. scalar(@recentfile) - 1 ) ),
@@ -1949,7 +1989,8 @@ sub buildmenu {    # The main menu building code.
                         $lglobal{global_filename} = $name;
                         binsave();
                         recentupdate($name);
-                    } else {
+                    }
+                    else {
                         return;
                     }
                     update_indicators();
@@ -1984,10 +2025,10 @@ sub buildmenu {    # The main menu building code.
                     }
             ],
             '',
-            [    Button => 'Import Prep Text Files',
+            [   Button   => 'Import Prep Text Files',
                 -command => sub { prep_import() }
             ],
-            [    Button => 'Export As Prep Text Files',
+            [   Button   => 'Export As Prep Text Files',
                 -command => sub { prep_export() }
             ],
             '',
@@ -2002,24 +2043,24 @@ sub buildmenu {    # The main menu building code.
         -label     => '~Edit',
         -tearoff   => 1,
         -menuitems => [
-            [   Button => 'Undo',
+            [   Button       => 'Undo',
                 -command     => sub { $textwindow->undo },
                 -accelerator => 'Ctrl+z'
             ],
-            [   Button => 'Redo',
+            [   Button       => 'Redo',
                 -command     => sub { $textwindow->redo },
                 -accelerator => 'Ctrl+y'
             ],
             '',
-            [   Button => 'Cut',
+            [   Button       => 'Cut',
                 -command     => sub { cut() },
                 -accelerator => 'Ctrl+x'
             ],
-            [   Button => 'Copy',
+            [   Button       => 'Copy',
                 -command     => sub { copy() },
                 -accelerator => 'Ctrl+c'
             ],
-            [   Button => 'Paste',
+            [   Button       => 'Paste',
                 -command     => sub { paste() },
                 -accelerator => 'Ctrl+v'
             ],
@@ -2054,47 +2095,49 @@ sub buildmenu {    # The main menu building code.
             [ Button => 'Search & ~Replace', -command => \&searchpopup ],
             [ Button => '~Stealth Scannos',  -command => \&stealthscanno ],
             [ Button => 'Spell ~Check',      -command => \&spellchecker ],
-            [   Button => 'Goto ~Line...',
+            [   Button   => 'Goto ~Line...',
                 -command => sub { gotoline(); update_indicators(); }
             ],
-            [   Button => 'Goto ~Page...',
+            [   Button   => 'Goto ~Page...',
                 -command => sub { gotopage(); update_indicators(); }
             ],
-            [   Button => '~Which Line?',
+            [   Button   => '~Which Line?',
                 -command => sub { $textwindow->WhatLineNumberPopUp }
             ],
-            
+
             '',
-            
-            [ Button => "Find Proofer Comments", -command => \&find_proofer_comment ],
-            [   Button => 'Find next /*..*/ block',
+
+            [   Button   => "Find Proofer Comments",
+                -command => \&find_proofer_comment
+            ],
+            [   Button   => 'Find next /*..*/ block',
                 -command => [ \&nextblock, 'default', 'forward' ]
             ],
-            [   Button => 'Find previous /*..*/ block',
+            [   Button   => 'Find previous /*..*/ block',
                 -command => [ \&nextblock, 'default', 'reverse' ]
             ],
-            [   Button => 'Find next /#..#/ block',
+            [   Button   => 'Find next /#..#/ block',
                 -command => [ \&nextblock, 'block', 'forward' ]
             ],
-            [   Button => 'Find previous /#..#/ block',
+            [   Button   => 'Find previous /#..#/ block',
                 -command => [ \&nextblock, 'block', 'reverse' ]
             ],
-            [   Button => 'Find next /$..$/ block',
+            [   Button   => 'Find next /$..$/ block',
                 -command => [ \&nextblock, 'stet', 'forward' ]
             ],
-            [   Button => 'Find previous /$..$/ block',
+            [   Button   => 'Find previous /$..$/ block',
                 -command => [ \&nextblock, 'stet', 'reverse' ]
             ],
-            [   Button => 'Find next /p..p/ block',
+            [   Button   => 'Find next /p..p/ block',
                 -command => [ \&nextblock, 'poetry', 'forward' ]
             ],
-            [   Button => 'Find previous /p..p/ block',
+            [   Button   => 'Find previous /p..p/ block',
                 -command => [ \&nextblock, 'poetry', 'reverse' ]
             ],
-            [   Button => 'Find next indented block',
+            [   Button   => 'Find next indented block',
                 -command => [ \&nextblock, 'indent', 'forward' ]
             ],
-            [   Button => 'Find previous indented block',
+            [   Button   => 'Find previous indented block',
                 -command => [ \&nextblock, 'indent', 'reverse' ]
             ],
             ,
@@ -2103,11 +2146,11 @@ sub buildmenu {    # The main menu building code.
                 -command => \&brackets
             ],
             '',
-            [   Button => 'Highlight double quotes in selection',
+            [   Button       => 'Highlight double quotes in selection',
                 -command     => [ \&hilite, '"' ],
                 -accelerator => 'Ctrl+Shift+"'
             ],
-            [   Button => 'Highlight single quotes in selection',
+            [   Button       => 'Highlight single quotes in selection',
                 -command     => [ \&hilite, '\'' ],
                 -accelerator => 'Ctrl+\''
             ],
@@ -2127,13 +2170,13 @@ sub buildmenu {    # The main menu building code.
 
     $menu->Cascade(
         qw/-label ~Bookmarks -tearoff 1 -menuitems/ => [
-            map ( [  Button => "Set Bookmark $_",
+            map ( [ Button       => "Set Bookmark $_",
                     -command     => [ \&setbookmark, $_ ],
                     -accelerator => "Ctrl+Shift+$_"
                 ],
                 ( 1 .. 5 ) ),
             '',
-            map ( [  Button => "Go To Bookmark $_",
+            map ( [ Button       => "Go To Bookmark $_",
                     -command     => [ \&gotobookmark, $_ ],
                     -accelerator => "Ctrl+$_"
                 ],
@@ -2145,16 +2188,16 @@ sub buildmenu {    # The main menu building code.
         -label     => '~Selection',
         -tearoff   => 1,
         -menuitems => [
-            [   Button => '~lowercase Selection',
+            [   Button   => '~lowercase Selection',
                 -command => sub { case ('lc'); }
             ],
-            [   Button => '~Sentence case Selection',
+            [   Button   => '~Sentence case Selection',
                 -command => sub { case ('sc'); }
             ],
-            [   Button => '~Title Case Selection',
+            [   Button   => '~Title Case Selection',
                 -command => sub { case ('tc'); }
             ],
-            [   Button => '~UPPERCASE Selection',
+            [   Button   => '~UPPERCASE Selection',
                 -command => sub { case ('uc'); }
             ],
             '',
@@ -2198,7 +2241,7 @@ sub buildmenu {    # The main menu building code.
                     $textwindow->addGlobEnd;
                     }
             ],
-            [    Button => 'Interrupt Rewrap',
+            [   Button   => 'Interrupt Rewrap',
                 -command => sub { $operationinterrupt = 1 }
             ],
             '',
@@ -2229,7 +2272,8 @@ sub buildmenu {    # The main menu building code.
                             my $start = pop @ranges;
                             fracconv( $start, $end );
                         }
-                    } else {
+                    }
+                    else {
                         fracconv( '1.0', 'end' );
                     }
                     $textwindow->addGlobEnd;
@@ -2259,7 +2303,7 @@ sub buildmenu {    # The main menu building code.
             ],
             [ Button => 'Run Fi~xup', -command => \&fixpopup ],
             '',
-            [    Button  => 'Fix ~Page Separators',
+            [   Button   => 'Fix ~Page Separators',
                 -command => \&seperatorpopup
             ],
             [   Button   => 'Remove Blank Lines Before Page Separators',
@@ -2273,14 +2317,14 @@ sub buildmenu {    # The main menu building code.
             [ Button => '~Footnote Fixup', -command => \&footnotepop ],
             [ Button => '~HTML Fixup',     -command => \&markpopup ],
             [ Button => '~Sidenote Fixup', -command => \&sidenotes ],
-            [    Button  => 'Reformat Poetry ~Line Numbers',
+            [   Button   => 'Reformat Poetry ~Line Numbers',
                 -command => \&poetrynumbers
             ],
-            [    Button  => 'Convert Windows CP 1252 characters to Unicode',
+            [   Button   => 'Convert Windows CP 1252 characters to Unicode',
                 -command => \&cp1252toUni
             ],
             '',
-            [    Button  => 'ASCII Table Special Effects',
+            [   Button   => 'ASCII Table Special Effects',
                 -command => \&tablefx
             ],
             '',
@@ -2292,43 +2336,50 @@ sub buildmenu {    # The main menu building code.
                     }
             ],
             '',
-            [    Button  => 'Find Greek',
+            [   Button   => 'Find Greek',
                 -command => \&findandextractgreek
             ],
-            [    Button  => 'Convert Greek [STUB - does nothing yet]',
+            [   Button   => 'Convert Greek [STUB - does nothing yet]',
                 -command => \&convertgreek
             ],
         ]
     );
 
-     $menu->Cascade(
-        -label    => 'Text Processing',
-        -tearoff => 1,
+    $menu->Cascade(
+        -label     => 'Text Processing',
+        -tearoff   => 1,
         -menuitems => [
-                [ Button => "Convert Italics", -command => \&text_convert_italic ],
-                [ Button => "Convert Bold", -command => \&text_convert_bold ],
-                #[ Button => "Convert Smallcaps", -command => \&text_convert_smcap ],
-                [ Button   => '~Add a Thought Break', -command => sub {
+            [   Button   => "Convert Italics",
+                -command => \&text_convert_italic
+            ],
+            [ Button => "Convert Bold", -command => \&text_convert_bold ],
+
+         #[ Button => "Convert Smallcaps", -command => \&text_convert_smcap ],
+            [   Button   => '~Add a Thought Break',
+                -command => sub {
                     $textwindow->addGlobStart;
                     thoughtbreak();
                     $textwindow->addGlobEnd;
-                    }],
-                [ Button   => 'Convert <tb> to asterisk break',
-                               -command => sub {
-                                                $textwindow->addGlobStart;
-                                                text_convert_tb();
-                                                $textwindow->addGlobEnd;
-                                                }],
+                    }
+            ],
+            [   Button   => 'Convert <tb> to asterisk break',
+                -command => sub {
+                    $textwindow->addGlobStart;
+                    text_convert_tb();
+                    $textwindow->addGlobEnd;
+                    }
+            ],
 
-                [ Button => "Options", -command => \&text_convert_options ],
-                                                ]);
-       $menu->Cascade(
+            [ Button => "Options", -command => \&text_convert_options ],
+        ]
+    );
+    $menu->Cascade(
         qw/-label Externa~l -tearoff 1 -menuitems/ => [
-            [    Button  => 'Setup External Operations',
+            [   Button   => 'Setup External Operations',
                 -command => \&externalpopup
             ],
             '',
-            map ( [  Button => "~$_ $extops[$_]{label}",
+            map ( [ Button   => "~$_ $extops[$_]{label}",
                     -command => [ \&xtops, $_ ]
                 ],
                 ( 0 .. 9 ) ),
@@ -2342,10 +2393,10 @@ sub buildmenu {    # The main menu building code.
         if ( $lglobal{utfrangesort} ) {
             $menu->Cascade(
                 qw/-label ~Unicode -tearoff 0 -menuitems/ => [
-                    [    Radiobutton => 'Sort by Name',
-                        -variable    => \$lglobal{utfrangesort},
-                        -command     => \&rebuildmenu,
-                        -value       => 0,
+                    [   Radiobutton => 'Sort by Name',
+                        -variable   => \$lglobal{utfrangesort},
+                        -command    => \&rebuildmenu,
+                        -value      => 0,
                     ],
                     map ( [ Button   => "$utfsorthash{$_}",
                             -command => [
@@ -2362,13 +2413,14 @@ sub buildmenu {    # The main menu building code.
                         ( sort ( keys %utfsorthash ) ) ),
                 ],
             );
-        } else {
+        }
+        else {
             $menu->Cascade(
                 qw/-label ~Unicode -tearoff 0 -menuitems/ => [
-                    [    Radiobutton => 'Sort by Range',
-                        -variable    => \$lglobal{utfrangesort},
-                        -command     => \&rebuildmenu,
-                        -value       => 1,
+                    [   Radiobutton => 'Sort by Range',
+                        -variable   => \$lglobal{utfrangesort},
+                        -command    => \&rebuildmenu,
+                        -value      => 1,
                     ],
                     map ( [ Button   => "$_",
                             -command => [
@@ -2404,7 +2456,8 @@ sub buildmenu {    # The main menu building code.
                                     [ 'Executable', [ '.exe', ] ],
                                     [ 'All Files',  ['*'] ],
                                 ];
-                            } else {
+                            }
+                            else {
                                 $types = [ [ 'All Files', ['*'] ] ];
                             }
                             $lglobal{pathtemp} = $textwindow->getOpenFile(
@@ -2427,7 +2480,8 @@ sub buildmenu {    # The main menu building code.
                                     [ 'Executable', [ '.exe', ] ],
                                     [ 'All Files',  ['*'] ],
                                 ];
-                            } else {
+                            }
+                            else {
                                 $types = [ [ 'All Files', ['*'] ] ];
                             }
                             $lglobal{pathtemp} = $textwindow->getOpenFile(
@@ -2450,7 +2504,8 @@ sub buildmenu {    # The main menu building code.
                                     [ 'Executable', [ '.exe', ] ],
                                     [ 'All Files',  ['*'] ],
                                 ];
-                            } else {
+                            }
+                            else {
                                 $types = [ [ 'All Files', ['*'] ] ];
                             }
                             $lglobal{pathtemp} = $textwindow->getOpenFile(
@@ -2473,7 +2528,8 @@ sub buildmenu {    # The main menu building code.
                                     [ 'Executable', [ '.exe', ] ],
                                     [ 'All Files',  ['*'] ],
                                 ];
-                            } else {
+                            }
+                            else {
                                 $types = [ [ 'All Files', ['*'] ] ];
                             }
                             $tidycommand = $textwindow->getOpenFile(
@@ -2485,38 +2541,38 @@ sub buildmenu {    # The main menu building code.
                             saveset();
                             }
                     ],
-                    [    Button  => 'Locate Image Viewer Executable',
+                    [   Button   => 'Locate Image Viewer Executable',
                         -command => \&viewerpath
                     ],
-                    [    Button  => 'Set Images Directory',
+                    [   Button   => 'Set Images Directory',
                         -command => \&setpngspath
                     ],
                 ]
             ],
-            [    Checkbutton => 'Leave Bookmarks Highlighted',
-                -variable    => \$bkmkhl,
-                -onvalue     => 1,
-                -offvalue    => 0
+            [   Checkbutton => 'Leave Bookmarks Highlighted',
+                -variable   => \$bkmkhl,
+                -onvalue    => 1,
+                -offvalue   => 0
             ],
-            [    Checkbutton => 'Enable Quotes Highlighting',
-                -variable    => \$nohighlights,
-                -onvalue     => 0,
-                -offvalue    => 1
+            [   Checkbutton => 'Enable Quotes Highlighting',
+                -variable   => \$nohighlights,
+                -onvalue    => 0,
+                -offvalue   => 1
             ],
-            [    Checkbutton => 'Keep Pop-ups On Top',
-                -variable    => \$stayontop,
-                -onvalue     => 1,
-                -offvalue    => 0
+            [   Checkbutton => 'Keep Pop-ups On Top',
+                -variable   => \$stayontop,
+                -onvalue    => 1,
+                -offvalue   => 0
             ],
-            [    Checkbutton => 'Enable Bell',
-                -variable    => \$nobell,
-                -onvalue     => 0,
-                -offvalue    => 1
+            [   Checkbutton => 'Enable Bell',
+                -variable   => \$nobell,
+                -onvalue    => 0,
+                -offvalue   => 1
             ],
-            [    Checkbutton => 'Auto Set Page Markers On File Open',
-                -variable    => \$auto_page_marks,
-                -onvalue     => 1,
-                -offvalue    => 0
+            [   Checkbutton => 'Auto Set Page Markers On File Open',
+                -variable   => \$auto_page_marks,
+                -onvalue    => 1,
+                -offvalue   => 0
             ],
             [   Checkbutton =>
                     'Leave Space After End-Of-Line Hyphens During Rewrap',
@@ -2524,45 +2580,45 @@ sub buildmenu {    # The main menu building code.
                 -onvalue  => 1,
                 -offvalue => 0
             ],
-            [    Cascade   => 'Toolbar Prefs',
+            [   Cascade    => 'Toolbar Prefs',
                 -tearoff   => 1,
                 -menuitems => [
-                    [    Checkbutton => 'Enable Toolbar',
-                        -variable    => \$notoolbar,
-                        -command     => [ \&toolbar_toggle ],
-                        -onvalue     => 0,
-                        -offvalue    => 1
+                    [   Checkbutton => 'Enable Toolbar',
+                        -variable   => \$notoolbar,
+                        -command    => [ \&toolbar_toggle ],
+                        -onvalue    => 0,
+                        -offvalue   => 1
                     ],
-                    [    Radiobutton => 'Toolbar on Top',
-                        -variable    => \$toolside,
-                        -command     => sub {
+                    [   Radiobutton => 'Toolbar on Top',
+                        -variable   => \$toolside,
+                        -command    => sub {
                             $lglobal{toptool}->destroy if $lglobal{toptool};
                             undef $lglobal{toptool};
                             toolbar_toggle();
                         },
                         -value => 'top'
                     ],
-                    [    Radiobutton => 'Toolbar on Bottom',
-                        -variable    => \$toolside,
-                        -command     => sub {
+                    [   Radiobutton => 'Toolbar on Bottom',
+                        -variable   => \$toolside,
+                        -command    => sub {
                             $lglobal{toptool}->destroy if $lglobal{toptool};
                             undef $lglobal{toptool};
                             toolbar_toggle();
                         },
                         -value => 'bottom'
                     ],
-                    [    Radiobutton => 'Toolbar on Left',
-                        -variable    => \$toolside,
-                        -command     => sub {
+                    [   Radiobutton => 'Toolbar on Left',
+                        -variable   => \$toolside,
+                        -command    => sub {
                             $lglobal{toptool}->destroy if $lglobal{toptool};
                             undef $lglobal{toptool};
                             toolbar_toggle();
                         },
                         -value => 'left'
                     ],
-                    [    Radiobutton => 'Toolbar on Right',
-                        -variable    => \$toolside,
-                        -command     => sub {
+                    [   Radiobutton => 'Toolbar on Right',
+                        -variable   => \$toolside,
+                        -command    => sub {
                             $lglobal{toptool}->destroy if $lglobal{toptool};
                             undef $lglobal{toptool};
                             toolbar_toggle();
@@ -2576,16 +2632,17 @@ sub buildmenu {    # The main menu building code.
                     my $thiscolor = setcolor($activecolor);
                     $activecolor = $thiscolor if $thiscolor;
                     OS_Win
-                        ? $lglobal{checkcolor} = 'white'
+                        ? $lglobal{checkcolor}
+                        = 'white'
                         : $lglobal{checkcolor} = $activecolor;
                     }
             ],
-            [    Button => 'Spellcheck Dictionary Select',
+            [   Button   => 'Spellcheck Dictionary Select',
                 -command => sub { spelloptions() }
             ],
-            [    Checkbutton => 'Enable Auto Save',
-                -variable    => \$autosave,
-                -command     => sub {
+            [   Checkbutton => 'Enable Auto Save',
+                -variable   => \$autosave,
+                -command    => sub {
                     toggle_autosave();
                     saveset();
                     }
@@ -2597,16 +2654,16 @@ sub buildmenu {    # The main menu building code.
                     set_autosave() if $autosave;
                     }
             ],
-            [    Checkbutton => 'Enable Auto Backups',
-                -variable    => \$autobackup,
-                -onvalue     => 1,
-                -offvalue    => 0
+            [   Checkbutton => 'Enable Auto Backups',
+                -variable   => \$autobackup,
+                -onvalue    => 1,
+                -offvalue   => 0
             ],
-            [    Checkbutton => 'Enable Scanno Highlighting',
-                -variable    => \$lglobal{scanno_hl},
-                -onvalue     => 1,
-                -offvalue    => 0,
-                -command     => \&hilitetgl
+            [   Checkbutton => 'Enable Scanno Highlighting',
+                -variable   => \$lglobal{scanno_hl},
+                -onvalue    => 1,
+                -offvalue   => 0,
+                -command    => \&hilitetgl
             ],
             [   Button   => 'Set Scanno Highlight Color',
                 -command => sub {
@@ -2632,13 +2689,14 @@ sub buildmenu {    # The main menu building code.
             [ Button => '~About',    -command => \&about_pop_up ],
             [ Button => '~Versions', -command => [ \&showversion, $top ] ],
             [   Button   => '~Manual',
-                -command => sub { # FIXME: sub this out.
+                -command => sub {        # FIXME: sub this out.
                     runner("$globalbrowserstart guiguts.html")
                         if ( -e 'guiguts.html' );
                     }
             ],
-# FIXME: Disable update check until it works
-#[ Button => 'Check For ~Updates',     -command => \&checkver ],
+
+            # FIXME: Disable update check until it works
+            #[ Button => 'Check For ~Updates',     -command => \&checkver ],
             [ Button => '~Hot keys',              -command => \&hotkeyshelp ],
             [ Button => '~Function History',      -command => \&opspop_up ],
             [ Button => '~Greek Transliteration', -command => \&greekpopup ],
@@ -2666,7 +2724,8 @@ sub viewpagenums {    # Toggle visible page markers
             $lglobal{pnumpop}->destroy;
             undef $lglobal{pnumpop};
         }
-    } else {
+    }
+    else {
         $lglobal{seepagenums} = 1;
         my @marks = $textwindow->markNames;
         for ( sort @marks ) {
@@ -2687,7 +2746,7 @@ sub thoughtbreak {    # Insert a "Thought break" (duh)
 }
 
 # Pop up a window which will allow jumping directly to a specified page
-sub gotopage {    
+sub gotopage {
     unless ( defined( $lglobal{gotopagpop} ) ) {
         return unless %pagenumbers;
         for ( keys(%pagenumbers) ) {
@@ -2709,7 +2768,8 @@ sub gotopage {
                     if ( $lglobal{pagedigits} == 3 ) {
                         $lglobal{lastpage}
                             = sprintf( "%03s", $lglobal{lastpage} );
-                    } elsif ( $lglobal{pagedigits} == 4 ) {
+                    }
+                    elsif ( $lglobal{pagedigits} == 4 ) {
                         $lglobal{lastpage}
                             = sprintf( "%04s", $lglobal{lastpage} );
                     }
@@ -2730,7 +2790,8 @@ sub gotopage {
                     update_indicators();
                     $lglobal{gotopagpop}->destroy;
                     undef $lglobal{gotopagpop};
-                } else {
+                }
+                else {
                     $lglobal{gotopagpop}->destroy;
                     undef $lglobal{gotopagpop};
                 }
@@ -2790,7 +2851,8 @@ sub gotolabel
                     update_indicators();
                     $lglobal{gotolabpop}->destroy;
                     undef $lglobal{gotolabpop};
-                } else {
+                }
+                else {
                     $lglobal{gotolabpop}->destroy;
                     undef $lglobal{gotolabpop};
                 }
@@ -2840,7 +2902,8 @@ sub gotoline {
                     update_indicators();
                     $lglobal{gotolinepop}->destroy;
                     undef $lglobal{gotolinepop};
-                } else {
+                }
+                else {
                     $lglobal{gotolinepop}->destroy;
                     undef $lglobal{gotolinepop};
                 }
@@ -2868,7 +2931,8 @@ sub saveinterval
     if ( $lglobal{intervalpop} ) {
         $lglobal{intervalpop}->deiconify;
         $lglobal{intervalpop}->raise;
-    } else {
+    }
+    else {
         $lglobal{intervalpop} = $top->Toplevel;
         $lglobal{intervalpop}->title('Autosave Interval');
         $lglobal{intervalpop}->resizable( 'no', 'no' );
@@ -2920,8 +2984,7 @@ sub checkver {
         keep_alive => 1,
         timeout    => 30,
     );
-    my $response
-        = $ua->get('http://guiguts.sourceforge.net/ggversion.txt');
+    my $response = $ua->get('http://guiguts.sourceforge.net/ggversion.txt');
     unless ( $response->content ) {
         $dbox = $top->Dialog(
             -text =>
@@ -2933,14 +2996,16 @@ sub checkver {
         $dbox->Show;
         return;
     }
-    if ( $response->content gt $currentver ) {     print $response->content;
+    if ( $response->content gt $currentver ) {
+        print $response->content;
         $dbox = $top->Dialog(
             -text =>
                 "A newer version is available.\nDo you want to go to the home page?",
             -title   => 'Newer version available.',
             -buttons => [ 'Ok', 'Cancel' ]
         );
-    } else {
+    }
+    else {
         $dbox = $top->Dialog(
             -text    => 'This is the most current version.',
             -title   => 'Up to date.',
@@ -2949,9 +3014,7 @@ sub checkver {
     }
     $answer = $dbox->Show;
     if ( $answer =~ /ok/i ) {
-        runner(
-            "$globalbrowserstart http://guiguts.sourceforge.net/"
-        );
+        runner( "$globalbrowserstart http://guiguts.sourceforge.net/" );
     }
 }
 
@@ -3027,7 +3090,8 @@ sub sidenotes {
             $textwindow->delete( $bracketstartndx, $bracketendndx );
             $textwindow->see($bracketstartndx);
             $textwindow->insert( "$paragraphp+1l", $sidenote . "\n\n" );
-        } elsif (
+        }
+        elsif (
             $textwindow->compare( "$bracketendndx+1c", '<', $paragraphn ) )
         {
             if ((   $textwindow->get( $bracketendndx, "$bracketendndx+1c" ) eq
@@ -3072,9 +3136,9 @@ sub cleanup {
 # FIXME: vls -- Adapt this to handle abitrary text at eol, separated by
 # >2 spaces. Suggestion from jabber room
 
-# Find and format poetry line numbers. They need to be to the right, at 
+# Find and format poetry line numbers. They need to be to the right, at
 # least 2 space from the text.
-sub poetrynumbers { 
+sub poetrynumbers {
     $searchstartindex = '1.0';
     viewpagenums() if ( $lglobal{seepagenums} );
     my ( $linenum, $line, $spacer, $row, $col );
@@ -3104,7 +3168,8 @@ sub opspop_up
     if ( $lglobal{oppop} ) {
         $lglobal{oppop}->deiconify;
         $lglobal{oppop}->raise;
-    } else {
+    }
+    else {
         $lglobal{oppop} = $top->Toplevel;
         $lglobal{oppop}->title('Function history');
         $lglobal{oppop}->geometry($geometry2) if $geometry2;
@@ -3157,7 +3222,8 @@ sub footnotepop
         $lglobal{footpop}->deiconify;
         $lglobal{footpop}->raise;
         $lglobal{footpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{fncount} = '1' unless $lglobal{fncount};
         $lglobal{fnalpha} = '1' unless $lglobal{fnalpha};
         $lglobal{fnroman} = '1' unless $lglobal{fnroman};
@@ -3486,7 +3552,8 @@ sub fnview
         $lglobal{footviewpop}->deiconify;
         $lglobal{footviewpop}->raise;
         $lglobal{footviewpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{footviewpop} = $top->Toplevel( -background => 'white' );
         $lglobal{footviewpop}->title('Footnotes');
         my $frame1 = $lglobal{footviewpop}->Frame( -background => 'white' )
@@ -3735,7 +3802,8 @@ sub autochaptlz {
             $textwindow->markSet( 'insert', "$index+1l" );
             setlz();
             $index .= '+4l';
-        } else {
+        }
+        else {
             $index .= '+1l';
             next;
         }
@@ -3764,7 +3832,8 @@ sub setanchor {
             $lglobal{fnarray}->[ $lglobal{fnindex} ][2],
             $lglobal{fnarray}->[ $lglobal{fnindex} ][3]
         ) if $lglobal{fnarray}->[ $lglobal{fnindex} ][3];
-    } else {
+    }
+    else {
         $lglobal{fnarray}->[ $lglobal{fnindex} ][2] = $insert;
     }
     footnoteadjust();
@@ -3779,25 +3848,24 @@ sub setanchor {
         );
         $textwindow->insert( $textwindow->index("fna$lglobal{fnindex}"), $fn )
             if $textwindow->compare(
-                    $textwindow->index("fna$lglobal{fnindex}"), '>',
-                    $textwindow->index("fns$lglobal{fnindex}")
-            );
+            $textwindow->index("fna$lglobal{fnindex}"),
+            '>', $textwindow->index("fns$lglobal{fnindex}") );
         $textwindow->delete(
             $textwindow->index("fns$lglobal{fnindex}"),
             $textwindow->index("fne$lglobal{fnindex}")
         );
         $textwindow->insert( $textwindow->index("fna$lglobal{fnindex}"), $fn )
             if $textwindow->compare(
-                    $textwindow->index("fna$lglobal{fnindex}"), '<=',
-                    $textwindow->index("fns$lglobal{fnindex}")
-            );
+            $textwindow->index("fna$lglobal{fnindex}"),
+            '<=', $textwindow->index("fns$lglobal{fnindex}") );
         $lglobal{fnarray}->[ $lglobal{fnindex} ][0]
             = $textwindow->index( 'fns' . $lglobal{fnindex} );
         $lglobal{fnarray}->[ $lglobal{fnindex} ][4] = '';
         $lglobal{fnarray}->[ $lglobal{fnindex} ][3] = '';
         $lglobal{fnarray}->[ $lglobal{fnindex} ][6] = '';
         footnoteadjust();
-    } else {
+    }
+    else {
         $lglobal{fnarray}->[ $lglobal{fnindex} ][2] = $insert;
         if ($textwindow->compare(
                 $lglobal{fnarray}->[ $lglobal{fnindex} ][2],
@@ -3946,7 +4014,8 @@ sub footnotefixup {
                 = $textwindow->search( '-backwards', '--', "[$pointer]",
                 $start, '1.0' )
                 if $pointer;
-        } else {
+        }
+        else {
             $anchor
                 = $textwindow->search( '-backwards', '--', "[$pointer]",
                 $start, "$start-80l" )
@@ -3980,7 +4049,8 @@ sub footnotefixup {
                 $lglobal{fnarray}->[ $lglobal{fnindex} ][5] = 'r';
                 $lglobal{fnarray}->[ $lglobal{fnindex} ][4] = uc($pointer);
             }
-        } else {
+        }
+        else {
             $lglobal{fnarray}->[ $lglobal{fnindex} ][5] = '';
         }
         $textwindow->markSet( "fns$lglobal{fnindex}", $start );
@@ -4011,7 +4081,8 @@ sub footnotefixup {
                     || ( $lglobal{fntyper} ) );
                 $lglobal{fnmvbutton}->configure( '-state' => 'normal' )
                     if ( defined $lglobal{fnlzs} and @{ $lglobal{fnlzs} } );
-            } else {
+            }
+            else {
                 $textwindow->markSet( 'insert', 'fna' . $lglobal{fnindex} );
                 $lglobal{fnarray}->[ $lglobal{fnindex} ][4] = '';
                 setanchor();
@@ -4046,7 +4117,8 @@ sub footnoteshow {
 
     if ( $lglobal{fncenter} ) {
         $textwindow->see($start) if $start;
-    } else {
+    }
+    else {
         my $widget = $textwindow->{rtext};
         my ( $lx, $ly, $lw, $lh ) = $widget->dlineinfo($line);
         my $bottom = int(
@@ -4217,7 +4289,8 @@ sub footnoteadjust {
         $lglobal{ftnoteindexstart}
             = $lglobal{fnarray}->[ $lglobal{fnindex} - 1 ][1];
         $textwindow->markSet( 'fnindex', $lglobal{ftnoteindexstart} );
-    } else {
+    }
+    else {
         $lglobal{ftnoteindexstart} = '1.0';
         $textwindow->markSet( 'fnindex', $lglobal{ftnoteindexstart} );
     }
@@ -4297,18 +4370,36 @@ sub alpha {
 # (c) 1995 OZAWA Sakuro. Done to avoid users having to install downloadable
 # modules.
 
-sub roman { 
-    my %roman_digit = qw(1 IV 10 XL 100 CD 1000 MMMMMM) ; my @figure =
-    reverse sort keys %roman_digit; grep( $roman_digit{$_} = [ split( //,
-            $roman_digit{$_}, 2 ) ], @figure ); my $arg = shift; return undef
-    unless defined $arg; 0 < $arg and $arg < 4000 or return undef; my ( $x,
-        $roman ); foreach (@figure) { my ( $digit, $i, $v ) = ( int( $arg / $_
-            ), @{ $roman_digit{$_} } ); if ( 1 <= $digit and $digit <= 3 ) {
-            $roman .= $i x $digit; } elsif ( $digit == 4 ) { $roman .= "$i$v";
-        } elsif ( $digit == 5 ) { $roman .= $v; } elsif ( 6 <= $digit and
-            $digit <= 8 ) { $roman .= $v . $i x ( $digit - 5 ); } elsif (
-            $digit == 9 ) { $roman .= "$i$x"; } $arg -= $digit * $_; $x = $i; }
-    return "$roman."; }
+sub roman {
+    my %roman_digit = qw(1 IV 10 XL 100 CD 1000 MMMMMM);
+    my @figure
+        = reverse sort keys %roman_digit;
+    grep( $roman_digit{$_} = [ split( //, $roman_digit{$_}, 2 ) ], @figure );
+    my $arg = shift;
+    return undef
+        unless defined $arg;
+    0 < $arg and $arg < 4000 or return undef;
+    my ( $x, $roman );
+    foreach (@figure) {
+        my ( $digit, $i, $v ) = ( int( $arg / $_ ), @{ $roman_digit{$_} } );
+        if ( 1 <= $digit and $digit <= 3 ) {
+            $roman .= $i x $digit;
+        }
+        elsif ( $digit == 4 ) {
+            $roman .= "$i$v";
+        }
+        elsif ( $digit == 5 ) { $roman .= $v; }
+        elsif ( 6 <= $digit
+            and $digit <= 8 )
+        {
+            $roman .= $v . $i x ( $digit - 5 );
+        }
+        elsif ( $digit == 9 ) { $roman .= "$i$x"; }
+        $arg -= $digit * $_;
+        $x = $i;
+    }
+    return "$roman.";
+}
 
 sub arabic {
     my $arg = shift;
@@ -4334,7 +4425,8 @@ sub fontsize {
         $lglobal{fspop}->deiconify;
         $lglobal{fspop}->raise;
         $lglobal{fspop}->focus;
-    } else {
+    }
+    else {
         $lglobal{fspop} = $top->Toplevel;
         $lglobal{fspop}->title('Font');
         my $tframe   = $lglobal{fspop}->Frame->pack;
@@ -4354,7 +4446,7 @@ sub fontsize {
                 $fontsize++;
                 fontinit();
                 $textwindow->configure( -font => $lglobal{font} );
-                $sizelabel->configure( -text  => $fontsize );
+                $sizelabel->configure( -text => $fontsize );
             },
             -text  => 'Bigger',
             -width => 10
@@ -4367,7 +4459,7 @@ sub fontsize {
                 $fontsize--;
                 fontinit();
                 $textwindow->configure( -font => $lglobal{font} );
-                $sizelabel->configure( -text  => $fontsize );
+                $sizelabel->configure( -text => $fontsize );
             },
             -text  => 'Smaller',
             -width => 10
@@ -4411,7 +4503,8 @@ sub spellchecker {    # Set up spell check window
             unless $globalspellpath; # Whoops, don't know where to find Aspell
         spellclearvars();
         spellcheckfirst();           # Start checking the spelling
-    } else {                         # window doesn't exist so set it up
+    }
+    else {                           # window doesn't exist so set it up
         $lglobal{spellpopup} = $top->Toplevel;
         $lglobal{spellpopup}
             ->title( 'Current Dictionary - ' . $globalspelldictopt
@@ -4692,6 +4785,18 @@ sub spelloptions {
         }
     )->pack( -pady => 4 );
     $spellpathentry->insert( 'end', $globalspellpath );
+
+    my $spellencodinglabel = $spellop->add( 'Label',
+        -text => 'Set encoding: default = iso8859-1' )->pack;
+
+    my $spellencodingentry = $spellop->add(
+        'Entry',
+        -width        => 30,
+        -textvariable => \$lglobal{spellencoding},
+    )->pack;
+
+# FIXME: Switching to utf-8 is barfola. Probably down in the checkfil.txt thingy.
+
     my $dictlabel
         = $spellop->add( 'Label', -text => 'Dictionary files' )->pack;
     $dictlist = $spellop->add(
@@ -4712,7 +4817,7 @@ sub spelloptions {
     )->pack;
     $spelldictxt->delete( '1.0', 'end' );
     $spelldictxt->insert( '1.0', $globalspelldictopt );
-    $dictlist->insert( 'end',    "<default>" );
+    $dictlist->insert( 'end', "<default>" );
 
     if ($globalspellpath) {
         OS_Win
@@ -4778,23 +4883,25 @@ sub spelloptions {
 # Initialize spellchecker
 sub spellcheckfirst {
     $lglobal{spellexename}
-    = ( OS_Win ? dos_path($globalspellpath) : $globalspellpath )
-    ;    # Make the exe path dos compliant
-    $lglobal{spellfilename}
-    = ( OS_Win
+        = ( OS_Win ? dos_path($globalspellpath) : $globalspellpath )
+        ;    # Make the exe path dos compliant
+    $lglobal{spellfilename} = (
+        OS_Win
         ? dos_path( $lglobal{global_filename} )
-        : $lglobal{global_filename} );    # make the file path dos compliant
+        : $lglobal{global_filename}
+    );       # make the file path dos compliant
     @{ $lglobal{misspelledlist} } = ();
     viewpagenums() if ( $lglobal{seepagenums} );
     getprojectdic();
     do "$lglobal{projectdictname}";
     $lglobal{lastmatchindex} = '1.0';
+
     # get list of mispelled words in selection (or file if nothing selected)
     spellget_misspellings();
     my $term = $lglobal{misspelledlist}[0];    # get first mispelled term
     $lglobal{misspelledentry}->delete( '0', 'end' );
     $lglobal{misspelledentry}->insert( 'end', $term )
-    ;    # put it in the appropriate text box
+        ;    # put it in the appropriate text box
     $lglobal{suggestionlabel}->configure( -text => 'Suggestions:' );
     return unless $term;    # no mispellings found, bail
     $lglobal{matchlength} = '0';
@@ -4804,8 +4911,8 @@ sub spellcheckfirst {
         $term, $lglobal{spellindexstart}, 'end'
     );                      # search for the mispelled word in the text
     $lglobal{lastmatchindex}
-    = spelladjust_index( $lglobal{matchindex}, $term )
-    ;                   # find the index of the end of the match
+        = spelladjust_index( $lglobal{matchindex}, $term )
+        ;                   # find the index of the end of the match
     spelladdtexttags();     # highlight the word in the text
     update_indicators();    # update the status bar
     aspellstart();          # initialize the guess function
@@ -4814,7 +4921,7 @@ sub spellcheckfirst {
 
     if ( scalar( $lglobal{seen} ) ) {
         $lglobal{misspelledlabel}->configure( -text =>
-            "Not in Dictionary:  -  $lglobal{seen}->{$term} in text." );
+                "Not in Dictionary:  -  $lglobal{seen}->{$term} in text." );
     }
     $lglobal{nextmiss} = 0;
 }
@@ -4857,7 +4964,8 @@ sub spellchecknext {
                 $lglobal{lastmatchindex}, 'end'
             )
         );
-    } else {
+    }
+    else {
         $lglobal{matchindex} = (
             $textwindow->search(
                 -forwards, -regexp,
@@ -4983,14 +5091,14 @@ sub spellmyaddword {    # add a word to the project dictionary
 sub spellclearvars {
     $lglobal{misspelledentry}->delete( '0', 'end' );
     $lglobal{replacementlist}->delete( 0,   'end' );
-    $lglobal{spreplaceentry}->delete( '0',  'end' );
+    $lglobal{spreplaceentry}->delete( '0', 'end' );
     $textwindow->tagRemove( 'highlight', '1.0', 'end' );
 }
 
 sub aspellstart
 {  # start aspell in interactive mode, repipe stdin and stdout to file handles
     aspellstop();
-    my @cmd = (# FIXME: Need to see what options are going to aspell
+    my @cmd = (    # FIXME: Need to see what options are going to aspell
         $lglobal{spellexename}, '-a', '-S', '--sug-mode', $globalaspellmode
     );
     push @cmd, '-d', $globalspelldictopt if $globalspelldictopt;
@@ -5060,7 +5168,8 @@ sub spellcheckrange
     if (@ranges) {
         $lglobal{spellindexend}   = $ranges[0];
         $lglobal{spellindexstart} = $ranges[-1];
-    } else {
+    }
+    else {
         $lglobal{spellindexstart} = '1.0';
         $lglobal{spellindexend}   = $textwindow->index('end');
     }
@@ -5075,12 +5184,12 @@ sub spellget_misspellings {    # get list of misspelled words
         $lglobal{spellindexend} );    # get selection
     $section =~ s/^-----File:.*//g;
     open SAVE, '>:bytes', 'checkfil.txt';
-    print SAVE $section;
+    print SAVE $section;    # FIXME: probably encode before printing.
     close SAVE;
     my $spellopt
         = get_spellchecker_version() lt "0.6"
-        ? "-l "
-        : "list "; # FIXME: was utf-8 --encoding=iso8859-1
+        ? "list --encoding=$lglobal{spellencoding} "
+        : "list --encoding=$lglobal{spellencoding} ";
     $spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
     @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
         ;    # feed the text to aspell, get an array of misspelled words out
@@ -5095,7 +5204,8 @@ sub spellget_misspellings {    # get list of misspelled words
         $lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
                 . ( $globalspelldictopt || '<default>' )
                 . " | $#{$lglobal{misspelledlist}} words to check." );
-    } else {
+    }
+    else {
         $lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
                 . ( $globalspelldictopt || '<default>' )
                 . ' | No Misspelled Words Found.' );
@@ -5174,7 +5284,8 @@ sub searchsize
     if ( $lglobal{hssizepop} ) {
         $lglobal{hssizepop}->deiconify;
         $lglobal{hssizepop}->raise;
-    } else {
+    }
+    else {
         $lglobal{hssizepop} = $top->Toplevel;
         $lglobal{hssizepop}->title('History Size');
         $lglobal{hssizepop}->resizable( 'no', 'no' );
@@ -5239,7 +5350,8 @@ sub searchpopup {
         $lglobal{search}->raise;
         $lglobal{search}->focus;
         $lglobal{searchentry}->focus;
-    } else {
+    }
+    else {
         $lglobal{search} = $top->Toplevel;
         $lglobal{search}->title('Search & Replace');
         $lglobal{search}->minsize( 460, 127 );
@@ -5373,7 +5485,8 @@ sub searchpopup {
                             -expand => 'y',
                             -fill   => 'x'
                         );
-                    } else {
+                    }
+                    else {
                         $_->pack(
                             -side   => 'top',
                             -anchor => 'w',
@@ -5899,7 +6012,8 @@ sub regedit {
             print REG "'$srch' => '$repl',\n";
         }
         print REG ");\n\n";
-        print REG # FIXME: here doc or just stuff in a text file and suck that out.
+        print
+            REG # FIXME: here doc or just stuff in a text file and suck that out.
             '# For a hint, use the regex expression EXACTLY as it appears in the %scannoslist hash'
             . "\n";
         print REG
@@ -5962,10 +6076,11 @@ sub regadd {
         }
         foreach ( @{ $lglobal{scannosarray} } ) {
             $lglobal{scannosindex}++ unless ( $_ eq $st );
-            next                     unless ( $_ eq $st );
+            next unless ( $_ eq $st );
             last;
         }
-    } else {
+    }
+    else {
         $scannoslist{$st} = $rt;
     }
     regload();
@@ -5994,7 +6109,8 @@ sub reghint {
         $lglobal{hintpop}->focus;
         $lglobal{hintmessage}->delete( '1.0', 'end' );
         $lglobal{hintmessage}->insert( 'end', $message );
-    } else {
+    }
+    else {
         $lglobal{hintpop} = $lglobal{search}->Toplevel;
         $lglobal{hintpop}->title('Search Term Hint');
         my $frame = $lglobal{hintpop}->Frame->pack(
@@ -6061,7 +6177,8 @@ sub loadscannos {
                         -title => 'Problem with file',
                         -type  => 'Ok',
                     );
-                } else {
+                }
+                else {
                     $top->messageBox(
                         -icon    => 'error',
                         -message => 'Could not find scannos file.',
@@ -6078,7 +6195,8 @@ sub loadscannos {
         }
         if ( $lglobal{scannosfilename} =~ /reg/i ) {
             searchoptset(qw/0 x x 1/);
-        } else {
+        }
+        else {
             searchoptset(qw/x x x 0/);
         }
         return 1;
@@ -6104,7 +6222,7 @@ sub findascanno {
     $searchendindex = '1.0';
     my $word = '';
     $word = $lglobal{scannosarray}[ $lglobal{scannosindex} ];
-    $lglobal{searchentry}->delete( '1.0',  'end' );
+    $lglobal{searchentry}->delete( '1.0', 'end' );
     $lglobal{replaceentry}->delete( '1.0', 'end' );
     $textwindow->bell unless ( $word || $nobell || $lglobal{regaa} );
     $lglobal{searchbutton}->flash unless ( $word || $lglobal{regaa} );
@@ -6184,11 +6302,13 @@ sub searchtext {
     if ( $range_total == 0 && $lglobal{selectionsearch} ) {
         $start = $textwindow->index('insert');
         $end   = $lglobal{selectionsearch};
-    } elsif ( $range_total == 0 && !$lglobal{selectionsearch} ) {
+    }
+    elsif ( $range_total == 0 && !$lglobal{selectionsearch} ) {
         $start = $textwindow->index('insert');
         $end   = 'end';
         $end   = '1.0' if ( $sopt[2] );
-    } else {
+    }
+    else {
         $end                      = pop(@ranges);
         $start                    = pop(@ranges);
         $lglobal{selectionsearch} = $end;
@@ -6197,7 +6317,8 @@ sub searchtext {
         if ( $sopt[2] ) {
             $start = 'end';
             $end   = '1.0';
-        } else {
+        }
+        else {
             $start = '1.0';
             $end   = 'end';
         }
@@ -6211,10 +6332,11 @@ sub searchtext {
             : ( $searchendindex = "$start+1c" );
     }
     {
-            no warnings;
-            # Turn off warnings temporarily since $searchterm is undefined on first search
-            unless ( length($searchterm) ) {
-                    $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
+        no warnings;
+
+# Turn off warnings temporarily since $searchterm is undefined on first search
+        unless ( length($searchterm) ) {
+            $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
         }
     }
     return ('') unless length($searchterm);
@@ -6274,7 +6396,8 @@ sub searchtext {
         my $mark;
         if ( $sopt[2] ) {
             $mark = getmark($searchstartindex);
-        } else {
+        }
+        else {
             $mark = getmark($searchendindex);
         }
         while ($mark) {
@@ -6282,7 +6405,8 @@ sub searchtext {
                 $length           = $1;
                 $searchstartindex = $textwindow->index($mark);
                 last;
-            } else {
+            }
+            else {
                 $mark = getmark($mark) if $mark;
                 next;
             }
@@ -6291,7 +6415,8 @@ sub searchtext {
         #print "$searchstartindex\n";
         $searchstartindex = 0 unless $mark;
         $lglobal{lastsearchterm} = 'reset' unless $mark;
-    } else {
+    }
+    else {
         my $exactsearch = $searchterm;
         $exactsearch =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g
             ;    # escape metacharacters for whole word matching
@@ -6311,7 +6436,8 @@ sub searchtext {
                 '-count' => \$length,
                 '--', $searchterm, $searchstart, $end
             );
-        } else {
+        }
+        else {
             $searchstartindex = $textwindow->search(
                 $mode, $direction,
                 '-count' => \$length,
@@ -6348,7 +6474,8 @@ sub searchtext {
             $searchstartindex = $end;
             $textwindow->markSet( 'insert', $searchstartindex );
             $textwindow->see($searchendindex);
-        } else {
+        }
+        else {
             $searchendindex = $start;
             $textwindow->markSet( 'insert', $start );
             $textwindow->see($start);
@@ -6369,7 +6496,8 @@ sub getmark {
     my $start = shift;
     if ( $sopt[2] ) {    # search reverse
         return $textwindow->markPrevious($start);
-    } else {             # search forward
+    }
+    else {               # search forward
         return $textwindow->markNext($start);
     }
 }
@@ -6377,13 +6505,15 @@ sub getmark {
 sub updatesearchlabels {
     if ( $lglobal{seen} && $lglobal{search} ) {
         my $replaceterm = $lglobal{replaceentry}->get( '1.0', '1.end' );
-        my $searchterm1 = $lglobal{searchentry}->get( '1.0',  '1.end' );
+        my $searchterm1 = $lglobal{searchentry}->get( '1.0', '1.end' );
         if ( ( $lglobal{seen}->{$searchterm1} ) && ( $sopt[0] ) ) {
             $lglobal{searchnumlabel}->configure(
                 -text => "Found $lglobal{seen}->{$searchterm1} times." );
-        } elsif ( ( $searchterm1 eq '' ) || ( !$sopt[0] ) ) {
+        }
+        elsif ( ( $searchterm1 eq '' ) || ( !$sopt[0] ) ) {
             $lglobal{searchnumlabel}->configure( -text => '' );
-        } else {
+        }
+        else {
             $lglobal{searchnumlabel}->configure( -text => 'Not Found.' );
         }
     }
@@ -6454,10 +6584,12 @@ sub replaceeval {
         if ( $replaceterm =~ s/^\\C// ) {
             if ( $replaceterm =~ s/\\C// ) {
                 @replarray = split /\\C/, $replaceterm;
-            } else {
+            }
+            else {
                 push @replarray, $replaceterm;
             }
-        } else {
+        }
+        else {
             @replarray = split /\\C/, $replaceterm;
             $replbuild = shift @replarray;
         }
@@ -6474,10 +6606,12 @@ sub replaceeval {
         if ( $replaceterm =~ s/^\\L// ) {
             if ( $replaceterm =~ s/\\L// ) {
                 @replarray = split /\\L/, $replaceterm;
-            } else {
+            }
+            else {
                 push @replarray, $replaceterm;
             }
-        } else {
+        }
+        else {
             @replarray = split /\\L/, $replaceterm;
             $replbuild = shift @replarray;
         }
@@ -6494,10 +6628,12 @@ sub replaceeval {
         if ( $replaceterm =~ s/^\\U// ) {
             if ( $replaceterm =~ s/\\U// ) {
                 @replarray = split /\\U/, $replaceterm;
-            } else {
+            }
+            else {
                 push @replarray, $replaceterm;
             }
-        } else {
+        }
+        else {
             @replarray = split /\\U/, $replaceterm;
             $replbuild = shift @replarray;
         }
@@ -6514,10 +6650,12 @@ sub replaceeval {
         if ( $replaceterm =~ s/^\\T// ) {
             if ( $replaceterm =~ s/\\T// ) {
                 @replarray = split /\\T/, $replaceterm;
-            } else {
+            }
+            else {
                 push @replarray, $replaceterm;
             }
-        } else {
+        }
+        else {
             @replarray = split /\\T/, $replaceterm;
             $replbuild = shift @replarray;
         }
@@ -6539,10 +6677,12 @@ sub replaceeval {
         if ( $replaceterm =~ s/^\\GA// ) {
             if ( $replaceterm =~ s/\\GA// ) {
                 @replarray = split /\\GA/, $replaceterm;
-            } else {
+            }
+            else {
                 push @replarray, $replaceterm;
             }
-        } else {
+        }
+        else {
             @replarray = split /\\GA/, $replaceterm;
             $replbuild = shift @replarray;
         }
@@ -6559,10 +6699,12 @@ sub replaceeval {
         if ( $replaceterm =~ s/^\\GB// ) {
             if ( $replaceterm =~ s/\\GB// ) {
                 @replarray = split /\\GB/, $replaceterm;
-            } else {
+            }
+            else {
                 push @replarray, $replaceterm;
             }
-        } else {
+        }
+        else {
             @replarray = split /\\GB/, $replaceterm;
             $replbuild = shift @replarray;
         }
@@ -6579,10 +6721,12 @@ sub replaceeval {
         if ( $replaceterm =~ s/^\\G// ) {
             if ( $replaceterm =~ s/\\G// ) {
                 @replarray = split /\\G/, $replaceterm;
-            } else {
+            }
+            else {
                 push @replarray, $replaceterm;
             }
-        } else {
+        }
+        else {
             @replarray = split /\\G/, $replaceterm;
             $replbuild = shift @replarray;
         }
@@ -6599,10 +6743,12 @@ sub replaceeval {
         if ( $replaceterm =~ s/^\\A// ) {
             if ( $replaceterm =~ s/\\A// ) {
                 @replarray = split /\\A/, $replaceterm;
-            } else {
+            }
+            else {
                 push @replarray, $replaceterm;
             }
-        } else {
+        }
+        else {
             @replarray = split /\\A/, $replaceterm;
             $replbuild = shift @replarray;
         }
@@ -6625,7 +6771,8 @@ sub opstop {
         $lglobal{stoppop}->deiconify;
         $lglobal{stoppop}->raise;
         $lglobal{stoppop}->focus;
-    } else {
+    }
+    else {
         $lglobal{stoppop} = $top->Toplevel;
         $lglobal{stoppop}->title('Interrupt');
         my $frame      = $lglobal{stoppop}->Frame->pack;
@@ -6650,7 +6797,8 @@ sub replaceall {
             = $lglobal{replaceentry}->get( '1.0', '1.end' );
         $searchstartindex = pop @ranges;
         $searchendindex   = pop @ranges;
-    } else {
+    }
+    else {
         $lglobal{lastsearchterm} = '';
     }
     $textwindow->focus;
@@ -6675,13 +6823,15 @@ sub nextblock {
                 = $textwindow->search( '-exact', '--', '/*',
                 $searchstartindex, 'end' )
                 if $searchstartindex;
-        } elsif ( $direction eq 'reverse' ) {
+        }
+        elsif ( $direction eq 'reverse' ) {
             $searchstartindex
                 = $textwindow->search( '-backwards', '-exact', '--', '/*',
                 $searchstartindex, '1.0' )
                 if $searchstartindex;
         }
-    } elsif ( $mark eq 'indent' ) {
+    }
+    elsif ( $mark eq 'indent' ) {
         if ( $direction eq 'forward' ) {
             $searchstartindex
                 = $textwindow->search( '-regexp', '--', '^\S',
@@ -6691,7 +6841,8 @@ sub nextblock {
                 = $textwindow->search( '-regexp', '--', '^\s',
                 $searchstartindex, 'end' )
                 if $searchstartindex;
-        } elsif ( $direction eq 'reverse' ) {
+        }
+        elsif ( $direction eq 'reverse' ) {
             $searchstartindex
                 = $textwindow->search( '-backwards', '-regexp', '--', '^\S',
                 $searchstartindex, '1.0' )
@@ -6701,37 +6852,43 @@ sub nextblock {
                 $searchstartindex, '1.0' )
                 if $searchstartindex;
         }
-    } elsif ( $mark eq 'stet' ) {
+    }
+    elsif ( $mark eq 'stet' ) {
         if ( $direction eq 'forward' ) {
             $searchstartindex
                 = $textwindow->search( '-exact', '--', '/$',
                 $searchstartindex, 'end' )
                 if $searchstartindex;
-        } elsif ( $direction eq 'reverse' ) {
+        }
+        elsif ( $direction eq 'reverse' ) {
             $searchstartindex
                 = $textwindow->search( '-backwards', '-exact', '--', '/$',
                 $searchstartindex, '1.0' )
                 if $searchstartindex;
         }
-    } elsif ( $mark eq 'block' ) {
+    }
+    elsif ( $mark eq 'block' ) {
         if ( $direction eq 'forward' ) {
             $searchstartindex
                 = $textwindow->search( '-exact', '--', '/#',
                 $searchstartindex, 'end' )
                 if $searchstartindex;
-        } elsif ( $direction eq 'reverse' ) {
+        }
+        elsif ( $direction eq 'reverse' ) {
             $searchstartindex
                 = $textwindow->search( '-backwards', '-exact', '--', '/#',
                 $searchstartindex, '1.0' )
                 if $searchstartindex;
         }
-    } elsif ( $mark eq 'poetry' ) {
+    }
+    elsif ( $mark eq 'poetry' ) {
         if ( $direction eq 'forward' ) {
             $searchstartindex
                 = $textwindow->search( '-regexp', '--', '\/[pP]',
                 $searchstartindex, 'end' )
                 if $searchstartindex;
-        } elsif ( $direction eq 'reverse' ) {
+        }
+        elsif ( $direction eq 'reverse' ) {
             $searchstartindex
                 = $textwindow->search( '-backwards', '-regexp', '--',
                 '\/[pP]', $searchstartindex, '1.0' )
@@ -6744,7 +6901,8 @@ sub nextblock {
     $textwindow->focus;
     if ( $direction eq 'forward' ) {
         $searchstartindex += 1;
-    } elsif ( $direction eq 'reverse' ) {
+    }
+    elsif ( $direction eq 'reverse' ) {
         $searchstartindex -= 1;
     }
     if ( $searchstartindex = int($searchstartindex) ) {
@@ -6759,7 +6917,8 @@ sub brackets {
         $lglobal{brkpop}->deiconify;
         $lglobal{brkpop}->raise;
         $lglobal{brkpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{brkpop} = $top->Toplevel;
         $lglobal{brkpop}->title('Find orphan brackets');
         $lglobal{brkpop}->Label( -text => 'Bracket or Markup Style' )->pack;
@@ -6819,7 +6978,7 @@ sub brackets {
             -selectcolor => $lglobal{checkcolor},
             -value       => '«|»',
             -text        => 'Angle quotes « »',
-        )->grid( -row => 2, -column => 2, -pady => 5 ); 
+        )->grid( -row => 2, -column => 2, -pady => 5 );
 
         my $gqusel = $frame3->Radiobutton(
             -variable    => \$lglobal{brsel},
@@ -6893,10 +7052,8 @@ sub brackets {
                 (      ( $lglobal{brbrackets}[0] =~ /[\[\(\{\<«]/ )
                     && ( $lglobal{brbrackets}[1] =~ /[\]\)\}\>»]/ )
                 )
-                ||
-                (      ( $lglobal{brbrackets}[0] =~ /[\[\(\{\<»]/ )
-                    && ( $lglobal{brbrackets}[1] =~ /[\]\)\}\>«]/ )
-                )
+                || (   ( $lglobal{brbrackets}[0] =~ /[\[\(\{\<»]/ )
+                    && ( $lglobal{brbrackets}[1] =~ /[\]\)\}\>«]/ ) )
                 || (   ( $lglobal{brbrackets}[0] =~ /^\x7f*\/\*/ )
                     && ( $lglobal{brbrackets}[1] =~ /^\x7f*\*\// ) )
                 || (   ( $lglobal{brbrackets}[0] =~ /^\x7f*\/\$/ )
@@ -6983,7 +7140,8 @@ sub orphans {
         );
         if ($opindex) {
             push @op, $opindex;
-        } else {
+        }
+        else {
             push @op, $textwindow->index('end');
         }
         my $begin = $op[1];
@@ -6995,7 +7153,8 @@ sub orphans {
         );
         if ($clindex) {
             push @op, $clindex;
-        } else {
+        }
+        else {
             push @op, $textwindow->index('end');
         }
         if ( $textwindow->compare( $op[1], '==', $op[3] ) ) {
@@ -7016,7 +7175,8 @@ sub orphans {
             shift @op;
             shift @op;
             next;
-        } elsif ( ( $textwindow->compare( $op[0], '<', $op[1] ) )
+        }
+        elsif (( $textwindow->compare( $op[0], '<', $op[1] ) )
             && ( $textwindow->compare( $op[1], '>', $op[2] ) ) )
         {
             $textwindow->markSet( 'insert', $op[2] ) if $op[2];
@@ -7028,7 +7188,8 @@ sub orphans {
             $textwindow->update;
             $textwindow->focus;
             return 1;
-        } elsif ( ( $textwindow->compare( $op[0], '<', $op[1] ) )
+        }
+        elsif (( $textwindow->compare( $op[0], '<', $op[1] ) )
             && ( $textwindow->compare( $op[2], '>', $op[3] ) ) )
         {
             $textwindow->markSet( 'insert', $op[3] ) if $op[3];
@@ -7040,7 +7201,8 @@ sub orphans {
             $textwindow->update;
             $textwindow->focus;
             return 1;
-        } elsif ( ( $textwindow->compare( $op[0], '>', $op[1] ) )
+        }
+        elsif (( $textwindow->compare( $op[0], '>', $op[1] ) )
             && ( $op[0] ne $end ) )
         {
             $textwindow->markSet( 'insert', $op[1] ) if $op[1];
@@ -7052,7 +7214,8 @@ sub orphans {
             $textwindow->update;
             $textwindow->focus;
             return 1;
-        } else {
+        }
+        else {
             if (   ( $op[3] eq $end )
                 && ( $textwindow->compare( $op[2], '>', $op[0] ) ) )
             {
@@ -7131,7 +7294,8 @@ sub indent {
     $operationinterrupt = 0;
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         my @selarray;
         if ( $indent eq 'up' ) { @ranges = reverse @ranges }
         while (@ranges) {
@@ -7146,7 +7310,8 @@ sub indent {
                     if ( $textwindow->compare( $end, '==', "$end lineend" ) )
                     {
                         $char = ' ';
-                    } else {
+                    }
+                    else {
                         $char = $textwindow->get($end);
                         $textwindow->delete($end);
                     }
@@ -7157,7 +7322,8 @@ sub indent {
                         unless (
                         $textwindow->get( $end, "$end lineend" ) =~ /^$/ );
                     push @selarray, ( "$start+1c", $end );
-                } elsif ( $indent eq 'out' ) {
+                }
+                elsif ( $indent eq 'out' ) {
                     if ($textwindow->compare(
                             $start, '==', "$start linestart"
                         )
@@ -7165,21 +7331,24 @@ sub indent {
                     {
                         push @selarray, ( $start, $end );
                         next;
-                    } else {
+                    }
+                    else {
                         $char = $textwindow->get("$start-1c");
                         $textwindow->insert( $end, $char );
                         $textwindow->delete("$start-1c");
                         push @selarray, ( "$start-1c", "$end-1c" );
                     }
                 }
-            } else {
+            }
+            else {
                 while ( $index <= $thisblockend ) {
                     if ( $indent eq 'in' ) {
                         $textwindow->insert( $index, ' ' )
                             unless (
                             $textwindow->get( $index, "$index lineend" )
                             =~ /^$/ );
-                    } elsif ( $indent eq 'out' ) {
+                    }
+                    elsif ( $indent eq 'out' ) {
                         if ( $textwindow->get( $index, "$index+1c" ) eq ' ' )
                         {
                             $textwindow->delete( $index, "$index+1c" );
@@ -7198,7 +7367,8 @@ sub indent {
                     push @selarray, ( $start, $end );
                     push @selarray, @ranges;
                     last;
-                } else {
+                }
+                else {
                     while (
                         $textwindow->compare(
                             "$end-1l", '>=', "$end-1l lineend"
@@ -7220,7 +7390,8 @@ sub indent {
                     }
                     $textwindow->replacewith( $start, $end, $templine );
                 }
-            } elsif ( $indent eq 'dn' ) {
+            }
+            elsif ( $indent eq 'dn' ) {
                 if ($textwindow->compare(
                         "$end+1l", '>=', $textwindow->index('end')
                     )
@@ -7229,7 +7400,8 @@ sub indent {
                     push @selarray, ( $start, $end );
                     push @selarray, @ranges;
                     last;
-                } else {
+                }
+                else {
                     while (
                         $textwindow->compare(
                             "$end+1l", '>=', "$end+1l lineend"
@@ -7283,7 +7455,8 @@ sub selectrewrap {
 
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         my $end = pop(@ranges);    #get the end index of the selection
         $start = pop(@ranges);     #get the start index of the selection
         my @marklist = $textwindow->dump( -mark, $start, $end )
@@ -7306,7 +7479,7 @@ sub selectrewrap {
         }
         while ( $textwindow->get("$end+1c") =~ /^\s*\n/ )
         {    #if the selection ends at the end of a line but not over it
-            $end = $textwindow->index("$end+1c"
+            $end = $textwindow->index( "$end+1c"
                 )  #advance the selection end until it does. (traps odd spaces
         }    #at paragraph end bug)
         $thisblockstart = $start;
@@ -7331,11 +7504,12 @@ sub selectrewrap {
         if ( $textend eq $end ) {
             $textwindow->tagAdd( 'blockend', "$end-1c"
                 ) #set a marker at the end of the selection, or one charecter less
-        } else {    #if the selection ends at the text end
+        }
+        else {    #if the selection ends at the text end
             $textwindow->tagAdd( 'blockend', $end );
         }
         if ( $textwindow->get( '1.0', '1.end' ) eq '' )
-        {           #trap top line delete bug
+        {         #trap top line delete bug
             $toplineblank = 1;
         }
         opstop();
@@ -7347,7 +7521,8 @@ sub selectrewrap {
             if ($thisblockend) {
                 $thisblockend
                     = $textwindow->index( $thisblockend . ' lineend' );
-            } else {
+            }
+            else {
                 $thisblockend = $end;
             }
             ;    #or end of text if end of selection
@@ -7453,7 +7628,8 @@ sub selectrewrap {
                                         {
                                             $textwindow->delete("$line.0");
                                         }
-                                    } else {
+                                    }
+                                    else {
                                         $textwindow->delete( "$line.0",
                                             "$line.@{[abs $indent]}" );
                                     }
@@ -7466,7 +7642,8 @@ sub selectrewrap {
                         $poem         = 0;
                         $inblock      = 0;
                     }
-                } else {
+                }
+                else {
                     $selection =~ s/<i>/\x8d/g
                         ; #convert some characters that will interfere with rewrap
                     $selection =~ s/<\/i>/\x8e/g;
@@ -7479,7 +7656,8 @@ sub selectrewrap {
                             $leftmargin,  $firstmargin,
                             $rightmargin, $selection
                         );
-                    } else {    #rewrap the paragraph
+                    }
+                    else {    #rewrap the paragraph
                         $rewrapped = wrapper( $lmargin, $lmargin, $rmargin,
                             $selection );
                     }
@@ -7580,8 +7758,8 @@ sub wrapper {
     my $firstmargin = shift;
     my $rightmargin = shift;
     my $paragraph   = shift;
-    $leftmargin--    if $leftmargin;
-    $firstmargin--   if $firstmargin;
+    $leftmargin--  if $leftmargin;
+    $firstmargin-- if $firstmargin;
     $rightmargin++;
     $paragraph =~ s/-\n/-/g unless $rwhyphenspace;
     $paragraph =~ s/\n/ /g;
@@ -7611,7 +7789,8 @@ sub wrapper {
             $line =~ s/\s$//;
             if ( $line =~ /\S/ ) {
                 $paragraph .= $line . "\n" . $word . "\n";
-            } else {
+            }
+            else {
                 $paragraph .= $word . "\n";
             }
             $line = ' ' x $firstmargin;
@@ -7628,13 +7807,15 @@ sub wrapper {
         $thisline =~ s/<\/?[^>]+?>//g;    #ignore HTML markup when rewrapping
         if ( length($thisline) < $rightmargin ) {
             $line .= $word . ' ';
-        } else {
+        }
+        else {
             if ( $line =~ /\S/ ) {
                 $line =~ s/\s$//;
                 $paragraph .= $line . "\n";
                 $line = ' ' x $leftmargin;
                 $line .= $word . ' ';
-            } else {
+            }
+            else {
                 $paragraph .= $line . $word . "\n";
                 $line = ' ' x $leftmargin;
             }
@@ -7657,7 +7838,7 @@ sub setmargins {
         -title   => 'Set margins for rewrap.',
         -buttons => ['OK'],
     );
-    my $lmframe = $getmargins->add( 'Frame' )
+    my $lmframe = $getmargins->add('Frame')
         ->pack( -side => 'top', -padx => 5, -pady => 3 );
     my $lmlabel = $lmframe->Label(
         -width => 25,
@@ -7669,7 +7850,7 @@ sub setmargins {
         -relief       => 'sunken',
         -textvariable => \$lmargin,
     )->pack( -side => 'left' );
-    my $rmframe = $getmargins->add( 'Frame' )
+    my $rmframe = $getmargins->add('Frame')
         ->pack( -side => 'top', -padx => 5, -pady => 3 );
     my $rmlabel = $rmframe->Label(
         -width => 25,
@@ -7681,7 +7862,7 @@ sub setmargins {
         -relief       => 'sunken',
         -textvariable => \$rmargin,
     )->pack( -side => 'left' );
-    my $blmframe = $getmargins->add( 'Frame' )
+    my $blmframe = $getmargins->add('Frame')
         ->pack( -side => 'top', -padx => 5, -pady => 3 );
     my $blmlabel = $blmframe->Label(
         -width => 25,
@@ -7693,7 +7874,7 @@ sub setmargins {
         -relief       => 'sunken',
         -textvariable => \$blocklmargin,
     )->pack( -side => 'left' );
-    my $brmframe = $getmargins->add( 'Frame' )
+    my $brmframe = $getmargins->add('Frame')
         ->pack( -side => 'top', -padx => 5, -pady => 3 );
     my $brmlabel = $brmframe->Label(
         -width => 25,
@@ -7705,7 +7886,7 @@ sub setmargins {
         -relief       => 'sunken',
         -textvariable => \$blockrmargin,
     )->pack( -side => 'left' );
-    my $didntframe = $getmargins->add( 'Frame' )
+    my $didntframe = $getmargins->add('Frame')
         ->pack( -side => 'top', -padx => 5, -pady => 3 );
     my $didntlabel = $didntframe->Label(
         -width => 25,
@@ -7764,7 +7945,8 @@ sub asciipopup {
         $lglobal{asciipop}->deiconify;
         $lglobal{asciipop}->raise;
         $lglobal{asciipop}->focus;
-    } else {
+    }
+    else {
         $lglobal{asciipop} = $top->Toplevel;
         $lglobal{asciipop}->title('ASCII Boxes');
         my $f = $lglobal{asciipop}
@@ -7851,7 +8033,8 @@ sub asciibox {
     my $range_total = @ranges;
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         my ( $linenum, $line, $sr, $sc, $er, $ec, $lspaces, $rspaces );
         my $end   = pop(@ranges);
         my $start = pop(@ranges);
@@ -7888,16 +8071,19 @@ sub asciibox {
             if ( $lglobal{asciijustify} eq 'left' ) {
                 $lspaces = 1;
                 $rspaces = ( $lglobal{asciiwidth} - 3 ) - length($line);
-            } elsif ( $lglobal{asciijustify} eq 'center' ) {
+            }
+            elsif ( $lglobal{asciijustify} eq 'center' ) {
                 $lspaces = ( $lglobal{asciiwidth} - 2 ) - length($line);
                 if ( $lspaces % 2 ) {
                     $rspaces = ( $lspaces / 2 ) + .5;
                     $lspaces = $rspaces - 1;
-                } else {
+                }
+                else {
                     $rspaces = $lspaces / 2;
                     $lspaces = $rspaces;
                 }
-            } elsif ( $lglobal{asciijustify} eq 'right' ) {
+            }
+            elsif ( $lglobal{asciijustify} eq 'right' ) {
                 $rspaces = 1;
                 $lspaces = ( $lglobal{asciiwidth} - 3 ) - length($line);
             }
@@ -7919,7 +8105,8 @@ sub alignpopup {
         $lglobal{alignpop}->deiconify;
         $lglobal{alignpop}->raise;
         $lglobal{alignpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{alignpop} = $top->Toplevel;
         $lglobal{alignpop}->title('Align text');
         my $f = $lglobal{alignpop}
@@ -7954,7 +8141,8 @@ sub aligntext {
     my $range_total = @ranges;
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         my $textindex = 0;
         my ( $linenum, $line, $sr, $sc, $er, $ec, $r, $c, @indexpos );
         my $end   = pop(@ranges);
@@ -7969,7 +8157,8 @@ sub aligntext {
                 "$linenum.end" );
             if ( $indexpos[$linenum] ) {
                 ( $r, $c ) = split /\./, $indexpos[$linenum];
-            } else {
+            }
+            else {
                 $c = -1;
             }
             if ( $c > $textindex ) { $textindex = $c }
@@ -7990,7 +8179,8 @@ sub flood {
         $lglobal{floodpop}->deiconify;
         $lglobal{floodpop}->raise;
         $lglobal{floodpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{floodpop} = $top->Toplevel;
         $lglobal{floodpop}->title('Flood Fill String:');
         my $f = $lglobal{floodpop}
@@ -8067,7 +8257,8 @@ sub surround {
         $lglobal{surpop}->deiconify;
         $lglobal{surpop}->raise;
         $lglobal{surpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{surpop} = $top->Toplevel;
         $lglobal{surpop}->title('Surround text with:');
         my $f
@@ -8102,7 +8293,7 @@ sub surround {
         $lglobal{surpop}->protocol( 'WM_DELETE_WINDOW' =>
                 sub { $lglobal{surpop}->destroy; undef $lglobal{surpop} } );
         $surstrt->insert( 'end', '_' ) unless ( $surstrt->get );
-        $surend->insert( 'end',  '_' ) unless ( $surend->get );
+        $surend->insert( 'end', '_' ) unless ( $surend->get );
         $lglobal{surpop}->Icon( -image => $icon );
     }
 }
@@ -8133,7 +8324,8 @@ sub markpopup {
         $lglobal{markpop}->deiconify;
         $lglobal{markpop}->raise;
         $lglobal{markpop}->focus;
-    } else {
+    }
+    else {
         my $blockmarkup;
         $lglobal{markpop} = $top->Toplevel;
         $lglobal{markpop}->title('HTML Markup');
@@ -8207,7 +8399,7 @@ sub markpopup {
             -sticky => 'w'
             );
 
-            my $latin1_convert = $f0->Checkbutton(
+        my $latin1_convert = $f0->Checkbutton(
             -variable    => \$lglobal{keep_latin1},
             -selectcolor => $lglobal{checkcolor},
             -text        => 'Keep Latin-1 Chars',
@@ -8219,15 +8411,16 @@ sub markpopup {
             -pady   => 2,
             -sticky => 'w'
             );
-        
-            $blockmarkup = $f0->Checkbutton(
+
+        $blockmarkup = $f0->Checkbutton(
             -variable    => \$lglobal{cssblockmarkup},
             -selectcolor => $lglobal{checkcolor},
             -command     => sub {
 
                 if ( $lglobal{cssblockmarkup} ) {
                     $blockmarkup->configure( '-text' => 'CSS blockquote' );
-                } else {
+                }
+                else {
                     $blockmarkup->configure( '-text' => 'Std. <blockquote>' );
                 }
             },
@@ -8432,7 +8625,8 @@ sub markpopup {
                 my $headertext;
                 while (<$infile>) {
                     $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-                    #$_ = eol_convert($_); 
+
+                    #$_ = eol_convert($_);
                     $headertext .= $_;
                 }
                 $textwindow->insert( '1.0', $headertext );
@@ -8459,7 +8653,7 @@ sub markpopup {
             -text  => 'HTML Tidy',
             -width => 16
         )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
-        $diventry->insert( 'end',  ' style="margin-left: 2em;"' );
+        $diventry->insert( 'end', ' style="margin-left: 2em;"' );
         $spanentry->insert( 'end', ' style="margin-left: 2em;"' );
         $lglobal{markpop}->protocol( 'WM_DELETE_WINDOW' =>
                 sub { $lglobal{markpop}->destroy; undef $lglobal{markpop} } );
@@ -8474,7 +8668,8 @@ sub poetryhtml {
     my $range_total = @ranges;
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         my $end   = pop(@ranges);
         my $start = pop(@ranges);
         my ( $lsr, $lsc, $ler, $lec, $step, $ital );
@@ -8490,7 +8685,8 @@ sub poetryhtml {
 
         if ( length $selection ) {
             $selection = "<span$class>" . $selection . '<br /></span>';
-        } else {
+        }
+        else {
             $selection = '';
         }
         $textwindow->delete( "$lsr.0", "$lsr.end" );
@@ -8542,7 +8738,8 @@ sub poetryhtml {
             }
             if ($indent) {
                 $textwindow->insert( "$step.0", "<span class=\"i$indent\">" );
-            } else {
+            }
+            else {
                 $textwindow->insert( "$step.0", '<span>' );
             }
             $textwindow->insert( "$step.end", '<br /></span>' );
@@ -8570,7 +8767,8 @@ sub autotable {
     my $range_total = @ranges;
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         my $table = 1;
         my $end   = pop(@ranges);
         my $start = pop(@ranges);
@@ -8591,7 +8789,8 @@ sub autotable {
             for my $tline (@tlines) {
                 if ( $selection =~ /\|/ ) {
                     @twords = split( /\|/, $tline );
-                } else {
+                }
+                else {
                     @twords = split( /\s\s+/, $tline );
                 }
                 for ( 0 .. $#twords ) {
@@ -8610,12 +8809,15 @@ sub autotable {
                     if ( $cformat[$cellcnt] ) {
                         if ( $cformat[$cellcnt] eq '>' ) {
                             $cellalign = ' align="right"';
-                        } elsif ( $cformat[$cellcnt] eq '|' ) {
+                        }
+                        elsif ( $cformat[$cellcnt] eq '|' ) {
                             $cellalign = ' align="center"';
-                        } else {
+                        }
+                        else {
                             $cellalign = ' align="left"';
                         }
-                    } else {
+                    }
+                    else {
                         $cellalign = $lglobal{tablecellalign};
                     }
                     ++$cellcnt;
@@ -8652,7 +8854,8 @@ sub autolist {
     my $range_total = @ranges;
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         $textwindow->addGlobStart;
         my $end       = pop(@ranges);
         my $start     = pop(@ranges);
@@ -8674,7 +8877,8 @@ sub autolist {
             $selection =~ s/ </</g;
             $textwindow->delete( $start, $end );
             $textwindow->insert( $start, $selection );
-        } else {
+        }
+        else {
             my ( $lsr, $lsc ) = split /\./, $start;
             my ( $ler, $lec ) = split /\./, $end;
             my $step = $lsr;
@@ -8699,7 +8903,7 @@ sub autolist {
                 $step++;
             }
             $textwindow->insert( "$ler.end", "</$lglobal{liststyle}>\n" );
-            $textwindow->insert( $start, "<$lglobal{liststyle}>" );
+            $textwindow->insert( $start,     "<$lglobal{liststyle}>" );
         }
         $textwindow->addGlobEnd;
     }
@@ -8722,7 +8926,8 @@ sub markup {
     my @intanchors;
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         my $end            = pop(@ranges);
         my $start          = pop(@ranges);
         my $thisblockstart = $start;
@@ -8754,13 +8959,15 @@ sub markup {
                 unless ( $step % 25 ) { $textwindow->update }
             }
             $textwindow->tagAdd( 'sel', $start, $end );
-        } elsif ( $mark eq 'br' ) {
+        }
+        elsif ( $mark eq 'br' ) {
             my ( $lsr, $lsc, $ler, $lec, $step );
             ( $lsr, $lsc ) = split /\./, $thisblockstart;
             ( $ler, $lec ) = split /\./, $thisblockend;
             if ( $lsr eq $ler ) {
                 $textwindow->insert( 'insert', '<br />' );
-            } else {
+            }
+            else {
                 $step = $lsr;
                 while ( $step <= $ler ) {
                     $selection = $textwindow->get( "$step.0", "$step.end" );
@@ -8769,15 +8976,18 @@ sub markup {
                     $step++;
                 }
             }
-        } elsif ( $mark eq 'hr' ) {
+        }
+        elsif ( $mark eq 'hr' ) {
             $textwindow->insert( 'insert', '<hr style="width: 95%;" />' );
-        } elsif ( $mark eq '&nbsp;' ) {
+        }
+        elsif ( $mark eq '&nbsp;' ) {
             my ( $lsr, $lsc, $ler, $lec, $step );
             ( $lsr, $lsc ) = split /\./, $thisblockstart;
             ( $ler, $lec ) = split /\./, $thisblockend;
             if ( $lsr eq $ler ) {
                 $textwindow->insert( 'insert', '&nbsp;' );
-            } else {
+            }
+            else {
                 $step = $lsr;
                 while ( $step <= $ler ) {
                     $selection = $textwindow->get( "$step.0", "$step.end" );
@@ -8791,14 +9001,17 @@ sub markup {
                     $step++;
                 }
             }
-        } elsif ( $mark eq 'img' ) {
+        }
+        elsif ( $mark eq 'img' ) {
             htmlimage( $thisblockstart, $thisblockend );
-        } elsif ( $mark eq 'elink' ) {
+        }
+        elsif ( $mark eq 'elink' ) {
             my ( $name, $tempname );
             $name = '';
             if ( $lglobal{elinkpop} ) {
                 $lglobal{elinkpop}->raise;
-            } else {
+            }
+            else {
                 $lglobal{elinkpop} = $top->Toplevel;
                 $lglobal{elinkpop}->title('Link Name');
                 my $linkf1 = $lglobal{elinkpop}
@@ -8856,7 +9069,8 @@ sub markup {
                 $lglobal{linkentry}->focus;
             }
             $done = '';
-        } elsif ( $mark eq 'ilink' ) {
+        }
+        elsif ( $mark eq 'ilink' ) {
             my ( $anchorname, $anchorstartindex, $anchorendindex, $length,
                 $srow, $scol, $string, $link, $match, $match2 );
             $length     = 0;
@@ -8894,7 +9108,8 @@ sub markup {
                         -type  => 'Ok',
                     );
                     return;
-                } else {
+                }
+                else {
                     $inthash{ '#' . ( lc($match) ) } = '#' . $match2;
                 }
             }
@@ -8902,7 +9117,8 @@ sub markup {
             $name = '';
             if ( $lglobal{linkpop} ) {
                 $lglobal{linkpop}->deiconify;
-            } else {
+            }
+            else {
                 my $linklistbox;
                 $selection
                     = $textwindow->get( $thisblockstart, $thisblockend );
@@ -9040,15 +9256,21 @@ sub markup {
                 linkpopulate( $linklistbox, \@intanchors );
                 $linklistbox->focus;
             }
-        } elsif ( $mark eq 'anchor' ) {
+        }
+        elsif ( $mark eq 'anchor' ) {
             my $linkname;
             $selection = $textwindow->get( $thisblockstart, $thisblockend )
                 || '';
             $linkname = makeanchor( deaccent($selection) );
             $done
-                = "<a name=\"" . $linkname . "\" id=\"" . $linkname . "\"></a>";
+                = "<a name=\""
+                . $linkname
+                . "\" id=\""
+                . $linkname
+                . "\"></a>";
             $textwindow->insert( $thisblockstart, $done );
-        } elsif ( $mark =~ /h\d/ ) {
+        }
+        elsif ( $mark =~ /h\d/ ) {
             $selection = $textwindow->get( $thisblockstart, $thisblockend );
             if ( $selection =~ s/<\/?p>//g ) {
                 $textwindow->delete( $thisblockstart, $thisblockend );
@@ -9058,17 +9280,20 @@ sub markup {
                     "<$mark>$selection<\/$mark>" );
                 $textwindow->tagAdd( 'sel', $thisblockstart,
                     $textwindow->index('blkend') );
-            } else {
+            }
+            else {
                 $textwindow->insert( $thisblockend,   "<\/$mark>" );
                 $textwindow->insert( $thisblockstart, "<$mark>" );
             }
-        } elsif ( ( $mark =~ /div/ ) || ( $mark =~ /span/ ) ) {
+        }
+        elsif ( ( $mark =~ /div/ ) || ( $mark =~ /span/ ) ) {
             $done = "<\/" . $mark . ">";
             $textwindow->insert( $thisblockend, $done );
             $mark .= $mark1;
             $done = '<' . $mark . '>';
             $textwindow->insert( $thisblockstart, $done );
-        } else {
+        }
+        else {
             $done = "<\/" . $mark . '>';
             $textwindow->insert( $thisblockend, $done );
             $done = '<' . $mark . '>';
@@ -9098,7 +9323,8 @@ sub linkpopulate {
             next if ( ( $_ =~ /#Page_\d+/ ) && $lglobal{pglinks} );
             $linklistbox->insert( 'end', $_ );
         }
-    } else {
+    }
+    else {
         foreach ( @{$anchorsref} ) {
             next
                 if ( ( ( $_ =~ /#Footnote/ ) || ( $_ =~ /#FNanchor/ ) )
@@ -9137,7 +9363,8 @@ sub htmlimage {
         $lglobal{htmlimpop}->deiconify;
         $lglobal{htmlimpop}->raise;
         $lglobal{htmlimpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{htmlimpop} = $top->Toplevel;
         $lglobal{htmlimpop}->title('Image');
         $lglobal{htmlimpop}->geometry( $lglobal{htmlgeom} )
@@ -9267,7 +9494,8 @@ sub htmlimage {
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
-                    } elsif ( $alignment eq 'left' ) {
+                    }
+                    elsif ( $alignment eq 'left' ) {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
@@ -9275,7 +9503,8 @@ sub htmlimage {
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
-                    } elsif ( $alignment eq 'right' ) {
+                    }
+                    elsif ( $alignment eq 'right' ) {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
@@ -9300,7 +9529,7 @@ sub htmlimage {
                     }
                     $textwindow->tagRemove( 'highlight', '1.0', 'end' );
                     $lglobal{htmlimpop}->destroy if $lglobal{htmlimpop};
-                    undef $lglobal{htmlimpop}    if $lglobal{htmlimpop};
+                    undef $lglobal{htmlimpop} if $lglobal{htmlimpop};
                 }
             }
         )->pack;
@@ -9333,7 +9562,7 @@ sub htmlimage {
         $lglobal{htmlimpop}->transient($top);
         $lglobal{htmlimpop}->Icon( -image => $icon );
     }
-    $lglobal{alttext}->delete( 0,  'end' ) if $lglobal{alttext};
+    $lglobal{alttext}->delete( 0, 'end' ) if $lglobal{alttext};
     $lglobal{titltext}->delete( 0, 'end' ) if $lglobal{titltext};
     $lglobal{alttext}->insert( 'end', $selection );
     tnbrowse();
@@ -9354,13 +9583,14 @@ sub tnbrowse {
 
     if ( $lglobal{ImageSize} ) {
         my ( $sizex, $sizey ) = Image::Size::imgsize($name);
-        $lglobal{widthent}->delete( 0,  'end' );
+        $lglobal{widthent}->delete( 0, 'end' );
         $lglobal{heightent}->delete( 0, 'end' );
-        $lglobal{widthent}->insert( 'end',  $sizex );
+        $lglobal{widthent}->insert( 'end', $sizex );
         $lglobal{heightent}->insert( 'end', $sizey );
         $lglobal{htmlimggeom}->configure(
             -text => "Actual image size: $sizex x $sizey pixels" );
-    } else {
+    }
+    else {
         $lglobal{htmlimggeom}
             ->configure( -text => "Actual image size: unknown" );
     }
@@ -9375,7 +9605,8 @@ sub tnbrowse {
 
     if ( lc($ext) eq 'gif' ) {
         $lglobal{htmlorig}->read( $name, -shrink );
-    } else {
+    }
+    else {
         $lglobal{htmlorig}->read( $name, -format => $ext, -shrink );
     }
     my $sw = int( ( $lglobal{htmlorig}->width ) / $xythumb );
@@ -9398,7 +9629,8 @@ sub linkcheck {
         $lglobal{lcpop}->deiconify;
         $lglobal{lcpop}->raise;
         $lglobal{lcpop}->focus;
-    } else {
+    }
+    else {
 
         $lglobal{lcpop} = $top->Toplevel;
         $lglobal{lcpop}->title('Link Check');
@@ -9541,7 +9773,8 @@ sub linkcheck {
         if ($anchor) {
             $anchor{ '#' . $anchor } = $anchor;
             $anchors++;
-        } elsif ($id) {
+        }
+        elsif ($id) {
             $id{ '#' . $id } = $id;
             $ids++;
         }
@@ -9602,7 +9835,8 @@ sub linkcheck {
         if ( $link{$_} eq $_ ) {
             if ( $_ =~ /:\/\// ) {
                 $lglobal{linkchkbox}->insert( 'end', "$link{$_}" );
-            } else {
+            }
+            else {
                 my $temp = $_;
                 $temp =~ s/^([^#]+).*/$1/;
                 unless ( -e $d . $temp ) {
@@ -9710,35 +9944,37 @@ sub makeanchor {
 # FIXME: Split this into separate functions, eventually into HTMLconvert.pm
 sub htmlautoconvert {
     viewpagenums() if ( $lglobal{seepagenums} );
-    my $aname    = '';
+    my $aname = '';
     my $author;
-    my $blkquot    = 0;
-    my $cflag      = 0;
+    my $blkquot = 0;
+    my $cflag   = 0;
     my $front;
     my $headertext;
     my $inblock    = 0;
     my $incontents = '1.0';
-    my $indent   = 0;
+    my $indent     = 0;
     my $intitle    = 0;
     my $ital       = 0;
     my $listmark   = 0;
-    my $pgoffset = 0;
+    my $pgoffset   = 0;
     my $poetry     = 0;
     my $selection  = '';
     my $skip       = 0;
     my $thisblank  = '';
     my $thisblockend;
     my $thisblockstart = '1.0';
-    my $thisend  = '';
+    my $thisend        = '';
     my $title;
     my ( $blkopen, $blkclose );
-    my ( $ler, $lec, $step ); #FIXME: WTF is ler and lec supposed to mean?
-    my @contents   = ("<p>\n");
-    my @last5      = [ 1, 1, 1, 1, 1 ];
+    my ( $ler, $lec, $step );    #FIXME: WTF is ler and lec supposed to mean?
+    my @contents = ("<p>\n");
+    my @last5 = [ 1, 1, 1, 1, 1 ];
+
     if ( $lglobal{cssblockmarkup} ) {
         $blkopen  = '<div class="blockquot"><p>';
         $blkclose = '</p></div>';
-    } else {
+    }
+    else {
         $blkopen  = '<blockquote><p>';
         $blkclose = '</p></blockquote>';
     }
@@ -9748,7 +9984,7 @@ sub htmlautoconvert {
 
     html_convert_codepage();
 
-#    html_parse_header( $selection, $headertext, $title, $author); 
+    #    html_parse_header( $selection, $headertext, $title, $author);
     working('Parsing Header');
 
     $selection = $textwindow->get( '1.0', '1.end' );
@@ -9763,24 +9999,26 @@ sub htmlautoconvert {
             last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
         }
         $textwindow->ntdelete( '1.0', "$step.0 +1c" );
-    } else {
+    }
+    else {
         open my $infile, '<', 'header.txt'
             or warn "Could not open header file. $!\n";
         while (<$infile>) {
             $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
             # FIXME: $_ = eol_convert($_);
             $headertext .= $_;
         }
         close $infile;
     }
 
-   $step = 0;
+    $step = 0;
     while (1) {
         $step++;
         last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
         $selection = $textwindow->get( "$step.0", "$step.end" );
-        next if ( $selection =~ /^\[Illustr/i ); # Skip Illustrations
-        next if ( $selection =~ /^\/[\$f]/i ); # Skip /$|/F tags
+        next if ( $selection =~ /^\[Illustr/i );    # Skip Illustrations
+        next if ( $selection =~ /^\/[\$f]/i );      # Skip /$|/F tags
         next unless length($selection);
         $title = $selection;
         $title =~ s/[,.]$//;
@@ -9810,7 +10048,8 @@ sub htmlautoconvert {
                 } until ( $selection ne "" );
                 $author = $selection;
                 $author =~ s/,$//;
-            } else {
+            }
+            else {
                 $author = $selection;
                 $author =~ s/\s$//i;
             }
@@ -9830,7 +10069,7 @@ sub htmlautoconvert {
     html_convert_ampersands();
 
     html_convert_emdashes();
-    
+
     # Footnotes
     $lglobal{fnsecondpass}  = 0;
     $lglobal{fnsearchlimit} = 1;
@@ -9920,27 +10159,28 @@ sub htmlautoconvert {
             && ( $selection =~ /contents/i )
             && ( $incontents eq '1.0' ) );
 
-    # Subscripts
-    html_convert_subscripts($selection, $step);
+        # Subscripts
+        html_convert_subscripts( $selection, $step );
 
-    # Superscripts
-    html_convert_superscripts($selection, $step);
+        # Superscripts
+        html_convert_superscripts( $selection, $step );
 
-    # Thought break conversion
-    html_convert_tb($selection, $step);
-#    if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ )
-#        {
-#            $textwindow->ntdelete( "$step.0", "$step.end" );
-#            $textwindow->ntinsert( "$step.0", $selection );
-#            next;
-#        }
-#        if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {
-#            $textwindow->ntdelete( "$step.0", "$step.end" );
-#            $textwindow->ntinsert( "$step.0", $selection );
-#            next;
-#        }
-#
-        # /x|/X gets <pre>
+        # Thought break conversion
+        html_convert_tb( $selection, $step );
+
+   #    if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ )
+   #        {
+   #            $textwindow->ntdelete( "$step.0", "$step.end" );
+   #            $textwindow->ntinsert( "$step.0", $selection );
+   #            next;
+   #        }
+   #        if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {
+   #            $textwindow->ntdelete( "$step.0", "$step.end" );
+   #            $textwindow->ntinsert( "$step.0", $selection );
+   #            next;
+   #        }
+   #
+   # /x|/X gets <pre>
         if ( $selection =~ m"^/x"i ) {
             $skip = 1;
             $textwindow->ntdelete( "$step.0", "$step.end" );
@@ -9955,6 +10195,7 @@ sub htmlautoconvert {
             $step++;
             next;
         }
+
         # and end tag gets </pre>
         if ( $selection =~ m"^x/"i ) {
             $skip = 0;
@@ -10338,7 +10579,7 @@ sub htmlautoconvert {
                     $selection =~ s/<[^>]+>//g;
                     $selection = "<b>$selection</b>";
                     push @contents,
-                        "<a href=\"#" 
+                          "<a href=\"#" 
                         . $aname . "\">"
                         . $selection
                         . "</a><br />\n";
@@ -10346,17 +10587,20 @@ sub htmlautoconvert {
                 $selection .= '<h2>';
                 $textwindow->see("$step.0");
                 $textwindow->update;
-            } elsif ( ( $last5[2] =~ /<h2>/ ) && ($selection) ) {
+            }
+            elsif ( ( $last5[2] =~ /<h2>/ ) && ($selection) ) {
                 $textwindow->ntinsert( "$step.0", '<p>' )
                     unless ( ( $selection =~ /<[pd]/ )
                     || ( $selection =~ /<[hb]r>/ )
                     || ($inblock) );
-            } elsif ( ( $last5[2] ) && ( !$last5[3] ) && ($selection) ) {
+            }
+            elsif ( ( $last5[2] ) && ( !$last5[3] ) && ($selection) ) {
                 $textwindow->ntinsert( "$step.0", '<p>' )
                     unless ( ( $selection =~ /<[phd]/ )
                     || ( $selection =~ /<[hb]r>/ )
                     || ($inblock) );
-            } elsif ( ( $last5[1] )
+            }
+            elsif (( $last5[1] )
                 && ( !$last5[2] )
                 && ( !$last5[3] )
                 && ($selection) )
@@ -10365,7 +10609,8 @@ sub htmlautoconvert {
                     unless ( ( $selection =~ /<[phd]/ )
                     || ( $selection =~ /<[hb]r>/ )
                     || ($inblock) );
-            } elsif ( ( $last5[0] )
+            }
+            elsif (( $last5[0] )
                 && ( !$last5[1] )
                 && ( !$last5[2] )
                 && ( !$last5[3] )
@@ -10382,8 +10627,8 @@ sub htmlautoconvert {
         $step++;
     }
     push @contents, '</p>';
-    
-    html_cleanup_markers ($thisblockstart, $ler, $lec, $thisblockend);
+
+    html_cleanup_markers( $thisblockstart, $ler, $lec, $thisblockend );
 
 #    working("Cleaning up\nblock Markers");
 #    while ( $thisblockstart
@@ -10408,7 +10653,7 @@ sub htmlautoconvert {
 #    {
 #        $textwindow->ntdelete( "$thisblockstart+5c", "$thisblockstart+9c" );
 #    }
-    
+
     working("Converting underscore and small caps markup");
     while ( $thisblockstart
         = $textwindow->search( '-exact', '--', '<u>', '1.0', 'end' ) )
@@ -10454,12 +10699,12 @@ sub htmlautoconvert {
             'end' );
         if ($thisblockstart) {
             $textwindow->insert( "$thisblockstart-3l", '</div>' );
-        } else {
+        }
+        else {
             $textwindow->insert( 'end-1l', '</div>' );
             last;
         }
     }
-    
 
     working("Converting\nSidenotes");
     my $thisnoteend;
@@ -10513,14 +10758,15 @@ sub htmlautoconvert {
                     $markindex . 'linestart +4c'
                 );
                 if ( $check =~ /<h[12]>/ ) {
-                    $markindex = $textwindow->index("$mark-1l lineend"); # FIXME: HTML page number hangs here
+                    $markindex = $textwindow->index("$mark-1l lineend")
+                        ;    # FIXME: HTML page number hangs here
                 }
                 $textwindow->ntinsert( $markindex,
                     "<span class=\"pagenum\"><a name=\"Page_$num\" id=\"Page_$num\">[Pg $num]</a></span>"
                 ) if $lglobal{pageanch};
 
 #$textwindow->ntinsert($markindex,"<span class="pagenum" id=\"Page_".$num."\">[Pg $num]</span>") if $lglobal{pageanch};
-                # FIXME: this is hanging up somewhere.
+# FIXME: this is hanging up somewhere.
                 $textwindow->ntinsert( $markindex,
                     '<!-- Page ' . $num . ' -->' )
                     if ( $lglobal{pagecmt} and $num );
@@ -10584,31 +10830,31 @@ sub htmlautoconvert {
     named( ' >', ' &gt;' );
     named( '< ', '&lt; ' );
 
-    if ( ! $lglobal{keep_latin1} ) { html_convert_latin1(); }
-    
-    html_convert_utf( $thisblockstart );
+    if ( !$lglobal{keep_latin1} ) { html_convert_latin1(); }
 
-#    if ( $lglobal{leave_utf} ) {
-#        $thisblockstart
-#            = $textwindow->search( '-exact', '--', 'charset=iso-8859-1',
-#            '1.0', 'end' );
-#        if ($thisblockstart) {
-#            $textwindow->ntdelete( $thisblockstart, "$thisblockstart+18c" );
-#            $textwindow->ntinsert( $thisblockstart, 'charset=UTF-8' );
-#        }
-#    }
-#    unless ( $lglobal{leave_utf} ) {
-#        while (
-#            $thisblockstart = $textwindow->search(
-#                '-regexp', '--', '[\x{100}-\x{65535}]', '1.0', 'end'
-#            )
-#            )
-#        {
-#            my $xchar = ord( $textwindow->get($thisblockstart) );
-#            $textwindow->ntdelete($thisblockstart);
-#            $textwindow->ntinsert( $thisblockstart, "&#$xchar;" );
-#        }
-#    }
+    html_convert_utf($thisblockstart);
+
+ #    if ( $lglobal{leave_utf} ) {
+ #        $thisblockstart
+ #            = $textwindow->search( '-exact', '--', 'charset=iso-8859-1',
+ #            '1.0', 'end' );
+ #        if ($thisblockstart) {
+ #            $textwindow->ntdelete( $thisblockstart, "$thisblockstart+18c" );
+ #            $textwindow->ntinsert( $thisblockstart, 'charset=UTF-8' );
+ #        }
+ #    }
+ #    unless ( $lglobal{leave_utf} ) {
+ #        while (
+ #            $thisblockstart = $textwindow->search(
+ #                '-regexp', '--', '[\x{100}-\x{65535}]', '1.0', 'end'
+ #            )
+ #            )
+ #        {
+ #            my $xchar = ord( $textwindow->get($thisblockstart) );
+ #            $textwindow->ntdelete($thisblockstart);
+ #            $textwindow->ntinsert( $thisblockstart, "&#$xchar;" );
+ #        }
+ #    }
 
     fracconv( '1.0', 'end' ) if $lglobal{autofraction};
     $textwindow->ntinsert( '1.0', $headertext );
@@ -10667,7 +10913,8 @@ sub tonamed {
     my $range_total = @ranges;
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         while (@ranges) {
             my $end   = pop @ranges;
             my $start = pop @ranges;
@@ -10716,7 +10963,8 @@ sub fromnamed {
     my $range_total = @ranges;
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         while (@ranges) {
             my $end   = pop @ranges;
             my $start = pop @ranges;
@@ -10921,7 +11169,8 @@ sub case {
     my $done        = '';
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         $textwindow->addGlobStart;
         while (@ranges) {
             my $end            = pop(@ranges);
@@ -10934,12 +11183,15 @@ sub case {
             my $buildsentence = '';
             if ( $marker eq 'uc' ) {
                 $done = uc($selection);
-            } elsif ( $marker eq 'lc' ) {
+            }
+            elsif ( $marker eq 'lc' ) {
                 $done = lc($selection);
-            } elsif ( $marker eq 'sc' ) {
+            }
+            elsif ( $marker eq 'sc' ) {
                 $done = lc($selection);
                 $done =~ s/(^\W*\w)/\U$1\E/;
-            } elsif ( $marker eq 'tc' ) {
+            }
+            elsif ( $marker eq 'tc' ) {
                 $done = lc($selection);
                 $done =~ s/(^\W*\w)/\U$1\E/;
                 $done =~ s/([\s\n]+\W*\w)/\U$1\E/g;
@@ -10956,7 +11208,8 @@ sub hilitepopup {
         $lglobal{hilitepop}->deiconify;
         $lglobal{hilitepop}->raise;
         $lglobal{hilitepop}->focus;
-    } else {
+    }
+    else {
         $lglobal{hilitepop} = $top->Toplevel;
         $lglobal{hilitepop}->title('Character Highlight');
         $lglobal{hilitemode} = 'exact';
@@ -11036,13 +11289,16 @@ sub hilitepopup {
 
 sub hilite {
     my $mark = shift;
-    $mark = quotemeta($mark) if $lglobal{hilitemode} eq 'exact'; # FIXME: uninitialized 'hilitemode'
+    $mark = quotemeta($mark)
+        if $lglobal{hilitemode} eq
+            'exact';    # FIXME: uninitialized 'hilitemode'
     my @ranges      = $textwindow->tagRanges('sel');
     my $range_total = @ranges;
     my ( $index, $lastindex );
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         my $end            = pop(@ranges);
         my $start          = pop(@ranges);
         my $thisblockstart = $start;
@@ -11072,7 +11328,8 @@ sub seperatorpopup {
         $lglobal{pagepop}->deiconify;
         $lglobal{pagepop}->raise;
         $lglobal{pagepop}->focus;
-    } else {
+    }
+    else {
         $lglobal{pagepop} = $top->Toplevel;
         $lglobal{pagepop}->title('Page separators');
         my $sf1 = $lglobal{pagepop}
@@ -11209,7 +11466,7 @@ sub seperatorpopup {
 }
 
 sub phelppopup {
-my $help_text = <<EOM;
+    my $help_text = <<EOM;
 Join Lines - join lines removing any spaces, asterisks and hyphens as necessary. - Hotkey j
 Join, Keep hyphen - join lines removing any spaces and asterisks as necessary. - Hotkey k
 Blank line - remove spaces as necessary. Keep one blank line. (paragraph break). - Hotkey l
@@ -11226,12 +11483,14 @@ EOM
         $lglobal{phelppop}->deiconify;
         $lglobal{phelppop}->raise;
         $lglobal{phelppop}->focus;
-    } else {
+    }
+    else {
         $lglobal{phelppop} = $top->Toplevel;
         $lglobal{phelppop}->title('Functions and Hotkeys');
-        $lglobal{phelppop}->Label( 
-            -justify => "left", 
-            -text => $help_text)->pack;
+        $lglobal{phelppop}->Label(
+            -justify => "left",
+            -text    => $help_text
+        )->pack;
         my $button_ok = $lglobal{phelppop}->Button(
             -activebackground => $activecolor,
             -text             => 'OK',
@@ -11246,7 +11505,7 @@ EOM
     }
 }
 
-sub convertfilnum { 
+sub convertfilnum {
     viewpagenums() if ( $lglobal{seepagenums} );
     $lglobal{joinundo} = 0;
     my ( $filenum, $line, $rnd1, $rnd2, $page );
@@ -11274,7 +11533,8 @@ sub convertfilnum {
             if ( ( $line =~ /[\s\n]$/ ) || ( $line =~ /[\w-]\*$/ ) ) {
                 $textwindow->delete("$index-1c");
                 $lglobal{joinundo}++;
-            } else {
+            }
+            else {
                 last;
             }
         }
@@ -11288,7 +11548,8 @@ sub convertfilnum {
                     $textwindow->delete($index);
                     $lglobal{joinundo}++;
                     last if $textwindow->compare( 'page1 +1l', '>=', 'end' );
-                } else {
+                }
+                else {
                     last;
                 }
             }
@@ -11343,7 +11604,7 @@ sub markpages {
         if ( $line =~ /-+File:.*?-+([^-]+)-+/ ) {
 
             # split the proofer string into parts
-            @{ $proofers{$page} } = split( "\Q\\\E", $1 ); 
+            @{ $proofers{$page} } = split( "\Q\\\E", $1 );
         }
 
         $pagemark = 'Pg' . $page;
@@ -11360,7 +11621,8 @@ sub showproofers {
         $lglobal{prooferpop}->deiconify;
         $lglobal{prooferpop}->raise;
         $lglobal{prooferpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{prooferpop} = $top->Toplevel;
         $lglobal{prooferpop}->title('Proofers For This File');
         my $bframe = $lglobal{prooferpop}->Frame->pack;
@@ -11445,7 +11707,8 @@ sub prfrmessage {
     my $proofer = shift;
     if ( $proofer eq '' ) {
         runner("$globalbrowserstart $no_proofer_url");
-    } else {
+    }
+    else {
         runner("$globalbrowserstart $yes_proofer_url$proofer");
     }
 }
@@ -11609,7 +11872,8 @@ sub guesswindow {
     my ( $totpages, $line25, $linex );
     if ( $lglobal{pgpop} ) {
         $lglobal{pgpop}->deiconify;
-    } else {
+    }
+    else {
         $lglobal{pgpop} = $top->Toplevel;
         $lglobal{pgpop}->title('Guess Page Numbers');
         my $f0 = $lglobal{pgpop}->Frame->pack;
@@ -11691,7 +11955,8 @@ sub guesswindow {
                     $lnum = int( ( $pnum - 1 ) * $average ) + 1;
                     if ( $totpages > 999 ) {
                         $number = sprintf '%04s', $pnum;
-                    } else {
+                    }
+                    else {
                         $number = sprintf '%03s', $pnum;
                     }
                     $textwindow->markSet( 'Pg' . $number, "$lnum.0" );
@@ -11704,7 +11969,8 @@ sub guesswindow {
                     $lnum = int( ( $pnum - 1 ) * $average ) + 1 + $line25;
                     if ( $totpages > 999 ) {
                         $number = sprintf '%04s', $pnum + 25;
-                    } else {
+                    }
+                    else {
                         $number = sprintf '%03s', $pnum + 25;
                     }
                     $textwindow->markSet( "Pg$number", "$lnum.0" );
@@ -11716,7 +11982,8 @@ sub guesswindow {
                     $lnum = int( ( $pnum - 1 ) * $average ) + 1 + $linex;
                     if ( $totpages > 999 ) {
                         $number = sprintf '%04s', $pnum + $pagex;
-                    } else {
+                    }
+                    else {
                         $number = sprintf '%03s', $pnum + $pagex;
                     }
                     $textwindow->markSet( "Pg$number", "$lnum.0" );
@@ -11759,7 +12026,7 @@ sub joinlines {
     $pagemark = 'Pg' . $1;
     $textwindow->delete( $searchstartindex, $searchendindex )
         if ( $searchstartindex && $searchendindex );
-    $textwindow->markSet( 'page', $searchstartindex );
+    $textwindow->markSet( 'page',    $searchstartindex );
     $textwindow->markSet( $pagemark, "$searchstartindex-1c" );
     $textwindow->markGravity( $pagemark, 'left' );
     $textwindow->markSet( 'insert', "$searchstartindex+1c" );
@@ -11773,7 +12040,8 @@ sub joinlines {
                 $textwindow->delete($index);
                 $lglobal{joinundo}++;
                 last if ( $textwindow->compare( $index, '>=', 'end' ) );
-            } else {
+            }
+            else {
                 last;
             }
         }
@@ -11787,7 +12055,8 @@ sub joinlines {
             if ( ( $line =~ /[\s\n]$/ ) || ( $line =~ /[\w-]\*$/ ) ) {
                 $textwindow->delete("$index-1c");
                 $lglobal{joinundo}++;
-            } else {
+            }
+            else {
                 last;
             }
         }
@@ -11817,7 +12086,7 @@ sub joinlines {
 
         if ( $line =~ />/ ) {
             my $markupl = $textwindow->get( "$index-4c", $index );
-            my $markupn = $textwindow->get( $index, "$index+3c" );
+            my $markupn = $textwindow->get( $index,      "$index+3c" );
             if ( ( $markupl =~ /<\/[ib]>/i ) && ( $markupn =~ /<[ib]>/i ) ) {
                 $textwindow->delete( $index, "$index+3c" );
                 $lglobal{joinundo}++;
@@ -11864,12 +12133,13 @@ sub joinlines {
         $lglobal{joinundo}++;
         $textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
         $lglobal{joinundo}++ if $lglobal{htmlpagenum};
-    } elsif ( $op eq 'k' ) {
+    }
+    elsif ( $op eq 'k' ) {
         $index = $textwindow->index('page');
         $line  = $textwindow->get("$index-1c");
         if ( $line =~ />/ ) {
             my $markupl = $textwindow->get( "$index-4c", $index );
-            my $markupn = $textwindow->get( $index, "$index+3c" );
+            my $markupn = $textwindow->get( $index,      "$index+3c" );
             if ( ( $markupl =~ /<\/[ib]>/i ) && ( $markupn =~ /<[ib]>/i ) ) {
                 $textwindow->delete( $index, "$index+3c" );
                 $lglobal{joinundo}++;
@@ -11920,22 +12190,26 @@ sub joinlines {
         $lglobal{joinundo}++;
         $textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
         $lglobal{joinundo}++ if $lglobal{htmlpagenum};
-    } elsif ( $op eq 'l' ) {
+    }
+    elsif ( $op eq 'l' ) {
         $textwindow->insert( $index, "\n\n" );
         $lglobal{joinundo}++;
         $textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
         $lglobal{joinundo}++ if $lglobal{htmlpagenum};
-    } elsif ( $op eq 't' ) {
+    }
+    elsif ( $op eq 't' ) {
         $textwindow->insert( $index, "\n\n\n" );
         $lglobal{joinundo}++;
         $textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
         $lglobal{joinundo}++ if $lglobal{htmlpagenum};
-    } elsif ( $op eq 'h' ) {
+    }
+    elsif ( $op eq 'h' ) {
         $textwindow->insert( $index, "\n\n\n\n\n" );
         $lglobal{joinundo}++;
         $textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
         $lglobal{joinundo}++ if $lglobal{htmlpagenum};
-    } elsif ( $op eq 'd' ) {
+    }
+    elsif ( $op eq 'd' ) {
         $textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
         $lglobal{joinundo}++ if $lglobal{htmlpagenum};
         $textwindow->delete("$index-1c");
@@ -11962,7 +12236,8 @@ sub tidypop_up {
     viewpagenums() if ( $lglobal{seepagenums} );
     if ( $lglobal{tidypop} ) {
         $lglobal{tidypop}->deiconify;
-    } else {
+    }
+    else {
         $lglobal{tidypop} = $top->Toplevel;
         $lglobal{tidypop}->title('Tidy');
         $lglobal{tidypop}->geometry($geometry2) if $geometry2;
@@ -11982,17 +12257,18 @@ sub tidypop_up {
             -padx   => 2,
             -anchor => 'n'
             );
-#        my $opsbutton2 = $ptopframe->Button(
-#            -activebackground => $activecolor,
-#            -command          => sub { tidyrun(' -f tidyerr.err -m '); },
-#            -text             => 'Generate Tidied File',
-#            -width            => 16
-#            )->pack(
-#            -side   => 'left',
-#            -pady   => 10,
-#            -padx   => 2,
-#            -anchor => 'n'
-#            );
+
+    #        my $opsbutton2 = $ptopframe->Button(
+    #            -activebackground => $activecolor,
+    #            -command          => sub { tidyrun(' -f tidyerr.err -m '); },
+    #            -text             => 'Generate Tidied File',
+    #            -width            => 16
+    #            )->pack(
+    #            -side   => 'left',
+    #            -pady   => 10,
+    #            -padx   => 2,
+    #            -anchor => 'n'
+    #            );
         my $pframe = $lglobal{tidypop}
             ->Frame->pack( -fill => 'both', -expand => 'both', );
         $lglobal{tidylistbox} = $pframe->Scrolled(
@@ -12143,14 +12419,15 @@ sub tidyrun {
     saveset();
     $top->Busy( -recurse => 1 );
     if ( $tidyoptions =~ /\-m/ ) {
-        $title =~ s/$window_title - //; # FIXME: duped in gutcheck code
-        $title =~ s/edited - //; 
+        $title =~ s/$window_title - //;    # FIXME: duped in gutcheck code
+        $title =~ s/edited - //;
         $title = os_normal($title);
         ( $fname, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
         $title = dos_path($title) if OS_Win;
         $name  = $title;
         $name  = "${path}tidy.$fname$extension";
-    } else {
+    }
+    else {
         $name = 'tidy.tmp';
     }
     if ( open my $td, '>', $name ) {
@@ -12163,7 +12440,8 @@ sub tidyrun {
             $index = $end;
         }
         close $td;
-    } else {
+    }
+    else {
         warn "Could not open temp file for writing. $!";
         my $dialog = $top->Dialog(
             -text => 'Could not write to the '
@@ -12259,6 +12537,7 @@ sub gutcheck {
     my $title = $top->cget('title');
     return if ( $title =~ /No File Loaded/ );
     $top->Busy( -recurse => 1 );
+
     # FIXME: wide character in print warning next line with unicode
     # Figure out how to determine encoding. See scratchpad.pl
     # open my $gc, ">:encoding(UTF-8)", "gutchk.tmp");
@@ -12272,7 +12551,8 @@ sub gutcheck {
             $index = $end;
         }
         close $gc;
-    } else {
+    }
+    else {
         warn "Could not open temp file for writing. $!";
         my $dialog = $top->Dialog(
             -text => 'Could not write to the '
@@ -12285,7 +12565,8 @@ sub gutcheck {
         $dialog->Show;
         return;
     }
-    $title =~ s/$window_title - //; #FIXME: sub this out; this and next in the tidy code
+    $title =~ s/$window_title - //
+        ;    #FIXME: sub this out; this and next in the tidy code
     $title =~ s/edited - //;
     $title = os_normal($title);
     $title = dos_path($title) if OS_Win;
@@ -12341,7 +12622,8 @@ sub gcheckpop_up {
     if ( $lglobal{gcpop} ) {
         $lglobal{gcpop}->deiconify;
         $lglobal{gclistbox}->delete( '0', 'end' );
-    } else {
+    }
+    else {
         $lglobal{gcpop} = $top->Toplevel;
         $lglobal{gcpop}->title('Gutcheck');
         $lglobal{gcpop}->geometry($geometry2) if $geometry2;
@@ -12516,7 +12798,8 @@ sub gcheckpop_up {
                         "$linenum.$colnum +4c" );
                     $colnum += 4;
                 }
-            } else {
+            }
+            else {
                 if ( $line =~ /Query digit in ([\w\d]+)/ ) {
                     $word   = $1;
                     $lincol = $textwindow->search( '--', $word, "$linenum.0",
@@ -12571,7 +12854,8 @@ sub gcheckpop_up {
                             = $textwindow->search( '-regexp', '--',
                             '(?<!\p{Alnum})' . $word . '(?!\p{Alnum})',
                             "$linenum.0", "$linenum.0 +1l" );
-                    } elsif ( $word eq 'i' ) {
+                    }
+                    elsif ( $word eq 'i' ) {
                         $lincol = $textwindow->search(
                             '-regexp',              '--',
                             ' ' . $word . '[^a-z]', "$linenum.0",
@@ -12584,7 +12868,8 @@ sub gcheckpop_up {
                             unless $lincol;
                         $lincol = $textwindow->index("$lincol +1c")
                             if ($lincol);
-                    } else {
+                    }
+                    else {
                         $lincol = $textwindow->search(
                             '-regexp',           '--',
                             '\b' . $word . '\b', "$linenum.0",
@@ -12610,7 +12895,8 @@ sub gcheckpop_up {
             $mark++;
             if ($lincol) {
                 $textwindow->markSet( "g$mark", $lincol );
-            } else {
+            }
+            else {
                 $colnum = '0' unless $colnum;
                 $textwindow->markSet( "g$mark", "$linenum.$colnum" );
             }
@@ -12698,7 +12984,8 @@ sub gcviewops {
         $lglobal{viewpop}->deiconify;
         $lglobal{viewpop}->raise;
         $lglobal{viewpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{viewpop} = $top->Toplevel;
         $lglobal{viewpop}->title('Gutcheck view options');
         my $pframe = $lglobal{viewpop}->Frame->pack;
@@ -12770,7 +13057,8 @@ sub gcviewops {
                 for ( 0 .. $#mygcview ) {
                     if ( $mygcview[$_] ) {
                         $gsoptions[$_]->select;
-                    } else {
+                    }
+                    else {
                         $gsoptions[$_]->deselect;
                     }
                 }
@@ -12849,7 +13137,8 @@ sub fixpopup {
         $lglobal{fixpop}->deiconify;
         $lglobal{fixpop}->raise;
         $lglobal{fixpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{fixpop} = $top->Toplevel;
         $lglobal{fixpop}->title('Fixup Options');
         my $tframe = $lglobal{fixpop}->Frame->pack;
@@ -13066,7 +13355,8 @@ sub wordcount {
         $lglobal{popup}->deiconify;
         $lglobal{popup}->raise;
         $lglobal{wclistbox}->delete( '0', 'end' );
-    } else {
+    }
+    else {
         $lglobal{popup} = $top->Toplevel;
         $lglobal{popup}
             ->title('Word frequency - Ctrl+s to save, Ctrl+x to export');
@@ -13242,16 +13532,20 @@ sub wordcount {
                 if ( $sword =~ /\*space\*/ ) {
                     $sword = ' ';
                     searchoptset(qw/0 x x 1/);
-                } elsif ( $sword =~ /\*tab\*/ ) {
+                }
+                elsif ( $sword =~ /\*tab\*/ ) {
                     $sword = '\t';
                     searchoptset(qw/0 x x 1/);
-                } elsif ( $sword =~ /\*newline\*/ ) {
+                }
+                elsif ( $sword =~ /\*newline\*/ ) {
                     $sword = '\n';
                     searchoptset(qw/0 x x 1/);
-                } elsif ( $sword =~ /\*nbsp\*/ ) {
+                }
+                elsif ( $sword =~ /\*nbsp\*/ ) {
                     $sword = '\x{A0}';
                     searchoptset(qw/0 x x 1/);
-                } elsif ( $sword =~ /\W/ ) {
+                }
+                elsif ( $sword =~ /\W/ ) {
                     $sword =~ s/([^\w\s\\])/\\$1/g;
                     searchoptset(qw/0 x x 1/);
                 }
@@ -13524,7 +13818,8 @@ sub searchoptset {
                     ? $lglobal{"searchop$_"}->select
                     : $lglobal{"searchop$_"}->deselect;
             }
-        } else {
+        }
+        else {
             if ( $opt[$_] !~ /[a-zA-Z]/ ) { $sopt[$_] = $opt[$_] }
         }
     }
@@ -13536,7 +13831,8 @@ sub harmonicspop {
         $lglobal{hpopup}->deiconify;
         $lglobal{hpopup}->raise;
         $lglobal{hlistbox}->delete( '0', 'end' );
-    } else {
+    }
+    else {
         $lglobal{hpopup} = $top->Toplevel;
         $lglobal{hpopup}->title('Word harmonics');
         $lglobal{hpopup}->geometry($geometry3) if $geometry3;
@@ -13682,7 +13978,8 @@ sub harmonicspop {
         $lglobal{hlistbox}->delete( '0', 'end' );
         $lglobal{hlistbox}
             ->insert( 'end', "$wc 2nd order harmonics for $active." );
-    } else {
+    }
+    else {
         harmonics($active);
         $wc = scalar( keys( %{ $lglobal{harmonic} } ) );
         $lglobal{hlistbox}->delete( '0', 'end' );
@@ -13736,13 +14033,15 @@ sub sortwords {
                 = sprintf( "%-8d %s", $$href{$_}, $_ );    # Print to the file
             $lglobal{wclistbox}->insert( 'end', $line );
         }
-    } elsif ( $lglobal{alpha_sort} eq 'a' ) {    # Sorted alphabetically
+    }
+    elsif ( $lglobal{alpha_sort} eq 'a' ) {    # Sorted alphabetically
         for ( natural_sort_alpha( keys %$href ) ) {
             my $line
                 = sprintf( "%-8d %s", $$href{$_}, $_ );    # Print to the file
             $lglobal{wclistbox}->insert( 'end', $line );
         }
-    } elsif ( $lglobal{alpha_sort} eq 'l' ) {    # Sorted by word length
+    }
+    elsif ( $lglobal{alpha_sort} eq 'l' ) {    # Sorted by word length
         for ( natural_sort_length( keys %$href ) ) {
             my $line
                 = sprintf( "%-8d %s", $$href{$_}, $_ );    # Print to the file
@@ -13996,7 +14295,7 @@ sub unicheck {
 
 sub wfspellcheck {
     spelloptions() unless $globalspellpath;
-    return         unless $globalspellpath;
+    return unless $globalspellpath;
     $top->Busy( -recurse => 1 );
     %{ $lglobal{spellsort} } = ();
     getprojectdic();
@@ -14011,11 +14310,13 @@ sub wfspellcheck {
     $lglobal{wclistbox}->update;
     my ( $words, $uwords );
     my $wordw = 0;
-    searchoptset(qw/1 x x 0/); # FIXME: Test for whole word search setting
+    searchoptset(qw/1 x x 0/);    # FIXME: Test for whole word search setting
+
     foreach ( sort ( keys %{ $lglobal{seen} } ) ) {
         if ( $_ !~ /[\x{100}-\x{FFEF}]/ ) {
             $words .= "$_\n";
-        } else {
+        }
+        else {
             next if ( exists( $projectdict{$_} ) );
             $lglobal{spellsort}->{$_} = $lglobal{seen}->{$_} || '0';
             $wordw++;
@@ -14027,7 +14328,9 @@ sub wfspellcheck {
             ;    #save it to a file temporarily
         print $file $words;
         close $file;
-        my $spellopt = get_spellchecker_version() lt "0.6" ? "-l " : "list ";
+
+        # FIXME: spellopt is getting set all over the joint
+        my $spellopt = get_spellchecker_version() lt "0.6" ? "list " : "list ";
         $spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
         my @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
             ;  # feed the text to aspell, get an array of misspelled words out
@@ -14191,7 +14494,7 @@ sub charsortcheck {
 
     while ( my $line = <$fh> ) {
         utf8::decode($line);
-        $line =~ s/^\x{FEFF}?// if ( $. < 2 ); # Drop the BOM!
+        $line =~ s/^\x{FEFF}?// if ( $. < 2 );    # Drop the BOM!
         if ( $lglobal{ignore_case} ) { $line = lc($line) }
         my @words = split( //, $line );
         foreach (@words) {
@@ -14267,7 +14570,8 @@ sub confirmdiscard {
         );
         if ( $ans =~ /yes/i ) {
             savefile();
-        } else {
+        }
+        else {
             return $ans;
         }
     }
@@ -14328,7 +14632,8 @@ sub latinpopup {
         $lglobal{latinpop}->deiconify;
         $lglobal{latinpop}->raise;
         $lglobal{latinpop}->focus;
-    } else {
+    }
+    else {
         my @lbuttons;
         $lglobal{latinpop} = $top->Toplevel;
         $lglobal{latinpop}->title('Latin-1 ISO 8859-1');
@@ -14407,7 +14712,8 @@ sub hotkeyshelp {
         $lglobal{hotpop}->deiconify;
         $lglobal{hotpop}->raise;
         $lglobal{hotpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{hotpop} = $top->Toplevel;
         $lglobal{hotpop}->title('Hot key combinations');
         my $frame = $lglobal{hotpop}->Frame->pack(
@@ -14426,9 +14732,9 @@ sub hotkeyshelp {
         )->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
         drag($rotextbox);
         $rotextbox->focus;
-        $rotextbox->insert( #FIXME: Make this a here doc.
+        $rotextbox->insert(    #FIXME: Make this a here doc.
             'end',
-            "\nMAIN WINDOW\n\n"
+                  "\nMAIN WINDOW\n\n"
                 . "<ctrl>+x -- cut or column cut\n"
                 . "<ctrl>+c -- copy or column copy\n"
                 . "<ctrl>+v -- paste\n"
@@ -14583,7 +14889,8 @@ sub BindMouseWheel {
                 Ev('D')
             ]
         );
-    } else {
+    }
+    else {
         $w->bind(
             '<4>' => sub {
                 $_[0]->yview( 'scroll', -3, 'units' ) unless $Tk::strictMotif;
@@ -14603,10 +14910,12 @@ sub working {
         $lglobal{worklabel}->configure(
             -text => "\n\n\nWorking....\n$msg\nPlease wait.\n\n\n" );
         $lglobal{workpop}->update;
-    } elsif ( defined $lglobal{workpop} ) {
+    }
+    elsif ( defined $lglobal{workpop} ) {
         $lglobal{workpop}->destroy;
         undef $lglobal{workpop};
-    } else {
+    }
+    else {
         $lglobal{workpop} = $top->Toplevel;
         $lglobal{workpop}->transient($top);
         $lglobal{workpop}->title('Working.....');
@@ -14629,9 +14938,12 @@ sub handleDND {
         if (OS_Win) {
             $filename
                 = $textwindow->SelectionGet( -selection => $sel, 'STRING' );
-        } else {
-            $filename = $textwindow->SelectionGet( -selection => $sel,
-                'FILE_NAME' );
+        }
+        else {
+            $filename = $textwindow->SelectionGet(
+                -selection => $sel,
+                'FILE_NAME'
+            );
         }
     };
     if ( defined $filename && -T $filename ) {
@@ -14717,8 +15029,10 @@ sub utfpopup {
             my $cname = charnames::viacode($name);
             $msg .= ", $cname" if $cname;
             $name = 0 unless $cname;
-        # FIXME: See Todo
-        $buttons[ ( $y * 16 ) + $x ] = $frame->Button(
+
+            # FIXME: See Todo
+            $buttons[ ( $y * 16 ) + $x ] = $frame->Button(
+
                 #    $buttons( ( $y * 16 ) + $x ) = $frame->Button(
                 -activebackground   => $activecolor,
                 -text               => chr($name),
@@ -14780,7 +15094,8 @@ sub regexref {
         $lglobal{regexrefpop}->deiconify;
         $lglobal{regexrefpop}->raise;
         $lglobal{regexrefpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{regexrefpop} = $top->Toplevel;
         $lglobal{regexrefpop}->title('Regex Quick Reference');
         my $button_ok = $lglobal{regexrefpop}->Button(
@@ -14809,14 +15124,17 @@ sub regexref {
             if ( open my $ref, '<', 'regref.txt' ) {
                 while (<$ref>) {
                     $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
                     #$_ = eol_convert($_);
                     $regtext->insert( 'end', $_ );
                 }
-            } else {
+            }
+            else {
                 $regtext->insert( 'end',
                     'Could not open Regex Reference file - regref.txt.' );
             }
-        } else {
+        }
+        else {
             $regtext->insert( 'end',
                 'Could not find Regex Reference file - regref.txt.' );
         }
@@ -14829,7 +15147,8 @@ sub tablefx {
         $lglobal{tblfxpop}->deiconify;
         $lglobal{tblfxpop}->raise;
         $lglobal{tblfxpop}->focus;
-    } else {
+    }
+    else {
         $lglobal{columnspaces} = '';
         $lglobal{tblfxpop}     = $top->Toplevel;
         $lglobal{tblfxpop}->title('ASCII Table Special Effects');
@@ -14876,7 +15195,8 @@ sub tablefx {
                 if ( $range_total == 0 ) {
                     $textwindow->addGlobEnd;
                     return;
-                } else {
+                }
+                else {
                     while (@ranges) {
                         my $end   = pop(@ranges);
                         my $start = pop(@ranges);
@@ -14941,7 +15261,8 @@ sub tablefx {
                     $rb1->configure( -state => 'active' );
                     $rb2->configure( -state => 'active' );
                     $rb3->configure( -state => 'active' );
-                } else {
+                }
+                else {
                     $rb1->configure( -state => 'disabled' );
                     $rb2->configure( -state => 'disabled' );
                     $rb3->configure( -state => 'disabled' );
@@ -15035,7 +15356,8 @@ sub tblselect {
     my $range_total = @ranges;
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         my $end   = pop(@ranges);
         my $start = pop(@ranges);
         $textwindow->markSet( 'tblstart', $start );
@@ -15059,7 +15381,8 @@ sub tlineremove {
     if ( $range_total == 0 ) {
         $textwindow->addGlobEnd;
         return;
-    } else {
+    }
+    else {
         while (@ranges) {
             my $end   = pop(@ranges);
             my $start = pop(@ranges);
@@ -15089,7 +15412,8 @@ sub tlineselect {
                 '--',        '|',
                 'insert',    'insert linestart'
             );
-        } else {
+        }
+        else {
             $textwindow->markSet( 'insert', $lineranges[1] ) if @lineranges;
             $nextcolumn = $textwindow->search( '-exact', '--', '|', 'insert',
                 'insert lineend' );
@@ -15129,7 +15453,8 @@ sub colcalc {
         = $textwindow->get( "$srow.0", "$srow.$lglobal{selectedline}" );
     if ( $widthline =~ /([^|]*)$/ ) {
         $lglobal{columnspaces} = length($1);
-    } else {
+    }
+    else {
         $lglobal{columnspaces} = 0;
     }
     $lglobal{colwidthlbl}
@@ -15141,7 +15466,8 @@ sub tblspace {
     my $range_total = @ranges;
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         $textwindow->addGlobStart;
         my $cursor = $textwindow->index('insert');
         my ( $erow, $ecol ) = split( /\./, ( $textwindow->index('tblend') ) );
@@ -15167,7 +15493,8 @@ sub tblcompress {
     my $range_total = @ranges;
     if ( $range_total == 0 ) {
         return;
-    } else {
+    }
+    else {
         $textwindow->addGlobStart;
         my $cursor = $textwindow->index('insert');
         my ( $erow, $ecol ) = split( /\./, ( $textwindow->index('tblend') ) );
@@ -15195,7 +15522,8 @@ sub insertline {
     if ( $range_total == 0 ) {
         $textwindow->bell;
         return;
-    } else {
+    }
+    else {
         $textwindow->addGlobStart;
         my $end   = pop(@ranges);
         my $start = pop(@ranges);
@@ -15281,19 +15609,23 @@ sub coladjust {
                 push @cells, 0;
                 $cellflag = 1;
                 next;
-            } elsif ( ( length $_ ) && !$cellflag ) {
+            }
+            elsif ( ( length $_ ) && !$cellflag ) {
                 push @cells, $cellheight;
                 $cellheight = 1;
                 $cellflag   = 1;
                 next;
-            } elsif ( !( length $_ ) && !$cellflag ) {
+            }
+            elsif ( !( length $_ ) && !$cellflag ) {
                 $cellheight++;
                 next;
-            } elsif ( !( length $_ ) && $cellflag ) {
+            }
+            elsif ( !( length $_ ) && $cellflag ) {
                 $cellflag = 0;
                 $cellheight++;
                 next;
-            } elsif ( ( length $_ ) && $cellflag ) {
+            }
+            elsif ( ( length $_ ) && $cellflag ) {
                 $cellheight++;
                 next;
             }
@@ -15330,9 +15662,11 @@ sub coladjust {
                     my $padr = int( $pad / 2 + .5 );
                     if ( $lglobal{tblcoljustify} eq 'l' ) {
                         $wline = $wline . ' ' x ($pad);
-                    } elsif ( $lglobal{tblcoljustify} eq 'c' ) {
+                    }
+                    elsif ( $lglobal{tblcoljustify} eq 'c' ) {
                         $wline = ' ' x ($padl) . $wline . ' ' x ($padr);
-                    } elsif ( $lglobal{tblcoljustify} eq 'r' ) {
+                    }
+                    elsif ( $lglobal{tblcoljustify} eq 'r' ) {
                         $wline = ' ' x ($pad) . $wline;
                     }
                     my $templine = shift @table;
@@ -15345,9 +15679,11 @@ sub coladjust {
                     my $padr = int( $pad / 2 + .5 );
                     if ( $lglobal{tblcoljustify} eq 'l' ) {
                         $_ = $_ . ' ' x ($pad);
-                    } elsif ( $lglobal{tblcoljustify} eq 'c' ) {
+                    }
+                    elsif ( $lglobal{tblcoljustify} eq 'c' ) {
                         $_ = ' ' x ($padl) . $_ . ' ' x ($padr);
-                    } elsif ( $lglobal{tblcoljustify} eq 'r' ) {
+                    }
+                    elsif ( $lglobal{tblcoljustify} eq 'r' ) {
                         $_ = ' ' x ($pad) . $_;
                     }
                     my $templine = $blankline;
@@ -15365,9 +15701,11 @@ sub coladjust {
                     my $padr = int( $pad / 2 + .5 );
                     if ( $lglobal{tblcoljustify} eq 'l' ) {
                         $_ = $_ . ' ' x ($pad);
-                    } elsif ( $lglobal{tblcoljustify} eq 'c' ) {
+                    }
+                    elsif ( $lglobal{tblcoljustify} eq 'c' ) {
                         $_ = ' ' x ($padl) . $_ . ' ' x ($padr);
-                    } elsif ( $lglobal{tblcoljustify} eq 'r' ) {
+                    }
+                    elsif ( $lglobal{tblcoljustify} eq 'r' ) {
                         $_ = ' ' x ($pad) . $_;
                     }
                     return 0 if ( length($_) > $width );
@@ -15391,7 +15729,8 @@ sub coladjust {
             if ( (/^[ |]+$/) && !$cellflag ) {
                 $cellflag = 1;
                 push @table, $_;
-            } else {
+            }
+            else {
                 next if (/^[ |]+$/);
                 push @table, $_;
                 $cellflag = 0;
@@ -15403,7 +15742,8 @@ sub coladjust {
             $textwindow->insert( 'tblstart', $_ );
         }
         $dir++;
-    } else {
+    }
+    else {
         my ( $srow, $scol ) = split( /\./, $textwindow->index('tblstart') );
         my ( $erow, $ecol ) = split( /\./, $textwindow->index('tblend') );
         $textwindow->addGlobStart;
@@ -15411,7 +15751,8 @@ sub coladjust {
             for ( $srow .. $erow ) {
                 $textwindow->insert( "$_.$lglobal{selectedline}", ' ' );
             }
-        } else {
+        }
+        else {
             for ( $srow .. $erow ) {
                 return 0
                     if (
@@ -15458,7 +15799,8 @@ sub grid2step {
             $tline =~ s/^\|//;
             if ( $selection =~ /.\|/ ) {
                 @twords = split( /\|/, $tline );
-            } else {
+            }
+            else {
                 return;
             }
             my $word = 0;
@@ -15517,7 +15859,8 @@ sub step2grid {
                 $tbl[$row][$col] .= $1 . ' ';
                 $tcol =~ s/^[ |]+//;
                 $tcol =~ s/^\n//;
-            } else {
+            }
+            else {
                 $tcol =~ s/^ +\|//smg;
                 $col++;
             }
@@ -15542,7 +15885,8 @@ sub step2grid {
                     $line .= $1;
                     my $pad = 20 - length($1);
                     $line .= ' ' x $pad . '|';
-                } else {
+                }
+                else {
                     $line .= ' ' x 20 . '|';
                     $num--;
                 }
@@ -15574,7 +15918,8 @@ sub tblautoc {
         $tline =~ s/\s+$//;
         if ( $selection =~ /.\|/ ) {
             @twords = split( /\|/, $tline );
-        } else {
+        }
+        else {
             @twords = split( /  +/, $tline );
         }
         my $word = 0;
@@ -15629,9 +15974,9 @@ sub initialize {
     $lglobal{footstyle}        = 'end';
     $lglobal{ftnoteindexstart} = '1.0';
     $lglobal{groutp}           = 'l';
-    $lglobal{htmlimgar}        = 1;          #html image aspect ratio
+    $lglobal{htmlimgar}        = 1;             #html image aspect ratio
     $lglobal{ignore_case}      = 0;
-    $lglobal{keep_latin1} = 1;
+    $lglobal{keep_latin1}      = 1;
     $lglobal{lastmatchindex}   = '1.0';
     $lglobal{lastsearchterm}   = '';
     $lglobal{longordlabel}     = 0;
@@ -15640,10 +15985,12 @@ sub initialize {
     $lglobal{seepagenums}      = 0;
     $lglobal{selectionsearch}  = 0;
     $lglobal{showblocksize}    = 1;
+    $lglobal{spellencoding}    = "iso8859-1";
     $lglobal{stepmaxwidth}     = 70;
     $lglobal{suspects_only}    = 0;
     $lglobal{tblcoljustify}    = 'l';
     $lglobal{tblrwcol}         = 1;
+    $lglobal{ToolBar}          = 1;
     $lglobal{uoutp}            = 'h';
     $lglobal{utfrangesort}     = 0;
     $lglobal{visibleline}      = '';
@@ -16105,7 +16452,8 @@ sub textbindings {
                 }
                 $textwindow->addGlobEnd;
                 $top->break;
-            } else {
+            }
+            else {
                 $textwindow->Delete;
             }
         }
@@ -16211,7 +16559,8 @@ sub textbindings {
             if ($DEBUG) {
                 $DEBUG = 0;
                 rebuildmenu();
-            } else {
+            }
+            else {
                 $DEBUG = 1;
                 rebuildmenu();
             }
@@ -16244,7 +16593,8 @@ sub textbindings {
             if ( $lglobal{search} ) {
                 my $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
                 searchtext($searchterm);
-            } else {
+            }
+            else {
                 searchpopup();
             }
         }
@@ -16254,7 +16604,8 @@ sub textbindings {
             '<3>' =>
                 sub { scrolldismiss(); $menu->Popup( -popover => 'cursor' ) }
         );
-    } else {
+    }
+    else {
         $textwindow->bind( 'TextUnicode', '<3>' => sub { scrolldismiss() } )
             ;    # Try to trap odd right click error under OSX and Linux
     }
@@ -16313,7 +16664,8 @@ sub buildstatusbar {
         sub {
             if ( $lglobal{showblocksize} ) {
                 $lglobal{showblocksize} = 0;
-            } else {
+            }
+            else {
                 $lglobal{showblocksize} = 1;
             }
         }
@@ -16356,9 +16708,10 @@ sub buildstatusbar {
             if ( $lglobal{scanno_hl} ) {
                 $lglobal{scanno_hl}          = 0;
                 $lglobal{highlighttempcolor} = 'gray';
-            } else {
+            }
+            else {
                 scannosfile() unless $scannoslist;
-                return        unless $scannoslist;
+                return unless $scannoslist;
                 $lglobal{scanno_hl}          = 1;
                 $lglobal{highlighttempcolor} = $highlightcolor;
             }
@@ -16398,7 +16751,8 @@ sub buildstatusbar {
                 ->configure( -relief => 'sunken' );
             if ( $textwindow->OverstrikeMode ) {
                 $textwindow->OverstrikeMode(0);
-            } else {
+            }
+            else {
                 $textwindow->OverstrikeMode(1);
             }
         }
@@ -16537,7 +16891,8 @@ sub findmatchingclosebracket {
         if ( $textwindow->compare( $openIndex, '<', $closeIndex ) ) {
             $indentLevel++;
             $startIndex = $openIndex;
-        } else {
+        }
+        else {
             $indentLevel--;
             $startIndex = $closeIndex;
         }
@@ -16553,7 +16908,8 @@ sub findgreek {
     if ($greekIndex) {
         my $closeIndex = findmatchingclosebracket($greekIndex);
         return ( $greekIndex, $closeIndex );
-    } else {
+    }
+    else {
         return ( $greekIndex, $greekIndex );
     }
 }
@@ -16584,7 +16940,8 @@ sub greekpopup {
         $lglobal{grpop}->deiconify;
         $lglobal{grpop}->raise;
         $lglobal{grpop}->focus;
-    } else {
+    }
+    else {
         my @greek = (
             [ 'a',    'calpha',   'lalpha',   'chalpha',   'halpha' ],
             [ 'b',    'cbeta',    'lbeta',    '',          '' ],
@@ -18577,7 +18934,8 @@ sub greekpopup {
                 sub {
                     if ( $lglobal{buildentry}->get ) {
                         $lglobal{buildentry}->delete('insert');
-                    } else {
+                    }
+                    else {
                         $lglobal{grtext}->delete( 'insert -1c', 'insert' );
                     }
                 }
@@ -18868,7 +19226,8 @@ sub betagreek {
             $phrase =~ s/\Q$_\E/$atebkrg{$_}/g;
         }
         return togreektr($phrase);
-    } else {
+    }
+    else {
         for ( keys %{ $lglobal{grkbeta1} } ) {
             $phrase =~ s/$_/$lglobal{grkbeta1}{$_}/g;
         }
@@ -18910,7 +19269,8 @@ sub pageadjust {
     if ( defined $lglobal{padjpop} ) {
         $lglobal{padjpop}->deiconify;
         $lglobal{padjpop}->raise;
-    } else {
+    }
+    else {
         my @marks = $textwindow->markNames;
         my @pages = sort grep ( /^Pg\S+$/, @marks );
         my %pagetrack;
@@ -18949,21 +19309,23 @@ sub pageadjust {
                     }
                     if ( $pagetrack{$num}[3]->cget( -text ) eq 'Arabic' ) {
                         $style = 'Arabic';
-                    } elsif ( $pagetrack{$num}[3]->cget( -text ) eq 'Roman' )
-                    {
+                    }
+                    elsif ( $pagetrack{$num}[3]->cget( -text ) eq 'Roman' ) {
                         $style = 'Roman';
                     }
                     if ( $style eq 'Roman' ) {
                         $label = lc( roman($index) );
                         $label =~ s/\.//;
-                    } else {
+                    }
+                    else {
                         $label = $index;
                         $label =~ s/^0+// if $label and length $label;
                     }
 
                     if ( $pagetrack{$num}[4]->cget( -text ) eq 'No Count' ) {
                         $pagetrack{$num}[2]->configure( -text => '' );
-                    } else {
+                    }
+                    else {
                         $pagetrack{$num}[2]
                             ->configure( -text => "Pg $label" );
                         $index++;
@@ -19037,16 +19399,18 @@ sub pageadjust {
                         {
                             $pagetrack{ $_[0] }[3]
                                 ->configure( -text => 'Roman' );
-                        } elsif (
+                        }
+                        elsif (
                             $pagetrack{ $_[0] }[3]->cget( -text ) eq 'Roman' )
                         {
                             $pagetrack{ $_[0] }[3]->configure( -text => '"' );
-                        } elsif (
-                            $pagetrack{ $_[0] }[3]->cget( -text ) eq '"' )
+                        }
+                        elsif ( $pagetrack{ $_[0] }[3]->cget( -text ) eq '"' )
                         {
                             $pagetrack{ $_[0] }[3]
                                 ->configure( -text => 'Arabic' );
-                        } else {
+                        }
+                        else {
                             $pagetrack{ $_[0] }[3]->configure( -text => '"' );
                         }
                     },
@@ -19063,17 +19427,20 @@ sub pageadjust {
                         {
                             $pagetrack{ $_[0] }[4]
                                 ->configure( -text => '+1' );
-                        } elsif (
+                        }
+                        elsif (
                             $pagetrack{ $_[0] }[4]->cget( -text ) eq '+1' )
                         {
                             $pagetrack{ $_[0] }[4]
                                 ->configure( -text => 'No Count' );
-                        } elsif ( $pagetrack{ $_[0] }[4]->cget( -text ) eq
+                        }
+                        elsif ( $pagetrack{ $_[0] }[4]->cget( -text ) eq
                             'No Count' )
                         {
                             $pagetrack{ $_[0] }[4]
                                 ->configure( -text => 'Start @' );
-                        } else {
+                        }
+                        else {
                             $pagetrack{ $_[0] }[4]
                                 ->configure( -text => '+1' );
                         }
@@ -19127,7 +19494,8 @@ sub pnumadjust {    #pop up a window to edit/resequence page markers
         $lglobal{pnumpop}->deiconify;
         $lglobal{pnumpop}->raise;
         $lglobal{pagenumentry}->configure( -text => $mark );
-    } else {
+    }
+    else {
         $lglobal{pnumpop} = $top->Toplevel;
         $lglobal{pnumpop}->title('Adjust Page Markers');
         $lglobal{pnumpop}->geometry( $lglobal{pnpopgoem} )
@@ -19317,7 +19685,7 @@ sub pageadd {    # Add a page marker
     $mark = sprintf( "%0" . $length . 'd', $mark + 1 );
     $mark = "Pg$mark";
     $textwindow->markSet( 'insert', $insert );
-    return 0       if ( $textwindow->markExists($mark) );
+    return 0 if ( $textwindow->markExists($mark) );
     viewpagenums() if $lglobal{seepagenums};
     $textwindow->markSet( $mark, $insert );
     $textwindow->markGravity( $mark, 'left' );
@@ -19357,7 +19725,8 @@ sub pgrenum {    # Re sequence page markers
         $end   = $marks[$#marks];
         $start = $lglobal{pagenumentry}->get;
         while ( $marks[0] ne $start ) { shift @marks }
-    } else {
+    }
+    else {
         @marks = reverse( sort( keys(%pagenumbers) ) );
         while ( !( $textwindow->markExists( $marks[0] ) ) ) { shift @marks }
         $start = $textwindow->index('end');
@@ -19372,7 +19741,7 @@ sub pgrenum {    # Re sequence page markers
         while ( $marks[$#marks] ne $end ) { pop @marks }
     }
     $textwindow->bell unless $offset;
-    return            unless $offset;
+    return unless $offset;
     $lglobal{seepagenums} = 1;
     viewpagenums();
     $textwindow->markSet( 'insert', '1.0' );
@@ -19444,15 +19813,11 @@ sub pmoveup {    # move the page marker up a line
 
     if ( $num eq '1.0' ) {
         return if $textwindow->compare( $index, '<', '1.0' );
-    } else {
+    }
+    else {
         return
-            if $textwindow->compare(
-                    $index, '<',
-                    (   $textwindow->index(
-                            $num . '+' . length($pagenum) . 'c'
-                        )
-                    )
-            );
+            if $textwindow->compare( $index, '<',
+            ( $textwindow->index( $num . '+' . length($pagenum) . 'c' ) ) );
     }
     $textwindow->ntdelete( $mark, $mark . ' +' . length($pagenum) . 'c' );
     $textwindow->markSet( $mark, $index );
@@ -19478,15 +19843,11 @@ sub pmoveleft {    # move the page marker left a character
 
     if ( $num eq '1.0' ) {
         return if $textwindow->compare( $index, '<', '1.0' );
-    } else {
+    }
+    else {
         return
-            if $textwindow->compare(
-                    $index, '<',
-                    (   $textwindow->index(
-                            $num . '+' . length($pagenum) . 'c'
-                        )
-                    )
-            );
+            if $textwindow->compare( $index, '<',
+            ( $textwindow->index( $num . '+' . length($pagenum) . 'c' ) ) );
     }
     $textwindow->ntdelete( $mark, $mark . ' +' . length($pagenum) . 'c' );
     $textwindow->markSet( $mark, $index );
@@ -19518,10 +19879,11 @@ sub pmoveright {    # move the page marker left a character
     }
     if ( $textwindow->compare( $num, '==', 'end' ) ) {
         return if $textwindow->compare( $index, '>=', 'end' );
-    } else {
+    }
+    else {
         return
             if $textwindow->compare( $index . '+' . length($pagenum) . 'c',
-                    '>=', $num );
+            '>=', $num );
     }
     $textwindow->ntdelete( $mark, $mark . ' +' . length($pagenum) . 'c' );
     $textwindow->markSet( $mark, $index );
@@ -19543,7 +19905,8 @@ sub pmovedown {    # move the page marker down a line
     my $index   = $textwindow->index("$mark+1l");
     if ( $textwindow->compare( $num, '==', 'end' ) ) {
         return if $textwindow->compare( $index, '>=', 'end' );
-    } else {
+    }
+    else {
         return if $textwindow->compare( $index, '>', $num );
     }
     $textwindow->ntdelete( $mark, $mark . ' +' . length($pagenum) . 'c' );
@@ -19647,7 +20010,8 @@ sub uchar {
     if ( defined $lglobal{ucharpop} ) {
         $lglobal{ucharpop}->deiconify;
         $lglobal{ucharpop}->raise;
-    } else {
+    }
+    else {
         return unless blocks_check();
         require q(unicore/Blocks.pl);
         require q(unicore/Name.pl);
@@ -19845,7 +20209,8 @@ sub copy {
     $textwindow->clipboardClear;
     if ( $range_total == 2 ) {
         $textwindow->clipboardCopy;
-    } else {
+    }
+    else {
         $textwindow->clipboardColumnCopy;
     }
 }
@@ -19856,7 +20221,8 @@ sub cut {
     return unless $range_total;
     if ( $range_total == 2 ) {
         $textwindow->clipboardCut;
-    } else {
+    }
+    else {
         $textwindow->addGlobStart;
         $textwindow->clipboardColumnCut;
         $textwindow->addGlobEnd;
@@ -19873,7 +20239,8 @@ sub drag {
         sub {
             if (OS_Win) {
                 $corner->configure( -cursor => 'size_nw_se' );
-            } else {
+            }
+            else {
                 $corner->configure( -cursor => 'sizing' );
             }
         }
@@ -19949,7 +20316,8 @@ sub jeebiesrun {
                 $listbox->insert( 'end', $line );
             }
         }
-    } else {
+    }
+    else {
         warn "Unable to run Jeebies. $!";
     }
     $listbox->delete('0');
@@ -19962,7 +20330,8 @@ sub jeebiespop_up {
     viewpagenums() if ( $lglobal{seepagenums} );
     if ( $lglobal{jeepop} ) {
         $lglobal{jeepop}->deiconify;
-    } else {
+    }
+    else {
         $lglobal{jeepop} = $top->Toplevel;
         $lglobal{jeepop}->title('Jeebies');
         $lglobal{jeepop}->geometry($geometry2) if $geometry2;
@@ -20139,9 +20508,10 @@ sub distance {
 }
 
 sub _min {
-    return $_[0] < $_[1]
-        ? $_[0] < $_[2] 
-            ? $_[0] 
+    return
+          $_[0] < $_[1]
+        ? $_[0] < $_[2]
+            ? $_[0]
             : $_[2]
         : $_[1] < $_[2] ? $_[1]
         :                 $_[2];
@@ -20180,10 +20550,10 @@ sub natural_sort_freq
 ## text file processing
 
 sub find_proofer_comment {
-   my $pattern = "[**";
-   my $comment = $textwindow->search($pattern, "insert");
-   my $index = $textwindow->index( "$comment +1c");
-   $textwindow->SetCursor($index);
+    my $pattern = "[**";
+    my $comment = $textwindow->search( $pattern, "insert" );
+    my $index   = $textwindow->index("$comment +1c");
+    $textwindow->SetCursor($index);
 }
 
 # functions specific to text version processing
@@ -20193,15 +20563,15 @@ sub text_convert_tb {
 }
 
 sub text_convert_italic {
-    my $italic = qr/<\/?i>/;
+    my $italic  = qr/<\/?i>/;
     my $replace = $italic_char;
-    $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $italic, $replace);
+    $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $italic, $replace );
 }
 
 sub text_convert_bold {
-    my $bold = qr/<\/?b>/;
+    my $bold    = qr/<\/?b>/;
     my $replace = "$bold_char";
-    $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $bold, $replace);
+    $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $bold, $replace );
 }
 
 #sub text_convert_smcap { }
@@ -20210,12 +20580,16 @@ sub text_convert_bold {
 sub text_convert_options {
 
     my $options = $top->DialogBox(
-        -title => "Text Processing Options",
-        -buttons => ["OK"],);
+        -title   => "Text Processing Options",
+        -buttons => ["OK"],
+    );
 
-    my $italic_frame = $options->add( 'Frame' )
-    ->pack( -side => 'top', -padx => 5, -pady => 3 );
-    my $italic_label = $italic_frame->Label( -width => 25, -text => "Italic Replace Character")->pack(-side => 'left' );
+    my $italic_frame = $options->add('Frame')
+        ->pack( -side => 'top', -padx => 5, -pady => 3 );
+    my $italic_label = $italic_frame->Label(
+        -width => 25,
+        -text  => "Italic Replace Character"
+    )->pack( -side => 'left' );
     my $italic_entry = $italic_frame->Entry(
         -width        => 6,
         -background   => 'white',
@@ -20223,9 +20597,10 @@ sub text_convert_options {
         -textvariable => \$italic_char,
     )->pack( -side => 'left' );
 
-    my $bold_frame = $options->add( 'Frame' )
-    ->pack( -side => 'top', -padx => 5, -pady => 3 );
-    my $bold_label = $bold_frame->Label( -width => 25, -text => "Bold Replace Character")->pack(-side => 'left' );
+    my $bold_frame = $options->add('Frame')
+        ->pack( -side => 'top', -padx => 5, -pady => 3 );
+    my $bold_label = $bold_frame->Label( -width => 25,
+        -text => "Bold Replace Character" )->pack( -side => 'left' );
     my $bold_entry = $bold_frame->Entry(
         -width        => 6,
         -background   => 'white',
@@ -20238,7 +20613,7 @@ sub text_convert_options {
 
 ## Low level file processing functions
 
-# This turns long Windows path to DOS path, e.g., C:\Program Files\ 
+# This turns long Windows path to DOS path, e.g., C:\Program Files\
 # becomes C:\Progra~1\.
 # Probably need this for DOS command window on Win98/95. Needed for XP also.
 sub dos_path {
@@ -20261,7 +20636,6 @@ sub dos_path {
 #    $line =~ s/$regex//;
 #    return $line;
 #}
-
 
 ## HTML processing routines
 sub htmlbackup {
@@ -20315,7 +20689,7 @@ sub html_convert_utf {
     my $blockstart = @_;
     if ( $lglobal{leave_utf} ) {
         $blockstart
-        = $textwindow->search( '-exact', '--', 'charset=iso-8859-1',
+            = $textwindow->search( '-exact', '--', 'charset=iso-8859-1',
             '1.0', 'end' );
         if ($blockstart) {
             $textwindow->ntdelete( $blockstart, "$blockstart+18c" );
@@ -20328,7 +20702,7 @@ sub html_convert_utf {
             $blockstart = $textwindow->search(
                 '-regexp', '--', '[\x{100}-\x{65535}]', '1.0', 'end'
             )
-        )
+            )
         {
             my $xchar = ord( $textwindow->get($blockstart) );
             $textwindow->ntdelete($blockstart);
@@ -20344,10 +20718,9 @@ sub html_convert_utf {
 # Set author name in <title></title>
 #sub html_set_author { }
 
-
 # FIXME: Should be a general purpose function
-sub html_cleanup_markers { 
-    my ($blockstart, $xler, $xlec, $blockend) = @_;
+sub html_cleanup_markers {
+    my ( $blockstart, $xler, $xlec, $blockend ) = @_;
 
     working("Cleaning up\nblock Markers");
 
@@ -20373,7 +20746,7 @@ sub html_cleanup_markers {
     {
         $textwindow->ntdelete( "$blockstart+5c", "$blockstart+9c" );
     }
-    
+
 }
 
 #sub html_parse_header {
@@ -20404,9 +20777,8 @@ sub html_cleanup_markers {
 #    }
 #}
 
-
 sub html_convert_subscripts {
-    my ($selection, $step) = @_;
+    my ( $selection, $step ) = @_;
 
     if ( $selection =~ s/_\{([^}]+?)\}/<sub>$1<\/sub>/g ) {
         $textwindow->ntdelete( "$step.0", "$step.end" );
@@ -20416,7 +20788,7 @@ sub html_convert_subscripts {
 
 # FIXME: Doesn't convert Gen^rl; workaround Gen^{rl}
 sub html_convert_superscripts {
-    my ($selection, $step) = @_;
+    my ( $selection, $step ) = @_;
 
     if ( $selection =~ s/\^\{([^}]+?)\}/<sup>$1<\/sup>/g ) {
         $textwindow->ntdelete( "$step.0", "$step.end" );
@@ -20425,11 +20797,10 @@ sub html_convert_superscripts {
 }
 
 sub html_convert_tb {
-    no warnings; # FIXME: Warning-- Exiting subroutine via next
-    my ($selection, $step) = @_;
+    no warnings;    # FIXME: Warning-- Exiting subroutine via next
+    my ( $selection, $step ) = @_;
 
-    if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ )
-    {
+    if ( $selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ ) {
         $textwindow->ntdelete( "$step.0", "$step.end" );
         $textwindow->ntinsert( "$step.0", $selection );
         next;
