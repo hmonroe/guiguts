@@ -2,6 +2,7 @@
 
 # $Id$
 
+
 # GuiGuts text editor
 
 #Copyright (C) 2008 V. L. Simpson <vlsimpson@gmail.com>
