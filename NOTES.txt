@@ -1,0 +1,2 @@
+    # my $spellencodinglabel = $spellop->add( 'Label', -text => 'Set encoding: default = iso8859-1' )->pack;
+    # my $spellencodingentry = $spellop->add( 'Entry', -width => 30, -textvariable => \$lglobal{spellencoding}, )->pack;
