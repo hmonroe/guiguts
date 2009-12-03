@@ -587,97 +587,6 @@ sub butbind {    # Bindings to make label in status bar act like buttons
 }
 
 
-# Pop up window to allow entering Unicode characters by ordinal number
-sub utford {
-    my $ord;
-    my $base = 'dec';
-    if ( $lglobal{ordpop} ) {
-        $lglobal{ordpop}->deiconify;
-        $lglobal{ordpop}->raise;
-    }
-    else {
-        $lglobal{ordpop} = $top->Toplevel;
-        $lglobal{ordpop}->title('Ordinal to Char');
-        $lglobal{ordpop}->resizable( 'yes', 'no' );
-        my $frame = $lglobal{ordpop}
-            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
-        my $frame2 = $lglobal{ordpop}
-            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
-        $frame->Label( -text => 'Ordinal of char.' )
-            ->grid( -row => 1, -column => 1 );
-        my $charlbl = $frame2->Label( -text => '', -width => 50 )->pack;
-        my ( $inentry, $outentry );
-        $frame->Radiobutton(
-            -variable => \$base,
-            -value    => 'hex',
-            -text     => 'Hex',
-            -command  => sub { $inentry->validate }
-        )->grid( -row => 0, -column => 1 );
-        $frame->Radiobutton(
-            -variable => \$base,
-            -value    => 'dec',
-            -text     => 'Decimal',
-            -command  => sub { $inentry->validate }
-        )->grid( -row => 0, -column => 2 );
-        $inentry = $frame->Entry(
-            -background   => 'white',
-            -width        => 6,
-            -font         => '{sanserif} 14',
-            -textvariable => \$ord,
-            -validate     => 'key',
-            -vcmd         => sub {
-
-                if ( $_[0] eq '' ) {
-                    $outentry->delete( '1.0', 'end' );
-                    return 1;
-                }
-                my ( $name, $char );
-                if ( $base eq 'hex' ) {
-                    return 0 unless ( $_[0] =~ /^[a-fA-F\d]{0,4}$/ );
-                    $char = chr( hex( $_[0] ) );
-                    $name = charnames::viacode( hex( $_[0] ) );
-                }
-                elsif ( $base eq 'dec' ) {
-                    return 0
-                        unless ( ( $_[0] =~ /^\d{0,5}$/ )
-                        && ( $_[0] < 65519 ) );
-                    $char = chr( $_[0] );
-                    $name = charnames::viacode( $_[0] );
-                }
-                $outentry->delete( '1.0', 'end' );
-                $outentry->insert( 'end', $char );
-                $charlbl->configure( -text => $name );
-                return 1;
-            },
-        )->grid( -row => 1, -column => 2 );
-        $outentry = $frame->ROText(
-            -background => 'white',
-            -relief     => 'sunken',
-            -font       => '{sanserif} 14',
-            -width      => 6,
-            -height     => 1,
-        )->grid( -row => 2, -column => 2 );
-        my $frame1 = $lglobal{ordpop}
-            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
-        my $button = $frame1->Button(
-            -text    => 'OK',
-            -width   => 8,
-            -command => sub {
-                $lglobal{hasfocus}
-                    ->insert( 'insert', $outentry->get( '1.0', 'end -1c' ) );
-            },
-        )->grid( -row => 1, -column => 1 );
-        $frame1->Button(
-            -text  => 'Close',
-            -width => 8,
-            -command =>
-                sub { $lglobal{ordpop}->destroy; undef $lglobal{ordpop} },
-        )->grid( -row => 1, -column => 2 );
-        $lglobal{ordpop}->protocol( 'WM_DELETE_WINDOW' =>
-                sub { $lglobal{ordpop}->destroy; undef $lglobal{ordpop} } );
-        $lglobal{ordpop}->Icon( -image => $icon );
-    }
-}
 
 # Pop up window allowing tracking and auto reselection of last selection
 sub selection {
@@ -14318,57 +14227,6 @@ sub insertit {
         if $isatext;
 }
 
-sub regexref {
-    if ( defined( $lglobal{regexrefpop} ) ) {
-        $lglobal{regexrefpop}->deiconify;
-        $lglobal{regexrefpop}->raise;
-        $lglobal{regexrefpop}->focus;
-    }
-    else {
-        $lglobal{regexrefpop} = $top->Toplevel;
-        $lglobal{regexrefpop}->title('Regex Quick Reference');
-        my $button_ok = $lglobal{regexrefpop}->Button(
-            -activebackground => $activecolor,
-            -text             => 'Close',
-            -command          => sub {
-                $lglobal{regexrefpop}->destroy;
-                undef $lglobal{regexrefpop};
-            }
-        )->pack( -pady => 6 );
-        my $regtext = $lglobal{regexrefpop}->Scrolled(
-            'ROText',
-            -scrollbars => 'se',
-            -background => 'white',
-            -font       => $lglobal{font},
-        )->pack( -anchor => 'n', -expand => 'y', -fill => 'both' );
-        drag($regtext);
-        $lglobal{regexrefpop}->protocol(
-            'WM_DELETE_WINDOW' => sub {
-                $lglobal{regexrefpop}->destroy;
-                undef $lglobal{regexrefpop};
-            }
-        );
-        $lglobal{regexrefpop}->Icon( -image => $icon );
-        if ( -e 'regref.txt' ) {
-            if ( open my $ref, '<', 'regref.txt' ) {
-                while (<$ref>) {
-                    $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-
-                    #$_ = eol_convert($_);
-                    $regtext->insert( 'end', $_ );
-                }
-            }
-            else {
-                $regtext->insert( 'end',
-                    'Could not open Regex Reference file - regref.txt.' );
-            }
-        }
-        else {
-            $regtext->insert( 'end',
-                'Could not find Regex Reference file - regref.txt.' );
-        }
-    }
-}
 
 sub tablefx {
     viewpagenums() if ( $lglobal{seepagenums} );
@@ -17198,152 +17056,6 @@ sub escape_problems {
     return $_[0];
 }
 
-sub uchar {
-    if ( defined $lglobal{ucharpop} ) {
-        $lglobal{ucharpop}->deiconify;
-        $lglobal{ucharpop}->raise;
-    }
-    else {
-        return unless blocks_check();
-        require q(unicore/Blocks.pl);
-        require q(unicore/Name.pl);
-        my $stopit = 0;
-        my %blocks;
-        for ( split /\n/, do 'unicore/Blocks.pl' ) {
-            my @array = split /\t/, $_;
-            $blocks{ $array[2] } = [ @array[ 0, 1 ] ];
-        }
-        $lglobal{ucharpop} = $top->Toplevel;
-        $lglobal{ucharpop}->title('Unicode Character Search');
-        $lglobal{ucharpop}->geometry('550x450');
-        $lglobal{ucharpop}->protocol(
-            'WM_DELETE_WINDOW' =>
-                sub { $lglobal{ucharpop}->destroy; undef $lglobal{ucharpop}; }
-        );
-        $lglobal{ucharpop}->Icon( -image => $icon );
-        my $cframe = $lglobal{ucharpop}->Frame->pack;
-        my $frame0 = $lglobal{ucharpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n', -pady => 4 );
-        my $sizelabel;
-        my ( @textchars, @textlabels );
-        my $pane = $lglobal{ucharpop}->Scrolled(
-            'Pane',
-            -background => 'white',
-            -scrollbars => 'se',
-            -sticky     => 'wne',
-        )->pack( -expand => 'y', -fill => 'both', -anchor => 'nw' );
-        drag($pane);
-        BindMouseWheel($pane);
-        my $fontlist = $cframe->BrowseEntry(
-            -label     => 'Font',
-            -browsecmd => sub {
-                utffontinit();
-                for (@textchars) {
-                    $_->configure( -font => $lglobal{utffont} );
-                }
-            },
-            -variable => \$utffontname,
-        )->grid( -row => 1, -column => 1, -padx => 8, -pady => 2 );
-        $fontlist->insert( 'end', sort( $textwindow->fontFamilies ) );
-        my $bigger = $cframe->Button(
-            -activebackground => $activecolor,
-            -text             => 'Bigger',
-            -command          => sub {
-                $utffontsize++;
-                utffontinit();
-                for (@textchars) {
-                    $_->configure( -font => $lglobal{utffont} );
-                }
-                $sizelabel->configure( -text => $utffontsize );
-            },
-        )->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
-        $sizelabel = $cframe->Label( -text => $utffontsize )
-            ->grid( -row => 1, -column => 3, -padx => 2, -pady => 2 );
-        my $smaller = $cframe->Button(
-            -activebackground => $activecolor,
-            -text             => 'Smaller',
-            -command          => sub {
-                $utffontsize--;
-                utffontinit();
-                for (@textchars) {
-                    $_->configure( -font => $lglobal{utffont} );
-                }
-                $sizelabel->configure( -text => $utffontsize );
-            },
-        )->grid( -row => 1, -column => 4, -padx => 2, -pady => 2 );
-
-        $frame0->Label( -text => 'Search Characteristics ', )
-            ->grid( -row => 1, -column => 1 );
-        my $characteristics = $frame0->Entry(
-            -width      => 40,
-            -background => 'white'
-        )->grid( -row => 1, -column => 2 );
-        my $doit = $frame0->Button(
-            -text    => 'Search',
-            -command => sub {
-                for ( @textchars, @textlabels ) {
-                    $_->destroy;
-                }
-                $stopit = 0;
-                my $row = 0;
-                @textlabels = @textchars = ();
-                my @chars = split /\s+/, uc( $characteristics->get );
-                my @lines = split /\n/,  do 'unicore/Name.pl';
-                while (@lines) {
-                    my @items = split /\t+/, shift @lines;
-                    my ( $ord, $name ) = ( $items[0], $items[-1] );
-                    last if ( hex $ord > 65535 );
-                    if ($stopit) { $stopit = 0; last; }
-                    my $count = 0;
-                    for my $char (@chars) {
-                        $count++;
-                        last unless $name =~ /\b$char\b/;
-                        if ( @chars == $count ) {
-                            my $block = '';
-                            for ( keys %blocks ) {
-                                if (   hex( $blocks{$_}[0] ) <= hex($ord)
-                                    && hex( $blocks{$_}[1] ) >= hex($ord) )
-                                {
-                                    $block = $_;
-                                    last;
-                                }
-                            }
-                            $textchars[$row] = $pane->Label(
-                                -text       => chr( hex $ord ),
-                                -font       => $lglobal{utffont},
-                                -background => 'white',
-                                )->grid(
-                                -row    => $row,
-                                -column => 0,
-                                -sticky => 'w'
-                                );
-                            utfchar_bind( $textchars[$row] );
-
-                            $textlabels[$row] = $pane->Label(
-                                -text => "$name  -  Ordinal $ord  -  $block",
-                                -background => 'white',
-                                )->grid(
-                                -row    => $row,
-                                -column => 1,
-                                -sticky => 'w'
-                                );
-                            utflabel_bind(
-                                $textlabels[$row],  $block,
-                                $blocks{$block}[0], $blocks{$block}[1]
-                            );
-                            $row++;
-                        }
-                    }
-                }
-            },
-        )->grid( -row => 1, -column => 3 );
-        $frame0->Button(
-            -text    => 'Stop',
-            -command => sub { $stopit = 1; },
-        )->grid( -row => 1, -column => 4 );
-        $characteristics->bind( '<Return>' => sub { $doit->invoke } );
-    }
-}
 
 sub utflabel_bind {
     my ( $widget, $block, $start, $end ) = @_;
@@ -20858,5 +20570,295 @@ sub latinpopup {
     }
 }
 
+sub regexref {
+    if ( defined( $lglobal{regexrefpop} ) ) {
+        $lglobal{regexrefpop}->deiconify;
+        $lglobal{regexrefpop}->raise;
+        $lglobal{regexrefpop}->focus;
+    }
+    else {
+        $lglobal{regexrefpop} = $top->Toplevel;
+        $lglobal{regexrefpop}->title('Regex Quick Reference');
+        my $button_ok = $lglobal{regexrefpop}->Button(
+            -activebackground => $activecolor,
+            -text             => 'Close',
+            -command          => sub {
+                $lglobal{regexrefpop}->destroy;
+                undef $lglobal{regexrefpop};
+            }
+        )->pack( -pady => 6 );
+        my $regtext = $lglobal{regexrefpop}->Scrolled(
+            'ROText',
+            -scrollbars => 'se',
+            -background => 'white',
+            -font       => $lglobal{font},
+        )->pack( -anchor => 'n', -expand => 'y', -fill => 'both' );
+        drag($regtext);
+        $lglobal{regexrefpop}->protocol(
+            'WM_DELETE_WINDOW' => sub {
+                $lglobal{regexrefpop}->destroy;
+                undef $lglobal{regexrefpop};
+            }
+        );
+        $lglobal{regexrefpop}->Icon( -image => $icon );
+        if ( -e 'regref.txt' ) {
+            if ( open my $ref, '<', 'regref.txt' ) {
+                while (<$ref>) {
+                    $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
+                    #$_ = eol_convert($_);
+                    $regtext->insert( 'end', $_ );
+                }
+            }
+            else {
+                $regtext->insert( 'end',
+                    'Could not open Regex Reference file - regref.txt.' );
+            }
+        }
+        else {
+            $regtext->insert( 'end',
+                'Could not find Regex Reference file - regref.txt.' );
+        }
+    }
+}
+
+# Pop up window to allow entering Unicode characters by ordinal number
+sub utford {
+    my $ord;
+    my $base = 'dec';
+    if ( $lglobal{ordpop} ) {
+        $lglobal{ordpop}->deiconify;
+        $lglobal{ordpop}->raise;
+    }
+    else {
+        $lglobal{ordpop} = $top->Toplevel;
+        $lglobal{ordpop}->title('Ordinal to Char');
+        $lglobal{ordpop}->resizable( 'yes', 'no' );
+        my $frame = $lglobal{ordpop}
+            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+        my $frame2 = $lglobal{ordpop}
+            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+        $frame->Label( -text => 'Ordinal of char.' )
+            ->grid( -row => 1, -column => 1 );
+        my $charlbl = $frame2->Label( -text => '', -width => 50 )->pack;
+        my ( $inentry, $outentry );
+        $frame->Radiobutton(
+            -variable => \$base,
+            -value    => 'hex',
+            -text     => 'Hex',
+            -command  => sub { $inentry->validate }
+        )->grid( -row => 0, -column => 1 );
+        $frame->Radiobutton(
+            -variable => \$base,
+            -value    => 'dec',
+            -text     => 'Decimal',
+            -command  => sub { $inentry->validate }
+        )->grid( -row => 0, -column => 2 );
+        $inentry = $frame->Entry(
+            -background   => 'white',
+            -width        => 6,
+            -font         => '{sanserif} 14',
+            -textvariable => \$ord,
+            -validate     => 'key',
+            -vcmd         => sub {
+
+                if ( $_[0] eq '' ) {
+                    $outentry->delete( '1.0', 'end' );
+                    return 1;
+                }
+                my ( $name, $char );
+                if ( $base eq 'hex' ) {
+                    return 0 unless ( $_[0] =~ /^[a-fA-F\d]{0,4}$/ );
+                    $char = chr( hex( $_[0] ) );
+                    $name = charnames::viacode( hex( $_[0] ) );
+                }
+                elsif ( $base eq 'dec' ) {
+                    return 0
+                        unless ( ( $_[0] =~ /^\d{0,5}$/ )
+                        && ( $_[0] < 65519 ) );
+                    $char = chr( $_[0] );
+                    $name = charnames::viacode( $_[0] );
+                }
+                $outentry->delete( '1.0', 'end' );
+                $outentry->insert( 'end', $char );
+                $charlbl->configure( -text => $name );
+                return 1;
+            },
+        )->grid( -row => 1, -column => 2 );
+        $outentry = $frame->ROText(
+            -background => 'white',
+            -relief     => 'sunken',
+            -font       => '{sanserif} 14',
+            -width      => 6,
+            -height     => 1,
+        )->grid( -row => 2, -column => 2 );
+        my $frame1 = $lglobal{ordpop}
+            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+        my $button = $frame1->Button(
+            -text    => 'OK',
+            -width   => 8,
+            -command => sub {
+                $lglobal{hasfocus}
+                    ->insert( 'insert', $outentry->get( '1.0', 'end -1c' ) );
+            },
+        )->grid( -row => 1, -column => 1 );
+        $frame1->Button(
+            -text  => 'Close',
+            -width => 8,
+            -command =>
+                sub { $lglobal{ordpop}->destroy; undef $lglobal{ordpop} },
+        )->grid( -row => 1, -column => 2 );
+        $lglobal{ordpop}->protocol( 'WM_DELETE_WINDOW' =>
+                sub { $lglobal{ordpop}->destroy; undef $lglobal{ordpop} } );
+        $lglobal{ordpop}->Icon( -image => $icon );
+    }
+}
+
+sub uchar {
+    if ( defined $lglobal{ucharpop} ) {
+        $lglobal{ucharpop}->deiconify;
+        $lglobal{ucharpop}->raise;
+    }
+    else {
+        return unless blocks_check();
+        require q(unicore/Blocks.pl);
+        require q(unicore/Name.pl);
+        my $stopit = 0;
+        my %blocks;
+        for ( split /\n/, do 'unicore/Blocks.pl' ) {
+            my @array = split /\t/, $_;
+            $blocks{ $array[2] } = [ @array[ 0, 1 ] ];
+        }
+        $lglobal{ucharpop} = $top->Toplevel;
+        $lglobal{ucharpop}->title('Unicode Character Search');
+        $lglobal{ucharpop}->geometry('550x450');
+        $lglobal{ucharpop}->protocol(
+            'WM_DELETE_WINDOW' =>
+                sub { $lglobal{ucharpop}->destroy; undef $lglobal{ucharpop}; }
+        );
+        $lglobal{ucharpop}->Icon( -image => $icon );
+        my $cframe = $lglobal{ucharpop}->Frame->pack;
+        my $frame0 = $lglobal{ucharpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n', -pady => 4 );
+        my $sizelabel;
+        my ( @textchars, @textlabels );
+        my $pane = $lglobal{ucharpop}->Scrolled(
+            'Pane',
+            -background => 'white',
+            -scrollbars => 'se',
+            -sticky     => 'wne',
+        )->pack( -expand => 'y', -fill => 'both', -anchor => 'nw' );
+        drag($pane);
+        BindMouseWheel($pane);
+        my $fontlist = $cframe->BrowseEntry(
+            -label     => 'Font',
+            -browsecmd => sub {
+                utffontinit();
+                for (@textchars) {
+                    $_->configure( -font => $lglobal{utffont} );
+                }
+            },
+            -variable => \$utffontname,
+        )->grid( -row => 1, -column => 1, -padx => 8, -pady => 2 );
+        $fontlist->insert( 'end', sort( $textwindow->fontFamilies ) );
+        my $bigger = $cframe->Button(
+            -activebackground => $activecolor,
+            -text             => 'Bigger',
+            -command          => sub {
+                $utffontsize++;
+                utffontinit();
+                for (@textchars) {
+                    $_->configure( -font => $lglobal{utffont} );
+                }
+                $sizelabel->configure( -text => $utffontsize );
+            },
+        )->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
+        $sizelabel = $cframe->Label( -text => $utffontsize )
+            ->grid( -row => 1, -column => 3, -padx => 2, -pady => 2 );
+        my $smaller = $cframe->Button(
+            -activebackground => $activecolor,
+            -text             => 'Smaller',
+            -command          => sub {
+                $utffontsize--;
+                utffontinit();
+                for (@textchars) {
+                    $_->configure( -font => $lglobal{utffont} );
+                }
+                $sizelabel->configure( -text => $utffontsize );
+            },
+        )->grid( -row => 1, -column => 4, -padx => 2, -pady => 2 );
+
+        $frame0->Label( -text => 'Search Characteristics ', )
+            ->grid( -row => 1, -column => 1 );
+        my $characteristics = $frame0->Entry(
+            -width      => 40,
+            -background => 'white'
+        )->grid( -row => 1, -column => 2 );
+        my $doit = $frame0->Button(
+            -text    => 'Search',
+            -command => sub {
+                for ( @textchars, @textlabels ) {
+                    $_->destroy;
+                }
+                $stopit = 0;
+                my $row = 0;
+                @textlabels = @textchars = ();
+                my @chars = split /\s+/, uc( $characteristics->get );
+                my @lines = split /\n/,  do 'unicore/Name.pl';
+                while (@lines) {
+                    my @items = split /\t+/, shift @lines;
+                    my ( $ord, $name ) = ( $items[0], $items[-1] );
+                    last if ( hex $ord > 65535 );
+                    if ($stopit) { $stopit = 0; last; }
+                    my $count = 0;
+                    for my $char (@chars) {
+                        $count++;
+                        last unless $name =~ /\b$char\b/;
+                        if ( @chars == $count ) {
+                            my $block = '';
+                            for ( keys %blocks ) {
+                                if (   hex( $blocks{$_}[0] ) <= hex($ord)
+                                    && hex( $blocks{$_}[1] ) >= hex($ord) )
+                                {
+                                    $block = $_;
+                                    last;
+                                }
+                            }
+                            $textchars[$row] = $pane->Label(
+                                -text       => chr( hex $ord ),
+                                -font       => $lglobal{utffont},
+                                -background => 'white',
+                                )->grid(
+                                -row    => $row,
+                                -column => 0,
+                                -sticky => 'w'
+                                );
+                            utfchar_bind( $textchars[$row] );
+
+                            $textlabels[$row] = $pane->Label(
+                                -text => "$name  -  Ordinal $ord  -  $block",
+                                -background => 'white',
+                                )->grid(
+                                -row    => $row,
+                                -column => 1,
+                                -sticky => 'w'
+                                );
+                            utflabel_bind(
+                                $textlabels[$row],  $block,
+                                $blocks{$block}[0], $blocks{$block}[1]
+                            );
+                            $row++;
+                        }
+                    }
+                }
+            },
+        )->grid( -row => 1, -column => 3 );
+        $frame0->Button(
+            -text    => 'Stop',
+            -command => sub { $stopit = 1; },
+        )->grid( -row => 1, -column => 4 );
+        $characteristics->bind( '<Return>' => sub { $doit->invoke } );
+    }
+}
 
 MainLoop;
