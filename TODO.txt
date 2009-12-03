@@ -10,6 +10,4 @@ DONE:Add --encoding=whatever to spell check options. iso-8859-1, utf-8 etc.
 
 Fix spell check popup. Acts weird with unicode.
 
-Hack on lib/ToolBar.pm to get the icons to show up.
-
 perl tidy -pbp all .pl/pm files.
