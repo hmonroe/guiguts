@@ -193,8 +193,9 @@ initialize();                 # Initialize a bunch of vars that need it.
 
 $top->minsize( 440, 90 );
 
+# Detect geometry changes for tracking
 $top->bind(
-    '<Configure>' => sub {    # Detect geometry changes for tracking
+    '<Configure>' => sub {    
         $geometry = $top->geometry;
         $lglobal{geometryupdate} = 1;
     }
@@ -247,8 +248,10 @@ my $counter_frame = $text_frame->Frame->pack(
     -pady   => 2,
     -expand => 0
 );
+
+# Frame to hold proofer names. Pack it when necessary.
 my $proofer_frame = $text_frame
-    ->Frame;    # Frame to hold proofer names. Pack it when necessary.
+    ->Frame;    
 
 # The actual text widget
 my $textwindow = $text_frame->LineNumberText(
@@ -304,7 +307,7 @@ textbindings();
 
 buildstatusbar();
 
-# Load the icon ito the window bar. Needs to happen late in the process
+# Load the icon into the window bar. Needs to happen late in the process
 $top->Icon( -image => $icon );
 
 $textwindow->focus;
@@ -677,230 +680,6 @@ sub selection {
     $lglobal{selsentry}->selectionRange( 0, 'end' );
 }
 
-# Routine to update the status bar when somthing has changed.
-sub update_indicators {
-    my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
-    my ( $line, $column ) = split( /\./, $textwindow->index('insert') );
-    $lglobal{current_line_label}->configure(
-        -text => "Ln: $line/" . ( $last_line - 1 ) . "  -  Col: $column" );
-    my $mode             = $textwindow->OverstrikeMode;
-    my $overstrke_insert = ' I ';
-    if ($mode) { $overstrke_insert = ' O ' }
-    $lglobal{insert_overstrike_mode_label}
-        ->configure( -text => " $overstrke_insert " );
-    my $filename = $textwindow->FileName;
-    $filename = 'No File Loaded' unless ( defined($filename) );
-    $lglobal{highlighlabel}->configure( -background => $highlightcolor )
-        if ( $lglobal{scanno_hl} );
-    $lglobal{highlighlabel}->configure( -background => 'gray' )
-        unless ( $lglobal{scanno_hl} );
-    $filename = os_normal($filename);
-    my $edit_flag = '';
-    my $ordinal   = ord( $textwindow->get('insert') );
-    my $hexi      = uc sprintf( "%04x", $ordinal );
-
-    if ( $lglobal{longordlabel} ) {
-        my $msg = charnames::viacode($ordinal) || '';
-        my $msgln = length(" Dec $ordinal : Hex $hexi : $msg ");
-
-        no warnings 'uninitialized';
-        $lglobal{ordmaxlength} = $msgln
-            if ( $msgln > $lglobal{ordmaxlength} );
-        $lglobal{ordinallabel}->configure(
-            -text    => " Dec $ordinal : Hex $hexi : $msg ",
-            -width   => $lglobal{ordmaxlength},
-            -justify => 'left'
-        );
-
-    }
-    else {
-        $lglobal{ordinallabel}->configure(
-            -text  => " Dec $ordinal : Hex $hexi ",
-            -width => 18
-        );
-    }
-    if ( $textwindow->numberChanges ) { $edit_flag = 'edited' }
-
-    # window label format: GG-version - [edited] - [file name]
-    if ($edit_flag) {
-        $top->configure( -title => $window_title . " - "
-                . $edit_flag . " - "
-                . $filename );
-    }
-    else { $top->configure( -title => $window_title . " - " . $filename ) }
-
-    #FIXME: need some logic behind this
-
-    $lglobal{global_filename} = $filename;
-    $textwindow->idletasks;
-    my ( $mark, $pnum );
-    my $markindex = $textwindow->index('insert');
-    if ( $filename ne 'No File Loaded' or defined $lglobal{prepfile} ) {
-        $lglobal{page_num_label}->configure( -text => 'Img: XXX' )
-            if defined $lglobal{page_num_label};
-        $lglobal{page_label}->configure( -text => ("Lbl: None ") )
-            if defined $lglobal{page_label};
-        $mark = $textwindow->markPrevious($markindex);
-        while ($mark) {
-            if ( $mark =~ /Pg(\S+)/ ) {
-                $pnum = $1;
-                unless ( defined( $lglobal{page_num_label} ) ) {
-                    $lglobal{page_num_label} = $counter_frame->Label(
-                        -text       => "Img: $pnum",
-                        -width      => 8,
-                        -background => 'gray',
-                        -relief     => 'ridge',
-                    )->grid( -row => 1, -column => 2, -sticky => 'nw' );
-                    $lglobal{page_num_label}->bind(
-                        '<1>',
-                        sub {
-                            $lglobal{page_num_label}
-                                ->configure( -relief => 'sunken' );
-                            gotopage();
-                            update_indicators();
-                        }
-                    );
-                    $lglobal{page_num_label}->bind(
-                        '<3>',
-                        sub {
-                            $lglobal{page_num_label}
-                                ->configure( -relief => 'sunken' );
-                            viewpagenums();
-                            update_indicators();
-                        }
-                    );
-                    butbind( $lglobal{page_num_label} );
-                    $lglobal{statushelp}->attach( $lglobal{page_num_label},
-                        -balloonmsg => "Image/Page name for current page." );
-                }
-                unless ( defined( $lglobal{pagebutton} ) ) {
-                    $lglobal{pagebutton} = $counter_frame->Label(
-                        -text       => 'See Image',
-                        -width      => 9,
-                        -relief     => 'ridge',
-                        -background => 'gray',
-                    )->grid( -row => 1, -column => 3 );
-                    $lglobal{pagebutton}->bind(
-                        '<1>',
-                        sub {
-                            $lglobal{pagebutton}
-                                ->configure( -relief => 'sunken' );
-                            openpng();
-                        }
-                    );
-                    $lglobal{pagebutton}
-                        ->bind( '<3>', sub { setpngspath() } );
-                    butbind( $lglobal{pagebutton} );
-                    $lglobal{statushelp}->attach( $lglobal{pagebutton},
-                        -balloonmsg =>
-                            "Open Image corresponding to current page in an external viewer."
-                    );
-                }
-                unless ( $lglobal{page_label} ) {
-                    $lglobal{page_label} = $counter_frame->Label(
-                        -text       => 'Lbl: None ',
-                        -background => 'gray',
-                        -relief     => 'ridge',
-                    )->grid( -row => 1, -column => 4 );
-                    butbind( $lglobal{page_label} );
-                    $lglobal{page_label}->bind(
-                        '<1>',
-                        sub {
-                            $lglobal{page_label}
-                                ->configure( -relief => 'sunken' );
-                            gotolabel();
-                        }
-                    );
-                    $lglobal{page_label}->bind(
-                        '<3>',
-                        sub {
-                            $lglobal{page_label}
-                                ->configure( -relief => 'sunken' );
-                            pageadjust();
-                        }
-                    );
-                    $lglobal{statushelp}->attach( $lglobal{page_label},
-                        -balloonmsg =>
-                            "Page label assigned to current page." );
-                }
-                $lglobal{page_num_label}->configure( -text => "Img: $pnum" )
-                    if defined $lglobal{page_num_label};
-                my $label = $pagenumbers{"Pg$pnum"}{label};
-                if ( defined $label && length $label ) {
-                    $lglobal{page_label}
-                        ->configure( -text => ("Lbl: $label ") );
-                }
-                else {
-                    $lglobal{page_label}
-                        ->configure( -text => ("Lbl: None ") );
-                }
-                last;
-            }
-            else {
-                if ( $textwindow->index('insert')
-                    > ( $textwindow->index($mark) + 400 ) )
-                {
-                    last;
-                }
-                $mark = $textwindow->markPrevious($mark) if $mark;
-                next;
-            }
-        }
-        if ( ( scalar %proofers ) && ( defined( $lglobal{pagebutton} ) ) ) {
-            unless ( defined( $lglobal{proofbutton} ) ) {
-                $lglobal{proofbutton} = $counter_frame->Label(
-                    -text       => 'See Proofers',
-                    -width      => 11,
-                    -relief     => 'ridge',
-                    -background => 'gray',
-                )->grid( -row => 1, -column => 5 );
-                $lglobal{proofbutton}->bind(
-                    '<1>',
-                    sub {
-                        $lglobal{proofbutton}
-                            ->configure( -relief => 'sunken' );
-                        showproofers();
-                    }
-                );
-                $lglobal{proofbutton}->bind(
-                    '<3>',
-                    sub {
-                        $lglobal{proofbutton}
-                            ->configure( -relief => 'sunken' );
-                        tglprfbar();
-                    }
-                );
-                butbind( $lglobal{proofbutton} );
-                $lglobal{statushelp}->attach( $lglobal{proofbutton},
-                    -balloonmsg => "Proofers for the current page." );
-            }
-            {
-
-                no warnings 'uninitialized';
-                my ( $pg, undef ) = each %proofers;
-                for my $round ( 1 .. 8 ) {
-                    last unless defined $proofers{$pg}->[$round];
-                    $lglobal{numrounds} = $round;
-                    $lglobal{proofbar}[$round]->configure( -text =>
-                            "  Round $round  $proofers{$pnum}->[$round]  " )
-                        if $lglobal{proofbarvisible};
-                }
-            }
-        }
-    }
-    $textwindow->tagRemove( 'bkmk', '1.0', 'end' ) unless $bkmkhl;
-    if ( $lglobal{geometryupdate} ) {
-        saveset();
-        $lglobal{geometryupdate} = 0;
-    }
-
-    # FIXME: Can this go? Maybe.
-    if ( $autosave and $lglobal{autosaveinterval} and $DEBUG ) {
-        my $elapsed
-            = $autosaveinterval * 60 - ( time - $lglobal{autosaveinterval} );
-        printf "%d:%02d\n", int( $elapsed / 60 ), $elapsed % 60;
-    }
-}
 
 sub hilitetgl {    # Enable / disable word highlighting in the text
     if ( $lglobal{scanno_hl} ) {
@@ -1719,7 +1498,7 @@ sub buildmenu {    # The main menu building code.
                 -command => sub { $textwindow->WhatLineNumberPopUp }
             ],
 
-            '',
+            ['separator', ''], 
 
             [   Button   => "Find Proofer Comments",
                 -command => \&find_proofer_comment
@@ -2359,74 +2138,6 @@ sub thoughtbreak {    # Insert a "Thought break" (duh)
         '       *' x 5 );
 }
 
-# Pop up a window which will allow jumping directly to a specified page
-sub gotopage {
-    unless ( defined( $lglobal{gotopagpop} ) ) {
-        return unless %pagenumbers;
-        for ( keys(%pagenumbers) ) {
-            $lglobal{pagedigits} = ( length($_) - 2 );
-            last;
-        }
-        $lglobal{gotopagpop} = $top->DialogBox(
-            -buttons => [qw[Ok Cancel]],
-            -title   => 'Goto Page Number',
-            -popover => $top,
-            -command => sub {
-                if ( $_[0] eq 'Ok' ) {
-                    unless ( $lglobal{lastpage} ) {
-                        $lglobal{gotopagpop}->bell;
-                        $lglobal{gotopagpop}->destroy;
-                        undef $lglobal{gotopagpop};
-                        return;
-                    }
-                    if ( $lglobal{pagedigits} == 3 ) {
-                        $lglobal{lastpage}
-                            = sprintf( "%03s", $lglobal{lastpage} );
-                    }
-                    elsif ( $lglobal{pagedigits} == 4 ) {
-                        $lglobal{lastpage}
-                            = sprintf( "%04s", $lglobal{lastpage} );
-                    }
-                    unless ( exists $pagenumbers{ 'Pg' . $lglobal{lastpage} }
-                        && defined $pagenumbers{ 'Pg' . $lglobal{lastpage} } )
-                    {
-                        delete $pagenumbers{ 'Pg' . $lglobal{lastpage} };
-                        $lglobal{gotopagpop}->bell;
-                        $lglobal{gotopagpop}->destroy;
-                        undef $lglobal{gotopagpop};
-                        return;
-                    }
-                    my $index
-                        = $textwindow->index( 'Pg' . $lglobal{lastpage} );
-                    $textwindow->markSet( 'insert', "$index +1l linestart" );
-                    $textwindow->see('insert');
-                    $textwindow->focus;
-                    update_indicators();
-                    $lglobal{gotopagpop}->destroy;
-                    undef $lglobal{gotopagpop};
-                }
-                else {
-                    $lglobal{gotopagpop}->destroy;
-                    undef $lglobal{gotopagpop};
-                }
-            }
-        );
-        $lglobal{gotopagpop}->resizable( 'no', 'no' );
-        my $frame = $lglobal{gotopagpop}->Frame->pack( -fill => 'x' );
-        $frame->Label( -text => 'Enter image number: ' )
-            ->pack( -side => 'left' );
-        my $entry = $frame->Entry(
-            -background   => 'white',
-            -width        => 25,
-            -textvariable => \$lglobal{lastpage}
-        )->pack( -side => 'left', -fill => 'x' );
-        $lglobal{gotopagpop}->Advertise( entry => $entry );
-        $lglobal{gotopagpop}->Popup;
-        $lglobal{gotopagpop}->Subwidget('entry')->focus;
-        $lglobal{gotopagpop}->Subwidget('entry')->selectionRange( 0, 'end' );
-        $lglobal{gotopagpop}->Wait;
-    }
-}
 
 sub gotolabel
 {    # Pop up a window which will allow jumping directly to a specified page
@@ -2489,56 +2200,6 @@ sub gotolabel
     }
 }
 
-# Pop up a window which will allow jumping directly to a specified line
-sub gotoline {
-    unless ( defined( $lglobal{gotolinepop} ) ) {
-        $lglobal{gotolinepop} = $top->DialogBox(
-            -buttons => [qw[Ok Cancel]],
-            -title   => 'Goto Line Number',
-            -popover => $top,
-            -command => sub {
-
-                no warnings 'uninitialized';
-                if ( $_[0] eq 'Ok' ) {
-                    $lglobal{line_number} =~ s/[\D.]//g;
-                    my ( $last_line, $junk )
-                        = split( /\./, $textwindow->index('end') );
-                    ( $lglobal{line_number}, $junk )
-                        = split( /\./, $textwindow->index('insert') )
-                        unless $lglobal{line_number};
-                    $lglobal{line_number} =~ s/^\s+|\s+$//g;
-                    if ( $lglobal{line_number} > $last_line ) {
-                        $lglobal{line_number} = $last_line;
-                    }
-                    $textwindow->markSet( 'insert',
-                        "$lglobal{line_number}.0" );
-                    $textwindow->see('insert');
-                    update_indicators();
-                    $lglobal{gotolinepop}->destroy;
-                    undef $lglobal{gotolinepop};
-                }
-                else {
-                    $lglobal{gotolinepop}->destroy;
-                    undef $lglobal{gotolinepop};
-                }
-            }
-        );
-        $lglobal{gotolinepop}->resizable( 'no', 'no' );
-        my $frame = $lglobal{gotolinepop}->Frame->pack( -fill => 'x' );
-        $frame->Label( -text => 'Enter Line number: ' )
-            ->pack( -side => 'left' );
-        my $entry = $frame->Entry(
-            -background   => 'white',
-            -width        => 25,
-            -textvariable => \$lglobal{line_number},
-        )->pack( -side => 'left', -fill => 'x' );
-        $lglobal{gotolinepop}->Advertise( entry => $entry );
-        $lglobal{gotolinepop}->Popup;
-        $lglobal{gotolinepop}->Subwidget('entry')->focus;
-        $lglobal{gotolinepop}->Subwidget('entry')->selectionRange( 0, 'end' );
-        $lglobal{gotolinepop}->Wait;
-    }
-}
 
 sub saveinterval
 {    # Pop up a window where you can adjust the auto save interval
@@ -4061,761 +3722,9 @@ sub fontsize {
     }
 }
 
-sub spellchecker {    # Set up spell check window
-    push @operations, ( localtime() . ' - Spellcheck' );
-    viewpagenums() if ( $lglobal{seepagenums} );
-    oppopupdate()  if $lglobal{oppop};
-    if ( defined( $lglobal{spellpopup} ) ) {    # If window already exists
-        $lglobal{spellpopup}->deiconify;        # pop it up off the task bar
-        $lglobal{spellpopup}->raise;            # put it on top
-        $lglobal{spellpopup}->focus;            # and give it focus
-        spelloptions()
-            unless $globalspellpath; # Whoops, don't know where to find Aspell
-        spellclearvars();
-        spellcheckfirst();           # Start checking the spelling
-    }
-    else {                           # window doesn't exist so set it up
-        $lglobal{spellpopup} = $top->Toplevel;
-        $lglobal{spellpopup}
-            ->title( 'Current Dictionary - ' . $globalspelldictopt
-                || '<default>' );
-        my $spf1 = $lglobal{spellpopup}
-            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
-        $lglobal{misspelledlabel}
-            = $spf1->Label( -text => 'Not in Dictionary:', )
-            ->pack( -side => 'top', -anchor => 'n', -pady => 5 );
-        $lglobal{misspelledentry} = $spf1->Entry(
-            -background => 'white',
-            -width      => 42,
-            -font       => $lglobal{font},
-        )->pack( -side => 'top', -anchor => 'n', -pady => 1 );
-        my $replacelabel = $spf1->Label( -text => 'Replacement Text:', )
-            ->pack( -side => 'top', -anchor => 'n', -padx => 6 );
-        $lglobal{spreplaceentry} = $spf1->Entry(
-            -background => 'white',
-            -width      => 42,
-            -font       => $lglobal{font},
-        )->pack( -side => 'top', -anchor => 'n', -padx => 1 );
-        $lglobal{suggestionlabel} = $spf1->Label( -text => 'Suggestions:', )
-            ->pack( -side => 'top', -anchor => 'n', -pady => 5 );
-        $lglobal{replacementlist} = $spf1->ScrlListbox(
-            -background => 'white',
-            -scrollbars => 'osoe',
-            -font       => $lglobal{font},
-            -width      => 40,
-        )->pack( -side => 'top', -anchor => 'n', -padx => 6, -pady => 6 );
-        my $spf2 = $lglobal{spellpopup}
-            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
-        my $changebutton = $spf2->Button(
-            -activebackground => $activecolor,
-            -command          => sub { spellreplace() },
-            -text             => 'Change',
-            -width            => 14
-            )->pack(
-            -side   => 'left',
-            -pady   => 2,
-            -padx   => 3,
-            -anchor => 'nw'
-            );
-        my $ignorebutton = $spf2->Button(
-            -activebackground => $activecolor,
-            -command =>
-                sub { shift @{ $lglobal{misspelledlist} }; spellchecknext() },
-            -text  => 'Skip <Ctrl+s>',
-            -width => 14
-            )->pack(
-            -side   => 'left',
-            -pady   => 2,
-            -padx   => 3,
-            -anchor => 'nw'
-            );
-        my $spelloptionsbutton = $spf2->Button(
-            -activebackground => $activecolor,
-            -command          => sub { spelloptions() },
-            -text             => 'Options',
-            -width            => 14
-            )->pack(
-            -side   => 'left',
-            -pady   => 2,
-            -padx   => 3,
-            -anchor => 'nw'
-            );
-        $spf2->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                $spellindexbkmrk
-                    = $textwindow->index( $lglobal{lastmatchindex} . '-1c' )
-                    || '1.0';
-                $textwindow->markSet( 'spellbkmk', $spellindexbkmrk );
-                saveset();
-            },
-            -text  => 'Set Bookmark',
-            -width => 14,
-            )->pack(
-            -side   => 'left',
-            -pady   => 2,
-            -padx   => 3,
-            -anchor => 'nw'
-            );
-        my $spf3 = $lglobal{spellpopup}
-            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
-        my $replaceallbutton = $spf3->Button(
-            -activebackground => $activecolor,
-            -command          => sub { spellreplaceall(); spellchecknext() },
-            -text             => 'Change All',
-            -width            => 14,
-            )->pack(
-            -side   => 'left',
-            -pady   => 2,
-            -padx   => 3,
-            -anchor => 'nw'
-            );
-        my $ignoreallbutton = $spf3->Button(
-            -activebackground => $activecolor,
-            -command          => sub { spellignoreall(); spellchecknext() },
-            -text             => 'Skip All <Ctrl+i>',
-            -width            => 14
-            )->pack(
-            -side   => 'left',
-            -pady   => 2,
-            -padx   => 3,
-            -anchor => 'nw'
-            );
-        my $closebutton = $spf3->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                @{ $lglobal{misspelledlist} } = ();
-                $lglobal{spellpopup}->destroy;
-                undef
-                    $lglobal{spellpopup}; # completly remove spellcheck window
-                print OUT "\cC\n"
-                    if $lglobal{spellpid};    # send a quit signal to aspell
-                aspellstop();                 # and remove the process
-                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-            },
-            -text  => 'Close',
-            -width => 14
-            )->pack(
-            -side   => 'left',
-            -pady   => 2,
-            -padx   => 3,
-            -anchor => 'nw'
-            );
-        $spf3->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                return unless $spellindexbkmrk;
-                $textwindow->tagRemove( 'sel',       '1.0', 'end' );
-                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-                $textwindow->tagAdd( 'sel', 'spellbkmk', 'end' );
-                spellcheckfirst();
-            },
-            -text  => 'Resume @ Bkmrk',
-            -width => 14
-            )->pack(
-            -side   => 'left',
-            -pady   => 2,
-            -padx   => 3,
-            -anchor => 'nw'
-            );
-        my $spf4 = $lglobal{spellpopup}
-            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
-        my $dictaddbutton = $spf4->Button(
-            -activebackground => $activecolor,
-            -command =>
-                sub { spelladdword(); spellignoreall(); spellchecknext() },
-            -text  => 'Add To Aspell Dic. <Ctrl+a>',
-            -width => 22,
-            )->pack(
-            -side   => 'left',
-            -pady   => 2,
-            -padx   => 3,
-            -anchor => 'nw'
-            );
-        my $dictmyaddbutton = $spf4->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                spellmyaddword( $lglobal{misspelledentry}->get );
-                spellignoreall();
-                spellchecknext();
-            },
-            -text  => 'Add To Project Dic. <Ctrl+p>',
-            -width => 22,
-            )->pack(
-            -side   => 'left',
-            -pady   => 2,
-            -padx   => 3,
-            -anchor => 'nw'
-            );
-        $lglobal{spellpopup}->protocol(
-            'WM_DELETE_WINDOW' => sub {
-                @{ $lglobal{misspelledlist} } = ();
-                $lglobal{spellpopup}->destroy;
-                undef
-                    $lglobal{spellpopup}; # completly remove spellcheck window
-                print OUT "\cC\n"
-                    if $lglobal{spellpid};    # send quit signal to aspell
-                aspellstop();                 # and remove the process
-                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-            }
-        );
-        $lglobal{spellpopup}->bind(
-            '<Control-a>',
-            sub {
-                $lglobal{spellpopup}->focus;
-                spelladdword();
-                spellignoreall();
-                spellchecknext();
-            }
-        );
-        $lglobal{spellpopup}->bind(
-            '<Control-p>',
-            sub {
-                $lglobal{spellpopup}->focus;
-                spellmyaddword( $lglobal{misspelledentry}->get );
-                spellignoreall();
-                spellchecknext();
-            }
-        );
-        $lglobal{spellpopup}->bind(
-            '<Control-s>',
-            sub {
-                $lglobal{spellpopup}->focus;
-                shift @{ $lglobal{misspelledlist} };
-                spellchecknext();
-            }
-        );
-        $lglobal{spellpopup}->bind(
-            '<Control-i>',
-            sub {
-                $lglobal{spellpopup}->focus;
-                spellignoreall();
-                spellchecknext();
-            }
-        );
-        $lglobal{spellpopup}->bind( '<Return>',
-            sub { $lglobal{spellpopup}->focus; spellreplace() } );
-        $lglobal{spellpopup}->Icon( -image => $icon );
-        $lglobal{spellpopup}->transient($top) if $stayontop;
-        $lglobal{replacementlist}
-            ->bind( '<Double-Button-1>', \&spellmisspelled_replace );
-        $lglobal{replacementlist}->bind( '<Triple-Button-1>',
-            sub { spellmisspelled_replace(); spellreplace() } );
-        BindMouseWheel( $lglobal{replacementlist} );
-        spelloptions()
-            unless $globalspellpath; # Check to see if we know where Aspell is
-        spellcheckfirst();           # Start the spellcheck
-    }
-}
 
-sub spelloptions {
-    if ($globalspellpath) {
-        OS_Win
-            ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
-            : ( $lglobal{spellexename} = $globalspellpath );
-        aspellstart() unless $lglobal{spellpid};
-    }
-    my $dicts;
-    my $dictlist;
-    my $spellop = $top->DialogBox(
-        -title   => 'Spellcheck Options',
-        -buttons => ['Close']
-    );
-    my $spellpathlabel
-        = $spellop->add( 'Label', -text => 'Aspell executable file?' )->pack;
-    my $spellpathentry
-        = $spellop->add( 'Entry', -width => 60, -background => 'white' )
-        ->pack;
-    my $spellpathbrowse = $spellop->add(
-        'Button',
-        -text    => 'Browse',
-        -width   => 12,
-        -command => sub {
-            my $name
-                = $spellop->getOpenFile( -title => 'Aspell executable?' );
-            if ($name) {
-                $globalspellpath = $name;
-                $globalspellpath = os_normal($globalspellpath);
-                $spellpathentry->delete( 0, 'end' );
-                $spellpathentry->insert( 'end', $globalspellpath );
-                saveset();
 
-                OS_Win
-                    ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
-                    : ( $lglobal{spellexename} = $globalspellpath );
-                open my $infile, '-|', "$lglobal{spellexename} dump dicts"
-                    or warn "Unable to access dictionaries. $!\n";
-                while ( $dicts = <$infile> ) {
-                    chomp $dicts;
-                    next if ( $dicts =~ m/-/ );
-                    $dictlist->insert( 'end', $dicts );
-                }
-                close $infile;
-            }
-        }
-    )->pack( -pady => 4 );
-    $spellpathentry->insert( 'end', $globalspellpath );
 
-    my $spellencodinglabel = $spellop->add( 'Label',
-        -text => 'Set encoding: default = iso8859-1' )->pack;
-
-    my $spellencodingentry = $spellop->add(
-        'Entry',
-        -width        => 30,
-        -textvariable => \$lglobal{spellencoding},
-    )->pack;
-
-# FIXME: Switching to utf-8 is barfola. Probably down in the checkfil.txt thingy.
-
-    my $dictlabel
-        = $spellop->add( 'Label', -text => 'Dictionary files' )->pack;
-    $dictlist = $spellop->add(
-        'ScrlListbox',
-        -scrollbars => 'oe',
-        -selectmode => 'browse',
-        -background => 'white',
-        -height     => 10,
-        -width      => 40,
-    )->pack( -pady => 4 );
-    my $spelldiclabel
-        = $spellop->add( 'Label', -text => 'Current Dictionary (ies)' )->pack;
-    my $spelldictxt = $spellop->add(
-        'ROText',
-        -width      => 40,
-        -height     => 1,
-        -background => 'white'
-    )->pack;
-    $spelldictxt->delete( '1.0', 'end' );
-    $spelldictxt->insert( '1.0', $globalspelldictopt );
-    $dictlist->insert( 'end', "<default>" );
-
-    if ($globalspellpath) {
-        OS_Win
-            ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
-            : ( $lglobal{spellexename} = $globalspellpath );
-        open my $infile, '-|', "$lglobal{spellexename} dump dicts"
-            or warn "Unable to access dictionaries. $!\n";
-        while ( $dicts = <$infile> ) {
-            chomp $dicts;
-            next if ( $dicts =~ m/-/ );
-            $dictlist->insert( 'end', $dicts );
-        }
-        close $infile;
-    }
-    $dictlist->eventAdd( '<<dictsel>>' => '<Double-Button-1>' );
-    $dictlist->bind(
-        '<<dictsel>>',
-        sub {
-            my $selection = $dictlist->get('active');
-            $spelldictxt->delete( '1.0', 'end' );
-            $spelldictxt->insert( '1.0', $selection );
-            $selection = '' if $selection eq "<default>";
-            $globalspelldictopt = $selection;
-            saveset();
-            aspellstart();
-            $top->Busy( -recurse => 1 );
-
-            if ( defined( $lglobal{spellpopup} ) ) {
-                spellclearvars();
-                spellcheckfirst();
-            }
-            $top->Unbusy( -recurse => 1 );
-        }
-    );
-    my $spopframe = $spellop->Frame->pack;
-    $spopframe->Radiobutton(
-        -selectcolor => $lglobal{checkcolor},
-        -text        => 'Ultra Fast',
-        -variable    => \$globalaspellmode,
-        -value       => 'ultra'
-    )->grid( -row => 0, -sticky => 'w' );
-    $spopframe->Radiobutton(
-        -selectcolor => $lglobal{checkcolor},
-        -text        => 'Fast',
-        -variable    => \$globalaspellmode,
-        -value       => 'fast'
-    )->grid( -row => 1, -sticky => 'w' );
-    $spopframe->Radiobutton(
-        -selectcolor => $lglobal{checkcolor},
-        -text        => 'Normal',
-        -variable    => \$globalaspellmode,
-        -value       => 'normal'
-    )->grid( -row => 2, -sticky => 'w' );
-    $spopframe->Radiobutton(
-        -selectcolor => $lglobal{checkcolor},
-        -text        => 'Bad Spellers',
-        -variable    => \$globalaspellmode,
-        -value       => 'bad-spellers'
-    )->grid( -row => 3, -sticky => 'w' );
-    $spellop->Show;
-}
-
-# Initialize spellchecker
-sub spellcheckfirst {
-    $lglobal{spellexename}
-        = ( OS_Win ? dos_path($globalspellpath) : $globalspellpath )
-        ;    # Make the exe path dos compliant
-    $lglobal{spellfilename} = (
-        OS_Win
-        ? dos_path( $lglobal{global_filename} )
-        : $lglobal{global_filename}
-    );       # make the file path dos compliant
-    @{ $lglobal{misspelledlist} } = ();
-    viewpagenums() if ( $lglobal{seepagenums} );
-    getprojectdic();
-    do "$lglobal{projectdictname}";
-    $lglobal{lastmatchindex} = '1.0';
-
-    # get list of mispelled words in selection (or file if nothing selected)
-    spellget_misspellings();
-    my $term = $lglobal{misspelledlist}[0];    # get first mispelled term
-    $lglobal{misspelledentry}->delete( '0', 'end' );
-    $lglobal{misspelledentry}->insert( 'end', $term )
-        ;    # put it in the appropriate text box
-    $lglobal{suggestionlabel}->configure( -text => 'Suggestions:' );
-    return unless $term;    # no mispellings found, bail
-    $lglobal{matchlength} = '0';
-    $lglobal{matchindex}  = $textwindow->search(
-        -forwards,
-        -count => \$lglobal{matchlength},
-        $term, $lglobal{spellindexstart}, 'end'
-    );                      # search for the mispelled word in the text
-    $lglobal{lastmatchindex}
-        = spelladjust_index( $lglobal{matchindex}, $term )
-        ;                   # find the index of the end of the match
-    spelladdtexttags();     # highlight the word in the text
-    update_indicators();    # update the status bar
-    aspellstart();          # initialize the guess function
-    spellguesses($term);    # get the guesses for the misspelling
-    spellshow_guesses();    # populate the listbox with guesses
-
-    if ( scalar( $lglobal{seen} ) ) {
-        $lglobal{misspelledlabel}->configure( -text =>
-                "Not in Dictionary:  -  $lglobal{seen}->{$term} in text." );
-    }
-    $lglobal{nextmiss} = 0;
-}
-
-sub getprojectdic {
-    $lglobal{projectdictname} = $lglobal{global_filename};
-    $lglobal{projectdictname} =~ s/\.[^\.]*?$/\.dic/;
-    if ( $lglobal{projectdictname} eq $lglobal{global_filename} ) {
-        $lglobal{projectdictname} .= '.dic';
-    }
-}
-
-sub spellchecknext {
-    viewpagenums() if ( $lglobal{seepagenums} );
-    $textwindow->tagRemove( 'highlight', '1.0', 'end' )
-        ;    # unhighlight any higlighted text
-    spellclearvars();
-    $lglobal{misspelledlabel}->configure( -text => 'Not in Dictionary:' );
-    unless ($nobell) {
-        $textwindow->bell
-            if ( $lglobal{nextmiss}
-            >= ( scalar( @{ $lglobal{misspelledlist} } ) ) );
-    }
-    $lglobal{suggestionlabel}->configure( -text => 'Suggestions:' );
-    return
-        if $lglobal{nextmiss} >= ( scalar( @{ $lglobal{misspelledlist} } ) )
-    ;        # no more mispelled words, bail
-    $lglobal{lastmatchindex} = $textwindow->index('spellindex');
-
-#print $lglobal{misspelledlist}[$lglobal{nextmiss}]." | $lglobal{lastmatchindex}\n";
-    if ( ( $lglobal{misspelledlist}[ $lglobal{nextmiss} ] =~ /^[\xC0-\xFF]/ )
-        || ($lglobal{misspelledlist}[ $lglobal{nextmiss} ] =~ /[\xC0-\xFF]$/ )
-        )
-    {        # crappy workaround for accented character bug
-        $lglobal{matchindex} = (
-            $textwindow->search(
-                -forwards,
-                -count => \$lglobal{matchlength},
-                $lglobal{misspelledlist}[ $lglobal{nextmiss} ],
-                $lglobal{lastmatchindex}, 'end'
-            )
-        );
-    }
-    else {
-        $lglobal{matchindex} = (
-            $textwindow->search(
-                -forwards, -regexp,
-                -count => \$lglobal{matchlength},
-                '(?<!\p{Alpha})'
-                    . $lglobal{misspelledlist}[ $lglobal{nextmiss} ]
-                    . '(?!\p{Alnum})', $lglobal{lastmatchindex}, 'end'
-            )
-        );
-    }
-    unless ( $lglobal{matchindex} ) {
-        $lglobal{matchindex} = (
-            $textwindow->search(
-                -forwards, -exact,
-                -count => \$lglobal{matchlength},
-                $lglobal{misspelledlist}[ $lglobal{nextmiss} ],
-                $lglobal{lastmatchindex}, 'end'
-            )
-        );
-    }
-    $lglobal{spreplaceentry}->delete( '0', 'end' )
-        ;    # remove last replacement word
-    $lglobal{misspelledentry}
-        ->insert( 'end', $lglobal{misspelledlist}[ $lglobal{nextmiss} ] )
-        ;    #put the misspelled word in the spellcheck text box
-    spelladdtexttags()
-        if $lglobal{matchindex};    # highlight the word in the text
-    $lglobal{lastmatchindex}
-        = spelladjust_index( $lglobal{matchindex},
-        $lglobal{misspelledlist}[ $lglobal{nextmiss} ] )
-        if $lglobal{matchindex};    #get the index of the end of the match
-    spellguesses( $lglobal{misspelledlist}[ $lglobal{nextmiss} ] )
-        ;    # get a list of guesses for the misspelling
-    spellshow_guesses();    # and put them in the guess list
-    update_indicators();    # update the status bar
-    $lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
-            . ( $globalspelldictopt || '<default>' )
-            . " | $#{$lglobal{misspelledlist}} words to check." );
-
-    if ( scalar( $lglobal{seen} ) ) {
-        $lglobal{misspelledlabel}->configure(
-            -text => 'Not in Dictionary:  -  '
-                . (
-                $lglobal{seen}
-                    ->{ $lglobal{misspelledlist}[ $lglobal{nextmiss} ] }
-                    || '0'
-                )
-                . ' in text.'
-        );
-    }
-    return 1;
-}
-
-sub spellgettextselection {
-    return $textwindow->get( $lglobal{matchindex},
-        "$lglobal{matchindex}+$lglobal{matchlength}c" )
-        ; # get the misspelled word as it appears in the text (may be checking case insensitive)
-}
-
-sub spellreplace {
-    viewpagenums() if ( $lglobal{seepagenums} );
-    my $replacement = $lglobal{spreplaceentry}
-        ->get;    # get the word for the replacement box
-    $textwindow->bell unless ( $replacement || $nobell );
-    my $misspelled = $lglobal{misspelledentry}->get;
-    return unless $replacement;
-    $textwindow->replacewith( $lglobal{matchindex},
-        "$lglobal{matchindex}+$lglobal{matchlength}c", $replacement );
-    $lglobal{lastmatchindex}
-        = spelladjust_index( ( $textwindow->index( $lglobal{matchindex} ) ),
-        $replacement );    #adjust the index to the end of the replaced word
-    print OUT '$$ra ' . "$misspelled, $replacement\n";
-    shift @{ $lglobal{misspelledlist} };
-    spellchecknext();      # and check the next word
-}
-
-sub spellreplaceall
-{    # replace all instances of a word with another, pretty straightforward
-    $top->Busy;
-    viewpagenums() if ( $lglobal{seepagenums} );
-    my $lastindex   = '1.0';
-    my $misspelled  = $lglobal{misspelledentry}->get;
-    my $replacement = $lglobal{spreplaceentry}->get;
-    my $repmatchindex;
-    $textwindow->FindAndReplaceAll( '-exact', '-nocase', $misspelled,
-        $replacement );
-    $top->Unbusy;
-    spellignoreall();
-}
-
-sub spellmisspelled_replace
-{    # replace the replacement word with one from the guess list
-    viewpagenums() if ( $lglobal{seepagenums} );
-    $lglobal{spreplaceentry}->delete( 0, 'end' );
-    my $term = $lglobal{replacementlist}->get('active');
-    $lglobal{spreplaceentry}->insert( 'end', $term );
-}
-
-sub spelladdword {    # tell aspell to add a word to the personal dictionary
-    my $term = $lglobal{misspelledentry}->get;
-    $textwindow->bell unless ( $term || $nobell );
-    return unless $term;
-    print OUT "*$term\n";
-    print OUT "#\n";
-}
-
-sub spellmyaddword {    # add a word to the project dictionary
-    my $term = shift;
-    $textwindow->bell unless ( $term || $nobell );
-    return unless $term;
-    getprojectdic();
-    $projectdict{$term} = '';
-    open( DIC, ">$lglobal{projectdictname}" );
-    print DIC "\%projectdict = (\n";
-    for $term ( sort { $a cmp $b } keys %projectdict ) {
-        $term =~ s/'/\\'/g;
-        print DIC "'$term' => '',\n";
-    }
-    print DIC ");";
-    close DIC;
-}
-
-sub spellclearvars {
-    $lglobal{misspelledentry}->delete( '0', 'end' );
-    $lglobal{replacementlist}->delete( 0,   'end' );
-    $lglobal{spreplaceentry}->delete( '0', 'end' );
-    $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-}
-
-sub aspellstart
-{  # start aspell in interactive mode, repipe stdin and stdout to file handles
-    aspellstop();
-    my @cmd = (    # FIXME: Need to see what options are going to aspell
-        $lglobal{spellexename}, '-a', '-S', '--sug-mode', $globalaspellmode
-    );
-    push @cmd, '-d', $globalspelldictopt if $globalspelldictopt;
-    $lglobal{spellpid} = open2( \*IN, \*OUT, @cmd );
-    my $line = <IN>;
-}
-
-sub get_spellchecker_version {
-    return $lglobal{spellversion} if $lglobal{spellversion};
-    my $aspell_version;
-    open my $aspell, '-|', "$lglobal{spellexename} help";
-    while (<$aspell>) {
-        $aspell_version = $1 if m/^Aspell ([\d\.]+)/;
-    }
-    close $aspell;
-    return $lglobal{spellversion} = $aspell_version;
-}
-
-sub aspellstop
-{ # many thanks to Gregory Margo for some excellent patches for my lousy process handling
-    if ( $lglobal{spellpid} ) {
-        close IN;
-        close OUT;
-        kill 9, $lglobal{spellpid}
-            if OS_Win
-        ; # Brute force kill the aspell process... seems to be necessary under windows
-        waitpid( $lglobal{spellpid}, 0 );
-        $lglobal{spellpid} = 0;
-    }
-}
-
-sub spellguesses {    #feed aspell a word to get a list of guess
-    my $word = shift;     # word to get guesses for
-    $textwindow->Busy;    # let the user know something is happening
-    @{ $lglobal{guesslist} } = ();    # clear the guesslist
-    print OUT $word, "\n";    # send the word to the stdout file handle
-    my $list = <IN>;          # and read the results
-    $list =~ s/.*\: //
-        ;    # remove incidental stuff (word, index, number of guesses)
-    $list =~ s/\#.*0/\*none\*/;    # oops, no guesses, put a notice in.
-    chomp $list;    # remove newline
-    chop $list;     # and something else that listbox doesn't like
-    @{ $lglobal{guesslist} }
-        = ( split /, /, $list );    # split the words into an array
-    $list = <IN>;                   # throw away extra newline
-    $textwindow->Unbusy;            # done processing
-}
-
-sub spellshow_guesses {             # load the guesses into the guess list box
-    $lglobal{replacementlist}->delete( 0, 'end' );
-    $lglobal{replacementlist}->insert( 0, @{ $lglobal{guesslist} } );
-    $lglobal{replacementlist}->activate(0);
-    $lglobal{spreplaceentry}->delete( '0', 'end' );
-    $lglobal{spreplaceentry}->insert( 'end', $lglobal{guesslist}[0] );
-    $lglobal{replacementlist}->yview( 'scroll', 1, 'units' );
-    $lglobal{replacementlist}->update;
-    $lglobal{replacementlist}->yview( 'scroll', -1, 'units' );
-    $lglobal{suggestionlabel}
-        ->configure( -text => @{ $lglobal{guesslist} } . ' Suggestions:' );
-}
-
-sub spellcheckrange
-{    # only spell check selected text or whole file if nothing selected
-    viewpagenums() if ( $lglobal{seepagenums} );
-    my @ranges = $textwindow->tagRanges('sel');
-    $operationinterrupt = 0;
-    if (@ranges) {
-        $lglobal{spellindexend}   = $ranges[0];
-        $lglobal{spellindexstart} = $ranges[-1];
-    }
-    else {
-        $lglobal{spellindexstart} = '1.0';
-        $lglobal{spellindexend}   = $textwindow->index('end');
-    }
-}
-
-sub spellget_misspellings {    # get list of misspelled words
-    spellcheckrange();         # get chunck of text to process
-    return if ( $lglobal{spellindexstart} eq $lglobal{spellindexend} );
-    my ( $word, @templist );
-    $top->Busy( -recurse => 1 );    # let user know something is going on
-    my $section = $textwindow->get( $lglobal{spellindexstart},
-        $lglobal{spellindexend} );    # get selection
-    $section =~ s/^-----File:.*//g;
-    open SAVE, '>:bytes', 'checkfil.txt';
-    print SAVE $section;    # FIXME: probably encode before printing.
-    close SAVE;
-    my $spellopt
-        = get_spellchecker_version() lt "0.6"
-        ? "list --encoding=$lglobal{spellencoding} "
-        : "list --encoding=$lglobal{spellencoding} ";
-    $spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
-    @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
-        ;    # feed the text to aspell, get an array of misspelled words out
-    chomp @templist;    # get rid of any newlines
-
-    foreach $word (@templist) {
-        next if ( exists( $projectdict{$word} ) );
-        push @{ $lglobal{misspelledlist} },
-            $word;      # filter out project dictionary word list.
-    }
-    if ( $#{ $lglobal{misspelledlist} } > 0 ) {
-        $lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
-                . ( $globalspelldictopt || '<default>' )
-                . " | $#{$lglobal{misspelledlist}} words to check." );
-    }
-    else {
-        $lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
-                . ( $globalspelldictopt || '<default>' )
-                . ' | No Misspelled Words Found.' );
-    }
-    $top->Unbusy( -recurse => 0 );    # done processing
-    unlink 'checkfil.txt';
-}
-
-sub spellignoreall {                  # remove ignored words from checklist
-    my $next;
-    my $word = $lglobal{misspelledentry}->get;   # get word you want to ignore
-    $textwindow->bell unless ( $word || $nobell );
-    return unless $word;
-    my @ignorelist
-        = @{ $lglobal{misspelledlist} };         # copy the mispellings array
-    @{ $lglobal{misspelledlist} } = ();          # then clear it
-    foreach $next (@ignorelist)
-    { # then put all of the words you are NOT ignoring back into the mispellings list
-        push @{ $lglobal{misspelledlist} }, $next
-            if ( $next ne $word )
-            ;    # inefficient but easy, and the overhead isn't THAT bad...
-    }
-    spellmyaddword($word);
-}
-
-sub spelladjust_index {    # get the index of the match start (row column)
-    my ( $idx, $match ) = @_;
-    my ( $mr, $mc ) = split /\./, $idx;
-    $mc += 1;
-    $textwindow->markSet( 'spellindex', "$mr.$mc" );
-    return "$mr.$mc";      # and return the index of the end of the match
-}
-
-sub spelladdtexttags {     # add highlighting to selected word
-    $textwindow->markSet( 'insert', $lglobal{matchindex} );
-    $textwindow->tagAdd( 'highlight', $lglobal{matchindex},
-        "$lglobal{matchindex}+$lglobal{matchlength} chars" );
-    $textwindow->yview('end');
-    $textwindow->see( $lglobal{matchindex} );
-}
 
 sub add_search_history {
     my ( $widget, $history_array_ref ) = @_;
@@ -4903,594 +3812,6 @@ sub load_hist_term {
     $widget->insert( 'end', $term );
 }
 
-sub searchpopup {
-    viewpagenums() if ( $lglobal{seepagenums} );
-    push @operations, ( localtime() . ' - Search & Replace' )
-        unless $lglobal{doscannos};
-    push @operations, ( localtime() . ' - Stealth Scannos' )
-        if $lglobal{doscannos};
-    oppopupdate() if $lglobal{oppop};
-    my $aacheck;
-    my $searchterm = '';
-    my @ranges     = $textwindow->tagRanges('sel');
-    $searchterm = $textwindow->get( $ranges[0], $ranges[1] ) if @ranges;
-
-    if ( defined( $lglobal{search} ) ) {
-        $lglobal{search}->deiconify;
-        $lglobal{search}->raise;
-        $lglobal{search}->focus;
-        $lglobal{searchentry}->focus;
-    }
-    else {
-        $lglobal{search} = $top->Toplevel;
-        $lglobal{search}->title('Search & Replace');
-        $lglobal{search}->minsize( 460, 127 );
-        my $sf1
-            = $lglobal{search}->Frame->pack( -side => 'top', -anchor => 'n' );
-        my $searchlabel = $sf1->Label( -text => 'Search Text', )
-            ->pack( -side => 'left', -anchor => 'n', -padx => 80 );
-        $lglobal{searchnumlabel} = $sf1->Label(
-            -text  => '',
-            -width => 20,
-        )->pack( -side => 'right', -anchor => 'e', -padx => 1 );
-        my $sf11 = $lglobal{search}->Frame->pack(
-            -side   => 'top',
-            -anchor => 'w',
-            -padx   => 3,
-            -expand => 'y',
-            -fill   => 'x'
-        );
-
-        $sf11->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                $textwindow->undo;
-                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-            },
-            -text  => 'Undo',
-            -width => 6
-        )->pack( -side => 'right', -anchor => 'w' );
-        $lglobal{searchbutton} = $sf11->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                add_search_history( $lglobal{searchentry}, \@search_history );
-                searchtext('');
-            },
-            -text  => 'Search',
-            -width => 6
-            )->pack(
-            -side   => 'right',
-            -pady   => 1,
-            -padx   => 2,
-            -anchor => 'w'
-            );
-
-        $lglobal{searchentry} = $sf11->Text(
-            -background => 'white',
-            -width      => 60,
-            -height     => 1,
-            )->pack(
-            -side   => 'right',
-            -anchor => 'w',
-            -expand => 'y',
-            -fill   => 'x'
-            );
-
-        $sf11->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                search_history( $lglobal{searchentry}, \@search_history );
-            },
-            -image  => $lglobal{hist_img},
-            -width  => 9,
-            -height => 15,
-        )->pack( -side => 'right', -anchor => 'w' );
-
-        $lglobal{regrepeat}
-            = $lglobal{searchentry}->repeat( 500, \&reg_check );
-
-        my $sf2
-            = $lglobal{search}->Frame->pack( -side => 'top', -anchor => 'w' );
-        $lglobal{searchop1} = $sf2->Checkbutton(
-            -variable    => \$sopt[1],
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Case Insensitive'
-        )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
-        $lglobal{searchop0} = $sf2->Checkbutton(
-            -variable    => \$sopt[0],
-            -command     => [ \&searchoptset, 'x', 'x', 'x', 0 ],
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Whole Word'
-        )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
-        $lglobal{searchop3} = $sf2->Checkbutton(
-            -variable    => \$sopt[3],
-            -command     => [ \&searchoptset, 0, 'x', 'x', 'x' ],
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Regex'
-        )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
-        $lglobal{searchop2} = $sf2->Checkbutton(
-            -variable    => \$sopt[2],
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Reverse'
-        )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
-        $lglobal{searchop4} = $sf2->Checkbutton(
-            -variable    => \$sopt[4],
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Start at Beginning'
-        )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
-
-        my ( $sf13, $sf14, $sf5 );
-        my $sf10 = $lglobal{search}->Frame->pack(
-            -side   => 'top',
-            -anchor => 'n',
-            -expand => '1',
-            -fill   => 'x'
-        );
-        my $replacelabel = $sf10->Label( -text => "Replacement Text\t\t", )
-            ->grid( -row => 1, -column => 1 );
-
-        $sf10->Label( -text => 'Terms - ' )->grid( -row => 1, -column => 2 );
-        $sf10->Radiobutton(
-            -text     => 'single',
-            -variable => \$singleterm,
-            -value    => 1,
-            -command  => sub {
-                for ( $sf13, $sf14 ) {
-                    $_->packForget;
-                }
-            },
-        )->grid( -row => 1, -column => 3 );
-        $sf10->Radiobutton(
-            -text     => 'multi',
-            -variable => \$singleterm,
-            -value    => 0,
-            -command  => sub {
-                for ( $sf13, $sf14 ) {
-                    if ( defined $sf5 ) {
-                        $_->pack(
-                            -before => $sf5,
-                            -side   => 'top',
-                            -anchor => 'w',
-                            -padx   => 3,
-                            -expand => 'y',
-                            -fill   => 'x'
-                        );
-                    }
-                    else {
-                        $_->pack(
-                            -side   => 'top',
-                            -anchor => 'w',
-                            -padx   => 3,
-                            -expand => 'y',
-                            -fill   => 'x'
-                        );
-                    }
-                }
-            },
-        )->grid( -row => 1, -column => 4 );
-        my $sf12 = $lglobal{search}->Frame->pack(
-            -side   => 'top',
-            -anchor => 'w',
-            -padx   => 3,
-            -expand => 'y',
-            -fill   => 'x'
-        );
-
-        $sf12->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                replaceall( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
-            },
-            -text  => 'Rpl All',
-            -width => 5
-            )->pack(
-            -side   => 'right',
-            -pady   => 1,
-            -padx   => 2,
-            -anchor => 'nw'
-            );
-
-        $sf12->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
-                add_search_history( $lglobal{searchentry}, \@search_history );
-                searchtext('');
-            },
-            -text  => 'R & S',
-            -width => 5
-            )->pack(
-            -side   => 'right',
-            -pady   => 1,
-            -padx   => 2,
-            -anchor => 'nw'
-            );
-        $sf12->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
-                add_search_history( $lglobal{replaceentry},
-                    \@replace_history );
-            },
-            -text  => 'Replace',
-            -width => 6
-            )->pack(
-            -side   => 'right',
-            -pady   => 1,
-            -padx   => 2,
-            -anchor => 'nw'
-            );
-
-        $lglobal{replaceentry} = $sf12->Text(
-            -background => 'white',
-            -width      => 60,
-            -height     => 1,
-            )->pack(
-            -side   => 'right',
-            -anchor => 'w',
-            -padx   => 1,
-            -expand => 'y',
-            -fill   => 'x'
-            );
-        $sf12->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                search_history( $lglobal{replaceentry}, \@replace_history );
-            },
-            -image  => $lglobal{hist_img},
-            -width  => 9,
-            -height => 15,
-        )->pack( -side => 'right', -anchor => 'w' );
-        $sf13 = $lglobal{search}->Frame;
-
-        $sf13->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                replaceall( $lglobal{replaceentry1}->get( '1.0', '1.end' ) );
-            },
-            -text  => 'Rpl All',
-            -width => 5
-            )->pack(
-            -side   => 'right',
-            -pady   => 1,
-            -padx   => 2,
-            -anchor => 'nw'
-            );
-
-        $sf13->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                replace( $lglobal{replaceentry1}->get( '1.0', '1.end' ) );
-                searchtext('');
-            },
-            -text  => 'R & S',
-            -width => 5
-            )->pack(
-            -side   => 'right',
-            -pady   => 1,
-            -padx   => 2,
-            -anchor => 'nw'
-            );
-        $sf13->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                replace( $lglobal{replaceentry1}->get( '1.0', '1.end' ) );
-                add_search_history( $lglobal{replaceentry1},
-                    \@replace_history );
-            },
-            -text  => 'Replace',
-            -width => 6
-            )->pack(
-            -side   => 'right',
-            -pady   => 1,
-            -padx   => 2,
-            -anchor => 'nw'
-            );
-
-        $lglobal{replaceentry1} = $sf13->Text(
-            -background => 'white',
-            -width      => 60,
-            -height     => 1,
-            )->pack(
-            -side   => 'right',
-            -anchor => 'w',
-            -padx   => 1,
-            -expand => 'y',
-            -fill   => 'x'
-            );
-        $sf13->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                search_history( $lglobal{replaceentry1}, \@replace_history );
-            },
-            -image  => $lglobal{hist_img},
-            -width  => 9,
-            -height => 15,
-        )->pack( -side => 'right', -anchor => 'w' );
-        $sf14 = $lglobal{search}->Frame;
-
-        $sf14->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                replaceall( $lglobal{replaceentry2}->get( '1.0', '1.end' ) );
-            },
-            -text  => 'Rpl All',
-            -width => 5
-            )->pack(
-            -side   => 'right',
-            -pady   => 1,
-            -padx   => 2,
-            -anchor => 'nw'
-            );
-
-        $sf14->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                replace( $lglobal{replaceentry2}->get( '1.0', '1.end' ) );
-                searchtext('');
-            },
-            -text  => 'R & S',
-            -width => 5
-            )->pack(
-            -side   => 'right',
-            -pady   => 1,
-            -padx   => 2,
-            -anchor => 'nw'
-            );
-        $sf14->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                replace( $lglobal{replaceentry2}->get( '1.0', '1.end' ) );
-                add_search_history( $lglobal{replaceentry2},
-                    \@replace_history );
-            },
-            -text  => 'Replace',
-            -width => 6
-            )->pack(
-            -side   => 'right',
-            -pady   => 1,
-            -padx   => 2,
-            -anchor => 'nw'
-            );
-
-        $lglobal{replaceentry2} = $sf14->Text(
-            -background => 'white',
-            -width      => 60,
-            -height     => 1,
-            )->pack(
-            -side   => 'right',
-            -anchor => 'w',
-            -padx   => 1,
-            -expand => 'y',
-            -fill   => 'x'
-            );
-        $sf14->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                search_history( $lglobal{replaceentry2}, \@replace_history );
-            },
-            -image  => $lglobal{hist_img},
-            -width  => 9,
-            -height => 15,
-        )->pack( -side => 'right', -anchor => 'w' );
-
-        unless ($singleterm) {
-            for ( $sf13, $sf14 ) {
-                $_->pack(
-                    -side   => 'top',
-                    -anchor => 'w',
-                    -padx   => 3,
-                    -expand => 'y',
-                    -fill   => 'x'
-                );
-            }
-        }
-        if ( $lglobal{doscannos} ) {
-            $sf5 = $lglobal{search}
-                ->Frame->pack( -side => 'top', -anchor => 'n' );
-            my $nextbutton = $sf5->Button(
-                -activebackground => $activecolor,
-                -command          => sub {
-                    $lglobal{scannosindex}++
-                        unless ( $lglobal{scannosindex}
-                        >= scalar( @{ $lglobal{scannosarray} } ) );
-                    getnextscanno();
-                },
-                -text  => 'Next Stealtho',
-                -width => 15
-                )->pack(
-                -side   => 'left',
-                -pady   => 5,
-                -padx   => 2,
-                -anchor => 'w'
-                );
-            my $lastbutton = $sf5->Button(
-                -activebackground => $activecolor,
-                -command          => sub {
-                    $aacheck->deselect;
-                    $lglobal{scannosindex}--
-                        unless ( $lglobal{scannosindex} == 0 );
-                    getnextscanno();
-                },
-                -text  => 'Prev Stealtho',
-                -width => 15
-                )->pack(
-                -side   => 'left',
-                -pady   => 5,
-                -padx   => 2,
-                -anchor => 'w'
-                );
-            my $switchbutton = $sf5->Button(
-                -activebackground => $activecolor,
-                -command          => sub { swapterms() },
-                -text             => 'Swap Terms',
-                -width            => 15
-                )->pack(
-                -side   => 'left',
-                -pady   => 5,
-                -padx   => 2,
-                -anchor => 'w'
-                );
-            my $hintbutton = $sf5->Button(
-                -activebackground => $activecolor,
-                -command          => sub { reghint() },
-                -text             => 'Hint',
-                -width            => 5
-                )->pack(
-                -side   => 'left',
-                -pady   => 5,
-                -padx   => 2,
-                -anchor => 'w'
-                );
-            my $editbutton = $sf5->Button(
-                -activebackground => $activecolor,
-                -command          => sub { regedit() },
-                -text             => 'Edit',
-                -width            => 5
-                )->pack(
-                -side   => 'left',
-                -pady   => 5,
-                -padx   => 2,
-                -anchor => 'w'
-                );
-            my $sf6 = $lglobal{search}
-                ->Frame->pack( -side => 'top', -anchor => 'n' );
-            $lglobal{regtracker} = $sf6->Label( -width => 15 )->pack(
-                -side   => 'left',
-                -pady   => 5,
-                -padx   => 2,
-                -anchor => 'w'
-            );
-            $aacheck = $sf6->Checkbutton(
-                -text     => 'Auto Advance',
-                -variable => \$lglobal{regaa},
-                )->pack(
-                -side   => 'left',
-                -pady   => 5,
-                -padx   => 2,
-                -anchor => 'w'
-                );
-        }
-        $lglobal{search}->protocol(
-            'WM_DELETE_WINDOW' => sub {
-                $lglobal{regrepeat}->cancel;
-                undef $lglobal{regrepeat};
-                $lglobal{search}->destroy;
-                undef $lglobal{search};
-                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-                undef $lglobal{hintpop} if $lglobal{hintpop};
-            }
-        );
-        $lglobal{search}->Icon( -image => $icon );
-        $lglobal{searchentry}->focus;
-        $lglobal{search}->resizable( 'yes', 'no' );
-        $lglobal{search}->transient($top) if $stayontop;
-        $lglobal{search}->Tk::bind(
-            '<Return>' => sub {
-                $lglobal{searchentry}->see('1.0');
-                $lglobal{searchentry}->delete('1.end');
-                $lglobal{searchentry}->delete( '2.0', 'end' );
-                $lglobal{replaceentry}->see('1.0');
-                $lglobal{replaceentry}->delete('1.end');
-                $lglobal{replaceentry}->delete( '2.0', 'end' );
-                searchtext();
-                $top->raise;
-            }
-        );
-        $lglobal{search}->Tk::bind(
-            '<Control-f>' => sub {
-                $lglobal{searchentry}->see('1.0');
-                $lglobal{searchentry}->delete( '2.0', 'end' );
-                $lglobal{replaceentry}->see('1.0');
-                $lglobal{replaceentry}->delete( '2.0', 'end' );
-                searchtext();
-                $top->raise;
-            }
-        );
-        $lglobal{search}->Tk::bind(
-            '<Control-F>' => sub {
-                $lglobal{searchentry}->see('1.0');
-                $lglobal{searchentry}->delete( '2.0', 'end' );
-                $lglobal{replaceentry}->see('1.0');
-                $lglobal{replaceentry}->delete( '2.0', 'end' );
-                searchtext();
-                $top->raise;
-            }
-        );
-        $lglobal{search}->eventAdd(
-            '<<FindNexte>>' => '<Control-Key-G>',
-            '<Control-Key-g>'
-        );
-
-        $lglobal{searchentry}->bind(
-            '<<FindNexte>>',
-            sub {
-                $lglobal{searchentry}->delete('insert -1c')
-                    if ( $lglobal{searchentry}->get('insert -1c') eq "\cG" );
-                searchtext( $lglobal{searchentry}->get( '1.0', '1.end' ) );
-                $textwindow->focus;
-            }
-        );
-
-        $lglobal{searchentry}->{_MENU_}   = ();
-        $lglobal{replaceentry}->{_MENU_}  = ();
-        $lglobal{replaceentry1}->{_MENU_} = ();
-        $lglobal{replaceentry2}->{_MENU_} = ();
-
-        $lglobal{searchentry}->bind( '<FocusIn>',
-            sub { $lglobal{hasfocus} = $lglobal{searchentry} } );
-        $lglobal{replaceentry}->bind( '<FocusIn>',
-            sub { $lglobal{hasfocus} = $lglobal{replaceentry} } );
-        $lglobal{replaceentry1}->bind( '<FocusIn>',
-            sub { $lglobal{hasfocus} = $lglobal{replaceentry1} } );
-        $lglobal{replaceentry2}->bind( '<FocusIn>',
-            sub { $lglobal{hasfocus} = $lglobal{replaceentry2} } );
-
-        $lglobal{search}->Tk::bind(
-            '<Control-Return>' => sub {
-                $lglobal{searchentry}->see('1.0');
-                $lglobal{searchentry}->delete('1.end');
-                $lglobal{searchentry}->delete( '2.0', 'end' );
-                $lglobal{replaceentry}->see('1.0');
-                $lglobal{replaceentry}->delete('1.end');
-                $lglobal{replaceentry}->delete( '2.0', 'end' );
-                replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
-                searchtext();
-                $top->raise;
-            }
-        );
-        $lglobal{search}->Tk::bind(
-            '<Shift-Return>' => sub {
-                $lglobal{searchentry}->see('1.0');
-                $lglobal{searchentry}->delete('1.end');
-                $lglobal{searchentry}->delete( '2.0', 'end' );
-                $lglobal{replaceentry}->see('1.0');
-                $lglobal{replaceentry}->delete('1.end');
-                $lglobal{replaceentry}->delete( '2.0', 'end' );
-                replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
-                $top->raise;
-            }
-        );
-        $lglobal{search}->Tk::bind(
-            '<Control-Shift-Return>' => sub {
-                $lglobal{searchentry}->see('1.0');
-                $lglobal{searchentry}->delete('1.end');
-                $lglobal{searchentry}->delete( '2.0', 'end' );
-                $lglobal{replaceentry}->see('1.0');
-                $lglobal{replaceentry}->delete('1.end');
-                $lglobal{replaceentry}->delete( '2.0', 'end' );
-                replaceall( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
-                $top->raise;
-            }
-        );
-    }
-    if ( length $searchterm ) {
-        $lglobal{searchentry}->delete( '1.0', 'end' );
-        $lglobal{searchentry}->insert( 'end', $searchterm );
-        $lglobal{searchentry}->tagAdd( 'sel', '1.0', 'end -1c' );
-        searchtext('');
-    }
-}
 
 sub reg_check {
     $lglobal{searchentry}->tagConfigure( 'reg', -foreground => 'black' );
@@ -5707,18 +4028,6 @@ sub reghint {
     $lglobal{hintpop}->Icon( -image => $icon );
 }
 
-sub stealthscanno {
-    $lglobal{doscannos} = 1;
-    $lglobal{search}->destroy if defined $lglobal{search};
-    undef $lglobal{search};
-    if ( loadscannos() ) {
-        saveset();
-        searchpopup();
-        getnextscanno();
-        searchtext();
-    }
-    $lglobal{doscannos} = 0;
-}
 
 sub loadscannos {
     $lglobal{scannosfilename} = '';
@@ -15716,174 +14025,6 @@ AAAAACH5BAAAAAAALAAAAAAMAAwAAwQfMMg5BaDYXiw178AlcJ6VhYFXoSoosm7KvrR8zfXHRQA7
     drag($textwindow);
 }
 
-sub buildstatusbar {
-    $lglobal{current_line_label} = $counter_frame->Label(
-        -text       => 'Ln: 1 / 1  -  Col: 0',
-        -width      => 26,
-        -relief     => 'ridge',
-        -background => 'gray',
-    )->grid( -row => 1, -column => 0, -sticky => 'nw' );
-    $lglobal{current_line_label}->bind(
-        '<1>',
-        sub {
-            $lglobal{current_line_label}->configure( -relief => 'sunken' );
-            gotoline();
-            update_indicators();
-        }
-    );
-    $lglobal{current_line_label}->bind(
-        '<3>',
-        sub {
-            if   ($vislnnm) { $vislnnm = 0 }
-            else            { $vislnnm = 1 }
-            $textwindow->showlinenum if $vislnnm;
-            $textwindow->hidelinenum unless $vislnnm;
-            saveset();
-        }
-    );
-    $lglobal{selectionlabel} = $counter_frame->Label(
-        -text       => ' No Selection ',
-        -relief     => 'ridge',
-        -background => 'gray',
-    )->grid( -row => 1, -column => 7, -sticky => 'nw' );
-    $lglobal{selectionlabel}->bind(
-        '<1>',
-        sub {
-            if ( $lglobal{showblocksize} ) {
-                $lglobal{showblocksize} = 0;
-            }
-            else {
-                $lglobal{showblocksize} = 1;
-            }
-        }
-    );
-    $lglobal{selectionlabel}->bind( '<Double-1>', sub { selection() } );
-    $lglobal{selectionlabel}->bind(
-        '<3>',
-        sub {
-            if ( $textwindow->markExists('selstart') ) {
-                $textwindow->tagAdd( 'sel', 'selstart', 'selend' );
-            }
-        }
-    );
-    $lglobal{selectionlabel}->bind(
-        '<Shift-3>',
-        sub {
-            $textwindow->tagRemove( 'sel', '1.0', 'end' );
-            if ( $textwindow->markExists('selstart') ) {
-                my ( $srow, $scol ) = split /\./,
-                    $textwindow->index('selstart');
-                my ( $erow, $ecol ) = split /\./,
-                    $textwindow->index('selend');
-                for ( $srow .. $erow ) {
-                    $textwindow->tagAdd( 'sel', "$_.$scol", "$_.$ecol" );
-                }
-            }
-        }
-    );
-
-    $lglobal{highlighlabel} = $counter_frame->Label(
-        -text       => 'H',
-        -width      => 2,
-        -relief     => 'ridge',
-        -background => 'gray',
-    )->grid( -row => 1, -column => 1 );
-
-    $lglobal{highlighlabel}->bind(
-        '<1>',
-        sub {
-            if ( $lglobal{scanno_hl} ) {
-                $lglobal{scanno_hl}          = 0;
-                $lglobal{highlighttempcolor} = 'gray';
-            }
-            else {
-                scannosfile() unless $scannoslist;
-                return unless $scannoslist;
-                $lglobal{scanno_hl}          = 1;
-                $lglobal{highlighttempcolor} = $highlightcolor;
-            }
-            hilitetgl();
-        }
-    );
-    $lglobal{highlighlabel}->bind( '<3>', sub { scannosfile() } );
-    $lglobal{highlighlabel}->bind(
-        '<Enter>',
-        sub {
-            $lglobal{highlighttempcolor}
-                = $lglobal{highlighlabel}->cget( -background );
-            $lglobal{highlighlabel}->configure( -background => $activecolor );
-            $lglobal{highlighlabel}->configure( -relief     => 'raised' );
-        }
-    );
-    $lglobal{highlighlabel}->bind(
-        '<Leave>',
-        sub {
-            $lglobal{highlighlabel}
-                ->configure( -background => $lglobal{highlighttempcolor} );
-            $lglobal{highlighlabel}->configure( -relief => 'ridge' );
-        }
-    );
-    $lglobal{highlighlabel}->bind( '<ButtonRelease-1>',
-        sub { $lglobal{highlighlabel}->configure( -relief => 'raised' ) } );
-    $lglobal{insert_overstrike_mode_label} = $counter_frame->Label(
-        -text       => '',
-        -relief     => 'ridge',
-        -background => 'gray',
-        -width      => 2,
-    )->grid( -row => 1, -column => 6, -sticky => 'nw' );
-    $lglobal{insert_overstrike_mode_label}->bind(
-        '<1>',
-        sub {
-            $lglobal{insert_overstrike_mode_label}
-                ->configure( -relief => 'sunken' );
-            if ( $textwindow->OverstrikeMode ) {
-                $textwindow->OverstrikeMode(0);
-            }
-            else {
-                $textwindow->OverstrikeMode(1);
-            }
-        }
-    );
-    $lglobal{ordinallabel} = $counter_frame->Label(
-        -text       => '',
-        -relief     => 'ridge',
-        -background => 'gray',
-        -anchor     => 'w',
-    )->grid( -row => 1, -column => 8 );
-
-    $lglobal{ordinallabel}->bind(
-        '<1>',
-        sub {
-            $lglobal{ordinallabel}->configure( -relief => 'sunken' );
-            $lglobal{longordlabel} = $lglobal{longordlabel} ? 0 : 1;
-            update_indicators();
-        }
-    );
-    butbind($_)
-        for (
-        $lglobal{insert_overstrike_mode_label},
-        $lglobal{current_line_label},
-        $lglobal{selectionlabel},
-        $lglobal{ordinallabel}
-        );
-    $lglobal{statushelp} = $top->Balloon( -initwait => 1000 );
-    $lglobal{statushelp}->attach( $lglobal{current_line_label},
-        -balloonmsg =>
-            "Line number out of total lines\nand column number of cursor." );
-    $lglobal{statushelp}->attach( $lglobal{insert_overstrike_mode_label},
-        -balloonmsg => 'Typeover Mode. (Insert/Overstrike)' );
-    $lglobal{statushelp}->attach( $lglobal{ordinallabel},
-        -balloonmsg =>
-            "Decimal & Hexadecimal ordinal of the\ncharacter to the right of the cursor."
-    );
-    $lglobal{statushelp}->attach( $lglobal{highlighlabel},
-        -balloonmsg =>
-            "Highlight words from list. Right click to select list" );
-    $lglobal{statushelp}->attach( $lglobal{selectionlabel},
-        -balloonmsg =>
-            "Start and end points of selection -- Or, total lines.columns of selection"
-    );
-}
 
 sub popscroll {
     if ( $lglobal{scroller} ) {
@@ -17693,6 +15834,929 @@ sub html_convert_tb {
 
 }
 
+
+### Internal Routines
+## Status Bar
+sub buildstatusbar {
+    $lglobal{current_line_label} = $counter_frame->Label(
+        -text       => 'Ln: 1 / 1  -  Col: 0',
+        -width      => 26,
+        -relief     => 'ridge',
+        -background => 'gray',
+    )->grid( -row => 1, -column => 0, -sticky => 'nw' );
+    $lglobal{current_line_label}->bind(
+        '<1>',
+        sub {
+            $lglobal{current_line_label}->configure( -relief => 'sunken' );
+            gotoline();
+            update_indicators();
+        }
+    );
+    $lglobal{current_line_label}->bind(
+        '<3>',
+        sub {
+            if   ($vislnnm) { $vislnnm = 0 }
+            else            { $vislnnm = 1 }
+            $textwindow->showlinenum if $vislnnm;
+            $textwindow->hidelinenum unless $vislnnm;
+            saveset();
+        }
+    );
+    $lglobal{selectionlabel} = $counter_frame->Label(
+        -text       => ' No Selection ',
+        -relief     => 'ridge',
+        -background => 'gray',
+    )->grid( -row => 1, -column => 7, -sticky => 'nw' );
+    $lglobal{selectionlabel}->bind(
+        '<1>',
+        sub {
+            if ( $lglobal{showblocksize} ) {
+                $lglobal{showblocksize} = 0;
+            }
+            else {
+                $lglobal{showblocksize} = 1;
+            }
+        }
+    );
+    $lglobal{selectionlabel}->bind( '<Double-1>', sub { selection() } );
+    $lglobal{selectionlabel}->bind(
+        '<3>',
+        sub {
+            if ( $textwindow->markExists('selstart') ) {
+                $textwindow->tagAdd( 'sel', 'selstart', 'selend' );
+            }
+        }
+    );
+    $lglobal{selectionlabel}->bind(
+        '<Shift-3>',
+        sub {
+            $textwindow->tagRemove( 'sel', '1.0', 'end' );
+            if ( $textwindow->markExists('selstart') ) {
+                my ( $srow, $scol ) = split /\./,
+                    $textwindow->index('selstart');
+                my ( $erow, $ecol ) = split /\./,
+                    $textwindow->index('selend');
+                for ( $srow .. $erow ) {
+                    $textwindow->tagAdd( 'sel', "$_.$scol", "$_.$ecol" );
+                }
+            }
+        }
+    );
+
+    $lglobal{highlighlabel} = $counter_frame->Label(
+        -text       => 'H',
+        -width      => 2,
+        -relief     => 'ridge',
+        -background => 'gray',
+    )->grid( -row => 1, -column => 1 );
+
+    $lglobal{highlighlabel}->bind(
+        '<1>',
+        sub {
+            if ( $lglobal{scanno_hl} ) {
+                $lglobal{scanno_hl}          = 0;
+                $lglobal{highlighttempcolor} = 'gray';
+            }
+            else {
+                scannosfile() unless $scannoslist;
+                return unless $scannoslist;
+                $lglobal{scanno_hl}          = 1;
+                $lglobal{highlighttempcolor} = $highlightcolor;
+            }
+            hilitetgl();
+        }
+    );
+    $lglobal{highlighlabel}->bind( '<3>', sub { scannosfile() } );
+    $lglobal{highlighlabel}->bind(
+        '<Enter>',
+        sub {
+            $lglobal{highlighttempcolor}
+                = $lglobal{highlighlabel}->cget( -background );
+            $lglobal{highlighlabel}->configure( -background => $activecolor );
+            $lglobal{highlighlabel}->configure( -relief     => 'raised' );
+        }
+    );
+    $lglobal{highlighlabel}->bind(
+        '<Leave>',
+        sub {
+            $lglobal{highlighlabel}
+                ->configure( -background => $lglobal{highlighttempcolor} );
+            $lglobal{highlighlabel}->configure( -relief => 'ridge' );
+        }
+    );
+    $lglobal{highlighlabel}->bind( '<ButtonRelease-1>',
+        sub { $lglobal{highlighlabel}->configure( -relief => 'raised' ) } );
+    $lglobal{insert_overstrike_mode_label} = $counter_frame->Label(
+        -text       => '',
+        -relief     => 'ridge',
+        -background => 'gray',
+        -width      => 2,
+    )->grid( -row => 1, -column => 6, -sticky => 'nw' );
+    $lglobal{insert_overstrike_mode_label}->bind(
+        '<1>',
+        sub {
+            $lglobal{insert_overstrike_mode_label}
+                ->configure( -relief => 'sunken' );
+            if ( $textwindow->OverstrikeMode ) {
+                $textwindow->OverstrikeMode(0);
+            }
+            else {
+                $textwindow->OverstrikeMode(1);
+            }
+        }
+    );
+    $lglobal{ordinallabel} = $counter_frame->Label(
+        -text       => '',
+        -relief     => 'ridge',
+        -background => 'gray',
+        -anchor     => 'w',
+    )->grid( -row => 1, -column => 8 );
+
+    $lglobal{ordinallabel}->bind(
+        '<1>',
+        sub {
+            $lglobal{ordinallabel}->configure( -relief => 'sunken' );
+            $lglobal{longordlabel} = $lglobal{longordlabel} ? 0 : 1;
+            update_indicators();
+        }
+    );
+    butbind($_)
+        for (
+        $lglobal{insert_overstrike_mode_label},
+        $lglobal{current_line_label},
+        $lglobal{selectionlabel},
+        $lglobal{ordinallabel}
+        );
+    $lglobal{statushelp} = $top->Balloon( -initwait => 1000 );
+    $lglobal{statushelp}->attach( $lglobal{current_line_label},
+        -balloonmsg =>
+            "Line number out of total lines\nand column number of cursor." );
+    $lglobal{statushelp}->attach( $lglobal{insert_overstrike_mode_label},
+        -balloonmsg => 'Typeover Mode. (Insert/Overstrike)' );
+    $lglobal{statushelp}->attach( $lglobal{ordinallabel},
+        -balloonmsg =>
+            "Decimal & Hexadecimal ordinal of the\ncharacter to the right of the cursor."
+    );
+    $lglobal{statushelp}->attach( $lglobal{highlighlabel},
+        -balloonmsg =>
+            "Highlight words from list. Right click to select list" );
+    $lglobal{statushelp}->attach( $lglobal{selectionlabel},
+        -balloonmsg =>
+            "Start and end points of selection -- Or, total lines.columns of selection"
+    );
+}
+
+
+# Routine to update the status bar when somthing has changed.
+sub update_indicators {
+    my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
+    my ( $line, $column ) = split( /\./, $textwindow->index('insert') );
+    $lglobal{current_line_label}->configure(
+                                            -text => "Ln: $line/" . ( $last_line - 1 ) . "  -  Col: $column" );
+    my $mode             = $textwindow->OverstrikeMode;
+    my $overstrke_insert = ' I ';
+    if ($mode) {
+        $overstrke_insert = ' O ';
+    }
+    $lglobal{insert_overstrike_mode_label}
+        ->configure( -text => " $overstrke_insert " );
+    my $filename = $textwindow->FileName;
+    $filename = 'No File Loaded' unless ( defined($filename) );
+    $lglobal{highlighlabel}->configure( -background => $highlightcolor )
+        if ( $lglobal{scanno_hl} );
+    $lglobal{highlighlabel}->configure( -background => 'gray' )
+        unless ( $lglobal{scanno_hl} );
+    $filename = os_normal($filename);
+    my $edit_flag = '';
+    my $ordinal   = ord( $textwindow->get('insert') );
+    my $hexi      = uc sprintf( "%04x", $ordinal );
+
+    if ( $lglobal{longordlabel} ) {
+        my $msg = charnames::viacode($ordinal) || '';
+        my $msgln = length(" Dec $ordinal : Hex $hexi : $msg ");
+
+        no warnings 'uninitialized';
+        $lglobal{ordmaxlength} = $msgln
+            if ( $msgln > $lglobal{ordmaxlength} );
+        $lglobal{ordinallabel}->configure(
+                                          -text    => " Dec $ordinal : Hex $hexi : $msg ",
+                                          -width   => $lglobal{ordmaxlength},
+                                          -justify => 'left'
+                                         );
+
+    } else {
+        $lglobal{ordinallabel}->configure(
+                                          -text  => " Dec $ordinal : Hex $hexi ",
+                                          -width => 18
+                                         );
+    }
+    if ( $textwindow->numberChanges ) {
+        $edit_flag = 'edited';
+    }
+
+    # window label format: GG-version - [edited] - [file name]
+    if ($edit_flag) {
+        $top->configure( -title => $window_title . " - "
+                         . $edit_flag . " - "
+                         . $filename );
+    } else {
+        $top->configure( -title => $window_title . " - " . $filename );
+    }
+
+    #FIXME: need some logic behind this
+
+    $lglobal{global_filename} = $filename;
+    $textwindow->idletasks;
+    my ( $mark, $pnum );
+    my $markindex = $textwindow->index('insert');
+    if ( $filename ne 'No File Loaded' or defined $lglobal{prepfile} ) {
+        $lglobal{page_num_label}->configure( -text => 'Img: XXX' )
+            if defined $lglobal{page_num_label};
+        $lglobal{page_label}->configure( -text => ("Lbl: None ") )
+            if defined $lglobal{page_label};
+        $mark = $textwindow->markPrevious($markindex);
+        while ($mark) {
+            if ( $mark =~ /Pg(\S+)/ ) {
+                $pnum = $1;
+                unless ( defined( $lglobal{page_num_label} ) ) {
+                    $lglobal{page_num_label} = $counter_frame->Label(
+                                                                     -text       => "Img: $pnum",
+                                                                     -width      => 8,
+                                                                     -background => 'gray',
+                                                                     -relief     => 'ridge',
+                                                                    )->grid( -row => 1, -column => 2, -sticky => 'nw' );
+                    $lglobal{page_num_label}->bind(
+                                                   '<1>',
+                                                   sub {
+                                                       $lglobal{page_num_label}
+                                                           ->configure( -relief => 'sunken' );
+                                                       gotopage();
+                                                       update_indicators();
+                                                   }
+                                                  );
+                    $lglobal{page_num_label}->bind(
+                                                   '<3>',
+                                                   sub {
+                                                       $lglobal{page_num_label}
+                                                           ->configure( -relief => 'sunken' );
+                                                       viewpagenums();
+                                                       update_indicators();
+                                                   }
+                                                  );
+                    butbind( $lglobal{page_num_label} );
+                    $lglobal{statushelp}->attach( $lglobal{page_num_label},
+                                                  -balloonmsg => "Image/Page name for current page." );
+                }
+                unless ( defined( $lglobal{pagebutton} ) ) {
+                    $lglobal{pagebutton} = $counter_frame->Label(
+                                                                 -text       => 'See Image',
+                                                                 -width      => 9,
+                                                                 -relief     => 'ridge',
+                                                                 -background => 'gray',
+                                                                )->grid( -row => 1, -column => 3 );
+                    $lglobal{pagebutton}->bind(
+                                               '<1>',
+                                               sub {
+                                                   $lglobal{pagebutton}
+                                                       ->configure( -relief => 'sunken' );
+                                                   openpng();
+                                               }
+                                              );
+                    $lglobal{pagebutton}
+                        ->bind( '<3>', sub { setpngspath() } );
+                    butbind( $lglobal{pagebutton} );
+                    $lglobal{statushelp}->attach( $lglobal{pagebutton},
+                                                  -balloonmsg =>
+                                                  "Open Image corresponding to current page in an external viewer."
+                                                );
+                }
+                unless ( $lglobal{page_label} ) {
+                    $lglobal{page_label} = $counter_frame->Label(
+                                                                 -text       => 'Lbl: None ',
+                                                                 -background => 'gray',
+                                                                 -relief     => 'ridge',
+                                                                )->grid( -row => 1, -column => 4 );
+                    butbind( $lglobal{page_label} );
+                    $lglobal{page_label}->bind(
+                                               '<1>',
+                                               sub {
+                                                   $lglobal{page_label}
+                                                       ->configure( -relief => 'sunken' );
+                                                   gotolabel();
+                                               }
+                                              );
+                    $lglobal{page_label}->bind(
+                                               '<3>',
+                                               sub {
+                                                   $lglobal{page_label}
+                                                       ->configure( -relief => 'sunken' );
+                                                   pageadjust();
+                                               }
+                                              );
+                    $lglobal{statushelp}->attach( $lglobal{page_label},
+                                                  -balloonmsg =>
+                                                  "Page label assigned to current page." );
+                }
+                $lglobal{page_num_label}->configure( -text => "Img: $pnum" )
+                    if defined $lglobal{page_num_label};
+                my $label = $pagenumbers{"Pg$pnum"}{label};
+                if ( defined $label && length $label ) {
+                    $lglobal{page_label}
+                        ->configure( -text => ("Lbl: $label ") );
+                } else {
+                    $lglobal{page_label}
+                        ->configure( -text => ("Lbl: None ") );
+                }
+                last;
+            } else {
+                if ( $textwindow->index('insert')
+                     > ( $textwindow->index($mark) + 400 ) ) {
+                    last;
+                }
+                $mark = $textwindow->markPrevious($mark) if $mark;
+                next;
+            }
+        }
+        if ( ( scalar %proofers ) && ( defined( $lglobal{pagebutton} ) ) ) {
+            unless ( defined( $lglobal{proofbutton} ) ) {
+                $lglobal{proofbutton} = $counter_frame->Label(
+                                                              -text       => 'See Proofers',
+                                                              -width      => 11,
+                                                              -relief     => 'ridge',
+                                                              -background => 'gray',
+                                                             )->grid( -row => 1, -column => 5 );
+                $lglobal{proofbutton}->bind(
+                                            '<1>',
+                                            sub {
+                                                $lglobal{proofbutton}
+                                                    ->configure( -relief => 'sunken' );
+                                                showproofers();
+                                            }
+                                           );
+                $lglobal{proofbutton}->bind(
+                                            '<3>',
+                                            sub {
+                                                $lglobal{proofbutton}
+                                                    ->configure( -relief => 'sunken' );
+                                                tglprfbar();
+                                            }
+                                           );
+                butbind( $lglobal{proofbutton} );
+                $lglobal{statushelp}->attach( $lglobal{proofbutton},
+                                              -balloonmsg => "Proofers for the current page." );
+            }
+            {
+
+                no warnings 'uninitialized';
+                my ( $pg, undef ) = each %proofers;
+                for my $round ( 1 .. 8 ) {
+                    last unless defined $proofers{$pg}->[$round];
+                    $lglobal{numrounds} = $round;
+                    $lglobal{proofbar}[$round]->configure( -text =>
+                                                           "  Round $round  $proofers{$pnum}->[$round]  " )
+                        if $lglobal{proofbarvisible};
+                }
+            }
+        }
+    }
+    $textwindow->tagRemove( 'bkmk', '1.0', 'end' ) unless $bkmkhl;
+    if ( $lglobal{geometryupdate} ) {
+        saveset();
+        $lglobal{geometryupdate} = 0;
+    }
+
+    # FIXME: Can this go? Maybe.
+    if ( $autosave and $lglobal{autosaveinterval} and $DEBUG ) {
+        my $elapsed
+            = $autosaveinterval * 60 - ( time - $lglobal{autosaveinterval} );
+        printf "%d:%02d\n", int( $elapsed / 60 ), $elapsed % 60;
+    }
+}
+
+## Spell Check
+sub spelloptions {
+    if ($globalspellpath) {
+        OS_Win
+            ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
+            : ( $lglobal{spellexename} = $globalspellpath );
+        aspellstart() unless $lglobal{spellpid};
+    }
+    my $dicts;
+    my $dictlist;
+    my $spellop = $top->DialogBox(
+        -title   => 'Spellcheck Options',
+        -buttons => ['Close']
+    );
+    my $spellpathlabel
+        = $spellop->add( 'Label', -text => 'Aspell executable file?' )->pack;
+    my $spellpathentry
+        = $spellop->add( 'Entry', -width => 60, -background => 'white' )
+        ->pack;
+    my $spellpathbrowse = $spellop->add(
+        'Button',
+        -text    => 'Browse',
+        -width   => 12,
+        -command => sub {
+            my $name
+                = $spellop->getOpenFile( -title => 'Aspell executable?' );
+            if ($name) {
+                $globalspellpath = $name;
+                $globalspellpath = os_normal($globalspellpath);
+                $spellpathentry->delete( 0, 'end' );
+                $spellpathentry->insert( 'end', $globalspellpath );
+                saveset();
+
+                OS_Win
+                    ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
+                    : ( $lglobal{spellexename} = $globalspellpath );
+                open my $infile, '-|', "$lglobal{spellexename} dump dicts"
+                    or warn "Unable to access dictionaries. $!\n";
+                while ( $dicts = <$infile> ) {
+                    chomp $dicts;
+                    next if ( $dicts =~ m/-/ );
+                    $dictlist->insert( 'end', $dicts );
+                }
+                close $infile;
+            }
+        }
+    )->pack( -pady => 4 );
+    $spellpathentry->insert( 'end', $globalspellpath );
+
+    my $spellencodinglabel = $spellop->add( 'Label',
+        -text => 'Set encoding: default = iso8859-1' )->pack;
+
+    my $spellencodingentry = $spellop->add(
+        'Entry',
+        -width        => 30,
+        -textvariable => \$lglobal{spellencoding},
+    )->pack;
+
+# FIXME: Switching to utf-8 is barfola. Probably down in the checkfil.txt thingy.
+
+    my $dictlabel
+        = $spellop->add( 'Label', -text => 'Dictionary files' )->pack;
+    $dictlist = $spellop->add(
+        'ScrlListbox',
+        -scrollbars => 'oe',
+        -selectmode => 'browse',
+        -background => 'white',
+        -height     => 10,
+        -width      => 40,
+    )->pack( -pady => 4 );
+    my $spelldiclabel
+        = $spellop->add( 'Label', -text => 'Current Dictionary (ies)' )->pack;
+    my $spelldictxt = $spellop->add(
+        'ROText',
+        -width      => 40,
+        -height     => 1,
+        -background => 'white'
+    )->pack;
+    $spelldictxt->delete( '1.0', 'end' );
+    $spelldictxt->insert( '1.0', $globalspelldictopt );
+    $dictlist->insert( 'end', "<default>" );
+
+    if ($globalspellpath) {
+        OS_Win
+            ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
+            : ( $lglobal{spellexename} = $globalspellpath );
+        open my $infile, '-|', "$lglobal{spellexename} dump dicts"
+            or warn "Unable to access dictionaries. $!\n";
+        while ( $dicts = <$infile> ) {
+            chomp $dicts;
+            next if ( $dicts =~ m/-/ );
+            $dictlist->insert( 'end', $dicts );
+        }
+        close $infile;
+    }
+    $dictlist->eventAdd( '<<dictsel>>' => '<Double-Button-1>' );
+    $dictlist->bind(
+        '<<dictsel>>',
+        sub {
+            my $selection = $dictlist->get('active');
+            $spelldictxt->delete( '1.0', 'end' );
+            $spelldictxt->insert( '1.0', $selection );
+            $selection = '' if $selection eq "<default>";
+            $globalspelldictopt = $selection;
+            saveset();
+            aspellstart();
+            $top->Busy( -recurse => 1 );
+
+            if ( defined( $lglobal{spellpopup} ) ) {
+                spellclearvars();
+                spellcheckfirst();
+            }
+            $top->Unbusy( -recurse => 1 );
+        }
+    );
+    my $spopframe = $spellop->Frame->pack;
+    $spopframe->Radiobutton(
+        -selectcolor => $lglobal{checkcolor},
+        -text        => 'Ultra Fast',
+        -variable    => \$globalaspellmode,
+        -value       => 'ultra'
+    )->grid( -row => 0, -sticky => 'w' );
+    $spopframe->Radiobutton(
+        -selectcolor => $lglobal{checkcolor},
+        -text        => 'Fast',
+        -variable    => \$globalaspellmode,
+        -value       => 'fast'
+    )->grid( -row => 1, -sticky => 'w' );
+    $spopframe->Radiobutton(
+        -selectcolor => $lglobal{checkcolor},
+        -text        => 'Normal',
+        -variable    => \$globalaspellmode,
+        -value       => 'normal'
+    )->grid( -row => 2, -sticky => 'w' );
+    $spopframe->Radiobutton(
+        -selectcolor => $lglobal{checkcolor},
+        -text        => 'Bad Spellers',
+        -variable    => \$globalaspellmode,
+        -value       => 'bad-spellers'
+    )->grid( -row => 3, -sticky => 'w' );
+    $spellop->Show;
+}
+
+# Initialize spellchecker
+sub spellcheckfirst {
+    $lglobal{spellexename}
+        = ( OS_Win ? dos_path($globalspellpath) : $globalspellpath )
+        ;    # Make the exe path dos compliant
+    $lglobal{spellfilename} = (
+        OS_Win
+        ? dos_path( $lglobal{global_filename} )
+        : $lglobal{global_filename}
+    );       # make the file path dos compliant
+    @{ $lglobal{misspelledlist} } = ();
+    viewpagenums() if ( $lglobal{seepagenums} );
+    getprojectdic();
+    do "$lglobal{projectdictname}";
+    $lglobal{lastmatchindex} = '1.0';
+
+    # get list of mispelled words in selection (or file if nothing selected)
+    spellget_misspellings();
+    my $term = $lglobal{misspelledlist}[0];    # get first mispelled term
+    $lglobal{misspelledentry}->delete( '0', 'end' );
+    $lglobal{misspelledentry}->insert( 'end', $term )
+        ;    # put it in the appropriate text box
+    $lglobal{suggestionlabel}->configure( -text => 'Suggestions:' );
+    return unless $term;    # no mispellings found, bail
+    $lglobal{matchlength} = '0';
+    $lglobal{matchindex}  = $textwindow->search(
+        -forwards,
+        -count => \$lglobal{matchlength},
+        $term, $lglobal{spellindexstart}, 'end'
+    );                      # search for the mispelled word in the text
+    $lglobal{lastmatchindex}
+        = spelladjust_index( $lglobal{matchindex}, $term )
+        ;                   # find the index of the end of the match
+    spelladdtexttags();     # highlight the word in the text
+    update_indicators();    # update the status bar
+    aspellstart();          # initialize the guess function
+    spellguesses($term);    # get the guesses for the misspelling
+    spellshow_guesses();    # populate the listbox with guesses
+
+    if ( scalar( $lglobal{seen} ) ) {
+        $lglobal{misspelledlabel}->configure( -text =>
+                "Not in Dictionary:  -  $lglobal{seen}->{$term} in text." );
+    }
+    $lglobal{nextmiss} = 0;
+}
+
+sub getprojectdic {
+    $lglobal{projectdictname} = $lglobal{global_filename};
+    $lglobal{projectdictname} =~ s/\.[^\.]*?$/\.dic/;
+    if ( $lglobal{projectdictname} eq $lglobal{global_filename} ) {
+        $lglobal{projectdictname} .= '.dic';
+    }
+}
+
+sub spellchecknext {
+    viewpagenums() if ( $lglobal{seepagenums} );
+    $textwindow->tagRemove( 'highlight', '1.0', 'end' )
+        ;    # unhighlight any higlighted text
+    spellclearvars();
+    $lglobal{misspelledlabel}->configure( -text => 'Not in Dictionary:' );
+    unless ($nobell) {
+        $textwindow->bell
+            if ( $lglobal{nextmiss}
+            >= ( scalar( @{ $lglobal{misspelledlist} } ) ) );
+    }
+    $lglobal{suggestionlabel}->configure( -text => 'Suggestions:' );
+    return
+        if $lglobal{nextmiss} >= ( scalar( @{ $lglobal{misspelledlist} } ) )
+    ;        # no more mispelled words, bail
+    $lglobal{lastmatchindex} = $textwindow->index('spellindex');
+
+#print $lglobal{misspelledlist}[$lglobal{nextmiss}]." | $lglobal{lastmatchindex}\n";
+    if ( ( $lglobal{misspelledlist}[ $lglobal{nextmiss} ] =~ /^[\xC0-\xFF]/ )
+        || ($lglobal{misspelledlist}[ $lglobal{nextmiss} ] =~ /[\xC0-\xFF]$/ )
+        )
+    {        # crappy workaround for accented character bug
+        $lglobal{matchindex} = (
+            $textwindow->search(
+                -forwards,
+                -count => \$lglobal{matchlength},
+                $lglobal{misspelledlist}[ $lglobal{nextmiss} ],
+                $lglobal{lastmatchindex}, 'end'
+            )
+        );
+    }
+    else {
+        $lglobal{matchindex} = (
+            $textwindow->search(
+                -forwards, -regexp,
+                -count => \$lglobal{matchlength},
+                '(?<!\p{Alpha})'
+                    . $lglobal{misspelledlist}[ $lglobal{nextmiss} ]
+                    . '(?!\p{Alnum})', $lglobal{lastmatchindex}, 'end'
+            )
+        );
+    }
+    unless ( $lglobal{matchindex} ) {
+        $lglobal{matchindex} = (
+            $textwindow->search(
+                -forwards, -exact,
+                -count => \$lglobal{matchlength},
+                $lglobal{misspelledlist}[ $lglobal{nextmiss} ],
+                $lglobal{lastmatchindex}, 'end'
+            )
+        );
+    }
+    $lglobal{spreplaceentry}->delete( '0', 'end' )
+        ;    # remove last replacement word
+    $lglobal{misspelledentry}
+        ->insert( 'end', $lglobal{misspelledlist}[ $lglobal{nextmiss} ] )
+        ;    #put the misspelled word in the spellcheck text box
+    spelladdtexttags()
+        if $lglobal{matchindex};    # highlight the word in the text
+    $lglobal{lastmatchindex}
+        = spelladjust_index( $lglobal{matchindex},
+        $lglobal{misspelledlist}[ $lglobal{nextmiss} ] )
+        if $lglobal{matchindex};    #get the index of the end of the match
+    spellguesses( $lglobal{misspelledlist}[ $lglobal{nextmiss} ] )
+        ;    # get a list of guesses for the misspelling
+    spellshow_guesses();    # and put them in the guess list
+    update_indicators();    # update the status bar
+    $lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
+            . ( $globalspelldictopt || '<default>' )
+            . " | $#{$lglobal{misspelledlist}} words to check." );
+
+    if ( scalar( $lglobal{seen} ) ) {
+        $lglobal{misspelledlabel}->configure(
+            -text => 'Not in Dictionary:  -  '
+                . (
+                $lglobal{seen}
+                    ->{ $lglobal{misspelledlist}[ $lglobal{nextmiss} ] }
+                    || '0'
+                )
+                . ' in text.'
+        );
+    }
+    return 1;
+}
+
+sub spellgettextselection {
+    return $textwindow->get( $lglobal{matchindex},
+        "$lglobal{matchindex}+$lglobal{matchlength}c" ); # get the
+                                                         # misspelled word
+                                                         # as it appears in
+                                                         # the text (may be
+                                                         # checking case
+                                                         # insensitive)
+}
+
+sub spellreplace {
+    viewpagenums() if ( $lglobal{seepagenums} );
+    my $replacement = $lglobal{spreplaceentry}
+        ->get;    # get the word for the replacement box
+    $textwindow->bell unless ( $replacement || $nobell );
+    my $misspelled = $lglobal{misspelledentry}->get;
+    return unless $replacement;
+    $textwindow->replacewith( $lglobal{matchindex},
+        "$lglobal{matchindex}+$lglobal{matchlength}c", $replacement );
+    $lglobal{lastmatchindex}
+        = spelladjust_index( ( $textwindow->index( $lglobal{matchindex} ) ),
+        $replacement );    #adjust the index to the end of the replaced word
+    print OUT '$$ra ' . "$misspelled, $replacement\n";
+    shift @{ $lglobal{misspelledlist} };
+    spellchecknext();      # and check the next word
+}
+
+# replace all instances of a word with another, pretty straightforward
+sub spellreplaceall
+{    
+    $top->Busy;
+    viewpagenums() if ( $lglobal{seepagenums} );
+    my $lastindex   = '1.0';
+    my $misspelled  = $lglobal{misspelledentry}->get;
+    my $replacement = $lglobal{spreplaceentry}->get;
+    my $repmatchindex;
+    $textwindow->FindAndReplaceAll( '-exact', '-nocase', $misspelled,
+        $replacement );
+    $top->Unbusy;
+    spellignoreall();
+}
+
+# replace the replacement word with one from the guess list
+sub spellmisspelled_replace
+{    
+    viewpagenums() if ( $lglobal{seepagenums} );
+    $lglobal{spreplaceentry}->delete( 0, 'end' );
+    my $term = $lglobal{replacementlist}->get('active');
+    $lglobal{spreplaceentry}->insert( 'end', $term );
+}
+
+# tell aspell to add a word to the personal dictionary
+sub spelladdword {    
+    my $term = $lglobal{misspelledentry}->get;
+    $textwindow->bell unless ( $term || $nobell );
+    return unless $term;
+    print OUT "*$term\n";
+    print OUT "#\n";
+}
+
+# add a word to the project dictionary
+sub spellmyaddword {    
+    my $term = shift;
+    $textwindow->bell unless ( $term || $nobell );
+    return unless $term;
+    getprojectdic();
+    $projectdict{$term} = '';
+    open( DIC, ">$lglobal{projectdictname}" );
+    print DIC "\%projectdict = (\n";
+    for $term ( sort { $a cmp $b } keys %projectdict ) {
+        $term =~ s/'/\\'/g;
+        print DIC "'$term' => '',\n";
+    }
+    print DIC ");";
+    close DIC;
+}
+
+sub spellclearvars {
+    $lglobal{misspelledentry}->delete( '0', 'end' );
+    $lglobal{replacementlist}->delete( 0,   'end' );
+    $lglobal{spreplaceentry}->delete( '0', 'end' );
+    $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+}
+
+# start aspell in interactive mode, repipe stdin and stdout to file handles
+sub aspellstart
+{  
+    aspellstop();
+    my @cmd = (    # FIXME: Need to see what options are going to aspell
+        $lglobal{spellexename}, '-a', '-S', '--sug-mode', $globalaspellmode
+    );
+    push @cmd, '-d', $globalspelldictopt if $globalspelldictopt;
+    $lglobal{spellpid} = open2( \*IN, \*OUT, @cmd );
+    my $line = <IN>;
+}
+
+sub get_spellchecker_version {
+    return $lglobal{spellversion} if $lglobal{spellversion};
+    my $aspell_version;
+    open my $aspell, '-|', "$lglobal{spellexename} help";
+    while (<$aspell>) {
+        $aspell_version = $1 if m/^Aspell ([\d\.]+)/;
+    }
+    close $aspell;
+    return $lglobal{spellversion} = $aspell_version;
+}
+
+sub aspellstop { 
+    if ( $lglobal{spellpid} ) {
+        close IN;
+        close OUT;
+        kill 9, $lglobal{spellpid}
+            if OS_Win
+                ; # Brute force kill the aspell process... seems to be necessary
+        # under windows
+        waitpid( $lglobal{spellpid}, 0 );
+        $lglobal{spellpid} = 0;
+    }
+}
+
+sub spellguesses {    #feed aspell a word to get a list of guess
+    my $word = shift;     # word to get guesses for
+    $textwindow->Busy;    # let the user know something is happening
+    @{ $lglobal{guesslist} } = ();    # clear the guesslist
+    print OUT $word, "\n";    # send the word to the stdout file handle
+    my $list = <IN>;          # and read the results
+    $list =~ s/.*\: //
+        ;    # remove incidental stuff (word, index, number of guesses)
+    $list =~ s/\#.*0/\*none\*/;    # oops, no guesses, put a notice in.
+    chomp $list;    # remove newline
+    chop $list;     # and something else that listbox doesn't like
+    @{ $lglobal{guesslist} }
+        = ( split /, /, $list );    # split the words into an array
+    $list = <IN>;                   # throw away extra newline
+    $textwindow->Unbusy;            # done processing
+}
+
+# load the guesses into the guess list box
+sub spellshow_guesses {             
+    $lglobal{replacementlist}->delete( 0, 'end' );
+    $lglobal{replacementlist}->insert( 0, @{ $lglobal{guesslist} } );
+    $lglobal{replacementlist}->activate(0);
+    $lglobal{spreplaceentry}->delete( '0', 'end' );
+    $lglobal{spreplaceentry}->insert( 'end', $lglobal{guesslist}[0] );
+    $lglobal{replacementlist}->yview( 'scroll', 1, 'units' );
+    $lglobal{replacementlist}->update;
+    $lglobal{replacementlist}->yview( 'scroll', -1, 'units' );
+    $lglobal{suggestionlabel}
+        ->configure( -text => @{ $lglobal{guesslist} } . ' Suggestions:' );
+}
+
+# only spell check selected text or whole file if nothing selected
+sub spellcheckrange
+{    
+    viewpagenums() if ( $lglobal{seepagenums} );
+    my @ranges = $textwindow->tagRanges('sel');
+    $operationinterrupt = 0;
+    if (@ranges) {
+        $lglobal{spellindexend}   = $ranges[0];
+        $lglobal{spellindexstart} = $ranges[-1];
+    }
+    else {
+        $lglobal{spellindexstart} = '1.0';
+        $lglobal{spellindexend}   = $textwindow->index('end');
+    }
+}
+
+sub spellget_misspellings {    # get list of misspelled words
+    spellcheckrange();         # get chunck of text to process
+    return if ( $lglobal{spellindexstart} eq $lglobal{spellindexend} );
+    my ( $word, @templist );
+    $top->Busy( -recurse => 1 );    # let user know something is going on
+    my $section = $textwindow->get( $lglobal{spellindexstart},
+        $lglobal{spellindexend} );    # get selection
+    $section =~ s/^-----File:.*//g;
+    open SAVE, '>:bytes', 'checkfil.txt';
+    print SAVE $section;    # FIXME: probably encode before printing.
+    close SAVE;
+    my $spellopt
+        = get_spellchecker_version() lt "0.6"
+        ? "list --encoding=$lglobal{spellencoding} "
+        : "list --encoding=$lglobal{spellencoding} ";
+    $spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
+    @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
+        ;    # feed the text to aspell, get an array of misspelled words out
+    chomp @templist;    # get rid of any newlines
+
+    foreach $word (@templist) {
+        next if ( exists( $projectdict{$word} ) );
+        push @{ $lglobal{misspelledlist} },
+            $word;      # filter out project dictionary word list.
+    }
+    if ( $#{ $lglobal{misspelledlist} } > 0 ) {
+        $lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
+                . ( $globalspelldictopt || '<default>' )
+                . " | $#{$lglobal{misspelledlist}} words to check." );
+    }
+    else {
+        $lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
+                . ( $globalspelldictopt || '<default>' )
+                . ' | No Misspelled Words Found.' );
+    }
+    $top->Unbusy( -recurse => 0 );    # done processing
+    unlink 'checkfil.txt';
+}
+
+# remove ignored words from checklist
+sub spellignoreall {                  
+    my $next;
+    my $word = $lglobal{misspelledentry}->get;   # get word you want to ignore
+    $textwindow->bell unless ( $word || $nobell );
+    return unless $word;
+    my @ignorelist
+        = @{ $lglobal{misspelledlist} };         # copy the mispellings array
+    @{ $lglobal{misspelledlist} } = ();          # then clear it
+    foreach $next (@ignorelist)
+    { # then put all of the words you are NOT ignoring back into the
+      # mispellings list
+        push @{ $lglobal{misspelledlist} }, $next
+            if ( $next ne $word )
+            ;    # inefficient but easy, and the overhead isn't THAT bad...
+    }
+    spellmyaddword($word);
+}
+
+sub spelladjust_index {    # get the index of the match start (row column)
+    my ( $idx, $match ) = @_;
+    my ( $mr, $mc ) = split /\./, $idx;
+    $mc += 1;
+    $textwindow->markSet( 'spellindex', "$mr.$mc" );
+    return "$mr.$mc";      # and return the index of the end of the match
+}
+
+# add highlighting to selected word
+sub spelladdtexttags {     
+    $textwindow->markSet( 'insert', $lglobal{matchindex} );
+    $textwindow->tagAdd( 'highlight', $lglobal{matchindex},
+        "$lglobal{matchindex}+$lglobal{matchlength} chars" );
+    $textwindow->yview('end');
+    $textwindow->see( $lglobal{matchindex} );
+}
+
 ### File Menu
 sub fileopen {    # Find a text file to open
     my ($name);
@@ -17831,6 +16895,7 @@ sub savefile {    # Determine which save routine to use and then use it
     set_autosave() if $autosave;
     update_indicators();
 }
+
 sub file_savease {}
 sub file_include {}
 sub file_close { }
@@ -18049,7 +17114,7 @@ sub guesswindow {
     }
 }
 
-# FIXME: This is converting dp page separators to internal mark
+#  Convert DP page separators to internal mark
 sub markpages {
     $top->Busy( -recurse => 1 );
     viewpagenums() if ( $lglobal{seepagenums} );
@@ -18146,6 +17211,976 @@ sub paste {
 }
 
 ### Search
+sub searchpopup {
+    viewpagenums() if ( $lglobal{seepagenums} );
+    push @operations, ( localtime() . ' - Search & Replace' )
+        unless $lglobal{doscannos};
+    push @operations, ( localtime() . ' - Stealth Scannos' )
+        if $lglobal{doscannos};
+    oppopupdate() if $lglobal{oppop};
+    my $aacheck;
+    my $searchterm = '';
+    my @ranges     = $textwindow->tagRanges('sel');
+    $searchterm = $textwindow->get( $ranges[0], $ranges[1] ) if @ranges;
+
+    if ( defined( $lglobal{search} ) ) {
+        $lglobal{search}->deiconify;
+        $lglobal{search}->raise;
+        $lglobal{search}->focus;
+        $lglobal{searchentry}->focus;
+    }
+    else {
+        $lglobal{search} = $top->Toplevel;
+        $lglobal{search}->title('Search & Replace');
+        $lglobal{search}->minsize( 460, 127 );
+        my $sf1
+            = $lglobal{search}->Frame->pack( -side => 'top', -anchor => 'n' );
+        my $searchlabel = $sf1->Label( -text => 'Search Text', )
+            ->pack( -side => 'left', -anchor => 'n', -padx => 80 );
+        $lglobal{searchnumlabel} = $sf1->Label(
+            -text  => '',
+            -width => 20,
+        )->pack( -side => 'right', -anchor => 'e', -padx => 1 );
+        my $sf11 = $lglobal{search}->Frame->pack(
+            -side   => 'top',
+            -anchor => 'w',
+            -padx   => 3,
+            -expand => 'y',
+            -fill   => 'x'
+        );
+
+        $sf11->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                $textwindow->undo;
+                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+            },
+            -text  => 'Undo',
+            -width => 6
+        )->pack( -side => 'right', -anchor => 'w' );
+        $lglobal{searchbutton} = $sf11->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                add_search_history( $lglobal{searchentry}, \@search_history );
+                searchtext('');
+            },
+            -text  => 'Search',
+            -width => 6
+            )->pack(
+            -side   => 'right',
+            -pady   => 1,
+            -padx   => 2,
+            -anchor => 'w'
+            );
+
+        $lglobal{searchentry} = $sf11->Text(
+            -background => 'white',
+            -width      => 60,
+            -height     => 1,
+            )->pack(
+            -side   => 'right',
+            -anchor => 'w',
+            -expand => 'y',
+            -fill   => 'x'
+            );
+
+        $sf11->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                search_history( $lglobal{searchentry}, \@search_history );
+            },
+            -image  => $lglobal{hist_img},
+            -width  => 9,
+            -height => 15,
+        )->pack( -side => 'right', -anchor => 'w' );
+
+        $lglobal{regrepeat}
+            = $lglobal{searchentry}->repeat( 500, \&reg_check );
+
+        my $sf2
+            = $lglobal{search}->Frame->pack( -side => 'top', -anchor => 'w' );
+        $lglobal{searchop1} = $sf2->Checkbutton(
+            -variable    => \$sopt[1],
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Case Insensitive'
+        )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
+        $lglobal{searchop0} = $sf2->Checkbutton(
+            -variable    => \$sopt[0],
+            -command     => [ \&searchoptset, 'x', 'x', 'x', 0 ],
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Whole Word'
+        )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
+        $lglobal{searchop3} = $sf2->Checkbutton(
+            -variable    => \$sopt[3],
+            -command     => [ \&searchoptset, 0, 'x', 'x', 'x' ],
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Regex'
+        )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
+        $lglobal{searchop2} = $sf2->Checkbutton(
+            -variable    => \$sopt[2],
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Reverse'
+        )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
+        $lglobal{searchop4} = $sf2->Checkbutton(
+            -variable    => \$sopt[4],
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Start at Beginning'
+        )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
+
+        my ( $sf13, $sf14, $sf5 );
+        my $sf10 = $lglobal{search}->Frame->pack(
+            -side   => 'top',
+            -anchor => 'n',
+            -expand => '1',
+            -fill   => 'x'
+        );
+        my $replacelabel = $sf10->Label( -text => "Replacement Text\t\t", )
+            ->grid( -row => 1, -column => 1 );
+
+        $sf10->Label( -text => 'Terms - ' )->grid( -row => 1, -column => 2 );
+        $sf10->Radiobutton(
+            -text     => 'single',
+            -variable => \$singleterm,
+            -value    => 1,
+            -command  => sub {
+                for ( $sf13, $sf14 ) {
+                    $_->packForget;
+                }
+            },
+        )->grid( -row => 1, -column => 3 );
+        $sf10->Radiobutton(
+            -text     => 'multi',
+            -variable => \$singleterm,
+            -value    => 0,
+            -command  => sub {
+                for ( $sf13, $sf14 ) {
+                    if ( defined $sf5 ) {
+                        $_->pack(
+                            -before => $sf5,
+                            -side   => 'top',
+                            -anchor => 'w',
+                            -padx   => 3,
+                            -expand => 'y',
+                            -fill   => 'x'
+                        );
+                    }
+                    else {
+                        $_->pack(
+                            -side   => 'top',
+                            -anchor => 'w',
+                            -padx   => 3,
+                            -expand => 'y',
+                            -fill   => 'x'
+                        );
+                    }
+                }
+            },
+        )->grid( -row => 1, -column => 4 );
+        my $sf12 = $lglobal{search}->Frame->pack(
+            -side   => 'top',
+            -anchor => 'w',
+            -padx   => 3,
+            -expand => 'y',
+            -fill   => 'x'
+        );
+
+        $sf12->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                replaceall( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
+            },
+            -text  => 'Rpl All',
+            -width => 5
+            )->pack(
+            -side   => 'right',
+            -pady   => 1,
+            -padx   => 2,
+            -anchor => 'nw'
+            );
+
+        $sf12->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
+                add_search_history( $lglobal{searchentry}, \@search_history );
+                searchtext('');
+            },
+            -text  => 'R & S',
+            -width => 5
+            )->pack(
+            -side   => 'right',
+            -pady   => 1,
+            -padx   => 2,
+            -anchor => 'nw'
+            );
+        $sf12->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
+                add_search_history( $lglobal{replaceentry},
+                    \@replace_history );
+            },
+            -text  => 'Replace',
+            -width => 6
+            )->pack(
+            -side   => 'right',
+            -pady   => 1,
+            -padx   => 2,
+            -anchor => 'nw'
+            );
+
+        $lglobal{replaceentry} = $sf12->Text(
+            -background => 'white',
+            -width      => 60,
+            -height     => 1,
+            )->pack(
+            -side   => 'right',
+            -anchor => 'w',
+            -padx   => 1,
+            -expand => 'y',
+            -fill   => 'x'
+            );
+        $sf12->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                search_history( $lglobal{replaceentry}, \@replace_history );
+            },
+            -image  => $lglobal{hist_img},
+            -width  => 9,
+            -height => 15,
+        )->pack( -side => 'right', -anchor => 'w' );
+        $sf13 = $lglobal{search}->Frame;
+
+        $sf13->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                replaceall( $lglobal{replaceentry1}->get( '1.0', '1.end' ) );
+            },
+            -text  => 'Rpl All',
+            -width => 5
+            )->pack(
+            -side   => 'right',
+            -pady   => 1,
+            -padx   => 2,
+            -anchor => 'nw'
+            );
+
+        $sf13->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                replace( $lglobal{replaceentry1}->get( '1.0', '1.end' ) );
+                searchtext('');
+            },
+            -text  => 'R & S',
+            -width => 5
+            )->pack(
+            -side   => 'right',
+            -pady   => 1,
+            -padx   => 2,
+            -anchor => 'nw'
+            );
+        $sf13->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                replace( $lglobal{replaceentry1}->get( '1.0', '1.end' ) );
+                add_search_history( $lglobal{replaceentry1},
+                    \@replace_history );
+            },
+            -text  => 'Replace',
+            -width => 6
+            )->pack(
+            -side   => 'right',
+            -pady   => 1,
+            -padx   => 2,
+            -anchor => 'nw'
+            );
+
+        $lglobal{replaceentry1} = $sf13->Text(
+            -background => 'white',
+            -width      => 60,
+            -height     => 1,
+            )->pack(
+            -side   => 'right',
+            -anchor => 'w',
+            -padx   => 1,
+            -expand => 'y',
+            -fill   => 'x'
+            );
+        $sf13->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                search_history( $lglobal{replaceentry1}, \@replace_history );
+            },
+            -image  => $lglobal{hist_img},
+            -width  => 9,
+            -height => 15,
+        )->pack( -side => 'right', -anchor => 'w' );
+        $sf14 = $lglobal{search}->Frame;
+
+        $sf14->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                replaceall( $lglobal{replaceentry2}->get( '1.0', '1.end' ) );
+            },
+            -text  => 'Rpl All',
+            -width => 5
+            )->pack(
+            -side   => 'right',
+            -pady   => 1,
+            -padx   => 2,
+            -anchor => 'nw'
+            );
+
+        $sf14->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                replace( $lglobal{replaceentry2}->get( '1.0', '1.end' ) );
+                searchtext('');
+            },
+            -text  => 'R & S',
+            -width => 5
+            )->pack(
+            -side   => 'right',
+            -pady   => 1,
+            -padx   => 2,
+            -anchor => 'nw'
+            );
+        $sf14->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                replace( $lglobal{replaceentry2}->get( '1.0', '1.end' ) );
+                add_search_history( $lglobal{replaceentry2},
+                    \@replace_history );
+            },
+            -text  => 'Replace',
+            -width => 6
+            )->pack(
+            -side   => 'right',
+            -pady   => 1,
+            -padx   => 2,
+            -anchor => 'nw'
+            );
+
+        $lglobal{replaceentry2} = $sf14->Text(
+            -background => 'white',
+            -width      => 60,
+            -height     => 1,
+            )->pack(
+            -side   => 'right',
+            -anchor => 'w',
+            -padx   => 1,
+            -expand => 'y',
+            -fill   => 'x'
+            );
+        $sf14->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                search_history( $lglobal{replaceentry2}, \@replace_history );
+            },
+            -image  => $lglobal{hist_img},
+            -width  => 9,
+            -height => 15,
+        )->pack( -side => 'right', -anchor => 'w' );
+
+        unless ($singleterm) {
+            for ( $sf13, $sf14 ) {
+                $_->pack(
+                    -side   => 'top',
+                    -anchor => 'w',
+                    -padx   => 3,
+                    -expand => 'y',
+                    -fill   => 'x'
+                );
+            }
+        }
+        if ( $lglobal{doscannos} ) {
+            $sf5 = $lglobal{search}
+                ->Frame->pack( -side => 'top', -anchor => 'n' );
+            my $nextbutton = $sf5->Button(
+                -activebackground => $activecolor,
+                -command          => sub {
+                    $lglobal{scannosindex}++
+                        unless ( $lglobal{scannosindex}
+                        >= scalar( @{ $lglobal{scannosarray} } ) );
+                    getnextscanno();
+                },
+                -text  => 'Next Stealtho',
+                -width => 15
+                )->pack(
+                -side   => 'left',
+                -pady   => 5,
+                -padx   => 2,
+                -anchor => 'w'
+                );
+            my $lastbutton = $sf5->Button(
+                -activebackground => $activecolor,
+                -command          => sub {
+                    $aacheck->deselect;
+                    $lglobal{scannosindex}--
+                        unless ( $lglobal{scannosindex} == 0 );
+                    getnextscanno();
+                },
+                -text  => 'Prev Stealtho',
+                -width => 15
+                )->pack(
+                -side   => 'left',
+                -pady   => 5,
+                -padx   => 2,
+                -anchor => 'w'
+                );
+            my $switchbutton = $sf5->Button(
+                -activebackground => $activecolor,
+                -command          => sub { swapterms() },
+                -text             => 'Swap Terms',
+                -width            => 15
+                )->pack(
+                -side   => 'left',
+                -pady   => 5,
+                -padx   => 2,
+                -anchor => 'w'
+                );
+            my $hintbutton = $sf5->Button(
+                -activebackground => $activecolor,
+                -command          => sub { reghint() },
+                -text             => 'Hint',
+                -width            => 5
+                )->pack(
+                -side   => 'left',
+                -pady   => 5,
+                -padx   => 2,
+                -anchor => 'w'
+                );
+            my $editbutton = $sf5->Button(
+                -activebackground => $activecolor,
+                -command          => sub { regedit() },
+                -text             => 'Edit',
+                -width            => 5
+                )->pack(
+                -side   => 'left',
+                -pady   => 5,
+                -padx   => 2,
+                -anchor => 'w'
+                );
+            my $sf6 = $lglobal{search}
+                ->Frame->pack( -side => 'top', -anchor => 'n' );
+            $lglobal{regtracker} = $sf6->Label( -width => 15 )->pack(
+                -side   => 'left',
+                -pady   => 5,
+                -padx   => 2,
+                -anchor => 'w'
+            );
+            $aacheck = $sf6->Checkbutton(
+                -text     => 'Auto Advance',
+                -variable => \$lglobal{regaa},
+                )->pack(
+                -side   => 'left',
+                -pady   => 5,
+                -padx   => 2,
+                -anchor => 'w'
+                );
+        }
+        $lglobal{search}->protocol(
+            'WM_DELETE_WINDOW' => sub {
+                $lglobal{regrepeat}->cancel;
+                undef $lglobal{regrepeat};
+                $lglobal{search}->destroy;
+                undef $lglobal{search};
+                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+                undef $lglobal{hintpop} if $lglobal{hintpop};
+            }
+        );
+        $lglobal{search}->Icon( -image => $icon );
+        $lglobal{searchentry}->focus;
+        $lglobal{search}->resizable( 'yes', 'no' );
+        $lglobal{search}->transient($top) if $stayontop;
+        $lglobal{search}->Tk::bind(
+            '<Return>' => sub {
+                $lglobal{searchentry}->see('1.0');
+                $lglobal{searchentry}->delete('1.end');
+                $lglobal{searchentry}->delete( '2.0', 'end' );
+                $lglobal{replaceentry}->see('1.0');
+                $lglobal{replaceentry}->delete('1.end');
+                $lglobal{replaceentry}->delete( '2.0', 'end' );
+                searchtext();
+                $top->raise;
+            }
+        );
+        $lglobal{search}->Tk::bind(
+            '<Control-f>' => sub {
+                $lglobal{searchentry}->see('1.0');
+                $lglobal{searchentry}->delete( '2.0', 'end' );
+                $lglobal{replaceentry}->see('1.0');
+                $lglobal{replaceentry}->delete( '2.0', 'end' );
+                searchtext();
+                $top->raise;
+            }
+        );
+        $lglobal{search}->Tk::bind(
+            '<Control-F>' => sub {
+                $lglobal{searchentry}->see('1.0');
+                $lglobal{searchentry}->delete( '2.0', 'end' );
+                $lglobal{replaceentry}->see('1.0');
+                $lglobal{replaceentry}->delete( '2.0', 'end' );
+                searchtext();
+                $top->raise;
+            }
+        );
+        $lglobal{search}->eventAdd(
+            '<<FindNexte>>' => '<Control-Key-G>',
+            '<Control-Key-g>'
+        );
+
+        $lglobal{searchentry}->bind(
+            '<<FindNexte>>',
+            sub {
+                $lglobal{searchentry}->delete('insert -1c')
+                    if ( $lglobal{searchentry}->get('insert -1c') eq "\cG" );
+                searchtext( $lglobal{searchentry}->get( '1.0', '1.end' ) );
+                $textwindow->focus;
+            }
+        );
+
+        $lglobal{searchentry}->{_MENU_}   = ();
+        $lglobal{replaceentry}->{_MENU_}  = ();
+        $lglobal{replaceentry1}->{_MENU_} = ();
+        $lglobal{replaceentry2}->{_MENU_} = ();
+
+        $lglobal{searchentry}->bind( '<FocusIn>',
+            sub { $lglobal{hasfocus} = $lglobal{searchentry} } );
+        $lglobal{replaceentry}->bind( '<FocusIn>',
+            sub { $lglobal{hasfocus} = $lglobal{replaceentry} } );
+        $lglobal{replaceentry1}->bind( '<FocusIn>',
+            sub { $lglobal{hasfocus} = $lglobal{replaceentry1} } );
+        $lglobal{replaceentry2}->bind( '<FocusIn>',
+            sub { $lglobal{hasfocus} = $lglobal{replaceentry2} } );
+
+        $lglobal{search}->Tk::bind(
+            '<Control-Return>' => sub {
+                $lglobal{searchentry}->see('1.0');
+                $lglobal{searchentry}->delete('1.end');
+                $lglobal{searchentry}->delete( '2.0', 'end' );
+                $lglobal{replaceentry}->see('1.0');
+                $lglobal{replaceentry}->delete('1.end');
+                $lglobal{replaceentry}->delete( '2.0', 'end' );
+                replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
+                searchtext();
+                $top->raise;
+            }
+        );
+        $lglobal{search}->Tk::bind(
+            '<Shift-Return>' => sub {
+                $lglobal{searchentry}->see('1.0');
+                $lglobal{searchentry}->delete('1.end');
+                $lglobal{searchentry}->delete( '2.0', 'end' );
+                $lglobal{replaceentry}->see('1.0');
+                $lglobal{replaceentry}->delete('1.end');
+                $lglobal{replaceentry}->delete( '2.0', 'end' );
+                replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
+                $top->raise;
+            }
+        );
+        $lglobal{search}->Tk::bind(
+            '<Control-Shift-Return>' => sub {
+                $lglobal{searchentry}->see('1.0');
+                $lglobal{searchentry}->delete('1.end');
+                $lglobal{searchentry}->delete( '2.0', 'end' );
+                $lglobal{replaceentry}->see('1.0');
+                $lglobal{replaceentry}->delete('1.end');
+                $lglobal{replaceentry}->delete( '2.0', 'end' );
+                replaceall( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
+                $top->raise;
+            }
+        );
+    }
+    if ( length $searchterm ) {
+        $lglobal{searchentry}->delete( '1.0', 'end' );
+        $lglobal{searchentry}->insert( 'end', $searchterm );
+        $lglobal{searchentry}->tagAdd( 'sel', '1.0', 'end -1c' );
+        searchtext('');
+    }
+}
+
+sub stealthscanno {
+    $lglobal{doscannos} = 1;
+    $lglobal{search}->destroy if defined $lglobal{search};
+    undef $lglobal{search};
+    if ( loadscannos() ) {
+        saveset();
+        searchpopup();
+        getnextscanno();
+        searchtext();
+    }
+    $lglobal{doscannos} = 0;
+}
+
+sub spellchecker {    # Set up spell check window
+    push @operations, ( localtime() . ' - Spellcheck' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    oppopupdate()  if $lglobal{oppop};
+    if ( defined( $lglobal{spellpopup} ) ) {    # If window already exists
+        $lglobal{spellpopup}->deiconify;        # pop it up off the task bar
+        $lglobal{spellpopup}->raise;            # put it on top
+        $lglobal{spellpopup}->focus;            # and give it focus
+        spelloptions()
+            unless $globalspellpath; # Whoops, don't know where to find Aspell
+        spellclearvars();
+        spellcheckfirst();           # Start checking the spelling
+    }
+    else {                           # window doesn't exist so set it up
+        $lglobal{spellpopup} = $top->Toplevel;
+        $lglobal{spellpopup}
+            ->title( 'Current Dictionary - ' . $globalspelldictopt
+                || '<default>' );
+        my $spf1 = $lglobal{spellpopup}
+            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
+        $lglobal{misspelledlabel}
+            = $spf1->Label( -text => 'Not in Dictionary:', )
+            ->pack( -side => 'top', -anchor => 'n', -pady => 5 );
+        $lglobal{misspelledentry} = $spf1->Entry(
+            -background => 'white',
+            -width      => 42,
+            -font       => $lglobal{font},
+        )->pack( -side => 'top', -anchor => 'n', -pady => 1 );
+        my $replacelabel = $spf1->Label( -text => 'Replacement Text:', )
+            ->pack( -side => 'top', -anchor => 'n', -padx => 6 );
+        $lglobal{spreplaceentry} = $spf1->Entry(
+            -background => 'white',
+            -width      => 42,
+            -font       => $lglobal{font},
+        )->pack( -side => 'top', -anchor => 'n', -padx => 1 );
+        $lglobal{suggestionlabel} = $spf1->Label( -text => 'Suggestions:', )
+            ->pack( -side => 'top', -anchor => 'n', -pady => 5 );
+        $lglobal{replacementlist} = $spf1->ScrlListbox(
+            -background => 'white',
+            -scrollbars => 'osoe',
+            -font       => $lglobal{font},
+            -width      => 40,
+        )->pack( -side => 'top', -anchor => 'n', -padx => 6, -pady => 6 );
+        my $spf2 = $lglobal{spellpopup}
+            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
+        my $changebutton = $spf2->Button(
+            -activebackground => $activecolor,
+            -command          => sub { spellreplace() },
+            -text             => 'Change',
+            -width            => 14
+            )->pack(
+            -side   => 'left',
+            -pady   => 2,
+            -padx   => 3,
+            -anchor => 'nw'
+            );
+        my $ignorebutton = $spf2->Button(
+            -activebackground => $activecolor,
+            -command =>
+                sub { shift @{ $lglobal{misspelledlist} }; spellchecknext() },
+            -text  => 'Skip <Ctrl+s>',
+            -width => 14
+            )->pack(
+            -side   => 'left',
+            -pady   => 2,
+            -padx   => 3,
+            -anchor => 'nw'
+            );
+        my $spelloptionsbutton = $spf2->Button(
+            -activebackground => $activecolor,
+            -command          => sub { spelloptions() },
+            -text             => 'Options',
+            -width            => 14
+            )->pack(
+            -side   => 'left',
+            -pady   => 2,
+            -padx   => 3,
+            -anchor => 'nw'
+            );
+        $spf2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                $spellindexbkmrk
+                    = $textwindow->index( $lglobal{lastmatchindex} . '-1c' )
+                    || '1.0';
+                $textwindow->markSet( 'spellbkmk', $spellindexbkmrk );
+                saveset();
+            },
+            -text  => 'Set Bookmark',
+            -width => 14,
+            )->pack(
+            -side   => 'left',
+            -pady   => 2,
+            -padx   => 3,
+            -anchor => 'nw'
+            );
+        my $spf3 = $lglobal{spellpopup}
+            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
+        my $replaceallbutton = $spf3->Button(
+            -activebackground => $activecolor,
+            -command          => sub { spellreplaceall(); spellchecknext() },
+            -text             => 'Change All',
+            -width            => 14,
+            )->pack(
+            -side   => 'left',
+            -pady   => 2,
+            -padx   => 3,
+            -anchor => 'nw'
+            );
+        my $ignoreallbutton = $spf3->Button(
+            -activebackground => $activecolor,
+            -command          => sub { spellignoreall(); spellchecknext() },
+            -text             => 'Skip All <Ctrl+i>',
+            -width            => 14
+            )->pack(
+            -side   => 'left',
+            -pady   => 2,
+            -padx   => 3,
+            -anchor => 'nw'
+            );
+        my $closebutton = $spf3->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                @{ $lglobal{misspelledlist} } = ();
+                $lglobal{spellpopup}->destroy;
+                undef
+                    $lglobal{spellpopup}; # completly remove spellcheck window
+                print OUT "\cC\n"
+                    if $lglobal{spellpid};    # send a quit signal to aspell
+                aspellstop();                 # and remove the process
+                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+            },
+            -text  => 'Close',
+            -width => 14
+            )->pack(
+            -side   => 'left',
+            -pady   => 2,
+            -padx   => 3,
+            -anchor => 'nw'
+            );
+        $spf3->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                return unless $spellindexbkmrk;
+                $textwindow->tagRemove( 'sel',       '1.0', 'end' );
+                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+                $textwindow->tagAdd( 'sel', 'spellbkmk', 'end' );
+                spellcheckfirst();
+            },
+            -text  => 'Resume @ Bkmrk',
+            -width => 14
+            )->pack(
+            -side   => 'left',
+            -pady   => 2,
+            -padx   => 3,
+            -anchor => 'nw'
+            );
+        my $spf4 = $lglobal{spellpopup}
+            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
+        my $dictaddbutton = $spf4->Button(
+            -activebackground => $activecolor,
+            -command =>
+                sub { spelladdword(); spellignoreall(); spellchecknext() },
+            -text  => 'Add To Aspell Dic. <Ctrl+a>',
+            -width => 22,
+            )->pack(
+            -side   => 'left',
+            -pady   => 2,
+            -padx   => 3,
+            -anchor => 'nw'
+            );
+        my $dictmyaddbutton = $spf4->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                spellmyaddword( $lglobal{misspelledentry}->get );
+                spellignoreall();
+                spellchecknext();
+            },
+            -text  => 'Add To Project Dic. <Ctrl+p>',
+            -width => 22,
+            )->pack(
+            -side   => 'left',
+            -pady   => 2,
+            -padx   => 3,
+            -anchor => 'nw'
+            );
+        $lglobal{spellpopup}->protocol(
+            'WM_DELETE_WINDOW' => sub {
+                @{ $lglobal{misspelledlist} } = ();
+                $lglobal{spellpopup}->destroy;
+                undef
+                    $lglobal{spellpopup}; # completly remove spellcheck window
+                print OUT "\cC\n"
+                    if $lglobal{spellpid};    # send quit signal to aspell
+                aspellstop();                 # and remove the process
+                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+            }
+        );
+        $lglobal{spellpopup}->bind(
+            '<Control-a>',
+            sub {
+                $lglobal{spellpopup}->focus;
+                spelladdword();
+                spellignoreall();
+                spellchecknext();
+            }
+        );
+        $lglobal{spellpopup}->bind(
+            '<Control-p>',
+            sub {
+                $lglobal{spellpopup}->focus;
+                spellmyaddword( $lglobal{misspelledentry}->get );
+                spellignoreall();
+                spellchecknext();
+            }
+        );
+        $lglobal{spellpopup}->bind(
+            '<Control-s>',
+            sub {
+                $lglobal{spellpopup}->focus;
+                shift @{ $lglobal{misspelledlist} };
+                spellchecknext();
+            }
+        );
+        $lglobal{spellpopup}->bind(
+            '<Control-i>',
+            sub {
+                $lglobal{spellpopup}->focus;
+                spellignoreall();
+                spellchecknext();
+            }
+        );
+        $lglobal{spellpopup}->bind( '<Return>',
+            sub { $lglobal{spellpopup}->focus; spellreplace() } );
+        $lglobal{spellpopup}->Icon( -image => $icon );
+        $lglobal{spellpopup}->transient($top) if $stayontop;
+        $lglobal{replacementlist}
+            ->bind( '<Double-Button-1>', \&spellmisspelled_replace );
+        $lglobal{replacementlist}->bind( '<Triple-Button-1>',
+            sub { spellmisspelled_replace(); spellreplace() } );
+        BindMouseWheel( $lglobal{replacementlist} );
+        spelloptions()
+            unless $globalspellpath; # Check to see if we know where Aspell is
+        spellcheckfirst();           # Start the spellcheck
+    }
+}
+
+# Pop up a window which will allow jumping directly to a specified line
+sub gotoline {
+    unless ( defined( $lglobal{gotolinepop} ) ) {
+        $lglobal{gotolinepop} = $top->DialogBox(
+            -buttons => [qw[Ok Cancel]],
+            -title   => 'Goto Line Number',
+            -popover => $top,
+            -command => sub {
+
+                no warnings 'uninitialized';
+                if ( $_[0] eq 'Ok' ) {
+                    $lglobal{line_number} =~ s/[\D.]//g;
+                    my ( $last_line, $junk )
+                        = split( /\./, $textwindow->index('end') );
+                    ( $lglobal{line_number}, $junk )
+                        = split( /\./, $textwindow->index('insert') )
+                        unless $lglobal{line_number};
+                    $lglobal{line_number} =~ s/^\s+|\s+$//g;
+                    if ( $lglobal{line_number} > $last_line ) {
+                        $lglobal{line_number} = $last_line;
+                    }
+                    $textwindow->markSet( 'insert',
+                        "$lglobal{line_number}.0" );
+                    $textwindow->see('insert');
+                    update_indicators();
+                    $lglobal{gotolinepop}->destroy;
+                    undef $lglobal{gotolinepop};
+                }
+                else {
+                    $lglobal{gotolinepop}->destroy;
+                    undef $lglobal{gotolinepop};
+                }
+            }
+        );
+        $lglobal{gotolinepop}->resizable( 'no', 'no' );
+        my $frame = $lglobal{gotolinepop}->Frame->pack( -fill => 'x' );
+        $frame->Label( -text => 'Enter Line number: ' )
+            ->pack( -side => 'left' );
+        my $entry = $frame->Entry(
+            -background   => 'white',
+            -width        => 25,
+            -textvariable => \$lglobal{line_number},
+        )->pack( -side => 'left', -fill => 'x' );
+        $lglobal{gotolinepop}->Advertise( entry => $entry );
+        $lglobal{gotolinepop}->Popup;
+        $lglobal{gotolinepop}->Subwidget('entry')->focus;
+        $lglobal{gotolinepop}->Subwidget('entry')->selectionRange( 0, 'end' );
+        $lglobal{gotolinepop}->Wait;
+    }
+}
+
+# Pop up a window which will allow jumping directly to a specified page
+sub gotopage {
+    unless ( defined( $lglobal{gotopagpop} ) ) {
+        return unless %pagenumbers;
+        for ( keys(%pagenumbers) ) {
+            $lglobal{pagedigits} = ( length($_) - 2 );
+            last;
+        }
+        $lglobal{gotopagpop} = $top->DialogBox(
+            -buttons => [qw[Ok Cancel]],
+            -title   => 'Goto Page Number',
+            -popover => $top,
+            -command => sub {
+                if ( $_[0] eq 'Ok' ) {
+                    unless ( $lglobal{lastpage} ) {
+                        $lglobal{gotopagpop}->bell;
+                        $lglobal{gotopagpop}->destroy;
+                        undef $lglobal{gotopagpop};
+                        return;
+                    }
+                    if ( $lglobal{pagedigits} == 3 ) {
+                        $lglobal{lastpage}
+                            = sprintf( "%03s", $lglobal{lastpage} );
+                    }
+                    elsif ( $lglobal{pagedigits} == 4 ) {
+                        $lglobal{lastpage}
+                            = sprintf( "%04s", $lglobal{lastpage} );
+                    }
+                    unless ( exists $pagenumbers{ 'Pg' . $lglobal{lastpage} }
+                        && defined $pagenumbers{ 'Pg' . $lglobal{lastpage} } )
+                    {
+                        delete $pagenumbers{ 'Pg' . $lglobal{lastpage} };
+                        $lglobal{gotopagpop}->bell;
+                        $lglobal{gotopagpop}->destroy;
+                        undef $lglobal{gotopagpop};
+                        return;
+                    }
+                    my $index
+                        = $textwindow->index( 'Pg' . $lglobal{lastpage} );
+                    $textwindow->markSet( 'insert', "$index +1l linestart" );
+                    $textwindow->see('insert');
+                    $textwindow->focus;
+                    update_indicators();
+                    $lglobal{gotopagpop}->destroy;
+                    undef $lglobal{gotopagpop};
+                }
+                else {
+                    $lglobal{gotopagpop}->destroy;
+                    undef $lglobal{gotopagpop};
+                }
+            }
+        );
+        $lglobal{gotopagpop}->resizable( 'no', 'no' );
+        my $frame = $lglobal{gotopagpop}->Frame->pack( -fill => 'x' );
+        $frame->Label( -text => 'Enter image number: ' )
+            ->pack( -side => 'left' );
+        my $entry = $frame->Entry(
+            -background   => 'white',
+            -width        => 25,
+            -textvariable => \$lglobal{lastpage}
+        )->pack( -side => 'left', -fill => 'x' );
+        $lglobal{gotopagpop}->Advertise( entry => $entry );
+        $lglobal{gotopagpop}->Popup;
+        $lglobal{gotopagpop}->Subwidget('entry')->focus;
+        $lglobal{gotopagpop}->Subwidget('entry')->selectionRange( 0, 'end' );
+        $lglobal{gotopagpop}->Wait;
+    }
+}
+
+
 
 ### Bookmarks
 
@@ -20263,7 +20298,7 @@ sub greekpopup {
             -fill   => 'both',
             -anchor => 'nw',
             -pady   => 5
-            );    # autosizing
+            );
         $lglobal{grtext}->bind( '<FocusIn>',
             sub { $lglobal{hasfocus} = $lglobal{grtext} } );
         drag( $lglobal{grtext} );
