@@ -11887,34 +11887,7 @@ sub confirmempty {
     return $answer;
 }
 
-sub setbookmark {
-    my $index    = '';
-    my $indexb   = '';
-    my $bookmark = shift;
-    if ( $bookmarks[$bookmark] ) {
-        $indexb = $textwindow->index("bkmk$bookmark");
-    }
-    $index = $textwindow->index('insert');
-    if ( $bookmarks[$bookmark] ) {
-        $textwindow->tagRemove( 'bkmk', $indexb, "$indexb+1c" );
-    }
-    if ( $index ne $indexb ) {
-        $textwindow->markSet( "bkmk$bookmark", $index );
-    }
-    $bookmarks[$bookmark] = $index;
-    $textwindow->tagAdd( 'bkmk', $index, "$index+1c" );
-}
 
-sub gotobookmark {
-    my $bookmark = shift;
-    $textwindow->bell unless ( $bookmarks[$bookmark] || $nobell );
-    $textwindow->see("bkmk$bookmark") if $bookmarks[$bookmark];
-    $textwindow->markSet( 'insert', "bkmk$bookmark" )
-        if $bookmarks[$bookmark];
-    update_indicators();
-    $textwindow->tagAdd( 'bkmk', "bkmk$bookmark", "bkmk$bookmark+1c" )
-        if $bookmarks[$bookmark];
-}
 
 
 
@@ -18183,9 +18156,36 @@ sub hilitepopup {
     }
 }
 
-
-
 ### Bookmarks
+
+sub setbookmark {
+    my $index    = '';
+    my $indexb   = '';
+    my $bookmark = shift;
+    if ( $bookmarks[$bookmark] ) {
+        $indexb = $textwindow->index("bkmk$bookmark");
+    }
+    $index = $textwindow->index('insert');
+    if ( $bookmarks[$bookmark] ) {
+        $textwindow->tagRemove( 'bkmk', $indexb, "$indexb+1c" );
+    }
+    if ( $index ne $indexb ) {
+        $textwindow->markSet( "bkmk$bookmark", $index );
+    }
+    $bookmarks[$bookmark] = $index;
+    $textwindow->tagAdd( 'bkmk', $index, "$index+1c" );
+}
+
+sub gotobookmark {
+    my $bookmark = shift;
+    $textwindow->bell unless ( $bookmarks[$bookmark] || $nobell );
+    $textwindow->see("bkmk$bookmark") if $bookmarks[$bookmark];
+    $textwindow->markSet( 'insert', "bkmk$bookmark" )
+        if $bookmarks[$bookmark];
+    update_indicators();
+    $textwindow->tagAdd( 'bkmk', "bkmk$bookmark", "bkmk$bookmark+1c" )
+        if $bookmarks[$bookmark];
+}
 
 ### Selection
 
