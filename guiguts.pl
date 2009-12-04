@@ -2123,10 +2123,6 @@ sub viewpagenums {    # Toggle visible page markers
     }
 }
 
-sub thoughtbreak {    # Insert a "Thought break" (duh)
-    $textwindow->insert( ( $textwindow->index('insert') ) . ' lineend',
-        '       *' x 5 );
-}
 
 sub gotolabel
 {    # Pop up a window which will allow jumping directly to a specified page
@@ -12184,62 +12180,7 @@ sub natural_sort_freq
     map { $_->[1] } sort { $b->[0] <=> $a->[0] or $a->[2] cmp $b->[2] } @x;
 }
 
-# functions specific to text version processing
-sub text_convert_tb {
-    my $tb = '       *       *       *       *       *';
-    $textwindow->FindAndReplaceAll( '-exact', '-nocase', '<tb>', $tb );
-}
 
-sub text_convert_italic {
-    my $italic  = qr/<\/?i>/;
-    my $replace = $italic_char;
-    $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $italic, $replace );
-}
-
-sub text_convert_bold {
-    my $bold    = qr/<\/?b>/;
-    my $replace = "$bold_char";
-    $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $bold, $replace );
-}
-
-#sub text_convert_smcap { }
-
-# Popup for choosing replacement characters, etc.
-sub text_convert_options {
-
-    my $options = $top->DialogBox(
-        -title   => "Text Processing Options",
-        -buttons => ["OK"],
-    );
-
-    my $italic_frame = $options->add('Frame')
-        ->pack( -side => 'top', -padx => 5, -pady => 3 );
-    my $italic_label = $italic_frame->Label(
-        -width => 25,
-        -text  => "Italic Replace Character"
-    )->pack( -side => 'left' );
-    my $italic_entry = $italic_frame->Entry(
-        -width        => 6,
-        -background   => 'white',
-        -relief       => 'sunken',
-        -textvariable => \$italic_char,
-    )->pack( -side => 'left' );
-
-    my $bold_frame = $options->add('Frame')
-        ->pack( -side => 'top', -padx => 5, -pady => 3 );
-    my $bold_label = $bold_frame->Label(
-        -width => 25,
-        -text  => "Bold Replace Character"
-    )->pack( -side => 'left' );
-    my $bold_entry = $bold_frame->Entry(
-        -width        => 6,
-        -background   => 'white',
-        -relief       => 'sunken',
-        -textvariable => \$bold_char,
-    )->pack( -side => 'left' );
-    $options->Show;
-    saveset();
-}
 
 ## Low level file processing functions
 
@@ -18178,6 +18119,68 @@ sub findandextractgreek {
 # }
 
 ### Text Processing
+
+sub text_convert_italic {
+    my $italic  = qr/<\/?i>/;
+    my $replace = $italic_char;
+    $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $italic, $replace );
+}
+
+sub text_convert_bold {
+    my $bold    = qr/<\/?b>/;
+    my $replace = "$bold_char";
+    $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $bold, $replace );
+}
+
+#sub text_convert_smcap { }
+
+sub thoughtbreak {    # Insert a "Thought break" (duh)
+    $textwindow->insert( ( $textwindow->index('insert') ) . ' lineend',
+        '       *' x 5 );
+}
+
+sub text_convert_tb {
+    my $tb = '       *       *       *       *       *';
+    $textwindow->FindAndReplaceAll( '-exact', '-nocase', '<tb>', $tb );
+}
+
+# Popup for choosing replacement characters, etc.
+sub text_convert_options {
+
+    my $options = $top->DialogBox(
+        -title   => "Text Processing Options",
+        -buttons => ["OK"],
+    );
+
+    my $italic_frame = $options->add('Frame')
+        ->pack( -side => 'top', -padx => 5, -pady => 3 );
+    my $italic_label = $italic_frame->Label(
+        -width => 25,
+        -text  => "Italic Replace Character"
+    )->pack( -side => 'left' );
+    my $italic_entry = $italic_frame->Entry(
+        -width        => 6,
+        -background   => 'white',
+        -relief       => 'sunken',
+        -textvariable => \$italic_char,
+    )->pack( -side => 'left' );
+
+    my $bold_frame = $options->add('Frame')
+        ->pack( -side => 'top', -padx => 5, -pady => 3 );
+    my $bold_label = $bold_frame->Label(
+        -width => 25,
+        -text  => "Bold Replace Character"
+    )->pack( -side => 'left' );
+    my $bold_entry = $bold_frame->Entry(
+        -width        => 6,
+        -background   => 'white',
+        -relief       => 'sunken',
+        -textvariable => \$bold_char,
+    )->pack( -side => 'left' );
+    $options->Show;
+    saveset();
+}
+
 
 ### External
 
