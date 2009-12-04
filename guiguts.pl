@@ -8993,387 +8993,7 @@ sub gutopts {
     saveset();
 }
 
-sub gutcheck {
-    no warnings;
-    push @operations, ( localtime() . ' - Gutcheck' );
-    viewpagenums() if ( $lglobal{seepagenums} );
-    oppopupdate()  if $lglobal{oppop};
-    my ( $name, $path, $extension, @path );
-    $textwindow->focus;
-    update_indicators();
-    my $title = $top->cget('title');
-    return if ( $title =~ /No File Loaded/ );
-    $top->Busy( -recurse => 1 );
 
-    # FIXME: wide character in print warning next line with unicode
-    # Figure out how to determine encoding. See scratchpad.pl
-    # open my $gc, ">:encoding(UTF-8)", "gutchk.tmp");
-    if ( open my $gc, ">:bytes", 'gutchk.tmp' ) {
-        my $count = 0;
-        my $index = '1.0';
-        my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
-        while ( $textwindow->compare( $index, '<', 'end' ) ) {
-            my $end = $textwindow->index("$index  lineend +1c");
-            print $gc $textwindow->get( $index, $end );
-            $index = $end;
-        }
-        close $gc;
-    }
-    else {
-        warn "Could not open temp file for writing. $!";
-        my $dialog = $top->Dialog(
-            -text => 'Could not write to the '
-                . cwd()
-                . ' directory. Check for write permission or space problems.',
-            -bitmap  => 'question',
-            -title   => 'Gutcheck problem',
-            -buttons => [qw/OK/],
-        );
-        $dialog->Show;
-        return;
-    }
-    $title =~ s/$window_title - //
-        ;    #FIXME: sub this out; this and next in the tidy code
-    $title =~ s/edited - //;
-    $title = os_normal($title);
-    $title = dos_path($title) if OS_Win;
-    ( $name, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
-    my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
-    unless ($gutpath) {
-        $gutpath = $textwindow->getOpenFile(
-            -filetypes => $types,
-            -title     => 'Where is the Gutcheck executable?'
-        );
-    }
-    return unless $gutpath;
-    my $gutcheckoptions = ' -ey'
-        ; # e - echo queried line. y - puts errors to stdout instead of stderr.
-    if ( $gcopt[0] ) { $gutcheckoptions .= 't' }
-    ;     # Check common typos
-    if ( $gcopt[1] ) { $gutcheckoptions .= 'x' }
-    ;     # "Trust no one" Paranoid mode. Queries everything
-    if ( $gcopt[2] ) { $gutcheckoptions .= 'p' }
-    ;     # Require closure of quotes on every paragraph
-    if ( $gcopt[3] ) { $gutcheckoptions .= 's' }
-    ;     # Force checking for matched pairs of single quotes
-    if ( $gcopt[4] ) { $gutcheckoptions .= 'm' }
-    ;     # Ignore markup in < >
-    if ( $gcopt[5] ) { $gutcheckoptions .= 'l' }
-    ;     # Line end checking - defaults on
-    if ( $gcopt[6] ) { $gutcheckoptions .= 'v' }
-    ;     # Verbose - list EVERYTHING!
-    if ( $gcopt[7] ) { $gutcheckoptions .= 'u' }
-    ;     # Use file of User-defined Typos
-    if ( $gcopt[8] ) { $gutcheckoptions .= 'd' }
-    ;     # Ignore DP style page separators
-    $gutcheckoptions .= ' ';
-    $gutpath = os_normal($gutpath);
-    $gutpath = dos_path($gutpath) if OS_Win;
-    saveset();
-
-    if ( $lglobal{gcpop} ) {
-        $lglobal{gclistbox}->delete( '0', 'end' );
-    }
-    gutcheckrun( $gutpath, $gutcheckoptions, 'gutchk.tmp' );
-    $top->Unbusy;
-    unlink 'gutchk.tmp';
-    gcheckpop_up();
-}
-
-my @gsopt;
-
-sub gcheckpop_up {
-    my @gclines;
-    my ( $line, $linenum, $colnum, $lincol, $word );
-    viewpagenums() if ( $lglobal{seepagenums} );
-    if ( $lglobal{gcpop} ) {
-        $lglobal{gcpop}->deiconify;
-        $lglobal{gclistbox}->delete( '0', 'end' );
-    }
-    else {
-        $lglobal{gcpop} = $top->Toplevel;
-        $lglobal{gcpop}->title('Gutcheck');
-        $lglobal{gcpop}->geometry($geometry2) if $geometry2;
-        $lglobal{gcpop}->transient($top)      if $stayontop;
-        my $ptopframe = $lglobal{gcpop}->Frame->pack;
-        my $opsbutton = $ptopframe->Button(
-            -activebackground => $activecolor,
-            -command          => sub { gcviewops( \@gclines ) },
-            -text             => 'GC View Options',
-            -width            => 16
-            )->pack(
-            -side   => 'left',
-            -pady   => 10,
-            -padx   => 2,
-            -anchor => 'n'
-            );
-        my $opsbutton2 = $ptopframe->Button(
-            -activebackground => $activecolor,
-            -command          => sub { gutcheck() },
-            -text             => 'Re-run Gutcheck',
-            -width            => 16
-            )->pack(
-            -side   => 'left',
-            -pady   => 10,
-            -padx   => 2,
-            -anchor => 'n'
-            );
-        my $opsbutton3 = $ptopframe->Button(
-            -activebackground => $activecolor,
-            -command          => sub { gutopts() },
-            -text             => 'GC Run Options',
-            -width            => 16
-            )->pack(
-            -side   => 'left',
-            -pady   => 10,
-            -padx   => 2,
-            -anchor => 'n'
-            );
-        my $pframe = $lglobal{gcpop}
-            ->Frame->pack( -fill => 'both', -expand => 'both', );
-        $lglobal{gclistbox} = $pframe->Scrolled(
-            'Listbox',
-            -scrollbars  => 'se',
-            -background  => 'white',
-            -font        => $lglobal{font},
-            -selectmode  => 'single',
-            -activestyle => 'none',
-            )->pack(
-            -anchor => 'nw',
-            -fill   => 'both',
-            -expand => 'both',
-            -padx   => 2,
-            -pady   => 2
-            );
-        drag( $lglobal{gclistbox} );
-        $lglobal{gcpop}->protocol(
-            'WM_DELETE_WINDOW' => sub {
-                $lglobal{viewpop}->iconify if defined $lglobal{viewpop};
-                $lglobal{gcpop}->destroy;
-                undef $lglobal{gcpop};
-                $textwindow->markUnset($_) for values %gc;
-            }
-        );
-        $lglobal{gcpop}->Icon( -image => $icon );
-        BindMouseWheel( $lglobal{gclistbox} );
-        $lglobal{gclistbox}
-            ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
-        $lglobal{gclistbox}->bind( '<<view>>', sub { gcview() } );
-        $lglobal{gcpop}->bind(
-            '<Configure>' => sub {
-                $lglobal{gcpop}->XEvent;
-                $geometry2 = $lglobal{gcpop}->geometry;
-                $lglobal{geometryupdate} = 1;
-            }
-        );
-        $lglobal{gclistbox}->eventAdd(
-            '<<remove>>' => '<ButtonRelease-2>',
-            '<ButtonRelease-3>'
-        );
-        $lglobal{gclistbox}->bind(
-            '<<remove>>',
-            sub {
-                $lglobal{gclistbox}->activate(
-                    $lglobal{gclistbox}->index(
-                        '@'
-                            . (
-                                  $lglobal{gclistbox}->pointerx
-                                - $lglobal{gclistbox}->rootx
-                            )
-                            . ','
-                            . (
-                                  $lglobal{gclistbox}->pointery
-                                - $lglobal{gclistbox}->rooty
-                            )
-                    )
-                );
-                $textwindow->markUnset(
-                    $gc{ $lglobal{gclistbox}->get('active') } );
-                undef $gc{ $lglobal{gclistbox}->get('active') };
-                $lglobal{gclistbox}->delete('active');
-                $lglobal{gclistbox}->selectionClear( '0', 'end' );
-                $lglobal{gclistbox}->selectionSet('active');
-                gcview();
-                $lglobal{gclistbox}->after( $lglobal{delay} );
-            }
-        );
-        $lglobal{gclistbox}->bind(
-            '<Button-3>',
-            sub {
-                $lglobal{gclistbox}->activate(
-                    $lglobal{gclistbox}->index(
-                        '@'
-                            . (
-                                  $lglobal{gclistbox}->pointerx
-                                - $lglobal{gclistbox}->rootx
-                            )
-                            . ','
-                            . (
-                                  $lglobal{gclistbox}->pointery
-                                - $lglobal{gclistbox}->rooty
-                            )
-                    )
-                );
-            }
-        );
-    }
-    $lglobal{gclistbox}->focus;
-    my $results;
-    unless ( open $results, '<', 'gutrslts.txt' ) {
-        my $dialog = $top->Dialog(
-            -text =>
-                'Could not read gutcheck results file. Problem with gutcheck.',
-            -bitmap  => 'question',
-            -title   => 'Gutcheck problem',
-            -buttons => [qw/OK/],
-        );
-        $dialog->Show;
-        return;
-    }
-    my $mark = 0;
-    %gc      = ();
-    @gclines = ();
-    while ( $line = <$results> ) {
-        $line =~ s/^\s//g;
-        chomp $line;
-        $line =~ s/^(File: )gutchk.tmp/$1$lglobal{global_filename}/g;
-        {
-
-            no warnings 'uninitialized';
-            next if $line eq $gclines[-1];
-        }
-        push @gclines, $line;
-        $gc{$line} = '';
-        $colnum    = '0';
-        $lincol    = '';
-        if ( $line =~ /Line (\d+)/ ) {
-            $linenum = $1;
-
-            if ( $line =~ /Line \d+ column (\d+)/ ) {
-                $colnum = $1;
-                $colnum--
-                    unless ( $line =~ /Long|Short|digit|space|bracket\?/ );
-                my $tempvar
-                    = $textwindow->get( "$linenum.0", "$linenum.$colnum" );
-                while ( $tempvar =~ s/<[ib]>// ) {
-                    $tempvar .= $textwindow->get( "$linenum.$colnum",
-                        "$linenum.$colnum +3c" );
-                    $colnum += 3;
-                }
-                while ( $tempvar =~ s/<\/[ib]>// ) {
-                    $tempvar .= $textwindow->get( "$linenum.$colnum",
-                        "$linenum.$colnum +4c" );
-                    $colnum += 4;
-                }
-            }
-            else {
-                if ( $line =~ /Query digit in ([\w\d]+)/ ) {
-                    $word   = $1;
-                    $lincol = $textwindow->search( '--', $word, "$linenum.0",
-                        "$linenum.0 +1l" );
-                }
-                if ( $line =~ /Query standalone (\d)/ ) {
-                    $word   = '(?<=\D)' . $1 . '(?=\D)';
-                    $lincol = $textwindow->search( '-regexp', '--', $word,
-                        "$linenum.0", "$linenum.0 +1l" );
-                }
-                if ( $line =~ /Asterisk?/ ) {
-                    $lincol = $textwindow->search( '--', '*', "$linenum.0",
-                        "$linenum.0 +1l" );
-                }
-                if ( $line =~ /Hyphen at end of line?/ ) {
-                    $lincol = $textwindow->search(
-                        '-regexp', '--',
-                        '-$',      "$linenum.0",
-                        "$linenum.0 +1l"
-                    );
-                }
-                if ( $line =~ /Non-ASCII character (\d+)/ ) {
-                    $word   = chr($1);
-                    $lincol = $textwindow->search( $word, "$linenum.0",
-                        "$linenum.0 +1l" );
-                }
-                if ( $line =~ /dash\?/ ) {
-                    $lincol = $textwindow->search(
-                        '-regexp',       '--',
-                        '-- | --| -|- ', "$linenum.0",
-                        "$linenum.0 +1l"
-                    );
-                }
-                if ( $line =~ /HTML symbol/ ) {
-                    $lincol = $textwindow->search(
-                        '-regexp', '--',
-                        '&',       "$linenum.0",
-                        "$linenum.0 +1l"
-                    );
-                }
-                if ( $line =~ /HTML Tag/ ) {
-                    $lincol = $textwindow->search(
-                        '-regexp', '--',
-                        '<',       "$linenum.0",
-                        "$linenum.0 +1l"
-                    );
-                }
-                if ( $line =~ /Query word ([\p{Alnum}']+)/ ) {
-                    $word = $1;
-                    if ( $word =~ /[\xA0-\xFF]/ ) {
-                        $lincol
-                            = $textwindow->search( '-regexp', '--',
-                            '(?<!\p{Alnum})' . $word . '(?!\p{Alnum})',
-                            "$linenum.0", "$linenum.0 +1l" );
-                    }
-                    elsif ( $word eq 'i' ) {
-                        $lincol = $textwindow->search(
-                            '-regexp',              '--',
-                            ' ' . $word . '[^a-z]', "$linenum.0",
-                            "$linenum.0 +1l"
-                        );
-                        $lincol
-                            = $textwindow->search( '-regexp', '--',
-                            '[^A-Za-z0-9<\/]' . $word . '[^A-Za-z0-9>]',
-                            "$linenum.0", "$linenum.0 +1l" )
-                            unless $lincol;
-                        $lincol = $textwindow->index("$lincol +1c")
-                            if ($lincol);
-                    }
-                    else {
-                        $lincol = $textwindow->search(
-                            '-regexp',           '--',
-                            '\b' . $word . '\b', "$linenum.0",
-                            "$linenum.0 +1l"
-                        );
-                    }
-                }
-                if ( $line =~ /Query he\/be/ ) {
-                    $lincol = $textwindow->search(
-                        '-regexp',       '--',
-                        '(?<= )[bh]e\W', "$linenum.0",
-                        "$linenum.0 +1l"
-                    );
-                }
-                if ( $line =~ /Query hut\/but/ ) {
-                    $lincol = $textwindow->search(
-                        '-regexp',        '--',
-                        '(?<= )[bh]ut\W', "$linenum.0",
-                        "$linenum.0 +1l"
-                    );
-                }
-            }
-            $mark++;
-            if ($lincol) {
-                $textwindow->markSet( "g$mark", $lincol );
-            }
-            else {
-                $colnum = '0' unless $colnum;
-                $textwindow->markSet( "g$mark", "$linenum.$colnum" );
-            }
-            $gc{$line} = "g$mark";
-        }
-    }
-    close $results;
-    unlink 'gutrslts.txt';
-    gutwindowpopulate( \@gclines );
-}
 
 sub gcview {
     $textwindow->tagRemove( 'highlight', '1.0', 'end' );
@@ -9808,434 +9428,6 @@ sub endofline {
     update_indicators();
 }
 
-sub wordcount {
-    push @operations, ( localtime() . ' - Word Frequency' );
-    viewpagenums() if ( $lglobal{seepagenums} );
-    oppopupdate()  if $lglobal{oppop};
-    $lglobal{seen} = ();
-    %{ $lglobal{seenm} } = ();
-    my ( @words, $match, @savesets );
-    my $index = '1.0';
-    my $wc    = 0;
-    my $end   = $textwindow->index('end');
-    if ( $lglobal{popup} ) {
-        $lglobal{popup}->deiconify;
-        $lglobal{popup}->raise;
-        $lglobal{wclistbox}->delete( '0', 'end' );
-    }
-    else {
-        $lglobal{popup} = $top->Toplevel;
-        $lglobal{popup}
-            ->title('Word frequency - Ctrl+s to save, Ctrl+x to export');
-        $lglobal{popup}->geometry($geometry2) if $geometry2;
-        my $wcseframe
-            = $lglobal{popup}->Frame->pack( -side => 'top', -anchor => 'n' );
-        my $wcopt3 = $wcseframe->Checkbutton(
-            -variable    => \$lglobal{suspects_only},
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Suspects'
-        )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
-        my $wcopt1 = $wcseframe->Checkbutton(
-            -variable    => \$lglobal{ignore_case},
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'No case',
-        )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
-        $wcseframe->Radiobutton(
-            -variable    => \$lglobal{alpha_sort},
-            -selectcolor => $lglobal{checkcolor},
-            -value       => 'a',
-            -text        => 'Alph',
-        )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
-        $wcseframe->Radiobutton(
-            -variable    => \$lglobal{alpha_sort},
-            -selectcolor => $lglobal{checkcolor},
-            -value       => 'f',
-            -text        => 'Frq',
-        )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
-        $wcseframe->Radiobutton(
-            -variable    => \$lglobal{alpha_sort},
-            -selectcolor => $lglobal{checkcolor},
-            -value       => 'l',
-            -text        => 'Len',
-        )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
-        $wcseframe->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                return unless ( $lglobal{wclistbox}->curselection );
-                $lglobal{harmonics} = 1;
-                harmonicspop();
-            },
-            -text => '1st Harm',
-            )->pack(
-            -side   => 'left',
-            -padx   => 1,
-            -pady   => 1,
-            -anchor => 'nw'
-            );
-        $wcseframe->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                return unless ( $lglobal{wclistbox}->curselection );
-                $lglobal{harmonics} = 2;
-                harmonicspop();
-            },
-            -text => '2nd Harm',
-            )->pack(
-            -side   => 'left',
-            -padx   => 1,
-            -pady   => 1,
-            -anchor => 'nw'
-            );
-        $wcseframe->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                return if $lglobal{global_filename} =~ /No File Loaded/;
-                savefile() unless ( $textwindow->numberChanges == 0 );
-                wordcount();
-            },
-            -text => 'Re Run ',
-            )->pack(
-            -side   => 'left',
-            -padx   => 2,
-            -pady   => 1,
-            -anchor => 'nw'
-            );
-        my $wcseframe1
-            = $lglobal{popup}->Frame->pack( -side => 'top', -anchor => 'n' );
-        my @wfbuttons = (
-            [ 'Emdashes'  => \&dashcheck ],
-            [ 'Hyphens'   => \&hyphencheck ],
-            [ 'Alpha/num' => \&alphanumcheck ],
-            [   'All Words' => sub {
-                    $lglobal{saveheader}
-                        = "$wc total words. " .
-                        keys( %{ $lglobal{seen} } )
-                        . " distinct words in file.";
-                    sortwords( $lglobal{seen} );
-                    }
-            ],
-            [ 'Check Spelling', \&wfspellcheck ],
-            [ 'Ital/Bold Words', \&itwords, \&ital_adjust ],
-            [ 'ALL CAPS',        \&capscheck ],
-            [ 'MiXeD CasE',      \&mixedcasecheck ],
-            [ 'Initial Caps',    \&initcapcheck ],
-            [ 'Character Cnts',  \&charsortcheck ],
-            [ 'Check , Upper',   \&commark ],
-            [ 'Check . Lower',   \&bangmark ],
-            [ 'Check Accents',   \&accentcheck ],
-            [ 'Unicode > FF',    \&unicheck ],
-            [ 'Stealtho Check',  \&stealthcheck ],
-        );
-        my ( $row, $col, $inc ) = ( 0, 0, 0 );
-        for (@wfbuttons) {
-            $row = int( $inc / 5 );
-            $col = $inc % 5;
-            my $button = $wcseframe1->Button(
-                -activebackground => $activecolor,
-                -command          => $_->[1],
-                -text             => $_->[0],
-                -width            => 13
-                )->grid(
-                -row    => $row,
-                -column => $col,
-                -padx   => 1,
-                -pady   => 1
-                );
-            ++$inc;
-            $button->bind( '<3>' => $_->[2] ) if $_->[2];
-        }
-
-        my $wcframe = $lglobal{popup}
-            ->Frame->pack( -fill => 'both', -expand => 'both', );
-        $lglobal{wclistbox} = $wcframe->Scrolled(
-            'Listbox',
-            -scrollbars  => 'se',
-            -background  => 'white',
-            -font        => $lglobal{font},
-            -selectmode  => 'single',
-            -activestyle => 'none',
-            )->pack(
-            -anchor => 'nw',
-            -fill   => 'both',
-            -expand => 'both',
-            -padx   => 2,
-            -pady   => 2
-            );
-        drag( $lglobal{wclistbox} );
-        $lglobal{popup}->protocol(
-            'WM_DELETE_WINDOW' => sub {
-                $lglobal{popup}->destroy;
-                undef $lglobal{popup};
-                undef $lglobal{wclistbox};
-            }
-        );
-        $lglobal{popup}->Icon( -image => $icon );
-        BindMouseWheel( $lglobal{wclistbox} );
-        $lglobal{wclistbox}->eventAdd( '<<search>>' => '<ButtonRelease-3>' );
-        $lglobal{wclistbox}->bind(
-            '<<search>>',
-            sub {
-                $lglobal{wclistbox}->selectionClear( 0, 'end' );
-                $lglobal{wclistbox}->selectionSet(
-                    $lglobal{wclistbox}->index(
-                        '@'
-                            . (
-                                  $lglobal{wclistbox}->pointerx
-                                - $lglobal{wclistbox}->rootx
-                            )
-                            . ','
-                            . (
-                                  $lglobal{wclistbox}->pointery
-                                - $lglobal{wclistbox}->rooty
-                            )
-                    )
-                );
-                my ($sword)
-                    = $lglobal{wclistbox}
-                    ->get( $lglobal{wclistbox}->curselection );
-                searchpopup();
-                $sword =~ s/\d+\s+(\S)/$1/;
-                $sword =~ s/\s+\*\*\*\*$//;
-                if ( $sword =~ /\*space\*/ ) {
-                    $sword = ' ';
-                    searchoptset(qw/0 x x 1/);
-                }
-                elsif ( $sword =~ /\*tab\*/ ) {
-                    $sword = '\t';
-                    searchoptset(qw/0 x x 1/);
-                }
-                elsif ( $sword =~ /\*newline\*/ ) {
-                    $sword = '\n';
-                    searchoptset(qw/0 x x 1/);
-                }
-                elsif ( $sword =~ /\*nbsp\*/ ) {
-                    $sword = '\x{A0}';
-                    searchoptset(qw/0 x x 1/);
-                }
-                elsif ( $sword =~ /\W/ ) {
-                    $sword =~ s/([^\w\s\\])/\\$1/g;
-                    searchoptset(qw/0 x x 1/);
-                }
-                $lglobal{searchentry}->delete( '1.0', 'end' );
-                $lglobal{searchentry}->insert( 'end', $sword );
-                updatesearchlabels();
-                $lglobal{searchentry}->after( $lglobal{delay} );
-            }
-        );
-        $lglobal{wclistbox}
-            ->eventAdd( '<<find>>' => '<Double-Button-1>', '<Return>' );
-        $lglobal{wclistbox}->bind(
-            '<<find>>',
-            sub {
-                my ($sword)
-                    = $lglobal{wclistbox}
-                    ->get( $lglobal{wclistbox}->curselection );
-                return unless length $sword;
-                @savesets = @sopt;
-                $sword =~ s/(\d+)\s+(\S)/$2/;
-                my $snum = $1;
-                $sword =~ s/\s+\*\*\*\*$//;
-                if ( $sword =~ /\W/ ) {
-                    $sword =~ s/\*nbsp\*/\x{A0}/;
-                    $sword =~ s/\*tab\*/\t/;
-                    $sword =~ s/\*newline\*/\n/;
-                    $sword =~ s/\*space\*/ /;
-                    $sword =~ s/([^\w\s\\])/\\$1/g;
-                    $sword .= '\b'
-                        if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
-                    searchoptset(qw/0 x x 1/);
-                }
-                if    ( $sword =~ /\*space\*/ )   { $sword = ' ' }
-                elsif ( $sword =~ /\*tab\*/ )     { $sword = "\t" }
-                elsif ( $sword =~ /\*newline\*/ ) { $sword = "\n" }
-                elsif ( $sword =~ /\*nbsp\*/ )    { $sword = "\xA0" }
-                unless ($snum) {
-                    searchoptset(qw/0 x x 1/);
-                    unless ( $sword =~ m/--/ ) {
-                        $sword = "(?<=-)$sword|$sword(?=-)";
-                    }
-                }
-                searchtext($sword);
-                searchoptset(@savesets);
-                $top->raise;
-            }
-        );
-        $lglobal{wclistbox}->eventAdd( '<<harm>>' => '<Control-Button-1>' );
-        $lglobal{wclistbox}->bind(
-            '<<harm>>',
-            sub {
-                return unless ( $lglobal{wclistbox}->curselection );
-                harmonics( $lglobal{wclistbox}->get('active') );
-                harmonicspop();
-            }
-        );
-        $lglobal{wclistbox}->eventAdd(
-            '<<adddict>>' => '<Control-Button-2>',
-            '<Control-Button-3>'
-        );
-        $lglobal{wclistbox}->bind(
-            '<<adddict>>',
-            sub {
-                return unless ( $lglobal{wclistbox}->curselection );
-                return unless $lglobal{wclistbox}->index('active');
-                my $sword = $lglobal{wclistbox}->get('active');
-                $sword =~ s/\d+\s+([\w'-]*)/$1/;
-                $sword =~ s/\*\*\*\*$//;
-                $sword =~ s/\s//g;
-                return if ( $sword =~ /[^\p{Alnum}']/ );
-                spellmyaddword($sword);
-                delete( $lglobal{spellsort}->{$sword} );
-                $lglobal{saveheader} = scalar( keys %{ $lglobal{spellsort} } )
-                    . ' words not recognised by the spellchecker.';
-                sortwords( \%{ $lglobal{spellsort} } );
-            }
-        );
-        $lglobal{popup}->bind(
-            '<Configure>' => sub {
-                $lglobal{popup}->XEvent;
-                $geometry2 = $lglobal{popup}->geometry;
-                $lglobal{geometryupdate} = 1;
-            }
-        );
-        $lglobal{wclistbox}->eventAdd(
-            '<<pnext>>' => '<Next>',
-            '<Prior>', '<Up>', '<Down>'
-        );
-        $lglobal{wclistbox}->bind(
-            '<<pnext>>',
-            sub {
-                $lglobal{wclistbox}->selectionClear( 0, 'end' );
-                $lglobal{wclistbox}
-                    ->selectionSet( $lglobal{wclistbox}->index('active') );
-            }
-        );
-        $lglobal{wclistbox}->bind(
-            '<Home>',
-            sub {
-                $lglobal{wclistbox}->selectionClear( 0, 'end' );
-                $lglobal{wclistbox}->see(0);
-                $lglobal{wclistbox}->selectionSet(1);
-                $lglobal{wclistbox}->activate(1);
-            }
-        );
-        $lglobal{wclistbox}->bind(
-            '<End>',
-            sub {
-                $lglobal{wclistbox}->selectionClear( 0, 'end' );
-                $lglobal{wclistbox}->see( $lglobal{wclistbox}->index('end') );
-                $lglobal{wclistbox}
-                    ->selectionSet( $lglobal{wclistbox}->index('end') - 1 );
-                $lglobal{wclistbox}
-                    ->activate( $lglobal{wclistbox}->index('end') - 1 );
-            }
-        );
-        $lglobal{popup}->bind(
-            '<Control-s>' => sub {
-                my ($name);
-                $name = $textwindow->getSaveFile(
-                    -title       => 'Save Word Frequency List As',
-                    -initialdir  => $globallastpath,
-                    -initialfile => 'wordfreq.txt'
-                );
-                if ( defined($name) and length($name) ) {
-                    open( my $SAVE, ">$name" );
-                    print $SAVE join "\n",
-                        $lglobal{wclistbox}->get( '0', 'end' );
-                }
-            }
-        );
-        $lglobal{popup}->bind(
-            '<Control-x>' => sub {
-                my ($name);
-                $name = $textwindow->getSaveFile(
-                    -title       => 'Export Word Frequency List As',
-                    -initialdir  => $globallastpath,
-                    -initialfile => 'wordlist.txt'
-                );
-                if ( defined($name) and length($name) ) {
-                    my $count = $lglobal{wclistbox}->index('end');
-                    open( my $SAVE, ">$name" );
-                    for ( 1 .. $count ) {
-                        my $word = $lglobal{wclistbox}->get($_);
-                        if ( ( defined $word ) && ( length $word ) ) {
-                            $word =~ s/^\d+\s+//;
-                            $word =~ s/\s+\*{4}\s*$//;
-                            print $SAVE $word, "\n";
-                        }
-                    }
-                }
-            }
-        );
-    }
-    my $filename = $textwindow->FileName;
-    unless ($filename) {
-        $filename = 'tempfile.tmp';
-        open( my $file, ">$filename" );
-        my ($lines) = $textwindow->index('end - 1 chars') =~ /^(\d+)\./;
-        while ( $textwindow->compare( $index, '<', 'end' ) ) {
-            my $end = $textwindow->index("$index  lineend +1c");
-            my $line = $textwindow->get( $index, $end );
-            print $file $line;
-            $index = $end;
-        }
-    }
-    $top->Busy( -recurse => 1 );
-    $lglobal{wclistbox}->focus;
-    $lglobal{wclistbox}
-        ->insert( 'end', 'Please wait, building word list....' );
-    savefile()
-        if ( ( $textwindow->FileName )
-        && ( $textwindow->numberChanges != 0 ) );
-    open my $fh, '<', $filename;
-    while ( my $line = <$fh> ) {
-        utf8::decode($line);
-        next if $line =~ m/^-----*\s?File:\s?\S+\.(png|jpg)---/;
-        $line =~ s/_/ /g;
-        $line =~ s/<!--//g;
-        $line =~ s/-->//g;
-
-        #print "$line\n";
-        if ( $lglobal{ignore_case} ) { $line = lc($line) }
-        @words = split( /\s+/, $line );
-        for my $word (@words) {
-            next unless ( $word =~ /--/ );
-            next if ( $word =~ /---/ );
-            $word =~ s/[\.,']$//;
-            $word =~ s/^[\.'-]+//;
-            next if ( $word eq '' );
-            $match = ( $lglobal{ignore_case} ) ? lc($word) : $word;
-            $lglobal{seenm}->{$match}++;
-        }
-        $line =~ s/[^'\.,\p{Alnum}-]/ /g;
-        $line =~ s/--/ /g;
-        $line =~ s/(\D),/$1 /g;
-        $line =~ s/,(\D)/ $1/g;
-        @words = split( /\s+/, $line );
-        for my $word (@words) {
-            $word =~ s/[\.',-]+$//;
-            $word =~ s/^[\.,'-]+//;
-            next if ( $word eq '' );
-            $wc++;
-            $match = ( $lglobal{ignore_case} ) ? lc($word) : $word;
-            $lglobal{seen}->{$match}++;
-        }
-        $index++;
-        $index .= '.0';
-        $textwindow->update;
-    }
-    close $fh;
-    unlink 'tempfile.tmp' if ( -e 'tempfile.tmp' );
-
-    #print "$index  ";
-    $lglobal{saveheader} = "$wc total words. " .
-        keys( %{ $lglobal{seen} } ) . " distinct words in file.";
-    $lglobal{wclistbox}->delete( '0', 'end' );
-    $lglobal{last_sort} = $lglobal{ignore_case};
-    searchoptset(qw/x 1 x x/) if $lglobal{ignore_case};
-    $top->Unbusy( -recurse => 1 );
-    sortwords( \%{ $lglobal{seen} } );
-    update_indicators();
-}
 
 sub ital_adjust {
     my $markuppop = $top->Toplevel( -title => 'Word count threshold', );
@@ -18203,6 +17395,822 @@ sub fracconv {
 
 ### Fixup
 
+## Word Frequency
+sub wordcount {
+    push @operations, ( localtime() . ' - Word Frequency' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    oppopupdate()  if $lglobal{oppop};
+    $lglobal{seen} = ();
+    %{ $lglobal{seenm} } = ();
+    my ( @words, $match, @savesets );
+    my $index = '1.0';
+    my $wc    = 0;
+    my $end   = $textwindow->index('end');
+    if ( $lglobal{popup} ) {
+        $lglobal{popup}->deiconify;
+        $lglobal{popup}->raise;
+        $lglobal{wclistbox}->delete( '0', 'end' );
+    }
+    else {
+        $lglobal{popup} = $top->Toplevel;
+        $lglobal{popup}
+            ->title('Word frequency - Ctrl+s to save, Ctrl+x to export');
+        $lglobal{popup}->geometry($geometry2) if $geometry2;
+        my $wcseframe
+            = $lglobal{popup}->Frame->pack( -side => 'top', -anchor => 'n' );
+        my $wcopt3 = $wcseframe->Checkbutton(
+            -variable    => \$lglobal{suspects_only},
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Suspects'
+        )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
+        my $wcopt1 = $wcseframe->Checkbutton(
+            -variable    => \$lglobal{ignore_case},
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'No case',
+        )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
+        $wcseframe->Radiobutton(
+            -variable    => \$lglobal{alpha_sort},
+            -selectcolor => $lglobal{checkcolor},
+            -value       => 'a',
+            -text        => 'Alph',
+        )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
+        $wcseframe->Radiobutton(
+            -variable    => \$lglobal{alpha_sort},
+            -selectcolor => $lglobal{checkcolor},
+            -value       => 'f',
+            -text        => 'Frq',
+        )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
+        $wcseframe->Radiobutton(
+            -variable    => \$lglobal{alpha_sort},
+            -selectcolor => $lglobal{checkcolor},
+            -value       => 'l',
+            -text        => 'Len',
+        )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
+        $wcseframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                return unless ( $lglobal{wclistbox}->curselection );
+                $lglobal{harmonics} = 1;
+                harmonicspop();
+            },
+            -text => '1st Harm',
+            )->pack(
+            -side   => 'left',
+            -padx   => 1,
+            -pady   => 1,
+            -anchor => 'nw'
+            );
+        $wcseframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                return unless ( $lglobal{wclistbox}->curselection );
+                $lglobal{harmonics} = 2;
+                harmonicspop();
+            },
+            -text => '2nd Harm',
+            )->pack(
+            -side   => 'left',
+            -padx   => 1,
+            -pady   => 1,
+            -anchor => 'nw'
+            );
+        $wcseframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                return if $lglobal{global_filename} =~ /No File Loaded/;
+                savefile() unless ( $textwindow->numberChanges == 0 );
+                wordcount();
+            },
+            -text => 'Re Run ',
+            )->pack(
+            -side   => 'left',
+            -padx   => 2,
+            -pady   => 1,
+            -anchor => 'nw'
+            );
+        my $wcseframe1
+            = $lglobal{popup}->Frame->pack( -side => 'top', -anchor => 'n' );
+        my @wfbuttons = (
+            [ 'Emdashes'  => \&dashcheck ],
+            [ 'Hyphens'   => \&hyphencheck ],
+            [ 'Alpha/num' => \&alphanumcheck ],
+            [   'All Words' => sub {
+                    $lglobal{saveheader}
+                        = "$wc total words. " .
+                        keys( %{ $lglobal{seen} } )
+                        . " distinct words in file.";
+                    sortwords( $lglobal{seen} );
+                    }
+            ],
+            [ 'Check Spelling', \&wfspellcheck ],
+            [ 'Ital/Bold Words', \&itwords, \&ital_adjust ],
+            [ 'ALL CAPS',        \&capscheck ],
+            [ 'MiXeD CasE',      \&mixedcasecheck ],
+            [ 'Initial Caps',    \&initcapcheck ],
+            [ 'Character Cnts',  \&charsortcheck ],
+            [ 'Check , Upper',   \&commark ],
+            [ 'Check . Lower',   \&bangmark ],
+            [ 'Check Accents',   \&accentcheck ],
+            [ 'Unicode > FF',    \&unicheck ],
+            [ 'Stealtho Check',  \&stealthcheck ],
+        );
+        my ( $row, $col, $inc ) = ( 0, 0, 0 );
+        for (@wfbuttons) {
+            $row = int( $inc / 5 );
+            $col = $inc % 5;
+            my $button = $wcseframe1->Button(
+                -activebackground => $activecolor,
+                -command          => $_->[1],
+                -text             => $_->[0],
+                -width            => 13
+                )->grid(
+                -row    => $row,
+                -column => $col,
+                -padx   => 1,
+                -pady   => 1
+                );
+            ++$inc;
+            $button->bind( '<3>' => $_->[2] ) if $_->[2];
+        }
+
+        my $wcframe = $lglobal{popup}
+            ->Frame->pack( -fill => 'both', -expand => 'both', );
+        $lglobal{wclistbox} = $wcframe->Scrolled(
+            'Listbox',
+            -scrollbars  => 'se',
+            -background  => 'white',
+            -font        => $lglobal{font},
+            -selectmode  => 'single',
+            -activestyle => 'none',
+            )->pack(
+            -anchor => 'nw',
+            -fill   => 'both',
+            -expand => 'both',
+            -padx   => 2,
+            -pady   => 2
+            );
+        drag( $lglobal{wclistbox} );
+        $lglobal{popup}->protocol(
+            'WM_DELETE_WINDOW' => sub {
+                $lglobal{popup}->destroy;
+                undef $lglobal{popup};
+                undef $lglobal{wclistbox};
+            }
+        );
+        $lglobal{popup}->Icon( -image => $icon );
+        BindMouseWheel( $lglobal{wclistbox} );
+        $lglobal{wclistbox}->eventAdd( '<<search>>' => '<ButtonRelease-3>' );
+        $lglobal{wclistbox}->bind(
+            '<<search>>',
+            sub {
+                $lglobal{wclistbox}->selectionClear( 0, 'end' );
+                $lglobal{wclistbox}->selectionSet(
+                    $lglobal{wclistbox}->index(
+                        '@'
+                            . (
+                                  $lglobal{wclistbox}->pointerx
+                                - $lglobal{wclistbox}->rootx
+                            )
+                            . ','
+                            . (
+                                  $lglobal{wclistbox}->pointery
+                                - $lglobal{wclistbox}->rooty
+                            )
+                    )
+                );
+                my ($sword)
+                    = $lglobal{wclistbox}
+                    ->get( $lglobal{wclistbox}->curselection );
+                searchpopup();
+                $sword =~ s/\d+\s+(\S)/$1/;
+                $sword =~ s/\s+\*\*\*\*$//;
+                if ( $sword =~ /\*space\*/ ) {
+                    $sword = ' ';
+                    searchoptset(qw/0 x x 1/);
+                }
+                elsif ( $sword =~ /\*tab\*/ ) {
+                    $sword = '\t';
+                    searchoptset(qw/0 x x 1/);
+                }
+                elsif ( $sword =~ /\*newline\*/ ) {
+                    $sword = '\n';
+                    searchoptset(qw/0 x x 1/);
+                }
+                elsif ( $sword =~ /\*nbsp\*/ ) {
+                    $sword = '\x{A0}';
+                    searchoptset(qw/0 x x 1/);
+                }
+                elsif ( $sword =~ /\W/ ) {
+                    $sword =~ s/([^\w\s\\])/\\$1/g;
+                    searchoptset(qw/0 x x 1/);
+                }
+                $lglobal{searchentry}->delete( '1.0', 'end' );
+                $lglobal{searchentry}->insert( 'end', $sword );
+                updatesearchlabels();
+                $lglobal{searchentry}->after( $lglobal{delay} );
+            }
+        );
+        $lglobal{wclistbox}
+            ->eventAdd( '<<find>>' => '<Double-Button-1>', '<Return>' );
+        $lglobal{wclistbox}->bind(
+            '<<find>>',
+            sub {
+                my ($sword)
+                    = $lglobal{wclistbox}
+                    ->get( $lglobal{wclistbox}->curselection );
+                return unless length $sword;
+                @savesets = @sopt;
+                $sword =~ s/(\d+)\s+(\S)/$2/;
+                my $snum = $1;
+                $sword =~ s/\s+\*\*\*\*$//;
+                if ( $sword =~ /\W/ ) {
+                    $sword =~ s/\*nbsp\*/\x{A0}/;
+                    $sword =~ s/\*tab\*/\t/;
+                    $sword =~ s/\*newline\*/\n/;
+                    $sword =~ s/\*space\*/ /;
+                    $sword =~ s/([^\w\s\\])/\\$1/g;
+                    $sword .= '\b'
+                        if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
+                    searchoptset(qw/0 x x 1/);
+                }
+                if    ( $sword =~ /\*space\*/ )   { $sword = ' ' }
+                elsif ( $sword =~ /\*tab\*/ )     { $sword = "\t" }
+                elsif ( $sword =~ /\*newline\*/ ) { $sword = "\n" }
+                elsif ( $sword =~ /\*nbsp\*/ )    { $sword = "\xA0" }
+                unless ($snum) {
+                    searchoptset(qw/0 x x 1/);
+                    unless ( $sword =~ m/--/ ) {
+                        $sword = "(?<=-)$sword|$sword(?=-)";
+                    }
+                }
+                searchtext($sword);
+                searchoptset(@savesets);
+                $top->raise;
+            }
+        );
+        $lglobal{wclistbox}->eventAdd( '<<harm>>' => '<Control-Button-1>' );
+        $lglobal{wclistbox}->bind(
+            '<<harm>>',
+            sub {
+                return unless ( $lglobal{wclistbox}->curselection );
+                harmonics( $lglobal{wclistbox}->get('active') );
+                harmonicspop();
+            }
+        );
+        $lglobal{wclistbox}->eventAdd(
+            '<<adddict>>' => '<Control-Button-2>',
+            '<Control-Button-3>'
+        );
+        $lglobal{wclistbox}->bind(
+            '<<adddict>>',
+            sub {
+                return unless ( $lglobal{wclistbox}->curselection );
+                return unless $lglobal{wclistbox}->index('active');
+                my $sword = $lglobal{wclistbox}->get('active');
+                $sword =~ s/\d+\s+([\w'-]*)/$1/;
+                $sword =~ s/\*\*\*\*$//;
+                $sword =~ s/\s//g;
+                return if ( $sword =~ /[^\p{Alnum}']/ );
+                spellmyaddword($sword);
+                delete( $lglobal{spellsort}->{$sword} );
+                $lglobal{saveheader} = scalar( keys %{ $lglobal{spellsort} } )
+                    . ' words not recognised by the spellchecker.';
+                sortwords( \%{ $lglobal{spellsort} } );
+            }
+        );
+        $lglobal{popup}->bind(
+            '<Configure>' => sub {
+                $lglobal{popup}->XEvent;
+                $geometry2 = $lglobal{popup}->geometry;
+                $lglobal{geometryupdate} = 1;
+            }
+        );
+        $lglobal{wclistbox}->eventAdd(
+            '<<pnext>>' => '<Next>',
+            '<Prior>', '<Up>', '<Down>'
+        );
+        $lglobal{wclistbox}->bind(
+            '<<pnext>>',
+            sub {
+                $lglobal{wclistbox}->selectionClear( 0, 'end' );
+                $lglobal{wclistbox}
+                    ->selectionSet( $lglobal{wclistbox}->index('active') );
+            }
+        );
+        $lglobal{wclistbox}->bind(
+            '<Home>',
+            sub {
+                $lglobal{wclistbox}->selectionClear( 0, 'end' );
+                $lglobal{wclistbox}->see(0);
+                $lglobal{wclistbox}->selectionSet(1);
+                $lglobal{wclistbox}->activate(1);
+            }
+        );
+        $lglobal{wclistbox}->bind(
+            '<End>',
+            sub {
+                $lglobal{wclistbox}->selectionClear( 0, 'end' );
+                $lglobal{wclistbox}->see( $lglobal{wclistbox}->index('end') );
+                $lglobal{wclistbox}
+                    ->selectionSet( $lglobal{wclistbox}->index('end') - 1 );
+                $lglobal{wclistbox}
+                    ->activate( $lglobal{wclistbox}->index('end') - 1 );
+            }
+        );
+        $lglobal{popup}->bind(
+            '<Control-s>' => sub {
+                my ($name);
+                $name = $textwindow->getSaveFile(
+                    -title       => 'Save Word Frequency List As',
+                    -initialdir  => $globallastpath,
+                    -initialfile => 'wordfreq.txt'
+                );
+                if ( defined($name) and length($name) ) {
+                    open( my $SAVE, ">$name" );
+                    print $SAVE join "\n",
+                        $lglobal{wclistbox}->get( '0', 'end' );
+                }
+            }
+        );
+        $lglobal{popup}->bind(
+            '<Control-x>' => sub {
+                my ($name);
+                $name = $textwindow->getSaveFile(
+                    -title       => 'Export Word Frequency List As',
+                    -initialdir  => $globallastpath,
+                    -initialfile => 'wordlist.txt'
+                );
+                if ( defined($name) and length($name) ) {
+                    my $count = $lglobal{wclistbox}->index('end');
+                    open( my $SAVE, ">$name" );
+                    for ( 1 .. $count ) {
+                        my $word = $lglobal{wclistbox}->get($_);
+                        if ( ( defined $word ) && ( length $word ) ) {
+                            $word =~ s/^\d+\s+//;
+                            $word =~ s/\s+\*{4}\s*$//;
+                            print $SAVE $word, "\n";
+                        }
+                    }
+                }
+            }
+        );
+    }
+    my $filename = $textwindow->FileName;
+    unless ($filename) {
+        $filename = 'tempfile.tmp';
+        open( my $file, ">$filename" );
+        my ($lines) = $textwindow->index('end - 1 chars') =~ /^(\d+)\./;
+        while ( $textwindow->compare( $index, '<', 'end' ) ) {
+            my $end = $textwindow->index("$index  lineend +1c");
+            my $line = $textwindow->get( $index, $end );
+            print $file $line;
+            $index = $end;
+        }
+    }
+    $top->Busy( -recurse => 1 );
+    $lglobal{wclistbox}->focus;
+    $lglobal{wclistbox}
+        ->insert( 'end', 'Please wait, building word list....' );
+    savefile()
+        if ( ( $textwindow->FileName )
+        && ( $textwindow->numberChanges != 0 ) );
+    open my $fh, '<', $filename;
+    while ( my $line = <$fh> ) {
+        utf8::decode($line);
+        next if $line =~ m/^-----*\s?File:\s?\S+\.(png|jpg)---/;
+        $line =~ s/_/ /g;
+        $line =~ s/<!--//g;
+        $line =~ s/-->//g;
+
+        #print "$line\n";
+        if ( $lglobal{ignore_case} ) { $line = lc($line) }
+        @words = split( /\s+/, $line );
+        for my $word (@words) {
+            next unless ( $word =~ /--/ );
+            next if ( $word =~ /---/ );
+            $word =~ s/[\.,']$//;
+            $word =~ s/^[\.'-]+//;
+            next if ( $word eq '' );
+            $match = ( $lglobal{ignore_case} ) ? lc($word) : $word;
+            $lglobal{seenm}->{$match}++;
+        }
+        $line =~ s/[^'\.,\p{Alnum}-]/ /g;
+        $line =~ s/--/ /g;
+        $line =~ s/(\D),/$1 /g;
+        $line =~ s/,(\D)/ $1/g;
+        @words = split( /\s+/, $line );
+        for my $word (@words) {
+            $word =~ s/[\.',-]+$//;
+            $word =~ s/^[\.,'-]+//;
+            next if ( $word eq '' );
+            $wc++;
+            $match = ( $lglobal{ignore_case} ) ? lc($word) : $word;
+            $lglobal{seen}->{$match}++;
+        }
+        $index++;
+        $index .= '.0';
+        $textwindow->update;
+    }
+    close $fh;
+    unlink 'tempfile.tmp' if ( -e 'tempfile.tmp' );
+
+    #print "$index  ";
+    $lglobal{saveheader} = "$wc total words. " .
+        keys( %{ $lglobal{seen} } ) . " distinct words in file.";
+    $lglobal{wclistbox}->delete( '0', 'end' );
+    $lglobal{last_sort} = $lglobal{ignore_case};
+    searchoptset(qw/x 1 x x/) if $lglobal{ignore_case};
+    $top->Unbusy( -recurse => 1 );
+    sortwords( \%{ $lglobal{seen} } );
+    update_indicators();
+}
+
+## Gutcheck
+sub gutcheck {
+    no warnings;
+    push @operations, ( localtime() . ' - Gutcheck' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    oppopupdate()  if $lglobal{oppop};
+    my ( $name, $path, $extension, @path );
+    $textwindow->focus;
+    update_indicators();
+    my $title = $top->cget('title');
+    return if ( $title =~ /No File Loaded/ );
+    $top->Busy( -recurse => 1 );
+
+    # FIXME: wide character in print warning next line with unicode
+    # Figure out how to determine encoding. See scratchpad.pl
+    # open my $gc, ">:encoding(UTF-8)", "gutchk.tmp");
+    if ( open my $gc, ">:bytes", 'gutchk.tmp' ) {
+        my $count = 0;
+        my $index = '1.0';
+        my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
+        while ( $textwindow->compare( $index, '<', 'end' ) ) {
+            my $end = $textwindow->index("$index  lineend +1c");
+            print $gc $textwindow->get( $index, $end );
+            $index = $end;
+        }
+        close $gc;
+    }
+    else {
+        warn "Could not open temp file for writing. $!";
+        my $dialog = $top->Dialog(
+            -text => 'Could not write to the '
+                . cwd()
+                . ' directory. Check for write permission or space problems.',
+            -bitmap  => 'question',
+            -title   => 'Gutcheck problem',
+            -buttons => [qw/OK/],
+        );
+        $dialog->Show;
+        return;
+    }
+    $title =~ s/$window_title - //
+        ;    #FIXME: sub this out; this and next in the tidy code
+    $title =~ s/edited - //;
+    $title = os_normal($title);
+    $title = dos_path($title) if OS_Win;
+    ( $name, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
+    my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
+    unless ($gutpath) {
+        $gutpath = $textwindow->getOpenFile(
+            -filetypes => $types,
+            -title     => 'Where is the Gutcheck executable?'
+        );
+    }
+    return unless $gutpath;
+    my $gutcheckoptions = ' -ey'
+        ; # e - echo queried line. y - puts errors to stdout instead of stderr.
+    if ( $gcopt[0] ) { $gutcheckoptions .= 't' }
+    ;     # Check common typos
+    if ( $gcopt[1] ) { $gutcheckoptions .= 'x' }
+    ;     # "Trust no one" Paranoid mode. Queries everything
+    if ( $gcopt[2] ) { $gutcheckoptions .= 'p' }
+    ;     # Require closure of quotes on every paragraph
+    if ( $gcopt[3] ) { $gutcheckoptions .= 's' }
+    ;     # Force checking for matched pairs of single quotes
+    if ( $gcopt[4] ) { $gutcheckoptions .= 'm' }
+    ;     # Ignore markup in < >
+    if ( $gcopt[5] ) { $gutcheckoptions .= 'l' }
+    ;     # Line end checking - defaults on
+    if ( $gcopt[6] ) { $gutcheckoptions .= 'v' }
+    ;     # Verbose - list EVERYTHING!
+    if ( $gcopt[7] ) { $gutcheckoptions .= 'u' }
+    ;     # Use file of User-defined Typos
+    if ( $gcopt[8] ) { $gutcheckoptions .= 'd' }
+    ;     # Ignore DP style page separators
+    $gutcheckoptions .= ' ';
+    $gutpath = os_normal($gutpath);
+    $gutpath = dos_path($gutpath) if OS_Win;
+    saveset();
+
+    if ( $lglobal{gcpop} ) {
+        $lglobal{gclistbox}->delete( '0', 'end' );
+    }
+    gutcheckrun( $gutpath, $gutcheckoptions, 'gutchk.tmp' );
+    $top->Unbusy;
+    unlink 'gutchk.tmp';
+    gcheckpop_up();
+}
+
+my @gsopt;
+
+sub gcheckpop_up {
+    my @gclines;
+    my ( $line, $linenum, $colnum, $lincol, $word );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    if ( $lglobal{gcpop} ) {
+        $lglobal{gcpop}->deiconify;
+        $lglobal{gclistbox}->delete( '0', 'end' );
+    }
+    else {
+        $lglobal{gcpop} = $top->Toplevel;
+        $lglobal{gcpop}->title('Gutcheck');
+        $lglobal{gcpop}->geometry($geometry2) if $geometry2;
+        $lglobal{gcpop}->transient($top)      if $stayontop;
+        my $ptopframe = $lglobal{gcpop}->Frame->pack;
+        my $opsbutton = $ptopframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub { gcviewops( \@gclines ) },
+            -text             => 'GC View Options',
+            -width            => 16
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+        my $opsbutton2 = $ptopframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub { gutcheck() },
+            -text             => 'Re-run Gutcheck',
+            -width            => 16
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+        my $opsbutton3 = $ptopframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub { gutopts() },
+            -text             => 'GC Run Options',
+            -width            => 16
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+        my $pframe = $lglobal{gcpop}
+            ->Frame->pack( -fill => 'both', -expand => 'both', );
+        $lglobal{gclistbox} = $pframe->Scrolled(
+            'Listbox',
+            -scrollbars  => 'se',
+            -background  => 'white',
+            -font        => $lglobal{font},
+            -selectmode  => 'single',
+            -activestyle => 'none',
+            )->pack(
+            -anchor => 'nw',
+            -fill   => 'both',
+            -expand => 'both',
+            -padx   => 2,
+            -pady   => 2
+            );
+        drag( $lglobal{gclistbox} );
+        $lglobal{gcpop}->protocol(
+            'WM_DELETE_WINDOW' => sub {
+                $lglobal{viewpop}->iconify if defined $lglobal{viewpop};
+                $lglobal{gcpop}->destroy;
+                undef $lglobal{gcpop};
+                $textwindow->markUnset($_) for values %gc;
+            }
+        );
+        $lglobal{gcpop}->Icon( -image => $icon );
+        BindMouseWheel( $lglobal{gclistbox} );
+        $lglobal{gclistbox}
+            ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
+        $lglobal{gclistbox}->bind( '<<view>>', sub { gcview() } );
+        $lglobal{gcpop}->bind(
+            '<Configure>' => sub {
+                $lglobal{gcpop}->XEvent;
+                $geometry2 = $lglobal{gcpop}->geometry;
+                $lglobal{geometryupdate} = 1;
+            }
+        );
+        $lglobal{gclistbox}->eventAdd(
+            '<<remove>>' => '<ButtonRelease-2>',
+            '<ButtonRelease-3>'
+        );
+        $lglobal{gclistbox}->bind(
+            '<<remove>>',
+            sub {
+                $lglobal{gclistbox}->activate(
+                    $lglobal{gclistbox}->index(
+                        '@'
+                            . (
+                                  $lglobal{gclistbox}->pointerx
+                                - $lglobal{gclistbox}->rootx
+                            )
+                            . ','
+                            . (
+                                  $lglobal{gclistbox}->pointery
+                                - $lglobal{gclistbox}->rooty
+                            )
+                    )
+                );
+                $textwindow->markUnset(
+                    $gc{ $lglobal{gclistbox}->get('active') } );
+                undef $gc{ $lglobal{gclistbox}->get('active') };
+                $lglobal{gclistbox}->delete('active');
+                $lglobal{gclistbox}->selectionClear( '0', 'end' );
+                $lglobal{gclistbox}->selectionSet('active');
+                gcview();
+                $lglobal{gclistbox}->after( $lglobal{delay} );
+            }
+        );
+        $lglobal{gclistbox}->bind(
+            '<Button-3>',
+            sub {
+                $lglobal{gclistbox}->activate(
+                    $lglobal{gclistbox}->index(
+                        '@'
+                            . (
+                                  $lglobal{gclistbox}->pointerx
+                                - $lglobal{gclistbox}->rootx
+                            )
+                            . ','
+                            . (
+                                  $lglobal{gclistbox}->pointery
+                                - $lglobal{gclistbox}->rooty
+                            )
+                    )
+                );
+            }
+        );
+    }
+    $lglobal{gclistbox}->focus;
+    my $results;
+    unless ( open $results, '<', 'gutrslts.txt' ) {
+        my $dialog = $top->Dialog(
+            -text =>
+                'Could not read gutcheck results file. Problem with gutcheck.',
+            -bitmap  => 'question',
+            -title   => 'Gutcheck problem',
+            -buttons => [qw/OK/],
+        );
+        $dialog->Show;
+        return;
+    }
+    my $mark = 0;
+    %gc      = ();
+    @gclines = ();
+    while ( $line = <$results> ) {
+        $line =~ s/^\s//g;
+        chomp $line;
+        $line =~ s/^(File: )gutchk.tmp/$1$lglobal{global_filename}/g;
+        {
+
+            no warnings 'uninitialized';
+            next if $line eq $gclines[-1];
+        }
+        push @gclines, $line;
+        $gc{$line} = '';
+        $colnum    = '0';
+        $lincol    = '';
+        if ( $line =~ /Line (\d+)/ ) {
+            $linenum = $1;
+
+            if ( $line =~ /Line \d+ column (\d+)/ ) {
+                $colnum = $1;
+                $colnum--
+                    unless ( $line =~ /Long|Short|digit|space|bracket\?/ );
+                my $tempvar
+                    = $textwindow->get( "$linenum.0", "$linenum.$colnum" );
+                while ( $tempvar =~ s/<[ib]>// ) {
+                    $tempvar .= $textwindow->get( "$linenum.$colnum",
+                        "$linenum.$colnum +3c" );
+                    $colnum += 3;
+                }
+                while ( $tempvar =~ s/<\/[ib]>// ) {
+                    $tempvar .= $textwindow->get( "$linenum.$colnum",
+                        "$linenum.$colnum +4c" );
+                    $colnum += 4;
+                }
+            }
+            else {
+                if ( $line =~ /Query digit in ([\w\d]+)/ ) {
+                    $word   = $1;
+                    $lincol = $textwindow->search( '--', $word, "$linenum.0",
+                        "$linenum.0 +1l" );
+                }
+                if ( $line =~ /Query standalone (\d)/ ) {
+                    $word   = '(?<=\D)' . $1 . '(?=\D)';
+                    $lincol = $textwindow->search( '-regexp', '--', $word,
+                        "$linenum.0", "$linenum.0 +1l" );
+                }
+                if ( $line =~ /Asterisk?/ ) {
+                    $lincol = $textwindow->search( '--', '*', "$linenum.0",
+                        "$linenum.0 +1l" );
+                }
+                if ( $line =~ /Hyphen at end of line?/ ) {
+                    $lincol = $textwindow->search(
+                        '-regexp', '--',
+                        '-$',      "$linenum.0",
+                        "$linenum.0 +1l"
+                    );
+                }
+                if ( $line =~ /Non-ASCII character (\d+)/ ) {
+                    $word   = chr($1);
+                    $lincol = $textwindow->search( $word, "$linenum.0",
+                        "$linenum.0 +1l" );
+                }
+                if ( $line =~ /dash\?/ ) {
+                    $lincol = $textwindow->search(
+                        '-regexp',       '--',
+                        '-- | --| -|- ', "$linenum.0",
+                        "$linenum.0 +1l"
+                    );
+                }
+                if ( $line =~ /HTML symbol/ ) {
+                    $lincol = $textwindow->search(
+                        '-regexp', '--',
+                        '&',       "$linenum.0",
+                        "$linenum.0 +1l"
+                    );
+                }
+                if ( $line =~ /HTML Tag/ ) {
+                    $lincol = $textwindow->search(
+                        '-regexp', '--',
+                        '<',       "$linenum.0",
+                        "$linenum.0 +1l"
+                    );
+                }
+                if ( $line =~ /Query word ([\p{Alnum}']+)/ ) {
+                    $word = $1;
+                    if ( $word =~ /[\xA0-\xFF]/ ) {
+                        $lincol
+                            = $textwindow->search( '-regexp', '--',
+                            '(?<!\p{Alnum})' . $word . '(?!\p{Alnum})',
+                            "$linenum.0", "$linenum.0 +1l" );
+                    }
+                    elsif ( $word eq 'i' ) {
+                        $lincol = $textwindow->search(
+                            '-regexp',              '--',
+                            ' ' . $word . '[^a-z]', "$linenum.0",
+                            "$linenum.0 +1l"
+                        );
+                        $lincol
+                            = $textwindow->search( '-regexp', '--',
+                            '[^A-Za-z0-9<\/]' . $word . '[^A-Za-z0-9>]',
+                            "$linenum.0", "$linenum.0 +1l" )
+                            unless $lincol;
+                        $lincol = $textwindow->index("$lincol +1c")
+                            if ($lincol);
+                    }
+                    else {
+                        $lincol = $textwindow->search(
+                            '-regexp',           '--',
+                            '\b' . $word . '\b', "$linenum.0",
+                            "$linenum.0 +1l"
+                        );
+                    }
+                }
+                if ( $line =~ /Query he\/be/ ) {
+                    $lincol = $textwindow->search(
+                        '-regexp',       '--',
+                        '(?<= )[bh]e\W', "$linenum.0",
+                        "$linenum.0 +1l"
+                    );
+                }
+                if ( $line =~ /Query hut\/but/ ) {
+                    $lincol = $textwindow->search(
+                        '-regexp',        '--',
+                        '(?<= )[bh]ut\W', "$linenum.0",
+                        "$linenum.0 +1l"
+                    );
+                }
+            }
+            $mark++;
+            if ($lincol) {
+                $textwindow->markSet( "g$mark", $lincol );
+            }
+            else {
+                $colnum = '0' unless $colnum;
+                $textwindow->markSet( "g$mark", "$linenum.$colnum" );
+            }
+            $gc{$line} = "g$mark";
+        }
+    }
+    close $results;
+    unlink 'gutrslts.txt';
+    gutwindowpopulate( \@gclines );
+}
+
+
+## End Gutcheck
+
 
 ### Text Processing
 
@@ -18223,10 +18231,10 @@ other useful postprocessing functions.
 This version produced by a number of volunteers.
 See the Thanks.txt file for details.
 
-This program may be freely used, modified and distributed.
-No guarantees are made as to its fitness for any purpose.
-Any damages or losses resulting from the use of this software
-are the responsibility of the user.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
 
 Original guiguts written by Stephen Schulze.
 Partially based on the Gedi editor - Gregs editor.

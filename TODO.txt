@@ -16,3 +16,5 @@ Replace '', in menus with ['separator', ''],
 
 Find '--command sub {} and rewrite as standalones.
 
+Label unobvious sub's, e.g., wordcount = Word Frequency
+
