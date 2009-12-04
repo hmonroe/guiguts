@@ -1722,9 +1722,9 @@ sub buildmenu {                        # The main menu building code.
             [   Button   => 'Find Greek',
                 -command => \&findandextractgreek
             ],
-            [   Button   => 'Convert Greek [STUB - does nothing yet]',
-                -command => \&convertgreek
-            ],
+            # FIXME: [   Button   => 'Convert Greek [STUB - does nothing yet]',
+            #    -command => \&convertgreek
+           # ],
         ]
     );
 
@@ -2282,485 +2282,15 @@ sub checkver {
 }
 
 # Find and reformat sidenotes
-sub sidenotes {
-    push @operations, ( localtime() . ' - Sidenote Fixup' );
-    viewpagenums() if ( $lglobal{seepagenums} );
-    oppopupdate()  if $lglobal{oppop};
-    $textwindow->markSet( 'sidenote', '1.0' );
-    my ( $bracketndx, $nextbracketndx, $bracketstartndx, $bracketendndx,
-        $paragraphp, $paragraphn, $sidenote, $sdnoteindexstart );
-
-    while (1) {
-        $sdnoteindexstart = $textwindow->index('sidenote');
-        $bracketstartndx = $textwindow->search( '-regexp', '--', '\[sidenote',
-            $sdnoteindexstart, 'end' );
-        if ($bracketstartndx) {
-            $textwindow->replacewith( "$bracketstartndx+1c",
-                "$bracketstartndx+2c", 'S' );
-            $textwindow->markSet( 'sidenote', "$bracketstartndx+1c" );
-            next;
-        }
-        $textwindow->markSet( 'sidenote', '1.0' );
-        last;
-    }
-    while (1) {
-        $sdnoteindexstart = $textwindow->index('sidenote');
-        $bracketstartndx = $textwindow->search( '-regexp', '--', '\[Sidenote',
-            $sdnoteindexstart, 'end' );
-        last unless $bracketstartndx;
-        $bracketndx = "$bracketstartndx+1c";
-        while (1) {
-            $bracketendndx
-                = $textwindow->search( '--', ']', $bracketndx, 'end' );
-            $bracketendndx = $textwindow->index("$bracketstartndx+9c")
-                unless $bracketendndx;
-            $bracketendndx = $textwindow->index("$bracketendndx+1c")
-                if $bracketendndx;
-            $nextbracketndx
-                = $textwindow->search( '--', '[', $bracketndx, 'end' );
-            if (($nextbracketndx)
-                && ($textwindow->compare(
-                        $nextbracketndx, '<', $bracketendndx
-                    )
-                )
-                )
-            {
-                $bracketndx = $bracketendndx;
-                next;
-            }
-            last;
-        }
-        $textwindow->markSet( 'sidenote', $bracketendndx );
-        $paragraphp
-            = $textwindow->search( '-backwards', '-regexp', '--', '^$',
-            $bracketstartndx, '1.0' );
-        $paragraphn
-            = $textwindow->search( '-regexp', '--', '^$', $bracketstartndx,
-            'end' );
-        $sidenote = $textwindow->get( $bracketstartndx, $bracketendndx );
-        if ( $textwindow->get( "$bracketstartndx-2c", $bracketstartndx ) ne
-            "\n\n" )
-        {
-            if ((   $textwindow->get( $bracketendndx, "$bracketendndx+1c" ) eq
-                    ' '
-                )
-                || ($textwindow->get( $bracketendndx, "$bracketendndx+1c" ) eq
-                    "\n" )
-                )
-            {
-                $textwindow->delete( $bracketendndx, "" );
-            }
-            $textwindow->delete( $bracketstartndx, $bracketendndx );
-            $textwindow->see($bracketstartndx);
-            $textwindow->insert( "$paragraphp+1l", $sidenote . "\n\n" );
-        }
-        elsif (
-            $textwindow->compare( "$bracketendndx+1c", '<', $paragraphn ) )
-        {
-            if ((   $textwindow->get( $bracketendndx, "$bracketendndx+1c" ) eq
-                    ' '
-                )
-                || ($textwindow->get( $bracketendndx, "$bracketendndx+1c" ) eq
-                    "\n" )
-                )
-            {
-                $textwindow->delete( $bracketendndx, "$bracketendndx+1c" );
-            }
-            $textwindow->see($bracketstartndx);
-            $textwindow->insert( $bracketendndx, "\n\n" );
-        }
-        $sdnoteindexstart = "$bracketstartndx+10c";
-    }
-    my $error
-        = $textwindow->search( '-regexp', '--', '(?<=[^\[])[Ss]idenote[: ]',
-        '1.0', 'end' );
-    unless ($nobell) { $textwindow->bell if $error }
-    $textwindow->see($error) if $error;
-    $textwindow->markSet( 'insert', $error ) if $error;
-}
 
 # Remove any rewrap markup in the text
-sub cleanup {
-    $top->Busy( -recurse => 1 );
-    $searchstartindex = '1.0';
-    viewpagenums() if ( $lglobal{seepagenums} );
-    while (1) {
-        $searchstartindex
-            = $textwindow->search( '-regexp', '--',
-            '^\/[\*\$#pPfFLlXx]|^[Pp\*\$#fFLlXx]\/',
-            $searchstartindex, 'end' );
-        last unless $searchstartindex;
-        $textwindow->delete( "$searchstartindex -1c",
-            "$searchstartindex lineend" );
-    }
-    $top->Unbusy( -recurse => 1 );
-}
 
-# FIXME: vls -- Adapt this to handle abitrary text at eol, separated by
-# >2 spaces. Suggestion from jabber room
-
-# Find and format poetry line numbers. They need to be to the right, at
-# least 2 space from the text.
-sub poetrynumbers {
-    $searchstartindex = '1.0';
-    viewpagenums() if ( $lglobal{seepagenums} );
-    my ( $linenum, $line, $spacer, $row, $col );
-    while (1) {
-        $searchstartindex
-            = $textwindow->search( '-regexp', '--', '(?<=\S)\s\s+\d+$',
-            $searchstartindex, 'end' );
-        last unless $searchstartindex;
-        $textwindow->see($searchstartindex);
-        $textwindow->update;
-        update_indicators();
-        ( $row, $col ) = split /\./, $searchstartindex;
-        $line = $textwindow->get( "$row.0", "$row.end" );
-        $line =~ s/(?<=\S)\s\s+(\d+)$//;
-        $linenum = $1;
-        $spacer  = $rmargin - length($line) - length($linenum);
-        $spacer -= 2;
-        $line = '  ' . ( ' ' x $spacer ) . $linenum;
-        $textwindow->delete( $searchstartindex, "$searchstartindex lineend" );
-        $textwindow->insert( $searchstartindex, $line );
-        $searchstartindex = ++$row . '.0';
-    }
-}
 
 sub oppopupdate {    # Update the Operations history
     $lglobal{oplistbox}->delete( '0', 'end' );
     $lglobal{oplistbox}->insert( 'end', @operations );
 }
 
-sub footnotepop
-{   # Pop up a window where footnotes can be found, fixed and formatted. (heh)
-    push @operations, ( localtime() . ' - Footnote Fixup' );
-    viewpagenums() if ( $lglobal{seepagenums} );
-    oppopupdate()  if $lglobal{oppop};
-    if ( defined( $lglobal{footpop} ) ) {
-        $lglobal{footpop}->deiconify;
-        $lglobal{footpop}->raise;
-        $lglobal{footpop}->focus;
-    }
-    else {
-        $lglobal{fncount} = '1' unless $lglobal{fncount};
-        $lglobal{fnalpha} = '1' unless $lglobal{fnalpha};
-        $lglobal{fnroman} = '1' unless $lglobal{fnroman};
-        $lglobal{fnindex} = '0' unless $lglobal{fnindex};
-        $lglobal{fntotal} = '0' unless $lglobal{fntotal};
-        $lglobal{footpop} = $top->Toplevel;
-        my ( $checkn, $checka, $checkr );
-        $lglobal{footpop}->title('Footnote Fix Up');
-        my $frame2 = $lglobal{footpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $frame2->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                $textwindow->yview('end');
-                $textwindow->see(
-                    $lglobal{fnarray}->[ $lglobal{fnindex} ][2] )
-                    if $lglobal{fnarray}->[ $lglobal{fnindex} ][2];
-            },
-            -text  => 'See Anchor',
-            -width => 14
-        )->grid( -row => 1, -column => 1, -padx => 2, -pady => 4 );
-        $lglobal{footnotetotal}
-            = $frame2->Label->grid( -row => 1, -column => 2 );
-        $frame2->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                footnoteshow();
-            },
-            -text  => 'See Footnote',
-            -width => 14
-        )->grid( -row => 1, -column => 3, -padx => 2, -pady => 4 );
-        $frame2->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                $lglobal{fnindex}--;
-                footnoteshow();
-            },
-            -text  => '<--- Last FN',
-            -width => 14
-        )->grid( -row => 2, -column => 1 );
-        $lglobal{fnindexbrowse} = $frame2->BrowseEntry(
-            -label     => 'Go to - #',
-            -variable  => \$lglobal{fnindex},
-            -state     => 'readonly',
-            -width     => 8,
-            -listwidth => 22,
-            -browsecmd => sub {
-                $lglobal{fnindex} = $lglobal{fntotal}
-                    if ( $lglobal{fnindex} > $lglobal{fntotal} );
-                $lglobal{fnindex} = 1 if ( $lglobal{fnindex} < 1 );
-                footnoteshow();
-            }
-        )->grid( -row => 2, -column => 2 );
-        $frame2->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                $lglobal{fnindex}++;
-                footnoteshow();
-            },
-            -text  => 'Next FN --->',
-            -width => 14
-        )->grid( -row => 2, -column => 3 );
-        $lglobal{footnotenumber} = $frame2->Label(
-            -background => 'white',
-            -relief     => 'sunken',
-            -justify    => 'center',
-            -font       => '{Times} 10',
-            -width      => 10,
-        )->grid( -row => 3, -column => 1, -padx => 2, -pady => 4 );
-        $lglobal{footnoteletter} = $frame2->Label(
-            -background => 'white',
-            -relief     => 'sunken',
-            -justify    => 'center',
-            -font       => '{Times} 10',
-            -width      => 10,
-        )->grid( -row => 3, -column => 2, -padx => 2, -pady => 4 );
-        $lglobal{footnoteroman} = $frame2->Label(
-            -background => 'white',
-            -relief     => 'sunken',
-            -justify    => 'center',
-            -font       => '{Times} 10',
-            -width      => 10,
-        )->grid( -row => 3, -column => 3, -padx => 2, -pady => 4 );
-        $checkn = $frame2->Checkbutton(
-            -variable => \$lglobal{fntypen},
-            -command  => sub {
-                return if ( $lglobal{footstyle} eq 'inline' );
-                $checka->deselect;
-                $checkr->deselect;
-            },
-            -text  => 'All to Number',
-            -width => 14
-        )->grid( -row => 4, -column => 1, -padx => 2, -pady => 4 );
-        $checka = $frame2->Checkbutton(
-            -variable => \$lglobal{fntypea},
-            -command  => sub {
-                return if ( $lglobal{footstyle} eq 'inline' );
-                $checkn->deselect;
-                $checkr->deselect;
-            },
-            -text  => 'All to Letter',
-            -width => 14
-        )->grid( -row => 4, -column => 2, -padx => 2, -pady => 4 );
-        $checkr = $frame2->Checkbutton(
-            -variable => \$lglobal{fntyper},
-            -command  => sub {
-                return if ( $lglobal{footstyle} eq 'inline' );
-                $checka->deselect;
-                $checkn->deselect;
-            },
-            -text  => 'All to Roman',
-            -width => 14
-        )->grid( -row => 4, -column => 3, -padx => 2, -pady => 4 );
-        $frame2->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                return if ( $lglobal{footstyle} eq 'inline' );
-                fninsertmarkers('n');
-                footnoteshow();
-            },
-            -text  => 'Number',
-            -width => 14
-        )->grid( -row => 5, -column => 1, -padx => 2, -pady => 4 );
-        $frame2->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                return if ( $lglobal{footstyle} eq 'inline' );
-                fninsertmarkers('a');
-                footnoteshow();
-            },
-            -text  => 'Letter',
-            -width => 14
-        )->grid( -row => 5, -column => 2, -padx => 2, -pady => 4 );
-        $frame2->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                return if ( $lglobal{footstyle} eq 'inline' );
-                fninsertmarkers('r');
-                footnoteshow();
-            },
-            -text  => 'Roman',
-            -width => 14
-        )->grid( -row => 5, -column => 3, -padx => 2, -pady => 4 );
-        $frame2->Button(
-            -activebackground => $activecolor,
-            -command          => sub { fnjoin() },
-            -text             => 'Join With Previous',
-            -width            => 14
-        )->grid( -row => 6, -column => 1, -padx => 2, -pady => 4 );
-        $frame2->Button(
-            -activebackground => $activecolor,
-            -command          => sub { footnoteadjust() },
-            -text             => 'Adjust Bounds',
-            -width            => 14
-        )->grid( -row => 6, -column => 2, -padx => 2, -pady => 4 );
-        $frame2->Button(
-            -activebackground => $activecolor,
-            -command          => sub { setanchor() },
-            -text             => 'Set Anchor',
-            -width            => 14
-        )->grid( -row => 6, -column => 3, -padx => 2, -pady => 4 );
-        $frame2->Checkbutton(
-            -variable => \$lglobal{fncenter},
-            -text     => 'Center on Search'
-        )->grid( -row => 7, -column => 1, -padx => 3, -pady => 4 );
-        $frame2->Button(
-            -activebackground => $activecolor,
-            -command => sub { $lglobal{fnsecondpass} = 0; footnotefixup() },
-            -text    => 'First Pass',
-            -width   => 14
-        )->grid( -row => 7, -column => 2, -padx => 2, -pady => 4 );
-        my $fnrb1 = $frame2->Radiobutton(
-            -text        => 'Inline',
-            -variable    => \$lglobal{footstyle},
-            -selectcolor => $lglobal{checkcolor},
-            -value       => 'inline',
-            -command     => sub {
-                $lglobal{fnindex} = 1;
-                footnoteshow();
-                $lglobal{fnmvbutton}->configure( -state => 'disabled' );
-            },
-        )->grid( -row => 8, -column => 1 );
-        $lglobal{fnfpbutton} = $frame2->Button(
-            -activebackground => $activecolor,
-            -command          => sub { footnotefixup() },
-            -text             => 'Re Index',
-            -state            => 'disabled',
-            -width            => 14
-        )->grid( -row => 8, -column => 2, -padx => 2, -pady => 4 );
-        my $fnrb2 = $frame2->Radiobutton(
-            -text        => 'Out-of-Line',
-            -variable    => \$lglobal{footstyle},
-            -selectcolor => $lglobal{checkcolor},
-            -value       => 'end',
-            -command     => sub {
-                $lglobal{fnindex} = 1;
-                footnoteshow();
-                $lglobal{fnmvbutton}->configure( -state => 'normal' )
-                    if ( $lglobal{fnsecondpass}
-                    && ( defined $lglobal{fnlzs} and @{ $lglobal{fnlzs} } ) );
-            },
-        )->grid( -row => 8, -column => 3 );
-        my $frame1 = $lglobal{footpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $frame1->Button(
-            -activebackground => $activecolor,
-            -command          => sub { setlz() },
-            -text             => 'Set LZ @ cursor',
-            -width            => 14
-        )->grid( -row => 1, -column => 1, -padx => 2, -pady => 4 );
-        $frame1->Button(
-            -activebackground => $activecolor,
-            -command          => sub { autochaptlz() },
-            -text             => 'Autoset Chap. LZ',
-            -width            => 14
-        )->grid( -row => 1, -column => 2, -padx => 2, -pady => 4 );
-        $frame1->Button(
-            -activebackground => $activecolor,
-            -command          => sub { autoendlz() },
-            -text             => 'Autoset End LZ',
-            -width            => 14
-        )->grid( -row => 1, -column => 3, -padx => 2, -pady => 4 );
-        $frame1->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                getlz();
-                return unless $lglobal{fnlzs} and @{ $lglobal{fnlzs} };
-                $lglobal{zoneindex}-- unless $lglobal{zoneindex} < 1;
-                if ( $lglobal{fnlzs}[ $lglobal{zoneindex} ] ) {
-                    $textwindow->see( 'LZ' . $lglobal{zoneindex} );
-                    $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-                    $textwindow->tagAdd(
-                        'highlight',
-                        'LZ' . $lglobal{zoneindex},
-                        'LZ' . $lglobal{zoneindex} . '+10c'
-                    );
-                }
-            },
-            -text  => '<--- Last LZ',
-            -width => 12
-        )->grid( -row => 2, -column => 1, -padx => 2, -pady => 4 );
-
-        $frame1->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                getlz();
-                return unless $lglobal{fnlzs} and @{ $lglobal{fnlzs} };
-                $lglobal{zoneindex}++
-                    unless $lglobal{zoneindex}
-                        > ( ( scalar( @{ $lglobal{fnlzs} } ) ) - 2 );
-                if ( $lglobal{fnlzs}[ $lglobal{zoneindex} ] ) {
-                    $textwindow->see( 'LZ' . $lglobal{zoneindex} );
-                    $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-                    $textwindow->tagAdd(
-                        'highlight',
-                        'LZ' . $lglobal{zoneindex},
-                        'LZ' . $lglobal{zoneindex} . '+10c'
-                    );
-                }
-            },
-            -text  => 'Next LZ --->',
-            -width => 12
-        )->grid( -row => 2, -column => 3, -padx => 6, -pady => 4 );
-        my $frame3 = $lglobal{footpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $frame3->Checkbutton(
-            -variable => \$lglobal{fnsearchlimit},
-            -text     => 'Unlimited Anchor Search'
-        )->grid( -row => 1, -column => 1, -padx => 3, -pady => 4 );
-        $lglobal{fnmvbutton} = $frame3->Button(
-            -activebackground => $activecolor,
-            -command          => sub { footnotemove() },
-            -text             => 'Move Footnotes To Landing Zone(s)',
-            -state            => 'disabled',
-            -width            => 30
-        )->grid( -row => 1, -column => 2, -padx => 3, -pady => 4 );
-        my $frame4 = $lglobal{footpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $frame4->Button(
-            -activebackground => $activecolor,
-            -command          => sub { footnotetidy() },
-            -text             => 'Tidy Up Footnotes',
-            -width            => 18
-        )->grid( -row => 1, -column => 1, -padx => 6, -pady => 4 );
-        $frame4->Button(
-            -activebackground => $activecolor,
-            -command          => sub { fnview() },
-            -text             => 'Check Footnotes',
-            -width            => 14
-        )->grid( -row => 1, -column => 2, -padx => 6, -pady => 4 );
-        $lglobal{footpop}->protocol(
-            'WM_DELETE_WINDOW' => sub {
-                $lglobal{footpop}->destroy;
-                undef $lglobal{footpop};
-                $textwindow->tagRemove( 'footnote', '1.0', 'end' );
-            }
-        );
-        $lglobal{footpop}->Icon( -image => $icon );
-        $fnrb2->select;
-        my ( $start, $end );
-        $start = '1.0';
-        while (1) {
-            $start = $textwindow->markNext($start);
-            last unless $start;
-            next unless ( $start =~ /^fns/ );
-            $end = $start;
-            $end =~ s/^fns/fne/;
-            $textwindow->tagAdd( 'footnote', $start, $end );
-        }
-        $lglobal{footnotenumber}->configure( -text => $lglobal{fncount} );
-        $lglobal{footnoteletter}
-            ->configure( -text => alpha( $lglobal{fnalpha} ) );
-        $lglobal{footnoteroman}
-            ->configure( -text => roman( $lglobal{fnroman} ) );
-        $lglobal{footnotetotal}->configure(
-            -text => "# $lglobal{fnindex}" . "/" . "$lglobal{fntotal}" );
-        $lglobal{fnsecondpass} = 0;
-    }
-}
 
 sub fnview
 { # Pop up a window showing all the footnote addresses with potential problems highlighted
@@ -4812,46 +4342,6 @@ sub orphans {
     return 0;
 }
 
-sub cp1252toUni {
-    my %cp = (
-        "\x{80}" => "\x{20AC}",
-        "\x{82}" => "\x{201A}",
-        "\x{83}" => "\x{0192}",
-        "\x{84}" => "\x{201E}",
-        "\x{85}" => "\x{2026}",
-        "\x{86}" => "\x{2020}",
-        "\x{87}" => "\x{2021}",
-        "\x{88}" => "\x{02C6}",
-        "\x{89}" => "\x{2030}",
-        "\x{8A}" => "\x{0160}",
-        "\x{8B}" => "\x{2039}",
-        "\x{8C}" => "\x{0152}",
-        "\x{8E}" => "\x{017D}",
-        "\x{91}" => "\x{2018}",
-        "\x{92}" => "\x{2019}",
-        "\x{93}" => "\x{201C}",
-        "\x{94}" => "\x{201D}",
-        "\x{95}" => "\x{2022}",
-        "\x{96}" => "\x{2013}",
-        "\x{97}" => "\x{2014}",
-        "\x{98}" => "\x{02DC}",
-        "\x{99}" => "\x{2122}",
-        "\x{9A}" => "\x{0161}",
-        "\x{9B}" => "\x{203A}",
-        "\x{9C}" => "\x{0153}",
-        "\x{9E}" => "\x{017E}",
-        "\x{9F}" => "\x{0178}"
-    );
-    for my $term ( keys %cp ) {
-        my $thisblockstart;
-        while ( $thisblockstart
-            = $textwindow->search( '-exact', '--', $term, '1.0', 'end' ) )
-        {
-            $textwindow->ntdelete( $thisblockstart, "$thisblockstart+1c" );
-            $textwindow->ntinsert( $thisblockstart, $cp{$term} );
-        }
-    }
-}
 
 sub wrapper {
     my @words       = ();
@@ -5203,350 +4693,6 @@ sub surroundit {
     $textwindow->addGlobEnd;
 }
 
-sub markpopup {
-    push @operations, ( localtime() . ' - HTML Markup' );
-    viewpagenums() if ( $lglobal{seepagenums} );
-    if ( defined( $lglobal{markpop} ) ) {
-        $lglobal{markpop}->deiconify;
-        $lglobal{markpop}->raise;
-        $lglobal{markpop}->focus;
-    }
-    else {
-        my $blockmarkup;
-        $lglobal{markpop} = $top->Toplevel;
-        $lglobal{markpop}->title('HTML Markup');
-        my $tableformat;
-        my $f0 = $lglobal{markpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $f0->Button(
-            -activebackground => $activecolor,
-            -command          => sub { htmlautoconvert() },
-            -text             => 'Autogenerate HTML',
-            -width            => 16
-        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-        $f0->Button(
-            -text    => 'Custom Page Labels',
-            -command => sub { pageadjust() },
-        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
-        $f0->Button(
-            -activebackground => $activecolor,
-            -command          => sub { htmlimages(); },
-            -text             => 'Auto Illus Search',
-            -width            => 16,
-        )->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
-        my $pagecomments = $f0->Checkbutton(
-            -variable    => \$lglobal{pagecmt},
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Pg #s as comments',
-            -anchor      => 'w',
-            )->grid(
-            -row    => 2,
-            -column => 1,
-            -padx   => 1,
-            -pady   => 2,
-            -sticky => 'w'
-            );
-        my $pageanchors = $f0->Checkbutton(
-            -variable    => \$lglobal{pageanch},
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Insert Anchors at Pg #s',
-            -anchor      => 'w',
-            )->grid(
-            -row    => 2,
-            -column => 3,
-            -padx   => 1,
-            -pady   => 2,
-            -sticky => 'w'
-            );
-        $pageanchors->select;
-        my $fractions = $f0->Checkbutton(
-            -variable    => \$lglobal{autofraction},
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Convert Fractions',
-            -anchor      => 'w',
-            )->grid(
-            -row    => 3,
-            -column => 1,
-            -padx   => 1,
-            -pady   => 2,
-            -sticky => 'w'
-            );
-
-        my $utfconvert = $f0->Checkbutton(
-            -variable    => \$lglobal{leave_utf},
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Keep UTF-8 Chars',
-            -anchor      => 'w',
-            )->grid(
-            -row    => 3,
-            -column => 2,
-            -padx   => 1,
-            -pady   => 2,
-            -sticky => 'w'
-            );
-
-        my $latin1_convert = $f0->Checkbutton(
-            -variable    => \$lglobal{keep_latin1},
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Keep Latin-1 Chars',
-            -anchor      => 'w',
-            )->grid(
-            -row    => 3,
-            -column => 4,
-            -padx   => 1,
-            -pady   => 2,
-            -sticky => 'w'
-            );
-
-        $blockmarkup = $f0->Checkbutton(
-            -variable    => \$lglobal{cssblockmarkup},
-            -selectcolor => $lglobal{checkcolor},
-            -command     => sub {
-
-                if ( $lglobal{cssblockmarkup} ) {
-                    $blockmarkup->configure( '-text' => 'CSS blockquote' );
-                }
-                else {
-                    $blockmarkup->configure( '-text' => 'Std. <blockquote>' );
-                }
-            },
-            -text   => 'CSS blockquote',
-            -anchor => 'w',
-            )->grid(
-            -row    => 3,
-            -column => 3,
-            -padx   => 1,
-            -pady   => 2,
-            -sticky => 'w'
-            );
-        my $f1 = $lglobal{markpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        my ( $inc, $row, $col ) = ( 0, 0, 0 );
-        for (
-            qw/i b u center h1 h2 h3 h4 h5 h6 p hr br big small ol ul li sup sub table tr td blockquote code/
-            )
-        {
-            $col = $inc % 5;
-            $row = int $inc / 5;
-            $f1->Button(
-                -activebackground => $activecolor,
-                -command          => [ sub { markup( $_[0] ) }, $_ ],
-                -text             => "<$_>",
-                -width            => 10
-                )->grid(
-                -row    => $row,
-                -column => $col,
-                -padx   => 1,
-                -pady   => 2
-                );
-            ++$inc;
-        }
-
-        $f1->Button(
-            -activebackground => $activecolor,
-            -command          => sub { markup('&nbsp;') },
-            -text             => 'nb space',
-            -width            => 10
-        )->grid( -row => 8, -column => 3, -padx => 1, -pady => 2 );
-        $f1->Button(
-            -activebackground => $activecolor,
-            -command          => \&poetryhtml,
-            -text             => 'Poetry',
-            -width            => 10
-        )->grid( -row => 8, -column => 4, -padx => 1, -pady => 2 );
-
-        my $f2 = $lglobal{markpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        my %hbuttons = (
-            'anchor', 'Named anchor',  'img',   'Image',
-            'elink',  'External Link', 'ilink', 'Internal Link'
-        );
-        ( $row, $col ) = ( 0, 0 );
-        for ( keys %hbuttons ) {
-            $f2->Button(
-                -activebackground => $activecolor,
-                -command          => [ sub { markup( $_[0] ) }, $_ ],
-                -text             => "$hbuttons{$_}",
-                -width            => 13
-                )->grid(
-                -row    => $row,
-                -column => $col,
-                -padx   => 1,
-                -pady   => 2
-                );
-            ++$col;
-        }
-
-        my $f3 = $lglobal{markpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $f3->Button(
-            -activebackground => $activecolor,
-            -command          => sub { markup('del') },
-            -text             => 'Remove markup from selection',
-            -width            => 28
-        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-        $f3->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                for my $orphan (
-                    'b',  'i',  'center', 'u',  'sub', 'sup',
-                    'sc', 'h1', 'h2',     'h3', 'h4',  'h5',
-                    'h6', 'p',  'span'
-                    )
-                {
-                    working( 'Checking <' . $orphan . '>' );
-                    last if orphans($orphan);
-                }
-                working();
-            },
-            -text  => 'Find orphaned markup',
-            -width => 28
-        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
-        my $f4 = $lglobal{markpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        my $unorderselect = $f4->Radiobutton(
-            -text        => 'unordered',
-            -selectcolor => $lglobal{checkcolor},
-            -variable    => \$lglobal{liststyle},
-            -value       => 'ul',
-        )->grid( -row => 1, -column => 1 );
-        my $orderselect = $f4->Radiobutton(
-            -text        => 'ordered',
-            -selectcolor => $lglobal{checkcolor},
-            -variable    => \$lglobal{liststyle},
-            -value       => 'ol',
-        )->grid( -row => 1, -column => 2 );
-        my $autolbutton = $f4->Button(
-            -activebackground => $activecolor,
-            -command          => sub { autolist(); $textwindow->focus },
-            -text             => 'Auto List',
-            -width            => 16
-        )->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
-        $f4->Checkbutton(
-            -text     => 'ML',
-            -variable => \$lglobal{list_multiline},
-            -onvalue  => 1,
-            -offvalue => 0
-        )->grid( -row => 1, -column => 5 );
-        my $leftselect = $f4->Radiobutton(
-            -text        => 'left',
-            -selectcolor => $lglobal{checkcolor},
-            -variable    => \$lglobal{tablecellalign},
-            -value       => ' align="left"',
-        )->grid( -row => 2, -column => 1 );
-        my $censelect = $f4->Radiobutton(
-            -text        => 'center',
-            -selectcolor => $lglobal{checkcolor},
-            -variable    => \$lglobal{tablecellalign},
-            -value       => ' align="center"',
-        )->grid( -row => 2, -column => 2 );
-        my $rghtselect = $f4->Radiobutton(
-            -text        => 'right',
-            -selectcolor => $lglobal{checkcolor},
-            -variable    => \$lglobal{tablecellalign},
-            -value       => ' align="right"',
-        )->grid( -row => 2, -column => 3 );
-        $leftselect->select;
-        $unorderselect->select;
-        $f4->Button(
-            -activebackground => $activecolor,
-            -command =>
-                sub { autotable( $tableformat->get ); $textwindow->focus },
-            -text  => 'Auto Table',
-            -width => 16
-        )->grid( -row => 2, -column => 4, -padx => 1, -pady => 2 );
-        $f4->Checkbutton(
-            -text     => 'ML',
-            -variable => \$lglobal{tbl_multiline},
-            -onvalue  => 1,
-            -offvalue => 0
-        )->grid( -row => 2, -column => 5 );
-        my $f5 = $lglobal{markpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $tableformat = $f5->Entry(
-            -width      => 40,
-            -background => 'white',
-            -relief     => 'sunken',
-        )->grid( -row => 0, -column => 1, -pady => 2 );
-        $f5->Label( -text => 'Column Fmt', )
-            ->grid( -row => 0, -column => 2, -padx => 2, -pady => 2 );
-        my $diventry = $f5->Entry(
-            -width      => 40,
-            -background => 'white',
-            -relief     => 'sunken',
-        )->grid( -row => 1, -column => 1, -pady => 2 );
-        $f5->Button(
-            -activebackground => $activecolor,
-            -command =>
-                sub { markup( 'div', $diventry->get ); $textwindow->focus },
-            -text  => 'div',
-            -width => 8
-        )->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
-        my $f6 = $lglobal{markpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        my $spanentry = $f6->Entry(
-            -width      => 40,
-            -background => 'white',
-            -relief     => 'sunken',
-        )->grid( -row => 1, -column => 1, -pady => 2 );
-        $f6->Button(
-            -activebackground => $activecolor,
-            -command =>
-                sub { markup( 'span', $spanentry->get ); $textwindow->focus },
-            -text  => 'span',
-            -width => 8
-        )->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
-        my $f7 = $lglobal{markpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $f7->Checkbutton(
-            -variable    => \$lglobal{poetrynumbers},
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Find and Format Poetry Line Numbers'
-        )->grid( -row => 1, -column => 1, -pady => 2 );
-        $f7->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                open my $infile, '<', 'header.txt'
-                    or warn "Could not open header file. $!\n";
-                my $headertext;
-                while (<$infile>) {
-                    $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-
-                    #$_ = eol_convert($_);
-                    $headertext .= $_;
-                }
-                $textwindow->insert( '1.0', $headertext );
-                close $infile;
-                $textwindow->insert( 'end', "<\/body>\n<\/html>" );
-            },
-            -text  => 'Header',
-            -width => 16
-        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
-        my $f8 = $lglobal{markpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $f8->Button(
-            -activebackground => $activecolor,
-            -command          => \&linkcheck,
-            -text             => 'Link Checker',
-            -width            => 16
-        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-        $f8->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                tidyrun('-f tidyerr.err -o null');
-                unlink 'null' if ( -e 'null' );
-            },
-            -text  => 'HTML Tidy',
-            -width => 16
-        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
-        $diventry->insert( 'end', ' style="margin-left: 2em;"' );
-        $spanentry->insert( 'end', ' style="margin-left: 2em;"' );
-        $lglobal{markpop}->protocol( 'WM_DELETE_WINDOW' =>
-                sub { $lglobal{markpop}->destroy; undef $lglobal{markpop} } );
-        $lglobal{markpop}->Icon( -image => $icon );
-        $lglobal{markpop}->transient($top) if $stayontop;
-    }
-}
 
 sub poetryhtml {
     viewpagenums() if ( $lglobal{seepagenums} );
@@ -10343,214 +9489,6 @@ sub insertit {
         if $isatext;
 }
 
-sub tablefx {
-    viewpagenums() if ( $lglobal{seepagenums} );
-    if ( defined( $lglobal{tblfxpop} ) ) {
-        $lglobal{tblfxpop}->deiconify;
-        $lglobal{tblfxpop}->raise;
-        $lglobal{tblfxpop}->focus;
-    }
-    else {
-        $lglobal{columnspaces} = '';
-        $lglobal{tblfxpop}     = $top->Toplevel;
-        $lglobal{tblfxpop}->title('ASCII Table Special Effects');
-        my $f0 = $lglobal{tblfxpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        my %tb_buttons = (
-            'Table Select'   => sub { tblselect() },
-            'Table Deselect' => sub {
-                $textwindow->tagRemove( 'table',   '1.0', 'end' );
-                $textwindow->tagRemove( 'linesel', '1.0', 'end' );
-                $textwindow->markUnset( 'tblstart', 'tblend' );
-                undef $lglobal{selectedline};
-            },
-            'Insert Vertical Line' => sub {
-                insertline('i');
-            },
-            'Add Vertical Line' => sub {
-                insertline('a');
-            },
-            'Space Out Table' => sub {
-                tblspace();
-            },
-            'Auto Columns' => sub {
-                tblautoc();
-            },
-            'Compress Table' => sub {
-                tblcompress();
-            },
-            'Select Prev Line' => sub {
-                tlineselect('p');
-            },
-            'Select Next Line' => sub {
-                tlineselect('n');
-            },
-            'Line Deselect' => sub {
-                $textwindow->tagRemove( 'linesel', '1.0', 'end' );
-                undef $lglobal{selectedline};
-            },
-            'Delete Sel. Line' => sub {
-                my @ranges      = $textwindow->tagRanges('linesel');
-                my $range_total = @ranges;
-                $operationinterrupt = 0;
-                $textwindow->addGlobStart;
-                if ( $range_total == 0 ) {
-                    $textwindow->addGlobEnd;
-                    return;
-                }
-                else {
-                    while (@ranges) {
-                        my $end   = pop(@ranges);
-                        my $start = pop(@ranges);
-                        $textwindow->delete( $start, $end )
-                            if ( $textwindow->get($start) eq '|' );
-                    }
-                }
-                $textwindow->tagAdd( 'table', 'tblstart', 'tblend' );
-                $textwindow->tagRemove( 'linesel', '1.0', 'end' );
-                $textwindow->addGlobEnd;
-            },
-            'Remove Sel. Line' => sub {
-                tlineremove();
-            },
-        );
-        my ( $inc, $row, $col ) = ( 0, 0, 0 );
-        for ( keys %tb_buttons ) {
-            $row = int( $inc / 4 );
-            $col = $inc % 4;
-            $f0->Button(
-                -activebackground => $activecolor,
-                -command          => $tb_buttons{$_},
-                -text             => $_,
-                -width            => 16
-                )->grid(
-                -row    => $row,
-                -column => $col,
-                -padx   => 1,
-                -pady   => 2
-                );
-            ++$inc;
-        }
-
-        my $f1 = $lglobal{tblfxpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $f1->Label( -text => 'Justify', )
-            ->grid( -row => 1, -column => 0, -padx => 1, -pady => 2 );
-        my $rb1 = $f1->Radiobutton(
-            -text        => 'L',
-            -variable    => \$lglobal{tblcoljustify},
-            -selectcolor => $lglobal{checkcolor},
-            -value       => 'l',
-        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-        my $rb2 = $f1->Radiobutton(
-            -text        => 'C',
-            -variable    => \$lglobal{tblcoljustify},
-            -selectcolor => $lglobal{checkcolor},
-            -value       => 'c',
-        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
-        my $rb3 = $f1->Radiobutton(
-            -text        => 'R',
-            -variable    => \$lglobal{tblcoljustify},
-            -selectcolor => $lglobal{checkcolor},
-            -value       => 'r',
-        )->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
-        $f1->Checkbutton(
-            -variable    => \$lglobal{tblrwcol},
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Rewrap Cols',
-            -command     => sub {
-                if ( $lglobal{tblrwcol} ) {
-                    $rb1->configure( -state => 'active' );
-                    $rb2->configure( -state => 'active' );
-                    $rb3->configure( -state => 'active' );
-                }
-                else {
-                    $rb1->configure( -state => 'disabled' );
-                    $rb2->configure( -state => 'disabled' );
-                    $rb3->configure( -state => 'disabled' );
-                }
-            },
-        )->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
-        $lglobal{colwidthlbl} = $f1->Label(
-            -text  => "Width $lglobal{columnspaces}",
-            -width => 8,
-        )->grid( -row => 1, -column => 5, -padx => 1, -pady => 2 );
-        $f1->Button(
-            -activebackground => $activecolor,
-            -command          => sub { coladjust(-1) },
-            -text             => 'Move Left',
-            -width            => 10
-        )->grid( -row => 1, -column => 6, -padx => 1, -pady => 2 );
-        $f1->Button(
-            -activebackground => $activecolor,
-            -command          => sub { coladjust(1) },
-            -text             => 'Move Right',
-            -width            => 10
-        )->grid( -row => 1, -column => 7, -padx => 1, -pady => 2 );
-        my $f3 = $lglobal{tblfxpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $f3->Label( -text => 'Table Right Column', )
-            ->grid( -row => 1, -column => 0, -padx => 1, -pady => 2 );
-        $f3->Entry(
-            -width        => 6,
-            -background   => 'white',
-            -textvariable => \$lglobal{stepmaxwidth},
-        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-        $f3->Button(
-            -activebackground => $activecolor,
-            -command          => sub { grid2step() },
-            -text             => 'Convert Grid to Step',
-            -width            => 16
-        )->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
-        my $f4 = $lglobal{tblfxpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $f4->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                $textwindow->undo;
-                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-            },
-            -text  => 'Undo',
-            -width => 10
-        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-        $f4->Button(
-            -activebackground => $activecolor,
-            -command          => sub { $textwindow->redo },
-            -text             => 'Redo',
-            -width            => 10
-        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
-        $f4->Button(
-            -activebackground => $activecolor,
-            -command          => sub { step2grid() },
-            -text             => 'Convert Step to Grid',
-            -width            => 16
-        )->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
-        $lglobal{tblfxpop}->bind( '<Control-Left>',  sub { coladjust(-1) } );
-        $lglobal{tblfxpop}->bind( '<Control-Right>', sub { coladjust(1) } );
-        $lglobal{tblfxpop}->bind( '<Left>',  sub { tlineselect('p') } );
-        $lglobal{tblfxpop}->bind( '<Right>', sub { tlineselect('n') } );
-        $lglobal{tblfxpop}->bind(
-            '<Control-z>',
-            sub {
-                $textwindow->undo;
-                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-            }
-        );
-        $lglobal{tblfxpop}->bind( '<Delete>', sub { tlineremove() } );
-        tblselect();
-    }
-    $lglobal{tblfxpop}->protocol(
-        'WM_DELETE_WINDOW' => sub {
-            $textwindow->tagRemove( 'table',   '1.0', 'end' );
-            $textwindow->tagRemove( 'linesel', '1.0', 'end' );
-            $textwindow->markUnset( 'tblstart', 'tblend' );
-            $lglobal{tblfxpop}->destroy;
-            undef $lglobal{tblfxpop};
-        }
-    );
-    $lglobal{tblfxpop}->Icon( -image => $icon );
-
-}
 
 sub tblselect {
     $textwindow->tagRemove( 'table', '1.0', 'end' );
@@ -11901,12 +10839,6 @@ sub b2scroll {
     }
 }
 
-# -------------------------------------------------------------------------------
-sub convertgreek {
-
-    # does nothing yet
-}
-
 sub findmatchingclosebracket {
     my ($startIndex) = @_;
     my $indentLevel = 1;
@@ -11947,24 +10879,6 @@ sub findgreek {
     }
 }
 
-sub findandextractgreek {
-    $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-    my ( $greekIndex, $closeIndex ) = findgreek('insert');
-    if ($closeIndex) {
-        $textwindow->markSet( 'insert', $greekIndex );
-        $textwindow->tagAdd( 'highlight', $greekIndex, $greekIndex . "+7c" );
-        $textwindow->see('insert');
-        $textwindow->tagAdd( 'highlight', $greekIndex, $greekIndex . "+1c" );
-        if ( !defined( $lglobal{grpop} ) ) {
-            greekpopup();
-        }
-        $textwindow->markSet( 'insert', $greekIndex . '+8c' );
-        my $text = $textwindow->get( $greekIndex . '+8c', $closeIndex );
-        $textwindow->delete( $greekIndex . '+8c', $closeIndex );
-        $lglobal{grtext}->delete( '1.0', 'end' );
-        $lglobal{grtext}->insert( '1.0', $text );
-    }
-}
 
 sub putgreek {
     my ( $attrib, $hash ) = @_;
@@ -18161,6 +17075,1107 @@ sub delblanklines {
     }
     $textwindow->Unbusy;
 }
+
+sub footnotepop
+{   # Pop up a window where footnotes can be found, fixed and formatted. (heh)
+    push @operations, ( localtime() . ' - Footnote Fixup' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    oppopupdate()  if $lglobal{oppop};
+    if ( defined( $lglobal{footpop} ) ) {
+        $lglobal{footpop}->deiconify;
+        $lglobal{footpop}->raise;
+        $lglobal{footpop}->focus;
+    }
+    else {
+        $lglobal{fncount} = '1' unless $lglobal{fncount};
+        $lglobal{fnalpha} = '1' unless $lglobal{fnalpha};
+        $lglobal{fnroman} = '1' unless $lglobal{fnroman};
+        $lglobal{fnindex} = '0' unless $lglobal{fnindex};
+        $lglobal{fntotal} = '0' unless $lglobal{fntotal};
+        $lglobal{footpop} = $top->Toplevel;
+        my ( $checkn, $checka, $checkr );
+        $lglobal{footpop}->title('Footnote Fix Up');
+        my $frame2 = $lglobal{footpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $frame2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                $textwindow->yview('end');
+                $textwindow->see(
+                    $lglobal{fnarray}->[ $lglobal{fnindex} ][2] )
+                    if $lglobal{fnarray}->[ $lglobal{fnindex} ][2];
+            },
+            -text  => 'See Anchor',
+            -width => 14
+        )->grid( -row => 1, -column => 1, -padx => 2, -pady => 4 );
+        $lglobal{footnotetotal}
+            = $frame2->Label->grid( -row => 1, -column => 2 );
+        $frame2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                footnoteshow();
+            },
+            -text  => 'See Footnote',
+            -width => 14
+        )->grid( -row => 1, -column => 3, -padx => 2, -pady => 4 );
+        $frame2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                $lglobal{fnindex}--;
+                footnoteshow();
+            },
+            -text  => '<--- Last FN',
+            -width => 14
+        )->grid( -row => 2, -column => 1 );
+        $lglobal{fnindexbrowse} = $frame2->BrowseEntry(
+            -label     => 'Go to - #',
+            -variable  => \$lglobal{fnindex},
+            -state     => 'readonly',
+            -width     => 8,
+            -listwidth => 22,
+            -browsecmd => sub {
+                $lglobal{fnindex} = $lglobal{fntotal}
+                    if ( $lglobal{fnindex} > $lglobal{fntotal} );
+                $lglobal{fnindex} = 1 if ( $lglobal{fnindex} < 1 );
+                footnoteshow();
+            }
+        )->grid( -row => 2, -column => 2 );
+        $frame2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                $lglobal{fnindex}++;
+                footnoteshow();
+            },
+            -text  => 'Next FN --->',
+            -width => 14
+        )->grid( -row => 2, -column => 3 );
+        $lglobal{footnotenumber} = $frame2->Label(
+            -background => 'white',
+            -relief     => 'sunken',
+            -justify    => 'center',
+            -font       => '{Times} 10',
+            -width      => 10,
+        )->grid( -row => 3, -column => 1, -padx => 2, -pady => 4 );
+        $lglobal{footnoteletter} = $frame2->Label(
+            -background => 'white',
+            -relief     => 'sunken',
+            -justify    => 'center',
+            -font       => '{Times} 10',
+            -width      => 10,
+        )->grid( -row => 3, -column => 2, -padx => 2, -pady => 4 );
+        $lglobal{footnoteroman} = $frame2->Label(
+            -background => 'white',
+            -relief     => 'sunken',
+            -justify    => 'center',
+            -font       => '{Times} 10',
+            -width      => 10,
+        )->grid( -row => 3, -column => 3, -padx => 2, -pady => 4 );
+        $checkn = $frame2->Checkbutton(
+            -variable => \$lglobal{fntypen},
+            -command  => sub {
+                return if ( $lglobal{footstyle} eq 'inline' );
+                $checka->deselect;
+                $checkr->deselect;
+            },
+            -text  => 'All to Number',
+            -width => 14
+        )->grid( -row => 4, -column => 1, -padx => 2, -pady => 4 );
+        $checka = $frame2->Checkbutton(
+            -variable => \$lglobal{fntypea},
+            -command  => sub {
+                return if ( $lglobal{footstyle} eq 'inline' );
+                $checkn->deselect;
+                $checkr->deselect;
+            },
+            -text  => 'All to Letter',
+            -width => 14
+        )->grid( -row => 4, -column => 2, -padx => 2, -pady => 4 );
+        $checkr = $frame2->Checkbutton(
+            -variable => \$lglobal{fntyper},
+            -command  => sub {
+                return if ( $lglobal{footstyle} eq 'inline' );
+                $checka->deselect;
+                $checkn->deselect;
+            },
+            -text  => 'All to Roman',
+            -width => 14
+        )->grid( -row => 4, -column => 3, -padx => 2, -pady => 4 );
+        $frame2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                return if ( $lglobal{footstyle} eq 'inline' );
+                fninsertmarkers('n');
+                footnoteshow();
+            },
+            -text  => 'Number',
+            -width => 14
+        )->grid( -row => 5, -column => 1, -padx => 2, -pady => 4 );
+        $frame2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                return if ( $lglobal{footstyle} eq 'inline' );
+                fninsertmarkers('a');
+                footnoteshow();
+            },
+            -text  => 'Letter',
+            -width => 14
+        )->grid( -row => 5, -column => 2, -padx => 2, -pady => 4 );
+        $frame2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                return if ( $lglobal{footstyle} eq 'inline' );
+                fninsertmarkers('r');
+                footnoteshow();
+            },
+            -text  => 'Roman',
+            -width => 14
+        )->grid( -row => 5, -column => 3, -padx => 2, -pady => 4 );
+        $frame2->Button(
+            -activebackground => $activecolor,
+            -command          => sub { fnjoin() },
+            -text             => 'Join With Previous',
+            -width            => 14
+        )->grid( -row => 6, -column => 1, -padx => 2, -pady => 4 );
+        $frame2->Button(
+            -activebackground => $activecolor,
+            -command          => sub { footnoteadjust() },
+            -text             => 'Adjust Bounds',
+            -width            => 14
+        )->grid( -row => 6, -column => 2, -padx => 2, -pady => 4 );
+        $frame2->Button(
+            -activebackground => $activecolor,
+            -command          => sub { setanchor() },
+            -text             => 'Set Anchor',
+            -width            => 14
+        )->grid( -row => 6, -column => 3, -padx => 2, -pady => 4 );
+        $frame2->Checkbutton(
+            -variable => \$lglobal{fncenter},
+            -text     => 'Center on Search'
+        )->grid( -row => 7, -column => 1, -padx => 3, -pady => 4 );
+        $frame2->Button(
+            -activebackground => $activecolor,
+            -command => sub { $lglobal{fnsecondpass} = 0; footnotefixup() },
+            -text    => 'First Pass',
+            -width   => 14
+        )->grid( -row => 7, -column => 2, -padx => 2, -pady => 4 );
+        my $fnrb1 = $frame2->Radiobutton(
+            -text        => 'Inline',
+            -variable    => \$lglobal{footstyle},
+            -selectcolor => $lglobal{checkcolor},
+            -value       => 'inline',
+            -command     => sub {
+                $lglobal{fnindex} = 1;
+                footnoteshow();
+                $lglobal{fnmvbutton}->configure( -state => 'disabled' );
+            },
+        )->grid( -row => 8, -column => 1 );
+        $lglobal{fnfpbutton} = $frame2->Button(
+            -activebackground => $activecolor,
+            -command          => sub { footnotefixup() },
+            -text             => 'Re Index',
+            -state            => 'disabled',
+            -width            => 14
+        )->grid( -row => 8, -column => 2, -padx => 2, -pady => 4 );
+        my $fnrb2 = $frame2->Radiobutton(
+            -text        => 'Out-of-Line',
+            -variable    => \$lglobal{footstyle},
+            -selectcolor => $lglobal{checkcolor},
+            -value       => 'end',
+            -command     => sub {
+                $lglobal{fnindex} = 1;
+                footnoteshow();
+                $lglobal{fnmvbutton}->configure( -state => 'normal' )
+                    if ( $lglobal{fnsecondpass}
+                    && ( defined $lglobal{fnlzs} and @{ $lglobal{fnlzs} } ) );
+            },
+        )->grid( -row => 8, -column => 3 );
+        my $frame1 = $lglobal{footpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $frame1->Button(
+            -activebackground => $activecolor,
+            -command          => sub { setlz() },
+            -text             => 'Set LZ @ cursor',
+            -width            => 14
+        )->grid( -row => 1, -column => 1, -padx => 2, -pady => 4 );
+        $frame1->Button(
+            -activebackground => $activecolor,
+            -command          => sub { autochaptlz() },
+            -text             => 'Autoset Chap. LZ',
+            -width            => 14
+        )->grid( -row => 1, -column => 2, -padx => 2, -pady => 4 );
+        $frame1->Button(
+            -activebackground => $activecolor,
+            -command          => sub { autoendlz() },
+            -text             => 'Autoset End LZ',
+            -width            => 14
+        )->grid( -row => 1, -column => 3, -padx => 2, -pady => 4 );
+        $frame1->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                getlz();
+                return unless $lglobal{fnlzs} and @{ $lglobal{fnlzs} };
+                $lglobal{zoneindex}-- unless $lglobal{zoneindex} < 1;
+                if ( $lglobal{fnlzs}[ $lglobal{zoneindex} ] ) {
+                    $textwindow->see( 'LZ' . $lglobal{zoneindex} );
+                    $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+                    $textwindow->tagAdd(
+                        'highlight',
+                        'LZ' . $lglobal{zoneindex},
+                        'LZ' . $lglobal{zoneindex} . '+10c'
+                    );
+                }
+            },
+            -text  => '<--- Last LZ',
+            -width => 12
+        )->grid( -row => 2, -column => 1, -padx => 2, -pady => 4 );
+
+        $frame1->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                getlz();
+                return unless $lglobal{fnlzs} and @{ $lglobal{fnlzs} };
+                $lglobal{zoneindex}++
+                    unless $lglobal{zoneindex}
+                        > ( ( scalar( @{ $lglobal{fnlzs} } ) ) - 2 );
+                if ( $lglobal{fnlzs}[ $lglobal{zoneindex} ] ) {
+                    $textwindow->see( 'LZ' . $lglobal{zoneindex} );
+                    $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+                    $textwindow->tagAdd(
+                        'highlight',
+                        'LZ' . $lglobal{zoneindex},
+                        'LZ' . $lglobal{zoneindex} . '+10c'
+                    );
+                }
+            },
+            -text  => 'Next LZ --->',
+            -width => 12
+        )->grid( -row => 2, -column => 3, -padx => 6, -pady => 4 );
+        my $frame3 = $lglobal{footpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $frame3->Checkbutton(
+            -variable => \$lglobal{fnsearchlimit},
+            -text     => 'Unlimited Anchor Search'
+        )->grid( -row => 1, -column => 1, -padx => 3, -pady => 4 );
+        $lglobal{fnmvbutton} = $frame3->Button(
+            -activebackground => $activecolor,
+            -command          => sub { footnotemove() },
+            -text             => 'Move Footnotes To Landing Zone(s)',
+            -state            => 'disabled',
+            -width            => 30
+        )->grid( -row => 1, -column => 2, -padx => 3, -pady => 4 );
+        my $frame4 = $lglobal{footpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $frame4->Button(
+            -activebackground => $activecolor,
+            -command          => sub { footnotetidy() },
+            -text             => 'Tidy Up Footnotes',
+            -width            => 18
+        )->grid( -row => 1, -column => 1, -padx => 6, -pady => 4 );
+        $frame4->Button(
+            -activebackground => $activecolor,
+            -command          => sub { fnview() },
+            -text             => 'Check Footnotes',
+            -width            => 14
+        )->grid( -row => 1, -column => 2, -padx => 6, -pady => 4 );
+        $lglobal{footpop}->protocol(
+            'WM_DELETE_WINDOW' => sub {
+                $lglobal{footpop}->destroy;
+                undef $lglobal{footpop};
+                $textwindow->tagRemove( 'footnote', '1.0', 'end' );
+            }
+        );
+        $lglobal{footpop}->Icon( -image => $icon );
+        $fnrb2->select;
+        my ( $start, $end );
+        $start = '1.0';
+        while (1) {
+            $start = $textwindow->markNext($start);
+            last unless $start;
+            next unless ( $start =~ /^fns/ );
+            $end = $start;
+            $end =~ s/^fns/fne/;
+            $textwindow->tagAdd( 'footnote', $start, $end );
+        }
+        $lglobal{footnotenumber}->configure( -text => $lglobal{fncount} );
+        $lglobal{footnoteletter}
+            ->configure( -text => alpha( $lglobal{fnalpha} ) );
+        $lglobal{footnoteroman}
+            ->configure( -text => roman( $lglobal{fnroman} ) );
+        $lglobal{footnotetotal}->configure(
+            -text => "# $lglobal{fnindex}" . "/" . "$lglobal{fntotal}" );
+        $lglobal{fnsecondpass} = 0;
+    }
+}
+
+sub markpopup { # FIXME: Rename html_popup
+    push @operations, ( localtime() . ' - HTML Markup' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    if ( defined( $lglobal{markpop} ) ) {
+        $lglobal{markpop}->deiconify;
+        $lglobal{markpop}->raise;
+        $lglobal{markpop}->focus;
+    }
+    else {
+        my $blockmarkup;
+        $lglobal{markpop} = $top->Toplevel;
+        $lglobal{markpop}->title('HTML Markup');
+        my $tableformat;
+        my $f0 = $lglobal{markpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $f0->Button(
+            -activebackground => $activecolor,
+            -command          => sub { htmlautoconvert() },
+            -text             => 'Autogenerate HTML',
+            -width            => 16
+        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+        $f0->Button(
+            -text    => 'Custom Page Labels',
+            -command => sub { pageadjust() },
+        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+        $f0->Button(
+            -activebackground => $activecolor,
+            -command          => sub { htmlimages(); },
+            -text             => 'Auto Illus Search',
+            -width            => 16,
+        )->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
+        my $pagecomments = $f0->Checkbutton(
+            -variable    => \$lglobal{pagecmt},
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Pg #s as comments',
+            -anchor      => 'w',
+            )->grid(
+            -row    => 2,
+            -column => 1,
+            -padx   => 1,
+            -pady   => 2,
+            -sticky => 'w'
+            );
+        my $pageanchors = $f0->Checkbutton(
+            -variable    => \$lglobal{pageanch},
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Insert Anchors at Pg #s',
+            -anchor      => 'w',
+            )->grid(
+            -row    => 2,
+            -column => 3,
+            -padx   => 1,
+            -pady   => 2,
+            -sticky => 'w'
+            );
+        $pageanchors->select;
+        my $fractions = $f0->Checkbutton(
+            -variable    => \$lglobal{autofraction},
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Convert Fractions',
+            -anchor      => 'w',
+            )->grid(
+            -row    => 3,
+            -column => 1,
+            -padx   => 1,
+            -pady   => 2,
+            -sticky => 'w'
+            );
+
+        my $utfconvert = $f0->Checkbutton(
+            -variable    => \$lglobal{leave_utf},
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Keep UTF-8 Chars',
+            -anchor      => 'w',
+            )->grid(
+            -row    => 3,
+            -column => 2,
+            -padx   => 1,
+            -pady   => 2,
+            -sticky => 'w'
+            );
+
+        my $latin1_convert = $f0->Checkbutton(
+            -variable    => \$lglobal{keep_latin1},
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Keep Latin-1 Chars',
+            -anchor      => 'w',
+            )->grid(
+            -row    => 3,
+            -column => 4,
+            -padx   => 1,
+            -pady   => 2,
+            -sticky => 'w'
+            );
+
+        $blockmarkup = $f0->Checkbutton(
+            -variable    => \$lglobal{cssblockmarkup},
+            -selectcolor => $lglobal{checkcolor},
+            -command     => sub {
+
+                if ( $lglobal{cssblockmarkup} ) {
+                    $blockmarkup->configure( '-text' => 'CSS blockquote' );
+                }
+                else {
+                    $blockmarkup->configure( '-text' => 'Std. <blockquote>' );
+                }
+            },
+            -text   => 'CSS blockquote',
+            -anchor => 'w',
+            )->grid(
+            -row    => 3,
+            -column => 3,
+            -padx   => 1,
+            -pady   => 2,
+            -sticky => 'w'
+            );
+        my $f1 = $lglobal{markpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        my ( $inc, $row, $col ) = ( 0, 0, 0 );
+        for (
+            qw/i b u center h1 h2 h3 h4 h5 h6 p hr br big small ol ul li sup sub table tr td blockquote code/
+            )
+        {
+            $col = $inc % 5;
+            $row = int $inc / 5;
+            $f1->Button(
+                -activebackground => $activecolor,
+                -command          => [ sub { markup( $_[0] ) }, $_ ],
+                -text             => "<$_>",
+                -width            => 10
+                )->grid(
+                -row    => $row,
+                -column => $col,
+                -padx   => 1,
+                -pady   => 2
+                );
+            ++$inc;
+        }
+
+        $f1->Button(
+            -activebackground => $activecolor,
+            -command          => sub { markup('&nbsp;') },
+            -text             => 'nb space',
+            -width            => 10
+        )->grid( -row => 8, -column => 3, -padx => 1, -pady => 2 );
+        $f1->Button(
+            -activebackground => $activecolor,
+            -command          => \&poetryhtml,
+            -text             => 'Poetry',
+            -width            => 10
+        )->grid( -row => 8, -column => 4, -padx => 1, -pady => 2 );
+
+        my $f2 = $lglobal{markpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        my %hbuttons = (
+            'anchor', 'Named anchor',  'img',   'Image',
+            'elink',  'External Link', 'ilink', 'Internal Link'
+        );
+        ( $row, $col ) = ( 0, 0 );
+        for ( keys %hbuttons ) {
+            $f2->Button(
+                -activebackground => $activecolor,
+                -command          => [ sub { markup( $_[0] ) }, $_ ],
+                -text             => "$hbuttons{$_}",
+                -width            => 13
+                )->grid(
+                -row    => $row,
+                -column => $col,
+                -padx   => 1,
+                -pady   => 2
+                );
+            ++$col;
+        }
+
+        my $f3 = $lglobal{markpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $f3->Button(
+            -activebackground => $activecolor,
+            -command          => sub { markup('del') },
+            -text             => 'Remove markup from selection',
+            -width            => 28
+        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+        $f3->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                for my $orphan (
+                    'b',  'i',  'center', 'u',  'sub', 'sup',
+                    'sc', 'h1', 'h2',     'h3', 'h4',  'h5',
+                    'h6', 'p',  'span'
+                    )
+                {
+                    working( 'Checking <' . $orphan . '>' );
+                    last if orphans($orphan);
+                }
+                working();
+            },
+            -text  => 'Find orphaned markup',
+            -width => 28
+        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+        my $f4 = $lglobal{markpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        my $unorderselect = $f4->Radiobutton(
+            -text        => 'unordered',
+            -selectcolor => $lglobal{checkcolor},
+            -variable    => \$lglobal{liststyle},
+            -value       => 'ul',
+        )->grid( -row => 1, -column => 1 );
+        my $orderselect = $f4->Radiobutton(
+            -text        => 'ordered',
+            -selectcolor => $lglobal{checkcolor},
+            -variable    => \$lglobal{liststyle},
+            -value       => 'ol',
+        )->grid( -row => 1, -column => 2 );
+        my $autolbutton = $f4->Button(
+            -activebackground => $activecolor,
+            -command          => sub { autolist(); $textwindow->focus },
+            -text             => 'Auto List',
+            -width            => 16
+        )->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
+        $f4->Checkbutton(
+            -text     => 'ML',
+            -variable => \$lglobal{list_multiline},
+            -onvalue  => 1,
+            -offvalue => 0
+        )->grid( -row => 1, -column => 5 );
+        my $leftselect = $f4->Radiobutton(
+            -text        => 'left',
+            -selectcolor => $lglobal{checkcolor},
+            -variable    => \$lglobal{tablecellalign},
+            -value       => ' align="left"',
+        )->grid( -row => 2, -column => 1 );
+        my $censelect = $f4->Radiobutton(
+            -text        => 'center',
+            -selectcolor => $lglobal{checkcolor},
+            -variable    => \$lglobal{tablecellalign},
+            -value       => ' align="center"',
+        )->grid( -row => 2, -column => 2 );
+        my $rghtselect = $f4->Radiobutton(
+            -text        => 'right',
+            -selectcolor => $lglobal{checkcolor},
+            -variable    => \$lglobal{tablecellalign},
+            -value       => ' align="right"',
+        )->grid( -row => 2, -column => 3 );
+        $leftselect->select;
+        $unorderselect->select;
+        $f4->Button(
+            -activebackground => $activecolor,
+            -command =>
+                sub { autotable( $tableformat->get ); $textwindow->focus },
+            -text  => 'Auto Table',
+            -width => 16
+        )->grid( -row => 2, -column => 4, -padx => 1, -pady => 2 );
+        $f4->Checkbutton(
+            -text     => 'ML',
+            -variable => \$lglobal{tbl_multiline},
+            -onvalue  => 1,
+            -offvalue => 0
+        )->grid( -row => 2, -column => 5 );
+        my $f5 = $lglobal{markpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $tableformat = $f5->Entry(
+            -width      => 40,
+            -background => 'white',
+            -relief     => 'sunken',
+        )->grid( -row => 0, -column => 1, -pady => 2 );
+        $f5->Label( -text => 'Column Fmt', )
+            ->grid( -row => 0, -column => 2, -padx => 2, -pady => 2 );
+        my $diventry = $f5->Entry(
+            -width      => 40,
+            -background => 'white',
+            -relief     => 'sunken',
+        )->grid( -row => 1, -column => 1, -pady => 2 );
+        $f5->Button(
+            -activebackground => $activecolor,
+            -command =>
+                sub { markup( 'div', $diventry->get ); $textwindow->focus },
+            -text  => 'div',
+            -width => 8
+        )->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
+        my $f6 = $lglobal{markpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        my $spanentry = $f6->Entry(
+            -width      => 40,
+            -background => 'white',
+            -relief     => 'sunken',
+        )->grid( -row => 1, -column => 1, -pady => 2 );
+        $f6->Button(
+            -activebackground => $activecolor,
+            -command =>
+                sub { markup( 'span', $spanentry->get ); $textwindow->focus },
+            -text  => 'span',
+            -width => 8
+        )->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
+        my $f7 = $lglobal{markpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $f7->Checkbutton(
+            -variable    => \$lglobal{poetrynumbers},
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Find and Format Poetry Line Numbers'
+        )->grid( -row => 1, -column => 1, -pady => 2 );
+        $f7->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                open my $infile, '<', 'header.txt'
+                    or warn "Could not open header file. $!\n";
+                my $headertext;
+                while (<$infile>) {
+                    $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
+                    #$_ = eol_convert($_);
+                    $headertext .= $_;
+                }
+                $textwindow->insert( '1.0', $headertext );
+                close $infile;
+                $textwindow->insert( 'end', "<\/body>\n<\/html>" );
+            },
+            -text  => 'Header',
+            -width => 16
+        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+        my $f8 = $lglobal{markpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $f8->Button(
+            -activebackground => $activecolor,
+            -command          => \&linkcheck,
+            -text             => 'Link Checker',
+            -width            => 16
+        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+        $f8->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                tidyrun('-f tidyerr.err -o null');
+                unlink 'null' if ( -e 'null' );
+            },
+            -text  => 'HTML Tidy',
+            -width => 16
+        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+        $diventry->insert( 'end', ' style="margin-left: 2em;"' );
+        $spanentry->insert( 'end', ' style="margin-left: 2em;"' );
+        $lglobal{markpop}->protocol( 'WM_DELETE_WINDOW' =>
+                sub { $lglobal{markpop}->destroy; undef $lglobal{markpop} } );
+        $lglobal{markpop}->Icon( -image => $icon );
+        $lglobal{markpop}->transient($top) if $stayontop;
+    }
+}
+
+## Sidenote Fixup
+sub sidenotes {
+    push @operations, ( localtime() . ' - Sidenote Fixup' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    oppopupdate()  if $lglobal{oppop};
+    $textwindow->markSet( 'sidenote', '1.0' );
+    my ( $bracketndx, $nextbracketndx, $bracketstartndx, $bracketendndx,
+        $paragraphp, $paragraphn, $sidenote, $sdnoteindexstart );
+
+    while (1) {
+        $sdnoteindexstart = $textwindow->index('sidenote');
+        $bracketstartndx = $textwindow->search( '-regexp', '--', '\[sidenote',
+            $sdnoteindexstart, 'end' );
+        if ($bracketstartndx) {
+            $textwindow->replacewith( "$bracketstartndx+1c",
+                "$bracketstartndx+2c", 'S' );
+            $textwindow->markSet( 'sidenote', "$bracketstartndx+1c" );
+            next;
+        }
+        $textwindow->markSet( 'sidenote', '1.0' );
+        last;
+    }
+    while (1) {
+        $sdnoteindexstart = $textwindow->index('sidenote');
+        $bracketstartndx = $textwindow->search( '-regexp', '--', '\[Sidenote',
+            $sdnoteindexstart, 'end' );
+        last unless $bracketstartndx;
+        $bracketndx = "$bracketstartndx+1c";
+        while (1) {
+            $bracketendndx
+                = $textwindow->search( '--', ']', $bracketndx, 'end' );
+            $bracketendndx = $textwindow->index("$bracketstartndx+9c")
+                unless $bracketendndx;
+            $bracketendndx = $textwindow->index("$bracketendndx+1c")
+                if $bracketendndx;
+            $nextbracketndx
+                = $textwindow->search( '--', '[', $bracketndx, 'end' );
+            if (($nextbracketndx)
+                && ($textwindow->compare(
+                        $nextbracketndx, '<', $bracketendndx
+                    )
+                )
+                )
+            {
+                $bracketndx = $bracketendndx;
+                next;
+            }
+            last;
+        }
+        $textwindow->markSet( 'sidenote', $bracketendndx );
+        $paragraphp
+            = $textwindow->search( '-backwards', '-regexp', '--', '^$',
+            $bracketstartndx, '1.0' );
+        $paragraphn
+            = $textwindow->search( '-regexp', '--', '^$', $bracketstartndx,
+            'end' );
+        $sidenote = $textwindow->get( $bracketstartndx, $bracketendndx );
+        if ( $textwindow->get( "$bracketstartndx-2c", $bracketstartndx ) ne
+            "\n\n" )
+        {
+            if ((   $textwindow->get( $bracketendndx, "$bracketendndx+1c" ) eq
+                    ' '
+                )
+                || ($textwindow->get( $bracketendndx, "$bracketendndx+1c" ) eq
+                    "\n" )
+                )
+            {
+                $textwindow->delete( $bracketendndx, "" );
+            }
+            $textwindow->delete( $bracketstartndx, $bracketendndx );
+            $textwindow->see($bracketstartndx);
+            $textwindow->insert( "$paragraphp+1l", $sidenote . "\n\n" );
+        }
+        elsif (
+            $textwindow->compare( "$bracketendndx+1c", '<', $paragraphn ) )
+        {
+            if ((   $textwindow->get( $bracketendndx, "$bracketendndx+1c" ) eq
+                    ' '
+                )
+                || ($textwindow->get( $bracketendndx, "$bracketendndx+1c" ) eq
+                    "\n" )
+                )
+            {
+                $textwindow->delete( $bracketendndx, "$bracketendndx+1c" );
+            }
+            $textwindow->see($bracketstartndx);
+            $textwindow->insert( $bracketendndx, "\n\n" );
+        }
+        $sdnoteindexstart = "$bracketstartndx+10c";
+    }
+    my $error
+        = $textwindow->search( '-regexp', '--', '(?<=[^\[])[Ss]idenote[: ]',
+        '1.0', 'end' );
+    unless ($nobell) { $textwindow->bell if $error }
+    $textwindow->see($error) if $error;
+    $textwindow->markSet( 'insert', $error ) if $error;
+}
+
+# FIXME: vls -- Adapt this to handle abitrary text at eol, separated by
+# >2 spaces. Suggestion from jabber room
+
+# Find and format poetry line numbers. They need to be to the right, at
+# least 2 space from the text.
+
+## Reformat Poetry ~LINE Numbers
+sub poetrynumbers {
+    $searchstartindex = '1.0';
+    viewpagenums() if ( $lglobal{seepagenums} );
+    my ( $linenum, $line, $spacer, $row, $col );
+    while (1) {
+        $searchstartindex
+            = $textwindow->search( '-regexp', '--', '(?<=\S)\s\s+\d+$',
+            $searchstartindex, 'end' );
+        last unless $searchstartindex;
+        $textwindow->see($searchstartindex);
+        $textwindow->update;
+        update_indicators();
+        ( $row, $col ) = split /\./, $searchstartindex;
+        $line = $textwindow->get( "$row.0", "$row.end" );
+        $line =~ s/(?<=\S)\s\s+(\d+)$//;
+        $linenum = $1;
+        $spacer  = $rmargin - length($line) - length($linenum);
+        $spacer -= 2;
+        $line = '  ' . ( ' ' x $spacer ) . $linenum;
+        $textwindow->delete( $searchstartindex, "$searchstartindex lineend" );
+        $textwindow->insert( $searchstartindex, $line );
+        $searchstartindex = ++$row . '.0';
+    }
+}
+
+## Convert Windows CP 1252
+sub cp1252toUni {
+    my %cp = (
+        "\x{80}" => "\x{20AC}",
+        "\x{82}" => "\x{201A}",
+        "\x{83}" => "\x{0192}",
+        "\x{84}" => "\x{201E}",
+        "\x{85}" => "\x{2026}",
+        "\x{86}" => "\x{2020}",
+        "\x{87}" => "\x{2021}",
+        "\x{88}" => "\x{02C6}",
+        "\x{89}" => "\x{2030}",
+        "\x{8A}" => "\x{0160}",
+        "\x{8B}" => "\x{2039}",
+        "\x{8C}" => "\x{0152}",
+        "\x{8E}" => "\x{017D}",
+        "\x{91}" => "\x{2018}",
+        "\x{92}" => "\x{2019}",
+        "\x{93}" => "\x{201C}",
+        "\x{94}" => "\x{201D}",
+        "\x{95}" => "\x{2022}",
+        "\x{96}" => "\x{2013}",
+        "\x{97}" => "\x{2014}",
+        "\x{98}" => "\x{02DC}",
+        "\x{99}" => "\x{2122}",
+        "\x{9A}" => "\x{0161}",
+        "\x{9B}" => "\x{203A}",
+        "\x{9C}" => "\x{0153}",
+        "\x{9E}" => "\x{017E}",
+        "\x{9F}" => "\x{0178}"
+    );
+    for my $term ( keys %cp ) {
+        my $thisblockstart;
+        while ( $thisblockstart
+            = $textwindow->search( '-exact', '--', $term, '1.0', 'end' ) )
+        {
+            $textwindow->ntdelete( $thisblockstart, "$thisblockstart+1c" );
+            $textwindow->ntinsert( $thisblockstart, $cp{$term} );
+        }
+    }
+}
+
+## ASCII Table Special Effects
+sub tablefx {
+    viewpagenums() if ( $lglobal{seepagenums} );
+    if ( defined( $lglobal{tblfxpop} ) ) {
+        $lglobal{tblfxpop}->deiconify;
+        $lglobal{tblfxpop}->raise;
+        $lglobal{tblfxpop}->focus;
+    }
+    else {
+        $lglobal{columnspaces} = '';
+        $lglobal{tblfxpop}     = $top->Toplevel;
+        $lglobal{tblfxpop}->title('ASCII Table Special Effects');
+        my $f0 = $lglobal{tblfxpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        my %tb_buttons = (
+            'Table Select'   => sub { tblselect() },
+            'Table Deselect' => sub {
+                $textwindow->tagRemove( 'table',   '1.0', 'end' );
+                $textwindow->tagRemove( 'linesel', '1.0', 'end' );
+                $textwindow->markUnset( 'tblstart', 'tblend' );
+                undef $lglobal{selectedline};
+            },
+            'Insert Vertical Line' => sub {
+                insertline('i');
+            },
+            'Add Vertical Line' => sub {
+                insertline('a');
+            },
+            'Space Out Table' => sub {
+                tblspace();
+            },
+            'Auto Columns' => sub {
+                tblautoc();
+            },
+            'Compress Table' => sub {
+                tblcompress();
+            },
+            'Select Prev Line' => sub {
+                tlineselect('p');
+            },
+            'Select Next Line' => sub {
+                tlineselect('n');
+            },
+            'Line Deselect' => sub {
+                $textwindow->tagRemove( 'linesel', '1.0', 'end' );
+                undef $lglobal{selectedline};
+            },
+            'Delete Sel. Line' => sub {
+                my @ranges      = $textwindow->tagRanges('linesel');
+                my $range_total = @ranges;
+                $operationinterrupt = 0;
+                $textwindow->addGlobStart;
+                if ( $range_total == 0 ) {
+                    $textwindow->addGlobEnd;
+                    return;
+                }
+                else {
+                    while (@ranges) {
+                        my $end   = pop(@ranges);
+                        my $start = pop(@ranges);
+                        $textwindow->delete( $start, $end )
+                            if ( $textwindow->get($start) eq '|' );
+                    }
+                }
+                $textwindow->tagAdd( 'table', 'tblstart', 'tblend' );
+                $textwindow->tagRemove( 'linesel', '1.0', 'end' );
+                $textwindow->addGlobEnd;
+            },
+            'Remove Sel. Line' => sub {
+                tlineremove();
+            },
+        );
+        my ( $inc, $row, $col ) = ( 0, 0, 0 );
+        for ( keys %tb_buttons ) {
+            $row = int( $inc / 4 );
+            $col = $inc % 4;
+            $f0->Button(
+                -activebackground => $activecolor,
+                -command          => $tb_buttons{$_},
+                -text             => $_,
+                -width            => 16
+                )->grid(
+                -row    => $row,
+                -column => $col,
+                -padx   => 1,
+                -pady   => 2
+                );
+            ++$inc;
+        }
+
+        my $f1 = $lglobal{tblfxpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $f1->Label( -text => 'Justify', )
+            ->grid( -row => 1, -column => 0, -padx => 1, -pady => 2 );
+        my $rb1 = $f1->Radiobutton(
+            -text        => 'L',
+            -variable    => \$lglobal{tblcoljustify},
+            -selectcolor => $lglobal{checkcolor},
+            -value       => 'l',
+        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+        my $rb2 = $f1->Radiobutton(
+            -text        => 'C',
+            -variable    => \$lglobal{tblcoljustify},
+            -selectcolor => $lglobal{checkcolor},
+            -value       => 'c',
+        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+        my $rb3 = $f1->Radiobutton(
+            -text        => 'R',
+            -variable    => \$lglobal{tblcoljustify},
+            -selectcolor => $lglobal{checkcolor},
+            -value       => 'r',
+        )->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
+        $f1->Checkbutton(
+            -variable    => \$lglobal{tblrwcol},
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Rewrap Cols',
+            -command     => sub {
+                if ( $lglobal{tblrwcol} ) {
+                    $rb1->configure( -state => 'active' );
+                    $rb2->configure( -state => 'active' );
+                    $rb3->configure( -state => 'active' );
+                }
+                else {
+                    $rb1->configure( -state => 'disabled' );
+                    $rb2->configure( -state => 'disabled' );
+                    $rb3->configure( -state => 'disabled' );
+                }
+            },
+        )->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
+        $lglobal{colwidthlbl} = $f1->Label(
+            -text  => "Width $lglobal{columnspaces}",
+            -width => 8,
+        )->grid( -row => 1, -column => 5, -padx => 1, -pady => 2 );
+        $f1->Button(
+            -activebackground => $activecolor,
+            -command          => sub { coladjust(-1) },
+            -text             => 'Move Left',
+            -width            => 10
+        )->grid( -row => 1, -column => 6, -padx => 1, -pady => 2 );
+        $f1->Button(
+            -activebackground => $activecolor,
+            -command          => sub { coladjust(1) },
+            -text             => 'Move Right',
+            -width            => 10
+        )->grid( -row => 1, -column => 7, -padx => 1, -pady => 2 );
+        my $f3 = $lglobal{tblfxpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $f3->Label( -text => 'Table Right Column', )
+            ->grid( -row => 1, -column => 0, -padx => 1, -pady => 2 );
+        $f3->Entry(
+            -width        => 6,
+            -background   => 'white',
+            -textvariable => \$lglobal{stepmaxwidth},
+        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+        $f3->Button(
+            -activebackground => $activecolor,
+            -command          => sub { grid2step() },
+            -text             => 'Convert Grid to Step',
+            -width            => 16
+        )->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
+        my $f4 = $lglobal{tblfxpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $f4->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                $textwindow->undo;
+                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+            },
+            -text  => 'Undo',
+            -width => 10
+        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+        $f4->Button(
+            -activebackground => $activecolor,
+            -command          => sub { $textwindow->redo },
+            -text             => 'Redo',
+            -width            => 10
+        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+        $f4->Button(
+            -activebackground => $activecolor,
+            -command          => sub { step2grid() },
+            -text             => 'Convert Step to Grid',
+            -width            => 16
+        )->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
+        $lglobal{tblfxpop}->bind( '<Control-Left>',  sub { coladjust(-1) } );
+        $lglobal{tblfxpop}->bind( '<Control-Right>', sub { coladjust(1) } );
+        $lglobal{tblfxpop}->bind( '<Left>',  sub { tlineselect('p') } );
+        $lglobal{tblfxpop}->bind( '<Right>', sub { tlineselect('n') } );
+        $lglobal{tblfxpop}->bind(
+            '<Control-z>',
+            sub {
+                $textwindow->undo;
+                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+            }
+        );
+        $lglobal{tblfxpop}->bind( '<Delete>', sub { tlineremove() } );
+        tblselect();
+    }
+    $lglobal{tblfxpop}->protocol(
+        'WM_DELETE_WINDOW' => sub {
+            $textwindow->tagRemove( 'table',   '1.0', 'end' );
+            $textwindow->tagRemove( 'linesel', '1.0', 'end' );
+            $textwindow->markUnset( 'tblstart', 'tblend' );
+            $lglobal{tblfxpop}->destroy;
+            undef $lglobal{tblfxpop};
+        }
+    );
+    $lglobal{tblfxpop}->Icon( -image => $icon );
+
+}
+
+## Clean Up Rewrap
+sub cleanup {
+    $top->Busy( -recurse => 1 );
+    $searchstartindex = '1.0';
+    viewpagenums() if ( $lglobal{seepagenums} );
+    while (1) {
+        $searchstartindex
+            = $textwindow->search( '-regexp', '--',
+            '^\/[\*\$#pPfFLlXx]|^[Pp\*\$#fFLlXx]\/',
+            $searchstartindex, 'end' );
+        last unless $searchstartindex;
+        $textwindow->delete( "$searchstartindex -1c",
+            "$searchstartindex lineend" );
+    }
+    $top->Unbusy( -recurse => 1 );
+}
+
+## Find Greek
+sub findandextractgreek {
+    $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+    my ( $greekIndex, $closeIndex ) = findgreek('insert');
+    if ($closeIndex) {
+        $textwindow->markSet( 'insert', $greekIndex );
+        $textwindow->tagAdd( 'highlight', $greekIndex, $greekIndex . "+7c" );
+        $textwindow->see('insert');
+        $textwindow->tagAdd( 'highlight', $greekIndex, $greekIndex . "+1c" );
+        if ( !defined( $lglobal{grpop} ) ) {
+            greekpopup();
+        }
+        $textwindow->markSet( 'insert', $greekIndex . '+8c' );
+        my $text = $textwindow->get( $greekIndex . '+8c', $closeIndex );
+        $textwindow->delete( $greekIndex . '+8c', $closeIndex );
+        $lglobal{grtext}->delete( '1.0', 'end' );
+        $lglobal{grtext}->insert( '1.0', $text );
+    }
+}
+
+## Convert Greek
+# sub convertgreek {
+
+#     # does nothing yet
+# }
 
 ### Text Processing
 

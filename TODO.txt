@@ -18,3 +18,11 @@ Find '--command sub {} and rewrite as standalones.
 
 Label unobvious sub's, e.g., wordcount = Word Frequency
 
+Go through WF code; see how the bindings work and apply to GC and Jeebies
+popups.
+
+Make sure toolbar functions have menu bar equivs; e.g., view image. and
+keyboard shortcuts
+
+
+
