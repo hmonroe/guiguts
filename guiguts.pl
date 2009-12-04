@@ -7964,150 +7964,7 @@ sub named {
 
 
 
-sub seperatorpopup {
-    push @operations, ( localtime() . ' - Page Separators Fixup' );
-    oppopupdate() if $lglobal{oppop};
-    if ( defined( $lglobal{pagepop} ) ) {
-        $lglobal{pagepop}->deiconify;
-        $lglobal{pagepop}->raise;
-        $lglobal{pagepop}->focus;
-    }
-    else {
-        $lglobal{pagepop} = $top->Toplevel;
-        $lglobal{pagepop}->title('Page separators');
-        my $sf1 = $lglobal{pagepop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        my $joinbutton = $sf1->Button(
-            -activebackground => $activecolor,
-            -command          => sub { joinlines('j') },
-            -text             => 'Join Lines',
-            -underline        => 0,
-            -width            => 18
-            )
-            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-        my $joinhybutton = $sf1->Button(
-            -activebackground => $activecolor,
-            -command          => sub { joinlines('k') },
-            -text             => 'Join, Keep Hyphen',
-            -underline        => 6,
-            -width            => 18
-            )
-            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-
-        my $sf2 = $lglobal{pagepop}
-            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
-        my $blankbutton = $sf2->Button(
-            -activebackground => $activecolor,
-            -command          => sub { joinlines('l') },
-            -text             => 'Blank Line',
-            -underline        => 6,
-            -width            => 12
-            )
-            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-
-        my $sectjoinbutton = $sf2->Button(
-            -activebackground => $activecolor,
-            -command          => sub { joinlines('t') },
-            -text             => 'New Section',
-            -underline        => 7,
-            -width            => 12
-            )
-            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-        my $chjoinbutton = $sf2->Button(
-            -activebackground => $activecolor,
-            -command          => sub { joinlines('h') },
-            -text             => 'New Chapter',
-            -underline        => 5,
-            -width            => 12
-            )
-            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-        my $sf3 = $lglobal{pagepop}
-            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
-        my $jautobutton = $sf3->Checkbutton(
-            -variable => \$lglobal{jautomatic},
-            -command  => sub {
-                $lglobal{jsemiautomatic} = 0 if $lglobal{jsemiautomatic};
-            },
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Full Auto',
-            )
-            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-        my $jsautobutton = $sf3->Checkbutton(
-            -variable => \$lglobal{jsemiautomatic},
-            -command =>
-                sub { $lglobal{jautomatic} = 0 if $lglobal{jautomatic}; },
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Semi Auto',
-            )
-            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-        my $sf4 = $lglobal{pagepop}
-            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
-        my $refreshbutton = $sf4->Button(
-            -activebackground => $activecolor,
-            -command          => sub { convertfilnum() },
-            -text             => 'Refresh',
-            -underline        => 0,
-            -width            => 8
-            )
-            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-        my $undobutton = $sf4->Button(
-            -activebackground => $activecolor,
-            -command          => sub { undojoin() },
-            -text             => 'Undo',
-            -underline        => 0,
-            -width            => 8
-            )
-            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-        my $delbutton = $sf4->Button(
-            -activebackground => $activecolor,
-            -command          => sub { joinlines('d') },
-            -text             => 'Delete',
-            -underline        => 0,
-            -width            => 8
-            )
-            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-        my $phelpbutton = $sf4->Button(
-            -activebackground => $activecolor,
-            -command          => sub { phelppopup() },
-            -text             => '?',
-            -width            => 1
-            )
-            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-        $lglobal{jsemiautomatic} = 1;
-    }
-    $lglobal{pagepop}->protocol(
-        'WM_DELETE_WINDOW' => sub {
-            $lglobal{pagepop}->destroy;
-            undef $lglobal{pagepop};
-            $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-        }
-    );
-    $lglobal{pagepop}->Icon( -image => $icon );
-    $lglobal{pagepop}->Tk::bind( '<j>' => sub { joinlines('j') } );
-    $lglobal{pagepop}->Tk::bind( '<k>' => sub { joinlines('k') } );
-    $lglobal{pagepop}->Tk::bind( '<l>' => sub { joinlines('l') } );
-    $lglobal{pagepop}->Tk::bind( '<h>' => sub { joinlines('h') } );
-    $lglobal{pagepop}->Tk::bind( '<d>' => sub { joinlines('d') } );
-    $lglobal{pagepop}->Tk::bind( '<t>' => sub { joinlines('t') } );
-    $lglobal{pagepop}->Tk::bind( '<r>' => \&convertfilnum );
-    $lglobal{pagepop}
-        ->Tk::bind( '<v>' => sub { openpng(); $lglobal{pagepop}->raise; } );
-    $lglobal{pagepop}->Tk::bind( '<u>' => \&undojoin );
-    $lglobal{pagepop}->Tk::bind(
-        '<a>' => sub {
-            if   ( $lglobal{jautomatic} ) { $lglobal{jautomatic} = 0 }
-            else                          { $lglobal{jautomatic} = 1 }
-        }
-    );
-    $lglobal{pagepop}->Tk::bind(
-        '<s>' => sub {
-            if   ( $lglobal{jsemiautomatic} ) { $lglobal{jsemiautomatic} = 0 }
-            else                              { $lglobal{jsemiautomatic} = 1 }
-        }
-    );
-    $lglobal{pagepop}->transient($top) if $stayontop;
-}
-
+# FIXME: Page separator removal help
 sub phelppopup {
     my $help_text = <<EOM;
 Join Lines - join lines removing any spaces, asterisks and hyphens as necessary. - Hotkey j
@@ -8434,37 +8291,6 @@ sub prfrby {
     }
 }
 
-sub delblanklines {
-    viewpagenums() if ( $lglobal{seepagenums} );
-    my ( $line, $index, $r, $c, $pagemark );
-    $searchstartindex = '2.0';
-    $searchendindex   = '2.0';
-    $textwindow->Busy;
-    while ($searchstartindex) {
-        $searchstartindex
-            = $textwindow->search( '-nocase', '-regexp', '--',
-            '^-----*\s*File:\s?(\S+)\.(png|jpg)---.*$',
-            $searchendindex, 'end' );
-        {
-
-            no warnings 'uninitialized';
-            $searchstartindex = '2.0' if $searchstartindex eq '1.0';
-        }
-        last unless $searchstartindex;
-        ( $r, $c ) = split /\./, $searchstartindex;
-        if ($textwindow->get( ( $r - 1 ) . '.0', ( $r - 1 ) . '.end' ) eq '' )
-        {
-            $textwindow->delete( "$searchstartindex -1c", $searchstartindex );
-            $searchendindex = $textwindow->index("$searchstartindex -2l");
-            $textwindow->see($searchstartindex);
-            $textwindow->update;
-            next;
-        }
-        $searchendindex = $r ? "$r.end" : '2.0';
-
-    }
-    $textwindow->Unbusy;
-}
 
 
 sub joinlines {
@@ -9524,142 +9350,7 @@ sub fixpopup {
     }
 }
 
-sub fixup {
-    push @operations, ( localtime() . ' - Fixup Routine' );
-    viewpagenums() if ( $lglobal{seepagenums} );
-    oppopupdate()  if $lglobal{oppop};
-    my ($line);
-    my $index     = '1.0';
-    my $lastindex = '1.0';
-    my $inblock   = 0;
-    my $update    = 0;
-    my $edited    = 0;
-    my $end       = $textwindow->index('end');
-    $operationinterrupt = 0;
 
-    while ( $lastindex < $end ) {
-        $line = $textwindow->get( $lastindex, $index );
-        if ( $line =~ /\/[\$\*]/ ) { $inblock = 1 }
-        if ( $line =~ /[\$\*]\// ) { $inblock = 0 }
-        unless ( $inblock && ${ $lglobal{fixopt} }[0] ) {
-            if ( ${ $lglobal{fixopt} }[10] ) {
-                while ( $line =~ s/(?<=\S)\s\s+(?=\S)/ / ) { $edited++ }
-            }
-            if ( ${ $lglobal{fixopt} }[12] ) {
-                $edited++ if $line =~ s/llth/11th/g;
-                $edited++ if $line =~ s/(?<=\d)lst/1st/g;
-                $edited++ if $line =~ s/(?<=\s)lst/1st/g;
-                $edited++ if $line =~ s/^lst/1st/;
-            }
-            if ( ${ $lglobal{fixopt} }[1] ) {
-                $edited++ if $line =~ s/ -/-/g;   # Remove space before hyphen
-                $edited++ if $line =~ s/- /-/g;   # Remove space after hyphen
-                $edited++
-                    if $line =~ s/(?<![-])([-]*---)(?=[^\s\\"F-])/$1 /g
-                ; # Except leave a space after a string of three or more hyphens
-            }
-            if ( ${ $lglobal{fixopt} }[2] ) {
-                $edited++ if $line =~ s/ +\.(?=\D)/\./g;
-            }
-            ;     # Get rid of space before periods
-            if ( ${ $lglobal{fixopt} }[3] ) {
-                $edited++
-                    if $line =~ s/ +!/!/g;
-            }
-            ;     # Get rid of space before exclamation points
-            if ( ${ $lglobal{fixopt} }[4] ) {
-                $edited++
-                    if $line =~ s/ +\?/\?/g;
-            }
-            ;     # Get rid of space before question marks
-
-            if ( ${ $lglobal{fixopt} }[5] ) {
-                $edited++
-                    if $line =~ s/ +\;/\;/g;
-            }
-            ;     # Get rid of space before semicolons
-            if ( ${ $lglobal{fixopt} }[6] ) {
-                $edited++
-                    if $line =~ s/ +:/:/g;
-            }
-            ;     # Get rid of space before colons
-
-            if ( ${ $lglobal{fixopt} }[7] ) {
-                $edited++
-                    if $line =~ s/ +,/,/g;
-            }
-            ;     # Get rid of space before commas
-            if ( ${ $lglobal{fixopt} }[8] ) {
-                $edited++
-                    if $line =~ s/^\" +/\"/
-                ; # Remove space after doublequote if it is the first character on a line
-                $edited++
-                    if $line =~ s/ +\"$/\"/
-                ; # Remove space before doublequote if it is the last character on a line
-            }
-            if ( ${ $lglobal{fixopt} }[9] ) {
-                $edited++
-                    if $line =~ s/(?<=(\(|\{|\[)) //g
-                ;    # Get rid of space after opening brackets
-                $edited++
-                    if $line =~ s/ (?=(\)|\}|\]))//g
-                ;    # Get rid of space before closing brackets
-            }
-            if ( ${ $lglobal{fixopt} }[13] ) {
-                $edited++ if $line =~ s/(?<![\.\!\?])\.{3}(?!\.)/ \.\.\./g;
-                $edited++ if $line =~ s/^ \./\./;
-            }
-            if ( ${ $lglobal{fixopt} }[11] ) {
-                $edited++
-                    if $line
-                        =~ s/^\s*(\*\s*){5}$/       \*       \*       \*       \*       \*\n/;
-            }
-            $edited++ if ( $line =~ s/ +$// );
-            if ( ${ $lglobal{fixopt} }[14] and ${ $lglobal{fixopt} }[15] ) {
-                $edited++ if $line =~ s/«\s+/«/g;
-                $edited++ if $line =~ s/\s+»/»/g;
-            }
-            if ( ${ $lglobal{fixopt} }[14] and !${ $lglobal{fixopt} }[15] ) {
-                $edited++ if $line =~ s/\s+«/«/g;
-                $edited++ if $line =~ s/»\s+/»/g;
-            }
-            $update++ if ( ( $index % 250 ) == 0 );
-            $textwindow->see($index) if ( $edited || $update );
-            if ($edited) {
-                $textwindow->replacewith( $lastindex, $index, $line );
-            }
-        }
-        $textwindow->markSet( 'insert', $index ) if $update;
-        $textwindow->update if ( $edited || $update );
-        update_indicators() if ( $edited || $update );
-        $edited    = 0;
-        $update    = 0;
-        $lastindex = $index;
-        $index++;
-        $index .= '.0';
-        if ( $index > $end ) { $index = $end }
-        if ($operationinterrupt) { $operationinterrupt = 0; return }
-    }
-    $textwindow->markSet( 'insert', 'end' );
-    $textwindow->see('end');
-    update_indicators();
-}
-
-sub endofline {
-    push @operations, ( localtime() . ' - End-of-line Spaces' );
-    viewpagenums() if ( $lglobal{seepagenums} );
-    oppopupdate()  if $lglobal{oppop};
-    my $start  = '1.0';
-    my $end    = $textwindow->index('end');
-    my @ranges = $textwindow->tagRanges('sel');
-    if (@ranges) {
-        $start = $ranges[0];
-        $end   = $ranges[-1];
-    }
-    $operationinterrupt = 0;
-    $textwindow->FindAndReplaceAll( '-regex', '-nocase', '\s+$', '' );
-    update_indicators();
-}
 
 
 sub ital_adjust {
@@ -13508,103 +13199,6 @@ sub jeebiesrun {
     $top->Unbusy( -recurse => 1 );
 }
 
-sub jeebiespop_up {
-    my @jlines;
-    viewpagenums() if ( $lglobal{seepagenums} );
-    if ( $lglobal{jeepop} ) {
-        $lglobal{jeepop}->deiconify;
-    }
-    else {
-        $lglobal{jeepop} = $top->Toplevel;
-        $lglobal{jeepop}->title('Jeebies');
-        $lglobal{jeepop}->geometry($geometry2) if $geometry2;
-        $lglobal{jeepop}->transient($top)      if $stayontop;
-        my $ptopframe = $lglobal{jeepop}->Frame->pack;
-        $ptopframe->Label( -text => 'Search mode:', )
-            ->pack( -side => 'left', -padx => 2 );
-        my %rbutton = ( 'Paranoid', 'p', 'Normal', '', 'Tolerant', 't' );
-        for ( keys %rbutton ) {
-            $ptopframe->Radiobutton(
-                -text     => $_,
-                -variable => \$jeebiesmode,
-                -value    => $rbutton{$_},
-                -command  => \&saveset,
-            )->pack( -side => 'left', -padx => 2 );
-        }
-        $ptopframe->Button(
-            -activebackground => $activecolor,
-            -command          => sub { jeebiesrun( $lglobal{jelistbox} ) },
-            -text             => 'Re-run Jeebies',
-            -width            => 16
-            )->pack(
-            -side   => 'left',
-            -pady   => 10,
-            -padx   => 2,
-            -anchor => 'n'
-            );
-        my $pframe = $lglobal{jeepop}
-            ->Frame->pack( -fill => 'both', -expand => 'both', );
-        $lglobal{jelistbox} = $pframe->Scrolled(
-            'Listbox',
-            -scrollbars  => 'se',
-            -background  => 'white',
-            -font        => $lglobal{font},
-            -selectmode  => 'single',
-            -activestyle => 'none',
-            )->pack(
-            -anchor => 'nw',
-            -fill   => 'both',
-            -expand => 'both',
-            -padx   => 2,
-            -pady   => 2
-            );
-        drag( $lglobal{jelistbox} );
-        $lglobal{jeepop}->protocol( 'WM_DELETE_WINDOW' =>
-                sub { $lglobal{jeepop}->destroy; undef $lglobal{jeepop} } );
-        $lglobal{jeepop}->Icon( -image => $icon );
-        BindMouseWheel( $lglobal{jelistbox} );
-        $lglobal{jelistbox}
-            ->eventAdd( '<<jview>>' => '<Button-1>', '<Return>' );
-        $lglobal{jelistbox}->bind( '<<jview>>', sub { jeebiesview() } );
-        $lglobal{jeepop}->bind(
-            '<Configure>' => sub {
-                $lglobal{jeepop}->XEvent;
-                $geometry2 = $lglobal{jeepop}->geometry;
-                $lglobal{geometryupdate} = 1;
-            }
-        );
-        $lglobal{jelistbox}->eventAdd(
-            '<<jremove>>' => '<ButtonRelease-2>',
-            '<ButtonRelease-3>'
-        );
-        $lglobal{jelistbox}->bind(
-            '<<jremove>>',
-            sub {
-                $lglobal{jelistbox}->activate(
-                    $lglobal{jelistbox}->index(
-                        '@'
-                            . (
-                                  $lglobal{jelistbox}->pointerx
-                                - $lglobal{jelistbox}->rootx
-                            )
-                            . ','
-                            . (
-                                  $lglobal{jelistbox}->pointery
-                                - $lglobal{jelistbox}->rooty
-                            )
-                    )
-                );
-                undef $gc{ $lglobal{jelistbox}->get('active') };
-                $lglobal{jelistbox}->delete('active');
-                jeebiesview();
-                $lglobal{jelistbox}->selectionClear( '0', 'end' );
-                $lglobal{jelistbox}->selectionSet('active');
-                $lglobal{jelistbox}->after( $lglobal{delay} );
-            }
-        );
-        jeebiesrun( $lglobal{jelistbox} );
-    }
-}
 
 sub jeebiesview {
     $textwindow->tagRemove( 'highlight', '1.0', 'end' );
@@ -18205,6 +17799,420 @@ sub gutopts {
     )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
     $gcdialog->Show;
     saveset();
+}
+
+sub jeebiespop_up {
+    my @jlines;
+    viewpagenums() if ( $lglobal{seepagenums} );
+    if ( $lglobal{jeepop} ) {
+        $lglobal{jeepop}->deiconify;
+    }
+    else {
+        $lglobal{jeepop} = $top->Toplevel;
+        $lglobal{jeepop}->title('Jeebies');
+        $lglobal{jeepop}->geometry($geometry2) if $geometry2;
+        $lglobal{jeepop}->transient($top)      if $stayontop;
+        my $ptopframe = $lglobal{jeepop}->Frame->pack;
+        $ptopframe->Label( -text => 'Search mode:', )
+            ->pack( -side => 'left', -padx => 2 );
+        my %rbutton = ( 'Paranoid', 'p', 'Normal', '', 'Tolerant', 't' );
+        for ( keys %rbutton ) {
+            $ptopframe->Radiobutton(
+                -text     => $_,
+                -variable => \$jeebiesmode,
+                -value    => $rbutton{$_},
+                -command  => \&saveset,
+            )->pack( -side => 'left', -padx => 2 );
+        }
+        $ptopframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub { jeebiesrun( $lglobal{jelistbox} ) },
+            -text             => 'Re-run Jeebies',
+            -width            => 16
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+        my $pframe = $lglobal{jeepop}
+            ->Frame->pack( -fill => 'both', -expand => 'both', );
+        $lglobal{jelistbox} = $pframe->Scrolled(
+            'Listbox',
+            -scrollbars  => 'se',
+            -background  => 'white',
+            -font        => $lglobal{font},
+            -selectmode  => 'single',
+            -activestyle => 'none',
+            )->pack(
+            -anchor => 'nw',
+            -fill   => 'both',
+            -expand => 'both',
+            -padx   => 2,
+            -pady   => 2
+            );
+        drag( $lglobal{jelistbox} );
+        $lglobal{jeepop}->protocol( 'WM_DELETE_WINDOW' =>
+                sub { $lglobal{jeepop}->destroy; undef $lglobal{jeepop} } );
+        $lglobal{jeepop}->Icon( -image => $icon );
+        BindMouseWheel( $lglobal{jelistbox} );
+        $lglobal{jelistbox}
+            ->eventAdd( '<<jview>>' => '<Button-1>', '<Return>' );
+        $lglobal{jelistbox}->bind( '<<jview>>', sub { jeebiesview() } );
+        $lglobal{jeepop}->bind(
+            '<Configure>' => sub {
+                $lglobal{jeepop}->XEvent;
+                $geometry2 = $lglobal{jeepop}->geometry;
+                $lglobal{geometryupdate} = 1;
+            }
+        );
+        $lglobal{jelistbox}->eventAdd(
+            '<<jremove>>' => '<ButtonRelease-2>',
+            '<ButtonRelease-3>'
+        );
+        $lglobal{jelistbox}->bind(
+            '<<jremove>>',
+            sub {
+                $lglobal{jelistbox}->activate(
+                    $lglobal{jelistbox}->index(
+                        '@'
+                            . (
+                                  $lglobal{jelistbox}->pointerx
+                                - $lglobal{jelistbox}->rootx
+                            )
+                            . ','
+                            . (
+                                  $lglobal{jelistbox}->pointery
+                                - $lglobal{jelistbox}->rooty
+                            )
+                    )
+                );
+                undef $gc{ $lglobal{jelistbox}->get('active') };
+                $lglobal{jelistbox}->delete('active');
+                jeebiesview();
+                $lglobal{jelistbox}->selectionClear( '0', 'end' );
+                $lglobal{jelistbox}->selectionSet('active');
+                $lglobal{jelistbox}->after( $lglobal{delay} );
+            }
+        );
+        jeebiesrun( $lglobal{jelistbox} );
+    }
+}
+
+## End of Line Cleanup
+sub endofline {
+    push @operations, ( localtime() . ' - End-of-line Spaces' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    oppopupdate()  if $lglobal{oppop};
+    my $start  = '1.0';
+    my $end    = $textwindow->index('end');
+    my @ranges = $textwindow->tagRanges('sel');
+    if (@ranges) {
+        $start = $ranges[0];
+        $end   = $ranges[-1];
+    }
+    $operationinterrupt = 0;
+    $textwindow->FindAndReplaceAll( '-regex', '-nocase', '\s+$', '' );
+    update_indicators();
+}
+
+## Fixup Popup
+
+sub fixup {
+    push @operations, ( localtime() . ' - Fixup Routine' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    oppopupdate()  if $lglobal{oppop};
+    my ($line);
+    my $index     = '1.0';
+    my $lastindex = '1.0';
+    my $inblock   = 0;
+    my $update    = 0;
+    my $edited    = 0;
+    my $end       = $textwindow->index('end');
+    $operationinterrupt = 0;
+
+    while ( $lastindex < $end ) {
+        $line = $textwindow->get( $lastindex, $index );
+        if ( $line =~ /\/[\$\*]/ ) { $inblock = 1 }
+        if ( $line =~ /[\$\*]\// ) { $inblock = 0 }
+        unless ( $inblock && ${ $lglobal{fixopt} }[0] ) {
+            if ( ${ $lglobal{fixopt} }[10] ) {
+                while ( $line =~ s/(?<=\S)\s\s+(?=\S)/ / ) { $edited++ }
+            }
+            if ( ${ $lglobal{fixopt} }[12] ) {
+                $edited++ if $line =~ s/llth/11th/g;
+                $edited++ if $line =~ s/(?<=\d)lst/1st/g;
+                $edited++ if $line =~ s/(?<=\s)lst/1st/g;
+                $edited++ if $line =~ s/^lst/1st/;
+            }
+            if ( ${ $lglobal{fixopt} }[1] ) {
+                $edited++ if $line =~ s/ -/-/g;   # Remove space before hyphen
+                $edited++ if $line =~ s/- /-/g;   # Remove space after hyphen
+                $edited++
+                    if $line =~ s/(?<![-])([-]*---)(?=[^\s\\"F-])/$1 /g
+                ; # Except leave a space after a string of three or more hyphens
+            }
+            if ( ${ $lglobal{fixopt} }[2] ) {
+                $edited++ if $line =~ s/ +\.(?=\D)/\./g;
+            }
+            ;     # Get rid of space before periods
+            if ( ${ $lglobal{fixopt} }[3] ) {
+                $edited++
+                    if $line =~ s/ +!/!/g;
+            }
+            ;     # Get rid of space before exclamation points
+            if ( ${ $lglobal{fixopt} }[4] ) {
+                $edited++
+                    if $line =~ s/ +\?/\?/g;
+            }
+            ;     # Get rid of space before question marks
+
+            if ( ${ $lglobal{fixopt} }[5] ) {
+                $edited++
+                    if $line =~ s/ +\;/\;/g;
+            }
+            ;     # Get rid of space before semicolons
+            if ( ${ $lglobal{fixopt} }[6] ) {
+                $edited++
+                    if $line =~ s/ +:/:/g;
+            }
+            ;     # Get rid of space before colons
+
+            if ( ${ $lglobal{fixopt} }[7] ) {
+                $edited++
+                    if $line =~ s/ +,/,/g;
+            }
+            ;     # Get rid of space before commas
+            if ( ${ $lglobal{fixopt} }[8] ) {
+                $edited++
+                    if $line =~ s/^\" +/\"/
+                ; # Remove space after doublequote if it is the first character on a line
+                $edited++
+                    if $line =~ s/ +\"$/\"/
+                ; # Remove space before doublequote if it is the last character on a line
+            }
+            if ( ${ $lglobal{fixopt} }[9] ) {
+                $edited++
+                    if $line =~ s/(?<=(\(|\{|\[)) //g
+                ;    # Get rid of space after opening brackets
+                $edited++
+                    if $line =~ s/ (?=(\)|\}|\]))//g
+                ;    # Get rid of space before closing brackets
+            }
+            if ( ${ $lglobal{fixopt} }[13] ) {
+                $edited++ if $line =~ s/(?<![\.\!\?])\.{3}(?!\.)/ \.\.\./g;
+                $edited++ if $line =~ s/^ \./\./;
+            }
+            if ( ${ $lglobal{fixopt} }[11] ) {
+                $edited++
+                    if $line
+                        =~ s/^\s*(\*\s*){5}$/       \*       \*       \*       \*       \*\n/;
+            }
+            $edited++ if ( $line =~ s/ +$// );
+            if ( ${ $lglobal{fixopt} }[14] and ${ $lglobal{fixopt} }[15] ) {
+                $edited++ if $line =~ s/«\s+/«/g;
+                $edited++ if $line =~ s/\s+»/»/g;
+            }
+            if ( ${ $lglobal{fixopt} }[14] and !${ $lglobal{fixopt} }[15] ) {
+                $edited++ if $line =~ s/\s+«/«/g;
+                $edited++ if $line =~ s/»\s+/»/g;
+            }
+            $update++ if ( ( $index % 250 ) == 0 );
+            $textwindow->see($index) if ( $edited || $update );
+            if ($edited) {
+                $textwindow->replacewith( $lastindex, $index, $line );
+            }
+        }
+        $textwindow->markSet( 'insert', $index ) if $update;
+        $textwindow->update if ( $edited || $update );
+        update_indicators() if ( $edited || $update );
+        $edited    = 0;
+        $update    = 0;
+        $lastindex = $index;
+        $index++;
+        $index .= '.0';
+        if ( $index > $end ) { $index = $end }
+        if ($operationinterrupt) { $operationinterrupt = 0; return }
+    }
+    $textwindow->markSet( 'insert', 'end' );
+    $textwindow->see('end');
+    update_indicators();
+}
+
+sub seperatorpopup {
+    push @operations, ( localtime() . ' - Page Separators Fixup' );
+    oppopupdate() if $lglobal{oppop};
+    if ( defined( $lglobal{pagepop} ) ) {
+        $lglobal{pagepop}->deiconify;
+        $lglobal{pagepop}->raise;
+        $lglobal{pagepop}->focus;
+    }
+    else {
+        $lglobal{pagepop} = $top->Toplevel;
+        $lglobal{pagepop}->title('Page separators');
+        my $sf1 = $lglobal{pagepop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        my $joinbutton = $sf1->Button(
+            -activebackground => $activecolor,
+            -command          => sub { joinlines('j') },
+            -text             => 'Join Lines',
+            -underline        => 0,
+            -width            => 18
+            )
+            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+        my $joinhybutton = $sf1->Button(
+            -activebackground => $activecolor,
+            -command          => sub { joinlines('k') },
+            -text             => 'Join, Keep Hyphen',
+            -underline        => 6,
+            -width            => 18
+            )
+            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+
+        my $sf2 = $lglobal{pagepop}
+            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
+        my $blankbutton = $sf2->Button(
+            -activebackground => $activecolor,
+            -command          => sub { joinlines('l') },
+            -text             => 'Blank Line',
+            -underline        => 6,
+            -width            => 12
+            )
+            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+
+        my $sectjoinbutton = $sf2->Button(
+            -activebackground => $activecolor,
+            -command          => sub { joinlines('t') },
+            -text             => 'New Section',
+            -underline        => 7,
+            -width            => 12
+            )
+            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+        my $chjoinbutton = $sf2->Button(
+            -activebackground => $activecolor,
+            -command          => sub { joinlines('h') },
+            -text             => 'New Chapter',
+            -underline        => 5,
+            -width            => 12
+            )
+            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+        my $sf3 = $lglobal{pagepop}
+            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
+        my $jautobutton = $sf3->Checkbutton(
+            -variable => \$lglobal{jautomatic},
+            -command  => sub {
+                $lglobal{jsemiautomatic} = 0 if $lglobal{jsemiautomatic};
+            },
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Full Auto',
+            )
+            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+        my $jsautobutton = $sf3->Checkbutton(
+            -variable => \$lglobal{jsemiautomatic},
+            -command =>
+                sub { $lglobal{jautomatic} = 0 if $lglobal{jautomatic}; },
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Semi Auto',
+            )
+            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+        my $sf4 = $lglobal{pagepop}
+            ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
+        my $refreshbutton = $sf4->Button(
+            -activebackground => $activecolor,
+            -command          => sub { convertfilnum() },
+            -text             => 'Refresh',
+            -underline        => 0,
+            -width            => 8
+            )
+            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+        my $undobutton = $sf4->Button(
+            -activebackground => $activecolor,
+            -command          => sub { undojoin() },
+            -text             => 'Undo',
+            -underline        => 0,
+            -width            => 8
+            )
+            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+        my $delbutton = $sf4->Button(
+            -activebackground => $activecolor,
+            -command          => sub { joinlines('d') },
+            -text             => 'Delete',
+            -underline        => 0,
+            -width            => 8
+            )
+            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+        my $phelpbutton = $sf4->Button(
+            -activebackground => $activecolor,
+            -command          => sub { phelppopup() },
+            -text             => '?',
+            -width            => 1
+            )
+            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+        $lglobal{jsemiautomatic} = 1;
+    }
+    $lglobal{pagepop}->protocol(
+        'WM_DELETE_WINDOW' => sub {
+            $lglobal{pagepop}->destroy;
+            undef $lglobal{pagepop};
+            $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+        }
+    );
+    $lglobal{pagepop}->Icon( -image => $icon );
+    $lglobal{pagepop}->Tk::bind( '<j>' => sub { joinlines('j') } );
+    $lglobal{pagepop}->Tk::bind( '<k>' => sub { joinlines('k') } );
+    $lglobal{pagepop}->Tk::bind( '<l>' => sub { joinlines('l') } );
+    $lglobal{pagepop}->Tk::bind( '<h>' => sub { joinlines('h') } );
+    $lglobal{pagepop}->Tk::bind( '<d>' => sub { joinlines('d') } );
+    $lglobal{pagepop}->Tk::bind( '<t>' => sub { joinlines('t') } );
+    $lglobal{pagepop}->Tk::bind( '<r>' => \&convertfilnum );
+    $lglobal{pagepop}
+        ->Tk::bind( '<v>' => sub { openpng(); $lglobal{pagepop}->raise; } );
+    $lglobal{pagepop}->Tk::bind( '<u>' => \&undojoin );
+    $lglobal{pagepop}->Tk::bind(
+        '<a>' => sub {
+            if   ( $lglobal{jautomatic} ) { $lglobal{jautomatic} = 0 }
+            else                          { $lglobal{jautomatic} = 1 }
+        }
+    );
+    $lglobal{pagepop}->Tk::bind(
+        '<s>' => sub {
+            if   ( $lglobal{jsemiautomatic} ) { $lglobal{jsemiautomatic} = 0 }
+            else                              { $lglobal{jsemiautomatic} = 1 }
+        }
+    );
+    $lglobal{pagepop}->transient($top) if $stayontop;
+}
+
+sub delblanklines {
+    viewpagenums() if ( $lglobal{seepagenums} );
+    my ( $line, $index, $r, $c, $pagemark );
+    $searchstartindex = '2.0';
+    $searchendindex   = '2.0';
+    $textwindow->Busy;
+    while ($searchstartindex) {
+        $searchstartindex
+            = $textwindow->search( '-nocase', '-regexp', '--',
+            '^-----*\s*File:\s?(\S+)\.(png|jpg)---.*$',
+            $searchendindex, 'end' );
+        {
+
+            no warnings 'uninitialized';
+            $searchstartindex = '2.0' if $searchstartindex eq '1.0';
+        }
+        last unless $searchstartindex;
+        ( $r, $c ) = split /\./, $searchstartindex;
+        if ($textwindow->get( ( $r - 1 ) . '.0', ( $r - 1 ) . '.end' ) eq '' )
+        {
+            $textwindow->delete( "$searchstartindex -1c", $searchstartindex );
+            $searchendindex = $textwindow->index("$searchstartindex -2l");
+            $textwindow->see($searchstartindex);
+            $textwindow->update;
+            next;
+        }
+        $searchendindex = $r ? "$r.end" : '2.0';
+
+    }
+    $textwindow->Unbusy;
 }
 
 
