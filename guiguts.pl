@@ -1644,7 +1644,7 @@ sub buildmenu {    # The main menu building code.
             [   Button   => 'Convert To Named/Numeric Entities',
                 -command => sub {
                     $textwindow->addGlobStart;
-                    tonamed();
+                    tonamed(); # FIXME: This should be with HTML code.
                     $textwindow->addGlobEnd;
                     }
             ],
@@ -5067,92 +5067,6 @@ sub setmargins {
     saveset();
 }
 
-sub asciipopup {
-    viewpagenums() if ( $lglobal{seepagenums} );
-    if ( defined( $lglobal{asciipop} ) ) {
-        $lglobal{asciipop}->deiconify;
-        $lglobal{asciipop}->raise;
-        $lglobal{asciipop}->focus;
-    }
-    else {
-        $lglobal{asciipop} = $top->Toplevel;
-        $lglobal{asciipop}->title('ASCII Boxes');
-        my $f = $lglobal{asciipop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $f->Label( -text => 'ASCII Drawing Characters', )
-            ->pack( -side => 'top', -pady => 2, -padx => 2, -anchor => 'n' );
-        my $f5 = $lglobal{asciipop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        my ( $row, $col );
-        for ( 0 .. 8 ) {
-            next if $_ == 4;
-            $row = int $_ / 3;
-            $col = $_ % 3;
-            $f5->Entry(
-                -width        => 1,
-                -background   => 'white',
-                -font         => $lglobal{font},
-                -relief       => 'sunken',
-                -textvariable => \${ $lglobal{ascii} }[$_],
-                )->grid(
-                -row    => $row,
-                -column => $col,
-                -padx   => 3,
-                -pady   => 3
-                );
-        }
-
-        my $f0 = $lglobal{asciipop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        my $wlabel = $f0->Label(
-            -width => 16,
-            -text  => 'ASCII Box Width',
-            )
-            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'n' );
-        my $wmentry = $f0->Entry(
-            -width        => 6,
-            -background   => 'white',
-            -relief       => 'sunken',
-            -textvariable => \$lglobal{asciiwidth},
-            )
-            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'n' );
-        my $f1 = $lglobal{asciipop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        my $leftjust = $f1->Radiobutton(
-            -text        => 'left justified',
-            -selectcolor => $lglobal{checkcolor},
-            -variable    => \$lglobal{asciijustify},
-            -value       => 'left',
-        )->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
-        my $centerjust = $f1->Radiobutton(
-            -text        => 'centered',
-            -selectcolor => $lglobal{checkcolor},
-            -variable    => \$lglobal{asciijustify},
-            -value       => 'center',
-        )->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
-        my $rightjust = $f1->Radiobutton(
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'right justified',
-            -variable    => \$lglobal{asciijustify},
-            -value       => 'right',
-        )->grid( -row => 2, -column => 3, -padx => 1, -pady => 2 );
-        my $asciiw = $f1->Checkbutton(
-            -variable    => \$lglobal{asciiwrap},
-            -selectcolor => $lglobal{checkcolor},
-            -text        => 'Don\'t Rewrap'
-        )->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
-        my $gobut = $f1->Button(
-            -activebackground => $activecolor,
-            -command          => sub { asciibox() },
-            -text             => 'Draw Box',
-            -width            => 16
-        )->grid( -row => 4, -column => 2, -padx => 1, -pady => 2 );
-        $lglobal{asciipop}->protocol( 'WM_DELETE_WINDOW' =>
-                sub { $lglobal{asciipop}->destroy; undef $lglobal{asciipop} }
-        );
-        $lglobal{asciipop}->Icon( -image => $icon );
-        $lglobal{asciipop}->resizable( 'no', 'no' );
-    }
 }
 
 sub asciibox {
@@ -5228,40 +5142,6 @@ sub asciibox {
     }
 }
 
-sub alignpopup {
-    if ( defined( $lglobal{alignpop} ) ) {
-        $lglobal{alignpop}->deiconify;
-        $lglobal{alignpop}->raise;
-        $lglobal{alignpop}->focus;
-    }
-    else {
-        $lglobal{alignpop} = $top->Toplevel;
-        $lglobal{alignpop}->title('Align text');
-        my $f = $lglobal{alignpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $f->Label( -text => 'String to align on (first occurence)', )
-            ->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
-        my $f1 = $lglobal{alignpop}
-            ->Frame->pack( -side => 'top', -anchor => 'n' );
-        $f1->Entry(
-            -width        => 8,
-            -background   => 'white',
-            -font         => $lglobal{font},
-            -relief       => 'sunken',
-            -textvariable => \$lglobal{alignstring},
-        )->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
-        my $gobut = $f1->Button(
-            -activebackground => $activecolor,
-            -command          => [ \&aligntext ],
-            -text             => 'Align selected text',
-            -width            => 16
-        )->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
-        $lglobal{alignpop}->protocol( 'WM_DELETE_WINDOW' =>
-                sub { $lglobal{alignpop}->destroy; undef $lglobal{alignpop} }
-        );
-        $lglobal{alignpop}->Icon( -image => $icon );
-    }
-}
 
 sub aligntext {
     my $marker      = shift(@_);
@@ -7919,123 +7799,8 @@ sub htmlautoconvert {
     $textwindow->see('1.0');
 }
 
-sub fracconv {
-    my ( $start, $end ) = @_;
-    my %frachash = (
-        '\b1\/2\b' => '&frac12;',
-        '\b1\/4\b' => '&frac14;',
-        '\b3\/4\b' => '&frac34;',
-    );
-    my ( $ascii, $html, $length );
-    my $thisblockstart = 1;
-    while ( ( $ascii, $html ) = each(%frachash) ) {
-        while (
-            $thisblockstart = $textwindow->search(
-                '-regexp',
-                '-count' => \$length,
-                '--', "-?$ascii", $start, $end
-            )
-            )
-        {
-            $textwindow->replacewith( $thisblockstart,
-                $thisblockstart . "+$length c", $html );
-        }
-    }
 
-}
 
-sub tonamed {
-    my @ranges      = $textwindow->tagRanges('sel');
-    my $range_total = @ranges;
-    if ( $range_total == 0 ) {
-        return;
-    }
-    else {
-        while (@ranges) {
-            my $end   = pop @ranges;
-            my $start = pop @ranges;
-            $textwindow->markSet( 'srchend', $end );
-            my $thisblockstart;
-            named( '&(?![\w#])',           '&amp;',   $start, 'srchend' );
-            named( '&$',                   '&amp;',   $start, 'srchend' );
-            named( '"',                    '&quot;',  $start, 'srchend' );
-            named( '(?<=[^-!])--(?=[^>])', '&mdash;', $start, 'srchend' );
-            named( '(?<=[^-])--$',         '&mdash;', $start, 'srchend' );
-            named( '^--(?=[^-])',          '&mdash;', $start, 'srchend' );
-            named( '& ',                   '&amp; ',  $start, 'srchend' );
-            named( '&c\.',                 '&amp;c.', $start, 'srchend' );
-            named( ' >',                   ' &gt;',   $start, 'srchend' );
-            named( '< ',                   '&lt; ',   $start, 'srchend' );
-            my $from;
-
-            for ( 128 .. 255 ) {
-                $from = lc sprintf( "%x", $_ );
-                named(
-                    '\x' . $from,
-                    entity( '\x' . $from ),
-                    $start, 'srchend'
-                );
-            }
-            while (
-                $thisblockstart = $textwindow->search(
-                    '-regexp',             '--',
-                    '[\x{100}-\x{65535}]', $start,
-                    'srchend'
-                )
-                )
-            {
-                my $xchar = ord( $textwindow->get($thisblockstart) );
-                $textwindow->ntdelete( $thisblockstart,
-                    "$thisblockstart+1c" );
-                $textwindow->ntinsert( $thisblockstart, "&#$xchar;" );
-            }
-            $textwindow->markUnset('srchend');
-        }
-    }
-}
-
-sub fromnamed {
-    my @ranges      = $textwindow->tagRanges('sel');
-    my $range_total = @ranges;
-    if ( $range_total == 0 ) {
-        return;
-    }
-    else {
-        while (@ranges) {
-            my $end   = pop @ranges;
-            my $start = pop @ranges;
-            $textwindow->markSet( 'srchend', $end );
-            my ( $thisblockstart, $length );
-            named( '&amp;',   '&',  $start, 'srchend' );
-            named( '&quot;',  '"',  $start, 'srchend' );
-            named( '&mdash;', '--', $start, 'srchend' );
-            named( ' &gt;',   ' >', $start, 'srchend' );
-            named( '&lt; ',   '< ', $start, 'srchend' );
-            my $from;
-
-            for ( 160 .. 255 ) {
-                $from = lc sprintf( "%x", $_ );
-                named( entity( '\x' . $from ), chr($_), $start, 'srchend' );
-            }
-            while (
-                $thisblockstart = $textwindow->search(
-                    '-regexp',
-                    '-count' => \$length,
-                    '--', '&#\d+;', $start, $end
-                )
-                )
-            {
-                my $xchar = $textwindow->get( $thisblockstart,
-                    $thisblockstart . '+' . $length . 'c' );
-                $textwindow->ntdelete( $thisblockstart,
-                    $thisblockstart . '+' . $length . 'c' );
-                $xchar =~ s/&#(\d+);/$1/;
-                $textwindow->ntinsert( $thisblockstart, chr($xchar) );
-            }
-            $textwindow->markUnset('srchend');
-        }
-    }
-}
 
 sub entity {
     my $char       = shift;
@@ -18195,8 +17960,249 @@ sub blockrewrap {
     $blockwrap = 0;
 }
 
+sub asciipopup {
+    viewpagenums() if ( $lglobal{seepagenums} );
+    if ( defined( $lglobal{asciipop} ) ) {
+        $lglobal{asciipop}->deiconify;
+        $lglobal{asciipop}->raise;
+        $lglobal{asciipop}->focus;
+    }
+    else {
+        $lglobal{asciipop} = $top->Toplevel;
+        $lglobal{asciipop}->title('ASCII Boxes');
+        my $f = $lglobal{asciipop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $f->Label( -text => 'ASCII Drawing Characters', )
+            ->pack( -side => 'top', -pady => 2, -padx => 2, -anchor => 'n' );
+        my $f5 = $lglobal{asciipop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        my ( $row, $col );
+        for ( 0 .. 8 ) {
+            next if $_ == 4;
+            $row = int $_ / 3;
+            $col = $_ % 3;
+            $f5->Entry(
+                -width        => 1,
+                -background   => 'white',
+                -font         => $lglobal{font},
+                -relief       => 'sunken',
+                -textvariable => \${ $lglobal{ascii} }[$_],
+                )->grid(
+                -row    => $row,
+                -column => $col,
+                -padx   => 3,
+                -pady   => 3
+                );
+        }
+
+        my $f0 = $lglobal{asciipop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        my $wlabel = $f0->Label(
+            -width => 16,
+            -text  => 'ASCII Box Width',
+            )
+            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'n' );
+        my $wmentry = $f0->Entry(
+            -width        => 6,
+            -background   => 'white',
+            -relief       => 'sunken',
+            -textvariable => \$lglobal{asciiwidth},
+            )
+            ->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'n' );
+        my $f1 = $lglobal{asciipop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        my $leftjust = $f1->Radiobutton(
+            -text        => 'left justified',
+            -selectcolor => $lglobal{checkcolor},
+            -variable    => \$lglobal{asciijustify},
+            -value       => 'left',
+        )->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
+        my $centerjust = $f1->Radiobutton(
+            -text        => 'centered',
+            -selectcolor => $lglobal{checkcolor},
+            -variable    => \$lglobal{asciijustify},
+            -value       => 'center',
+        )->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
+        my $rightjust = $f1->Radiobutton(
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'right justified',
+            -variable    => \$lglobal{asciijustify},
+            -value       => 'right',
+        )->grid( -row => 2, -column => 3, -padx => 1, -pady => 2 );
+        my $asciiw = $f1->Checkbutton(
+            -variable    => \$lglobal{asciiwrap},
+            -selectcolor => $lglobal{checkcolor},
+            -text        => 'Don\'t Rewrap'
+        )->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
+        my $gobut = $f1->Button(
+            -activebackground => $activecolor,
+            -command          => sub { asciibox() },
+            -text             => 'Draw Box',
+            -width            => 16
+        )->grid( -row => 4, -column => 2, -padx => 1, -pady => 2 );
+        $lglobal{asciipop}->protocol( 'WM_DELETE_WINDOW' =>
+                sub { $lglobal{asciipop}->destroy; undef $lglobal{asciipop} }
+        );
+        $lglobal{asciipop}->Icon( -image => $icon );
+        $lglobal{asciipop}->resizable( 'no', 'no' );
+    }
+
+sub alignpopup {
+    if ( defined( $lglobal{alignpop} ) ) {
+        $lglobal{alignpop}->deiconify;
+        $lglobal{alignpop}->raise;
+        $lglobal{alignpop}->focus;
+    }
+    else {
+        $lglobal{alignpop} = $top->Toplevel;
+        $lglobal{alignpop}->title('Align text');
+        my $f = $lglobal{alignpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $f->Label( -text => 'String to align on (first occurence)', )
+            ->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
+        my $f1 = $lglobal{alignpop}
+            ->Frame->pack( -side => 'top', -anchor => 'n' );
+        $f1->Entry(
+            -width        => 8,
+            -background   => 'white',
+            -font         => $lglobal{font},
+            -relief       => 'sunken',
+            -textvariable => \$lglobal{alignstring},
+        )->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
+        my $gobut = $f1->Button(
+            -activebackground => $activecolor,
+            -command          => [ \&aligntext ],
+            -text             => 'Align selected text',
+            -width            => 16
+        )->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
+        $lglobal{alignpop}->protocol( 'WM_DELETE_WINDOW' =>
+                sub { $lglobal{alignpop}->destroy; undef $lglobal{alignpop} }
+        );
+        $lglobal{alignpop}->Icon( -image => $icon );
+    }
+}
+
+sub tonamed {
+    my @ranges      = $textwindow->tagRanges('sel');
+    my $range_total = @ranges;
+    if ( $range_total == 0 ) {
+        return;
+    }
+    else {
+        while (@ranges) {
+            my $end   = pop @ranges;
+            my $start = pop @ranges;
+            $textwindow->markSet( 'srchend', $end );
+            my $thisblockstart;
+            named( '&(?![\w#])',           '&amp;',   $start, 'srchend' );
+            named( '&$',                   '&amp;',   $start, 'srchend' );
+            named( '"',                    '&quot;',  $start, 'srchend' );
+            named( '(?<=[^-!])--(?=[^>])', '&mdash;', $start, 'srchend' );
+            named( '(?<=[^-])--$',         '&mdash;', $start, 'srchend' );
+            named( '^--(?=[^-])',          '&mdash;', $start, 'srchend' );
+            named( '& ',                   '&amp; ',  $start, 'srchend' );
+            named( '&c\.',                 '&amp;c.', $start, 'srchend' );
+            named( ' >',                   ' &gt;',   $start, 'srchend' );
+            named( '< ',                   '&lt; ',   $start, 'srchend' );
+            my $from;
+
+            for ( 128 .. 255 ) {
+                $from = lc sprintf( "%x", $_ );
+                named(
+                    '\x' . $from,
+                    entity( '\x' . $from ),
+                    $start, 'srchend'
+                );
+            }
+            while (
+                $thisblockstart = $textwindow->search(
+                    '-regexp',             '--',
+                    '[\x{100}-\x{65535}]', $start,
+                    'srchend'
+                )
+                )
+            {
+                my $xchar = ord( $textwindow->get($thisblockstart) );
+                $textwindow->ntdelete( $thisblockstart,
+                    "$thisblockstart+1c" );
+                $textwindow->ntinsert( $thisblockstart, "&#$xchar;" );
+            }
+            $textwindow->markUnset('srchend');
+        }
+    }
+}
+
+sub fromnamed {
+    my @ranges      = $textwindow->tagRanges('sel');
+    my $range_total = @ranges;
+    if ( $range_total == 0 ) {
+        return;
+    }
+    else {
+        while (@ranges) {
+            my $end   = pop @ranges;
+            my $start = pop @ranges;
+            $textwindow->markSet( 'srchend', $end );
+            my ( $thisblockstart, $length );
+            named( '&amp;',   '&',  $start, 'srchend' );
+            named( '&quot;',  '"',  $start, 'srchend' );
+            named( '&mdash;', '--', $start, 'srchend' );
+            named( ' &gt;',   ' >', $start, 'srchend' );
+            named( '&lt; ',   '< ', $start, 'srchend' );
+            my $from;
+
+            for ( 160 .. 255 ) {
+                $from = lc sprintf( "%x", $_ );
+                named( entity( '\x' . $from ), chr($_), $start, 'srchend' );
+            }
+            while (
+                $thisblockstart = $textwindow->search(
+                    '-regexp',
+                    '-count' => \$length,
+                    '--', '&#\d+;', $start, $end
+                )
+                )
+            {
+                my $xchar = $textwindow->get( $thisblockstart,
+                    $thisblockstart . '+' . $length . 'c' );
+                $textwindow->ntdelete( $thisblockstart,
+                    $thisblockstart . '+' . $length . 'c' );
+                $xchar =~ s/&#(\d+);/$1/;
+                $textwindow->ntinsert( $thisblockstart, chr($xchar) );
+            }
+            $textwindow->markUnset('srchend');
+        }
+    }
+}
+
+sub fracconv {
+    my ( $start, $end ) = @_;
+    my %frachash = (
+        '\b1\/2\b' => '&frac12;',
+        '\b1\/4\b' => '&frac14;',
+        '\b3\/4\b' => '&frac34;',
+    );
+    my ( $ascii, $html, $length );
+    my $thisblockstart = 1;
+    while ( ( $ascii, $html ) = each(%frachash) ) {
+        while (
+            $thisblockstart = $textwindow->search(
+                '-regexp',
+                '-count' => \$length,
+                '--', "-?$ascii", $start, $end
+            )
+            )
+        {
+            $textwindow->replacewith( $thisblockstart,
+                $thisblockstart . "+$length c", $html );
+        }
+    }
+
+}
+
 
 ### Fixup
+
 
 ### Text Processing
 

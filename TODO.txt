@@ -14,3 +14,5 @@ perl tidy -pbp all .pl/pm files.
 
 Replace '', in menus with ['separator', ''],
 
+Find '--command sub {} and rewrite as standalones.
+
