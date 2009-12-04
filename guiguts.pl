@@ -1697,7 +1697,7 @@ sub buildmenu {    # The main menu building code.
             [ Button => 'Run Fi~xup', -command => \&fixpopup ],
             '',
             [   Button   => 'Fix ~Page Separators',
-                -command => \&seperatorpopup
+                -command => \&separatorpopup
             ],
             [   Button   => 'Remove Blank Lines Before Page Separators',
                 -command => sub {
@@ -1706,7 +1706,7 @@ sub buildmenu {    # The main menu building code.
                     $textwindow->addGlobEnd;
                     }
             ],
-            '',
+            ['separator', ''],
             [ Button => '~Footnote Fixup', -command => \&footnotepop ],
             [ Button => '~HTML Fixup',     -command => \&markpopup ],
             [ Button => '~Sidenote Fixup', -command => \&sidenotes ],
@@ -7973,10 +7973,10 @@ Blank line - remove spaces as necessary. Keep one blank line. (paragraph break).
 New Section - remove spaces as necessary. Keep two blank lines (section break). - Hotkey t
 New Chapter - remove spaces as necessary. Keep four blank lines (chapter break). - Hotkey h
 Refresh - search for and center next page separator. - Hotkey r
-Undo - undo the previous page seperator edit. - Hotkey u
-Delete - delete the page seperator. Make no other edits. - Hotkey d
-Full Auto - automatically search for and convert if possible the next page seperator. - Toggle - a
-Semi Auto - automatically search for and center the next page seperator after an edit. - Toggle - s
+Undo - undo the previous page separator edit. - Hotkey u
+Delete - delete the page separator. Make no other edits. - Hotkey d
+Full Auto - automatically search for and convert if possible the next page separator. - Toggle - a
+Semi Auto - automatically search for and center the next page separator after an edit. - Toggle - s
 EOM
 
     if ( defined( $lglobal{phelppop} ) ) {
@@ -18039,7 +18039,7 @@ sub fixup {
     update_indicators();
 }
 
-sub seperatorpopup {
+sub separatorpopup {
     push @operations, ( localtime() . ' - Page Separators Fixup' );
     oppopupdate() if $lglobal{oppop};
     if ( defined( $lglobal{pagepop} ) ) {
@@ -18459,7 +18459,7 @@ sub hotkeyshelp {
                 . "'l' -- Blank Line - leave one blank line. Close up any other whitespace. (Paragraph Break)\n"
                 . "'t' -- New Section - leave two blank lines. Close up any other whitespace. (Section Break)\n"
                 . "'h' -- New Chapter - leave four blank lines. Close up any other whitespace. (Chapter Break)\n"
-                . "'r' -- Refresh - search for, highlight and re-center the next page seperator.\n"
+                . "'r' -- Refresh - search for, highlight and re-center the next page separator.\n"
                 . "'u' -- Undo - undo the last edit. (Note: in Full Automatic mode,\n\tthis just single steps back through the undo buffer)\n"
                 . "'d' -- Delete - delete the page separator. Make no other edits.\n"
                 . "'v' -- View the current page in the image viewer.\n"
