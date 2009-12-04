@@ -1337,12 +1337,12 @@ sub buildmenu {    # The main menu building code.
         -tearoff   => 0,
         -menuitems => [
             [ Button => '~Open', -command => [ \&fileopen ] ],
-            '',
+            ['separator', ''],
             map ( [ Button   => "$recentfile[$_]",
                     -command => [ \&openfile, $recentfile[$_] ],
                 ],
                 ( 0 .. scalar(@recentfile) - 1 ) ),
-            '',
+            ['separator', ''],
             [   Button       => '~Save',
                 -command     => \&savefile,
                 -accelerator => 'Ctrl+s'
@@ -1417,17 +1417,17 @@ sub buildmenu {    # The main menu building code.
                     update_indicators();
                     }
             ],
-            '',
+            ['separator', ''],
             [   Button   => 'Import Prep Text Files',
                 -command => sub { prep_import() } # FIXME: \&prep_import
             ],
             [   Button   => 'Export As Prep Text Files',
                 -command => sub { prep_export() }
             ],
-            '',
+            ['separator', ''],
             [ Button => '~Guess Page Markers', -command => \&guesswindow ],
             [ Button => 'Set Page ~Markers',   -command => \&markpages ],
-            '',
+            ['separator', ''],
             [ Button => 'E~xit', -command => \&myexit ],
         ]
     );
@@ -1444,7 +1444,7 @@ sub buildmenu {    # The main menu building code.
                 -command     => sub { $textwindow->redo },
                 -accelerator => 'Ctrl+y'
             ],
-            '',
+            ['separator', ''],
             [   Button       => 'Cut',
                 -command     => sub { cut() },
                 -accelerator => 'Ctrl+x'
@@ -1465,7 +1465,7 @@ sub buildmenu {    # The main menu building code.
                 },
                 -accelerator => 'Ctrl+`'
             ],
-            '',
+            ['separator', ''],
             [   Button   => 'Select All',
                 -command => sub {
                     $textwindow->selectAll;
@@ -1534,11 +1534,11 @@ sub buildmenu {    # The main menu building code.
                 -command => [ \&nextblock, 'indent', 'reverse' ]
             ],
             ,
-            '',
+            ['separator', ''],
             [   Button   => 'Find ~Orphaned Brackets & Markup',
                 -command => \&brackets
             ],
-            '',
+            ['separator', ''],
             [   Button       => 'Highlight double quotes in selection',
                 -command     => [ \&hilite, '"' ],
                 -accelerator => 'Ctrl+Shift+"'
@@ -1568,7 +1568,7 @@ sub buildmenu {    # The main menu building code.
                     -accelerator => "Ctrl+Shift+$_"
                 ],
                 ( 1 .. 5 ) ),
-            '',
+            ['separator', ''],
             map ( [ Button       => "Go To Bookmark $_",
                     -command     => [ \&gotobookmark, $_ ],
                     -accelerator => "Ctrl+$_"
@@ -1593,7 +1593,7 @@ sub buildmenu {    # The main menu building code.
             [   Button   => '~UPPERCASE Selection',
                 -command => sub { case('uc'); }
             ],
-            '',
+            ['separator', ''],
             [   Button   => 'Surround Selection With....',
                 -command => \&surround
             ],
@@ -1604,7 +1604,7 @@ sub buildmenu {    # The main menu building code.
                     $textwindow->addGlobEnd;
                     }
             ],
-            '',
+            ['separator', ''],
             [   Button   => 'Indent Selection 1',
                 -command => sub {
                     $textwindow->addGlobStart;
@@ -1619,7 +1619,7 @@ sub buildmenu {    # The main menu building code.
                     $textwindow->addGlobEnd;
                     }
             ],
-            '',
+            ['separator', ''],
             [   Button   => '~Rewrap Selection',
                 -command => sub {
                     $textwindow->addGlobStart;
@@ -1637,10 +1637,10 @@ sub buildmenu {    # The main menu building code.
             [   Button   => 'Interrupt Rewrap',
                 -command => sub { $operationinterrupt = 1 }
             ],
-            '',
+            ['separator', ''],
             [ Button => 'ASCII ~Boxes',          -command => \&asciipopup ],
             [ Button => '~Align text on string', -command => \&alignpopup ],
-            '',
+            ['separator', ''],
             [   Button   => 'Convert To Named/Numeric Entities',
                 -command => sub {
                     $textwindow->addGlobStart;
@@ -1682,11 +1682,11 @@ sub buildmenu {    # The main menu building code.
             [   Button   => 'Run ~Word Frequency Routine',
                 -command => \&wordcount
             ],
-            '',
+            ['separator', ''],
             [ Button => 'Run ~Gutcheck',    -command => \&gutcheck ],
             [ Button => 'Gutcheck options', -command => \&gutopts ],
             [ Button => 'Run ~Jeebies',     -command => \&jeebiespop_up ],
-            '',
+            ['separator', ''],
             [   Button   => 'Remove End-of-line Spaces',
                 -command => sub {
                     $textwindow->addGlobStart;
@@ -1695,7 +1695,7 @@ sub buildmenu {    # The main menu building code.
                     }
             ],
             [ Button => 'Run Fi~xup', -command => \&fixpopup ],
-            '',
+            ['separator', ''],
             [   Button   => 'Fix ~Page Separators',
                 -command => \&separatorpopup
             ],
@@ -1716,11 +1716,11 @@ sub buildmenu {    # The main menu building code.
             [   Button   => 'Convert Windows CP 1252 characters to Unicode',
                 -command => \&cp1252toUni
             ],
-            '',
+            ['separator', ''],
             [   Button   => 'ASCII Table Special Effects',
                 -command => \&tablefx
             ],
-            '',
+            ['separator', ''],
             [   Button   => 'Clean Up Rewrap ~Markers',
                 -command => sub {
                     $textwindow->addGlobStart;
@@ -1728,7 +1728,7 @@ sub buildmenu {    # The main menu building code.
                     $textwindow->addGlobEnd;
                     }
             ],
-            '',
+            ['separator', ''],
             [   Button   => 'Find Greek',
                 -command => \&findandextractgreek
             ],
@@ -1771,7 +1771,7 @@ sub buildmenu {    # The main menu building code.
             [   Button   => 'Setup External Operations',
                 -command => \&externalpopup
             ],
-            '',
+            ['separator', ''],
             map ( [ Button   => "~$_ $extops[$_]{label}",
                     -command => [ \&xtops, $_ ]
                 ],
