@@ -8992,92 +8992,6 @@ sub gutopts {
     saveset();
 }
 
-sub gutcheck {
-    no warnings;
-    push @operations, ( localtime() . ' - Gutcheck' );
-    viewpagenums() if ( $lglobal{seepagenums} );
-    oppopupdate()  if $lglobal{oppop};
-    my ( $name, $path, $extension, @path );
-    $textwindow->focus;
-    update_indicators();
-    my $title = $top->cget('title');
-    return if ( $title =~ /No File Loaded/ );
-    $top->Busy( -recurse => 1 );
-
-    # FIXME: wide character in print warning next line with unicode
-    # Figure out how to determine encoding. See scratchpad.pl
-    # open my $gc, ">:encoding(UTF-8)", "gutchk.tmp");
-    if ( open my $gc, ">:bytes", 'gutchk.tmp' ) {
-        my $count = 0;
-        my $index = '1.0';
-        my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
-        while ( $textwindow->compare( $index, '<', 'end' ) ) {
-            my $end = $textwindow->index("$index  lineend +1c");
-            print $gc $textwindow->get( $index, $end );
-            $index = $end;
-        }
-        close $gc;
-    }
-    else {
-        warn "Could not open temp file for writing. $!";
-        my $dialog = $top->Dialog(
-            -text => 'Could not write to the '
-                . cwd()
-                . ' directory. Check for write permission or space problems.',
-            -bitmap  => 'question',
-            -title   => 'Gutcheck problem',
-            -buttons => [qw/OK/],
-        );
-        $dialog->Show;
-        return;
-    }
-    $title =~ s/$window_title - //
-        ;    #FIXME: sub this out; this and next in the tidy code
-    $title =~ s/edited - //;
-    $title = os_normal($title);
-    $title = dos_path($title) if OS_Win;
-    ( $name, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
-    my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
-    unless ($gutpath) {
-        $gutpath = $textwindow->getOpenFile(
-            -filetypes => $types,
-            -title     => 'Where is the Gutcheck executable?'
-        );
-    }
-    return unless $gutpath;
-    my $gutcheckoptions = ' -ey'
-        ; # e - echo queried line. y - puts errors to stdout instead of stderr.
-    if ( $gcopt[0] ) { $gutcheckoptions .= 't' }
-    ;     # Check common typos
-    if ( $gcopt[1] ) { $gutcheckoptions .= 'x' }
-    ;     # "Trust no one" Paranoid mode. Queries everything
-    if ( $gcopt[2] ) { $gutcheckoptions .= 'p' }
-    ;     # Require closure of quotes on every paragraph
-    if ( $gcopt[3] ) { $gutcheckoptions .= 's' }
-    ;     # Force checking for matched pairs of single quotes
-    if ( $gcopt[4] ) { $gutcheckoptions .= 'm' }
-    ;     # Ignore markup in < >
-    if ( $gcopt[5] ) { $gutcheckoptions .= 'l' }
-    ;     # Line end checking - defaults on
-    if ( $gcopt[6] ) { $gutcheckoptions .= 'v' }
-    ;     # Verbose - list EVERYTHING!
-    if ( $gcopt[7] ) { $gutcheckoptions .= 'u' }
-    ;     # Use file of User-defined Typos
-    if ( $gcopt[8] ) { $gutcheckoptions .= 'd' }
-    ;     # Ignore DP style page separators
-    $gutcheckoptions .= ' ';
-    $gutpath = os_normal($gutpath);
-    $gutpath = dos_path($gutpath) if OS_Win;
-    saveset();
-
-    if ( $lglobal{gcpop} ) {
-        $lglobal{gclistbox}->delete( '0', 'end' );
-    }
-    gutcheckrun( $gutpath, $gutcheckoptions, 'gutchk.tmp' );
-    $top->Unbusy;
-    unlink 'gutchk.tmp';
-    gcheckpop_up();
-}
 
 my @gsopt;
 
@@ -18202,6 +18116,93 @@ sub wordcount {
     $top->Unbusy( -recurse => 1 );
     sortwords( \%{ $lglobal{seen} } );
     update_indicators();
+}
+
+sub gutcheck {
+    no warnings;
+    push @operations, ( localtime() . ' - Gutcheck' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    oppopupdate()  if $lglobal{oppop};
+    my ( $name, $path, $extension, @path );
+    $textwindow->focus;
+    update_indicators();
+    my $title = $top->cget('title');
+    return if ( $title =~ /No File Loaded/ );
+    $top->Busy( -recurse => 1 );
+
+    # FIXME: wide character in print warning next line with unicode
+    # Figure out how to determine encoding. See scratchpad.pl
+    # open my $gc, ">:encoding(UTF-8)", "gutchk.tmp");
+    if ( open my $gc, ">:bytes", 'gutchk.tmp' ) {
+        my $count = 0;
+        my $index = '1.0';
+        my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
+        while ( $textwindow->compare( $index, '<', 'end' ) ) {
+            my $end = $textwindow->index("$index  lineend +1c");
+            print $gc $textwindow->get( $index, $end );
+            $index = $end;
+        }
+        close $gc;
+    }
+    else {
+        warn "Could not open temp file for writing. $!";
+        my $dialog = $top->Dialog(
+            -text => 'Could not write to the '
+                . cwd()
+                . ' directory. Check for write permission or space problems.',
+            -bitmap  => 'question',
+            -title   => 'Gutcheck problem',
+            -buttons => [qw/OK/],
+        );
+        $dialog->Show;
+        return;
+    }
+    $title =~ s/$window_title - //
+        ;    #FIXME: sub this out; this and next in the tidy code
+    $title =~ s/edited - //;
+    $title = os_normal($title);
+    $title = dos_path($title) if OS_Win;
+    ( $name, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
+    my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
+    unless ($gutpath) {
+        $gutpath = $textwindow->getOpenFile(
+            -filetypes => $types,
+            -title     => 'Where is the Gutcheck executable?'
+        );
+    }
+    return unless $gutpath;
+    my $gutcheckoptions = ' -ey'
+        ; # e - echo queried line. y - puts errors to stdout instead of stderr.
+    if ( $gcopt[0] ) { $gutcheckoptions .= 't' }
+    ;     # Check common typos
+    if ( $gcopt[1] ) { $gutcheckoptions .= 'x' }
+    ;     # "Trust no one" Paranoid mode. Queries everything
+    if ( $gcopt[2] ) { $gutcheckoptions .= 'p' }
+    ;     # Require closure of quotes on every paragraph
+    if ( $gcopt[3] ) { $gutcheckoptions .= 's' }
+    ;     # Force checking for matched pairs of single quotes
+    if ( $gcopt[4] ) { $gutcheckoptions .= 'm' }
+    ;     # Ignore markup in < >
+    if ( $gcopt[5] ) { $gutcheckoptions .= 'l' }
+    ;     # Line end checking - defaults on
+    if ( $gcopt[6] ) { $gutcheckoptions .= 'v' }
+    ;     # Verbose - list EVERYTHING!
+    if ( $gcopt[7] ) { $gutcheckoptions .= 'u' }
+    ;     # Use file of User-defined Typos
+    if ( $gcopt[8] ) { $gutcheckoptions .= 'd' }
+    ;     # Ignore DP style page separators
+    $gutcheckoptions .= ' ';
+    $gutpath = os_normal($gutpath);
+    $gutpath = dos_path($gutpath) if OS_Win;
+    saveset();
+
+    if ( $lglobal{gcpop} ) {
+        $lglobal{gclistbox}->delete( '0', 'end' );
+    }
+    gutcheckrun( $gutpath, $gutcheckoptions, 'gutchk.tmp' );
+    $top->Unbusy;
+    unlink 'gutchk.tmp';
+    gcheckpop_up();
 }
 
 
