@@ -187,15 +187,15 @@ else {
     $lglobal{ImageSize} = 0;
 }
 
-my $top = tkinit(-title => $window_title,);
+my $top = tkinit( -title => $window_title, );
 
-initialize();                 # Initialize a bunch of vars that need it.
+initialize();    # Initialize a bunch of vars that need it.
 
 $top->minsize( 440, 90 );
 
 # Detect geometry changes for tracking
 $top->bind(
-    '<Configure>' => sub {    
+    '<Configure>' => sub {
         $geometry = $top->geometry;
         $lglobal{geometryupdate} = 1;
     }
@@ -237,9 +237,10 @@ utffontinit();
 $top->geometry($geometry) if $geometry;
 
 # Set up Main window layout
-my $text_frame = $top->Frame->pack( -anchor => 'nw',
-                                    -expand => 'yes',
-                                    -fill => 'both'
+my $text_frame = $top->Frame->pack(
+    -anchor => 'nw',
+    -expand => 'yes',
+    -fill   => 'both'
 );
 
 my $counter_frame = $text_frame->Frame->pack(
@@ -250,8 +251,7 @@ my $counter_frame = $text_frame->Frame->pack(
 );
 
 # Frame to hold proofer names. Pack it when necessary.
-my $proofer_frame = $text_frame
-    ->Frame;    
+my $proofer_frame = $text_frame->Frame;
 
 # The actual text widget
 my $textwindow = $text_frame->LineNumberText(
@@ -287,8 +287,7 @@ $top->configure( -menu => $menu );
 
 # routines to call every time the text is edited
 $textwindow->SetGUICallbacks(
-    [
-        \&update_indicators,
+    [   \&update_indicators,
         sub {
             return if $nohighlights;
             $textwindow->HighlightAllPairsBracketingCursor;
@@ -383,9 +382,6 @@ sub updatesel {    # Update Last Selection readout in status bar
     $textwindow->_lineupdate;
 }
 
-
-
-
 sub set_autosave {
     $lglobal{autosaveid}->cancel     if $lglobal{autosaveid};
     $lglobal{saveflashid}->cancel    if $lglobal{saveflashid};
@@ -449,7 +445,6 @@ sub toggle_autosave {
     }
 }
 
-
 sub binsave {    # save the .bin file associated with the text file
     push @operations, ( localtime() . ' - File Saved' );
     oppopupdate() if $lglobal{oppop};
@@ -512,8 +507,8 @@ sub binsave {    # save the .bin file associated with the text file
         print $bin '$bookmarks[0] = \''
             . $textwindow->index('insert') . "';\n";
         for ( 1 .. 5 ) {
-            print $bin '$bookmarks['
-                . $_
+            print $bin '$bookmarks[' 
+                . $_ 
                 . '] = \''
                 . $textwindow->index( 'bkmk' . $_ ) . "';\n"
                 if $bookmarks[$_];
@@ -529,8 +524,8 @@ sub binsave {    # save the .bin file associated with the text file
             no warnings 'uninitialized';
             for my $round ( 1 .. $lglobal{numrounds} ) {
                 if ( defined $proofers{$page}->[$round] ) {
-                    print $bin '$proofers{\''
-                        . $page . '\'}['
+                    print $bin '$proofers{\'' 
+                        . $page . '\'}[' 
                         . $round
                         . '] = \''
                         . $proofers{$page}->[$round] . '\';' . "\n";
@@ -588,8 +583,6 @@ sub butbind {    # Bindings to make label in status bar act like buttons
     $widget->bind( '<ButtonRelease-1>',
         sub { $widget->configure( -relief => 'raised' ) } );
 }
-
-
 
 # Pop up window allowing tracking and auto reselection of last selection
 sub selection {
@@ -680,7 +673,6 @@ sub selection {
     $lglobal{selsentry}->selectionRange( 0, 'end' );
 }
 
-
 sub hilitetgl {    # Enable / disable word highlighting in the text
     if ( $lglobal{scanno_hl} ) {
         $lglobal{hl_index} = 1;
@@ -703,16 +695,16 @@ sub toolbar_toggle {    # Set up / remove the tool bar
     }
     elsif ( !$notoolbar && !$lglobal{toptool} ) {
 
-      # FIXME: if Tk::ToolBar isn't available, show a message and disable
-      # the toolbar
-        # if ( !$lglobal{ToolBar} ) {
-        #     my $dbox = $top->Dialog(
-        #         -text =>
-        #             'Tk::ToolBar package not found, unable to create Toolbar. The toolbar will be disabled.',
-        #         -title   => 'Unable to create Toolbar.',
-        #         -buttons => ['OK']
-        #     );
-        #     $dbox->Show;
+# FIXME: if Tk::ToolBar isn't available, show a message and disable
+# the toolbar
+# if ( !$lglobal{ToolBar} ) {
+#     my $dbox = $top->Dialog(
+#         -text =>
+#             'Tk::ToolBar package not found, unable to create Toolbar. The toolbar will be disabled.',
+#         -title   => 'Unable to create Toolbar.',
+#         -buttons => ['OK']
+#     );
+#     $dbox->Show;
 
         #     # disable toolbar in settings
         #     $notoolbar = 1;
@@ -839,7 +831,6 @@ sub toolbar_toggle {    # Set up / remove the tool bar
     }
     saveset();
 }
-
 
 # Command parsing for External command routine
 sub cmdinterp {
@@ -1330,25 +1321,24 @@ sub highlightscannos {   #routine to automatically highlight words in the text
     }
 }
 
-
-sub buildmenu {    # The main menu building code.
+sub buildmenu {                        # The main menu building code.
     $menu->Cascade(
         -label     => '~File',
         -tearoff   => 0,
         -menuitems => [
             [ Button => '~Open', -command => [ \&fileopen ] ],
-            ['separator', ''],
+            [ 'separator', '' ],
             map ( [ Button   => "$recentfile[$_]",
                     -command => [ \&openfile, $recentfile[$_] ],
                 ],
                 ( 0 .. scalar(@recentfile) - 1 ) ),
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button       => '~Save',
                 -command     => \&savefile,
                 -accelerator => 'Ctrl+s'
             ],
             [   Button   => 'Save ~As',
-                -command => sub {# FIXME: Move to sub saveas
+                -command => sub {         # FIXME: Move to sub saveas
                     my ($name);
                     $name = $textwindow->getSaveFile(
                         -title      => 'Save As',
@@ -1390,7 +1380,7 @@ sub buildmenu {    # The main menu building code.
                     }
             ],
             [   Button   => '~Include',
-                -command => sub { # FIXME: file_include
+                -command => sub {         # FIXME: file_include
                     my ($name);
                     my $types = [
                         [   'Text Files',
@@ -1411,23 +1401,23 @@ sub buildmenu {    # The main menu building code.
                     }
             ],
             [   Button   => '~Close',
-                -command => sub { # FIXME: sub file_close
+                -command => sub {       # FIXME: sub file_close
                     return if ( confirmempty() =~ /cancel/i );
                     clearvars();
                     update_indicators();
                     }
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button   => 'Import Prep Text Files',
-                -command => sub { prep_import() } # FIXME: \&prep_import
+                -command => sub { prep_import() }       # FIXME: \&prep_import
             ],
             [   Button   => 'Export As Prep Text Files',
                 -command => sub { prep_export() }
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [ Button => '~Guess Page Markers', -command => \&guesswindow ],
             [ Button => 'Set Page ~Markers',   -command => \&markpages ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [ Button => 'E~xit', -command => \&myexit ],
         ]
     );
@@ -1444,7 +1434,7 @@ sub buildmenu {    # The main menu building code.
                 -command     => sub { $textwindow->redo },
                 -accelerator => 'Ctrl+y'
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button       => 'Cut',
                 -command     => sub { cut() },
                 -accelerator => 'Ctrl+x'
@@ -1458,14 +1448,14 @@ sub buildmenu {    # The main menu building code.
                 -accelerator => 'Ctrl+v'
             ],
             [   Button   => 'Col Paste',
-                -command => sub { # FIXME: sub edit_column_paste
+                -command => sub {          # FIXME: sub edit_column_paste
                     $textwindow->addGlobStart;
                     $textwindow->clipboardColumnPaste;
                     $textwindow->addGlobEnd;
                 },
                 -accelerator => 'Ctrl+`'
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button   => 'Select All',
                 -command => sub {
                     $textwindow->selectAll;
@@ -1498,7 +1488,7 @@ sub buildmenu {    # The main menu building code.
                 -command => sub { $textwindow->WhatLineNumberPopUp }
             ],
 
-            ['separator', ''], 
+            [ 'separator', '' ],
 
             [   Button   => "Find Proofer Comments",
                 -command => \&find_proofer_comment
@@ -1534,11 +1524,11 @@ sub buildmenu {    # The main menu building code.
                 -command => [ \&nextblock, 'indent', 'reverse' ]
             ],
             ,
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button   => 'Find ~Orphaned Brackets & Markup',
                 -command => \&brackets
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button       => 'Highlight double quotes in selection',
                 -command     => [ \&hilite, '"' ],
                 -accelerator => 'Ctrl+Shift+"'
@@ -1552,7 +1542,7 @@ sub buildmenu {    # The main menu building code.
                 -accelerator => 'Ctrl+Alt+h'
             ],
             [   Button   => 'Remove Highlights',
-                -command => sub { # FIXME: sub search_rm_hilites
+                -command => sub {               # FIXME: sub search_rm_hilites
                     $textwindow->tagRemove( 'highlight', '1.0', 'end' );
                     $textwindow->tagRemove( 'quotemark', '1.0', 'end' );
                 },
@@ -1568,7 +1558,7 @@ sub buildmenu {    # The main menu building code.
                     -accelerator => "Ctrl+Shift+$_"
                 ],
                 ( 1 .. 5 ) ),
-            ['separator', ''],
+            [ 'separator', '' ],
             map ( [ Button       => "Go To Bookmark $_",
                     -command     => [ \&gotobookmark, $_ ],
                     -accelerator => "Ctrl+$_"
@@ -1582,18 +1572,18 @@ sub buildmenu {    # The main menu building code.
         -tearoff   => 1,
         -menuitems => [
             [   Button   => '~lowercase Selection',
-                -command => sub { case('lc'); }
+                -command => sub { case ('lc'); }
             ],
             [   Button   => '~Sentence case Selection',
-                -command => sub { case('sc'); }
+                -command => sub { case ('sc'); }
             ],
             [   Button   => '~Title Case Selection',
-                -command => sub { case('tc'); }
+                -command => sub { case ('tc'); }
             ],
             [   Button   => '~UPPERCASE Selection',
-                -command => sub { case('uc'); }
+                -command => sub { case ('uc'); }
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button   => 'Surround Selection With....',
                 -command => \&surround
             ],
@@ -1604,7 +1594,7 @@ sub buildmenu {    # The main menu building code.
                     $textwindow->addGlobEnd;
                     }
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button   => 'Indent Selection 1',
                 -command => sub {
                     $textwindow->addGlobStart;
@@ -1619,7 +1609,7 @@ sub buildmenu {    # The main menu building code.
                     $textwindow->addGlobEnd;
                     }
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button   => '~Rewrap Selection',
                 -command => sub {
                     $textwindow->addGlobStart;
@@ -1637,10 +1627,10 @@ sub buildmenu {    # The main menu building code.
             [   Button   => 'Interrupt Rewrap',
                 -command => sub { $operationinterrupt = 1 }
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [ Button => 'ASCII ~Boxes',          -command => \&asciipopup ],
             [ Button => '~Align text on string', -command => \&alignpopup ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button   => 'Convert To Named/Numeric Entities',
                 -command => sub {
                     $textwindow->addGlobStart;
@@ -1682,11 +1672,11 @@ sub buildmenu {    # The main menu building code.
             [   Button   => 'Run ~Word Frequency Routine',
                 -command => \&wordcount
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [ Button => 'Run ~Gutcheck',    -command => \&gutcheck ],
             [ Button => 'Gutcheck options', -command => \&gutopts ],
             [ Button => 'Run ~Jeebies',     -command => \&jeebiespop_up ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button   => 'Remove End-of-line Spaces',
                 -command => sub {
                     $textwindow->addGlobStart;
@@ -1695,7 +1685,7 @@ sub buildmenu {    # The main menu building code.
                     }
             ],
             [ Button => 'Run Fi~xup', -command => \&fixpopup ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button   => 'Fix ~Page Separators',
                 -command => \&separatorpopup
             ],
@@ -1706,7 +1696,7 @@ sub buildmenu {    # The main menu building code.
                     $textwindow->addGlobEnd;
                     }
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [ Button => '~Footnote Fixup', -command => \&footnotepop ],
             [ Button => '~HTML Fixup',     -command => \&markpopup ],
             [ Button => '~Sidenote Fixup', -command => \&sidenotes ],
@@ -1716,11 +1706,11 @@ sub buildmenu {    # The main menu building code.
             [   Button   => 'Convert Windows CP 1252 characters to Unicode',
                 -command => \&cp1252toUni
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button   => 'ASCII Table Special Effects',
                 -command => \&tablefx
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button   => 'Clean Up Rewrap ~Markers',
                 -command => sub {
                     $textwindow->addGlobStart;
@@ -1728,7 +1718,7 @@ sub buildmenu {    # The main menu building code.
                     $textwindow->addGlobEnd;
                     }
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             [   Button   => 'Find Greek',
                 -command => \&findandextractgreek
             ],
@@ -1771,7 +1761,7 @@ sub buildmenu {    # The main menu building code.
             [   Button   => 'Setup External Operations',
                 -command => \&externalpopup
             ],
-            ['separator', ''],
+            [ 'separator', '' ],
             map ( [ Button   => "~$_ $extops[$_]{label}",
                     -command => [ \&xtops, $_ ]
                 ],
@@ -2138,7 +2128,6 @@ sub thoughtbreak {    # Insert a "Thought break" (duh)
         '       *' x 5 );
 }
 
-
 sub gotolabel
 {    # Pop up a window which will allow jumping directly to a specified page
     unless ( defined( $lglobal{gotolabpop} ) ) {
@@ -2199,7 +2188,6 @@ sub gotolabel
         $lglobal{gotolabpop}->Wait;
     }
 }
-
 
 sub saveinterval
 {    # Pop up a window where you can adjust the auto save interval
@@ -2289,7 +2277,7 @@ sub checkver {
     }
     $answer = $dbox->Show;
     if ( $answer =~ /ok/i ) {
-        runner( "$globalbrowserstart http://guiguts.sourceforge.net/" );
+        runner("$globalbrowserstart http://guiguts.sourceforge.net/");
     }
 }
 
@@ -2437,7 +2425,6 @@ sub poetrynumbers {
         $searchstartindex = ++$row . '.0';
     }
 }
-
 
 sub oppopupdate {    # Update the Operations history
     $lglobal{oplistbox}->delete( '0', 'end' );
@@ -2841,7 +2828,7 @@ sub fnview
         $lglobal{footviewpop}->Icon( -image => $icon );
         for my $findex ( 1 .. $lglobal{fntotal} ) {
             $ftext->insert( 'end',
-                      'footnote #'
+                      'footnote #' 
                     . $findex
                     . '  line.column - '
                     . $lglobal{fnarray}->[$findex][0]
@@ -3353,7 +3340,7 @@ sub footnoteshow {
         my $widget = $textwindow->{rtext};
         my ( $lx, $ly, $lw, $lh ) = $widget->dlineinfo($line);
         my $bottom = int(
-            (         $widget->height
+            (         $widget->height 
                     - 2 * $widget->cget( -bd )
                     - 2 * $widget->cget( -highlightthickness )
             ) / $lh / 2
@@ -3603,8 +3590,7 @@ sub alpha {
 
 sub roman {
     my %roman_digit = qw(1 IV 10 XL 100 CD 1000 MMMMMM);
-    my @figure
-        = reverse sort keys %roman_digit;
+    my @figure      = reverse sort keys %roman_digit;
     grep( $roman_digit{$_} = [ split( //, $roman_digit{$_}, 2 ) ], @figure );
     my $arg = shift;
     return undef
@@ -3722,10 +3708,6 @@ sub fontsize {
     }
 }
 
-
-
-
-
 sub add_search_history {
     my ( $widget, $history_array_ref ) = @_;
     my @temparray = @$history_array_ref;
@@ -3811,7 +3793,6 @@ sub load_hist_term {
     $widget->delete( '1.0', 'end' );
     $widget->insert( 'end', $term );
 }
-
 
 sub reg_check {
     $lglobal{searchentry}->tagConfigure( 'reg', -foreground => 'black' );
@@ -4027,7 +4008,6 @@ sub reghint {
             sub { $lglobal{hintpop}->destroy; undef $lglobal{hintpop} } );
     $lglobal{hintpop}->Icon( -image => $icon );
 }
-
 
 sub loadscannos {
     $lglobal{scannosfilename} = '';
@@ -4693,8 +4673,6 @@ sub replaceall {
     undef $lglobal{stoppop};
 }
 
-
-
 sub orphans {
     viewpagenums() if ( $lglobal{seepagenums} );
     my $br = shift;
@@ -4874,9 +4852,6 @@ sub cp1252toUni {
         }
     }
 }
-
-
-
 
 sub wrapper {
     my @words       = ();
@@ -5067,7 +5042,6 @@ sub setmargins {
     saveset();
 }
 
-
 sub asciibox {
     my $marker      = shift(@_);
     my @ranges      = $textwindow->tagRanges('sel');
@@ -5141,7 +5115,6 @@ sub asciibox {
     }
 }
 
-
 sub aligntext {
     my $marker      = shift(@_);
     my @ranges      = $textwindow->tagRanges('sel');
@@ -5181,7 +5154,6 @@ sub aligntext {
     }
 }
 
-
 sub floodfill {
     my @ranges = $textwindow->tagRanges('sel');
     return unless @ranges;
@@ -5211,7 +5183,6 @@ sub floodfill {
     $textwindow->addGlobEnd;
 
 }
-
 
 sub surroundit {
     my ( $pre, $post ) = @_;
@@ -6414,7 +6385,7 @@ sub htmlimage {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
-                                  "<div class=\"figleft\" style=\"width: "
+                                  "<div class=\"figleft\" style=\"width: " 
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -6423,7 +6394,7 @@ sub htmlimage {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
-                                  "<div class=\"figright\" style=\"width: "
+                                  "<div class=\"figright\" style=\"width: " 
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -7230,7 +7201,7 @@ sub htmlautoconvert {
                 $ital = 0;
             }
             $lglobal{classhash}->{$indent}
-                = '    .poem span.i'
+                = '    .poem span.i' 
                 . $indent
                 . '     {display: block; margin-left: '
                 . $indent
@@ -7446,7 +7417,7 @@ sub htmlautoconvert {
                     $ital = 0;
                 }
                 $selection
-                    = '<span style="margin-left: '
+                    = '<span style="margin-left: ' 
                     . $indent . 'em;">'
                     . $selection
                     . '</span>';
@@ -7481,7 +7452,7 @@ sub htmlautoconvert {
                 $aname =~ s/<\/?[hscalup].*?>//g;
                 $aname = makeanchor( deaccent($selection) );
                 $textwindow->ntinsert( "$step.0",
-                          "<h2><a name=\""
+                          "<h2><a name=\"" 
                         . $aname
                         . "\" id=\""
                         . $aname
@@ -7494,7 +7465,7 @@ sub htmlautoconvert {
                     $selection =~ s/<[^>]+>//g;
                     $selection = "<b>$selection</b>";
                     push @contents,
-                          "<a href=\"#"
+                          "<a href=\"#" 
                         . $aname . "\">"
                         . $selection
                         . "</a><br />\n";
@@ -7798,9 +7769,6 @@ sub htmlautoconvert {
     $textwindow->see('1.0');
 }
 
-
-
-
 sub entity {
     my $char       = shift;
     my %markuphash = (
@@ -7961,9 +7929,6 @@ sub named {
     }
 }
 
-
-
-
 # FIXME: Page separator removal help
 sub phelppopup {
     my $help_text = <<EOM;
@@ -8069,7 +8034,6 @@ sub convertfilnum {
     $textwindow->markSet( 'insert', "$searchstartindex+2l" )
         if $searchstartindex;
 }
-
 
 sub showproofers {
     if ( defined( $lglobal{prooferpop} ) ) {
@@ -8290,8 +8254,6 @@ sub prfrby {
             ->insert( 'end', sprintf( " %8s\n", $proofersort{$prfr}[0] ) );
     }
 }
-
-
 
 sub joinlines {
     viewpagenums() if ( $lglobal{seepagenums} );
@@ -8756,8 +8718,6 @@ sub tidyrun {
     unlink 'tidy.tmp';
     tidypop_up();
 }
-
-
 
 my @gsopt;
 
@@ -9350,9 +9310,6 @@ sub fixpopup {
     }
 }
 
-
-
-
 sub ital_adjust {
     my $markuppop = $top->Toplevel( -title => 'Word count threshold', );
     my $f0 = $markuppop->Frame->pack( -side => 'top', -anchor => 'n' );
@@ -9913,7 +9870,8 @@ sub wfspellcheck {
         close $file;
 
         # FIXME: spellopt is getting set all over the joint
-        my $spellopt = get_spellchecker_version() lt "0.6" ? "list " : "list ";
+        my $spellopt
+            = get_spellchecker_version() lt "0.6" ? "list " : "list ";
         $spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
         my @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
             ;  # feed the text to aspell, get an array of misspelled words out
@@ -10135,7 +10093,6 @@ sub stealthcheck {
     $top->Unbusy;
 }
 
-
 sub confirmdiscard {
     if ( $textwindow->numberChanges ) {
         my $ans = $top->messageBox(
@@ -10174,10 +10131,6 @@ sub confirmempty {
     }
     return $answer;
 }
-
-
-
-
 
 sub BindMouseWheel {
     my ($w) = @_;
@@ -10389,7 +10342,6 @@ sub insertit {
         ->markSet( 'insert', $spot . '+' . length($letter) . 'c' )
         if $isatext;
 }
-
 
 sub tablefx {
     viewpagenums() if ( $lglobal{seepagenums} );
@@ -11879,7 +11831,6 @@ AAAAACH5BAAAAAAALAAAAAAMAAwAAwQfMMg5BaDYXiw178AlcJ6VhYFXoSoosm7KvrR8zfXHRQA7
     drag($textwindow);
 }
 
-
 sub popscroll {
     if ( $lglobal{scroller} ) {
         scrolldismiss();
@@ -12014,7 +11965,6 @@ sub findandextractgreek {
         $lglobal{grtext}->insert( '1.0', $text );
     }
 }
-
 
 sub putgreek {
     my ( $attrib, $hash ) = @_;
@@ -13051,7 +13001,6 @@ sub escape_problems {
     return $_[0];
 }
 
-
 sub utflabel_bind {
     my ( $widget, $block, $start, $end ) = @_;
     $widget->bind( '<Enter>',
@@ -13101,8 +13050,6 @@ sub utfchar_bind {
     );
 }
 
-
-
 sub drag {
     my $scrolledwidget = shift;
     my $corner         = $scrolledwidget->Subwidget('corner');
@@ -13134,11 +13081,11 @@ sub drag {
         '<B1-Motion>',
         sub {
             my $x
-                = $scrolledwidget->toplevel->width
+                = $scrolledwidget->toplevel->width 
                 - $lglobal{x}
                 + $scrolledwidget->toplevel->pointerx;
             my $y
-                = $scrolledwidget->toplevel->height
+                = $scrolledwidget->toplevel->height 
                 - $lglobal{y}
                 + $scrolledwidget->toplevel->pointery;
             ( $lglobal{x}, $lglobal{y} ) = (
@@ -13198,7 +13145,6 @@ sub jeebiesrun {
     $listbox->insert( 2, "  --> $mark queries." );
     $top->Unbusy( -recurse => 1 );
 }
-
 
 sub jeebiesview {
     $textwindow->tagRemove( 'highlight', '1.0', 'end' );
@@ -13324,7 +13270,6 @@ sub natural_sort_freq
     map { $_->[1] } sort { $b->[0] <=> $a->[0] or $a->[2] cmp $b->[2] } @x;
 }
 
-
 # functions specific to text version processing
 sub text_convert_tb {
     my $tb = '       *       *       *       *       *';
@@ -13368,8 +13313,10 @@ sub text_convert_options {
 
     my $bold_frame = $options->add('Frame')
         ->pack( -side => 'top', -padx => 5, -pady => 3 );
-    my $bold_label = $bold_frame->Label( -width => 25,
-        -text => "Bold Replace Character" )->pack( -side => 'left' );
+    my $bold_label = $bold_frame->Label(
+        -width => 25,
+        -text  => "Bold Replace Character"
+    )->pack( -side => 'left' );
     my $bold_entry = $bold_frame->Entry(
         -width        => 6,
         -background   => 'white',
@@ -13583,7 +13530,6 @@ sub html_convert_tb {
 
 }
 
-
 ### Internal Routines
 ## Status Bar
 sub buildstatusbar {
@@ -13755,13 +13701,12 @@ sub buildstatusbar {
     );
 }
 
-
 # Routine to update the status bar when somthing has changed.
 sub update_indicators {
     my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
     my ( $line, $column ) = split( /\./, $textwindow->index('insert') );
     $lglobal{current_line_label}->configure(
-                                            -text => "Ln: $line/" . ( $last_line - 1 ) . "  -  Col: $column" );
+        -text => "Ln: $line/" . ( $last_line - 1 ) . "  -  Col: $column" );
     my $mode             = $textwindow->OverstrikeMode;
     my $overstrke_insert = ' I ';
     if ($mode) {
@@ -13788,16 +13733,17 @@ sub update_indicators {
         $lglobal{ordmaxlength} = $msgln
             if ( $msgln > $lglobal{ordmaxlength} );
         $lglobal{ordinallabel}->configure(
-                                          -text    => " Dec $ordinal : Hex $hexi : $msg ",
-                                          -width   => $lglobal{ordmaxlength},
-                                          -justify => 'left'
-                                         );
+            -text    => " Dec $ordinal : Hex $hexi : $msg ",
+            -width   => $lglobal{ordmaxlength},
+            -justify => 'left'
+        );
 
-    } else {
+    }
+    else {
         $lglobal{ordinallabel}->configure(
-                                          -text  => " Dec $ordinal : Hex $hexi ",
-                                          -width => 18
-                                         );
+            -text  => " Dec $ordinal : Hex $hexi ",
+            -width => 18
+        );
     }
     if ( $textwindow->numberChanges ) {
         $edit_flag = 'edited';
@@ -13806,9 +13752,10 @@ sub update_indicators {
     # window label format: GG-version - [edited] - [file name]
     if ($edit_flag) {
         $top->configure( -title => $window_title . " - "
-                         . $edit_flag . " - "
-                         . $filename );
-    } else {
+                . $edit_flag . " - "
+                . $filename );
+    }
+    else {
         $top->configure( -title => $window_title . " - " . $filename );
     }
 
@@ -13829,82 +13776,82 @@ sub update_indicators {
                 $pnum = $1;
                 unless ( defined( $lglobal{page_num_label} ) ) {
                     $lglobal{page_num_label} = $counter_frame->Label(
-                                                                     -text       => "Img: $pnum",
-                                                                     -width      => 8,
-                                                                     -background => 'gray',
-                                                                     -relief     => 'ridge',
-                                                                    )->grid( -row => 1, -column => 2, -sticky => 'nw' );
+                        -text       => "Img: $pnum",
+                        -width      => 8,
+                        -background => 'gray',
+                        -relief     => 'ridge',
+                    )->grid( -row => 1, -column => 2, -sticky => 'nw' );
                     $lglobal{page_num_label}->bind(
-                                                   '<1>',
-                                                   sub {
-                                                       $lglobal{page_num_label}
-                                                           ->configure( -relief => 'sunken' );
-                                                       gotopage();
-                                                       update_indicators();
-                                                   }
-                                                  );
+                        '<1>',
+                        sub {
+                            $lglobal{page_num_label}
+                                ->configure( -relief => 'sunken' );
+                            gotopage();
+                            update_indicators();
+                        }
+                    );
                     $lglobal{page_num_label}->bind(
-                                                   '<3>',
-                                                   sub {
-                                                       $lglobal{page_num_label}
-                                                           ->configure( -relief => 'sunken' );
-                                                       viewpagenums();
-                                                       update_indicators();
-                                                   }
-                                                  );
+                        '<3>',
+                        sub {
+                            $lglobal{page_num_label}
+                                ->configure( -relief => 'sunken' );
+                            viewpagenums();
+                            update_indicators();
+                        }
+                    );
                     butbind( $lglobal{page_num_label} );
                     $lglobal{statushelp}->attach( $lglobal{page_num_label},
-                                                  -balloonmsg => "Image/Page name for current page." );
+                        -balloonmsg => "Image/Page name for current page." );
                 }
                 unless ( defined( $lglobal{pagebutton} ) ) {
                     $lglobal{pagebutton} = $counter_frame->Label(
-                                                                 -text       => 'See Image',
-                                                                 -width      => 9,
-                                                                 -relief     => 'ridge',
-                                                                 -background => 'gray',
-                                                                )->grid( -row => 1, -column => 3 );
+                        -text       => 'See Image',
+                        -width      => 9,
+                        -relief     => 'ridge',
+                        -background => 'gray',
+                    )->grid( -row => 1, -column => 3 );
                     $lglobal{pagebutton}->bind(
-                                               '<1>',
-                                               sub {
-                                                   $lglobal{pagebutton}
-                                                       ->configure( -relief => 'sunken' );
-                                                   openpng();
-                                               }
-                                              );
+                        '<1>',
+                        sub {
+                            $lglobal{pagebutton}
+                                ->configure( -relief => 'sunken' );
+                            openpng();
+                        }
+                    );
                     $lglobal{pagebutton}
                         ->bind( '<3>', sub { setpngspath() } );
                     butbind( $lglobal{pagebutton} );
                     $lglobal{statushelp}->attach( $lglobal{pagebutton},
-                                                  -balloonmsg =>
-                                                  "Open Image corresponding to current page in an external viewer."
-                                                );
+                        -balloonmsg =>
+                            "Open Image corresponding to current page in an external viewer."
+                    );
                 }
                 unless ( $lglobal{page_label} ) {
                     $lglobal{page_label} = $counter_frame->Label(
-                                                                 -text       => 'Lbl: None ',
-                                                                 -background => 'gray',
-                                                                 -relief     => 'ridge',
-                                                                )->grid( -row => 1, -column => 4 );
+                        -text       => 'Lbl: None ',
+                        -background => 'gray',
+                        -relief     => 'ridge',
+                    )->grid( -row => 1, -column => 4 );
                     butbind( $lglobal{page_label} );
                     $lglobal{page_label}->bind(
-                                               '<1>',
-                                               sub {
-                                                   $lglobal{page_label}
-                                                       ->configure( -relief => 'sunken' );
-                                                   gotolabel();
-                                               }
-                                              );
+                        '<1>',
+                        sub {
+                            $lglobal{page_label}
+                                ->configure( -relief => 'sunken' );
+                            gotolabel();
+                        }
+                    );
                     $lglobal{page_label}->bind(
-                                               '<3>',
-                                               sub {
-                                                   $lglobal{page_label}
-                                                       ->configure( -relief => 'sunken' );
-                                                   pageadjust();
-                                               }
-                                              );
+                        '<3>',
+                        sub {
+                            $lglobal{page_label}
+                                ->configure( -relief => 'sunken' );
+                            pageadjust();
+                        }
+                    );
                     $lglobal{statushelp}->attach( $lglobal{page_label},
-                                                  -balloonmsg =>
-                                                  "Page label assigned to current page." );
+                        -balloonmsg =>
+                            "Page label assigned to current page." );
                 }
                 $lglobal{page_num_label}->configure( -text => "Img: $pnum" )
                     if defined $lglobal{page_num_label};
@@ -13912,14 +13859,17 @@ sub update_indicators {
                 if ( defined $label && length $label ) {
                     $lglobal{page_label}
                         ->configure( -text => ("Lbl: $label ") );
-                } else {
+                }
+                else {
                     $lglobal{page_label}
                         ->configure( -text => ("Lbl: None ") );
                 }
                 last;
-            } else {
+            }
+            else {
                 if ( $textwindow->index('insert')
-                     > ( $textwindow->index($mark) + 400 ) ) {
+                    > ( $textwindow->index($mark) + 400 ) )
+                {
                     last;
                 }
                 $mark = $textwindow->markPrevious($mark) if $mark;
@@ -13929,30 +13879,30 @@ sub update_indicators {
         if ( ( scalar %proofers ) && ( defined( $lglobal{pagebutton} ) ) ) {
             unless ( defined( $lglobal{proofbutton} ) ) {
                 $lglobal{proofbutton} = $counter_frame->Label(
-                                                              -text       => 'See Proofers',
-                                                              -width      => 11,
-                                                              -relief     => 'ridge',
-                                                              -background => 'gray',
-                                                             )->grid( -row => 1, -column => 5 );
+                    -text       => 'See Proofers',
+                    -width      => 11,
+                    -relief     => 'ridge',
+                    -background => 'gray',
+                )->grid( -row => 1, -column => 5 );
                 $lglobal{proofbutton}->bind(
-                                            '<1>',
-                                            sub {
-                                                $lglobal{proofbutton}
-                                                    ->configure( -relief => 'sunken' );
-                                                showproofers();
-                                            }
-                                           );
+                    '<1>',
+                    sub {
+                        $lglobal{proofbutton}
+                            ->configure( -relief => 'sunken' );
+                        showproofers();
+                    }
+                );
                 $lglobal{proofbutton}->bind(
-                                            '<3>',
-                                            sub {
-                                                $lglobal{proofbutton}
-                                                    ->configure( -relief => 'sunken' );
-                                                tglprfbar();
-                                            }
-                                           );
+                    '<3>',
+                    sub {
+                        $lglobal{proofbutton}
+                            ->configure( -relief => 'sunken' );
+                        tglprfbar();
+                    }
+                );
                 butbind( $lglobal{proofbutton} );
                 $lglobal{statushelp}->attach( $lglobal{proofbutton},
-                                              -balloonmsg => "Proofers for the current page." );
+                    -balloonmsg => "Proofers for the current page." );
             }
             {
 
@@ -13962,7 +13912,7 @@ sub update_indicators {
                     last unless defined $proofers{$pg}->[$round];
                     $lglobal{numrounds} = $round;
                     $lglobal{proofbar}[$round]->configure( -text =>
-                                                           "  Round $round  $proofers{$pnum}->[$round]  " )
+                            "  Round $round  $proofers{$pnum}->[$round]  " )
                         if $lglobal{proofbarvisible};
                 }
             }
@@ -14266,12 +14216,12 @@ sub spellchecknext {
 
 sub spellgettextselection {
     return $textwindow->get( $lglobal{matchindex},
-        "$lglobal{matchindex}+$lglobal{matchlength}c" ); # get the
-                                                         # misspelled word
-                                                         # as it appears in
-                                                         # the text (may be
-                                                         # checking case
-                                                         # insensitive)
+        "$lglobal{matchindex}+$lglobal{matchlength}c" );    # get the
+                                                            # misspelled word
+                                                            # as it appears in
+                                                            # the text (may be
+                                                            # checking case
+                                                            # insensitive)
 }
 
 sub spellreplace {
@@ -14292,8 +14242,7 @@ sub spellreplace {
 }
 
 # replace all instances of a word with another, pretty straightforward
-sub spellreplaceall
-{    
+sub spellreplaceall {
     $top->Busy;
     viewpagenums() if ( $lglobal{seepagenums} );
     my $lastindex   = '1.0';
@@ -14307,8 +14256,7 @@ sub spellreplaceall
 }
 
 # replace the replacement word with one from the guess list
-sub spellmisspelled_replace
-{    
+sub spellmisspelled_replace {
     viewpagenums() if ( $lglobal{seepagenums} );
     $lglobal{spreplaceentry}->delete( 0, 'end' );
     my $term = $lglobal{replacementlist}->get('active');
@@ -14316,7 +14264,7 @@ sub spellmisspelled_replace
 }
 
 # tell aspell to add a word to the personal dictionary
-sub spelladdword {    
+sub spelladdword {
     my $term = $lglobal{misspelledentry}->get;
     $textwindow->bell unless ( $term || $nobell );
     return unless $term;
@@ -14325,7 +14273,7 @@ sub spelladdword {
 }
 
 # add a word to the project dictionary
-sub spellmyaddword {    
+sub spellmyaddword {
     my $term = shift;
     $textwindow->bell unless ( $term || $nobell );
     return unless $term;
@@ -14349,8 +14297,7 @@ sub spellclearvars {
 }
 
 # start aspell in interactive mode, repipe stdin and stdout to file handles
-sub aspellstart
-{  
+sub aspellstart {
     aspellstop();
     my @cmd = (    # FIXME: Need to see what options are going to aspell
         $lglobal{spellexename}, '-a', '-S', '--sug-mode', $globalaspellmode
@@ -14371,14 +14318,14 @@ sub get_spellchecker_version {
     return $lglobal{spellversion} = $aspell_version;
 }
 
-sub aspellstop { 
+sub aspellstop {
     if ( $lglobal{spellpid} ) {
         close IN;
         close OUT;
         kill 9, $lglobal{spellpid}
             if OS_Win
-                ; # Brute force kill the aspell process... seems to be necessary
-        # under windows
+        ;    # Brute force kill the aspell process... seems to be necessary
+             # under windows
         waitpid( $lglobal{spellpid}, 0 );
         $lglobal{spellpid} = 0;
     }
@@ -14402,7 +14349,7 @@ sub spellguesses {    #feed aspell a word to get a list of guess
 }
 
 # load the guesses into the guess list box
-sub spellshow_guesses {             
+sub spellshow_guesses {
     $lglobal{replacementlist}->delete( 0, 'end' );
     $lglobal{replacementlist}->insert( 0, @{ $lglobal{guesslist} } );
     $lglobal{replacementlist}->activate(0);
@@ -14416,8 +14363,7 @@ sub spellshow_guesses {
 }
 
 # only spell check selected text or whole file if nothing selected
-sub spellcheckrange
-{    
+sub spellcheckrange {
     viewpagenums() if ( $lglobal{seepagenums} );
     my @ranges = $textwindow->tagRanges('sel');
     $operationinterrupt = 0;
@@ -14471,7 +14417,7 @@ sub spellget_misspellings {    # get list of misspelled words
 }
 
 # remove ignored words from checklist
-sub spellignoreall {                  
+sub spellignoreall {
     my $next;
     my $word = $lglobal{misspelledentry}->get;   # get word you want to ignore
     $textwindow->bell unless ( $word || $nobell );
@@ -14480,8 +14426,8 @@ sub spellignoreall {
         = @{ $lglobal{misspelledlist} };         # copy the mispellings array
     @{ $lglobal{misspelledlist} } = ();          # then clear it
     foreach $next (@ignorelist)
-    { # then put all of the words you are NOT ignoring back into the
-      # mispellings list
+    {    # then put all of the words you are NOT ignoring back into the
+            # mispellings list
         push @{ $lglobal{misspelledlist} }, $next
             if ( $next ne $word )
             ;    # inefficient but easy, and the overhead isn't THAT bad...
@@ -14498,7 +14444,7 @@ sub spelladjust_index {    # get the index of the match start (row column)
 }
 
 # add highlighting to selected word
-sub spelladdtexttags {     
+sub spelladdtexttags {
     $textwindow->markSet( 'insert', $lglobal{matchindex} );
     $textwindow->tagAdd( 'highlight', $lglobal{matchindex},
         "$lglobal{matchindex}+$lglobal{matchlength} chars" );
@@ -14645,9 +14591,9 @@ sub savefile {    # Determine which save routine to use and then use it
     update_indicators();
 }
 
-sub file_savease {}
-sub file_include {}
-sub file_close { }
+sub file_savease { }
+sub file_include { }
+sub file_close   { }
 
 sub prep_import {
     return if ( confirmempty() =~ /cancel/i );
@@ -17233,6 +17179,7 @@ sub wordcount {
     my $index = '1.0';
     my $wc    = 0;
     my $end   = $textwindow->index('end');
+
     if ( $lglobal{popup} ) {
         $lglobal{popup}->deiconify;
         $lglobal{popup}->raise;
@@ -18215,8 +18162,6 @@ sub delblanklines {
     $textwindow->Unbusy;
 }
 
-
-
 ### Text Processing
 
 ### External
@@ -18305,7 +18250,6 @@ sub showversion {
     );
     $dialog->Show;
 }
-
 
 sub hotkeyshelp {
     if ( defined( $lglobal{hotpop} ) ) {
@@ -18478,10 +18422,9 @@ sub hotkeyshelp {
     }
 }
 
- # Pop up an "Operation" history. Track which functions have already been
- # run.
-sub opspop_up
-{
+# Pop up an "Operation" history. Track which functions have already been
+# run.
+sub opspop_up {
     if ( $lglobal{oppop} ) {
         $lglobal{oppop}->deiconify;
         $lglobal{oppop}->raise;
