@@ -382,30 +382,6 @@ sub updatesel {    # Update Last Selection readout in status bar
     $textwindow->_lineupdate;
 }
 
-sub set_autosave {
-    $lglobal{autosaveid}->cancel     if $lglobal{autosaveid};
-    $lglobal{saveflashid}->cancel    if $lglobal{saveflashid};
-    $lglobal{saveflashingid}->cancel if $lglobal{saveflashingid};
-    $lglobal{autosaveid} = $top->repeat(
-        ( $autosaveinterval * 60000 ),
-        sub {
-            savefile()
-                if $textwindow->numberChanges
-                    and $lglobal{global_filename} !~ /No File Loaded/;
-        }
-    );
-    $lglobal{saveflashid} = $top->after(
-        ( $autosaveinterval * 60000 - 10000 ),
-        sub {
-            flash_save()
-                if $lglobal{global_filename} !~ /No File Loaded/;
-        }
-    );
-    $lglobal{savetool}
-        ->configure( -background => 'green', -activebackground => 'green' )
-        unless $notoolbar;
-    $lglobal{autosaveinterval} = time;
-}
 
 sub flash_save {
     $lglobal{saveflashingid} = $top->repeat(
@@ -427,23 +403,6 @@ sub flash_save {
     );
 }
 
-sub toggle_autosave {
-    if ($autosave) {
-        set_autosave();
-    }
-    else {
-        $lglobal{autosaveid}->cancel;
-        undef $lglobal{autosaveid};
-        $lglobal{saveflashid}->cancel;
-        undef $lglobal{saveflashid};
-        $lglobal{saveflashingid}->cancel if $lglobal{saveflashingid};
-        undef $lglobal{saveflashingid};
-        $lglobal{savetool}->configure(
-            -background       => 'SystemButtonFace',
-            -activebackground => 'SystemButtonFace'
-        ) unless $notoolbar;
-    }
-}
 
 sub binsave {    # save the .bin file associated with the text file
     push @operations, ( localtime() . ' - File Saved' );
@@ -673,164 +632,7 @@ sub selection {
     $lglobal{selsentry}->selectionRange( 0, 'end' );
 }
 
-sub hilitetgl {    # Enable / disable word highlighting in the text
-    if ( $lglobal{scanno_hl} ) {
-        $lglobal{hl_index} = 1;
-        highlightscannos();
-        $lglobal{scanno_hlid} = $top->repeat( 400, \&highlightscannos );
-    }
-    else {
-        $lglobal{scanno_hlid}->cancel if $lglobal{scanno_hlid};
-        undef $lglobal{scanno_hlid};
-        $textwindow->tagRemove( 'scannos', '1.0', 'end' );
-    }
-    update_indicators();
-    saveset();
-}
 
-sub toolbar_toggle {    # Set up / remove the tool bar
-    if ( $notoolbar && $lglobal{toptool} ) {
-        $lglobal{toptool}->destroy;
-        undef $lglobal{toptool};
-    }
-    elsif ( !$notoolbar && !$lglobal{toptool} ) {
-
-# FIXME: if Tk::ToolBar isn't available, show a message and disable
-# the toolbar
-# if ( !$lglobal{ToolBar} ) {
-#     my $dbox = $top->Dialog(
-#         -text =>
-#             'Tk::ToolBar package not found, unable to create Toolbar. The toolbar will be disabled.',
-#         -title   => 'Unable to create Toolbar.',
-#         -buttons => ['OK']
-#     );
-#     $dbox->Show;
-
-        #     # disable toolbar in settings
-        #     $notoolbar = 1;
-        #     saveset();
-        #     return;
-        #}
-
-        $lglobal{toptool}
-            = $top->ToolBar( -side => $toolside, -close => '30' );
-        $lglobal{toolfont} = $top->Font(
-            -family => 'Times',
-            -slant  => 'italic',
-            -weight => 'bold',
-            -size   => 9
-        );
-        $lglobal{toptool}->separator;
-        $lglobal{toptool}->ToolButton(
-            -image   => 'fileopen16',
-            -command => [ \&fileopen ],
-            -tip     => 'Open'
-        );
-        $lglobal{savetool} = $lglobal{toptool}->ToolButton(
-            -image   => 'filesave16',
-            -command => [ \&savefile ],
-            -tip     => 'Save',
-        );
-        $lglobal{savetool}->bind( '<3>', sub { set_autosave() } );
-        $lglobal{savetool}->bind(
-            '<Shift-3>',
-            sub {
-                $autosave = !$autosave;
-                toggle_autosave();
-            }
-        );
-        $lglobal{toptool}->ToolButton(
-            -image   => 'edittrash16',
-            -command => sub {
-                return if ( confirmempty() =~ /cancel/i );
-                clearvars();
-                update_indicators();
-            },
-            -tip => 'Discard Edits'
-        );
-        $lglobal{toptool}->separator;
-        $lglobal{toptool}->ToolButton(
-            -image   => 'actundo16',
-            -command => sub { $textwindow->undo },
-            -tip     => 'Undo'
-        );
-        $lglobal{toptool}->ToolButton(
-            -image   => 'actredo16',
-            -command => sub { $textwindow->redo },
-            -tip     => 'Redo'
-        );
-        $lglobal{toptool}->separator;
-        $lglobal{toptool}->ToolButton(
-            -image   => 'filefind16',
-            -command => [ \&searchpopup ],
-            -tip     => 'Search'
-        );
-        $lglobal{toptool}->ToolButton(
-            -image   => 'actcheck16',
-            -command => [ \&spellchecker ],
-            -tip     => 'Spell Check'
-        );
-        $lglobal{toptool}->ToolButton(
-            -text    => '"arid"',
-            -command => [ \&stealthscanno ],
-            -tip     => 'Scannos'
-        );
-        $lglobal{toptool}->separator;
-        $lglobal{toptool}->ToolButton(
-            -text    => 'WF²',
-            -font    => $lglobal{toolfont},
-            -command => [ \&wordcount ],
-            -tip     => 'Word Frequency'
-        );
-        $lglobal{toptool}->ToolButton(
-            -text    => 'GC',
-            -font    => $lglobal{toolfont},
-            -command => [ \&gutcheck ],
-            -tip     => 'Gutcheck'
-        );
-        $lglobal{toptool}->separator;
-        $lglobal{toptool}->ToolButton(
-            -text    => 'Ltn-1',
-            -font    => $lglobal{toolfont},
-            -command => [ \&latinpopup ],
-            -tip     => 'Latin - 1 Popup'
-        );
-        $lglobal{toptool}->ToolButton(
-            -text    => 'Grk',
-            -font    => $lglobal{toolfont},
-            -command => [ \&greekpopup ],
-            -tip     => 'Greek Transliteration Popup'
-        );
-        $lglobal{toptool}->ToolButton(
-            -text    => 'UCS',
-            -font    => $lglobal{toolfont},
-            -command => [ \&uchar ],
-            -tip     => 'Unicode Character Search'
-        );
-        $lglobal{toptool}->separator;
-        $lglobal{toptool}->ToolButton(
-            -text    => 'HTML',
-            -font    => $lglobal{toolfont},
-            -command => [ \&markpopup ],
-            -tip     => 'HTML Fixup Popup'
-        );
-        $lglobal{toptool}->separator;
-        $lglobal{toptool}->ToolButton(
-            -text    => 'Tfx',
-            -font    => $lglobal{toolfont},
-            -command => [ \&tablefx ],
-            -tip     => 'ASCII Table Formatting'
-        );
-        $lglobal{toptool}->separator;
-        $lglobal{toptool}->ToolButton(
-            -text    => 'Eol',
-            -font    => $lglobal{toolfont},
-            -command => [ \&endofline ],
-            -tip     => 'Remove trailing spaces in selection'
-        );
-    }
-    saveset();
-}
 
 # Command parsing for External command routine
 sub cmdinterp {
@@ -862,15 +664,6 @@ sub cmdinterp {
     return $command;
 }
 
-sub setcolor {    # Color picking routine
-    my $initial = shift;
-    return (
-        $top->chooseColor(
-            -initialcolor => $initial,
-            -title        => 'Choose color'
-        )
-    );
-}
 
 # Routine to spawn another perl process and use it to execute an
 # external program
@@ -890,61 +683,7 @@ sub runner {
     system "perl spawn.pl $args";
 }
 
-sub viewerpath {    #Find your image viewer
-    my $types;
-    if (OS_Win) {
-        $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
-    }
-    else {
-        $types = [ [ 'All Files', ['*'] ] ];
-    }
-    $lglobal{pathtemp} = $textwindow->getOpenFile(
-        -filetypes  => $types,
-        -title      => 'Where is your image viewer?',
-        -initialdir => dirname($globalviewerpath)
-    );
-    $globalviewerpath = $lglobal{pathtemp} if $lglobal{pathtemp};
-    $globalviewerpath = os_normal($globalviewerpath);
-    saveset();
-}
 
-sub setbrowser { # Set up command to start a browser, varies by OS and browser
-    my $browsepop = $top->Toplevel;
-    $browsepop->title('Browser Start Command?');
-    $browsepop->Label( -text =>
-            "Enter the complete path to the executable.\n(Under Windows, you can use 'start' to use the default handler.\n"
-            . "Under OSX, 'open' will start the default browser.)" )
-        ->grid( -row => 0, -column => 1, -columnspan => 2 );
-    my $browserentry = $browsepop->Entry(
-        -width        => 60,
-        -background   => 'white',
-        -textvariable => $globalbrowserstart,
-    )->grid( -row => 1, -column => 1, -columnspan => 2, -pady => 3 );
-    my $button_ok = $browsepop->Button(
-        -activebackground => $activecolor,
-        -text             => 'OK',
-        -width            => 6,
-        -command          => sub {
-            $globalbrowserstart = $browserentry->get;
-            saveset();
-            $browsepop->destroy;
-            undef $browsepop;
-        }
-    )->grid( -row => 2, -column => 1, -pady => 8 );
-    my $button_cancel = $browsepop->Button(
-        -activebackground => $activecolor,
-        -text             => 'Cancel',
-        -width            => 6,
-        -command          => sub {
-            $browsepop->destroy;
-            undef $browsepop;
-        }
-    )->grid( -row => 2, -column => 2, -pady => 8 );
-    $browsepop->protocol(
-        'WM_DELETE_WINDOW' => sub { $browsepop->destroy; undef $browsepop; }
-    );
-    $browsepop->Icon( -image => $icon );
-}
 
 
 # Menus are not easily modifiable in place. Easier to just destroy and
@@ -1080,17 +819,6 @@ sub openpng {
 }
 
 # Select directory where image files are located
-sub setpngspath {
-    my $path = $textwindow->chooseDirectory(
-        -title      => 'Choose the image file directory.',
-        -initialdir => "$globallastpath" . "pngs",
-    );
-    return unless defined $path and -e $path;
-    $path .= '/';
-    $path     = os_normal($path);
-    $pngspath = $path;
-    openpng();
-}
 
 # Routine to find highlight word list
 sub scannosfile {
@@ -1755,7 +1483,7 @@ sub buildmenu {                        # The main menu building code.
             [ Button => 'Browser Start Command', -command => \&setbrowser ],
             [   Cascade    => 'Set File ~Paths',
                 -tearoff   => 0,
-                -menuitems => [
+                -menuitems => [ # FIXME: sub this and generalize for all occurences in menu code.
                     [   Button   => 'Locate Gutcheck Executable',
                         -command => sub {
                             my $types;
@@ -2110,97 +1838,7 @@ sub gotolabel
     }
 }
 
-sub saveinterval
-{    # Pop up a window where you can adjust the auto save interval
-    if ( $lglobal{intervalpop} ) {
-        $lglobal{intervalpop}->deiconify;
-        $lglobal{intervalpop}->raise;
-    }
-    else {
-        $lglobal{intervalpop} = $top->Toplevel;
-        $lglobal{intervalpop}->title('Autosave Interval');
-        $lglobal{intervalpop}->resizable( 'no', 'no' );
-        my $frame = $lglobal{intervalpop}
-            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
-        $frame->Label( -text => 'Minutes between Autosave' )
-            ->pack( -side => 'left' );
-        my $entry = $frame->Entry(
-            -background   => 'white',
-            -width        => 5,
-            -textvariable => \$autosaveinterval,
-            -validate     => 'key',
-            -vcmd         => sub {
-                return 1 unless $_[0];
-                return 0 if ( $_[0] =~ /\D/ );
-                return 0 if ( $_[0] < 1 );
-                return 0 if ( $_[0] > 999 );
-                return 1;
-            },
-        )->pack( -side => 'left', -fill => 'x' );
-        my $frame1 = $lglobal{intervalpop}
-            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
-        $frame1->Label( -text => '1-999 minutes' )->pack( -side => 'left' );
-        my $button = $frame1->Button(
-            -text    => 'OK',
-            -command => sub {
-                $autosaveinterval = 5 unless $autosaveinterval;
-                $lglobal{intervalpop}->destroy;
-                undef $lglobal{scrlspdpop};
-            },
-        )->pack( -side => 'left' );
-        $lglobal{intervalpop}->protocol(
-            'WM_DELETE_WINDOW' => sub {
-                $autosaveinterval = 5 unless $autosaveinterval;
-                $lglobal{intervalpop}->destroy;
-                undef $lglobal{intervalpop};
-            }
-        );
-        $lglobal{intervalpop}->Icon( -image => $icon );
-        $entry->selectionRange( 0, 'end' );
-    }
-}
 
-# Check to see if this is the most recent version
-sub checkver {
-    my ( $dbox, $answer );
-    my $ua = LWP::UserAgent->new(
-        env_proxy  => 1,
-        keep_alive => 1,
-        timeout    => 30,
-    );
-    my $response = $ua->get('http://guiguts.sourceforge.net/ggversion.txt');
-    unless ( $response->content ) {
-        $dbox = $top->Dialog(
-            -text =>
-                'Could not check for updates, unable to connect to server.',
-            -bitmap  => 'error',
-            -title   => 'Could not connect.',
-            -buttons => ['Ok']
-        );
-        $dbox->Show;
-        return;
-    }
-    if ( $response->content gt $currentver ) {
-        print $response->content;
-        $dbox = $top->Dialog(
-            -text =>
-                "A newer version is available.\nDo you want to go to the home page?",
-            -title   => 'Newer version available.',
-            -buttons => [ 'Ok', 'Cancel' ]
-        );
-    }
-    else {
-        $dbox = $top->Dialog(
-            -text    => 'This is the most current version.',
-            -title   => 'Up to date.',
-            -buttons => ['Cancel']
-        );
-    }
-    $answer = $dbox->Show;
-    if ( $answer =~ /ok/i ) {
-        runner("$globalbrowserstart http://guiguts.sourceforge.net/");
-    }
-}
 
 # Find and reformat sidenotes
 
@@ -3087,77 +2725,6 @@ sub arabic {
     return $arabic;
 }
 
-sub fontsize {
-    my $sizelabel;
-    if ( defined( $lglobal{fspop} ) ) {
-        $lglobal{fspop}->deiconify;
-        $lglobal{fspop}->raise;
-        $lglobal{fspop}->focus;
-    }
-    else {
-        $lglobal{fspop} = $top->Toplevel;
-        $lglobal{fspop}->title('Font');
-        my $tframe   = $lglobal{fspop}->Frame->pack;
-        my $fontlist = $tframe->BrowseEntry(
-            -label     => 'Font',
-            -browsecmd => sub {
-                fontinit();
-                $textwindow->configure( -font => $lglobal{font} );
-            },
-            -variable => \$fontname
-        )->grid( -row => 1, -column => 1, -pady => 5 );
-        $fontlist->insert( 'end', sort( $textwindow->fontFamilies ) );
-        my $mframe        = $lglobal{fspop}->Frame->pack;
-        my $smallerbutton = $mframe->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                $fontsize++;
-                fontinit();
-                $textwindow->configure( -font => $lglobal{font} );
-                $sizelabel->configure( -text => $fontsize );
-            },
-            -text  => 'Bigger',
-            -width => 10
-        )->grid( -row => 1, -column => 1, -pady => 5 );
-        $sizelabel = $mframe->Label( -text => $fontsize )
-            ->grid( -row => 1, -column => 2, -pady => 5 );
-        my $biggerbutton = $mframe->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                $fontsize--;
-                fontinit();
-                $textwindow->configure( -font => $lglobal{font} );
-                $sizelabel->configure( -text => $fontsize );
-            },
-            -text  => 'Smaller',
-            -width => 10
-        )->grid( -row => 1, -column => 3, -pady => 5 );
-        my $weightbox = $mframe->Checkbutton(
-            -variable    => \$fontweight,
-            -onvalue     => 'bold',
-            -offvalue    => '',
-            -selectcolor => $activecolor,
-            -command     => sub {
-                fontinit();
-                $textwindow->configure( -font => $lglobal{font} );
-            },
-            -text => 'Bold'
-        )->grid( -row => 2, -column => 2, -pady => 5 );
-        my $button_ok = $mframe->Button(
-            -activebackground => $activecolor,
-            -text             => 'OK',
-            -command          => sub {
-                $lglobal{fspop}->destroy;
-                undef $lglobal{fspop};
-                saveset();
-            }
-        )->grid( -row => 3, -column => 2, -pady => 5 );
-        $lglobal{fspop}->resizable( 'no', 'no' );
-        $lglobal{fspop}->protocol( 'WM_DELETE_WINDOW' =>
-                sub { $lglobal{fspop}->destroy; undef $lglobal{fspop} } );
-        $lglobal{fspop}->Icon( -image => $icon );
-    }
-}
 
 sub add_search_history {
     my ( $widget, $history_array_ref ) = @_;
@@ -3191,53 +2758,6 @@ sub search_history {
     $menu->post( $x, $y );
 }
 
-sub searchsize
-{    # Pop up a window where you can adjust the search history size
-    if ( $lglobal{hssizepop} ) {
-        $lglobal{hssizepop}->deiconify;
-        $lglobal{hssizepop}->raise;
-    }
-    else {
-        $lglobal{hssizepop} = $top->Toplevel;
-        $lglobal{hssizepop}->title('History Size');
-        $lglobal{hssizepop}->resizable( 'no', 'no' );
-        my $frame = $lglobal{hssizepop}
-            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
-        $frame->Label( -text => 'History Size: # of terms to save - ' )
-            ->pack( -side => 'left' );
-        my $entry = $frame->Entry(
-            -background   => 'white',
-            -width        => 5,
-            -textvariable => \$history_size,
-            -validate     => 'key',
-            -vcmd         => sub {
-                return 1 unless $_[0];
-                return 0 if ( $_[0] =~ /\D/ );
-                return 0 if ( $_[0] < 1 );
-                return 0 if ( $_[0] > 200 );
-                return 1;
-            },
-        )->pack( -side => 'left', -fill => 'x' );
-        my $frame2 = $lglobal{hssizepop}
-            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
-        $frame2->Button(
-            -text    => 'Ok',
-            -width   => 10,
-            -command => sub {
-                saveset();
-                $lglobal{hssizepop}->destroy;
-                undef $lglobal{hssizepop};
-            }
-        )->pack;
-        $lglobal{hssizepop}->protocol(
-            'WM_DELETE_WINDOW' => sub {
-                $lglobal{hssizepop}->destroy;
-                undef $lglobal{hssizepop};
-            }
-        );
-        $lglobal{hssizepop}->Icon( -image => $icon );
-    }
-}
 
 sub load_hist_term {
     my ( $widget, $term ) = @_;
@@ -4347,111 +3867,6 @@ sub wrapper {
     return ($paragraph);
 }
 
-sub setmargins {
-    my $getmargins = $top->DialogBox(
-        -title   => 'Set margins for rewrap.',
-        -buttons => ['OK'],
-    );
-    my $lmframe = $getmargins->add('Frame')
-        ->pack( -side => 'top', -padx => 5, -pady => 3 );
-    my $lmlabel = $lmframe->Label(
-        -width => 25,
-        -text  => 'Rewrap Left Margin',
-    )->pack( -side => 'left' );
-    my $lmentry = $lmframe->Entry(
-        -width        => 6,
-        -background   => 'white',
-        -relief       => 'sunken',
-        -textvariable => \$lmargin,
-    )->pack( -side => 'left' );
-    my $rmframe = $getmargins->add('Frame')
-        ->pack( -side => 'top', -padx => 5, -pady => 3 );
-    my $rmlabel = $rmframe->Label(
-        -width => 25,
-        -text  => 'Rewrap Right Margin',
-    )->pack( -side => 'left' );
-    my $rmentry = $rmframe->Entry(
-        -width        => 6,
-        -background   => 'white',
-        -relief       => 'sunken',
-        -textvariable => \$rmargin,
-    )->pack( -side => 'left' );
-    my $blmframe = $getmargins->add('Frame')
-        ->pack( -side => 'top', -padx => 5, -pady => 3 );
-    my $blmlabel = $blmframe->Label(
-        -width => 25,
-        -text  => 'Block Rewrap Left Margin',
-    )->pack( -side => 'left' );
-    my $blmentry = $blmframe->Entry(
-        -width        => 6,
-        -background   => 'white',
-        -relief       => 'sunken',
-        -textvariable => \$blocklmargin,
-    )->pack( -side => 'left' );
-    my $brmframe = $getmargins->add('Frame')
-        ->pack( -side => 'top', -padx => 5, -pady => 3 );
-    my $brmlabel = $brmframe->Label(
-        -width => 25,
-        -text  => 'Block Rewrap Right Margin',
-    )->pack( -side => 'left' );
-    my $brmentry = $brmframe->Entry(
-        -width        => 6,
-        -background   => 'white',
-        -relief       => 'sunken',
-        -textvariable => \$blockrmargin,
-    )->pack( -side => 'left' );
-    my $didntframe = $getmargins->add('Frame')
-        ->pack( -side => 'top', -padx => 5, -pady => 3 );
-    my $didntlabel = $didntframe->Label(
-        -width => 25,
-        -text  => 'Default Indent for /*  */ Blocks',
-    )->pack( -side => 'left' );
-    my $didntmentry = $didntframe->Entry(
-        -width        => 6,
-        -background   => 'white',
-        -relief       => 'sunken',
-        -textvariable => \$defaultindent,
-    )->pack( -side => 'left' );
-    $getmargins->Icon( -image => $icon );
-    $getmargins->Show;
-
-    if (   ( $blockrmargin eq '' )
-        || ( $blocklmargin eq '' )
-        || ( $rmargin      eq '' )
-        || ( $lmargin      eq '' ) )
-    {
-        $top->messageBox(
-            -icon    => 'error',
-            -message => 'The margins must be a positive integer.',
-            -title   => 'Incorrect margin ',
-            -type    => 'OK',
-        );
-        setmargins();
-    }
-    if (   ( $blockrmargin =~ /[\D\.]/ )
-        || ( $blocklmargin =~ /[\D\.]/ )
-        || ( $rmargin      =~ /[\D\.]/ )
-        || ( $lmargin      =~ /[\D\.]/ ) )
-    {
-        $top->messageBox(
-            -icon    => 'error',
-            -message => 'The margins must be a positive integer.',
-            -title   => 'Incorrect margin ',
-            -type    => 'OK',
-        );
-        setmargins();
-    }
-    if ( ( $blockrmargin < $blocklmargin ) || ( $rmargin < $lmargin ) ) {
-        $top->messageBox(
-            -icon    => 'error',
-            -message => 'The left margins must come before the right margin.',
-            -title   => 'Incorrect margin ',
-            -type    => 'OK',
-        );
-        setmargins();
-    }
-    saveset();
-}
 
 sub asciibox {
     my $marker      = shift(@_);
@@ -12603,147 +12018,6 @@ sub update_indicators {
 }
 
 ## Spell Check
-sub spelloptions {
-    if ($globalspellpath) {
-        OS_Win
-            ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
-            : ( $lglobal{spellexename} = $globalspellpath );
-        aspellstart() unless $lglobal{spellpid};
-    }
-    my $dicts;
-    my $dictlist;
-    my $spellop = $top->DialogBox(
-        -title   => 'Spellcheck Options',
-        -buttons => ['Close']
-    );
-    my $spellpathlabel
-        = $spellop->add( 'Label', -text => 'Aspell executable file?' )->pack;
-    my $spellpathentry
-        = $spellop->add( 'Entry', -width => 60, -background => 'white' )
-        ->pack;
-    my $spellpathbrowse = $spellop->add(
-        'Button',
-        -text    => 'Browse',
-        -width   => 12,
-        -command => sub {
-            my $name
-                = $spellop->getOpenFile( -title => 'Aspell executable?' );
-            if ($name) {
-                $globalspellpath = $name;
-                $globalspellpath = os_normal($globalspellpath);
-                $spellpathentry->delete( 0, 'end' );
-                $spellpathentry->insert( 'end', $globalspellpath );
-                saveset();
-
-                OS_Win
-                    ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
-                    : ( $lglobal{spellexename} = $globalspellpath );
-                open my $infile, '-|', "$lglobal{spellexename} dump dicts"
-                    or warn "Unable to access dictionaries. $!\n";
-                while ( $dicts = <$infile> ) {
-                    chomp $dicts;
-                    next if ( $dicts =~ m/-/ );
-                    $dictlist->insert( 'end', $dicts );
-                }
-                close $infile;
-            }
-        }
-    )->pack( -pady => 4 );
-    $spellpathentry->insert( 'end', $globalspellpath );
-
-    my $spellencodinglabel = $spellop->add( 'Label',
-        -text => 'Set encoding: default = iso8859-1' )->pack;
-
-    my $spellencodingentry = $spellop->add(
-        'Entry',
-        -width        => 30,
-        -textvariable => \$lglobal{spellencoding},
-    )->pack;
-
-# FIXME: Switching to utf-8 is barfola. Probably down in the checkfil.txt thingy.
-
-    my $dictlabel
-        = $spellop->add( 'Label', -text => 'Dictionary files' )->pack;
-    $dictlist = $spellop->add(
-        'ScrlListbox',
-        -scrollbars => 'oe',
-        -selectmode => 'browse',
-        -background => 'white',
-        -height     => 10,
-        -width      => 40,
-    )->pack( -pady => 4 );
-    my $spelldiclabel
-        = $spellop->add( 'Label', -text => 'Current Dictionary (ies)' )->pack;
-    my $spelldictxt = $spellop->add(
-        'ROText',
-        -width      => 40,
-        -height     => 1,
-        -background => 'white'
-    )->pack;
-    $spelldictxt->delete( '1.0', 'end' );
-    $spelldictxt->insert( '1.0', $globalspelldictopt );
-    $dictlist->insert( 'end', "<default>" );
-
-    if ($globalspellpath) {
-        OS_Win
-            ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
-            : ( $lglobal{spellexename} = $globalspellpath );
-        open my $infile, '-|', "$lglobal{spellexename} dump dicts"
-            or warn "Unable to access dictionaries. $!\n";
-        while ( $dicts = <$infile> ) {
-            chomp $dicts;
-            next if ( $dicts =~ m/-/ );
-            $dictlist->insert( 'end', $dicts );
-        }
-        close $infile;
-    }
-    $dictlist->eventAdd( '<<dictsel>>' => '<Double-Button-1>' );
-    $dictlist->bind(
-        '<<dictsel>>',
-        sub {
-            my $selection = $dictlist->get('active');
-            $spelldictxt->delete( '1.0', 'end' );
-            $spelldictxt->insert( '1.0', $selection );
-            $selection = '' if $selection eq "<default>";
-            $globalspelldictopt = $selection;
-            saveset();
-            aspellstart();
-            $top->Busy( -recurse => 1 );
-
-            if ( defined( $lglobal{spellpopup} ) ) {
-                spellclearvars();
-                spellcheckfirst();
-            }
-            $top->Unbusy( -recurse => 1 );
-        }
-    );
-    my $spopframe = $spellop->Frame->pack;
-    $spopframe->Radiobutton(
-        -selectcolor => $lglobal{checkcolor},
-        -text        => 'Ultra Fast',
-        -variable    => \$globalaspellmode,
-        -value       => 'ultra'
-    )->grid( -row => 0, -sticky => 'w' );
-    $spopframe->Radiobutton(
-        -selectcolor => $lglobal{checkcolor},
-        -text        => 'Fast',
-        -variable    => \$globalaspellmode,
-        -value       => 'fast'
-    )->grid( -row => 1, -sticky => 'w' );
-    $spopframe->Radiobutton(
-        -selectcolor => $lglobal{checkcolor},
-        -text        => 'Normal',
-        -variable    => \$globalaspellmode,
-        -value       => 'normal'
-    )->grid( -row => 2, -sticky => 'w' );
-    $spopframe->Radiobutton(
-        -selectcolor => $lglobal{checkcolor},
-        -text        => 'Bad Spellers',
-        -variable    => \$globalaspellmode,
-        -value       => 'bad-spellers'
-    )->grid( -row => 3, -sticky => 'w' );
-    $spellop->Show;
-}
 
 # Initialize spellchecker
 sub spellcheckfirst {
@@ -18193,7 +17467,708 @@ sub utfpopup {
 
 ### Prefs
 
+sub setmargins {
+    my $getmargins = $top->DialogBox(
+        -title   => 'Set margins for rewrap.',
+        -buttons => ['OK'],
+    );
+    my $lmframe = $getmargins->add('Frame')
+        ->pack( -side => 'top', -padx => 5, -pady => 3 );
+    my $lmlabel = $lmframe->Label(
+        -width => 25,
+        -text  => 'Rewrap Left Margin',
+    )->pack( -side => 'left' );
+    my $lmentry = $lmframe->Entry(
+        -width        => 6,
+        -background   => 'white',
+        -relief       => 'sunken',
+        -textvariable => \$lmargin,
+    )->pack( -side => 'left' );
+    my $rmframe = $getmargins->add('Frame')
+        ->pack( -side => 'top', -padx => 5, -pady => 3 );
+    my $rmlabel = $rmframe->Label(
+        -width => 25,
+        -text  => 'Rewrap Right Margin',
+    )->pack( -side => 'left' );
+    my $rmentry = $rmframe->Entry(
+        -width        => 6,
+        -background   => 'white',
+        -relief       => 'sunken',
+        -textvariable => \$rmargin,
+    )->pack( -side => 'left' );
+    my $blmframe = $getmargins->add('Frame')
+        ->pack( -side => 'top', -padx => 5, -pady => 3 );
+    my $blmlabel = $blmframe->Label(
+        -width => 25,
+        -text  => 'Block Rewrap Left Margin',
+    )->pack( -side => 'left' );
+    my $blmentry = $blmframe->Entry(
+        -width        => 6,
+        -background   => 'white',
+        -relief       => 'sunken',
+        -textvariable => \$blocklmargin,
+    )->pack( -side => 'left' );
+    my $brmframe = $getmargins->add('Frame')
+        ->pack( -side => 'top', -padx => 5, -pady => 3 );
+    my $brmlabel = $brmframe->Label(
+        -width => 25,
+        -text  => 'Block Rewrap Right Margin',
+    )->pack( -side => 'left' );
+    my $brmentry = $brmframe->Entry(
+        -width        => 6,
+        -background   => 'white',
+        -relief       => 'sunken',
+        -textvariable => \$blockrmargin,
+    )->pack( -side => 'left' );
+    my $didntframe = $getmargins->add('Frame')
+        ->pack( -side => 'top', -padx => 5, -pady => 3 );
+    my $didntlabel = $didntframe->Label(
+        -width => 25,
+        -text  => 'Default Indent for /*  */ Blocks',
+    )->pack( -side => 'left' );
+    my $didntmentry = $didntframe->Entry(
+        -width        => 6,
+        -background   => 'white',
+        -relief       => 'sunken',
+        -textvariable => \$defaultindent,
+    )->pack( -side => 'left' );
+    $getmargins->Icon( -image => $icon );
+    $getmargins->Show;
+
+    if (   ( $blockrmargin eq '' )
+        || ( $blocklmargin eq '' )
+        || ( $rmargin      eq '' )
+        || ( $lmargin      eq '' ) )
+    {
+        $top->messageBox(
+            -icon    => 'error',
+            -message => 'The margins must be a positive integer.',
+            -title   => 'Incorrect margin ',
+            -type    => 'OK',
+        );
+        setmargins();
+    }
+    if (   ( $blockrmargin =~ /[\D\.]/ )
+        || ( $blocklmargin =~ /[\D\.]/ )
+        || ( $rmargin      =~ /[\D\.]/ )
+        || ( $lmargin      =~ /[\D\.]/ ) )
+    {
+        $top->messageBox(
+            -icon    => 'error',
+            -message => 'The margins must be a positive integer.',
+            -title   => 'Incorrect margin ',
+            -type    => 'OK',
+        );
+        setmargins();
+    }
+    if ( ( $blockrmargin < $blocklmargin ) || ( $rmargin < $lmargin ) ) {
+        $top->messageBox(
+            -icon    => 'error',
+            -message => 'The left margins must come before the right margin.',
+            -title   => 'Incorrect margin ',
+            -type    => 'OK',
+        );
+        setmargins();
+    }
+    saveset();
+}
+
+sub fontsize {
+    my $sizelabel;
+    if ( defined( $lglobal{fspop} ) ) {
+        $lglobal{fspop}->deiconify;
+        $lglobal{fspop}->raise;
+        $lglobal{fspop}->focus;
+    }
+    else {
+        $lglobal{fspop} = $top->Toplevel;
+        $lglobal{fspop}->title('Font');
+        my $tframe   = $lglobal{fspop}->Frame->pack;
+        my $fontlist = $tframe->BrowseEntry(
+            -label     => 'Font',
+            -browsecmd => sub {
+                fontinit();
+                $textwindow->configure( -font => $lglobal{font} );
+            },
+            -variable => \$fontname
+        )->grid( -row => 1, -column => 1, -pady => 5 );
+        $fontlist->insert( 'end', sort( $textwindow->fontFamilies ) );
+        my $mframe        = $lglobal{fspop}->Frame->pack;
+        my $smallerbutton = $mframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                $fontsize++;
+                fontinit();
+                $textwindow->configure( -font => $lglobal{font} );
+                $sizelabel->configure( -text => $fontsize );
+            },
+            -text  => 'Bigger',
+            -width => 10
+        )->grid( -row => 1, -column => 1, -pady => 5 );
+        $sizelabel = $mframe->Label( -text => $fontsize )
+            ->grid( -row => 1, -column => 2, -pady => 5 );
+        my $biggerbutton = $mframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                $fontsize--;
+                fontinit();
+                $textwindow->configure( -font => $lglobal{font} );
+                $sizelabel->configure( -text => $fontsize );
+            },
+            -text  => 'Smaller',
+            -width => 10
+        )->grid( -row => 1, -column => 3, -pady => 5 );
+        my $weightbox = $mframe->Checkbutton(
+            -variable    => \$fontweight,
+            -onvalue     => 'bold',
+            -offvalue    => '',
+            -selectcolor => $activecolor,
+            -command     => sub {
+                fontinit();
+                $textwindow->configure( -font => $lglobal{font} );
+            },
+            -text => 'Bold'
+        )->grid( -row => 2, -column => 2, -pady => 5 );
+        my $button_ok = $mframe->Button(
+            -activebackground => $activecolor,
+            -text             => 'OK',
+            -command          => sub {
+                $lglobal{fspop}->destroy;
+                undef $lglobal{fspop};
+                saveset();
+            }
+        )->grid( -row => 3, -column => 2, -pady => 5 );
+        $lglobal{fspop}->resizable( 'no', 'no' );
+        $lglobal{fspop}->protocol( 'WM_DELETE_WINDOW' =>
+                sub { $lglobal{fspop}->destroy; undef $lglobal{fspop} } );
+        $lglobal{fspop}->Icon( -image => $icon );
+    }
+}
+
+sub setbrowser { # Set up command to start a browser, varies by OS and browser
+    my $browsepop = $top->Toplevel;
+    $browsepop->title('Browser Start Command?');
+    $browsepop->Label( -text =>
+            "Enter the complete path to the executable.\n(Under Windows, you can use 'start' to use the default handler.\n"
+            . "Under OSX, 'open' will start the default browser.)" )
+        ->grid( -row => 0, -column => 1, -columnspan => 2 );
+    my $browserentry = $browsepop->Entry(
+        -width        => 60,
+        -background   => 'white',
+        -textvariable => $globalbrowserstart,
+    )->grid( -row => 1, -column => 1, -columnspan => 2, -pady => 3 );
+    my $button_ok = $browsepop->Button(
+        -activebackground => $activecolor,
+        -text             => 'OK',
+        -width            => 6,
+        -command          => sub {
+            $globalbrowserstart = $browserentry->get;
+            saveset();
+            $browsepop->destroy;
+            undef $browsepop;
+        }
+    )->grid( -row => 2, -column => 1, -pady => 8 );
+    my $button_cancel = $browsepop->Button(
+        -activebackground => $activecolor,
+        -text             => 'Cancel',
+        -width            => 6,
+        -command          => sub {
+            $browsepop->destroy;
+            undef $browsepop;
+        }
+    )->grid( -row => 2, -column => 2, -pady => 8 );
+    $browsepop->protocol(
+        'WM_DELETE_WINDOW' => sub { $browsepop->destroy; undef $browsepop; }
+    );
+    $browsepop->Icon( -image => $icon );
+}
+
+sub viewerpath {    #Find your image viewer
+    my $types;
+    if (OS_Win) {
+        $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
+    }
+    else {
+        $types = [ [ 'All Files', ['*'] ] ];
+    }
+    $lglobal{pathtemp} = $textwindow->getOpenFile(
+        -filetypes  => $types,
+        -title      => 'Where is your image viewer?',
+        -initialdir => dirname($globalviewerpath)
+    );
+    $globalviewerpath = $lglobal{pathtemp} if $lglobal{pathtemp};
+    $globalviewerpath = os_normal($globalviewerpath);
+    saveset();
+}
+
+sub setpngspath {
+    my $path = $textwindow->chooseDirectory(
+        -title      => 'Choose the image file directory.',
+        -initialdir => "$globallastpath" . "pngs",
+    );
+    return unless defined $path and -e $path;
+    $path .= '/';
+    $path     = os_normal($path);
+    $pngspath = $path;
+    openpng();
+}
+
+sub toolbar_toggle {    # Set up / remove the tool bar
+    if ( $notoolbar && $lglobal{toptool} ) {
+        $lglobal{toptool}->destroy;
+        undef $lglobal{toptool};
+    }
+    elsif ( !$notoolbar && !$lglobal{toptool} ) {
+
+# FIXME: if Tk::ToolBar isn't available, show a message and disable
+# the toolbar
+# if ( !$lglobal{ToolBar} ) {
+#     my $dbox = $top->Dialog(
+#         -text =>
+#             'Tk::ToolBar package not found, unable to create Toolbar. The toolbar will be disabled.',
+#         -title   => 'Unable to create Toolbar.',
+#         -buttons => ['OK']
+#     );
+#     $dbox->Show;
+
+        #     # disable toolbar in settings
+        #     $notoolbar = 1;
+        #     saveset();
+        #     return;
+        #}
+
+        $lglobal{toptool}
+            = $top->ToolBar( -side => $toolside, -close => '30' );
+        $lglobal{toolfont} = $top->Font(
+            -family => 'Times',
+            -slant  => 'italic',
+            -weight => 'bold',
+            -size   => 9
+        );
+        $lglobal{toptool}->separator;
+        $lglobal{toptool}->ToolButton(
+            -image   => 'fileopen16',
+            -command => [ \&fileopen ],
+            -tip     => 'Open'
+        );
+        $lglobal{savetool} = $lglobal{toptool}->ToolButton(
+            -image   => 'filesave16',
+            -command => [ \&savefile ],
+            -tip     => 'Save',
+        );
+        $lglobal{savetool}->bind( '<3>', sub { set_autosave() } );
+        $lglobal{savetool}->bind(
+            '<Shift-3>',
+            sub {
+                $autosave = !$autosave;
+                toggle_autosave();
+            }
+        );
+        $lglobal{toptool}->ToolButton(
+            -image   => 'edittrash16',
+            -command => sub {
+                return if ( confirmempty() =~ /cancel/i );
+                clearvars();
+                update_indicators();
+            },
+            -tip => 'Discard Edits'
+        );
+        $lglobal{toptool}->separator;
+        $lglobal{toptool}->ToolButton(
+            -image   => 'actundo16',
+            -command => sub { $textwindow->undo },
+            -tip     => 'Undo'
+        );
+        $lglobal{toptool}->ToolButton(
+            -image   => 'actredo16',
+            -command => sub { $textwindow->redo },
+            -tip     => 'Redo'
+        );
+        $lglobal{toptool}->separator;
+        $lglobal{toptool}->ToolButton(
+            -image   => 'filefind16',
+            -command => [ \&searchpopup ],
+            -tip     => 'Search'
+        );
+        $lglobal{toptool}->ToolButton(
+            -image   => 'actcheck16',
+            -command => [ \&spellchecker ],
+            -tip     => 'Spell Check'
+        );
+        $lglobal{toptool}->ToolButton(
+            -text    => '"arid"',
+            -command => [ \&stealthscanno ],
+            -tip     => 'Scannos'
+        );
+        $lglobal{toptool}->separator;
+        $lglobal{toptool}->ToolButton(
+            -text    => 'WF²',
+            -font    => $lglobal{toolfont},
+            -command => [ \&wordcount ],
+            -tip     => 'Word Frequency'
+        );
+        $lglobal{toptool}->ToolButton(
+            -text    => 'GC',
+            -font    => $lglobal{toolfont},
+            -command => [ \&gutcheck ],
+            -tip     => 'Gutcheck'
+        );
+        $lglobal{toptool}->separator;
+        $lglobal{toptool}->ToolButton(
+            -text    => 'Ltn-1',
+            -font    => $lglobal{toolfont},
+            -command => [ \&latinpopup ],
+            -tip     => 'Latin - 1 Popup'
+        );
+        $lglobal{toptool}->ToolButton(
+            -text    => 'Grk',
+            -font    => $lglobal{toolfont},
+            -command => [ \&greekpopup ],
+            -tip     => 'Greek Transliteration Popup'
+        );
+        $lglobal{toptool}->ToolButton(
+            -text    => 'UCS',
+            -font    => $lglobal{toolfont},
+            -command => [ \&uchar ],
+            -tip     => 'Unicode Character Search'
+        );
+        $lglobal{toptool}->separator;
+        $lglobal{toptool}->ToolButton(
+            -text    => 'HTML',
+            -font    => $lglobal{toolfont},
+            -command => [ \&markpopup ],
+            -tip     => 'HTML Fixup Popup'
+        );
+        $lglobal{toptool}->separator;
+        $lglobal{toptool}->ToolButton(
+            -text    => 'Tfx',
+            -font    => $lglobal{toolfont},
+            -command => [ \&tablefx ],
+            -tip     => 'ASCII Table Formatting'
+        );
+        $lglobal{toptool}->separator;
+        $lglobal{toptool}->ToolButton(
+            -text    => 'Eol',
+            -font    => $lglobal{toolfont},
+            -command => [ \&endofline ],
+            -tip     => 'Remove trailing spaces in selection'
+        );
+    }
+    saveset();
+}
+
+sub setcolor {    # Color picking routine
+    my $initial = shift;
+    return (
+        $top->chooseColor(
+            -initialcolor => $initial,
+            -title        => 'Choose color'
+        )
+    );
+}
+
+sub spelloptions {
+    if ($globalspellpath) {
+        OS_Win
+            ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
+            : ( $lglobal{spellexename} = $globalspellpath );
+        aspellstart() unless $lglobal{spellpid};
+    }
+    my $dicts;
+    my $dictlist;
+    my $spellop = $top->DialogBox(
+        -title   => 'Spellcheck Options',
+        -buttons => ['Close']
+    );
+    my $spellpathlabel
+        = $spellop->add( 'Label', -text => 'Aspell executable file?' )->pack;
+    my $spellpathentry
+        = $spellop->add( 'Entry', -width => 60, -background => 'white' )
+        ->pack;
+    my $spellpathbrowse = $spellop->add(
+        'Button',
+        -text    => 'Browse',
+        -width   => 12,
+        -command => sub {
+            my $name
+                = $spellop->getOpenFile( -title => 'Aspell executable?' );
+            if ($name) {
+                $globalspellpath = $name;
+                $globalspellpath = os_normal($globalspellpath);
+                $spellpathentry->delete( 0, 'end' );
+                $spellpathentry->insert( 'end', $globalspellpath );
+                saveset();
+
+                OS_Win
+                    ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
+                    : ( $lglobal{spellexename} = $globalspellpath );
+                open my $infile, '-|', "$lglobal{spellexename} dump dicts"
+                    or warn "Unable to access dictionaries. $!\n";
+                while ( $dicts = <$infile> ) {
+                    chomp $dicts;
+                    next if ( $dicts =~ m/-/ );
+                    $dictlist->insert( 'end', $dicts );
+                }
+                close $infile;
+            }
+        }
+    )->pack( -pady => 4 );
+    $spellpathentry->insert( 'end', $globalspellpath );
+
+    my $spellencodinglabel = $spellop->add( 'Label',
+        -text => 'Set encoding: default = iso8859-1' )->pack;
+
+    my $spellencodingentry = $spellop->add(
+        'Entry',
+        -width        => 30,
+        -textvariable => \$lglobal{spellencoding},
+    )->pack;
+
+# FIXME: Switching to utf-8 is barfola. Probably down in the checkfil.txt thingy.
+
+    my $dictlabel
+        = $spellop->add( 'Label', -text => 'Dictionary files' )->pack;
+    $dictlist = $spellop->add(
+        'ScrlListbox',
+        -scrollbars => 'oe',
+        -selectmode => 'browse',
+        -background => 'white',
+        -height     => 10,
+        -width      => 40,
+    )->pack( -pady => 4 );
+    my $spelldiclabel
+        = $spellop->add( 'Label', -text => 'Current Dictionary (ies)' )->pack;
+    my $spelldictxt = $spellop->add(
+        'ROText',
+        -width      => 40,
+        -height     => 1,
+        -background => 'white'
+    )->pack;
+    $spelldictxt->delete( '1.0', 'end' );
+    $spelldictxt->insert( '1.0', $globalspelldictopt );
+    $dictlist->insert( 'end', "<default>" );
+
+    if ($globalspellpath) {
+        OS_Win
+            ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
+            : ( $lglobal{spellexename} = $globalspellpath );
+        open my $infile, '-|', "$lglobal{spellexename} dump dicts"
+            or warn "Unable to access dictionaries. $!\n";
+        while ( $dicts = <$infile> ) {
+            chomp $dicts;
+            next if ( $dicts =~ m/-/ );
+            $dictlist->insert( 'end', $dicts );
+        }
+        close $infile;
+    }
+    $dictlist->eventAdd( '<<dictsel>>' => '<Double-Button-1>' );
+    $dictlist->bind(
+        '<<dictsel>>',
+        sub {
+            my $selection = $dictlist->get('active');
+            $spelldictxt->delete( '1.0', 'end' );
+            $spelldictxt->insert( '1.0', $selection );
+            $selection = '' if $selection eq "<default>";
+            $globalspelldictopt = $selection;
+            saveset();
+            aspellstart();
+            $top->Busy( -recurse => 1 );
+
+            if ( defined( $lglobal{spellpopup} ) ) {
+                spellclearvars();
+                spellcheckfirst();
+            }
+            $top->Unbusy( -recurse => 1 );
+        }
+    );
+    my $spopframe = $spellop->Frame->pack;
+    $spopframe->Radiobutton(
+        -selectcolor => $lglobal{checkcolor},
+        -text        => 'Ultra Fast',
+        -variable    => \$globalaspellmode,
+        -value       => 'ultra'
+    )->grid( -row => 0, -sticky => 'w' );
+    $spopframe->Radiobutton(
+        -selectcolor => $lglobal{checkcolor},
+        -text        => 'Fast',
+        -variable    => \$globalaspellmode,
+        -value       => 'fast'
+    )->grid( -row => 1, -sticky => 'w' );
+    $spopframe->Radiobutton(
+        -selectcolor => $lglobal{checkcolor},
+        -text        => 'Normal',
+        -variable    => \$globalaspellmode,
+        -value       => 'normal'
+    )->grid( -row => 2, -sticky => 'w' );
+    $spopframe->Radiobutton(
+        -selectcolor => $lglobal{checkcolor},
+        -text        => 'Bad Spellers',
+        -variable    => \$globalaspellmode,
+        -value       => 'bad-spellers'
+    )->grid( -row => 3, -sticky => 'w' );
+    $spellop->Show;
+}
+
+sub toggle_autosave {
+    if ($autosave) {
+        set_autosave();
+    }
+    else {
+        $lglobal{autosaveid}->cancel;
+        undef $lglobal{autosaveid};
+        $lglobal{saveflashid}->cancel;
+        undef $lglobal{saveflashid};
+        $lglobal{saveflashingid}->cancel if $lglobal{saveflashingid};
+        undef $lglobal{saveflashingid};
+        $lglobal{savetool}->configure(
+            -background       => 'SystemButtonFace',
+            -activebackground => 'SystemButtonFace'
+        ) unless $notoolbar;
+    }
+}
+
+# Pop up a window where you can adjust the auto save interval
+sub saveinterval
+{
+    if ( $lglobal{intervalpop} ) {
+        $lglobal{intervalpop}->deiconify;
+        $lglobal{intervalpop}->raise;
+    }
+    else {
+        $lglobal{intervalpop} = $top->Toplevel;
+        $lglobal{intervalpop}->title('Autosave Interval');
+        $lglobal{intervalpop}->resizable( 'no', 'no' );
+        my $frame = $lglobal{intervalpop}
+            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+        $frame->Label( -text => 'Minutes between Autosave' )
+            ->pack( -side => 'left' );
+        my $entry = $frame->Entry(
+            -background   => 'white',
+            -width        => 5,
+            -textvariable => \$autosaveinterval,
+            -validate     => 'key',
+            -vcmd         => sub {
+                return 1 unless $_[0];
+                return 0 if ( $_[0] =~ /\D/ );
+                return 0 if ( $_[0] < 1 );
+                return 0 if ( $_[0] > 999 );
+                return 1;
+            },
+        )->pack( -side => 'left', -fill => 'x' );
+        my $frame1 = $lglobal{intervalpop}
+            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+        $frame1->Label( -text => '1-999 minutes' )->pack( -side => 'left' );
+        my $button = $frame1->Button(
+            -text    => 'OK',
+            -command => sub {
+                $autosaveinterval = 5 unless $autosaveinterval;
+                $lglobal{intervalpop}->destroy;
+                undef $lglobal{scrlspdpop};
+            },
+        )->pack( -side => 'left' );
+        $lglobal{intervalpop}->protocol(
+            'WM_DELETE_WINDOW' => sub {
+                $autosaveinterval = 5 unless $autosaveinterval;
+                $lglobal{intervalpop}->destroy;
+                undef $lglobal{intervalpop};
+            }
+        );
+        $lglobal{intervalpop}->Icon( -image => $icon );
+        $entry->selectionRange( 0, 'end' );
+    }
+}
+
+sub set_autosave {
+    $lglobal{autosaveid}->cancel     if $lglobal{autosaveid};
+    $lglobal{saveflashid}->cancel    if $lglobal{saveflashid};
+    $lglobal{saveflashingid}->cancel if $lglobal{saveflashingid};
+    $lglobal{autosaveid} = $top->repeat(
+        ( $autosaveinterval * 60000 ),
+        sub {
+            savefile()
+                if $textwindow->numberChanges
+                    and $lglobal{global_filename} !~ /No File Loaded/;
+        }
+    );
+    $lglobal{saveflashid} = $top->after(
+        ( $autosaveinterval * 60000 - 10000 ),
+        sub {
+            flash_save()
+                if $lglobal{global_filename} !~ /No File Loaded/;
+        }
+    );
+    $lglobal{savetool}
+        ->configure( -background => 'green', -activebackground => 'green' )
+        unless $notoolbar;
+    $lglobal{autosaveinterval} = time;
+}
+
+sub hilitetgl {    # Enable / disable word highlighting in the text
+    if ( $lglobal{scanno_hl} ) {
+        $lglobal{hl_index} = 1;
+        highlightscannos();
+        $lglobal{scanno_hlid} = $top->repeat( 400, \&highlightscannos );
+    }
+    else {
+        $lglobal{scanno_hlid}->cancel if $lglobal{scanno_hlid};
+        undef $lglobal{scanno_hlid};
+        $textwindow->tagRemove( 'scannos', '1.0', 'end' );
+    }
+    update_indicators();
+    saveset();
+}
+
+sub searchsize
+{    # Pop up a window where you can adjust the search history size
+    if ( $lglobal{hssizepop} ) {
+        $lglobal{hssizepop}->deiconify;
+        $lglobal{hssizepop}->raise;
+    }
+    else {
+        $lglobal{hssizepop} = $top->Toplevel;
+        $lglobal{hssizepop}->title('History Size');
+        $lglobal{hssizepop}->resizable( 'no', 'no' );
+        my $frame = $lglobal{hssizepop}
+            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+        $frame->Label( -text => 'History Size: # of terms to save - ' )
+            ->pack( -side => 'left' );
+        my $entry = $frame->Entry(
+            -background   => 'white',
+            -width        => 5,
+            -textvariable => \$history_size,
+            -validate     => 'key',
+            -vcmd         => sub {
+                return 1 unless $_[0];
+                return 0 if ( $_[0] =~ /\D/ );
+                return 0 if ( $_[0] < 1 );
+                return 0 if ( $_[0] > 200 );
+                return 1;
+            },
+        )->pack( -side => 'left', -fill => 'x' );
+        my $frame2 = $lglobal{hssizepop}
+            ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+        $frame2->Button(
+            -text    => 'Ok',
+            -width   => 10,
+            -command => sub {
+                saveset();
+                $lglobal{hssizepop}->destroy;
+                undef $lglobal{hssizepop};
+            }
+        )->pack;
+        $lglobal{hssizepop}->protocol(
+            'WM_DELETE_WINDOW' => sub {
+                $lglobal{hssizepop}->destroy;
+                undef $lglobal{hssizepop};
+            }
+        );
+        $lglobal{hssizepop}->Icon( -image => $icon );
+    }
+}
+
+
 ### Help
+# FIXME: generalize about, version, etc. into one function.
 sub about_pop_up {
     my $about_text = <<EOM;
 Guiguts.pl post processing toolkit/interface to gutcheck.
@@ -18273,6 +18248,49 @@ sub showversion {
     );
     $dialog->Show;
 }
+
+# Check to see if this is the most recent version
+# FIXME: Doesn't work.
+# sub checkver {
+#     my ( $dbox, $answer );
+#     my $ua = LWP::UserAgent->new(
+#         env_proxy  => 1,
+#         keep_alive => 1,
+#         timeout    => 30,
+#     );
+#     my $response = $ua->get('http://guiguts.sourceforge.net/ggversion.txt');
+#     unless ( $response->content ) {
+#         $dbox = $top->Dialog(
+#             -text =>
+#                 'Could not check for updates, unable to connect to server.',
+#             -bitmap  => 'error',
+#             -title   => 'Could not connect.',
+#             -buttons => ['Ok']
+#         );
+#         $dbox->Show;
+#         return;
+#     }
+#     if ( $response->content gt $currentver ) {
+#         print $response->content;
+#         $dbox = $top->Dialog(
+#             -text =>
+#                 "A newer version is available.\nDo you want to go to the home page?",
+#             -title   => 'Newer version available.',
+#             -buttons => [ 'Ok', 'Cancel' ]
+#         );
+#     }
+#     else {
+#         $dbox = $top->Dialog(
+#             -text    => 'This is the most current version.',
+#             -title   => 'Up to date.',
+#             -buttons => ['Cancel']
+#         );
+#     }
+#     $answer = $dbox->Show;
+#     if ( $answer =~ /ok/i ) {
+#         runner("$globalbrowserstart http://guiguts.sourceforge.net/");
+#     }
+# }
 
 sub hotkeyshelp {
     if ( defined( $lglobal{hotpop} ) ) {

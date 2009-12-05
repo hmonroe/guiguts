@@ -12,7 +12,7 @@ Fix spell check popup. Acts weird with unicode.
 
 perl tidy -pbp all .pl/pm files.
 
-Replace '', in menus with ['separator', ''],
+DONE: Replace '', in menus with ['separator', ''],
 
 Find '--command sub {} and rewrite as standalones.
 
@@ -28,5 +28,5 @@ Write a short "How to Test GG" tutorial.
 
 Add a readonly switch for viewing/previewing.
 
-
+sub find_exe for aspell, viewer, jeebies, etc.
 
