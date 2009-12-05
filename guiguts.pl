@@ -952,76 +952,6 @@ sub xtops {    # run an external program through the external commands menu
     runner( cmdinterp( $extops[$index]{command} ) );
 }
 
-sub externalpopup {    # Set up the external commands menu
-    my $menutempvar;
-    if ( $lglobal{xtpop} ) {
-        $lglobal{xtpop}->deiconify;
-    }
-    else {
-        $lglobal{xtpop} = $top->Toplevel( -title => 'External programs', );
-        my $f0
-            = $lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-        $f0->Label( -text =>
-                "You can set up external programs to be called from within guiguts here. Each line of entry boxes represent\n"
-                . "a menu entry. The left box is the label that will show up under the menu. The right box is the calling parameters.\n"
-                . "Format the calling parameters as they would be when entered into the \"Run\" entry under the Start button\n"
-                . "(for Windows). You can call a file directly: (\"C:\\Program Files\\Accessories\\wordpad.exe\") or indirectly for\n"
-                . "registered apps (start or rundll). If you call a program that has a space in the path, you must enclose the program\n"
-                . "name in double quotes.\n\n"
-                . "There are a few exposed internal variables you can use to build commands with.\nUse one of these variable to "
-                . "substitute in the corresponding value.\n\n"
-                . "\$d = the directory path of the currently open file.\n"
-                . "\$f = the current open file name, without a path or extension.\n"
-                . "\$e = the extension of the currently open file.\n"
-                . '(So, to pass the currently open file, use $d$f$e.)'
-                . "\n\n"
-                . "\$i = the directory with full path that the png files are in.\n"
-                . "\$p = the number of the page that the cursor is currently in.\n"
-        )->pack;
-        my $f1
-            = $lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-        for $menutempvar ( 0 .. 9 ) {
-            $f1->Entry(
-                -width        => 50,
-                -background   => 'white',
-                -relief       => 'sunken',
-                -textvariable => \$extops[$menutempvar]{label},
-                )->grid(
-                -row    => "$menutempvar" + 1,
-                -column => 1,
-                -padx   => 2,
-                -pady   => 4
-                );
-            $f1->Entry(
-                -width        => 80,
-                -background   => 'white',
-                -relief       => 'sunken',
-                -textvariable => \$extops[$menutempvar]{command},
-                )->grid(
-                -row    => "$menutempvar" + 1,
-                -column => 2,
-                -padx   => 2,
-                -pady   => 4
-                );
-        }
-        my $f2
-            = $lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-        my $gobut = $f2->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                saveset();
-                rebuildmenu();
-                $lglobal{xtpop}->destroy;
-                undef $lglobal{xtpop};
-            },
-            -text  => 'OK',
-            -width => 8
-        )->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
-        $lglobal{xtpop}->protocol( 'WM_DELETE_WINDOW' =>
-                sub { $lglobal{xtpop}->destroy; undef $lglobal{xtpop} } );
-        $lglobal{xtpop}->Icon( -image => $icon );
-    }
-}
 
 # Menus are not easily modifiable in place. Easier to just destroy and
 # rebuild every time it is modified
@@ -18183,6 +18113,78 @@ sub text_convert_options {
 
 
 ### External
+
+
+sub externalpopup {    # Set up the external commands menu
+    my $menutempvar;
+    if ( $lglobal{xtpop} ) {
+        $lglobal{xtpop}->deiconify;
+    }
+    else {
+        $lglobal{xtpop} = $top->Toplevel( -title => 'External programs', );
+        my $f0
+            = $lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+        $f0->Label( -text =>
+                "You can set up external programs to be called from within guiguts here. Each line of entry boxes represent\n"
+                . "a menu entry. The left box is the label that will show up under the menu. The right box is the calling parameters.\n"
+                . "Format the calling parameters as they would be when entered into the \"Run\" entry under the Start button\n"
+                . "(for Windows). You can call a file directly: (\"C:\\Program Files\\Accessories\\wordpad.exe\") or indirectly for\n"
+                . "registered apps (start or rundll). If you call a program that has a space in the path, you must enclose the program\n"
+                . "name in double quotes.\n\n"
+                . "There are a few exposed internal variables you can use to build commands with.\nUse one of these variable to "
+                . "substitute in the corresponding value.\n\n"
+                . "\$d = the directory path of the currently open file.\n"
+                . "\$f = the current open file name, without a path or extension.\n"
+                . "\$e = the extension of the currently open file.\n"
+                . '(So, to pass the currently open file, use $d$f$e.)'
+                . "\n\n"
+                . "\$i = the directory with full path that the png files are in.\n"
+                . "\$p = the number of the page that the cursor is currently in.\n"
+        )->pack;
+        my $f1
+            = $lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+        for $menutempvar ( 0 .. 9 ) {
+            $f1->Entry(
+                -width        => 50,
+                -background   => 'white',
+                -relief       => 'sunken',
+                -textvariable => \$extops[$menutempvar]{label},
+                )->grid(
+                -row    => "$menutempvar" + 1,
+                -column => 1,
+                -padx   => 2,
+                -pady   => 4
+                );
+            $f1->Entry(
+                -width        => 80,
+                -background   => 'white',
+                -relief       => 'sunken',
+                -textvariable => \$extops[$menutempvar]{command},
+                )->grid(
+                -row    => "$menutempvar" + 1,
+                -column => 2,
+                -padx   => 2,
+                -pady   => 4
+                );
+        }
+        my $f2
+            = $lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+        my $gobut = $f2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                saveset();
+                rebuildmenu();
+                $lglobal{xtpop}->destroy;
+                undef $lglobal{xtpop};
+            },
+            -text  => 'OK',
+            -width => 8
+        )->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
+        $lglobal{xtpop}->protocol( 'WM_DELETE_WINDOW' =>
+                sub { $lglobal{xtpop}->destroy; undef $lglobal{xtpop} } );
+        $lglobal{xtpop}->Icon( -image => $icon );
+    }
+}
 
 ### Unicode
 

@@ -24,5 +24,9 @@ popups.
 Make sure toolbar functions have menu bar equivs; e.g., view image. and
 keyboard shortcuts
 
+Write a short "How to Test GG" tutorial.
+
+Add a readonly switch for viewing/previewing.
+
 
 
