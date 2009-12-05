@@ -946,12 +946,6 @@ sub setbrowser { # Set up command to start a browser, varies by OS and browser
     $browsepop->Icon( -image => $icon );
 }
 
-sub xtops {    # run an external program through the external commands menu
-    my $index = shift;
-    return unless $extops[$index]{command};
-    runner( cmdinterp( $extops[$index]{command} ) );
-}
-
 
 # Menus are not easily modifiable in place. Easier to just destroy and
 # rebuild every time it is modified
@@ -1698,6 +1692,7 @@ sub buildmenu {                        # The main menu building code.
                 ( 0 .. 9 ) ),
         ],
     );
+
     if ( $Tk::version ge 8.4 ) {
         my %utfsorthash;
         for ( keys %{ $lglobal{utfblocks} } ) {
@@ -9277,116 +9272,6 @@ sub handleDND {
     }
 }
 
-sub utfpopup {
-    $top->Busy( -recurse => 1 );
-    my ( $block, $start, $end ) = @_;
-    my $utfpop = $top->Toplevel;
-    $utfpop->geometry('600x300+10+10');
-    my $blln = $utfpop->Balloon( -initwait => 750 );
-    my ( $frame, $pframe, $sizelabel, @buttons );
-    my $rows = ( ( hex $end ) - ( hex $start ) + 1 ) / 16 - 1;
-    $utfpop->title( $block . ': ' . $start . ' - ' . $end );
-    my $cframe   = $utfpop->Frame->pack;
-    my $fontlist = $cframe->BrowseEntry(
-        -label     => 'Font',
-        -browsecmd => sub {
-            utffontinit();
-            for (@buttons) {
-                $_->configure( -font => $lglobal{utffont} );
-            }
-        },
-        -variable => \$utffontname,
-    )->grid( -row => 1, -column => 1, -padx => 8, -pady => 2 );
-    my $bigger = $cframe->Button(
-        -activebackground => $activecolor,
-        -text             => 'Bigger',
-        -command          => sub {
-            $utffontsize++;
-            utffontinit();
-            for (@buttons) {
-                $_->configure( -font => $lglobal{utffont} );
-            }
-            $sizelabel->configure( -text => $utffontsize );
-        },
-    )->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
-    $sizelabel = $cframe->Label( -text => $utffontsize )
-        ->grid( -row => 1, -column => 3, -padx => 2, -pady => 2 );
-    my $smaller = $cframe->Button(
-        -activebackground => $activecolor,
-        -text             => 'Smaller',
-        -command          => sub {
-            $utffontsize--;
-            utffontinit();
-            for (@buttons) {
-                $_->configure( -font => $lglobal{utffont} );
-            }
-            $sizelabel->configure( -text => $utffontsize );
-        },
-    )->grid( -row => 1, -column => 4, -padx => 2, -pady => 2 );
-    my $usel = $cframe->Radiobutton(
-        -variable    => \$lglobal{uoutp},
-        -selectcolor => $lglobal{checkcolor},
-        -value       => 'u',
-        -text        => 'Unicode',
-    )->grid( -row => 1, -column => 5, -padx => 5 );
-    $cframe->Radiobutton(
-        -variable    => \$lglobal{uoutp},
-        -selectcolor => $lglobal{checkcolor},
-        -value       => 'h',
-        -text        => 'HTML code',
-    )->grid( -row => 1, -column => 6 );
-    $usel->select;
-    $fontlist->insert( 'end', sort( $textwindow->fontFamilies ) );
-    $pframe = $utfpop->Frame( -background => 'white' )
-        ->pack( -expand => 'y', -fill => 'both' );
-    $frame = $pframe->Scrolled(
-        'Pane',
-        -background => 'white',
-        -scrollbars => 'se',
-        -sticky     => 'nswe'
-    )->pack( -expand => 'y', -fill => 'both' );
-    drag($frame);
-    for my $y ( 0 .. $rows ) {
-
-        for my $x ( 0 .. 15 ) {
-            my $name = hex($start) + ( $y * 16 ) + $x;
-            my $hex   = sprintf "%04X", $name;
-            my $msg   = "Dec. $name, Hex. $hex";
-            my $cname = charnames::viacode($name);
-            $msg .= ", $cname" if $cname;
-            $name = 0 unless $cname;
-
-            # FIXME: See Todo
-            $buttons[ ( $y * 16 ) + $x ] = $frame->Button(
-
-                #    $buttons( ( $y * 16 ) + $x ) = $frame->Button(
-                -activebackground   => $activecolor,
-                -text               => chr($name),
-                -font               => $lglobal{utffont},
-                -relief             => 'flat',
-                -borderwidth        => 0,
-                -background         => 'white',
-                -command            => [ \&pututf, $utfpop ],
-                -highlightthickness => 0,
-            )->grid( -row => $y, -column => $x );
-            $buttons[ ( $y * 16 ) + $x ]->bind(
-                '<ButtonPress-3>',
-                sub {
-                    $textwindow->clipboardClear;
-                    $textwindow->clipboardAppend(
-                        $buttons[ ( $y * 16 ) + $x ]->cget('-text') );
-                }
-            );
-            $blln->attach( $buttons[ ( $y * 16 ) + $x ],
-                -balloonmsg => $msg, );
-            $utfpop->update;
-        }
-    }
-    $utfpop->protocol(
-        'WM_DELETE_WINDOW' => sub { $blln->destroy; $utfpop->destroy; } );
-    $utfpop->Icon( -image => $icon );
-    $top->Unbusy( -recurse => 1 );
-}
 
 sub pututf {
     my $utfpop = shift;
@@ -18186,7 +18071,125 @@ sub externalpopup {    # Set up the external commands menu
     }
 }
 
+sub xtops {    # run an external program through the external commands menu
+    my $index = shift;
+    return unless $extops[$index]{command};
+    runner( cmdinterp( $extops[$index]{command} ) );
+}
+
 ### Unicode
+
+sub utfpopup {
+    $top->Busy( -recurse => 1 );
+    my ( $block, $start, $end ) = @_;
+    my $utfpop = $top->Toplevel;
+    $utfpop->geometry('600x300+10+10');
+    my $blln = $utfpop->Balloon( -initwait => 750 );
+    my ( $frame, $pframe, $sizelabel, @buttons );
+    my $rows = ( ( hex $end ) - ( hex $start ) + 1 ) / 16 - 1;
+    $utfpop->title( $block . ': ' . $start . ' - ' . $end );
+    my $cframe   = $utfpop->Frame->pack;
+    my $fontlist = $cframe->BrowseEntry(
+        -label     => 'Font',
+        -browsecmd => sub {
+            utffontinit();
+            for (@buttons) {
+                $_->configure( -font => $lglobal{utffont} );
+            }
+        },
+        -variable => \$utffontname,
+    )->grid( -row => 1, -column => 1, -padx => 8, -pady => 2 );
+    my $bigger = $cframe->Button(
+        -activebackground => $activecolor,
+        -text             => 'Bigger',
+        -command          => sub {
+            $utffontsize++;
+            utffontinit();
+            for (@buttons) {
+                $_->configure( -font => $lglobal{utffont} );
+            }
+            $sizelabel->configure( -text => $utffontsize );
+        },
+    )->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
+    $sizelabel = $cframe->Label( -text => $utffontsize )
+        ->grid( -row => 1, -column => 3, -padx => 2, -pady => 2 );
+    my $smaller = $cframe->Button(
+        -activebackground => $activecolor,
+        -text             => 'Smaller',
+        -command          => sub {
+            $utffontsize--;
+            utffontinit();
+            for (@buttons) {
+                $_->configure( -font => $lglobal{utffont} );
+            }
+            $sizelabel->configure( -text => $utffontsize );
+        },
+    )->grid( -row => 1, -column => 4, -padx => 2, -pady => 2 );
+    my $usel = $cframe->Radiobutton(
+        -variable    => \$lglobal{uoutp},
+        -selectcolor => $lglobal{checkcolor},
+        -value       => 'u',
+        -text        => 'Unicode',
+    )->grid( -row => 1, -column => 5, -padx => 5 );
+    $cframe->Radiobutton(
+        -variable    => \$lglobal{uoutp},
+        -selectcolor => $lglobal{checkcolor},
+        -value       => 'h',
+        -text        => 'HTML code',
+    )->grid( -row => 1, -column => 6 );
+    $usel->select;
+    $fontlist->insert( 'end', sort( $textwindow->fontFamilies ) );
+    $pframe = $utfpop->Frame( -background => 'white' )
+        ->pack( -expand => 'y', -fill => 'both' );
+    $frame = $pframe->Scrolled(
+        'Pane',
+        -background => 'white',
+        -scrollbars => 'se',
+        -sticky     => 'nswe'
+    )->pack( -expand => 'y', -fill => 'both' );
+    drag($frame);
+    for my $y ( 0 .. $rows ) {
+
+        for my $x ( 0 .. 15 ) {
+            my $name = hex($start) + ( $y * 16 ) + $x;
+            my $hex   = sprintf "%04X", $name;
+            my $msg   = "Dec. $name, Hex. $hex";
+            my $cname = charnames::viacode($name);
+            $msg .= ", $cname" if $cname;
+            $name = 0 unless $cname;
+
+            # FIXME: See Todo
+            $buttons[ ( $y * 16 ) + $x ] = $frame->Button(
+
+                #    $buttons( ( $y * 16 ) + $x ) = $frame->Button(
+                -activebackground   => $activecolor,
+                -text               => chr($name),
+                -font               => $lglobal{utffont},
+                -relief             => 'flat',
+                -borderwidth        => 0,
+                -background         => 'white',
+                -command            => [ \&pututf, $utfpop ],
+                -highlightthickness => 0,
+            )->grid( -row => $y, -column => $x );
+            $buttons[ ( $y * 16 ) + $x ]->bind(
+                '<ButtonPress-3>',
+                sub {
+                    $textwindow->clipboardClear;
+                    $textwindow->clipboardAppend(
+                        $buttons[ ( $y * 16 ) + $x ]->cget('-text') );
+                }
+            );
+            $blln->attach( $buttons[ ( $y * 16 ) + $x ],
+                -balloonmsg => $msg, );
+            $utfpop->update;
+        }
+    }
+    $utfpop->protocol(
+        'WM_DELETE_WINDOW' => sub { $blln->destroy; $utfpop->destroy; } );
+    $utfpop->Icon( -image => $icon );
+    $top->Unbusy( -recurse => 1 );
+}
+
 
 ### Prefs
 
