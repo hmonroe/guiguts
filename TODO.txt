@@ -30,3 +30,5 @@ Add a readonly switch for viewing/previewing.
 
 sub find_exe for aspell, viewer, jeebies, etc.
 
+Fix text processing, <i>, <b> etc. to work in Find box instead of just arbitrarily replace.
+option; replace all or view finder.
