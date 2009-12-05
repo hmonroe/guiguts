@@ -21,4 +21,5 @@ jump to text. Focus is in text window.
 
 9. <tb> seen as unbalanced markup.
 
-10.
+10. WF spellcheck. Some words listed as 0 occurence.
+

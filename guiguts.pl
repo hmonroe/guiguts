@@ -667,6 +667,7 @@ sub cmdinterp {
 
 # Routine to spawn another perl process and use it to execute an
 # external program
+# FIXME: Can we get rid of spawn.pl
 sub runner {
     my $args;
     $args = join ' ', @_;
@@ -817,8 +818,6 @@ sub openpng {
         setpngspath();
     }
 }
-
-# Select directory where image files are located
 
 # Routine to find highlight word list
 sub scannosfile {
@@ -1838,21 +1837,16 @@ sub gotolabel
     }
 }
 
-
-
-# Find and reformat sidenotes
-
-# Remove any rewrap markup in the text
-
-
 sub oppopupdate {    # Update the Operations history
     $lglobal{oplistbox}->delete( '0', 'end' );
     $lglobal{oplistbox}->insert( 'end', @operations );
 }
 
-
+## Footnote Operations
+# Pop up a window showing all the footnote addresses with potential
+# problems highlighted
 sub fnview
-{ # Pop up a window showing all the footnote addresses with potential problems highlighted
+{ 
     my ( %fnotes, %anchors, $ftext );
     viewpagenums() if ( $lglobal{seepagenums} );
     if ( defined( $lglobal{footviewpop} ) ) {
@@ -1961,8 +1955,10 @@ sub fnview
     }
 }
 
+# Clean up footnotes in ASCII version of text. Note: destructive. Use only
+# at end of editing.
 sub footnotetidy
-{ # Clean up footnotes in ASCII version of text. Note: destructive. Use only at end of editing.
+{ 
     my ( $begin, $end, $colon );
     $lglobal{fnsecondpass} = 0;
     footnotefixup();
@@ -2676,7 +2672,6 @@ sub alpha {
 # Roman numeral conversion taken directly from the Roman.pm module Copyright
 # (c) 1995 OZAWA Sakuro. Done to avoid users having to install downloadable
 # modules.
-
 sub roman {
     my %roman_digit = qw(1 IV 10 XL 100 CD 1000 MMMMMM);
     my @figure      = reverse sort keys %roman_digit;
@@ -3162,10 +3157,11 @@ sub searchtext {
             : ( $searchendindex = "$start+1c" );
     }
     {
-        no warnings;
 
-# Turn off warnings temporarily since $searchterm is undefined on first search
-        unless ( length($searchterm) ) {
+      # Turn off warnings temporarily since $searchterm is undefined on first
+      # search
+      no warnings;
+      unless ( length($searchterm) ) {
             $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
         }
     }
@@ -3274,8 +3270,6 @@ sub searchtext {
                 '--', $searchterm, $searchstart, $end
             );
         }
-
-#print "whole word ".$sopt[0]." case ".$sopt[1]." direction ".$sopt[2]." regex ".$sopt[3]." |$searchterm|$mode\n";
     }
     if ($searchstartindex) {
         $tempindex = $searchstartindex;
@@ -11053,20 +11047,21 @@ sub pmovedown {    # move the page marker down a line
     $textwindow->see($mark);
 }
 
+## Save setting.rc file
 sub saveset {
+    my $message = <<EOM;
+# This file contains your saved settings for guiguts.
+# It is automatically generated when you save your settings.
+# If you delete it, all the settings will revert to defaults.
+# You shouldn't ever have to edit this file manually.\n\n
+EOM
     my ( $index, $savethis );
     my $thispath = $0;
     $thispath =~ s/[^\\]*$//;
     my $savefile = $thispath . 'setting.rc';
     $geometry = $top->geometry unless $geometry;
     if ( open my $save_handle, '>', $savefile ) {
-        print $save_handle
-            "# This file contains your saved settings for guiguts.
-# It is automatically generated when you save your settings.
-# If you delete it, all the settings will revert to defaults.
-# You shouldn't ever have to edit this file manually.\n\n"
-            ;
-
+        print $save_handle $message;
         print $save_handle '@gcopt = (';
         print $save_handle "$_," || '0,' for @gcopt;
         print $save_handle ");\n\n";
@@ -12395,6 +12390,8 @@ sub spelladdtexttags {
     $textwindow->yview('end');
     $textwindow->see( $lglobal{matchindex} );
 }
+
+## End Spellcheck
 
 ### File Menu
 sub fileopen {    # Find a text file to open
@@ -17272,8 +17269,6 @@ sub text_convert_options {
 
 
 ### External
-
-
 sub externalpopup {    # Set up the external commands menu
     my $menutempvar;
     if ( $lglobal{xtpop} ) {
