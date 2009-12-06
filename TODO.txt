@@ -37,3 +37,5 @@ Clean up FIXME:'s
 Rename sub's to something more logical and/or obvious, e.g., sub
 text_convert_sc.
 
+Add POD to each relevant sub.
+
