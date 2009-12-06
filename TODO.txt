@@ -1,0 +1,34 @@
+Label various operations as ### GutCheck ... ### End GutCheck.
+
+Fix 'file open from command line', e.g. perl gutthing file.txt acts weird.
+
+Fix option database.
+
+settings.rc and project.bin files in ".ini" format. Config::INI module.
+
+DONE:Add --encoding=whatever to spell check options. iso-8859-1, utf-8 etc.
+
+Fix spell check popup. Acts weird with unicode.
+
+perl tidy -pbp all .pl/pm files.
+
+DONE: Replace '', in menus with ['separator', ''],
+
+Find '--command sub {} and rewrite as standalones.
+
+Label unobvious sub's, e.g., wordcount = Word Frequency
+
+Go through WF code; see how the bindings work and apply to GC and Jeebies
+popups.
+
+Make sure toolbar functions have menu bar equivs; e.g., view image. and
+keyboard shortcuts
+
+Write a short "How to Test GG" tutorial.
+
+Add a readonly switch for viewing/previewing.
+
+sub find_exe for aspell, viewer, jeebies, etc.
+
+Fix text processing, <i>, <b> etc. to work in Find box instead of just arbitrarily replace.
+option; replace all or view finder.
