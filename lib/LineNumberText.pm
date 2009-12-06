@@ -1,6 +1,5 @@
 #$Id$
 
-
 package LineNumberText;
 
 use Tk;

@@ -20,15 +20,15 @@ $VERSION = 0.09;
 my $edgeH = 24;
 my $edgeW = 5;
 
-my $sepH  = 24;
-my $sepW  = 3;
+my $sepH = 24;
+my $sepW = 3;
 
 my %sideToSticky = qw(
-		      top    n
-		      right  e
-		      left   w
-		      bottom s
-		      );
+    top    n
+    right  e
+    left   w
+    bottom s
+);
 
 my $packIn     = '';
 my @allWidgets = ();
@@ -40,100 +40,109 @@ my %isDummy;
 1;
 
 sub ClassInit {
-    my ($class, $mw) = @_;
+    my ( $class, $mw ) = @_;
     $class->SUPER::ClassInit($mw);
 
     # load the images.
     my $imageFile = Tk->findINC('ToolBar/tkIcons');
 
-    if (defined $imageFile) {
-	local *F;
-	open F, $imageFile;
+    if ( defined $imageFile ) {
+        local *F;
+        open F, $imageFile;
 
-	local $_;
+        local $_;
 
-	while (<F>) {
-	    chomp;
-	    my ($n, $d) = (split /:/)[0, 4];
+        while (<F>) {
+            chomp;
+            my ( $n, $d ) = ( split /:/ )[ 0, 4 ];
 
-	    $mw->Photo($n, -data => $d);
-	}
-	close F;
-    } else {
-	carp <<EOW;
+            $mw->Photo( $n, -data => $d );
+        }
+        close F;
+    }
+    else {
+        carp <<EOW;
 WARNING: can not find tkIcons. Your installation of Tk::ToolBar is broken.
          No icons will be loaded.
 EOW
-;
     }
 }
 
 sub Populate {
-    my ($self, $args) = @_;
+    my ( $self, $args ) = @_;
 
     $self->SUPER::Populate($args);
-    $self->{MW}     = $self->parent;
-    $self->{SIDE}   = exists $args->{-side}          ? delete $args->{-side}          : 'top';
-    $self->{STICKY} = exists $args->{-sticky}        ? delete $args->{-sticky}        : 'nsew';
-    $self->{USECC}  = exists $args->{-cursorcontrol} ? delete $args->{-cursorcontrol} : 1;
-    $self->{STYLE}  = exists $args->{-mystyle}       ? delete $args->{-mystyle}       : 0;
-    $packIn         = exists $args->{-in}            ? delete $args->{-in}            : '';
+    $self->{MW} = $self->parent;
+    $self->{SIDE} = exists $args->{-side} ? delete $args->{-side} : 'top';
+    $self->{STICKY}
+        = exists $args->{-sticky} ? delete $args->{-sticky} : 'nsew';
+    $self->{USECC}
+        = exists $args->{-cursorcontrol} ? delete $args->{-cursorcontrol} : 1;
+    $self->{STYLE} = exists $args->{-mystyle} ? delete $args->{-mystyle} : 0;
+    $packIn = exists $args->{-in} ? delete $args->{-in} : '';
 
     if ($packIn) {
-      unless ($packIn->isa('ToolBar')) {
-	croak "value of -packin '$packIn' is not a Tk::ToolBar object";
-      } else {
-	$self->{SIDE} = $packIn->{SIDE};
-      }
+        unless ( $packIn->isa('ToolBar') ) {
+            croak "value of -packin '$packIn' is not a Tk::ToolBar object";
+        }
+        else {
+            $self->{SIDE} = $packIn->{SIDE};
+        }
     }
 
-    unless ($self->{STICKY} =~ /$sideToSticky{$self->{SIDE}}/) {
-	croak "can't place '$self->{STICKY}' toolbar on '$self->{SIDE}' side";
+    unless ( $self->{STICKY} =~ /$sideToSticky{$self->{SIDE}}/ ) {
+        croak "can't place '$self->{STICKY}' toolbar on '$self->{SIDE}' side";
     }
 
     $self->{CONTAINER} = $self->{MW}->Frame;
     $self->_packSelf;
 
-    my $edge = $self->{CONTAINER}->Frame(qw/
-					 -borderwidth 2
-					 -relief ridge
-					 /);
+    my $edge = $self->{CONTAINER}->Frame(
+        qw/
+            -borderwidth 2
+            -relief ridge
+            /
+    );
 
     $self->{EDGE} = $edge;
 
-    $self->_packEdge($edge, 1);
+    $self->_packEdge( $edge, 1 );
 
     $self->ConfigSpecs(
-		       -movable          => [qw/METHOD  movable          Movable             1/],
-		       -close            => [qw/PASSIVE close            Close              15/],
-		       -activebackground => [qw/METHOD  activebackground ActiveBackground/, Tk::ACTIVE_BG],
-		       -indicatorcolor   => [qw/PASSIVE indicatorcolor   IndicatorColor/,   '#00C2F1'],
-		       -indicatorrelief  => [qw/PASSIVE indicatorrelief  IndicatorRelief    flat/],
-		       -float            => [qw/PASSIVE float            Float              1/],
-		      );
+        -movable => [qw/METHOD  movable          Movable             1/],
+        -close   => [qw/PASSIVE close            Close              15/],
+        -activebackground =>
+            [ qw/METHOD  activebackground ActiveBackground/, Tk::ACTIVE_BG ],
+        -indicatorcolor =>
+            [ qw/PASSIVE indicatorcolor   IndicatorColor/, '#00C2F1' ],
+        -indicatorrelief =>
+            [qw/PASSIVE indicatorrelief  IndicatorRelief    flat/],
+        -float => [qw/PASSIVE float            Float              1/],
+    );
 
     push @allWidgets => $self;
 
-    $containers{$self->{CONTAINER}} = $self;
+    $containers{ $self->{CONTAINER} } = $self;
 
     $self->{BALLOON} = $self->{MW}->Balloon;
 
     # check for Tk::CursorControl
     $self->{CC} = undef;
-    if ($self->{USECC}) {
-	local $^W = 0; # suppress message from Win32::API
-	eval "require Tk::CursorControl";
-	unless ($@) {
-	    # CC is installed. Use it.
-	    $self->{CC} = $self->{MW}->CursorControl;
-	}
+    if ( $self->{USECC} ) {
+        local $^W = 0;    # suppress message from Win32::API
+        eval "require Tk::CursorControl";
+        unless ($@) {
+
+            # CC is installed. Use it.
+            $self->{CC} = $self->{MW}->CursorControl;
+        }
     }
 }
 
 sub activebackground {
-    my ($self, $c) = @_;
+    my ( $self, $c ) = @_;
 
-    return unless $c; # ignore falses.
+    return unless $c;    # ignore falses.
 
     $self->{ACTIVE_BG} = $c;
 }
@@ -143,31 +152,39 @@ sub _packSelf {
 
     my $side = $self->{SIDE};
     my $fill = 'y';
-    if ($side eq 'top' or $side eq 'bottom') { $fill = 'x' }
+    if ( $side eq 'top' or $side eq 'bottom' ) { $fill = 'x' }
 
-    if ($packIn && $packIn != $self) {
-	my $side = $packIn->{SIDE} =~ /top|bottom/ ? 'left' : 'top';
+    if ( $packIn && $packIn != $self ) {
+        my $side = $packIn->{SIDE} =~ /top|bottom/ ? 'left' : 'top';
 
-	$self->{CONTAINER}->pack(-in => $packIn->{CONTAINER},
-				 -side => $side,
-				 -anchor => ($fill eq 'x' ? 'w' : 'n'),
-				 -expand => 0);
-	$self->{CONTAINER}->raise;
-	$packIn{$self->{CONTAINER}} = $packIn->{CONTAINER};
-    } else {
-	# force a certain look! for now.
-	my $slave = ($self->{MW}->packSlaves)[0];
+        $self->{CONTAINER}->pack(
+            -in     => $packIn->{CONTAINER},
+            -side   => $side,
+            -anchor => ( $fill eq 'x' ? 'w' : 'n' ),
+            -expand => 0
+        );
+        $self->{CONTAINER}->raise;
+        $packIn{ $self->{CONTAINER} } = $packIn->{CONTAINER};
+    }
+    else {
 
-	$self->configure(qw/-relief raised -borderwidth 1/);
-	$self->pack(-side => $side, -fill => $fill,
-		    $slave ? (-before => $slave) : ()
-		    );
+        # force a certain look! for now.
+        my $slave = ( $self->{MW}->packSlaves )[0];
 
-	$self->{CONTAINER}->pack(-in => $self,
-				 -anchor => ($fill eq 'x' ? 'w' : 'n'),
-				 -expand => 0);
+        $self->configure(qw/-relief raised -borderwidth 1/);
+        $self->pack(
+            -side => $side,
+            -fill => $fill,
+            $slave ? ( -before => $slave ) : ()
+        );
 
-	$packIn{$self->{CONTAINER}} = $self;
+        $self->{CONTAINER}->pack(
+            -in     => $self,
+            -anchor => ( $fill eq 'x' ? 'w' : 'n' ),
+            -expand => 0
+        );
+
+        $packIn{ $self->{CONTAINER} } = $self;
     }
 }
 
@@ -176,307 +193,369 @@ sub _packEdge {
     my $e    = shift;
     my $w    = shift;
 
-    my $s    = $self->{SIDE};
+    my $s = $self->{SIDE};
 
-    my ($pack, $pad, $nopad, $fill);
+    my ( $pack, $pad, $nopad, $fill );
 
-    if ($s eq 'top' or $s eq 'bottom') {
-      if ($w) {
-	$e->configure(-height => $edgeH, -width => $edgeW);
-      } else {
-	$e->configure(-height => $sepH, -width => $sepW);
-      }
-      $pack  = 'left';
-      $pad   = '-padx';
-      $nopad = '-pady';
-      $fill  = 'y';
-    } else {
-      if ($w) {
-	$e->configure(-height => $edgeW, -width => $edgeH);
-      } else {
-	$e->configure(-height => $sepW, -width => $sepH);
-      }
+    if ( $s eq 'top' or $s eq 'bottom' ) {
+        if ($w) {
+            $e->configure( -height => $edgeH, -width => $edgeW );
+        }
+        else {
+            $e->configure( -height => $sepH, -width => $sepW );
+        }
+        $pack  = 'left';
+        $pad   = '-padx';
+        $nopad = '-pady';
+        $fill  = 'y';
+    }
+    else {
+        if ($w) {
+            $e->configure( -height => $edgeW, -width => $edgeH );
+        }
+        else {
+            $e->configure( -height => $sepW, -width => $sepH );
+        }
 
-      $pack  = 'top';
-      $pad   = '-pady';
-      $nopad = '-padx';
-      $fill  = 'x';
+        $pack  = 'top';
+        $pad   = '-pady';
+        $nopad = '-padx';
+        $fill  = 'x';
     }
 
-    if (exists $self->{SEPARATORS}{$e}) {
-	$e->configure(-cursor => $pack eq 'left' ? 'sb_h_double_arrow' : 'sb_v_double_arrow');
-	$self->{SEPARATORS}{$e}->pack(-side   => $pack,
-				      -fill   => $fill);
+    if ( exists $self->{SEPARATORS}{$e} ) {
+        $e->configure( -cursor => $pack eq 'left'
+            ? 'sb_h_double_arrow'
+            : 'sb_v_double_arrow' );
+        $self->{SEPARATORS}{$e}->pack(
+            -side => $pack,
+            -fill => $fill
+        );
     }
 
-    $e->pack(-side  => $pack, $pad => 5,
-	     $nopad => 0,  -expand => 0);
+    $e->pack(
+        -side   => $pack,
+        $pad    => 5,
+        $nopad  => 0,
+        -expand => 0
+    );
 }
 
 sub movable {
-    my ($self, $value) = @_;
+    my ( $self, $value ) = @_;
 
-    if (defined $value) {
-	$self->{ISMOVABLE} = $value;
-	my $e = $self->_edge;
+    if ( defined $value ) {
+        $self->{ISMOVABLE} = $value;
+        my $e = $self->_edge;
 
-	if ($value) {
-	    $e->configure(qw/-cursor fleur/);
-	    $self->afterIdle(sub {$self->_enableEdge()});
-	} else {
-	    $e->configure(-cursor => undef);
-	    $self->_disableEdge($e);
-	}
+        if ($value) {
+            $e->configure(qw/-cursor fleur/);
+            $self->afterIdle( sub { $self->_enableEdge() } );
+        }
+        else {
+            $e->configure( -cursor => undef );
+            $self->_disableEdge($e);
+        }
     }
 
     return $self->{ISMOVABLE};
 }
 
 sub _enableEdge {
-  my ($self) = @_;
+    my ($self) = @_;
 
-  my $e     = $self->_edge;
-  my $hilte = $self->{MW}->Frame(-bg     => $self->cget('-indicatorcolor'),
-				 -relief => $self->cget('-indicatorrelief'));
+    my $e     = $self->_edge;
+    my $hilte = $self->{MW}->Frame(
+        -bg     => $self->cget('-indicatorcolor'),
+        -relief => $self->cget('-indicatorrelief')
+    );
 
-  my $dummy = $self->{MW}->Frame(
-				 qw/
-				 -borderwidth 2
-				 -relief ridge
-				 /);
+    my $dummy = $self->{MW}->Frame(
+        qw/
+            -borderwidth 2
+            -relief ridge
+            /
+    );
 
-  $self->{DUMMY} = $dummy;
+    $self->{DUMMY} = $dummy;
 
-  my $drag     = 0;
-  #my $floating = 0;
-  my $clone;
+    my $drag = 0;
 
-  my @mwSize;  # extent of mainwindow.
+    #my $floating = 0;
+    my $clone;
 
-  $e->bind('<1>'         => sub {
-	     $self->{CC}->confine($self->{MW}) if defined $self->{CC};
-	     my $geom      = $self->{MW}->geometry;
-	     my ($rx, $ry) = ($self->{MW}->rootx, $self->{MW}->rooty);
+    my @mwSize;    # extent of mainwindow.
 
-	     if ($geom =~ /(\d+)x(\d+)/) {#\+(\d+)\+(\d+)/) {
-#	       @mwSize = ($3, $4, $1 + $3, $2 + $4);
-	       @mwSize = ($rx, $ry, $1 + $rx, $2 + $ry);
-	     } else {
-	       @mwSize = ();
-	     }
+    $e->bind(
+        '<1>' => sub {
+            $self->{CC}->confine( $self->{MW} ) if defined $self->{CC};
+            my $geom = $self->{MW}->geometry;
+            my ( $rx, $ry ) = ( $self->{MW}->rootx, $self->{MW}->rooty );
 
-	     if (!$self->{ISCLONE} && $self->{CLONE}) {
-	       $self->{CLONE}->destroy;
-	       $self->{CLONE} = $clone = undef;
-	       @allWidgets = grep Tk::Exists, @allWidgets;
-	     }
+            if ( $geom =~ /(\d+)x(\d+)/ ) {    #\+(\d+)\+(\d+)/) {
 
-	   });
+                #	       @mwSize = ($3, $4, $1 + $3, $2 + $4);
+                @mwSize = ( $rx, $ry, $1 + $rx, $2 + $ry );
+            }
+            else {
+                @mwSize = ();
+            }
 
-  $e->bind('<B1-Motion>' => sub {
-	     my ($x, $y) = ($self->pointerx - $self->{MW}->rootx - ceil($e->width /2) - $e->x,
-			    $self->pointery - $self->{MW}->rooty - ceil($e->height/2) - $e->y);
+            if ( !$self->{ISCLONE} && $self->{CLONE} ) {
+                $self->{CLONE}->destroy;
+                $self->{CLONE} = $clone = undef;
+                @allWidgets = grep Tk::Exists, @allWidgets;
+            }
 
-	     my ($px, $py) = $self->pointerxy;
+        }
+    );
 
-	     $dummy = $self->{ISCLONE} ? $self->{CLONE}{DUMMY} : $self->{DUMMY};
+    $e->bind(
+        '<B1-Motion>' => sub {
+            my ( $x, $y ) = (
+                $self->pointerx 
+                    - $self->{MW}->rootx 
+                    - ceil( $e->width / 2 )
+                    - $e->x,
+                $self->pointery 
+                    - $self->{MW}->rooty 
+                    - ceil( $e->height / 2 )
+                    - $e->y
+            );
 
-	     unless ($drag or $floating) {
-	       $drag = 1;
-	       $dummy->raise;
-	       my $noclone = $self->{ISCLONE} ? $self->{CLONE} : $self;
-	       $noclone->packForget;
-	       $noclone->{CONTAINER}->pack(-in => $dummy);
-	       $noclone->{CONTAINER}->raise;
-	       ref($_) eq 'Tk::Frame' && $_->raise for $noclone->{CONTAINER}->packSlaves;
-	     }
-	     $hilte->placeForget;
+            my ( $px, $py ) = $self->pointerxy;
 
-	     if ($self->cget('-float') &&
-		 (@mwSize and
-		 $px < $mwSize[0] or
-		 $py < $mwSize[1] or
-		 $px > $mwSize[2] or
-		 $py > $mwSize[3])) {
+            $dummy
+                = $self->{ISCLONE} ? $self->{CLONE}{DUMMY} : $self->{DUMMY};
 
-	       # we are outside .. switch to toplevel mode.
-	       $dummy->placeForget;
-	       $floating = 1;
+            unless ( $drag or $floating ) {
+                $drag = 1;
+                $dummy->raise;
+                my $noclone = $self->{ISCLONE} ? $self->{CLONE} : $self;
+                $noclone->packForget;
+                $noclone->{CONTAINER}->pack( -in => $dummy );
+                $noclone->{CONTAINER}->raise;
+                ref($_) eq 'Tk::Frame' && $_->raise
+                    for $noclone->{CONTAINER}->packSlaves;
+            }
+            $hilte->placeForget;
 
-	       unless ($self->{CLONE} || $self->{ISCLONE}) {
-		 # clone it.
-		 my $clone = $self->{MW}->Toplevel(qw/-relief ridge -borderwidth 2/);
-		 $clone->withdraw;
-		 $clone->overrideredirect(1);
-		 $self->_clone($clone);
-		 $self->{CLONE} = $clone;
-	       }
+            if ($self->cget('-float')
+                && (   @mwSize and $px < $mwSize[0]
+                    or $py < $mwSize[1]
+                    or $px > $mwSize[2]
+                    or $py > $mwSize[3] )
+                )
+            {
 
-	       $clone = $self->{ISCLONE} || $self->{CLONE};
-	       $clone->deiconify unless $clone->ismapped;
-	       $clone->geometry("+$px+$py");
+                # we are outside .. switch to toplevel mode.
+                $dummy->placeForget;
+                $floating = 1;
 
-	     } else {
-	       $self->{ISCLONE}->withdraw if $self->{CLONE} && $self->{ISCLONE};
+                unless ( $self->{CLONE} || $self->{ISCLONE} ) {
 
-	       $dummy->place('-x' => $x, '-y' => $y);
-	       $floating = 0;
+                    # clone it.
+                    my $clone = $self->{MW}
+                        ->Toplevel(qw/-relief ridge -borderwidth 2/);
+                    $clone->withdraw;
+                    $clone->overrideredirect(1);
+                    $self->_clone($clone);
+                    $self->{CLONE} = $clone;
+                }
 
-	       if (my $newSide = $self->_whereAmI($x, $y)) {
-		 # still inside main window.
-		 # highlight the close edge.
-		 $clone && $clone->ismapped && $clone->withdraw;
-		 #$self->{ISCLONE}->withdraw if $self->{CLONE} && $self->{ISCLONE};
+                $clone = $self->{ISCLONE} || $self->{CLONE};
+                $clone->deiconify unless $clone->ismapped;
+                $clone->geometry("+$px+$py");
 
-		 my ($op, $pp);
-		 if ($newSide =~ /top/) {
-		   $op = [qw/-height 5/];
-		   $pp = [qw/-relx 0 -relwidth 1 -y 0/];
-		 } elsif ($newSide =~ /bottom/) {
-		   $op = [qw/-height 5/];
-		   $pp = [qw/-relx 0 -relwidth 1 -y -5 -rely 1/];
-		 } elsif ($newSide =~ /left/) {
-		   $op = [qw/-width 5/];
-		   $pp = [qw/-x 0 -relheight 1 -y 0/];
-		 } elsif ($newSide =~ /right/) {
-		   $op = [qw/-width 5/];
-		   $pp = [qw/-x -5 -relx 1 -relheight 1 -y 0/];
-		 }
+            }
+            else {
+                $self->{ISCLONE}->withdraw
+                    if $self->{CLONE} && $self->{ISCLONE};
 
-		 $hilte->configure(@$op);
-		 $hilte->place(@$pp);
-		 $hilte->raise;
-	       }
-	     }
-	   });
+                $dummy->place( '-x' => $x, '-y' => $y );
+                $floating = 0;
 
-    $e->bind('<ButtonRelease-1>' => sub {
-	my $noclone = $self->{ISCLONE} ? $self->{CLONE} : $self;
-	$noclone->{CC}->free($noclone->{MW}) if defined $noclone->{CC};
-	return unless $drag;
+                if ( my $newSide = $self->_whereAmI( $x, $y ) ) {
 
-	$drag = 0;
-	$dummy->placeForget;
+                    # still inside main window.
+                    # highlight the close edge.
+                    $clone && $clone->ismapped && $clone->withdraw;
 
-	# forget everything if it's cloned.
-	return if $clone && $clone->ismapped;
+            #$self->{ISCLONE}->withdraw if $self->{CLONE} && $self->{ISCLONE};
 
-	# destroy the clone.
-	#$clone->destroy;
+                    my ( $op, $pp );
+                    if ( $newSide =~ /top/ ) {
+                        $op = [qw/-height 5/];
+                        $pp = [qw/-relx 0 -relwidth 1 -y 0/];
+                    }
+                    elsif ( $newSide =~ /bottom/ ) {
+                        $op = [qw/-height 5/];
+                        $pp = [qw/-relx 0 -relwidth 1 -y -5 -rely 1/];
+                    }
+                    elsif ( $newSide =~ /left/ ) {
+                        $op = [qw/-width 5/];
+                        $pp = [qw/-x 0 -relheight 1 -y 0/];
+                    }
+                    elsif ( $newSide =~ /right/ ) {
+                        $op = [qw/-width 5/];
+                        $pp = [qw/-x -5 -relx 1 -relheight 1 -y 0/];
+                    }
 
-	#return unless $self->_whereAmI(1);
-	$noclone->_whereAmI(1);
-	$hilte->placeForget;
+                    $hilte->configure(@$op);
+                    $hilte->place(@$pp);
+                    $hilte->raise;
+                }
+            }
+        }
+    );
 
-	# repack everything now.
-	my $ec = $noclone->_edge;
-	my @allSlaves = grep {$_ ne $ec} $noclone->{CONTAINER}->packSlaves;
-	$_   ->packForget for $noclone, @allSlaves, $noclone->{CONTAINER};
+    $e->bind(
+        '<ButtonRelease-1>' => sub {
+            my $noclone = $self->{ISCLONE} ? $self->{CLONE} : $self;
+            $noclone->{CC}->free( $noclone->{MW} ) if defined $noclone->{CC};
+            return unless $drag;
 
-	$noclone->_packSelf;
-	$noclone->_packEdge($ec, 1);
-	$noclone->_packWidget($_) for @allSlaves;
-    });
+            $drag = 0;
+            $dummy->placeForget;
+
+            # forget everything if it's cloned.
+            return if $clone && $clone->ismapped;
+
+            # destroy the clone.
+            #$clone->destroy;
+
+            #return unless $self->_whereAmI(1);
+            $noclone->_whereAmI(1);
+            $hilte->placeForget;
+
+            # repack everything now.
+            my $ec = $noclone->_edge;
+            my @allSlaves
+                = grep { $_ ne $ec } $noclone->{CONTAINER}->packSlaves;
+            $_->packForget for $noclone, @allSlaves, $noclone->{CONTAINER};
+
+            $noclone->_packSelf;
+            $noclone->_packEdge( $ec, 1 );
+            $noclone->_packWidget($_) for @allSlaves;
+        }
+    );
 }
 
 sub _whereAmI {
     my $self = shift;
 
     my $flag = 0;
-    my ($x, $y);
+    my ( $x, $y );
 
-    if (@_ == 1) {
-	$flag = shift;
-	my $e    = $self->_edge;
-	($x, $y) = ($self->pointerx - $self->{MW}->rootx - ceil($e->width /2) - $e->x,
-		    $self->pointery - $self->{MW}->rooty - ceil($e->height/2) - $e->y);
-    } else {
-	($x, $y) = @_;
+    if ( @_ == 1 ) {
+        $flag = shift;
+        my $e = $self->_edge;
+        ( $x, $y ) = (
+            $self->pointerx 
+                - $self->{MW}->rootx 
+                - ceil( $e->width / 2 )
+                - $e->x,
+            $self->pointery 
+                - $self->{MW}->rooty 
+                - ceil( $e->height / 2 )
+                - $e->y
+        );
+    }
+    else {
+        ( $x, $y ) = @_;
     }
 
     my $x2 = $x + $self->{CONTAINER}->width;
     my $y2 = $y + $self->{CONTAINER}->height;
 
-    my $w  = $self->{MW}->Width;
-    my $h  = $self->{MW}->Height;
+    my $w = $self->{MW}->Width;
+    my $h = $self->{MW}->Height;
 
     # bound check
-    $x     = 1      if $x  <= 0;
-    $y     = 1      if $y  <= 0;
-    $x     = $w - 1 if $x  >= $w;
-    $y     = $h - 1 if $y  >= $h;
+    $x = 1      if $x <= 0;
+    $y = 1      if $y <= 0;
+    $x = $w - 1 if $x >= $w;
+    $y = $h - 1 if $y >= $h;
 
-    $x2    = 0      if $x2 <= 0;
-    $y2    = 0      if $y2 <= 0;
-    $x2    = $w - 1 if $x2 >= $w;
-    $y2    = $h - 1 if $y2 >= $h;
+    $x2 = 0      if $x2 <= 0;
+    $y2 = 0      if $y2 <= 0;
+    $x2 = $w - 1 if $x2 >= $w;
+    $y2 = $h - 1 if $y2 >= $h;
 
     my $dx = 0;
     my $dy = 0;
 
     my $close = $self->cget('-close');
 
-    if    ($x       < $close) { $dx = $x }
-    elsif ($w - $x2 < $close) { $dx = $x2 - $w }
+    if    ( $x < $close )       { $dx = $x }
+    elsif ( $w - $x2 < $close ) { $dx = $x2 - $w }
 
-    if    ($y       < $close) { $dy = $y }
-    elsif ($h - $y2 < $close) { $dy = $y2 - $h }
+    if    ( $y < $close )       { $dy = $y }
+    elsif ( $h - $y2 < $close ) { $dy = $y2 - $h }
 
-    $packIn       = '';
-    if ($dx || $dy) {
-	my $newSide;
-	if ($dx && $dy) {
-	    # which is closer?
-	    if (abs($dx) < abs($dy)) {
-		$newSide = $dx > 0 ? 'left' : 'right';
-	    } else {
-		$newSide = $dy > 0 ? 'top' : 'bottom';
-	    }
-	} elsif ($dx) {
-	    $newSide = $dx > 0 ? 'left' : 'right';
-	} else {
-	    $newSide = $dy > 0 ? 'top' : 'bottom';
-	}
+    $packIn = '';
+    if ( $dx || $dy ) {
+        my $newSide;
+        if ( $dx && $dy ) {
 
-	# make sure we're stickable on that side.
-	return undef unless $self->{STICKY} =~ /$sideToSticky{$newSide}/;
+            # which is closer?
+            if ( abs($dx) < abs($dy) ) {
+                $newSide = $dx > 0 ? 'left' : 'right';
+            }
+            else {
+                $newSide = $dy > 0 ? 'top' : 'bottom';
+            }
+        }
+        elsif ($dx) {
+            $newSide = $dx > 0 ? 'left' : 'right';
+        }
+        else {
+            $newSide = $dy > 0 ? 'top' : 'bottom';
+        }
 
-	$self->{SIDE} = $newSide if $flag;
-	return $newSide;
-    } elsif ($flag) {
-	# check for overlaps.
-	for my $w (@allWidgets) {
-	    next if $w == $self;
+        # make sure we're stickable on that side.
+        return undef unless $self->{STICKY} =~ /$sideToSticky{$newSide}/;
 
-	    my $x1 = $w->x;
-	    my $y1 = $w->y;
-	    my $x2 = $x1 + $w->width;
-	    my $y2 = $y1 + $w->height;
+        $self->{SIDE} = $newSide if $flag;
+        return $newSide;
+    }
+    elsif ($flag) {
 
-	    if ($x > $x1 and $y > $y1 and $x < $x2 and $y < $y2) {
-		$packIn = $w;
-		last;
-	    }
-	}
+        # check for overlaps.
+        for my $w (@allWidgets) {
+            next if $w == $self;
 
-      $self->{SIDE} = $packIn->{SIDE} if $packIn;
-#	if ($packIn) {
-#	  $self->{SIDE} = $packIn->{SIDE};
-#	} else {
-#	  return undef;
-#	}
-    } else {
-	return undef;
+            my $x1 = $w->x;
+            my $y1 = $w->y;
+            my $x2 = $x1 + $w->width;
+            my $y2 = $y1 + $w->height;
+
+            if ( $x > $x1 and $y > $y1 and $x < $x2 and $y < $y2 ) {
+                $packIn = $w;
+                last;
+            }
+        }
+
+        $self->{SIDE} = $packIn->{SIDE} if $packIn;
+
+        #	if ($packIn) {
+        #	  $self->{SIDE} = $packIn->{SIDE};
+        #	} else {
+        #	  return undef;
+        #	}
+    }
+    else {
+        return undef;
     }
 
     return 1;
 }
 
 sub _disableEdge {
-    my ($self, $e) = @_;
+    my ( $self, $e ) = @_;
 
-    $e->bind('<B1-Motion>'       => undef);
-    $e->bind('<ButtonRelease-1>' => undef);
+    $e->bind( '<B1-Motion>'       => undef );
+    $e->bind( '<ButtonRelease-1>' => undef );
 }
 
 sub _edge {
@@ -489,32 +568,36 @@ sub ToolButton {
 
     my $type = delete $args{-type} || 'Button';
 
-    unless ($type eq 'Button' or
-	    $type eq 'Checkbutton' or
-	    $type eq 'Menubutton' or
-	    $type eq 'Radiobutton') {
+    unless ( $type eq 'Button'
+        or $type eq 'Checkbutton'
+        or $type eq 'Menubutton'
+        or $type eq 'Radiobutton' )
+    {
 
-	croak "toolbutton can be only 'Button', 'Menubutton', 'Checkbutton', or 'Radiobutton'";
+        croak
+            "toolbutton can be only 'Button', 'Menubutton', 'Checkbutton', or 'Radiobutton'";
     }
 
     my $m = delete $args{-tip}         || '';
     my $x = delete $args{-accelerator} || '';
 
-    my $b = $self->{CONTAINER}->$type(%args,
-				      $self->{STYLE} ? () : (
-							     -relief      => 'flat',
-							     -borderwidth => 1,
-							    ),
-				     );
+    my $b = $self->{CONTAINER}->$type(
+        %args,
+        $self->{STYLE}
+        ? ()
+        : ( -relief      => 'flat',
+            -borderwidth => 1,
+        ),
+    );
 
     $self->_createButtonBindings($b);
-    $self->_configureWidget     ($b);
+    $self->_configureWidget($b);
 
-    push @{$self->{WIDGETS}} => $b;
+    push @{ $self->{WIDGETS} } => $b;
     $self->_packWidget($b);
 
-    $self->{BALLOON}->attach($b, -balloonmsg => $m) if $m;
-    $self->{MW}->bind($x => [$b, 'invoke'])         if $x;
+    $self->{BALLOON}->attach( $b, -balloonmsg => $m ) if $m;
+    $self->{MW}->bind( $x => [ $b, 'invoke' ] ) if $x;
 
     # change the bind tags.
     #$b->bindtags([$b, ref($b), $b->toplevel, 'all']);
@@ -527,7 +610,7 @@ sub ToolLabel {
 
     my $l = $self->{CONTAINER}->Label(@_);
 
-    push @{$self->{WIDGETS}} => $l;
+    push @{ $self->{WIDGETS} } => $l;
 
     $self->_packWidget($l);
 
@@ -539,12 +622,12 @@ sub ToolEntry {
     my %args = @_;
 
     my $m = delete $args{-tip} || '';
-    my $l = $self->{CONTAINER}->Entry(%args, -width => 5);
+    my $l = $self->{CONTAINER}->Entry( %args, -width => 5 );
 
-    push @{$self->{WIDGETS}} => $l;
+    push @{ $self->{WIDGETS} } => $l;
 
     $self->_packWidget($l);
-    $self->{BALLOON}->attach($b, -balloonmsg => $m) if $m;
+    $self->{BALLOON}->attach( $b, -balloonmsg => $m ) if $m;
 
     return $l;
 }
@@ -555,12 +638,12 @@ sub ToolLabEntry {
 
     require Tk::LabEntry;
     my $m = delete $args{-tip} || '';
-    my $l = $self->{CONTAINER}->LabEntry(%args, -width => 5);
+    my $l = $self->{CONTAINER}->LabEntry( %args, -width => 5 );
 
-    push @{$self->{WIDGETS}} => $l;
+    push @{ $self->{WIDGETS} } => $l;
 
     $self->_packWidget($l);
-    $self->{BALLOON}->attach($b, -balloonmsg => $m) if $m;
+    $self->{BALLOON}->attach( $b, -balloonmsg => $m ) if $m;
 
     return $l;
 }
@@ -572,10 +655,10 @@ sub ToolOptionmenu {
     my $m = delete $args{-tip} || '';
     my $l = $self->{CONTAINER}->Optionmenu(%args);
 
-    push @{$self->{WIDGETS}} => $l;
+    push @{ $self->{WIDGETS} } => $l;
 
     $self->_packWidget($l);
-    $self->{BALLOON}->attach($b, -balloonmsg => $m) if $m;
+    $self->{BALLOON}->attach( $b, -balloonmsg => $m ) if $m;
 
     return $l;
 }
@@ -585,198 +668,217 @@ sub separator {
     my %args = @_;
 
     my $move = 1;
-    $move    = $args{-movable} if exists $args{-movable};
+    $move = $args{-movable} if exists $args{-movable};
     my $just = $args{-space} || 0;
 
-    my $f    = $self->{CONTAINER}->Frame(-width => $just, -height => 0);
+    my $f = $self->{CONTAINER}->Frame( -width => $just, -height => 0 );
 
-    my $sep  = $self->{CONTAINER}->Frame(qw/
-					 -borderwidth 5
-					 -relief sunken
-					 /);
+    my $sep = $self->{CONTAINER}->Frame(
+        qw/
+            -borderwidth 5
+            -relief sunken
+            /
+    );
 
     $isDummy{$f} = $self->{SIDE};
 
-    push @{$self->{WIDGETS}} => $sep;
+    push @{ $self->{WIDGETS} } => $sep;
     $self->{SEPARATORS}{$sep} = $f;
     $self->_packWidget($sep);
 
     $self->_createSeparatorBindings($sep) if $move;
 
-    if ($just eq 'right' || $just eq 'bottom') {
-      # just figure out the good width.
+    if ( $just eq 'right' || $just eq 'bottom' ) {
+
+        # just figure out the good width.
     }
 
     return 1;
 }
 
 sub _packWidget {
-    my ($self, $b) = @_;
+    my ( $self, $b ) = @_;
 
     return $self->_packEdge($b) if exists $self->{SEPARATORS}{$b};
 
-    my ($side, $pad, $nopad) = $self->{SIDE} =~ /^top$|^bottom$/ ? 
-	qw/left -padx -pady/ : qw/top -pady -padx/;
+    my ( $side, $pad, $nopad )
+        = $self->{SIDE} =~ /^top$|^bottom$/
+        ? qw/left -padx -pady/
+        : qw/top -pady -padx/;
 
-    if (ref($b) eq 'Tk::LabEntry') {
-	$b->configure(-labelPack => [-side => $side]);
+    if ( ref($b) eq 'Tk::LabEntry' ) {
+        $b->configure( -labelPack => [ -side => $side ] );
     }
 
     my @extra;
-    if (exists $packIn{$b}) {
-	@extra = (-in => $packIn{$b});
+    if ( exists $packIn{$b} ) {
+        @extra = ( -in => $packIn{$b} );
 
-	# repack everything now.
-	my $top = $containers{$b};
-	$top->{SIDE} = $self->{SIDE};
+        # repack everything now.
+        my $top = $containers{$b};
+        $top->{SIDE} = $self->{SIDE};
 
-	my $e = $top->_edge;
-	my @allSlaves = grep {$_ ne $e} $b->packSlaves;
-	$_   ->packForget for @allSlaves;
+        my $e = $top->_edge;
+        my @allSlaves = grep { $_ ne $e } $b->packSlaves;
+        $_->packForget for @allSlaves;
 
-	$top->_packEdge($e, 1);
-	$top->_packWidget($_) for @allSlaves;
+        $top->_packEdge( $e, 1 );
+        $top->_packWidget($_) for @allSlaves;
     }
 
-    if (exists $isDummy{$b}) { # swap width/height if we need to.
-	my ($w, $h);
+    if ( exists $isDummy{$b} ) {    # swap width/height if we need to.
+        my ( $w, $h );
 
-	if ($side eq 'left' && $isDummy{$b} =~ /left|right/) {
-	    $w = 0;
-	    $h = $b->height;
-	} elsif ($side eq 'top'  && $isDummy{$b} =~ /top|bottom/) {
-	    $w = $b->width;
-	    $h = 0;
-	}
+        if ( $side eq 'left' && $isDummy{$b} =~ /left|right/ ) {
+            $w = 0;
+            $h = $b->height;
+        }
+        elsif ( $side eq 'top' && $isDummy{$b} =~ /top|bottom/ ) {
+            $w = $b->width;
+            $h = 0;
+        }
 
-	$b->configure(-width => $h, -height => $w) if defined $w;
-	$isDummy{$b} = $self->{SIDE};
+        $b->configure( -width => $h, -height => $w ) if defined $w;
+        $isDummy{$b} = $self->{SIDE};
     }
 
-    $b->pack(-side => $side, $pad => 4, $nopad => 0, @extra);
+    $b->pack( -side => $side, $pad => 4, $nopad => 0, @extra );
 }
 
 sub _packWidget_old {
-    my ($self, $b) = @_;
+    my ( $self, $b ) = @_;
 
     return $self->_packEdge($b) if exists $self->{SEPARATORS}{$b};
 
-    my ($side, $pad, $nopad) = $self->{SIDE} =~ /^top$|^bottom$/ ? 
-	qw/left -padx -pady/ : qw/top -pady -padx/;
+    my ( $side, $pad, $nopad )
+        = $self->{SIDE} =~ /^top$|^bottom$/
+        ? qw/left -padx -pady/
+        : qw/top -pady -padx/;
 
-    if (ref($b) eq 'Tk::LabEntry') {
-	$b->configure(-labelPack => [-side => $side]);
+    if ( ref($b) eq 'Tk::LabEntry' ) {
+        $b->configure( -labelPack => [ -side => $side ] );
     }
 
     my @extra;
-    if (exists $packIn{$b}) {
-	@extra = (-in => $packIn{$b});
+    if ( exists $packIn{$b} ) {
+        @extra = ( -in => $packIn{$b} );
 
-	# repack everything now.
-	my $top = $containers{$b};
-	$top->{SIDE} = $self->{SIDE};
+        # repack everything now.
+        my $top = $containers{$b};
+        $top->{SIDE} = $self->{SIDE};
 
-	my $e = $top->_edge;
-	my @allSlaves = grep {$_ ne $e} $b->packSlaves;
-	$_   ->packForget for @allSlaves;
+        my $e = $top->_edge;
+        my @allSlaves = grep { $_ ne $e } $b->packSlaves;
+        $_->packForget for @allSlaves;
 
-	$top->_packEdge($e, 1);
-	$top->_packWidget($_) for @allSlaves;
+        $top->_packEdge( $e, 1 );
+        $top->_packWidget($_) for @allSlaves;
     }
 
-    $b->pack(-side => $side, $pad => 4, $nopad => 0, @extra);
+    $b->pack( -side => $side, $pad => 4, $nopad => 0, @extra );
 }
 
 sub _configureWidget {
-    my ($self, $w) = @_;
+    my ( $self, $w ) = @_;
 
-    $w->configure(-activebackground => $self->{ACTIVE_BG});
+    $w->configure( -activebackground => $self->{ACTIVE_BG} );
 }
 
 sub _createButtonBindings {
-    my ($self, $b) = @_;
+    my ( $self, $b ) = @_;
 
     my $bg = $b->cget('-bg');
 
-    $b->bind('<Enter>' => [$b, 'configure', qw/-relief raised/]);
-    $b->bind('<Leave>' => [$b, 'configure', qw/-relief flat/]);
+    $b->bind( '<Enter>' => [ $b, 'configure', qw/-relief raised/ ] );
+    $b->bind( '<Leave>' => [ $b, 'configure', qw/-relief flat/ ] );
 }
 
 sub _createSeparatorBindings {
-  my ($self, $s) = @_;
+    my ( $self, $s ) = @_;
 
-  my ($ox, $oy);
+    my ( $ox, $oy );
 
-  $s->bind('<1>'         => sub {
-	     $ox = $s->XEvent->x;
-	     $oy = $s->XEvent->y;
-	   });
+    $s->bind(
+        '<1>' => sub {
+            $ox = $s->XEvent->x;
+            $oy = $s->XEvent->y;
+        }
+    );
 
-  $s->bind('<B1-Motion>' => sub {
-	     my $x = $s->XEvent->x;
-	     my $y = $s->XEvent->y;
+    $s->bind(
+        '<B1-Motion>' => sub {
+            my $x = $s->XEvent->x;
+            my $y = $s->XEvent->y;
 
-	     my $f = $self->{SEPARATORS}{$s};
+            my $f = $self->{SEPARATORS}{$s};
 
-	     if ($self->{SIDE} =~ /top|bottom/) {
-	       my $dx = $x - $ox;
+            if ( $self->{SIDE} =~ /top|bottom/ ) {
+                my $dx = $x - $ox;
 
-	       my $w  = $f->width + $dx;
-	       $w     = 0 if $w < 0;
+                my $w = $f->width + $dx;
+                $w = 0 if $w < 0;
 
-	       $f->GeometryRequest($w, $f->height);
-	     } else {
-	       my $dy = $y - $oy;
+                $f->GeometryRequest( $w, $f->height );
+            }
+            else {
+                my $dy = $y - $oy;
 
-	       my $h  = $f->height + $dy;
-	       $h     = 0 if $h < 0;
+                my $h = $f->height + $dy;
+                $h = 0 if $h < 0;
 
-	       $f->GeometryRequest($f->width, $h);
-	     }
-	   });
+                $f->GeometryRequest( $f->width, $h );
+            }
+        }
+    );
 }
 
-sub Button     { goto &ToolButton     }
-sub Label      { goto &ToolLabel      }
-sub Entry      { goto &ToolEntry      }
-sub LabEntry   { goto &ToolLabEntry   }
+sub Button     { goto &ToolButton }
+sub Label      { goto &ToolLabel }
+sub Entry      { goto &ToolEntry }
+sub LabEntry   { goto &ToolLabEntry }
 sub Optionmenu { goto &ToolOptionmenu }
 
 sub _clone {
-  my ($self, $top, $in) = @_;
+    my ( $self, $top, $in ) = @_;
 
-  my $new = $top->ToolBar(qw/-side top -cursorcontrol/, $self->{USECC}, ($in ? (-in => $in, -movable => 0) : ()));
-  my $e   = $self->_edge;
+    my $new = $top->ToolBar( qw/-side top -cursorcontrol/,
+        $self->{USECC}, ( $in ? ( -in => $in, -movable => 0 ) : () ) );
+    my $e = $self->_edge;
 
-  my @allSlaves = grep {$_ ne $e} $self->{CONTAINER}->packSlaves;
-  for my $w (@allSlaves) {
-    my $t = ref $w;
-    $t =~ s/Tk:://;
+    my @allSlaves = grep { $_ ne $e } $self->{CONTAINER}->packSlaves;
+    for my $w (@allSlaves) {
+        my $t = ref $w;
+        $t =~ s/Tk:://;
 
-    if ($t eq 'Frame' && exists $containers{$w}) { # embedded toolbar
-      my $obj = $containers{$w};
-      $obj->_clone($top, $new);
+        if ( $t eq 'Frame' && exists $containers{$w} ) {    # embedded toolbar
+            my $obj = $containers{$w};
+            $obj->_clone( $top, $new );
+        }
+
+        if ( $t eq 'Frame' && exists $self->{SEPARATORS}{$w} ) {   # separator
+            $new->separator;
+        }
+
+        my %c = map { $_->[0], $_->[4] || $_->[3] }
+            grep { defined $_->[4] || $_->[3] } grep @$_ > 2, $w->configure;
+        delete $c{$_}
+            for qw/-offset -class -tile -visual -colormap -labelPack/;
+
+        if ( $t =~ /.button/ ) {
+            $new->Button(
+                -type => $t,
+                %c
+            );
+        }
+        else {
+            $new->$t(%c);
+        }
     }
 
-    if ($t eq 'Frame' && exists $self->{SEPARATORS}{$w}) {  # separator
-      $new->separator;
-    }
-
-    my %c = map { $_->[0], $_->[4] || $_->[3] } grep {defined $_->[4] || $_->[3] } grep @$_ > 2, $w->configure;
-    delete $c{$_} for qw/-offset -class -tile -visual -colormap -labelPack/;
-
-    if ($t =~ /.button/) {
-      $new->Button(-type => $t,
-		   %c);
-    } else {
-      $new->$t(%c);
-    }
-  }
-
-  $new ->{MW}      = $self->{MW};
-  $new ->{CLONE}   = $self;
-  $new ->{ISCLONE} = $top;
-  $self->{ISCLONE} = 0;
+    $new->{MW}       = $self->{MW};
+    $new->{CLONE}    = $self;
+    $new->{ISCLONE}  = $top;
+    $self->{ISCLONE} = 0;
 }
 
 __END__
