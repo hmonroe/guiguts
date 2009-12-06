@@ -13,7 +13,8 @@ jump to text. Focus is in text window.
 
  Bookmark doesn't work. Setting bookmark clears the wordlist.
 
-6. .bin file saved in Unix lf on Windows.
+6. .bin file saved in Unix lf on Windows. Should be OS specific cr/lf Win;
+lf Unix.
 
 7. Command line "perl gutthing file.txt" is broken.
 

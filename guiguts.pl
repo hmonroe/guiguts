@@ -465,8 +465,8 @@ sub binsave {
         print $bin '$bookmarks[0] = \''
             . $textwindow->index('insert') . "';\n";
         for ( 1 .. 5 ) {
-            print $bin '$bookmarks[' 
-                . $_ 
+            print $bin '$bookmarks['
+                . $_
                 . '] = \''
                 . $textwindow->index( 'bkmk' . $_ ) . "';\n"
                 if $bookmarks[$_];
@@ -482,8 +482,8 @@ sub binsave {
             no warnings 'uninitialized';
             for my $round ( 1 .. $lglobal{numrounds} ) {
                 if ( defined $proofers{$page}->[$round] ) {
-                    print $bin '$proofers{\'' 
-                        . $page . '\'}[' 
+                    print $bin '$proofers{\''
+                        . $page . '\'}['
                         . $round
                         . '] = \''
                         . $proofers{$page}->[$round] . '\';' . "\n";
@@ -1912,7 +1912,7 @@ sub fnview {
         $lglobal{footviewpop}->Icon( -image => $icon );
         for my $findex ( 1 .. $lglobal{fntotal} ) {
             $ftext->insert( 'end',
-                      'footnote #' 
+                      'footnote #'
                     . $findex
                     . '  line.column - '
                     . $lglobal{fnarray}->[$findex][0]
@@ -2425,7 +2425,7 @@ sub footnoteshow {
         my $widget = $textwindow->{rtext};
         my ( $lx, $ly, $lw, $lh ) = $widget->dlineinfo($line);
         my $bottom = int(
-            (         $widget->height 
+            (         $widget->height
                     - 2 * $widget->cget( -bd )
                     - 2 * $widget->cget( -highlightthickness )
             ) / $lh / 2
@@ -4856,7 +4856,7 @@ sub htmlimage {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
-                                  "<div class=\"figleft\" style=\"width: " 
+                                  "<div class=\"figleft\" style=\"width: "
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -4865,7 +4865,7 @@ sub htmlimage {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
-                                  "<div class=\"figright\" style=\"width: " 
+                                  "<div class=\"figright\" style=\"width: "
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -5672,7 +5672,7 @@ sub htmlautoconvert {
                 $ital = 0;
             }
             $lglobal{classhash}->{$indent}
-                = '    .poem span.i' 
+                = '    .poem span.i'
                 . $indent
                 . '     {display: block; margin-left: '
                 . $indent
@@ -5888,7 +5888,7 @@ sub htmlautoconvert {
                     $ital = 0;
                 }
                 $selection
-                    = '<span style="margin-left: ' 
+                    = '<span style="margin-left: '
                     . $indent . 'em;">'
                     . $selection
                     . '</span>';
@@ -5923,7 +5923,7 @@ sub htmlautoconvert {
                 $aname =~ s/<\/?[hscalup].*?>//g;
                 $aname = makeanchor( deaccent($selection) );
                 $textwindow->ntinsert( "$step.0",
-                          "<h2><a name=\"" 
+                          "<h2><a name=\""
                         . $aname
                         . "\" id=\""
                         . $aname
@@ -5936,7 +5936,7 @@ sub htmlautoconvert {
                     $selection =~ s/<[^>]+>//g;
                     $selection = "<b>$selection</b>";
                     push @contents,
-                          "<a href=\"#" 
+                          "<a href=\"#"
                         . $aname . "\">"
                         . $selection
                         . "</a><br />\n";
@@ -11213,11 +11213,11 @@ sub drag {
         '<B1-Motion>',
         sub {
             my $x
-                = $scrolledwidget->toplevel->width 
+                = $scrolledwidget->toplevel->width
                 - $lglobal{x}
                 + $scrolledwidget->toplevel->pointerx;
             my $y
-                = $scrolledwidget->toplevel->height 
+                = $scrolledwidget->toplevel->height
                 - $lglobal{y}
                 + $scrolledwidget->toplevel->pointery;
             ( $lglobal{x}, $lglobal{y} ) = (
@@ -18286,6 +18286,143 @@ sub showversion {
 # }
 
 sub hotkeyshelp {
+  my $hotkeys = <<EOM;
+                MAIN WINDOW
+
+
+<ctrl>+x -- cut or column cut
+<ctrl>+c -- copy or column copy
+<ctrl>+v -- paste
+<ctrl>+` -- column paste
+<ctrl>+a -- select all
+
+
+F1 -- column copy
+F2 -- column cut
+F3 -- column paste
+F7 -- spell check selection (or document, if no selection made)
+
+
+<ctrl>+z -- undo
+<ctrl>+y -- redo
+<ctrl>+/ -- select all
+<ctrl>+\\ -- unselect all
+<Esc> -- unselect all
+
+
+<ctrl>+u -- Convert case of selection to upper case
+<ctrl>+l -- Convert case of selection to lower case
+<ctrl>+t -- Convert case of selection to title case
+
+
+<ctrl>+i -- insert a tab character before cursor (Tab)
+<ctrl>+j -- insert a newline character before cursor (Enter)
+<ctrl>+o -- insert a newline character after cursor
+
+
+<ctrl>+d -- delete character after cursor (Delete)
+<ctrl>+h -- delete character to the left of the cursor (Backspace)
+<ctrl>+k -- delete from cursor to end of line
+
+
+<ctrl>+e -- move cursor to end of current line. (End)
+<ctrl>+b -- move cursor left one character (left arrow)
+<ctrl>+p -- move cursor up one line (up arrow)
+<ctrl>+n -- move cursor down one line (down arrow)
+
+
+<ctrl>Home -- move cursor to the start of the text
+<ctrl>End -- move cursor to end of the text
+<ctrl>+right arrow -- move to the start of the next word
+<ctrl>+left arrow -- move to the start of the previous word
+<ctrl>+up arrow -- move to the start of the current paragraph
+<ctrl>+down arrow -- move to the start of the next paragraph
+<ctrl>+PgUp -- scroll left one screen
+<ctrl>+PgDn -- scroll right one screen
+
+
+<shift>+Home -- adjust selection to beginning of current line
+<shift>+End -- adjust selection to end of current line
+<shift>+up arrow -- adjust selection up one line
+<shift>+down arrow -- adjust selection down one line
+<shift>+left arrow -- adjust selection left one character
+<shift>+right arrow -- adjust selection right one character
+
+
+<shift><ctrl>Home -- adjust selection to the start of the text
+<shift><ctrl>End -- adjust selection to end of the text
+<shift><ctrl>+left arrow -- adjust selection to the start of the previous word
+<shift><ctrl>+right arrow -- adjust selection to the start of the next word
+<shift><ctrl>+up arrow -- adjust selection to the start of the current paragraph
+<shift><ctrl>+down arrow -- adjust selection to the start of the next paragraph
+
+
+<ctrl>+' -- highlight all apostrophes in selection.
+<ctrl>+\ -- highlight all double quotes in selection.
+<ctrl>+0 -- remove all highlights.
+
+
+<Insert> -- Toggle insert / overstrike mode .
+
+Double click left mouse button -- select word
+Triple click left mouse button -- select line
+
+
+<shift> click left mouse button -- adjust selection to click point
+<shift> Double click left mouse button -- adjust selection to include word clicked on
+<shift> Triple click left mouse button -- adjust selection to include line clicked on
+
+
+Single click right mouse button -- pop up shortcut to menu bar
+
+
+                BOOKMARKS
+<ctrl>+<shift>+1 -- set bookmark 1
+<ctrl>+<shift>+2 -- set bookmark 1
+<ctrl>+<shift>+3 -- set bookmark 3
+<ctrl>+<shift>+4 -- set bookmark 4
+<ctrl>+<shift>+5 -- set bookmark 5
+
+
+<ctrl>+1 -- go to bookmark 1
+<ctrl>+2 -- go to bookmark 2
+<ctrl>+3 -- go to bookmark 3
+<ctrl>+4 -- go to bookmark 4
+<ctrl>+5 -- go to bookmark 5
+
+
+MENUS
+<alt>+f -- file menu
+<alt>+e -- edit menu
+<alt>+b -- bookmarks
+<alt>+s -- search menu
+<alt>+g -- gutcheck menu
+<alt>+x -- fixup menu
+<alt>+w -- word frequency menu
+
+
+                SEARCH POPUP
+<Enter> -- Search
+<shift><Enter> -- Replace
+<ctrl><Enter> -- Replace & Search
+<ctrl><shift><Enter> -- Replace All
+
+
+                PAGE SEPARATOR POPUP
+'j' -- Join Lines - join lines, remove all blank lines, spaces, asterisks and hyphens.
+'k' -- Join, Keep Hyphen - join lines, remove all blank lines, spaces and asterisks, keep hyphen.
+'l' -- Blank Line - leave one blank line. Close up any other whitespace. (Paragraph Break)
+'t' -- New Section - leave two blank lines. Close up any other whitespace. (Section Break)
+'h' -- New Chapter - leave four blank lines. Close up any other whitespace. (Chapter Break)
+'r' -- Refresh - search for, highlight and re-center the next page separator.
+'u' -- Undo - undo the last edit. (Note: in Full Automatic mode,
+              this just single steps back through the undo buffer)
+'d' -- Delete - delete the page separator. Make no other edits.
+'v' -- View the current page in the image viewer.
+'a' -- Toggle Full Automatic mode.
+'s' -- Toggle Semi Automatic mode.
+EOM
+
     if ( defined( $lglobal{hotpop} ) ) {
         $lglobal{hotpop}->deiconify;
         $lglobal{hotpop}->raise;
@@ -18310,140 +18447,7 @@ sub hotkeyshelp {
         )->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
         drag($rotextbox);
         $rotextbox->focus;
-        $rotextbox->insert(    #FIXME: Make this a here doc.
-            'end',
-                  "\nMAIN WINDOW\n\n"
-                . "<ctrl>+x -- cut or column cut\n"
-                . "<ctrl>+c -- copy or column copy\n"
-                . "<ctrl>+v -- paste\n"
-                . "<ctrl>+` -- column paste\n"
-                . "<ctrl>+a -- select all\n\n"
-                .
-
-                "F1 -- column copy\n"
-                . "F2 -- column cut\n"
-                . "F3 -- column paste\n\n"
-                .
-
-                "F7 -- spell check selection (or document, if no selection made)\n\n"
-                .
-
-                "<ctrl>+z -- undo\n" . "<ctrl>+y -- redo\n\n" .
-
-                "<ctrl>+/ -- select all\n"
-                . "<ctrl>+\\ -- unselect all\n"
-                . "<Esc> -- unselect all\n\n"
-                .
-
-                "<ctrl>+u -- Convert case of selection to upper case\n"
-                . "<ctrl>+l -- Convert case of selection to lower case\n"
-                . "<ctrl>+t -- Convert case of selection to title case\n\n"
-                .
-
-                "<ctrl>+i -- insert a tab character before cursor (Tab)\n"
-                . "<ctrl>+j -- insert a newline character before cursor (Enter)\n"
-                . "<ctrl>+o -- insert a newline character after cursor\n\n"
-                .
-
-                "<ctrl>+d -- delete character after cursor (Delete)\n"
-                . "<ctrl>+h -- delete character to the left of the cursor (Backspace)\n"
-                . "<ctrl>+k -- delete from cursor to end of line\n\n"
-                .
-
-                "<ctrl>+e -- move cursor to end of current line. (End)\n"
-                . "<ctrl>+b -- move cursor left one character (left arrow)\n"
-                . "<ctrl>+p -- move cursor up one line (up arrow)\n"
-                . "<ctrl>+n -- move cursor down one line (down arrow)\n\n"
-                .
-
-                "<ctrl>Home -- move cursor to the start of the text\n"
-                . "<ctrl>End -- move cursor to end of the text\n"
-                . "<ctrl>+right arrow -- move to the start of the next word\n"
-                . "<ctrl>+left arrow -- move to the start of the previous word\n"
-                . "<ctrl>+up arrow -- move to the start of the current paragraph\n"
-                . "<ctrl>+down arrow -- move to the start of the next paragraph\n"
-                . "<ctrl>+PgUp -- scroll left one screen\n\n"
-                . "<ctrl>+PgDn -- scroll right one screen\n\n"
-                .
-
-                "<shift>+Home -- adjust selection to beginning of current line\n"
-                . "<shift>+End -- adjust selection to end of current line\n"
-                . "<shift>+up arrow -- adjust selection up one line\n"
-                . "<shift>+down arrow -- adjust selection down one line\n"
-                . "<shift>+left arrow -- adjust selection left one character\n"
-                . "<shift>+right arrow -- adjust selection right one character\n\n"
-                .
-
-                "<shift><ctrl>Home -- adjust selection to the start of the text\n"
-                . "<shift><ctrl>End -- adjust selection to end of the text\n"
-                . "<shift><ctrl>+left arrow -- adjust selection to the start of the previous word\n"
-                . "<shift><ctrl>+right arrow -- adjust selection to the start of the next word\n"
-                . "<shift><ctrl>+up arrow -- adjust selection to the start of the current paragraph\n"
-                . "<shift><ctrl>+down arrow -- adjust selection to the start of the next paragraph\n\n"
-                .
-
-                "<ctrl>+' -- highlight all apostrophes in selection.\n"
-                . "<ctrl>+\" -- highlight all double quotes in selection.\n"
-                . "<ctrl>+0 -- remove all highlights.\n\n"
-                .
-
-                "<Insert> -- Toggle insert / overstrike mode\n\n" .
-
-                "Double click left mouse button -- select word\n"
-                . "Triple click left mouse button -- select line\n\n"
-                .
-
-                "<shift> click left mouse button -- adjust selection to click point\n"
-                . "<shift> Double click left mouse button -- adjust selection to include word clicked on\n"
-                . "<shift> Triple click left mouse button -- adjust selection to include line clicked on\n"
-                .
-
-                "Single click right mouse button -- pop up shortcut to menu bar\n\n"
-                .
-
-                "BOOKMARKS\n\n"
-                . "<ctrl>+<shift>+1 -- set bookmark 1\n"
-                . "<ctrl>+<shift>+2 -- set bookmark 1\n"
-                . "<ctrl>+<shift>+3 -- set bookmark 3\n"
-                . "<ctrl>+<shift>+4 -- set bookmark 4\n"
-                . "<ctrl>+<shift>+5 -- set bookmark 5\n\n"
-                .
-
-                "<ctrl>+1 -- go to bookmark 1\n"
-                . "<ctrl>+2 -- go to bookmark 2\n"
-                . "<ctrl>+3 -- go to bookmark 3\n"
-                . "<ctrl>+4 -- go to bookmark 4\n"
-                . "<ctrl>+5 -- go to bookmark 5\n\n"
-                .
-
-                "MENUS\n\n"
-                . "<alt>+f -- file menu\n"
-                . "<alt>+e -- edit menu\n"
-                . "<alt>+b -- bookmarks\n"
-                . "<alt>+s -- search menu\n"
-                . "<alt>+g -- gutcheck menu\n"
-                . "<alt>+x -- fixup menu\n"
-                . "<alt>+w -- word frequency menu\n\n"
-                .
-
-                "\nSEARCH POPUP\n\n"
-                . "<Enter> -- Search\n"
-                . "<shift><Enter> -- Replace\n"
-                . "<ctrl><Enter> -- Replace & Search\n"
-                . "<ctrl><shift><Enter> -- Replace All\n"
-                . "\nPAGE SEPARATOR POPUP\n\n"
-                . "'j' -- Join Lines - join lines, remove all blank lines, spaces, asterisks and hyphens.\n"
-                . "'k' -- Join, Keep Hyphen - join lines, remove all blank lines, spaces and asterisks, keep hyphen.\n"
-                . "'l' -- Blank Line - leave one blank line. Close up any other whitespace. (Paragraph Break)\n"
-                . "'t' -- New Section - leave two blank lines. Close up any other whitespace. (Section Break)\n"
-                . "'h' -- New Chapter - leave four blank lines. Close up any other whitespace. (Chapter Break)\n"
-                . "'r' -- Refresh - search for, highlight and re-center the next page separator.\n"
-                . "'u' -- Undo - undo the last edit. (Note: in Full Automatic mode,\n\tthis just single steps back through the undo buffer)\n"
-                . "'d' -- Delete - delete the page separator. Make no other edits.\n"
-                . "'v' -- View the current page in the image viewer.\n"
-                . "'a' -- Toggle Full Automatic mode.\n"
-                . "'s' -- Toggle Semi Automatic mode.\n" . "\n"
-        );
+        $rotextbox->insert( 'end', $hotkeys );
         my $button_ok = $frame->Button(
             -activebackground => $activecolor,
             -text             => 'OK',
