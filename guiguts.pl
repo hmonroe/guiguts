@@ -67,7 +67,7 @@ $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { myexit() };
 
 my $DEBUG      = 0;          # FIXME: this can go.
-my $VERSION    = "0.2.7";
+my $VERSION    = "0.2.8";
 my $currentver = $VERSION;
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
@@ -382,7 +382,6 @@ sub updatesel {
     $textwindow->_lineupdate;
 }
 
-
 sub flash_save {
     $lglobal{saveflashingid} = $top->repeat(
         500,
@@ -466,8 +465,8 @@ sub binsave {
         print $bin '$bookmarks[0] = \''
             . $textwindow->index('insert') . "';\n";
         for ( 1 .. 5 ) {
-            print $bin '$bookmarks['
-                . $_
+            print $bin '$bookmarks[' 
+                . $_ 
                 . '] = \''
                 . $textwindow->index( 'bkmk' . $_ ) . "';\n"
                 if $bookmarks[$_];
@@ -483,8 +482,8 @@ sub binsave {
             no warnings 'uninitialized';
             for my $round ( 1 .. $lglobal{numrounds} ) {
                 if ( defined $proofers{$page}->[$round] ) {
-                    print $bin '$proofers{\''
-                        . $page . '\'}['
+                    print $bin '$proofers{\'' 
+                        . $page . '\'}[' 
                         . $round
                         . '] = \''
                         . $proofers{$page}->[$round] . '\';' . "\n";
@@ -634,8 +633,6 @@ sub selection {
     $lglobal{selsentry}->selectionRange( 0, 'end' );
 }
 
-
-
 # Command parsing for External command routine
 sub cmdinterp {
     my $command = shift;
@@ -665,7 +662,6 @@ sub cmdinterp {
     }
     return $command;
 }
-
 
 ## Routine to spawn another perl process and use it to execute an
 # external program
@@ -1376,8 +1372,9 @@ sub buildmenu {
             [   Button   => 'Find Greek',
                 -command => \&findandextractgreek
             ],
-            # FIXME: [   Button   => 'Convert Greek [STUB - does nothing yet]',
-            #    -command => \&convertgreek
+
+           # FIXME: [   Button   => 'Convert Greek [STUB - does nothing yet]',
+           #    -command => \&convertgreek
            # ],
         ]
     );
@@ -1483,9 +1480,10 @@ sub buildmenu {
             [ Button => 'Set Rewrap ~margins',   -command => \&setmargins ],
             [ Button => '~Font',                 -command => \&fontsize ],
             [ Button => 'Browser Start Command', -command => \&setbrowser ],
-            [   Cascade    => 'Set File ~Paths',
-                -tearoff   => 0,
-                -menuitems => [ # FIXME: sub this and generalize for all occurences in menu code.
+            [   Cascade  => 'Set File ~Paths',
+                -tearoff => 0,
+                -menuitems =>
+                    [ # FIXME: sub this and generalize for all occurences in menu code.
                     [   Button   => 'Locate Gutcheck Executable',
                         -command => sub {
                             my $types;
@@ -1585,7 +1583,7 @@ sub buildmenu {
                     [   Button   => 'Set Images Directory',
                         -command => \&setpngspath
                     ],
-                ]
+                    ]
             ],
             [   Checkbutton => 'Leave Bookmarks Highlighted',
                 -variable   => \$bkmkhl,
@@ -1747,7 +1745,7 @@ sub buildmenu {
 }
 
 ## Toggle visible page markers
-sub viewpagenums {    
+sub viewpagenums {
     if ( $lglobal{seepagenums} ) {
         $lglobal{seepagenums} = 0;
         my @marks = $textwindow->markNames;
@@ -1780,8 +1778,7 @@ sub viewpagenums {
 }
 
 ## Pop up a window which will allow jumping directly to a specified page
-sub gotolabel
-{    
+sub gotolabel {
     unless ( defined( $lglobal{gotolabpop} ) ) {
         return unless %pagenumbers;
         for ( keys(%pagenumbers) ) {
@@ -1842,7 +1839,7 @@ sub gotolabel
 }
 
 ## Update the Operations history
-sub oppopupdate {    
+sub oppopupdate {
     $lglobal{oplistbox}->delete( '0', 'end' );
     $lglobal{oplistbox}->insert( 'end', @operations );
 }
@@ -1850,8 +1847,7 @@ sub oppopupdate {
 ## Footnote Operations
 # Pop up a window showing all the footnote addresses with potential
 # problems highlighted
-sub fnview
-{
+sub fnview {
     my ( %fnotes, %anchors, $ftext );
     viewpagenums() if ( $lglobal{seepagenums} );
     if ( defined( $lglobal{footviewpop} ) ) {
@@ -1916,7 +1912,7 @@ sub fnview
         $lglobal{footviewpop}->Icon( -image => $icon );
         for my $findex ( 1 .. $lglobal{fntotal} ) {
             $ftext->insert( 'end',
-                      'footnote #'
+                      'footnote #' 
                     . $findex
                     . '  line.column - '
                     . $lglobal{fnarray}->[$findex][0]
@@ -1962,8 +1958,7 @@ sub fnview
 
 # Clean up footnotes in ASCII version of text. Note: destructive. Use only
 # at end of editing.
-sub footnotetidy
-{
+sub footnotetidy {
     my ( $begin, $end, $colon );
     $lglobal{fnsecondpass} = 0;
     footnotefixup();
@@ -2430,7 +2425,7 @@ sub footnoteshow {
         my $widget = $textwindow->{rtext};
         my ( $lx, $ly, $lw, $lh ) = $widget->dlineinfo($line);
         my $bottom = int(
-            (         $widget->height
+            (         $widget->height 
                     - 2 * $widget->cget( -bd )
                     - 2 * $widget->cget( -highlightthickness )
             ) / $lh / 2
@@ -2725,7 +2720,6 @@ sub arabic {
     return $arabic;
 }
 
-
 sub add_search_history {
     my ( $widget, $history_array_ref ) = @_;
     my @temparray = @$history_array_ref;
@@ -2757,7 +2751,6 @@ sub search_history {
     my $y = $widget->rooty + $widget->height;
     $menu->post( $x, $y );
 }
-
 
 sub load_hist_term {
     my ( $widget, $term ) = @_;
@@ -3163,10 +3156,10 @@ sub searchtext {
     }
     {
 
-      # Turn off warnings temporarily since $searchterm is undefined on first
-      # search
-      no warnings;
-      unless ( length($searchterm) ) {
+       # Turn off warnings temporarily since $searchterm is undefined on first
+       # search
+        no warnings;
+        unless ( length($searchterm) ) {
             $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
         }
     }
@@ -3782,7 +3775,6 @@ sub orphans {
     return 0;
 }
 
-
 sub wrapper {
     my @words       = ();
     my $word        = '';
@@ -3865,7 +3857,6 @@ sub wrapper {
     }
     return ($paragraph);
 }
-
 
 sub asciibox {
     my $marker      = shift(@_);
@@ -4027,7 +4018,6 @@ sub surroundit {
     }
     $textwindow->addGlobEnd;
 }
-
 
 sub poetryhtml {
     viewpagenums() if ( $lglobal{seepagenums} );
@@ -4866,7 +4856,7 @@ sub htmlimage {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
-                                  "<div class=\"figleft\" style=\"width: "
+                                  "<div class=\"figleft\" style=\"width: " 
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -4875,7 +4865,7 @@ sub htmlimage {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
-                                  "<div class=\"figright\" style=\"width: "
+                                  "<div class=\"figright\" style=\"width: " 
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -5682,7 +5672,7 @@ sub htmlautoconvert {
                 $ital = 0;
             }
             $lglobal{classhash}->{$indent}
-                = '    .poem span.i'
+                = '    .poem span.i' 
                 . $indent
                 . '     {display: block; margin-left: '
                 . $indent
@@ -5898,7 +5888,7 @@ sub htmlautoconvert {
                     $ital = 0;
                 }
                 $selection
-                    = '<span style="margin-left: '
+                    = '<span style="margin-left: ' 
                     . $indent . 'em;">'
                     . $selection
                     . '</span>';
@@ -5933,7 +5923,7 @@ sub htmlautoconvert {
                 $aname =~ s/<\/?[hscalup].*?>//g;
                 $aname = makeanchor( deaccent($selection) );
                 $textwindow->ntinsert( "$step.0",
-                          "<h2><a name=\""
+                          "<h2><a name=\"" 
                         . $aname
                         . "\" id=\""
                         . $aname
@@ -5946,7 +5936,7 @@ sub htmlautoconvert {
                     $selection =~ s/<[^>]+>//g;
                     $selection = "<b>$selection</b>";
                     push @contents,
-                          "<a href=\"#"
+                          "<a href=\"#" 
                         . $aname . "\">"
                         . $selection
                         . "</a><br />\n";
@@ -8576,7 +8566,6 @@ sub stealthcheck {
 }
 ## End Word Frequency
 
-
 sub confirmdiscard {
     if ( $textwindow->numberChanges ) {
         my $ans = $top->messageBox(
@@ -8670,7 +8659,6 @@ sub working {
     }
 }
 
-
 # FIXME: Just throw this crap out
 sub handleDND {
     my ( $sel, $filename ) = shift;
@@ -8690,7 +8678,6 @@ sub handleDND {
         openfile($filename);
     }
 }
-
 
 sub pututf {
     my $utfpop = shift;
@@ -8718,7 +8705,6 @@ sub insertit {
         ->markSet( 'insert', $spot . '+' . length($letter) . 'c' )
         if $isatext;
 }
-
 
 sub tblselect {
     $textwindow->tagRemove( 'table', '1.0', 'end' );
@@ -10109,7 +10095,6 @@ sub findgreek {
     }
 }
 
-
 sub putgreek {
     my ( $attrib, $hash ) = @_;
     my $letter;
@@ -10622,7 +10607,7 @@ sub pageadjust {
 }
 
 ## Page Number Adjust
-sub pnumadjust {    
+sub pnumadjust {
     my $mark = $textwindow->index('current');
     while ( $mark = $textwindow->markPrevious($mark) ) {
         if ( $mark =~ /Pg(\d+)/ ) {
@@ -11228,11 +11213,11 @@ sub drag {
         '<B1-Motion>',
         sub {
             my $x
-                = $scrolledwidget->toplevel->width
+                = $scrolledwidget->toplevel->width 
                 - $lglobal{x}
                 + $scrolledwidget->toplevel->pointerx;
             my $y
-                = $scrolledwidget->toplevel->height
+                = $scrolledwidget->toplevel->height 
                 - $lglobal{y}
                 + $scrolledwidget->toplevel->pointery;
             ( $lglobal{x}, $lglobal{y} ) = (
@@ -11396,7 +11381,7 @@ sub noast {
 }
 
 ## Ultra fast natural sort - wants an array
-sub natural_sort_alpha {    
+sub natural_sort_alpha {
     my $i;
     s/(\d+(,\d+)*)/pack 'aNa*', 0, length $1, $1/eg, $_ .= ' ' . $i++
         for ( my @x = map { lc deaccent $_} @_ );
@@ -11404,23 +11389,19 @@ sub natural_sort_alpha {
 }
 
 ## Fast length sort with secondary natural sort - wants an array
-sub natural_sort_length
-{
+sub natural_sort_length {
     $_->[2] =~ s/(\d+(,\d+)*)/pack 'aNa*', 0, length $1, $1/eg
         for ( my @x = map { [ length noast($_), $_, lc deaccent $_ ] } @_ );
     map { $_->[1] } sort { $b->[0] <=> $a->[0] or $a->[2] cmp $b->[2] } @x;
 }
 
 ## Fast freqency sort with secondary natural sort - wants a hash reference
-sub natural_sort_freq
-{    
+sub natural_sort_freq {
     $_->[2] =~ s/(\d+(,\d+)*)/pack 'aNa*', 0, length $1, $1/eg
         for ( my @x
         = map { [ $_[0]->{$_}, $_, lc deaccent $_ ] } keys %{ $_[0] } );
     map { $_->[1] } sort { $b->[0] <=> $a->[0] or $a->[2] cmp $b->[2] } @x;
 }
-
-
 
 ## Low level file processing functions
 
@@ -16119,8 +16100,7 @@ sub delblanklines {
 }
 
 ## Pop up a window where footnotes can be found, fixed and formatted. (heh)
-sub footnotepop
-{   
+sub footnotepop {
     push @operations, ( localtime() . ' - Footnote Fixup' );
     viewpagenums() if ( $lglobal{seepagenums} );
     oppopupdate()  if $lglobal{oppop};
@@ -16450,7 +16430,7 @@ sub footnotepop
     }
 }
 
-sub markpopup { # FIXME: Rename html_popup
+sub markpopup {    # FIXME: Rename html_popup
     push @operations, ( localtime() . ' - HTML Markup' );
     viewpagenums() if ( $lglobal{seepagenums} );
     if ( defined( $lglobal{markpop} ) ) {
@@ -17237,14 +17217,13 @@ sub text_convert_bold {
 #sub text_convert_smcap { }
 
 ## Insert a "Thought break" (duh)
-sub thoughtbreak {    
+sub thoughtbreak {
     $textwindow->insert( ( $textwindow->index('insert') ) . ' lineend',
         '       *' x 5 );
 }
 
-sub text_DP_tb { 
-    $textwindow->insert( $textwindow->index('insert') .
-                         ' lineend', '<tb>');
+sub text_DP_tb {
+    $textwindow->insert( $textwindow->index('insert') . ' lineend', '<tb>' );
 }
 
 sub text_convert_tb {
@@ -17288,7 +17267,6 @@ sub text_convert_options {
     $options->Show;
     saveset();
 }
-
 
 ### External
 sub externalpopup {    # Set up the external commands menu
@@ -17481,7 +17459,6 @@ sub utfpopup {
     $top->Unbusy( -recurse => 1 );
 }
 
-
 ### Prefs
 
 sub setmargins {
@@ -17663,7 +17640,7 @@ sub fontsize {
 }
 
 ## Set up command to start a browser, varies by OS and browser
-sub setbrowser { 
+sub setbrowser {
     my $browsepop = $top->Toplevel;
     $browsepop->title('Browser Start Command?');
     $browsepop->Label( -text =>
@@ -18046,8 +18023,7 @@ sub toggle_autosave {
 }
 
 # Pop up a window where you can adjust the auto save interval
-sub saveinterval
-{
+sub saveinterval {
     if ( $lglobal{intervalpop} ) {
         $lglobal{intervalpop}->deiconify;
         $lglobal{intervalpop}->raise;
@@ -18183,7 +18159,6 @@ sub searchsize
         $lglobal{hssizepop}->Icon( -image => $icon );
     }
 }
-
 
 ### Help
 # FIXME: generalize about, version, etc. into one function.
