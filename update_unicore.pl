@@ -47,10 +47,6 @@ print "Downloading Unicode data files from $url\n\n";
 
 get_files( $url, @files );
 
-#print "\n\nDownloading new mktables script.\n\n";
-
-#get_files('http://mywebpages.comcast.net/thundergnat/', 'mktables.pl');
-
 print "\nRenaming PropertyValueAliases.txt to PropValueAliases.txt.\n";
 rename 'PropertyValueAliases.txt', 'PropValueAliases.txt';
 

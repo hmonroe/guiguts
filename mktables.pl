@@ -3,7 +3,7 @@
 ## Any files created or read by this program should be listed in 'mktables.lst'
 
 
-#$Id$
+# $Id:$
 require 5.008;    # Needs pack "U". Probably safest to run on 5.8.x
 use strict;
 use warnings;
