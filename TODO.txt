@@ -39,3 +39,6 @@ text_convert_sc.
 
 Add POD to each relevant sub.
 
+Fix update_unicore.pl; currently borked.
+
+ggmanual.html to xhtml strict.
