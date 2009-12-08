@@ -25,6 +25,11 @@ Add a readonly switch for viewing/previewing.
 
 Add a rewrap/unwrap switch.
 
+real endash/emdash
+
+Convert ellipsis to real ellip or &#8230;
+
+
 sub find_exe for aspell, viewer, jeebies, etc.
 
 Fix text processing, <i>, <b> etc. to work in Find box instead of just
@@ -41,4 +46,3 @@ Add POD to each relevant sub.
 
 Fix update_unicore.pl; currently borked.
 
-ggmanual.html to xhtml strict.

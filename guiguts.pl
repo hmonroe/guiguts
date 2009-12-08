@@ -12326,7 +12326,7 @@ sub spellget_misspellings {    # get list of misspelled words
     my $spellopt
         = get_spellchecker_version() lt "0.6"
         ? "list --encoding=$lglobal{spellencoding} "
-        : "list --encoding=$lglobal{spellencoding} ";
+        : "list --encoding=$lglobal{spellencoding} "; # FIXME: This not necessary.
     $spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
     @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
         ;    # feed the text to aspell, get an array of misspelled words out
