@@ -15323,7 +15323,7 @@ sub wordcount {
         );
         $lglobal{wclistbox}
             ->eventAdd( '<<find>>' => '<Double-Button-1>', '<Return>' );
-        $lglobal{wclistbox}->bind(
+        $lglobal{wclistbox}->bind( # FIXME: This needs to go in GC code.
             '<<find>>',
             sub {
                 my ($sword)
