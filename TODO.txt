@@ -29,6 +29,9 @@ real endash/emdash
 
 Convert ellipsis to real ellip or &#8230;
 
+Normalize spell check encoding vis-a-vis 0.50/0.60: iso8859 for 50; iso-8859 for 60 aspell
+
+
 
 sub find_exe for aspell, viewer, jeebies, etc.
 
