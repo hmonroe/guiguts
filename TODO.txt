@@ -1,7 +1,6 @@
 $Id:$
 
 
-
 Label various operations as ### GutCheck ... ### End GutCheck.
 
 Fix 'file open from command line', e.g. perl gutthing file.txt acts weird.
@@ -11,7 +10,6 @@ Fix option database.
 settings.rc and project.bin files in ".ini" format. Config::INI module.
 
 Fix spell check popup. Acts weird with unicode.
-
 
 Find '--command sub {} and rewrite as standalones.
 
@@ -33,9 +31,8 @@ real endash/emdash
 
 Convert ellipsis to real ellip or &#8230;
 
-Normalize spell check encoding vis-a-vis 0.50/0.60: iso8859 for 50; iso-8859 for 60 aspell
-
-
+Normalize spell check encoding vis-a-vis 0.50/0.60: iso8859 for 50;
+iso-8859 for 60 aspell
 
 sub find_exe for aspell, viewer, jeebies, etc.
 
@@ -53,3 +50,8 @@ Add POD to each relevant sub.
 
 Fix update_unicore.pl; currently borked.
 
+Do laundry.
+
+Wash dishes.
+
+Fix all file open routines to "use FileHandle".
