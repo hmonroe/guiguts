@@ -1,0 +1,49 @@
+$Id:$
+
+
+
+Upgrading to a new Guiguts version.
+
+1. Download latest version: https://sourceforge.net/projects/guiguts/
+
+2. Unzip in preferred location, e.g. /home/you/DP, C:\DP
+
+3. Creates directory guiguts-VERSION.
+
+4. Open new and olg GG directories in separate file browser windows.
+
+5. a: Copy any custom files from old to new GG directory, heading.txt,
+    wordlist, scannos, setting.rc etc.
+
+   b: Unixy folks can do above in a command terminal: 
+            cd OLD-GG/; cp -i header.txt setting.rc NEW-GG/
+
+6. Fire up GG and have fun PPing.
+
+Some notes:
+
+New GG versions are packaged with gutcheck, jeebies, and tidy (no tidy for
+Unix-types). Moving a setting.rc is still pointing at the old GG directory.
+
+Since gutcheck, etc. are fairly static as far as releases go, one setup is
+copy gutcheck, jeebies, tidy directories outside the GG directories.
+
+Example directory setup:
+
+        DP
+         guiguts-OLD
+         guiguts-NEW
+         gutcheck
+         jeebies
+         tidy
+
+Use the Prefs/Set File Paths menu item to point to the utilities. This way
+you can move the settings.rc without having to fiddle with re-setting the
+locations for new upgrades. Delete the gc, jeebies, tidy from the GG
+directory if so inclined.
+
+An alternative upgrade path is copy the new guiguts.pl (might rename so not to
+overwrite the old GG.pl) to old GG directory. Copy the GG/lib directory
+into old, overwriting files in that directory. It's important that the lib
+directory is moved over to catch any upgrades/enhancements provided by
+files contained there.

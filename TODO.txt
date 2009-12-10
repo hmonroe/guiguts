@@ -1,3 +1,7 @@
+$Id:$
+
+
+
 Label various operations as ### GutCheck ... ### End GutCheck.
 
 Fix 'file open from command line', e.g. perl gutthing file.txt acts weird.
