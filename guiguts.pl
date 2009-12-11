@@ -3386,14 +3386,16 @@ sub replaceeval {
 
     if ( $replaceterm =~ /\\C/ ) {
         if ( $lglobal{codewarn} ) {
+my $message= <<END
+WARNING!! The replacement term will execute arbitrary perl code. 
+If you do not want to, or are not sure of what you are doing, cancel the operation.
+It is unlikely that there is a problem. However, it is possible (and not terribly difficult) 
+to construct an expression that would delete files, execute arbitrary malicious code, 
+reformat hard drives, etc.
+Do you want to proceed?
+END
             my $dialog = $top->Dialog(
-                -text =>
-                    "WARNING!! The replacement term will execute arbitrary perl code. "
-                    . "If you do not want to, or are not sure of what you are doing, cancel the operation.\n\n"
-                    . "It is unlikely that there is a problem. However, it is possible (and not terribly difficult) "
-                    . "to construct an expression that would delete files, execute arbitrary malicious code, "
-                    . "reformat hard drives, etc.\n\n"
-                    . "Do you want to proceed?",
+                -text => $message,
                 -bitmap  => 'warning',
                 -title   => 'WARNING! Code in term.',
                 -buttons => [ 'OK', 'Warnings Off', 'Cancel' ],
