@@ -28,6 +28,7 @@ use lib $FindBin::Bin . "/lib";
 #use Data::Dumper;
 use Cwd;
 use Encode;
+use FileHandle;
 use File::Basename;
 use File::Temp qw/tempfile/;
 use HTML::TokeParser;
@@ -331,6 +332,7 @@ if (@ARGV) {
 else {
     $lglobal{global_filename} = 'No File Loaded';
 }
+
 
 set_autosave() if $autosave;
 

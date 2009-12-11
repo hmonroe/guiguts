@@ -55,3 +55,6 @@ Do laundry.
 Wash dishes.
 
 Fix all file open routines to "use FileHandle".
+
+spelling: chekfil.txt writes to GG dir; needs to go in project directory.
+

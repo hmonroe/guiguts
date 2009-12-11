@@ -19,7 +19,7 @@ jump to text. Focus is in text window.
 6. .bin file saved in Unix lf on Windows. Should be OS specific cr/lf Win;
 lf Unix.
 
-7. Command line "perl gutthing file.txt" is broken.
+7. Command line "perl gutthing file.txt" is broken. File not found error.
 
 8. Brief flash of line number widget at app startup.
 
