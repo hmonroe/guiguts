@@ -28,6 +28,7 @@ use lib $FindBin::Bin . "/lib";
 #use Data::Dumper;
 use Cwd;
 use Encode;
+use FileHandle;
 use File::Basename;
 use File::Temp qw/tempfile/;
 use HTML::TokeParser;
@@ -332,6 +333,7 @@ else {
     $lglobal{global_filename} = 'No File Loaded';
 }
 
+
 set_autosave() if $autosave;
 
 $textwindow->CallNextGUICallback;
@@ -448,31 +450,32 @@ sub binsave {
         }
         rename $binname, $bak or warn "Can not back up .bin file: $!\n";
     }
-    if ( open my $bin, '>', $binname ) {
-        print $bin "\%pagenumbers = (\n";
+    my $fh = FileHandle->new("> $binname");
+    if (defined $fh) {
+        print $fh "\%pagenumbers = (\n";
         for my $page ( sort { $a cmp $b } keys %pagenumbers ) {
 
             no warnings 'uninitialized';
-            print $bin " '$page' => {";
-            print $bin "'offset' => '$pagenumbers{$page}{offset}', ";
-            print $bin "'label' => '$pagenumbers{$page}{label}', ";
-            print $bin "'style' => '$pagenumbers{$page}{style}', ";
-            print $bin "'action' => '$pagenumbers{$page}{action}', ";
-            print $bin "'base' => '$pagenumbers{$page}{base}'},\n";
+            print $fh " '$page' => {";
+            print $fh "'offset' => '$pagenumbers{$page}{offset}', ";
+            print $fh "'label' => '$pagenumbers{$page}{label}', ";
+            print $fh "'style' => '$pagenumbers{$page}{style}', ";
+            print $fh "'action' => '$pagenumbers{$page}{action}', ";
+            print $fh "'base' => '$pagenumbers{$page}{base}'},\n";
         }
-        print $bin ");\n\n";
+        print $fh ");\n\n";
 
-        print $bin '$bookmarks[0] = \''
+        print $fh '$bookmarks[0] = \''
             . $textwindow->index('insert') . "';\n";
         for ( 1 .. 5 ) {
-            print $bin '$bookmarks[' 
+            print $fh '$bookmarks[' 
                 . $_ 
                 . '] = \''
                 . $textwindow->index( 'bkmk' . $_ ) . "';\n"
                 if $bookmarks[$_];
         }
         if ($pngspath) {
-            print $bin
+            print $fh
                 "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
         }
         my ( $page, $prfr );
@@ -482,7 +485,7 @@ sub binsave {
             no warnings 'uninitialized';
             for my $round ( 1 .. $lglobal{numrounds} ) {
                 if ( defined $proofers{$page}->[$round] ) {
-                    print $bin '$proofers{\'' 
+                    print $fh '$proofers{\'' 
                         . $page . '\'}[' 
                         . $round
                         . '] = \''
@@ -490,18 +493,18 @@ sub binsave {
                 }
             }
         }
-        print $bin "\n\n";
-        print $bin "\@operations = (\n";
+        print $fh "\n\n";
+        print $fh "\@operations = (\n";
         for $mark (@operations) {
             $mark = escape_problems($mark);
-            print $bin "'$mark',\n";
+            print $fh "'$mark',\n";
         }
-        print $bin ");\n\n";
-        print $bin "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
-        print $bin
+        print $fh ");\n\n";
+        print $fh "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
+        print $fh
             "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
-        print $bin '1;';
-        close $bin;
+        print $fh '1;';
+        $fh->close;
     }
     else {
         $top->BackTrace("Cannot open $binname:$!");
@@ -3384,14 +3387,17 @@ sub replaceeval {
 
     if ( $replaceterm =~ /\\C/ ) {
         if ( $lglobal{codewarn} ) {
+          my $message= <<END;
+WARNING!! The replacement term will execute arbitrary perl code. 
+If you do not want to, or are not sure of what you are doing, cancel the operation.
+It is unlikely that there is a problem. However, it is possible (and not terribly difficult) 
+to construct an expression that would delete files, execute arbitrary malicious code, 
+reformat hard drives, etc.
+Do you want to proceed?
+END
+
             my $dialog = $top->Dialog(
-                -text =>
-                    "WARNING!! The replacement term will execute arbitrary perl code. "
-                    . "If you do not want to, or are not sure of what you are doing, cancel the operation.\n\n"
-                    . "It is unlikely that there is a problem. However, it is possible (and not terribly difficult) "
-                    . "to construct an expression that would delete files, execute arbitrary malicious code, "
-                    . "reformat hard drives, etc.\n\n"
-                    . "Do you want to proceed?",
+                -text => $message,
                 -bitmap  => 'warning',
                 -title   => 'WARNING! Code in term.',
                 -buttons => [ 'OK', 'Warnings Off', 'Cancel' ],
@@ -7025,7 +7031,7 @@ sub tidypop_up {
             ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
         $lglobal{tidylistbox}->bind(
             '<<view>>',
-            sub {
+            sub { # FIXME: adapt for gutcheck
                 $textwindow->tagRemove( 'highlight', '1.0', 'end' );
                 my $line = $lglobal{tidylistbox}->get('active');
                 if ( $line =~ /^line/ ) {
@@ -7075,8 +7081,10 @@ sub tidypop_up {
         );
         $lglobal{tidypop}->update;
     }
-    $lglobal{tidylistbox}->focus;
-    unless ( open( RESULTS, '<', 'tidyerr.err' ) ) {
+    $lglobal{tidylistbox}->focus;# FIXME: Again for gutcheck, jeebies.
+    my $fh = FileHandle->new("< tidyerr.err");
+    unless (defined($fh)) {
+      # FIXME: original line: unless ( open( RESULTS, '<', 'tidyerr.err' ) ) {
         my $dialog = $top->Dialog(
             -text    => 'Could not find tidy error file.',
             -bitmap  => 'question',
@@ -7094,7 +7102,7 @@ sub tidypop_up {
             $textwindow->markUnset($_);
         }
     }
-    while ( $line = <RESULTS> ) {
+    while ( $line = <$fh> ) {
         $line =~ s/^\s//g;
         chomp $line;
 
@@ -7111,7 +7119,7 @@ sub tidypop_up {
             }
         }
     }
-    close RESULTS;
+    $fh->close;
     unlink 'tidyerr.err';
     $lglobal{tidylistbox}->insert( 'end', @tidylines );
     $lglobal{tidylistbox}->yview( 'scroll', 1, 'units' );
@@ -11305,12 +11313,15 @@ sub blocks_check {
             }
         }
     );
+    my $message = <<END;
+Your Perl installation is missing some files\nthat are critical for some Unicode operations.
+Do you want to download/install them?\n(You need to have an active internet connection.)
+If running under Linux or OSX, you will probably need to run the command\n\"sudo perl /[pathto]/guiguts/update_unicore.pl\
+in a terminal window for the updates to be installed correctly.
+END
+
     $oops->add( 'Label',
-        -text =>
-            "Your Perl installation is missing some files\nthat are critical for some Unicode operations.\n"
-            . "Do you want to download/install them?\n(You need to have an active internet connection.)\n"
-            . "If running under Linux or OSX, you will probably need to run the command\n\"sudo perl /[pathto]/guiguts/update_unicore.pl\"\n"
-            . "in a terminal window for the updates to be installed correctly.",
+        -text => $message
     )->pack;
     $oops->Show;
     return 0;
