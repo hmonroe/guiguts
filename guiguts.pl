@@ -450,31 +450,33 @@ sub binsave {
         }
         rename $binname, $bak or warn "Can not back up .bin file: $!\n";
     }
-    if ( open my $bin, '>', $binname ) {
-        print $bin "\%pagenumbers = (\n";
+    my $fh = FileHandle->new("> $binname");
+    if (defined $fh) {
+    # FIXME: original line: if ( open my $bin, '>', $binname ) {
+        print $fh "\%pagenumbers = (\n";
         for my $page ( sort { $a cmp $b } keys %pagenumbers ) {
 
             no warnings 'uninitialized';
-            print $bin " '$page' => {";
-            print $bin "'offset' => '$pagenumbers{$page}{offset}', ";
-            print $bin "'label' => '$pagenumbers{$page}{label}', ";
-            print $bin "'style' => '$pagenumbers{$page}{style}', ";
-            print $bin "'action' => '$pagenumbers{$page}{action}', ";
-            print $bin "'base' => '$pagenumbers{$page}{base}'},\n";
+            print $fh " '$page' => {";
+            print $fh "'offset' => '$pagenumbers{$page}{offset}', ";
+            print $fh "'label' => '$pagenumbers{$page}{label}', ";
+            print $fh "'style' => '$pagenumbers{$page}{style}', ";
+            print $fh "'action' => '$pagenumbers{$page}{action}', ";
+            print $fh "'base' => '$pagenumbers{$page}{base}'},\n";
         }
-        print $bin ");\n\n";
+        print $fh ");\n\n";
 
-        print $bin '$bookmarks[0] = \''
+        print $fh '$bookmarks[0] = \''
             . $textwindow->index('insert') . "';\n";
         for ( 1 .. 5 ) {
-            print $bin '$bookmarks[' 
+            print $fh '$bookmarks[' 
                 . $_ 
                 . '] = \''
                 . $textwindow->index( 'bkmk' . $_ ) . "';\n"
                 if $bookmarks[$_];
         }
         if ($pngspath) {
-            print $bin
+            print $fh
                 "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
         }
         my ( $page, $prfr );
@@ -484,7 +486,7 @@ sub binsave {
             no warnings 'uninitialized';
             for my $round ( 1 .. $lglobal{numrounds} ) {
                 if ( defined $proofers{$page}->[$round] ) {
-                    print $bin '$proofers{\'' 
+                    print $fh '$proofers{\'' 
                         . $page . '\'}[' 
                         . $round
                         . '] = \''
@@ -492,18 +494,18 @@ sub binsave {
                 }
             }
         }
-        print $bin "\n\n";
-        print $bin "\@operations = (\n";
+        print $fh "\n\n";
+        print $fh "\@operations = (\n";
         for $mark (@operations) {
             $mark = escape_problems($mark);
-            print $bin "'$mark',\n";
+            print $fh "'$mark',\n";
         }
-        print $bin ");\n\n";
-        print $bin "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
-        print $bin
+        print $fh ");\n\n";
+        print $fh "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
+        print $fh
             "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
-        print $bin '1;';
-        close $bin;
+        print $fh '1;';
+        close $fh;
     }
     else {
         $top->BackTrace("Cannot open $binname:$!");
@@ -3386,7 +3388,7 @@ sub replaceeval {
 
     if ( $replaceterm =~ /\\C/ ) {
         if ( $lglobal{codewarn} ) {
-my $message= <<END
+          my $message= <<END;
 WARNING!! The replacement term will execute arbitrary perl code. 
 If you do not want to, or are not sure of what you are doing, cancel the operation.
 It is unlikely that there is a problem. However, it is possible (and not terribly difficult) 
@@ -3394,6 +3396,7 @@ to construct an expression that would delete files, execute arbitrary malicious 
 reformat hard drives, etc.
 Do you want to proceed?
 END
+
             my $dialog = $top->Dialog(
                 -text => $message,
                 -bitmap  => 'warning',
