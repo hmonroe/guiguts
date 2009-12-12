@@ -504,7 +504,7 @@ sub binsave {
         print $fh
             "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
         print $fh '1;';
-        close $fh;
+        $fh->close;
     }
     else {
         $top->BackTrace("Cannot open $binname:$!");
@@ -7119,7 +7119,7 @@ sub tidypop_up {
             }
         }
     }
-    close $fh;
+    $fh->close;
     unlink 'tidyerr.err';
     $lglobal{tidylistbox}->insert( 'end', @tidylines );
     $lglobal{tidylistbox}->yview( 'scroll', 1, 'units' );
