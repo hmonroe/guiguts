@@ -452,7 +452,6 @@ sub binsave {
     }
     my $fh = FileHandle->new("> $binname");
     if (defined $fh) {
-    # FIXME: original line: if ( open my $bin, '>', $binname ) {
         print $fh "\%pagenumbers = (\n";
         for my $page ( sort { $a cmp $b } keys %pagenumbers ) {
 
@@ -7032,7 +7031,7 @@ sub tidypop_up {
             ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
         $lglobal{tidylistbox}->bind(
             '<<view>>',
-            sub {
+            sub { # FIXME: adapt for gutcheck
                 $textwindow->tagRemove( 'highlight', '1.0', 'end' );
                 my $line = $lglobal{tidylistbox}->get('active');
                 if ( $line =~ /^line/ ) {
@@ -7082,8 +7081,10 @@ sub tidypop_up {
         );
         $lglobal{tidypop}->update;
     }
-    $lglobal{tidylistbox}->focus;
-    unless ( open( RESULTS, '<', 'tidyerr.err' ) ) {
+    $lglobal{tidylistbox}->focus;# FIXME: Again for gutcheck, jeebies.
+    my $fh = FileHandle->new("< tidyerr.err");
+    unless (defined($fh)) {
+      # FIXME: original line: unless ( open( RESULTS, '<', 'tidyerr.err' ) ) {
         my $dialog = $top->Dialog(
             -text    => 'Could not find tidy error file.',
             -bitmap  => 'question',
@@ -7101,7 +7102,7 @@ sub tidypop_up {
             $textwindow->markUnset($_);
         }
     }
-    while ( $line = <RESULTS> ) {
+    while ( $line = <$fh> ) {
         $line =~ s/^\s//g;
         chomp $line;
 
@@ -7118,7 +7119,7 @@ sub tidypop_up {
             }
         }
     }
-    close RESULTS;
+    close $fh;
     unlink 'tidyerr.err';
     $lglobal{tidylistbox}->insert( 'end', @tidylines );
     $lglobal{tidylistbox}->yview( 'scroll', 1, 'units' );
