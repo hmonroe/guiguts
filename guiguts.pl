@@ -11313,12 +11313,15 @@ sub blocks_check {
             }
         }
     );
+    my $message = <<END;
+Your Perl installation is missing some files\nthat are critical for some Unicode operations.
+Do you want to download/install them?\n(You need to have an active internet connection.)
+If running under Linux or OSX, you will probably need to run the command\n\"sudo perl /[pathto]/guiguts/update_unicore.pl\
+in a terminal window for the updates to be installed correctly.
+END
+
     $oops->add( 'Label',
-        -text =>
-            "Your Perl installation is missing some files\nthat are critical for some Unicode operations.\n"
-            . "Do you want to download/install them?\n(You need to have an active internet connection.)\n"
-            . "If running under Linux or OSX, you will probably need to run the command\n\"sudo perl /[pathto]/guiguts/update_unicore.pl\"\n"
-            . "in a terminal window for the updates to be installed correctly.",
+        -text => $message
     )->pack;
     $oops->Show;
     return 0;
