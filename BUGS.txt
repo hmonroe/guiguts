@@ -3,12 +3,13 @@ $Id$
 
 1. Long lines don't horizontal scroll with character addition. Seems to be an
 artifact of LineNumberText.pm.
+   artifact of LineNumberText.pm.
 
 2. Word Frequency: Counts are off; seems to be single letters
-preceding/following punctuation, e.g., 's .o etc.
+   preceding/following punctuation, e.g., 's .o etc.
 
 3. Jeebies popup: No arrow scrolling. Enter on higlighted line does not
-jump to text. Focus is in text window.
+   jump to text. Focus is in text window.
 
 4. Gutcheck popup: similar jeebies behaviour.
 
@@ -17,9 +18,9 @@ jump to text. Focus is in text window.
  Bookmark doesn't work. Setting bookmark clears the wordlist.
 
 6. .bin file saved in Unix lf on Windows. Should be OS specific cr/lf Win;
-lf Unix.
+   lf Unix.
 
-7. Command line "perl gutthing file.txt" is broken.
+7. Command line "perl gutthing file.txt" is broken. File not found error.
 
 8. Brief flash of line number widget at app startup.
 
@@ -27,3 +28,6 @@ lf Unix.
 
 10. WF spellcheck. Some words listed as 0 occurence.
 
+11. Recent file entries seem borked.
+
+12.
