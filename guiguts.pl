@@ -65,7 +65,7 @@ use constant OS_Win => $^O =~ /Win/;
 # ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
 $SIG{ALRM} = 'IGNORE';
-$SIG{INT} = sub { myexit() };
+$SIG{INT} = sub { _exit() };
 
 my $DEBUG      = 0;          # FIXME: this can go.
 my $VERSION    = "0.2.8";
@@ -280,7 +280,7 @@ $top->DropSite(
     : [qw/XDND Sun/]
 );
 
-$top->protocol( 'WM_DELETE_WINDOW' => \&myexit );
+$top->protocol( 'WM_DELETE_WINDOW' => \&_exit );
 
 my $menu = $top->Menu( -type => 'menubar' );
 
@@ -338,10 +338,10 @@ set_autosave() if $autosave;
 
 $textwindow->CallNextGUICallback;
 
-$top->repeat( 200, \&updatesel );
+$top->repeat( 200, \&_updatesel );
 
 ## Global Exit
-sub myexit {
+sub _exit {
     if ( confirmdiscard() =~ /no/i ) {
         aspellstop() if $lglobal{spellpid};
         exit;
@@ -349,7 +349,7 @@ sub myexit {
 }
 
 ## Update Last Selection readout in status bar
-sub updatesel {
+sub __updatesel {
     my @ranges = $textwindow->tagRanges('sel');
     my $msg;
     if (@ranges) {
@@ -384,7 +384,7 @@ sub updatesel {
     $textwindow->_lineupdate;
 }
 
-sub flash_save {
+sub _flash_save {
     $lglobal{saveflashingid} = $top->repeat(
         500,
         sub {
@@ -405,7 +405,7 @@ sub flash_save {
 }
 
 ## save the .bin file associated with the text file
-sub binsave {
+sub _bin_save {
     push @operations, ( localtime() . ' - File Saved' );
     oppopupdate() if $lglobal{oppop};
     my $mark = '1.0';
@@ -512,7 +512,7 @@ sub binsave {
 }
 
 ## Track recently open files for the menu
-sub recentupdate {
+sub _recentupdate { # FIXME: Seems to be choking.
     my $name = shift;
 
     # remove $name or any *empty* values from the list
@@ -527,7 +527,7 @@ sub recentupdate {
 }
 
 ## Bindings to make label in status bar act like buttons
-sub butbind {
+sub _butbind {
     my $widget = shift;
     $widget->bind(
         '<Enter>',
@@ -752,7 +752,7 @@ sub tglprfbar {
                     -relief     => 'ridge',
                     -background => 'gray',
                 )->grid( -row => 1, -column => $round, -sticky => 'nw' );
-                butbind( $lglobal{proofbar}[$round] );
+                _butbind( $lglobal{proofbar}[$round] );
                 $lglobal{proofbar}[$round]->bind(
                     '<1>' => sub {
                         $lglobal{proofbar}[$round]
@@ -1023,8 +1023,8 @@ sub buildmenu {
                         $name           = os_normal($name);
                         $textwindow->FileName($name);
                         $lglobal{global_filename} = $name;
-                        binsave();
-                        recentupdate($name);
+                        _bin_save();
+                        _recentupdate($name);
                     }
                     else {
                         return;
@@ -1071,7 +1071,7 @@ sub buildmenu {
             [ Button => '~Guess Page Markers', -command => \&guesswindow ],
             [ Button => 'Set Page ~Markers',   -command => \&markpages ],
             [ 'separator', '' ],
-            [ Button => 'E~xit', -command => \&myexit ],
+            [ Button => 'E~xit', -command => \&_exit ],
         ]
     );
 
@@ -11449,7 +11449,7 @@ sub htmlbackup {
     working("Saving backup of file\nto $newfn");
     $textwindow->SaveUTF($newfn);
     $lglobal{global_filename} = $newfn;
-    binsave();
+    _bin_save();
     $lglobal{global_filename} = $savefn;
     $textwindow->FileName($savefn);
 }
@@ -11762,7 +11762,7 @@ sub buildstatusbar {
             update_indicators();
         }
     );
-    butbind($_)
+    _butbind($_)
         for (
         $lglobal{insert_overstrike_mode_label},
         $lglobal{current_line_label},
@@ -11886,7 +11886,7 @@ sub update_indicators {
                             update_indicators();
                         }
                     );
-                    butbind( $lglobal{page_num_label} );
+                    _butbind( $lglobal{page_num_label} );
                     $lglobal{statushelp}->attach( $lglobal{page_num_label},
                         -balloonmsg => "Image/Page name for current page." );
                 }
@@ -11907,7 +11907,7 @@ sub update_indicators {
                     );
                     $lglobal{pagebutton}
                         ->bind( '<3>', sub { setpngspath() } );
-                    butbind( $lglobal{pagebutton} );
+                    _butbind( $lglobal{pagebutton} );
                     $lglobal{statushelp}->attach( $lglobal{pagebutton},
                         -balloonmsg =>
                             "Open Image corresponding to current page in an external viewer."
@@ -11919,7 +11919,7 @@ sub update_indicators {
                         -background => 'gray',
                         -relief     => 'ridge',
                     )->grid( -row => 1, -column => 4 );
-                    butbind( $lglobal{page_label} );
+                    _butbind( $lglobal{page_label} );
                     $lglobal{page_label}->bind(
                         '<1>',
                         sub {
@@ -11987,7 +11987,7 @@ sub update_indicators {
                         tglprfbar();
                     }
                 );
-                butbind( $lglobal{proofbutton} );
+                _butbind( $lglobal{proofbutton} );
                 $lglobal{statushelp}->attach( $lglobal{proofbutton},
                     -balloonmsg => "Proofers for the current page." );
             }
@@ -12484,7 +12484,7 @@ sub openfile {    # and open it
             if $spellindexbkmrk;
         $textwindow->see( $bookmarks[0] );
     }
-    recentupdate($name);
+    _recentupdate($name);
     update_indicators();
     markpages() if $auto_page_marks;
     push @operations, ( localtime() . " - Open $lglobal{global_filename}" );
@@ -12507,7 +12507,7 @@ sub savefile {    # Determine which save routine to use and then use it
         if ( defined($name) and length($name) ) {
             $textwindow->SaveUTF($name);
             $name = os_normal($name);
-            recentupdate($name);
+            _recentupdate($name);
         }
         else {
             return;
@@ -12534,7 +12534,7 @@ sub savefile {    # Determine which save routine to use and then use it
         $textwindow->SaveUTF;
     }
     $textwindow->ResetUndo;
-    binsave();
+    _bin_save();
     set_autosave() if $autosave;
     update_indicators();
 }
@@ -18098,7 +18098,7 @@ sub set_autosave {
     $lglobal{saveflashid} = $top->after(
         ( $autosaveinterval * 60000 - 10000 ),
         sub {
-            flash_save()
+            _flash_save()
                 if $lglobal{global_filename} !~ /No File Loaded/;
         }
     );
