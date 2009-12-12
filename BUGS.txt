@@ -1,4 +1,4 @@
-$Id:$
+$Id$
 
 
 1. Long lines don't horizontal scroll with character addition. Seems to be an

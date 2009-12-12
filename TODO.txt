@@ -1,4 +1,4 @@
-$Id:$
+$Id$
 
 
 Label various operations as ### GutCheck ... ### End GutCheck.
