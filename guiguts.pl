@@ -14065,19 +14065,19 @@ sub brackets {
         while (1) {
             last
                 unless (
-                (      ( $lglobal{brbrackets}[0] =~ m{[\[\(\{\<«]} )
-                    && ( $lglobal{brbrackets}[1] =~ m{[\]\)\}\>»]} )
+                (      ( $lglobal{brbrackets}[0] =~ m{[\[\(\{<«]} )
+                    && ( $lglobal{brbrackets}[1] =~ m{[\]\)\}>»]} )
                 )
-                || (   ( $lglobal{brbrackets}[0] =~ m{[\[\(\{\<»]} )
-                    && ( $lglobal{brbrackets}[1] =~ m{[\]\)\}\>«]} ) )
+                || (   ( $lglobal{brbrackets}[0] =~ m{[\[\(\{<»]} )
+                    && ( $lglobal{brbrackets}[1] =~ m{[\]\)\}>«]} ) )
                 || (   ( $lglobal{brbrackets}[0] =~ m{^\x7f*/\*} )
                     && ( $lglobal{brbrackets}[1] =~ m{^\x7f*\*/} ) )
                 || (   ( $lglobal{brbrackets}[0] =~ m{^\x7f*/\$} )
                     && ( $lglobal{brbrackets}[1] =~ m{^\x7f*\$/} ) )
                 || (   ( $lglobal{brbrackets}[0] =~ m{^\x7f*/[p]}i )
                     && ( $lglobal{brbrackets}[1] =~ m{^\x7f*[p]/}i ) )
-                || (   ( $lglobal{brbrackets}[0] =~ m{^\x7f*/\#} )
-                    && ( $lglobal{brbrackets}[1] =~ m{^\x7f*\#/} ) )
+                || (   ( $lglobal{brbrackets}[0] =~ m{^\x7f*/#} )
+                    && ( $lglobal{brbrackets}[1] =~ m{^\x7f*#/} ) )
                 );
             shift @{ $lglobal{brbrackets} };
             shift @{ $lglobal{brbrackets} };
