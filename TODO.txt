@@ -58,3 +58,4 @@ Fix all file open routines to "use FileHandle".
 
 spelling: chekfil.txt writes to GG dir; needs to go in project directory.
 
+Disable unicode search function until update unicore is fixed.
