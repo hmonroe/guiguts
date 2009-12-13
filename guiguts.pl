@@ -60,7 +60,7 @@ use LineNumberText;
 use TextUnicode;
 use ToolBar;
 
-use constant OS_Win => $^O =~ /Win/;
+use constant OS_Win => $^O =~ m{Win};
 
 # ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
@@ -342,7 +342,7 @@ $top->repeat( 200, \&_updatesel );
 
 ## Global Exit
 sub _exit {
-    if ( confirmdiscard() =~ /no/i ) {
+    if ( confirmdiscard() =~ m{no}i ) {
         aspellstop() if $lglobal{spellpid};
         exit;
     }
@@ -414,7 +414,7 @@ sub _bin_save {
     }
     my $markindex;
     while ($mark) {
-        if ( $mark =~ /Pg(\S+)/ ) {
+        if ( $mark =~ m{Pg(\S+)} ) {
             $markindex                  = $textwindow->index($mark);
             $pagenumbers{$mark}{offset} = $markindex;
             $mark                       = $textwindow->markNext($mark);
@@ -424,7 +424,7 @@ sub _bin_save {
             next;
         }
     }
-    return if ( $lglobal{global_filename} =~ /No File Loaded/ );
+    return if ( $lglobal{global_filename} =~ m{No File Loaded} );
     my $binname = "$lglobal{global_filename}.bin";
     if ( $textwindow->markExists('spellbkmk') ) {
         $spellindexbkmrk = $textwindow->index('spellbkmk');
@@ -568,7 +568,7 @@ sub selection {
             -textvariable => \$start,
             -validate     => 'focusout',
             -vcmd         => sub {
-                return 0 unless ( $_[0] =~ /^\d+\.\d+$/ );
+                return 0 unless ( $_[0] =~ m{^\d+\.\d+$} );
                 return 1;
             },
         )->grid( -row => 1, -column => 2 );
@@ -580,7 +580,7 @@ sub selection {
             -textvariable => \$end,
             -validate     => 'focusout',
             -vcmd         => sub {
-                return 0 unless ( $_[0] =~ /^\d+\.\d+$/ );
+                return 0 unless ( $_[0] =~ m{^\d+\.\d+$} );
                 return 1;
             },
         )->grid( -row => 2, -column => 2 );
@@ -591,8 +591,8 @@ sub selection {
             -width   => 8,
             -command => sub {
                 return
-                    unless ( ( $start =~ /^\d+\.\d+$/ )
-                    && ( $end =~ /^\d+\.\d+$/ ) );
+                    unless ( ( $start =~ m{^\d+\.\d+$} )
+                    && ( $end =~ m{^\d+\.\d+$} ) );
                 $textwindow->tagRemove( 'sel', '1.0', 'end' );
                 $textwindow->tagAdd( 'sel', $start, $end );
                 $textwindow->markSet( 'selstart', $start );
@@ -698,7 +698,7 @@ sub rebuildmenu {
 sub clearvars {
     my @marks = $textwindow->markNames;
     for (@marks) {
-        unless ( $_ =~ /insert|current/ ) {
+        unless ( $_ =~ m{insert|current} ) {
             $textwindow->markUnset($_);
         }
     }
@@ -803,7 +803,7 @@ sub openpng {
                         -title => 'Problem with file',
                         -type  => 'YesNo',
                     );
-                    setpngspath() if $response =~ /yes/i;
+                    setpngspath() if $response =~ m{yes}i;
                     return;
                 }
             }
@@ -887,14 +887,14 @@ sub highlightscannos {
                                 if (
                                 $textwindow->get(
                                     "$lglobal{hl_index}.@{[$index-1]}")
-                                =~ /\p{Alnum}/
+                                =~ m{\p{Alnum}}
                                 );
                         }
                         next
                             if (
                             $textwindow->get(
                                 "$lglobal{hl_index}.@{[$index + length $word]}"
-                            ) =~ /\p{Alnum}/
+                            ) =~ m{\p{Alnum}}
                             );
                         $textwindow->tagAdd(
                             'scannos',
@@ -946,13 +946,13 @@ sub highlightscannos {
                     if ( $index > 0 ) {
                         next
                             if ( $textwindow->get("$realline.@{[$index - 1]}")
-                            =~ /\p{Alnum}/ );
+                            =~ m{\p{Alnum}} );
                     }
                     next
                         if (
                         $textwindow->get(
                             "$realline.@{[$index + length $word]}")
-                        =~ /\p{Alnum}/
+                        =~ m{\p{Alnum}}
                         );
                     $textwindow->tagAdd(
                         'scannos',
@@ -1041,7 +1041,7 @@ sub buildmenu {
                         ],
                         [ 'All Files', ['*'] ],
                     ];
-                    return if $lglobal{global_filename} =~ /No File Loaded/;
+                    return if $lglobal{global_filename} =~ m{No File Loaded};
                     $name = $textwindow->getOpenFile(
                         -filetypes  => $types,
                         -title      => 'File Include',
@@ -1055,7 +1055,7 @@ sub buildmenu {
             ],
             [   Button   => '~Close',
                 -command => sub {       # FIXME: sub file_close
-                    return if ( confirmempty() =~ /cancel/i );
+                    return if ( confirmempty() =~ m{cancel}i );
                     clearvars();
                     update_indicators();
                     }
@@ -1742,7 +1742,7 @@ sub buildmenu {
             [ Button => '~Latin 1 Chart',         -command => \&latinpopup ],
             [ Button => '~Regex Quick Reference', -command => \&regexref ],
             [ Button => '~UTF Character entry',   -command => \&utford ],
-            [ Button => '~UTF Character Search',  -command => \&uchar ],
+            # FIXME: Disable till unicodeupdate fixed.[ Button => '~UTF Character Search',  -command => \&uchar ],
         ]
     );
 }
@@ -1753,7 +1753,7 @@ sub viewpagenums {
         $lglobal{seepagenums} = 0;
         my @marks = $textwindow->markNames;
         for ( sort @marks ) {
-            if ( $_ =~ /Pg(\S+)/ ) {
+            if ( $_ =~ m{Pg(\S+)} ) {
                 my $pagenum = " Pg$1 ";
                 $textwindow->ntdelete( $_, "$_ +@{[length $pagenum]}c" );
             }
@@ -1769,7 +1769,7 @@ sub viewpagenums {
         $lglobal{seepagenums} = 1;
         my @marks = $textwindow->markNames;
         for ( sort @marks ) {
-            if ( $_ =~ /Pg(\S+)/ ) {
+            if ( $_ =~ m{Pg(\S+)} ) {
                 my $pagenum = " Pg$1 ";
                 $textwindow->ntinsert( $_, $pagenum );
                 $textwindow->tagAdd( 'pagenum', $_,
@@ -17832,12 +17832,12 @@ sub toolbar_toggle {    # Set up / remove the tool bar
             -command => [ \&greekpopup ],
             -tip     => 'Greek Transliteration Popup'
         );
-        $lglobal{toptool}->ToolButton(
-            -text    => 'UCS',
-            -font    => $lglobal{toolfont},
-            -command => [ \&uchar ],
-            -tip     => 'Unicode Character Search'
-        );
+        #FIXME: disable till unicoreupdate fixed. $lglobal{toptool}->ToolButton(
+        #     -text    => 'UCS',
+        #     -font    => $lglobal{toolfont},
+        #     -command => [ \&uchar ],
+        #     -tip     => 'Unicode Character Search'
+        #);
         $lglobal{toptool}->separator;
         $lglobal{toptool}->ToolButton(
             -text    => 'HTML',
