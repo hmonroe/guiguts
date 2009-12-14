@@ -1742,7 +1742,7 @@ sub buildmenu {
             [ Button => '~Latin 1 Chart',         -command => \&latinpopup ],
             [ Button => '~Regex Quick Reference', -command => \&regexref ],
             [ Button => '~UTF Character entry',   -command => \&utford ],
-            # FIXME: Disable till unicodeupdate fixed.[ Button => '~UTF Character Search',  -command => \&uchar ],
+            [ Button => '~UTF Character Search',  -command => \&uchar ],
         ]
     );
 }
@@ -17832,12 +17832,12 @@ sub toolbar_toggle {    # Set up / remove the tool bar
             -command => [ \&greekpopup ],
             -tip     => 'Greek Transliteration Popup'
         );
-        #FIXME: disable till unicoreupdate fixed. $lglobal{toptool}->ToolButton(
-        #     -text    => 'UCS',
-        #     -font    => $lglobal{toolfont},
-        #     -command => [ \&uchar ],
-        #     -tip     => 'Unicode Character Search'
-        #);
+        $lglobal{toptool}->ToolButton(
+             -text    => 'UCS',
+             -font    => $lglobal{toolfont},
+             -command => [ \&uchar ],
+             -tip     => 'Unicode Character Search'
+        );
         $lglobal{toptool}->separator;
         $lglobal{toptool}->ToolButton(
             -text    => 'HTML',
