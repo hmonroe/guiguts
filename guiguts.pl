@@ -60,12 +60,12 @@ use LineNumberText;
 use TextUnicode;
 use ToolBar;
 
-use constant OS_Win => $^O =~ /Win/;
+use constant OS_Win => $^O =~ m{Win};
 
 # ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
 $SIG{ALRM} = 'IGNORE';
-$SIG{INT} = sub { myexit() };
+$SIG{INT} = sub { _exit() };
 
 my $DEBUG      = 0;          # FIXME: this can go.
 my $VERSION    = "0.2.8";
@@ -280,7 +280,7 @@ $top->DropSite(
     : [qw/XDND Sun/]
 );
 
-$top->protocol( 'WM_DELETE_WINDOW' => \&myexit );
+$top->protocol( 'WM_DELETE_WINDOW' => \&_exit );
 
 my $menu = $top->Menu( -type => 'menubar' );
 
@@ -338,18 +338,18 @@ set_autosave() if $autosave;
 
 $textwindow->CallNextGUICallback;
 
-$top->repeat( 200, \&updatesel );
+$top->repeat( 200, \&_updatesel );
 
 ## Global Exit
-sub myexit {
-    if ( confirmdiscard() =~ /no/i ) {
+sub _exit {
+    if ( confirmdiscard() =~ m{no}i ) {
         aspellstop() if $lglobal{spellpid};
         exit;
     }
 }
 
 ## Update Last Selection readout in status bar
-sub updatesel {
+sub _updatesel {
     my @ranges = $textwindow->tagRanges('sel');
     my $msg;
     if (@ranges) {
@@ -384,7 +384,7 @@ sub updatesel {
     $textwindow->_lineupdate;
 }
 
-sub flash_save {
+sub _flash_save {
     $lglobal{saveflashingid} = $top->repeat(
         500,
         sub {
@@ -405,7 +405,7 @@ sub flash_save {
 }
 
 ## save the .bin file associated with the text file
-sub binsave {
+sub _bin_save {
     push @operations, ( localtime() . ' - File Saved' );
     oppopupdate() if $lglobal{oppop};
     my $mark = '1.0';
@@ -414,7 +414,7 @@ sub binsave {
     }
     my $markindex;
     while ($mark) {
-        if ( $mark =~ /Pg(\S+)/ ) {
+        if ( $mark =~ m{Pg(\S+)} ) {
             $markindex                  = $textwindow->index($mark);
             $pagenumbers{$mark}{offset} = $markindex;
             $mark                       = $textwindow->markNext($mark);
@@ -424,7 +424,7 @@ sub binsave {
             next;
         }
     }
-    return if ( $lglobal{global_filename} =~ /No File Loaded/ );
+    return if ( $lglobal{global_filename} =~ m{No File Loaded} );
     my $binname = "$lglobal{global_filename}.bin";
     if ( $textwindow->markExists('spellbkmk') ) {
         $spellindexbkmrk = $textwindow->index('spellbkmk');
@@ -512,7 +512,7 @@ sub binsave {
 }
 
 ## Track recently open files for the menu
-sub recentupdate {
+sub _recentupdate { # FIXME: Seems to be choking.
     my $name = shift;
 
     # remove $name or any *empty* values from the list
@@ -527,7 +527,7 @@ sub recentupdate {
 }
 
 ## Bindings to make label in status bar act like buttons
-sub butbind {
+sub _butbind {
     my $widget = shift;
     $widget->bind(
         '<Enter>',
@@ -568,7 +568,7 @@ sub selection {
             -textvariable => \$start,
             -validate     => 'focusout',
             -vcmd         => sub {
-                return 0 unless ( $_[0] =~ /^\d+\.\d+$/ );
+                return 0 unless ( $_[0] =~ m{^\d+\.\d+$} );
                 return 1;
             },
         )->grid( -row => 1, -column => 2 );
@@ -580,7 +580,7 @@ sub selection {
             -textvariable => \$end,
             -validate     => 'focusout',
             -vcmd         => sub {
-                return 0 unless ( $_[0] =~ /^\d+\.\d+$/ );
+                return 0 unless ( $_[0] =~ m{^\d+\.\d+$} );
                 return 1;
             },
         )->grid( -row => 2, -column => 2 );
@@ -591,8 +591,8 @@ sub selection {
             -width   => 8,
             -command => sub {
                 return
-                    unless ( ( $start =~ /^\d+\.\d+$/ )
-                    && ( $end =~ /^\d+\.\d+$/ ) );
+                    unless ( ( $start =~ m{^\d+\.\d+$} )
+                    && ( $end =~ m{^\d+\.\d+$} ) );
                 $textwindow->tagRemove( 'sel', '1.0', 'end' );
                 $textwindow->tagAdd( 'sel', $start, $end );
                 $textwindow->markSet( 'selstart', $start );
@@ -698,7 +698,7 @@ sub rebuildmenu {
 sub clearvars {
     my @marks = $textwindow->markNames;
     for (@marks) {
-        unless ( $_ =~ /insert|current/ ) {
+        unless ( $_ =~ m{insert|current} ) {
             $textwindow->markUnset($_);
         }
     }
@@ -752,7 +752,7 @@ sub tglprfbar {
                     -relief     => 'ridge',
                     -background => 'gray',
                 )->grid( -row => 1, -column => $round, -sticky => 'nw' );
-                butbind( $lglobal{proofbar}[$round] );
+                _butbind( $lglobal{proofbar}[$round] );
                 $lglobal{proofbar}[$round]->bind(
                     '<1>' => sub {
                         $lglobal{proofbar}[$round]
@@ -803,7 +803,7 @@ sub openpng {
                         -title => 'Problem with file',
                         -type  => 'YesNo',
                     );
-                    setpngspath() if $response =~ /yes/i;
+                    setpngspath() if $response =~ m{yes}i;
                     return;
                 }
             }
@@ -887,14 +887,14 @@ sub highlightscannos {
                                 if (
                                 $textwindow->get(
                                     "$lglobal{hl_index}.@{[$index-1]}")
-                                =~ /\p{Alnum}/
+                                =~ m{\p{Alnum}}
                                 );
                         }
                         next
                             if (
                             $textwindow->get(
                                 "$lglobal{hl_index}.@{[$index + length $word]}"
-                            ) =~ /\p{Alnum}/
+                            ) =~ m{\p{Alnum}}
                             );
                         $textwindow->tagAdd(
                             'scannos',
@@ -946,13 +946,13 @@ sub highlightscannos {
                     if ( $index > 0 ) {
                         next
                             if ( $textwindow->get("$realline.@{[$index - 1]}")
-                            =~ /\p{Alnum}/ );
+                            =~ m{\p{Alnum}} );
                     }
                     next
                         if (
                         $textwindow->get(
                             "$realline.@{[$index + length $word]}")
-                        =~ /\p{Alnum}/
+                        =~ m{\p{Alnum}}
                         );
                     $textwindow->tagAdd(
                         'scannos',
@@ -1023,8 +1023,8 @@ sub buildmenu {
                         $name           = os_normal($name);
                         $textwindow->FileName($name);
                         $lglobal{global_filename} = $name;
-                        binsave();
-                        recentupdate($name);
+                        _bin_save();
+                        _recentupdate($name);
                     }
                     else {
                         return;
@@ -1041,7 +1041,7 @@ sub buildmenu {
                         ],
                         [ 'All Files', ['*'] ],
                     ];
-                    return if $lglobal{global_filename} =~ /No File Loaded/;
+                    return if $lglobal{global_filename} =~ m{No File Loaded};
                     $name = $textwindow->getOpenFile(
                         -filetypes  => $types,
                         -title      => 'File Include',
@@ -1055,7 +1055,7 @@ sub buildmenu {
             ],
             [   Button   => '~Close',
                 -command => sub {       # FIXME: sub file_close
-                    return if ( confirmempty() =~ /cancel/i );
+                    return if ( confirmempty() =~ m{cancel}i );
                     clearvars();
                     update_indicators();
                     }
@@ -1071,7 +1071,7 @@ sub buildmenu {
             [ Button => '~Guess Page Markers', -command => \&guesswindow ],
             [ Button => 'Set Page ~Markers',   -command => \&markpages ],
             [ 'separator', '' ],
-            [ Button => 'E~xit', -command => \&myexit ],
+            [ Button => 'E~xit', -command => \&_exit ],
         ]
     );
 
@@ -1753,7 +1753,7 @@ sub viewpagenums {
         $lglobal{seepagenums} = 0;
         my @marks = $textwindow->markNames;
         for ( sort @marks ) {
-            if ( $_ =~ /Pg(\S+)/ ) {
+            if ( $_ =~ m{Pg(\S+)} ) {
                 my $pagenum = " Pg$1 ";
                 $textwindow->ntdelete( $_, "$_ +@{[length $pagenum]}c" );
             }
@@ -1769,7 +1769,7 @@ sub viewpagenums {
         $lglobal{seepagenums} = 1;
         my @marks = $textwindow->markNames;
         for ( sort @marks ) {
-            if ( $_ =~ /Pg(\S+)/ ) {
+            if ( $_ =~ m{Pg(\S+)} ) {
                 my $pagenum = " Pg$1 ";
                 $textwindow->ntinsert( $_, $pagenum );
                 $textwindow->tagAdd( 'pagenum', $_,
@@ -11449,7 +11449,7 @@ sub htmlbackup {
     working("Saving backup of file\nto $newfn");
     $textwindow->SaveUTF($newfn);
     $lglobal{global_filename} = $newfn;
-    binsave();
+    _bin_save();
     $lglobal{global_filename} = $savefn;
     $textwindow->FileName($savefn);
 }
@@ -11762,7 +11762,7 @@ sub buildstatusbar {
             update_indicators();
         }
     );
-    butbind($_)
+    _butbind($_)
         for (
         $lglobal{insert_overstrike_mode_label},
         $lglobal{current_line_label},
@@ -11886,7 +11886,7 @@ sub update_indicators {
                             update_indicators();
                         }
                     );
-                    butbind( $lglobal{page_num_label} );
+                    _butbind( $lglobal{page_num_label} );
                     $lglobal{statushelp}->attach( $lglobal{page_num_label},
                         -balloonmsg => "Image/Page name for current page." );
                 }
@@ -11907,7 +11907,7 @@ sub update_indicators {
                     );
                     $lglobal{pagebutton}
                         ->bind( '<3>', sub { setpngspath() } );
-                    butbind( $lglobal{pagebutton} );
+                    _butbind( $lglobal{pagebutton} );
                     $lglobal{statushelp}->attach( $lglobal{pagebutton},
                         -balloonmsg =>
                             "Open Image corresponding to current page in an external viewer."
@@ -11919,7 +11919,7 @@ sub update_indicators {
                         -background => 'gray',
                         -relief     => 'ridge',
                     )->grid( -row => 1, -column => 4 );
-                    butbind( $lglobal{page_label} );
+                    _butbind( $lglobal{page_label} );
                     $lglobal{page_label}->bind(
                         '<1>',
                         sub {
@@ -11987,7 +11987,7 @@ sub update_indicators {
                         tglprfbar();
                     }
                 );
-                butbind( $lglobal{proofbutton} );
+                _butbind( $lglobal{proofbutton} );
                 $lglobal{statushelp}->attach( $lglobal{proofbutton},
                     -balloonmsg => "Proofers for the current page." );
             }
@@ -12484,7 +12484,7 @@ sub openfile {    # and open it
             if $spellindexbkmrk;
         $textwindow->see( $bookmarks[0] );
     }
-    recentupdate($name);
+    _recentupdate($name);
     update_indicators();
     markpages() if $auto_page_marks;
     push @operations, ( localtime() . " - Open $lglobal{global_filename}" );
@@ -12507,7 +12507,7 @@ sub savefile {    # Determine which save routine to use and then use it
         if ( defined($name) and length($name) ) {
             $textwindow->SaveUTF($name);
             $name = os_normal($name);
-            recentupdate($name);
+            _recentupdate($name);
         }
         else {
             return;
@@ -12534,7 +12534,7 @@ sub savefile {    # Determine which save routine to use and then use it
         $textwindow->SaveUTF;
     }
     $textwindow->ResetUndo;
-    binsave();
+    _bin_save();
     set_autosave() if $autosave;
     update_indicators();
 }
@@ -14065,19 +14065,19 @@ sub brackets {
         while (1) {
             last
                 unless (
-                (      ( $lglobal{brbrackets}[0] =~ /[\[\(\{\<«]/ )
-                    && ( $lglobal{brbrackets}[1] =~ /[\]\)\}\>»]/ )
+                (      ( $lglobal{brbrackets}[0] =~ m{[\[\(\{<«]} )
+                    && ( $lglobal{brbrackets}[1] =~ m{[\]\)\}>»]} )
                 )
-                || (   ( $lglobal{brbrackets}[0] =~ /[\[\(\{\<»]/ )
-                    && ( $lglobal{brbrackets}[1] =~ /[\]\)\}\>«]/ ) )
-                || (   ( $lglobal{brbrackets}[0] =~ /^\x7f*\/\*/ )
-                    && ( $lglobal{brbrackets}[1] =~ /^\x7f*\*\// ) )
-                || (   ( $lglobal{brbrackets}[0] =~ /^\x7f*\/\$/ )
-                    && ( $lglobal{brbrackets}[1] =~ /^\x7f*\$\// ) )
-                || (   ( $lglobal{brbrackets}[0] =~ /^\x7f*\/[Pp]/ )
-                    && ( $lglobal{brbrackets}[1] =~ /^\x7f*[Pp]\// ) )
-                || (   ( $lglobal{brbrackets}[0] =~ /^\x7f*\/\#/ )
-                    && ( $lglobal{brbrackets}[1] =~ /^\x7f*\#\// ) )
+                || (   ( $lglobal{brbrackets}[0] =~ m{[\[\(\{<»]} )
+                    && ( $lglobal{brbrackets}[1] =~ m{[\]\)\}>«]} ) )
+                || (   ( $lglobal{brbrackets}[0] =~ m{^\x7f*/\*} )
+                    && ( $lglobal{brbrackets}[1] =~ m{^\x7f*\*/} ) )
+                || (   ( $lglobal{brbrackets}[0] =~ m{^\x7f*/\$} )
+                    && ( $lglobal{brbrackets}[1] =~ m{^\x7f*\$/} ) )
+                || (   ( $lglobal{brbrackets}[0] =~ m{^\x7f*/[p]}i )
+                    && ( $lglobal{brbrackets}[1] =~ m{^\x7f*[p]/}i ) )
+                || (   ( $lglobal{brbrackets}[0] =~ m{^\x7f*/#} )
+                    && ( $lglobal{brbrackets}[1] =~ m{^\x7f*#/} ) )
                 );
             shift @{ $lglobal{brbrackets} };
             shift @{ $lglobal{brbrackets} };
@@ -14462,7 +14462,7 @@ sub indent {
                         push @selarray, ( "$start-1c", "$end-1c" );
                     }
                 }
-            }
+                }
             else {
                 while ( $index <= $thisblockend ) {
                     if ( $indent eq 'in' ) {
@@ -18098,7 +18098,7 @@ sub set_autosave {
     $lglobal{saveflashid} = $top->after(
         ( $autosaveinterval * 60000 - 10000 ),
         sub {
-            flash_save()
+            _flash_save()
                 if $lglobal{global_filename} !~ /No File Loaded/;
         }
     );
