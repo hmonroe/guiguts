@@ -191,7 +191,7 @@ else {
 my $top = tkinit( -title => $window_title, );
 
 initialize();    # Initialize a bunch of vars that need it.
-
+$top->withdraw; # Hide while under construction...
 $top->minsize( 440, 90 );
 
 # Detect geometry changes for tracking
@@ -339,6 +339,10 @@ set_autosave() if $autosave;
 $textwindow->CallNextGUICallback;
 
 $top->repeat( 200, \&_updatesel );
+
+$top->update;
+$top->deiconify;
+$top->raise; # ... and show it to the world.
 
 ## Global Exit
 sub _exit {
