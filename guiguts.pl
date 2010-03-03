@@ -55,22 +55,26 @@ use Tk::widgets qw/Balloon
     TextEdit
     /;
 
-# Custom Guigut modules
+### Custom Guigut modules
+# FIXME: Move these into lib/Guiguts.
 use LineNumberText;
 use TextUnicode;
-use ToolBar;
 use Guiguts::Greekgifs;
 
-use constant OS_Win => $^O =~ m{Win};
+use ToolBar; # FIXME: Move to lib/Tk.
 
-# ignore any watchdog timer alarms. Subroutines that take a long time to
+# Ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
 $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { _exit() };
 
+### Constants
+use constant OS_Win => $^O =~ m{Win};
 my $DEBUG      = 0;          # FIXME: this can go.
-my $VERSION    = "0.2.9";
+my $VERSION    = '0.2.9';
+my $APP_NAME = 'GuiGuts';
 my $currentver = $VERSION;
+
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
     = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
@@ -88,48 +92,48 @@ our $bold_char     = "=";
 our $defaultindent = 0;
 our $fontname      = 'Courier New';
 our $fontsize      = 10;
-our $fontweight    = '';
-our $geometry2     = '';
-our $geometry3     = '';
+our $fontweight    = q{};
+our $geometry2     = q{};
+our $geometry3     = q{};
 our $geometry;
 our $globalaspellmode   = 'normal';
 our $globalbrowserstart = 'start';
-our $globalimagepath    = '';
-our $globallastpath     = '';
-our $globalspelldictopt = '';
-our $globalspellpath    = '';
-our $globalviewerpath   = '';
-our $gutpath            = '';
+our $globalimagepath    = q{};
+our $globallastpath     = q{};
+our $globalspelldictopt = q{};
+our $globalspellpath    = q{};
+our $globalviewerpath   = q{};
+our $gutpath            = q{};
 our $highlightcolor     = '#a08dfc';
 our $history_size       = 20;
 our $italic_char        = "_";
 our $jeebiesmode        = 'p';
-our $jeebiespath        = '';
+our $jeebiespath        = q{};
 our $lmargin            = 1;
 our $markupthreshold    = 4;
 our $nobell             = 0;
 our $nohighlights       = 0;
 our $notoolbar          = 0;
 our $operationinterrupt;
-our $pngspath         = '';
+our $pngspath         = q{};
 our $rmargin          = 72;
 our $rwhyphenspace    = 0;
-our $scannoslist      = '';
-our $scannoslistpath  = '';
-our $scannospath      = '';
+our $scannoslist      = q{};
+our $scannoslistpath  = q{};
+our $scannospath      = q{};
 our $scrollupdatespd  = 40;
 our $searchendindex   = 'end';
 our $searchstartindex = '1.0';
 our $singleterm       = 1;
-our $spellindexbkmrk  = '';
+our $spellindexbkmrk  = q{};
 our $stayontop        = 0;
 our $suspectindex;
-our $tidycommand  = '';
+our $tidycommand  = q{};
 our $toolside     = 'bottom';
 our $utffontname  = 'Courier New';
 our $utffontsize  = 14;
 our $vislnnm      = 0;
-our $window_title = "Guiguts-" . $currentver;
+our $window_title = $APP_NAME . '-' . $VERSION;
 
 our %gc;
 our %jeeb;
@@ -3385,7 +3389,7 @@ sub replaceeval {
 
     if ( $replaceterm =~ /\\C/ ) {
         if ( $lglobal{codewarn} ) {
-          my $message= <<END;
+          my $message = <<END;
 WARNING!! The replacement term will execute arbitrary perl code. 
 If you do not want to, or are not sure of what you are doing, cancel the operation.
 It is unlikely that there is a problem. However, it is possible (and not terribly difficult) 
@@ -5327,7 +5331,7 @@ sub htmlautoconvert {
     my $thisend        = '';
     my $title;
     my ( $blkopen, $blkclose );
-    my ( $ler, $lec, $step );    #FIXME: WTF is ler and lec supposed to mean?
+    my ( $ler, $lec, $step );    #FIXME: WTF is ler and lec supposed to mean line_end_r? line_end_column
     my @contents = ("<p>\n");
     my @last5 = [ 1, 1, 1, 1, 1 ];
 
@@ -18230,23 +18234,30 @@ sub showversion {
     my ($top) = @_;
     my $os = $^O;
     $os =~ s/^([^\[]+)\[.+/$1/;
-    my $winver = "\n";
+    my $perl = sprintf( "Perl v%vd", $^V);
+    my $winver;
     if (OS_Win) {
-        $winver = `ver`;
-        $winver =~ s/([\s\w]* Windows \w+) .*/$1/;
+        $winver = qx{ver};
+        $winver =~ s{\n}{}smg;
+        $winver =~ s/([\s\w]* Windows \w+) .*/$1/; # FIXME: Spurious newline in here.
+        chomp($winver);
     }
+    my $message = <<"END";
+Currently Running :
+$0, Version : $VERSION
+Platform : $os
+$winver
+$perl
+perl/Tk Version : $Tk::VERSION
+Tk patchLevel : $Tk::patchLevel
+Tk libraries : $Tk::library
+END
+    
     my $dialog = $top->Dialog(
         -title   => 'Versions',
         -popover => $top,
-        -text    => "Currently Running :\n"
-            . "$0\nVersion : $currentver\n"
-            . "Platform : $os"
-            . $winver
-            . ( sprintf "Perl v%vd\n", $^V )
-            . "perl/Tk Version : $Tk::VERSION\n"
-            . "Tk patchLevel : $Tk::patchLevel\n"
-            . "Tk libraries : $Tk::library\n",
-        -justify => 'center'
+        -justify => 'center',
+        -text => $message,
     );
     $dialog->Show;
 }
