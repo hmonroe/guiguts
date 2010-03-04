@@ -18239,12 +18239,10 @@ sub showversion {
     if (OS_Win) {
         $winver = qx{ver};
         $winver =~ s{\n}{}smg;
-        $winver =~ s/([\s\w]* Windows \w+) .*/$1/; # FIXME: Spurious newline in here.
-        chomp($winver);
     }
     my $message = <<"END";
 Currently Running :
-$0, Version : $VERSION
+$APP_NAME, Version : $VERSION
 Platform : $os
 $winver
 $perl
@@ -18252,7 +18250,7 @@ perl/Tk Version : $Tk::VERSION
 Tk patchLevel : $Tk::patchLevel
 Tk libraries : $Tk::library
 END
-    
+
     my $dialog = $top->Dialog(
         -title   => 'Versions',
         -popover => $top,
