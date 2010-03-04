@@ -4,7 +4,7 @@
 
 # GuiGuts text editor
 
-#Copyright (C) 2008 V. L. Simpson <vlsimpson@gmail.com>
+#Copyright (C) 2008 V. L. Simpson <vlsimpson@users.sourceforge.net>
 
 #This program is free software; you can redistribute it and/or
 #modify it under the terms of the GNU General Public License
@@ -13829,7 +13829,7 @@ sub find_proofer_comment {
     my $pattern = "[**";
     my $comment = $textwindow->search( $pattern, "insert" );
     my $index   = $textwindow->index("$comment +1c");
-    $textwindow->SetCursor($index);
+    if ($comment) { $textwindow->SetCursor($index); }
 }
 
 sub nextblock {
