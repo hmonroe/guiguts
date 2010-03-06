@@ -69,16 +69,14 @@ $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { _exit() };
 
 ### Constants
-use constant OS_Win => $^O =~ m{Win};
-my $DEBUG      = 0;          # FIXME: this can go.
+my $OS_WIN = $^O =~ m{Win};
 my $VERSION    = '0.2.9';
 my $APP_NAME = 'GuiGuts';
-my $currentver = $VERSION;
-
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
     = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
+### Application Globals
 our $activecolor      = '#f2f818';
 our $auto_page_marks  = 1;
 our $autobackup       = 0;
@@ -165,12 +163,12 @@ our @extops = (
     {   'label'   => 'Pass open file to default handler',
         'command' => 'start $d$f$e'
     },
-    { 'label' => '', 'command' => '' },
-    { 'label' => '', 'command' => '' },
-    { 'label' => '', 'command' => '' },
-    { 'label' => '', 'command' => '' },
-    { 'label' => '', 'command' => '' },
-    { 'label' => '', 'command' => '' },
+    { 'label' => q{}, 'command' => q{} },
+    { 'label' => q{}, 'command' => q{} },
+    { 'label' => q{}, 'command' => q{} },
+    { 'label' => q{}, 'command' => q{} },
+    { 'label' => q{}, 'command' => q{} },
+    { 'label' => q{}, 'command' => q{} },
 );
 
 #All local global variables contained in one hash.
@@ -193,6 +191,7 @@ else {
     $lglobal{ImageSize} = 0;
 }
 
+# FIXME: Change $top to $mw.
 my $top = tkinit( -title => $window_title, );
 
 initialize();    # Initialize a bunch of vars that need it.
@@ -260,6 +259,14 @@ my $counter_frame = $text_frame->Frame->pack(
 my $proofer_frame = $text_frame->Frame;
 
 # The actual text widget
+# FIXME: This ain't working for some reason
+our $text_font = $top->fontCreate(
+    'courier',
+    -family => "Courier New",
+    -size   => 12,
+    -weight => 'normal',
+);
+
 my $textwindow = $text_frame->LineNumberText(
     -widget => 'TextUnicode',
     -exportselection => 'true',     # 'sel' tag is associated with selections
@@ -280,7 +287,7 @@ my $textwindow = $text_frame->LineNumberText(
 $top->DropSite(
     -dropcommand => \&handleDND,
     -droptypes =>
-        ( OS_Win or ( $^O eq 'cygwin' and $Tk::platform eq 'MSWin32' ) )
+        ( $OS_WIN or ( $^O eq 'cygwin' and $Tk::platform eq 'MSWin32' ) )
     ? ['Win32']
     : [qw/XDND Sun/]
 );
@@ -435,7 +442,7 @@ sub _bin_save {
         $spellindexbkmrk = $textwindow->index('spellbkmk');
     }
     else {
-        $spellindexbkmrk = '';
+        $spellindexbkmrk = q{};
     }
     my $bak = "$binname.bak";
     if ( -e $bak ) {
@@ -648,7 +655,7 @@ sub cmdinterp {
     if ( $command =~ m/\$f|\$d|\$e/ ) {
         return ' ' if ( $lglobal{global_filename} =~ m/No File Loaded/ );
         $fname = $lglobal{global_filename};
-        $fname = dos_path( $lglobal{global_filename} ) if OS_Win;
+        $fname = dos_path( $lglobal{global_filename} ) if $OS_WIN;
         my ( $f, $d, $e ) = fileparse( $fname, qr{\.[^\.]*$} );
         $command =~ s/\$f/$f/ if $f;
         $command =~ s/\$d/$d/ if $d;
@@ -665,7 +672,7 @@ sub cmdinterp {
     if ( $command =~ m/\$i/ ) {
         return ' ' unless $pngspath;
         $pname = $pngspath;
-        $pname = dos_path($pngspath) if OS_Win;
+        $pname = dos_path($pngspath) if $OS_WIN;
         $command =~ s/\$i/$pngspath/;
     }
     return $command;
@@ -681,7 +688,7 @@ sub runner {
         open my $spawn, '>', 'spawn.pl';
         print $spawn 'exec @ARGV;';
     }
-    if (OS_Win) {
+    if ($OS_WIN) {
         $args = '"' . $args . '"';
     }
     else {
@@ -715,7 +722,7 @@ sub clearvars {
     %pagenumbers          = ();
     @operations           = ();
     @bookmarks            = ();
-    $pngspath             = '';
+    $pngspath             = q{};
     $lglobal{seepagenums} = 0;
     @{ $lglobal{fnarray} } = ();
     undef $lglobal{prepfile};
@@ -785,7 +792,7 @@ sub openpng {
     viewerpath() unless $globalviewerpath;
     my $dosfile;
     unless ($pngspath) {
-        if (OS_Win) {
+        if ($OS_WIN) {
             $pngspath = "${globallastpath}pngs\\";
         }
         else {
@@ -812,7 +819,7 @@ sub openpng {
                     return;
                 }
             }
-            if (OS_Win) {
+            if ($OS_WIN) {
                 $dospath = dos_path($dospath);
                 $dosfile = dos_path($dosfile);
             }
@@ -1495,7 +1502,7 @@ sub buildmenu {
                     [   Button   => 'Locate Gutcheck Executable',
                         -command => sub {
                             my $types;
-                            if (OS_Win) {
+                            if ($OS_WIN) {
                                 $types = [
                                     [ 'Executable', [ '.exe', ] ],
                                     [ 'All Files',  ['*'] ],
@@ -1519,7 +1526,7 @@ sub buildmenu {
                     [   Button   => 'Locate Jeebies Executable',
                         -command => sub {
                             my $types;
-                            if (OS_Win) {
+                            if ($OS_WIN) {
                                 $types = [
                                     [ 'Executable', [ '.exe', ] ],
                                     [ 'All Files',  ['*'] ],
@@ -1543,7 +1550,7 @@ sub buildmenu {
                     [   Button   => 'Locate Aspell Executable',
                         -command => sub {
                             my $types;
-                            if (OS_Win) {
+                            if ($OS_WIN) {
                                 $types = [
                                     [ 'Executable', [ '.exe', ] ],
                                     [ 'All Files',  ['*'] ],
@@ -1567,7 +1574,7 @@ sub buildmenu {
                     [   Button   => 'Locate Tidy Executable',
                         -command => sub {
                             my $types;
-                            if (OS_Win) {
+                            if ($OS_WIN) {
                                 $types = [
                                     [ 'Executable', [ '.exe', ] ],
                                     [ 'All Files',  ['*'] ],
@@ -1675,7 +1682,7 @@ sub buildmenu {
                 -command => sub {
                     my $thiscolor = setcolor($activecolor);
                     $activecolor = $thiscolor if $thiscolor;
-                    OS_Win
+                    $OS_WIN
                         ? $lglobal{checkcolor}
                         = 'white'
                         : $lglobal{checkcolor} = $activecolor;
@@ -3389,7 +3396,7 @@ sub replaceeval {
 
     if ( $replaceterm =~ /\\C/ ) {
         if ( $lglobal{codewarn} ) {
-          my $message = <<END;
+          my $message = <<'END';
 WARNING!! The replacement term will execute arbitrary perl code. 
 If you do not want to, or are not sure of what you are doing, cancel the operation.
 It is unlikely that there is a problem. However, it is possible (and not terribly difficult) 
@@ -4037,7 +4044,7 @@ sub poetryhtml {
     else {
         my $end   = pop(@ranges);
         my $start = pop(@ranges);
-        my ( $lsr, $lsc, $ler, $lec, $step, $ital );
+        my ( $lsr, $lsc, $ler, $lec, $step, $ital ); # FIXME: Guessing $lsr is last_star_row, last_end
         ( $lsr, $lsc ) = split /\./, $start;
         ( $ler, $lec ) = split /\./, $end;
         $step = $lsr;
@@ -5079,7 +5086,7 @@ sub linkcheck {
             ->insert( 'end', "You need to save your file first." );
         return;
     }
-    $fname = dos_path( $lglobal{global_filename} ) if OS_Win;
+    $fname = dos_path( $lglobal{global_filename} ) if $OS_WIN;
     my ( $f, $d, $e ) = fileparse( $fname, qr{\.[^\.]*$} );
     my %imagefiles;
     my @ifiles   = ();
@@ -5309,7 +5316,7 @@ sub makeanchor {
 # FIXME: Split this into separate functions, eventually into HTMLconvert.pm
 sub htmlautoconvert {
     viewpagenums() if ( $lglobal{seepagenums} );
-    my $aname = '';
+    my $aname = q{};
     my $author;
     my $blkquot = 0;
     my $cflag   = 0;
@@ -5323,15 +5330,16 @@ sub htmlautoconvert {
     my $listmark   = 0;
     my $pgoffset   = 0;
     my $poetry     = 0;
-    my $selection  = '';
+    my $selection  = q{};
     my $skip       = 0;
-    my $thisblank  = '';
+    my $thisblank  = q{};
     my $thisblockend;
     my $thisblockstart = '1.0';
-    my $thisend        = '';
+    my $thisend        = q{};
+   # FIXME: May as well put all uninit vars in a single my();
     my $title;
     my ( $blkopen, $blkclose );
-    my ( $ler, $lec, $step );    #FIXME: WTF is ler and lec supposed to mean line_end_r? line_end_column
+    my ( $ler, $lec, $step ); # FIXME: last_end_row|column
     my @contents = ("<p>\n");
     my @last5 = [ 1, 1, 1, 1, 1 ];
 
@@ -6408,19 +6416,19 @@ sub named {
     }
 }
 
-# FIXME: Page separator removal help
+# FIXME: Page separator removal help. Rename.
 sub phelppopup {
-    my $help_text = <<EOM;
-Join Lines - join lines removing any spaces, asterisks and hyphens as necessary. - Hotkey j
-Join, Keep hyphen - join lines removing any spaces and asterisks as necessary. - Hotkey k
-Blank line - remove spaces as necessary. Keep one blank line. (paragraph break). - Hotkey l
-New Section - remove spaces as necessary. Keep two blank lines (section break). - Hotkey t
-New Chapter - remove spaces as necessary. Keep four blank lines (chapter break). - Hotkey h
-Refresh - search for and center next page separator. - Hotkey r
-Undo - undo the previous page separator edit. - Hotkey u
-Delete - delete the page separator. Make no other edits. - Hotkey d
-Full Auto - automatically search for and convert if possible the next page separator. - Toggle - a
-Semi Auto - automatically search for and center the next page separator after an edit. - Toggle - s
+    my $help_text = <<'EOM';
+    Join Lines - join lines removing any spaces, asterisks and hyphens as necessary. - Hotkey j
+    Join, Keep hyphen - join lines removing any spaces and asterisks as necessary. - Hotkey k
+    Blank line - remove spaces as necessary. Keep one blank line. (paragraph break). - Hotkey l
+    New Section - remove spaces as necessary. Keep two blank lines (section break). - Hotkey t
+    New Chapter - remove spaces as necessary. Keep four blank lines (chapter break). - Hotkey h
+    Refresh - search for and center next page separator. - Hotkey r
+    Undo - undo the previous page separator edit. - Hotkey u
+    Delete - delete the page separator. Make no other edits. - Hotkey d
+    Full Auto - automatically search for and convert if possible the next page separator. - Toggle - a
+    Semi Auto - automatically search for and center the next page separator after an edit. - Toggle - s
 EOM
 
     if ( defined( $lglobal{phelppop} ) ) {
@@ -7150,7 +7158,7 @@ sub tidyrun {
     }
     return unless $tidycommand;
     $tidycommand = os_normal($tidycommand);
-    $tidycommand = dos_path($tidycommand) if OS_Win;
+    $tidycommand = dos_path($tidycommand) if $OS_WIN;
     saveset();
     $top->Busy( -recurse => 1 );
     if ( $tidyoptions =~ /\-m/ ) {
@@ -7158,7 +7166,7 @@ sub tidyrun {
         $title =~ s/edited - //;
         $title = os_normal($title);
         ( $fname, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
-        $title = dos_path($title) if OS_Win;
+        $title = dos_path($title) if $OS_WIN;
         $name  = $title;
         $name  = "${path}tidy.$fname$extension";
     }
@@ -8323,7 +8331,7 @@ sub wfspellcheck {
     getprojectdic();
     do "$lglobal{projectdictname}";
     $lglobal{spellexename}
-        = OS_Win
+        = $OS_WIN
         ? dos_path($globalspellpath)
         : $globalspellpath;    # Make the exe path dos compliant
     $lglobal{wclistbox}->delete( '0', 'end' );
@@ -8617,7 +8625,7 @@ sub confirmempty {
 
 sub BindMouseWheel {
     my ($w) = @_;
-    if (OS_Win) {
+    if ($OS_WIN) {
         $w->bind(
             '<MouseWheel>' => [
                 sub {
@@ -8673,7 +8681,7 @@ sub working {
 sub handleDND {
     my ( $sel, $filename ) = shift;
     eval {    # In case of an error, do the SelectionGet in an eval block
-        if (OS_Win) {
+        if ($OS_WIN) {
             $filename
                 = $textwindow->SelectionGet( -selection => $sel, 'STRING' );
         }
@@ -9317,8 +9325,11 @@ sub tblautoc {
 }
 
 sub fontinit {
-    $lglobal{font} = "{$fontname} $fontsize $fontweight";
+    $lglobal{font} = "{$fontname} $fontsize $fontweight"
 }
+
+# FIXME: Not working ... probably in font change pref doodad.
+#sub fontinit { $lglobal{font} = \$text_font; }
 
 sub utffontinit {
     $lglobal{utffont} = "{$utffontname} $utffontsize";
@@ -9729,7 +9740,7 @@ sub initialize {
         "\x{1FAF}" => 'Ô~(|',
     );
 
-    $lglobal{checkcolor} = (OS_Win) ? 'white' : $activecolor;
+    $lglobal{checkcolor} = ($OS_WIN) ? 'white' : $activecolor;
     my $scroll_gif
         = 'R0lGODlhCAAQAIAAAAAAAP///yH5BAEAAAEALAAAAAAIABAAAAIUjAGmiMutopz0pPgwk7B6/3SZphQAOw==';
     $lglobal{scrollgif} = $top->Photo(
@@ -9919,20 +9930,7 @@ sub textbindings {
         }
     );
     $textwindow->bind( 'TextUnicode', '<F7>' => \&spellchecker );
-    $textwindow->bind(
-        'TextUnicode',
-        '<Control-Alt-d>' => sub {
-            if ($DEBUG) {
-                $DEBUG = 0;
-                rebuildmenu();
-            }
-            else {
-                $DEBUG = 1;
-                rebuildmenu();
-            }
-            print "Debug ", $DEBUG ? "on\n" : "off\n";
-        }
-    );
+
     $textwindow->bind(
         'TextUnicode',
         '<Control-Alt-s>' => sub {
@@ -9940,7 +9938,7 @@ sub textbindings {
                 open my $fh, '>', 'scratchpad.txt'
                     or warn "Could not create file $!";
             }
-            runner('start scratchpad.txt') if OS_Win;
+            runner('start scratchpad.txt') if $OS_WIN;
         }
     );
     $textwindow->bind( 'TextUnicode',
@@ -9965,7 +9963,7 @@ sub textbindings {
             }
         }
     );
-    if (OS_Win) {
+    if ($OS_WIN) {
         $textwindow->bind( 'TextUnicode',
             '<3>' =>
                 sub { scrolldismiss(); $menu->Popup( -popover => 'cursor' ) }
@@ -10765,7 +10763,7 @@ sub pnumadjust {
             }
         );
         $lglobal{pnumpop}->Icon( -image => $icon );
-        if (OS_Win) {
+        if ($OS_WIN) {
             $lglobal{pagerenumoffset}->bind(
                 $lglobal{pagerenumoffset},
                 '<MouseWheel>' => [
@@ -11133,7 +11131,7 @@ EOM
 }
 
 sub os_normal {
-    $_[0] =~ s|/|\\|g if OS_Win;
+    $_[0] =~ s|/|\\|g if $OS_WIN;
     return $_[0];
 }
 
@@ -11200,7 +11198,7 @@ sub drag {
     $corner_label->bind(
         '<Enter>',
         sub {
-            if (OS_Win) {
+            if ($OS_WIN) {
                 $corner->configure( -cursor => 'size_nw_se' );
             }
             else {
@@ -11244,7 +11242,7 @@ sub jeebiesrun {
     $listbox->delete( '0', 'end' );
     savefile() if ( $textwindow->numberChanges );
     my $title = os_normal( $lglobal{global_filename} );
-    $title = dos_path($title) if OS_Win;
+    $title = dos_path($title) if $OS_WIN;
     my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
     unless ($jeebiespath) {
         $jeebiespath = $textwindow->getOpenFile(
@@ -11255,7 +11253,7 @@ sub jeebiesrun {
     return unless $jeebiespath;
     my $jeebiesoptions = "-$jeebiesmode" . 'e';
     $jeebiespath = os_normal($jeebiespath);
-    $jeebiespath = dos_path($jeebiespath) if OS_Win;
+    $jeebiespath = dos_path($jeebiespath) if $OS_WIN;
     %jeeb        = ();
     my $mark = 0;
     $top->Busy( -recurse => 1 );
@@ -12012,24 +12010,17 @@ sub update_indicators {
         saveset();
         $lglobal{geometryupdate} = 0;
     }
-
-    # FIXME: Can this go? Maybe.
-    if ( $autosave and $lglobal{autosaveinterval} and $DEBUG ) {
-        my $elapsed
-            = $autosaveinterval * 60 - ( time - $lglobal{autosaveinterval} );
-        printf "%d:%02d\n", int( $elapsed / 60 ), $elapsed % 60;
-    }
-}
+  }
 
 ## Spell Check
 
 # Initialize spellchecker
 sub spellcheckfirst {
     $lglobal{spellexename}
-        = ( OS_Win ? dos_path($globalspellpath) : $globalspellpath )
+        = ( $OS_WIN ? dos_path($globalspellpath) : $globalspellpath )
         ;    # Make the exe path dos compliant
     $lglobal{spellfilename} = (
-        OS_Win
+        $OS_WIN
         ? dos_path( $lglobal{global_filename} )
         : $lglobal{global_filename}
     );       # make the file path dos compliant
@@ -12271,7 +12262,7 @@ sub aspellstop {
         close IN;
         close OUT;
         kill 9, $lglobal{spellpid}
-            if OS_Win
+            if $OS_WIN
         ;    # Brute force kill the aspell process... seems to be necessary
              # under windows
         waitpid( $lglobal{spellpid}, 0 );
@@ -15593,7 +15584,7 @@ sub gutcheck {
         ;    #FIXME: sub this out; this and next in the tidy code
     $title =~ s/edited - //;
     $title = os_normal($title);
-    $title = dos_path($title) if OS_Win;
+    $title = dos_path($title) if $OS_WIN;
     ( $name, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
     my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
     unless ($gutpath) {
@@ -15625,7 +15616,7 @@ sub gutcheck {
     ;     # Ignore DP style page separators
     $gutcheckoptions .= ' ';
     $gutpath = os_normal($gutpath);
-    $gutpath = dos_path($gutpath) if OS_Win;
+    $gutpath = dos_path($gutpath) if $OS_WIN;
     saveset();
 
     if ( $lglobal{gcpop} ) {
@@ -17580,6 +17571,7 @@ sub setmargins {
     saveset();
 }
 
+# FIXME: Adapt to work with fontCreate thingy
 sub fontsize {
     my $sizelabel;
     if ( defined( $lglobal{fspop} ) ) {
@@ -17693,7 +17685,7 @@ sub setbrowser {
 
 sub viewerpath {    #Find your image viewer
     my $types;
-    if (OS_Win) {
+    if ($OS_WIN) {
         $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
     }
     else {
@@ -17877,7 +17869,7 @@ sub setcolor {    # Color picking routine
 
 sub spelloptions {
     if ($globalspellpath) {
-        OS_Win
+        $OS_WIN
             ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
             : ( $lglobal{spellexename} = $globalspellpath );
         aspellstart() unless $lglobal{spellpid};
@@ -17907,7 +17899,7 @@ sub spelloptions {
                 $spellpathentry->insert( 'end', $globalspellpath );
                 saveset();
 
-                OS_Win
+                $OS_WIN
                     ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
                     : ( $lglobal{spellexename} = $globalspellpath );
                 open my $infile, '-|', "$lglobal{spellexename} dump dicts"
@@ -17957,7 +17949,7 @@ sub spelloptions {
     $dictlist->insert( 'end', "<default>" );
 
     if ($globalspellpath) {
-        OS_Win
+        $OS_WIN
             ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
             : ( $lglobal{spellexename} = $globalspellpath );
         open my $infile, '-|', "$lglobal{spellexename} dump dicts"
@@ -18236,7 +18228,7 @@ sub showversion {
     $os =~ s/^([^\[]+)\[.+/$1/;
     my $perl = sprintf( "Perl v%vd", $^V);
     my $winver;
-    if (OS_Win) {
+    if ($OS_WIN) {
         $winver = qx{ver};
         $winver =~ s{\n}{}smg;
     }
@@ -18281,7 +18273,7 @@ END
 #         $dbox->Show;
 #         return;
 #     }
-#     if ( $response->content gt $currentver ) {
+#     if ( $response->content gt $VERSION ) {
 #         print $response->content;
 #         $dbox = $top->Dialog(
 #             -text =>
