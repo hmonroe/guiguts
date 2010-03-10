@@ -18455,7 +18455,8 @@ sub hotkeyshelp {
                 . "'d' -- Delete - delete the page separator. Make no other edits.\n"
                 . "'v' -- View the current page in the image viewer.\n"
                 . "'a' -- Toggle Full Automatic mode.\n"
-                . "'s' -- Toggle Semi Automatic mode.\n" . "\n"
+                . "'s' -- Toggle Semi Automatic mode.\n"
+                . "'?' -- View hotkey help popup.\n"
         );
         my $button_ok = $frame->Button(
             -activebackground => $activecolor,
