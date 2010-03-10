@@ -58,5 +58,11 @@ Fix all file open routines to "use FileHandle".
 
 spelling: chekfil.txt writes to GG dir; needs to go in project directory.
 
-Disable unicode search function until update unicore is fixed.
+Move CER/NER lists to separate module ala lib/Guiguts/Greekgifs.pm
+
+Make the find dialog a toolbar built into the GG main window ala emacs.
+
+Rewrite menu code to newer implementation.
+
+use File::Spec for filenames, dir paths.
 
