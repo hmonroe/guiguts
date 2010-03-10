@@ -6429,6 +6429,8 @@ sub phelppopup {
     Delete - delete the page separator. Make no other edits. - Hotkey d
     Full Auto - automatically search for and convert if possible the next page separator. - Toggle - a
     Semi Auto - automatically search for and center the next page separator after an edit. - Toggle - s
+    View page image - Hotkey v
+    View Page Separator help -Hotkey ?
 EOM
 
     if ( defined( $lglobal{phelppop} ) ) {
@@ -16052,6 +16054,7 @@ sub separatorpopup {
     $lglobal{pagepop}->Tk::bind( '<h>' => sub { joinlines('h') } );
     $lglobal{pagepop}->Tk::bind( '<d>' => sub { joinlines('d') } );
     $lglobal{pagepop}->Tk::bind( '<t>' => sub { joinlines('t') } );
+    $lglobal{pagepop}->Tk::bind( '<?>' => sub { phelppopup('?') } );
     $lglobal{pagepop}->Tk::bind( '<r>' => \&convertfilnum );
     $lglobal{pagepop}
         ->Tk::bind( '<v>' => sub { openpng(); $lglobal{pagepop}->raise; } );
