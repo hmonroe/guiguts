@@ -61,7 +61,7 @@ use LineNumberText;
 use TextUnicode;
 use Guiguts::Greekgifs;
 
-use ToolBar; # FIXME: Move to lib/Tk.
+use ToolBar;    # FIXME: Move to lib/Tk.
 
 # Ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
@@ -69,9 +69,9 @@ $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { _exit() };
 
 ### Constants
-my $OS_WIN = $^O =~ m{Win};
-my $VERSION    = '0.2.9';
-my $APP_NAME = 'GuiGuts';
+my $OS_WIN         = $^O =~ m{Win};
+my $VERSION        = '0.2.9';
+my $APP_NAME       = 'GuiGuts';
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
     = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
@@ -345,7 +345,6 @@ else {
     $lglobal{global_filename} = 'No File Loaded';
 }
 
-
 set_autosave() if $autosave;
 
 $textwindow->CallNextGUICallback;
@@ -463,7 +462,7 @@ sub _bin_save {
         rename $binname, $bak or warn "Can not back up .bin file: $!\n";
     }
     my $fh = FileHandle->new("> $binname");
-    if (defined $fh) {
+    if ( defined $fh ) {
         print $fh "\%pagenumbers = (\n";
         for my $page ( sort { $a cmp $b } keys %pagenumbers ) {
 
@@ -487,8 +486,7 @@ sub _bin_save {
                 if $bookmarks[$_];
         }
         if ($pngspath) {
-            print $fh
-                "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
+            print $fh "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
         }
         my ( $page, $prfr );
         delete $proofers{''};
@@ -524,7 +522,7 @@ sub _bin_save {
 }
 
 ## Track recently open files for the menu
-sub _recentupdate { # FIXME: Seems to be choking.
+sub _recentupdate {    # FIXME: Seems to be choking.
     my $name = shift;
 
     # remove $name or any *empty* values from the list
@@ -3396,7 +3394,7 @@ sub replaceeval {
 
     if ( $replaceterm =~ /\\C/ ) {
         if ( $lglobal{codewarn} ) {
-          my $message = <<'END';
+            my $message = <<'END';
 WARNING!! The replacement term will execute arbitrary perl code. 
 If you do not want to, or are not sure of what you are doing, cancel the operation.
 It is unlikely that there is a problem. However, it is possible (and not terribly difficult) 
@@ -3406,7 +3404,7 @@ Do you want to proceed?
 END
 
             my $dialog = $top->Dialog(
-                -text => $message,
+                -text    => $message,
                 -bitmap  => 'warning',
                 -title   => 'WARNING! Code in term.',
                 -buttons => [ 'OK', 'Warnings Off', 'Cancel' ],
@@ -4044,7 +4042,8 @@ sub poetryhtml {
     else {
         my $end   = pop(@ranges);
         my $start = pop(@ranges);
-        my ( $lsr, $lsc, $ler, $lec, $step, $ital ); # FIXME: Guessing $lsr is last_star_row, last_end
+        my ( $lsr, $lsc, $ler, $lec, $step, $ital )
+            ;    # FIXME: Guessing $lsr is last_star_row, last_end
         ( $lsr, $lsc ) = split /\./, $start;
         ( $ler, $lec ) = split /\./, $end;
         $step = $lsr;
@@ -5336,10 +5335,11 @@ sub htmlautoconvert {
     my $thisblockend;
     my $thisblockstart = '1.0';
     my $thisend        = q{};
-   # FIXME: May as well put all uninit vars in a single my();
+
+    # FIXME: May as well put all uninit vars in a single my();
     my $title;
     my ( $blkopen, $blkclose );
-    my ( $ler, $lec, $step ); # FIXME: last_end_row|column
+    my ( $ler, $lec, $step );    # FIXME: last_end_row|column
     my @contents = ("<p>\n");
     my @last5 = [ 1, 1, 1, 1, 1 ];
 
@@ -7043,7 +7043,7 @@ sub tidypop_up {
             ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
         $lglobal{tidylistbox}->bind(
             '<<view>>',
-            sub { # FIXME: adapt for gutcheck
+            sub {    # FIXME: adapt for gutcheck
                 $textwindow->tagRemove( 'highlight', '1.0', 'end' );
                 my $line = $lglobal{tidylistbox}->get('active');
                 if ( $line =~ /^line/ ) {
@@ -7093,9 +7093,10 @@ sub tidypop_up {
         );
         $lglobal{tidypop}->update;
     }
-    $lglobal{tidylistbox}->focus;# FIXME: Again for gutcheck, jeebies.
+    $lglobal{tidylistbox}->focus;    # FIXME: Again for gutcheck, jeebies.
     my $fh = FileHandle->new("< tidyerr.err");
-    unless (defined($fh)) {
+    unless ( defined($fh) ) {
+
       # FIXME: original line: unless ( open( RESULTS, '<', 'tidyerr.err' ) ) {
         my $dialog = $top->Dialog(
             -text    => 'Could not find tidy error file.',
@@ -9327,7 +9328,7 @@ sub tblautoc {
 }
 
 sub fontinit {
-    $lglobal{font} = "{$fontname} $fontsize $fontweight"
+    $lglobal{font} = "{$fontname} $fontsize $fontweight";
 }
 
 # FIXME: Not working ... probably in font change pref doodad.
@@ -11322,9 +11323,7 @@ If running under Linux or OSX, you will probably need to run the command\n\"sudo
 in a terminal window for the updates to be installed correctly.
 END
 
-    $oops->add( 'Label',
-        -text => $message
-    )->pack;
+    $oops->add( 'Label', -text => $message )->pack;
     $oops->Show;
     return 0;
 }
@@ -12012,7 +12011,7 @@ sub update_indicators {
         saveset();
         $lglobal{geometryupdate} = 0;
     }
-  }
+}
 
 ## Spell Check
 
@@ -12332,7 +12331,8 @@ sub spellget_misspellings {    # get list of misspelled words
     my $spellopt
         = get_spellchecker_version() lt "0.6"
         ? "list --encoding=$lglobal{spellencoding} "
-        : "list --encoding=$lglobal{spellencoding} "; # FIXME: This not necessary.
+        : "list --encoding=$lglobal{spellencoding} "
+        ;                   # FIXME: This not necessary.
     $spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
     @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
         ;    # feed the text to aspell, get an array of misspelled words out
@@ -14457,7 +14457,7 @@ sub indent {
                         push @selarray, ( "$start-1c", "$end-1c" );
                     }
                 }
-                }
+            }
             else {
                 while ( $index <= $thisblockend ) {
                     if ( $indent eq 'in' ) {
@@ -15329,7 +15329,7 @@ sub wordcount {
         );
         $lglobal{wclistbox}
             ->eventAdd( '<<find>>' => '<Double-Button-1>', '<Return>' );
-        $lglobal{wclistbox}->bind( # FIXME: This needs to go in GC code.
+        $lglobal{wclistbox}->bind(    # FIXME: This needs to go in GC code.
             '<<find>>',
             sub {
                 my ($sword)
@@ -18229,7 +18229,7 @@ sub showversion {
     my ($top) = @_;
     my $os = $^O;
     $os =~ s/^([^\[]+)\[.+/$1/;
-    my $perl = sprintf( "Perl v%vd", $^V);
+    my $perl = sprintf( "Perl v%vd", $^V );
     my $winver;
     if ($OS_WIN) {
         $winver = qx{ver};
@@ -18250,7 +18250,7 @@ END
         -title   => 'Versions',
         -popover => $top,
         -justify => 'center',
-        -text => $message,
+        -text    => $message,
     );
     $dialog->Show;
 }
