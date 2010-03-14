@@ -70,7 +70,7 @@ $SIG{INT} = sub { _exit() };
 
 ### Constants
 my $OS_WIN         = $^O =~ m{Win};
-my $VERSION        = '0.2.9';
+my $VERSION        = '0.2.10';
 my $APP_NAME       = 'GuiGuts';
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
