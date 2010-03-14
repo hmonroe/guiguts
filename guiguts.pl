@@ -1399,16 +1399,21 @@ sub buildmenu {
             [   Button   => "Convert Italics",
                 -command => \&text_convert_italic
             ],
+
             [ Button => "Convert Bold", -command => \&text_convert_bold ],
 
-         #[ Button => "Convert Smallcaps", -command => \&text_convert_smcap ],
+            # FIXME: [ Button => "Delete [Blank Page]", -command => \&text_delete_blank_page ],
+
+            # FIXME: [ Button => "Convert Smallcaps", -command => \&text_convert_smcap ],
+
             [   Button   => '~Add a Thought Break',
                 -command => sub {
                     $textwindow->addGlobStart;
-                    thoughtbreak();
+                    text_thought_break();
                     $textwindow->addGlobEnd;
                     }
             ],
+
             [   Button   => 'Convert <tb> to asterisk break',
                 -command => sub {
                     $textwindow->addGlobStart;
@@ -1420,8 +1425,9 @@ sub buildmenu {
             [ Button => "Options", -command => \&text_convert_options ],
         ]
     );
+
     $menu->Cascade(
-        qw/-label Externa~l -tearoff 1 -menuitems/ => [
+        qw{-label Externa~l -tearoff 1 -menuitems} => [
             [   Button   => 'Setup External Operations',
                 -command => \&externalpopup
             ],
@@ -17216,7 +17222,7 @@ sub text_convert_italic {
 }
 
 sub text_convert_bold {
-    my $bold    = qr/<\/?b>/;
+    my $bold    = qr{</?b>};
     my $replace = "$bold_char";
     $textwindow->FindAndReplaceAll( '-regexp', '-nocase', $bold, $replace );
 }
@@ -17224,7 +17230,7 @@ sub text_convert_bold {
 #sub text_convert_smcap { }
 
 ## Insert a "Thought break" (duh)
-sub thoughtbreak {
+sub text_thought_break {
     $textwindow->insert( ( $textwindow->index('insert') ) . ' lineend',
         '       *' x 5 );
 }
@@ -17237,6 +17243,8 @@ sub text_convert_tb {
     my $tb = '       *       *       *       *       *';
     $textwindow->FindAndReplaceAll( '-exact', '-nocase', '<tb>', $tb );
 }
+
+# FIXME: sub text_delete_blank_page { }
 
 # Popup for choosing replacement characters, etc.
 sub text_convert_options {
