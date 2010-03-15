@@ -37,7 +37,7 @@ use LWP::UserAgent;
 use charnames();
 
 use Tk;
-use Tk::widgets qw/Balloon
+use Tk::widgets qw{Balloon
     BrowseEntry
     Checkbutton
     Dialog
@@ -53,7 +53,8 @@ use Tk::widgets qw/Balloon
     ProgressBar
     Radiobutton
     TextEdit
-    /;
+    ToolBar
+    };
 
 ### Custom Guigut modules
 # FIXME: Move these into lib/Guiguts.
@@ -61,7 +62,6 @@ use LineNumberText;
 use TextUnicode;
 use Guiguts::Greekgifs;
 
-use ToolBar;    # FIXME: Move to lib/Tk.
 
 # Ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
