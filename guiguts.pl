@@ -294,9 +294,7 @@ $top->DropSite(
 
 $top->protocol( 'WM_DELETE_WINDOW' => \&_exit );
 
-my $menu = $top->Menu( -type => 'menubar' );
-
-$top->configure( -menu => $menu );
+$top->configure( -menu => my $menubar = $top->Menu);
 
 # routines to call every time the text is edited
 $textwindow->SetGUICallbacks(
@@ -479,8 +477,8 @@ sub _bin_save {
         print $fh '$bookmarks[0] = \''
             . $textwindow->index('insert') . "';\n";
         for ( 1 .. 5 ) {
-            print $fh '$bookmarks[' 
-                . $_ 
+            print $fh '$bookmarks['
+                . $_
                 . '] = \''
                 . $textwindow->index( 'bkmk' . $_ ) . "';\n"
                 if $bookmarks[$_];
@@ -495,8 +493,8 @@ sub _bin_save {
             no warnings 'uninitialized';
             for my $round ( 1 .. $lglobal{numrounds} ) {
                 if ( defined $proofers{$page}->[$round] ) {
-                    print $fh '$proofers{\'' 
-                        . $page . '\'}[' 
+                    print $fh '$proofers{\''
+                        . $page . '\'}['
                         . $round
                         . '] = \''
                         . $proofers{$page}->[$round] . '\';' . "\n";
@@ -699,7 +697,7 @@ sub runner {
 ## rebuild every time it is modified
 sub rebuildmenu {
     for ( 0 .. 10 ) {
-        $menu->delete('last');
+        $menubar->delete('last');
     }
     buildmenu();
 }
@@ -984,157 +982,428 @@ sub highlightscannos {
 }
 
 ## The main menu building code.
-sub buildmenu {
-    $menu->Cascade(
-        -label     => '~File',
-        -tearoff   => 0,
-        -menuitems => [
-            [ Button => '~Open', -command => [ \&fileopen ] ],
-            [ 'separator', '' ],
-            map ( [ Button   => "$recentfile[$_]",
-                    -command => [ \&openfile, $recentfile[$_] ],
-                ],
-                ( 0 .. scalar(@recentfile) - 1 ) ),
-            [ 'separator', '' ],
-            [   Button       => '~Save',
-                -command     => \&savefile,
-                -accelerator => 'Ctrl+s'
-            ],
-            [   Button   => 'Save ~As',
-                -command => sub {         # FIXME: Move to sub saveas
-                    my ($name);
-                    $name = $textwindow->getSaveFile(
-                        -title      => 'Save As',
-                        -initialdir => $globallastpath
+use subs qw{
+             file_menuitems
+             edit_menuitems
+             search_menuitems
+             help_menuitems
+             };
+
+sub file_saveas {
+    my ($name);
+    $name = $textwindow->getSaveFile(
+                                     -title      => 'Save As',
+                                     -initialdir => $globallastpath
+                                    );
+    if ( defined($name) and length($name) ) {
+        my $binname = $name;
+        $binname =~ s/\.[^\.]*?$/\.bin/;
+        if ( $binname eq $name ) { $binname .= '.bin' }
+        if ( -e $binname ) {
+            my $warning = $top->Dialog(# FIXME: heredoc
+                                       -text =>
+                                       "WARNING! A file already exists that will use the same .bin filename.\n"
+                                       . "It is highly recommended that a different file name is chosen to avoid\n"
+                                       . "corrupting the .bin files.\n\n Are you sure you want to continue?",
+                                       -title          => 'Bin File Collision!',
+                                       -bitmap         => 'warning',
+                                       -buttons        => [qw/Continue Cancel/],
+                                       -default_button => qw/Cancel/,
+                                      );
+            my $answer = $warning->Show;
+            return unless ( $answer eq 'Continue' );
+        }
+        $textwindow->SaveUTF($name);
+        my ( $fname, $extension, $filevar );
+        ( $fname, $globallastpath, $extension )
+            = fileparse($name);
+        $globallastpath = os_normal($globallastpath);
+        $name           = os_normal($name);
+        $textwindow->FileName($name);
+        $lglobal{global_filename} = $name;
+        _bin_save();
+        _recentupdate($name);
+    }
+    else {
+        return;
+    }
+    update_indicators();
+}
+
+sub file_close {
+    return if ( confirmempty() =~ m{cancel}i );
+    clearvars();
+    update_indicators();
+
+}
+
+sub file_include { # FIXME: Should include even if no file loaded.
+    my ($name);
+    my $types = [
+                 [   'Text Files',
+                     [ '.txt', '.text', '.ggp', 'htm', 'html' ]
+                 ],
+                 [ 'All Files', ['*'] ],
+                ];
+    return if $lglobal{global_filename} =~ m{No File Loaded};
+    $name = $textwindow->getOpenFile(
+                                     -filetypes  => $types,
+                                     -title      => 'File Include',
+                                     -initialdir => $globallastpath
+                                    );
+    $textwindow->IncludeFile($name)
+        if defined($name)
+            and length($name);
+    update_indicators();
+}
+
+sub file_import {
+    return if ( confirmempty() =~ /cancel/i );
+    my $directory
+        = $top->chooseDirectory( -title =>
+            'Choose the directory containing the text files to be imported.',
+        );
+    return 0
+        unless ( -d $directory and defined $directory and $directory ne '' );
+    $top->Busy( -recurse => 1 );
+    my $pwd = getcwd();
+    chdir $directory;
+    my @files = glob "*.txt";
+    chdir $pwd;
+    $directory .= '/';
+    $directory      = os_normal($directory);
+    $globallastpath = $directory;
+
+    for my $file (@files) {
+        if ( $file =~ /^(\d+)\.txt/ ) {
+            $textwindow->ntinsert( 'end', ( "\n" . '-' x 6 ) );
+            $textwindow->ntinsert( 'end', "File: $1.png" );
+            $textwindow->ntinsert( 'end', ( '-' x 45 ) . "\n" );
+            if ( open my $fh, '<', "$directory$file" ) {
+                local $/ = undef;
+                my $line = <$fh>;
+                utf8::decode($line);
+                $line =~ s/^\x{FEFF}?//;
+                $line =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
+                #$line = eol_convert($line);
+                $line =~ s/[\t \xA0]+$//smg;
+                $textwindow->ntinsert( 'end', $line );
+                close $file;
+            }
+            $top->update;
+        }
+    }
+    $textwindow->markSet( 'insert', '1.0' );
+    $lglobal{prepfile} = 1;
+    markpages();
+    $pngspath = '';
+    $top->Unbusy( -recurse => 1 );
+}
+
+sub file_export {
+    my $directory = $top->chooseDirectory(
+        -title => 'Choose the directory to export the text files to.', );
+    return 0 unless ( defined $directory and $directory ne '' );
+    unless ( -e $directory ) {
+        mkdir $directory or warn "Could not make directory $!\n" and return;
+    }
+    $top->Busy( -recurse => 1 );
+    my @marks = $textwindow->markNames;
+    my @pages = sort grep ( /^Pg\S+$/, @marks );
+    my $unicode
+        = $textwindow->search( '-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0',
+        'end' );
+    while (@pages) {
+        my $page = shift @pages;
+        my ($filename) = $page =~ /Pg(\S+)/;
+        $filename .= '.txt';
+        my $next;
+        if (@pages) {
+            $next = $pages[0];
+        }
+        else {
+            $next = 'end';
+        }
+        my $file = $textwindow->get( $page, $next );
+        $file =~ s/-{5,}File:.+?-{5}\n//;
+        $file =~ s/\n+$//;
+        open my $fh, '>', "$directory/$filename";
+        if ($unicode) {
+            $file = "\x{FEFF}" . $file;    # Add the BOM to beginning of file.
+            utf8::encode($file);
+        }
+        print $fh $file;
+    }
+    $top->Unbusy( -recurse => 1 );
+}
+
+sub file_guess_page_marks {
+    my ( $totpages, $line25, $linex );
+    if ( $lglobal{pgpop} ) {
+        $lglobal{pgpop}->deiconify;
+    }
+    else {
+        $lglobal{pgpop} = $top->Toplevel;
+        $lglobal{pgpop}->title('Guess Page Numbers');
+        my $f0 = $lglobal{pgpop}->Frame->pack;
+        $f0->Label( -text =>
+                'This function should only be used if you have the page images but no page markers in the text.',
+        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+        my $f1 = $lglobal{pgpop}->Frame->pack;
+        $f1->Label( -text => 'How many pages are there total?', )
+            ->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+        my $tpages = $f1->Entry(
+            -background => 'white',
+            -width      => 8,
+        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+        $f1->Label( -text => 'What line # does page 25 start with?', )
+            ->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
+        my $page25 = $f1->Entry(
+            -background => 'white',
+            -width      => 8,
+        )->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
+        my $f3 = $lglobal{pgpop}->Frame->pack;
+        $f3->Label(
+            -text => 'Select a page near the back, before the index starts.',
+        )->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
+        my $f4 = $lglobal{pgpop}->Frame->pack;
+        $f4->Label( -text => 'Page #?.', )
+            ->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+        $f4->Label( -text => 'Line #?.', )
+            ->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+        my $pagexe = $f4->Entry(
+            -background => 'white',
+            -width      => 8,
+        )->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
+        my $linexe = $f4->Entry(
+            -background => 'white',
+            -width      => 8,
+        )->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
+        my $f2         = $lglobal{pgpop}->Frame->pack;
+        my $calcbutton = $f2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                my ( $pnum, $lnum, $pagex, $linex, $number );
+                $totpages = $tpages->get;
+                $line25   = $page25->get;
+                $pagex    = $pagexe->get;
+                $linex    = $linexe->get;
+                unless ( $totpages && $line25 && $line25 && $linex ) {
+                    $top->messageBox(
+                        -icon    => 'error',
+                        -message => 'Need all values filled in.',
+                        -title   => 'Missing values',
+                        -type    => 'Ok',
                     );
-                    if ( defined($name) and length($name) ) {
-                        my $binname = $name;
-                        $binname =~ s/\.[^\.]*?$/\.bin/;
-                        if ( $binname eq $name ) { $binname .= '.bin' }
-                        if ( -e $binname ) {
-                            my $warning = $top->Dialog(
-                                -text =>
-                                    "WARNING! A file already exists that will use the same .bin filename.\n"
-                                    . "It is highly recommended that a different file name is chosen to avoid\n"
-                                    . "corrupting the .bin files.\n\n Are you sure you want to continue?",
-                                -title          => 'Bin File Collision!',
-                                -bitmap         => 'warning',
-                                -buttons        => [qw/Continue Cancel/],
-                                -default_button => qw/Cancel/,
-                            );
-                            my $answer = $warning->Show;
-                            return unless ( $answer eq 'Continue' );
-                        }
-                        $textwindow->SaveUTF($name);
-                        my ( $fname, $extension, $filevar );
-                        ( $fname, $globallastpath, $extension )
-                            = fileparse($name);
-                        $globallastpath = os_normal($globallastpath);
-                        $name           = os_normal($name);
-                        $textwindow->FileName($name);
-                        $lglobal{global_filename} = $name;
-                        _bin_save();
-                        _recentupdate($name);
+                    return;
+                }
+                if ( $totpages <= $pagex ) {
+                    $top->messageBox(
+                        -icon => 'error',
+                        -message =>
+                            'Selected page must be lower than total pages',
+                        -title => 'Bad value',
+                        -type  => 'Ok',
+                    );
+                    return;
+                }
+                if ( $linex <= $line25 ) {
+                    $top->messageBox(
+                        -icon    => 'error',
+                        -message => "Line number for selected page must be \n"
+                            . "higher than that of page 25",
+                        -title => 'Bad value',
+                        -type  => 'Ok',
+                    );
+                    return;
+                }
+                my $end = $textwindow->index('end');
+                $end = int( $end + .5 );
+                my $average = ( int( $line25 + .5 ) / 25 );
+                for $pnum ( 1 .. 24 ) {
+                    $lnum = int( ( $pnum - 1 ) * $average ) + 1;
+                    if ( $totpages > 999 ) {
+                        $number = sprintf '%04s', $pnum;
                     }
                     else {
-                        return;
+                        $number = sprintf '%03s', $pnum;
                     }
-                    update_indicators();
+                    $textwindow->markSet( 'Pg' . $number, "$lnum.0" );
+                    $textwindow->markGravity( "Pg$number", 'left' );
+                }
+                $average
+                    = ( ( int( $linex + .5 ) ) - ( int( $line25 + .5 ) ) )
+                    / ( $pagex - 25 );
+                for $pnum ( 1 .. $pagex - 26 ) {
+                    $lnum = int( ( $pnum - 1 ) * $average ) + 1 + $line25;
+                    if ( $totpages > 999 ) {
+                        $number = sprintf '%04s', $pnum + 25;
                     }
-            ],
-            [   Button   => '~Include',
-                -command => sub {         # FIXME: file_include
-                    my ($name);
-                    my $types = [
-                        [   'Text Files',
-                            [ '.txt', '.text', '.ggp', 'htm', 'html' ]
-                        ],
-                        [ 'All Files', ['*'] ],
-                    ];
-                    return if $lglobal{global_filename} =~ m{No File Loaded};
-                    $name = $textwindow->getOpenFile(
-                        -filetypes  => $types,
-                        -title      => 'File Include',
-                        -initialdir => $globallastpath
-                    );
-                    $textwindow->IncludeFile($name)
-                        if defined($name)
-                            and length($name);
-                    update_indicators();
+                    else {
+                        $number = sprintf '%03s', $pnum + 25;
                     }
-            ],
-            [   Button   => '~Close',
-                -command => sub {       # FIXME: sub file_close
-                    return if ( confirmempty() =~ m{cancel}i );
-                    clearvars();
-                    update_indicators();
+                    $textwindow->markSet( "Pg$number", "$lnum.0" );
+                    $textwindow->markGravity( "Pg$number", 'left' );
+                }
+                $average
+                    = ( $end - int( $linex + .5 ) ) / ( $totpages - $pagex );
+                for $pnum ( 1 .. ( $totpages - $pagex ) ) {
+                    $lnum = int( ( $pnum - 1 ) * $average ) + 1 + $linex;
+                    if ( $totpages > 999 ) {
+                        $number = sprintf '%04s', $pnum + $pagex;
                     }
-            ],
-            [ 'separator', '' ],
-            [   Button   => 'Import Prep Text Files',
-                -command => sub { prep_import() }       # FIXME: \&prep_import
-            ],
-            [   Button   => 'Export As Prep Text Files',
-                -command => sub { prep_export() }
-            ],
-            [ 'separator', '' ],
-            [ Button => '~Guess Page Markers', -command => \&guesswindow ],
-            [ Button => 'Set Page ~Markers',   -command => \&markpages ],
-            [ 'separator', '' ],
-            [ Button => 'E~xit', -command => \&_exit ],
-        ]
-    );
+                    else {
+                        $number = sprintf '%03s', $pnum + $pagex;
+                    }
+                    $textwindow->markSet( "Pg$number", "$lnum.0" );
+                    $textwindow->markGravity( "Pg$number", 'left' );
+                }
+                $lglobal{pgpop}->destroy;
+                undef $lglobal{pgpop};
+            },
+            -text  => 'Guess Page #s',
+            -width => 18
+        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+        $lglobal{pgpop}->protocol( 'WM_DELETE_WINDOW' =>
+                sub { $lglobal{pgpop}->destroy; undef $lglobal{pgpop} } );
+        $lglobal{pgpop}->Icon( -image => $icon );
+    }
+}
 
-    $menu->Cascade(
-        -label     => '~Edit',
-        -tearoff   => 1,
-        -menuitems => [
-            [   Button       => 'Undo',
-                -command     => sub { $textwindow->undo },
-                -accelerator => 'Ctrl+z'
-            ],
-            [   Button       => 'Redo',
-                -command     => sub { $textwindow->redo },
-                -accelerator => 'Ctrl+y'
-            ],
-            [ 'separator', '' ],
-            [   Button       => 'Cut',
-                -command     => sub { cut() },
-                -accelerator => 'Ctrl+x'
-            ],
-            [   Button       => 'Copy',
-                -command     => sub { copy() },
-                -accelerator => 'Ctrl+c'
-            ],
-            [   Button       => 'Paste',
-                -command     => sub { paste() },
-                -accelerator => 'Ctrl+v'
-            ],
-            [   Button   => 'Col Paste',
-                -command => sub {          # FIXME: sub edit_column_paste
-                    $textwindow->addGlobStart;
-                    $textwindow->clipboardColumnPaste;
-                    $textwindow->addGlobEnd;
-                },
-                -accelerator => 'Ctrl+`'
-            ],
-            [ 'separator', '' ],
-            [   Button   => 'Select All',
-                -command => sub {
-                    $textwindow->selectAll;
-                },
-                -accelerator => 'Ctrl+/'
-            ],
-            [   Button   => 'Unselect All',
-                -command => sub {
-                    $textwindow->unselectAll;
-                },
-                -accelerator => 'Ctrl+\\'
-            ],
-        ]
-    );
+sub file_mark_pages {
+    $top->Busy( -recurse => 1 );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    my ( $line, $index, $page, $rnd1, $rnd2, $pagemark );
+    $searchstartindex = '1.0';
+    $searchendindex   = '1.0';
+    while ($searchstartindex) {
+        $searchstartindex
+            = $textwindow->search( '-nocase', '-regexp', '--',
+            '-*\s?File:\s?(\S+)\.(png|jpg)---.*$',
+            $searchendindex, 'end' );
+        last unless $searchstartindex;
+        $searchendindex = $textwindow->index("$searchstartindex lineend");
+        $line = $textwindow->get( $searchstartindex, $searchendindex );
 
-    $menu->Cascade(
+        # get the page name - we do this separate from pulling the
+        # proofer names in case we did an Import Test Prep Files
+        # which does not include proofer names
+        #  look for one or more dashes followed by File: followed
+        #  by zero or more spaces, then non-greedily capture everything
+        #  up to the first period
+        if ( $line =~ /-+File:\s*(.*?)\./ ) {
+            $page = $1;
+        }
+
+        # get list of proofers:
+        #  look for one or more dashes followed by File:, then
+        #  non-greedily ignore everything up to the
+        #  string of dashes, ignore the dashes, then capture
+        #  everything until the dashes begin again (proofer string)
+        if ( $line =~ /-+File:.*?-+([^-]+)-+/ ) {
+
+            # split the proofer string into parts
+            @{ $proofers{$page} } = split( "\Q\\\E", $1 );
+        }
+
+        $pagemark = 'Pg' . $page;
+        $pagenumbers{$pagemark}{offset} = 1;
+        $textwindow->markSet( $pagemark, $searchstartindex );
+        $textwindow->markGravity( $pagemark, 'left' );
+    }
+    delete $proofers{''};
+    $top->Unbusy( -recurse => 1 );
+}
+
+sub file_menuitems {
+    [   [ 'command',   '~Open',    -command => \&file_open ],
+        [ 'separator', '' ],
+        map ([Button => "$recentfile[$_]", # FIXME: Rewrite this
+              -command => [ \&openfile, $recentfile[$_]]],
+             ( 0 .. scalar(@recentfile) - 1 )),
+        [ 'separator', '' ],
+        [ 'command',   '~Save',
+          -accelerator => 'Ctrl+s',
+          -command => \&savefile ],
+        [ 'command',   'Save ~As', -command => \&file_saveas ],
+        [ 'command',   '~Include File', -command => \&file_include ],
+        [ 'command',   '~Close',   -command => \&file_close ],
+        [ 'separator', '' ],
+        [ 'command',   'Import Prep Text Files', -command => \&file_import ],
+        [ 'command',   'Export As Prep Text Files', -command => \&file_export ],
+        [ 'separator', '' ],
+        [ 'command',   '~Guess Page Markers', -command => \&file_guess_page_marks],
+        [ 'command',   'Set Page ~Markers', file_mark_pages],
+        [ 'separator', '' ],
+        [ 'command', 'E~xit', -command => \&_exit ],
+    ]
+
+}
+
+sub buildmenu {
+  my $file = $menubar->cascade(
+    -label     => '~File',
+    -tearoff   => 0,
+    -menuitems => file_menuitems,
+);
+
+my $edit = $menubar->cascade(
+    -label     => '~Edit',
+    -tearoff   => 0,
+    -menuitems => edit_menuitems,
+);
+
+    # $menubar->Cascade(
+    #     -label     => '~Edit',
+    #     -tearoff   => 1,
+    #     -menuitems => [
+    #         [   Button       => 'Undo',
+    #             -command     => sub { $textwindow->undo },
+    #             -accelerator => 'Ctrl+z'
+    #         ],
+    #         [   Button       => 'Redo',
+    #             -command     => sub { $textwindow->redo },
+    #             -accelerator => 'Ctrl+y'
+    #         ],
+    #         [ 'separator', '' ],
+    #         [   Button       => 'Cut',
+    #             -command     => sub { cut() },
+    #             -accelerator => 'Ctrl+x'
+    #         ],
+    #         [   Button       => 'Copy',
+    #             -command     => sub { copy() },
+    #             -accelerator => 'Ctrl+c'
+    #         ],
+    #         [   Button       => 'Paste',
+    #             -command     => sub { paste() },
+    #             -accelerator => 'Ctrl+v'
+    #         ],
+    #         [   Button   => 'Col Paste',
+    #             -command => sub {          # FIXME: sub edit_column_paste
+    #                 $textwindow->addGlobStart;
+    #                 $textwindow->clipboardColumnPaste;
+    #                 $textwindow->addGlobEnd;
+    #             },
+    #             -accelerator => 'Ctrl+`'
+    #         ],
+    #         [ 'separator', '' ],
+    #         [   Button   => 'Select All',
+    #             -command => sub {
+    #                 $textwindow->selectAll;
+    #             },
+    #             -accelerator => 'Ctrl+/'
+    #         ],
+    #         [   Button   => 'Unselect All',
+    #             -command => sub {
+    #                 $textwindow->unselectAll;
+    #             },
+    #             -accelerator => 'Ctrl+\\'
+    #         ],
+    #     ]
+    # );
+
+    $menubar->Cascade(
         -label     => 'Sea~rch',
         -tearoff   => 1,
         -menuitems => [
@@ -1214,7 +1483,7 @@ sub buildmenu {
         ]
     );
 
-    $menu->Cascade(
+    $menubar->Cascade(
         qw/-label ~Bookmarks -tearoff 1 -menuitems/ => [
             map ( [ Button       => "Set Bookmark $_",
                     -command     => [ \&setbookmark, $_ ],
@@ -1230,7 +1499,7 @@ sub buildmenu {
         ],
     );
 
-    $menu->Cascade(
+    $menubar->Cascade(
         -label     => '~Selection',
         -tearoff   => 1,
         -menuitems => [
@@ -1328,7 +1597,7 @@ sub buildmenu {
         ]
     );
 
-    $menu->Cascade(
+    $menubar->Cascade(
         -label     => 'Fi~xup',
         -tearoff   => 1,
         -menuitems => [
@@ -1392,7 +1661,7 @@ sub buildmenu {
         ]
     );
 
-    $menu->Cascade(
+    $menubar->Cascade(
         -label     => 'Text Processing',
         -tearoff   => 1,
         -menuitems => [
@@ -1426,7 +1695,7 @@ sub buildmenu {
         ]
     );
 
-    $menu->Cascade(
+    $menubar->Cascade(
         qw{-label Externa~l -tearoff 1 -menuitems} => [
             [   Button   => 'Setup External Operations',
                 -command => \&externalpopup
@@ -1445,7 +1714,7 @@ sub buildmenu {
             $utfsorthash{ $lglobal{utfblocks}{$_}->[0] } = $_;
         }
         if ( $lglobal{utfrangesort} ) {
-            $menu->Cascade(
+            $menubar->Cascade(
                 qw/-label ~Unicode -tearoff 0 -menuitems/ => [
                     [   Radiobutton => 'Sort by Name',
                         -variable   => \$lglobal{utfrangesort},
@@ -1469,7 +1738,7 @@ sub buildmenu {
             );
         }
         else {
-            $menu->Cascade(
+            $menubar->Cascade(
                 qw/-label ~Unicode -tearoff 0 -menuitems/ => [
                     [   Radiobutton => 'Sort by Range',
                         -variable   => \$lglobal{utfrangesort},
@@ -1492,7 +1761,7 @@ sub buildmenu {
         }
     }
 
-    $menu->Cascade(
+    $menubar->Cascade(
         -label     => '~Prefs',
         -tearoff   => 1,
         -menuitems => [
@@ -1737,7 +2006,7 @@ sub buildmenu {
             ],
         ]
     );
-    $menu->Cascade(
+    $menubar->Cascade(
         -label     => '~Help',
         -tearoff   => 1,
         -menuitems => [
@@ -1931,7 +2200,7 @@ sub fnview {
         $lglobal{footviewpop}->Icon( -image => $icon );
         for my $findex ( 1 .. $lglobal{fntotal} ) {
             $ftext->insert( 'end',
-                      'footnote #' 
+                      'footnote #'
                     . $findex
                     . '  line.column - '
                     . $lglobal{fnarray}->[$findex][0]
@@ -2444,7 +2713,7 @@ sub footnoteshow {
         my $widget = $textwindow->{rtext};
         my ( $lx, $ly, $lw, $lh ) = $widget->dlineinfo($line);
         my $bottom = int(
-            (         $widget->height 
+            (         $widget->height
                     - 2 * $widget->cget( -bd )
                     - 2 * $widget->cget( -highlightthickness )
             ) / $lh / 2
@@ -3401,10 +3670,10 @@ sub replaceeval {
     if ( $replaceterm =~ /\\C/ ) {
         if ( $lglobal{codewarn} ) {
             my $message = <<'END';
-WARNING!! The replacement term will execute arbitrary perl code. 
+WARNING!! The replacement term will execute arbitrary perl code.
 If you do not want to, or are not sure of what you are doing, cancel the operation.
-It is unlikely that there is a problem. However, it is possible (and not terribly difficult) 
-to construct an expression that would delete files, execute arbitrary malicious code, 
+It is unlikely that there is a problem. However, it is possible (and not terribly difficult)
+to construct an expression that would delete files, execute arbitrary malicious code,
 reformat hard drives, etc.
 Do you want to proceed?
 END
@@ -4876,7 +5145,7 @@ sub htmlimage {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
-                                  "<div class=\"figleft\" style=\"width: " 
+                                  "<div class=\"figleft\" style=\"width: "
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -4885,7 +5154,7 @@ sub htmlimage {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
-                                  "<div class=\"figright\" style=\"width: " 
+                                  "<div class=\"figright\" style=\"width: "
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -5694,7 +5963,7 @@ sub htmlautoconvert {
                 $ital = 0;
             }
             $lglobal{classhash}->{$indent}
-                = '    .poem span.i' 
+                = '    .poem span.i'
                 . $indent
                 . '     {display: block; margin-left: '
                 . $indent
@@ -5910,7 +6179,7 @@ sub htmlautoconvert {
                     $ital = 0;
                 }
                 $selection
-                    = '<span style="margin-left: ' 
+                    = '<span style="margin-left: '
                     . $indent . 'em;">'
                     . $selection
                     . '</span>';
@@ -5945,7 +6214,7 @@ sub htmlautoconvert {
                 $aname =~ s/<\/?[hscalup].*?>//g;
                 $aname = makeanchor( deaccent($selection) );
                 $textwindow->ntinsert( "$step.0",
-                          "<h2><a name=\"" 
+                          "<h2><a name=\""
                         . $aname
                         . "\" id=\""
                         . $aname
@@ -5958,7 +6227,7 @@ sub htmlautoconvert {
                     $selection =~ s/<[^>]+>//g;
                     $selection = "<b>$selection</b>";
                     push @contents,
-                          "<a href=\"#" 
+                          "<a href=\"#"
                         . $aname . "\">"
                         . $selection
                         . "</a><br />\n";
@@ -9975,7 +10244,7 @@ sub textbindings {
     if ($OS_WIN) {
         $textwindow->bind( 'TextUnicode',
             '<3>' =>
-                sub { scrolldismiss(); $menu->Popup( -popover => 'cursor' ) }
+                sub { scrolldismiss(); $menubar->Popup( -popover => 'cursor' ) }
         );
     }
     else {
@@ -11230,11 +11499,11 @@ sub drag {
         '<B1-Motion>',
         sub {
             my $x
-                = $scrolledwidget->toplevel->width 
+                = $scrolledwidget->toplevel->width
                 - $lglobal{x}
                 + $scrolledwidget->toplevel->pointerx;
             my $y
-                = $scrolledwidget->toplevel->height 
+                = $scrolledwidget->toplevel->height
                 - $lglobal{y}
                 + $scrolledwidget->toplevel->pointery;
             ( $lglobal{x}, $lglobal{y} ) = (
@@ -12402,7 +12671,7 @@ sub spelladdtexttags {
 ## End Spellcheck
 
 ### File Menu
-sub fileopen {    # Find a text file to open
+sub file_open {    # Find a text file to open
     my ($name);
     return if ( confirmempty() =~ /cancel/i );
     my $types = [
@@ -12540,269 +12809,9 @@ sub savefile {    # Determine which save routine to use and then use it
     update_indicators();
 }
 
-sub file_savease { }
-sub file_include { }
-sub file_close   { }
 
-sub prep_import {
-    return if ( confirmempty() =~ /cancel/i );
-    my $directory
-        = $top->chooseDirectory( -title =>
-            'Choose the directory containing the text files to be imported.',
-        );
-    return 0
-        unless ( -d $directory and defined $directory and $directory ne '' );
-    $top->Busy( -recurse => 1 );
-    my $pwd = getcwd();
-    chdir $directory;
-    my @files = glob "*.txt";
-    chdir $pwd;
-    $directory .= '/';
-    $directory      = os_normal($directory);
-    $globallastpath = $directory;
-
-    for my $file (@files) {
-        if ( $file =~ /^(\d+)\.txt/ ) {
-            $textwindow->ntinsert( 'end', ( "\n" . '-' x 6 ) );
-            $textwindow->ntinsert( 'end', "File: $1.png" );
-            $textwindow->ntinsert( 'end', ( '-' x 45 ) . "\n" );
-            if ( open my $fh, '<', "$directory$file" ) {
-                local $/ = undef;
-                my $line = <$fh>;
-                utf8::decode($line);
-                $line =~ s/^\x{FEFF}?//;
-                $line =~ s/\cM\cJ|\cM|\cJ/\n/g;
-
-                #$line = eol_convert($line);
-                $line =~ s/[\t \xA0]+$//smg;
-                $textwindow->ntinsert( 'end', $line );
-                close $file;
-            }
-            $top->update;
-        }
-    }
-    $textwindow->markSet( 'insert', '1.0' );
-    $lglobal{prepfile} = 1;
-    markpages();
-    $pngspath = '';
-    $top->Unbusy( -recurse => 1 );
-}
-
-sub prep_export {
-    my $directory = $top->chooseDirectory(
-        -title => 'Choose the directory to export the text files to.', );
-    return 0 unless ( defined $directory and $directory ne '' );
-    unless ( -e $directory ) {
-        mkdir $directory or warn "Could not make directory $!\n" and return;
-    }
-    $top->Busy( -recurse => 1 );
-    my @marks = $textwindow->markNames;
-    my @pages = sort grep ( /^Pg\S+$/, @marks );
-    my $unicode
-        = $textwindow->search( '-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0',
-        'end' );
-    while (@pages) {
-        my $page = shift @pages;
-        my ($filename) = $page =~ /Pg(\S+)/;
-        $filename .= '.txt';
-        my $next;
-        if (@pages) {
-            $next = $pages[0];
-        }
-        else {
-            $next = 'end';
-        }
-        my $file = $textwindow->get( $page, $next );
-        $file =~ s/-{5,}File:.+?-{5}\n//;
-        $file =~ s/\n+$//;
-        open my $fh, '>', "$directory/$filename";
-        if ($unicode) {
-            $file = "\x{FEFF}" . $file;    # Add the BOM to beginning of file.
-            utf8::encode($file);
-        }
-        print $fh $file;
-    }
-    $top->Unbusy( -recurse => 1 );
-}
-
-sub guesswindow {
-    my ( $totpages, $line25, $linex );
-    if ( $lglobal{pgpop} ) {
-        $lglobal{pgpop}->deiconify;
-    }
-    else {
-        $lglobal{pgpop} = $top->Toplevel;
-        $lglobal{pgpop}->title('Guess Page Numbers');
-        my $f0 = $lglobal{pgpop}->Frame->pack;
-        $f0->Label( -text =>
-                'This function should only be used if you have the page images but no page markers in the text.',
-        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-        my $f1 = $lglobal{pgpop}->Frame->pack;
-        $f1->Label( -text => 'How many pages are there total?', )
-            ->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-        my $tpages = $f1->Entry(
-            -background => 'white',
-            -width      => 8,
-        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
-        $f1->Label( -text => 'What line # does page 25 start with?', )
-            ->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
-        my $page25 = $f1->Entry(
-            -background => 'white',
-            -width      => 8,
-        )->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
-        my $f3 = $lglobal{pgpop}->Frame->pack;
-        $f3->Label(
-            -text => 'Select a page near the back, before the index starts.',
-        )->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
-        my $f4 = $lglobal{pgpop}->Frame->pack;
-        $f4->Label( -text => 'Page #?.', )
-            ->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-        $f4->Label( -text => 'Line #?.', )
-            ->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
-        my $pagexe = $f4->Entry(
-            -background => 'white',
-            -width      => 8,
-        )->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
-        my $linexe = $f4->Entry(
-            -background => 'white',
-            -width      => 8,
-        )->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
-        my $f2         = $lglobal{pgpop}->Frame->pack;
-        my $calcbutton = $f2->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                my ( $pnum, $lnum, $pagex, $linex, $number );
-                $totpages = $tpages->get;
-                $line25   = $page25->get;
-                $pagex    = $pagexe->get;
-                $linex    = $linexe->get;
-                unless ( $totpages && $line25 && $line25 && $linex ) {
-                    $top->messageBox(
-                        -icon    => 'error',
-                        -message => 'Need all values filled in.',
-                        -title   => 'Missing values',
-                        -type    => 'Ok',
-                    );
-                    return;
-                }
-                if ( $totpages <= $pagex ) {
-                    $top->messageBox(
-                        -icon => 'error',
-                        -message =>
-                            'Selected page must be lower than total pages',
-                        -title => 'Bad value',
-                        -type  => 'Ok',
-                    );
-                    return;
-                }
-                if ( $linex <= $line25 ) {
-                    $top->messageBox(
-                        -icon    => 'error',
-                        -message => "Line number for selected page must be \n"
-                            . "higher than that of page 25",
-                        -title => 'Bad value',
-                        -type  => 'Ok',
-                    );
-                    return;
-                }
-                my $end = $textwindow->index('end');
-                $end = int( $end + .5 );
-                my $average = ( int( $line25 + .5 ) / 25 );
-                for $pnum ( 1 .. 24 ) {
-                    $lnum = int( ( $pnum - 1 ) * $average ) + 1;
-                    if ( $totpages > 999 ) {
-                        $number = sprintf '%04s', $pnum;
-                    }
-                    else {
-                        $number = sprintf '%03s', $pnum;
-                    }
-                    $textwindow->markSet( 'Pg' . $number, "$lnum.0" );
-                    $textwindow->markGravity( "Pg$number", 'left' );
-                }
-                $average
-                    = ( ( int( $linex + .5 ) ) - ( int( $line25 + .5 ) ) )
-                    / ( $pagex - 25 );
-                for $pnum ( 1 .. $pagex - 26 ) {
-                    $lnum = int( ( $pnum - 1 ) * $average ) + 1 + $line25;
-                    if ( $totpages > 999 ) {
-                        $number = sprintf '%04s', $pnum + 25;
-                    }
-                    else {
-                        $number = sprintf '%03s', $pnum + 25;
-                    }
-                    $textwindow->markSet( "Pg$number", "$lnum.0" );
-                    $textwindow->markGravity( "Pg$number", 'left' );
-                }
-                $average
-                    = ( $end - int( $linex + .5 ) ) / ( $totpages - $pagex );
-                for $pnum ( 1 .. ( $totpages - $pagex ) ) {
-                    $lnum = int( ( $pnum - 1 ) * $average ) + 1 + $linex;
-                    if ( $totpages > 999 ) {
-                        $number = sprintf '%04s', $pnum + $pagex;
-                    }
-                    else {
-                        $number = sprintf '%03s', $pnum + $pagex;
-                    }
-                    $textwindow->markSet( "Pg$number", "$lnum.0" );
-                    $textwindow->markGravity( "Pg$number", 'left' );
-                }
-                $lglobal{pgpop}->destroy;
-                undef $lglobal{pgpop};
-            },
-            -text  => 'Guess Page #s',
-            -width => 18
-        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-        $lglobal{pgpop}->protocol( 'WM_DELETE_WINDOW' =>
-                sub { $lglobal{pgpop}->destroy; undef $lglobal{pgpop} } );
-        $lglobal{pgpop}->Icon( -image => $icon );
-    }
-}
 
 #  Convert DP page separators to internal mark
-sub markpages {
-    $top->Busy( -recurse => 1 );
-    viewpagenums() if ( $lglobal{seepagenums} );
-    my ( $line, $index, $page, $rnd1, $rnd2, $pagemark );
-    $searchstartindex = '1.0';
-    $searchendindex   = '1.0';
-    while ($searchstartindex) {
-        $searchstartindex
-            = $textwindow->search( '-nocase', '-regexp', '--',
-            '-*\s?File:\s?(\S+)\.(png|jpg)---.*$',
-            $searchendindex, 'end' );
-        last unless $searchstartindex;
-        $searchendindex = $textwindow->index("$searchstartindex lineend");
-        $line = $textwindow->get( $searchstartindex, $searchendindex );
-
-        # get the page name - we do this separate from pulling the
-        # proofer names in case we did an Import Test Prep Files
-        # which does not include proofer names
-        #  look for one or more dashes followed by File: followed
-        #  by zero or more spaces, then non-greedily capture everything
-        #  up to the first period
-        if ( $line =~ /-+File:\s*(.*?)\./ ) {
-            $page = $1;
-        }
-
-        # get list of proofers:
-        #  look for one or more dashes followed by File:, then
-        #  non-greedily ignore everything up to the
-        #  string of dashes, ignore the dashes, then capture
-        #  everything until the dashes begin again (proofer string)
-        if ( $line =~ /-+File:.*?-+([^-]+)-+/ ) {
-
-            # split the proofer string into parts
-            @{ $proofers{$page} } = split( "\Q\\\E", $1 );
-        }
-
-        $pagemark = 'Pg' . $page;
-        $pagenumbers{$pagemark}{offset} = 1;
-        $textwindow->markSet( $pagemark, $searchstartindex );
-        $textwindow->markGravity( $pagemark, 'left' );
-    }
-    delete $proofers{''};
-    $top->Unbusy( -recurse => 1 );
-}
 
 ### Edit Menu
 sub cut {
@@ -17759,7 +17768,7 @@ sub toolbar_toggle {    # Set up / remove the tool bar
         $lglobal{toptool}->separator;
         $lglobal{toptool}->ToolButton(
             -image   => 'fileopen16',
-            -command => [ \&fileopen ],
+            -command => [ \&file_open ],
             -tip     => 'Open'
         );
         $lglobal{savetool} = $lglobal{toptool}->ToolButton(
