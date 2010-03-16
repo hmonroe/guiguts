@@ -54,14 +54,13 @@ use Tk::widgets qw{Balloon
     Radiobutton
     TextEdit
     ToolBar
-    };
+};
 
 ### Custom Guigut modules
 # FIXME: Move these into lib/Guiguts.
 use LineNumberText;
 use TextUnicode;
 use Guiguts::Greekgifs;
-
 
 # Ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
@@ -294,7 +293,7 @@ $top->DropSite(
 
 $top->protocol( 'WM_DELETE_WINDOW' => \&_exit );
 
-$top->configure( -menu => my $menubar = $top->Menu);
+$top->configure( -menu => my $menubar = $top->Menu );
 
 # routines to call every time the text is edited
 $textwindow->SetGUICallbacks(
@@ -477,8 +476,8 @@ sub _bin_save {
         print $fh '$bookmarks[0] = \''
             . $textwindow->index('insert') . "';\n";
         for ( 1 .. 5 ) {
-            print $fh '$bookmarks['
-                . $_
+            print $fh '$bookmarks[' 
+                . $_ 
                 . '] = \''
                 . $textwindow->index( 'bkmk' . $_ ) . "';\n"
                 if $bookmarks[$_];
@@ -493,8 +492,8 @@ sub _bin_save {
             no warnings 'uninitialized';
             for my $round ( 1 .. $lglobal{numrounds} ) {
                 if ( defined $proofers{$page}->[$round] ) {
-                    print $fh '$proofers{\''
-                        . $page . '\'}['
+                    print $fh '$proofers{\'' 
+                        . $page . '\'}[' 
                         . $round
                         . '] = \''
                         . $proofers{$page}->[$round] . '\';' . "\n";
@@ -983,40 +982,39 @@ sub highlightscannos {
 
 ## The main menu building code.
 use subs qw{
-             file_menuitems
-             edit_menuitems
-             search_menuitems
-             help_menuitems
-             };
+    file_menuitems
+    edit_menuitems
+    search_menuitems
+    help_menuitems
+};
 
 sub file_saveas {
     my ($name);
     $name = $textwindow->getSaveFile(
-                                     -title      => 'Save As',
-                                     -initialdir => $globallastpath
-                                    );
+        -title      => 'Save As',
+        -initialdir => $globallastpath
+    );
     if ( defined($name) and length($name) ) {
         my $binname = $name;
         $binname =~ s/\.[^\.]*?$/\.bin/;
         if ( $binname eq $name ) { $binname .= '.bin' }
         if ( -e $binname ) {
-            my $warning = $top->Dialog(# FIXME: heredoc
-                                       -text =>
-                                       "WARNING! A file already exists that will use the same .bin filename.\n"
-                                       . "It is highly recommended that a different file name is chosen to avoid\n"
-                                       . "corrupting the .bin files.\n\n Are you sure you want to continue?",
-                                       -title          => 'Bin File Collision!',
-                                       -bitmap         => 'warning',
-                                       -buttons        => [qw/Continue Cancel/],
-                                       -default_button => qw/Cancel/,
-                                      );
+            my $warning = $top->Dialog(    # FIXME: heredoc
+                -text =>
+                    "WARNING! A file already exists that will use the same .bin filename.\n"
+                    . "It is highly recommended that a different file name is chosen to avoid\n"
+                    . "corrupting the .bin files.\n\n Are you sure you want to continue?",
+                -title          => 'Bin File Collision!',
+                -bitmap         => 'warning',
+                -buttons        => [qw/Continue Cancel/],
+                -default_button => qw/Cancel/,
+            );
             my $answer = $warning->Show;
             return unless ( $answer eq 'Continue' );
         }
         $textwindow->SaveUTF($name);
         my ( $fname, $extension, $filevar );
-        ( $fname, $globallastpath, $extension )
-            = fileparse($name);
+        ( $fname, $globallastpath, $extension ) = fileparse($name);
         $globallastpath = os_normal($globallastpath);
         $name           = os_normal($name);
         $textwindow->FileName($name);
@@ -1037,20 +1035,18 @@ sub file_close {
 
 }
 
-sub file_include { # FIXME: Should include even if no file loaded.
+sub file_include {    # FIXME: Should include even if no file loaded.
     my ($name);
     my $types = [
-                 [   'Text Files',
-                     [ '.txt', '.text', '.ggp', 'htm', 'html' ]
-                 ],
-                 [ 'All Files', ['*'] ],
-                ];
+        [ 'Text Files', [ '.txt', '.text', '.ggp', 'htm', 'html' ] ],
+        [ 'All Files', ['*'] ],
+    ];
     return if $lglobal{global_filename} =~ m{No File Loaded};
     $name = $textwindow->getOpenFile(
-                                     -filetypes  => $types,
-                                     -title      => 'File Include',
-                                     -initialdir => $globallastpath
-                                    );
+        -filetypes  => $types,
+        -title      => 'File Include',
+        -initialdir => $globallastpath
+    );
     $textwindow->IncludeFile($name)
         if defined($name)
             and length($name);
@@ -1096,7 +1092,7 @@ sub file_import {
     }
     $textwindow->markSet( 'insert', '1.0' );
     $lglobal{prepfile} = 1;
-    markpages();
+    file_mark_pages();
     $pngspath = '';
     $top->Unbusy( -recurse => 1 );
 }
@@ -1317,93 +1313,101 @@ sub file_mark_pages {
 }
 
 sub file_menuitems {
-    [   [ 'command',   '~Open',    -command => \&file_open ],
+    [   [ 'command',   '~Open', -command => \&file_open ],
         [ 'separator', '' ],
-        map ([Button => "$recentfile[$_]", # FIXME: Rewrite this
-              -command => [ \&openfile, $recentfile[$_]]],
-             ( 0 .. scalar(@recentfile) - 1 )),
+        map ( [ Button => "$recentfile[$_]",    # FIXME: Rewrite this
+                -command => [ \&openfile, $recentfile[$_] ]
+            ],
+            ( 0 .. scalar(@recentfile) - 1 ) ),
         [ 'separator', '' ],
-        [ 'command',   '~Save',
-          -accelerator => 'Ctrl+s',
-          -command => \&savefile ],
-        [ 'command',   'Save ~As', -command => \&file_saveas ],
-        [ 'command',   '~Include File', -command => \&file_include ],
-        [ 'command',   '~Close',   -command => \&file_close ],
+        [   'command',
+            '~Save',
+            -accelerator => 'Ctrl+s',
+            -command     => \&savefile
+        ],
+        [ 'command',   'Save ~As',               -command => \&file_saveas ],
+        [ 'command',   '~Include File',          -command => \&file_include ],
+        [ 'command',   '~Close',                 -command => \&file_close ],
         [ 'separator', '' ],
         [ 'command',   'Import Prep Text Files', -command => \&file_import ],
-        [ 'command',   'Export As Prep Text Files', -command => \&file_export ],
+        [ 'command', 'Export As Prep Text Files', -command => \&file_export ],
         [ 'separator', '' ],
-        [ 'command',   '~Guess Page Markers', -command => \&file_guess_page_marks],
-        [ 'command',   'Set Page ~Markers', file_mark_pages],
+        [   'command',
+            '~Guess Page Markers',
+            -command => \&file_guess_page_marks
+        ],
+        [ 'command',   'Set Page ~Markers', file_mark_pages ],
         [ 'separator', '' ],
         [ 'command', 'E~xit', -command => \&_exit ],
     ]
 
 }
 
-sub edit_menuitems {}
+sub edit_menuitems {
+    [   [   'command', 'Undo',
+            -command     => sub { $textwindow->undo },
+            -accelerator => 'Ctrl+z'
+        ],
+
+        [   'command', 'Redo',
+            -command     => sub { $textwindow->redo },
+            -accelerator => 'Ctrl+y'
+        ],
+        [ 'separator', '' ],
+
+        [   'command', 'Cut',
+            -command     => sub { cut() },
+            -accelerator => 'Ctrl+x'
+        ],
+
+        [ 'separator', '' ],
+        [   'command', 'Copy',
+            -command     => sub { copy() },
+            -accelerator => 'Ctrl+c'
+        ],
+        [   'command', 'Paste',
+            -command     => sub { paste() },
+            -accelerator => 'Ctrl+v'
+        ],
+        [   'command',
+            'Col Paste',
+            -command => sub {    # FIXME: sub edit_column_paste
+                $textwindow->addGlobStart;
+                $textwindow->clipboardColumnPaste;
+                $textwindow->addGlobEnd;
+            },
+            -accelerator => 'Ctrl+`'
+        ],
+        [ 'separator', '' ],
+        [   'command',
+            'Select All',
+            -command => sub {
+                $textwindow->selectAll;
+            },
+            -accelerator => 'Ctrl+/'
+        ],
+        [   'command',
+            'Unselect All',
+            -command => sub {
+                $textwindow->unselectAll;
+            },
+            -accelerator => 'Ctrl+\\'
+        ],
+    ];
+}
 
 sub buildmenu {
     my $file = $menubar->cascade(
-                                 -label     => '~File',
-                                 -tearoff   => 0,
-                                 -menuitems => file_menuitems,
-                                );
+        -label     => '~File',
+        -tearoff   => 0,
+        -menuitems => file_menuitems,
+    );
 
     my $edit = $menubar->cascade(
-                                 -label     => '~Edit',
-                                 -tearoff   => 0,
-                                 -menuitems => edit_menuitems,
-                                );
-
-    # $menubar->Cascade(
-    #     -label     => '~Edit',
-    #     -tearoff   => 1,
-    #     -menuitems => [
-    #         [   Button       => 'Undo',
-    #             -command     => sub { $textwindow->undo },
-    #             -accelerator => 'Ctrl+z'
-    #         ],
-    #         [   Button       => 'Redo',
-    #             -command     => sub { $textwindow->redo },
-    #             -accelerator => 'Ctrl+y'
-    #         ],
-    #         [ 'separator', '' ],
-    #         [   Button       => 'Cut',
-    #             -command     => sub { cut() },
-    #             -accelerator => 'Ctrl+x'
-    #         ],
-    #         [   Button       => 'Copy',
-    #             -command     => sub { copy() },
-    #             -accelerator => 'Ctrl+c'
-    #         ],
-    #         [   Button       => 'Paste',
-    #             -command     => sub { paste() },
-    #             -accelerator => 'Ctrl+v'
-    #         ],
-    #         [   Button   => 'Col Paste',
-    #             -command => sub {          # FIXME: sub edit_column_paste
-    #                 $textwindow->addGlobStart;
-    #                 $textwindow->clipboardColumnPaste;
-    #                 $textwindow->addGlobEnd;
-    #             },
-    #             -accelerator => 'Ctrl+`'
-    #         ],
-    #         [ 'separator', '' ],
-    #         [   Button   => 'Select All',
-    #             -command => sub {
-    #                 $textwindow->selectAll;
-    #             },
-    #             -accelerator => 'Ctrl+/'
-    #         ],
-    #         [   Button   => 'Unselect All',
-    #             -command => sub {
-    #                 $textwindow->unselectAll;
-    #             },
-    #             -accelerator => 'Ctrl+\\'
-    #         ],
-    #     ]
-    # );
+        -label     => '~Edit',
+        -tearoff   => 0,
+        -menuitems => edit_menuitems,
+    );
 
     $menubar->Cascade(
         -label     => 'Sea~rch',
@@ -1673,9 +1677,9 @@ sub buildmenu {
 
             [ Button => "Convert Bold", -command => \&text_convert_bold ],
 
-            # FIXME: [ Button => "Delete [Blank Page]", -command => \&text_delete_blank_page ],
+# FIXME: [ Button => "Delete [Blank Page]", -command => \&text_delete_blank_page ],
 
-            # FIXME: [ Button => "Convert Smallcaps", -command => \&text_convert_smcap ],
+ # FIXME: [ Button => "Convert Smallcaps", -command => \&text_convert_smcap ],
 
             [   Button   => '~Add a Thought Break',
                 -command => sub {
@@ -2202,7 +2206,7 @@ sub fnview {
         $lglobal{footviewpop}->Icon( -image => $icon );
         for my $findex ( 1 .. $lglobal{fntotal} ) {
             $ftext->insert( 'end',
-                      'footnote #'
+                      'footnote #' 
                     . $findex
                     . '  line.column - '
                     . $lglobal{fnarray}->[$findex][0]
@@ -2715,7 +2719,7 @@ sub footnoteshow {
         my $widget = $textwindow->{rtext};
         my ( $lx, $ly, $lw, $lh ) = $widget->dlineinfo($line);
         my $bottom = int(
-            (         $widget->height
+            (         $widget->height 
                     - 2 * $widget->cget( -bd )
                     - 2 * $widget->cget( -highlightthickness )
             ) / $lh / 2
@@ -5147,7 +5151,7 @@ sub htmlimage {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
-                                  "<div class=\"figleft\" style=\"width: "
+                                  "<div class=\"figleft\" style=\"width: " 
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -5156,7 +5160,7 @@ sub htmlimage {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
-                                  "<div class=\"figright\" style=\"width: "
+                                  "<div class=\"figright\" style=\"width: " 
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -5965,7 +5969,7 @@ sub htmlautoconvert {
                 $ital = 0;
             }
             $lglobal{classhash}->{$indent}
-                = '    .poem span.i'
+                = '    .poem span.i' 
                 . $indent
                 . '     {display: block; margin-left: '
                 . $indent
@@ -6181,7 +6185,7 @@ sub htmlautoconvert {
                     $ital = 0;
                 }
                 $selection
-                    = '<span style="margin-left: '
+                    = '<span style="margin-left: ' 
                     . $indent . 'em;">'
                     . $selection
                     . '</span>';
@@ -6216,7 +6220,7 @@ sub htmlautoconvert {
                 $aname =~ s/<\/?[hscalup].*?>//g;
                 $aname = makeanchor( deaccent($selection) );
                 $textwindow->ntinsert( "$step.0",
-                          "<h2><a name=\""
+                          "<h2><a name=\"" 
                         . $aname
                         . "\" id=\""
                         . $aname
@@ -6229,7 +6233,7 @@ sub htmlautoconvert {
                     $selection =~ s/<[^>]+>//g;
                     $selection = "<b>$selection</b>";
                     push @contents,
-                          "<a href=\"#"
+                          "<a href=\"#" 
                         . $aname . "\">"
                         . $selection
                         . "</a><br />\n";
@@ -10244,9 +10248,12 @@ sub textbindings {
         }
     );
     if ($OS_WIN) {
-        $textwindow->bind( 'TextUnicode',
-            '<3>' =>
-                sub { scrolldismiss(); $menubar->Popup( -popover => 'cursor' ) }
+        $textwindow->bind(
+            'TextUnicode',
+            '<3>' => sub {
+                scrolldismiss();
+                $menubar->Popup( -popover => 'cursor' );
+            }
         );
     }
     else {
@@ -11501,11 +11508,11 @@ sub drag {
         '<B1-Motion>',
         sub {
             my $x
-                = $scrolledwidget->toplevel->width
+                = $scrolledwidget->toplevel->width 
                 - $lglobal{x}
                 + $scrolledwidget->toplevel->pointerx;
             my $y
-                = $scrolledwidget->toplevel->height
+                = $scrolledwidget->toplevel->height 
                 - $lglobal{y}
                 + $scrolledwidget->toplevel->pointery;
             ( $lglobal{x}, $lglobal{y} ) = (
@@ -12758,7 +12765,7 @@ sub openfile {    # and open it
     }
     _recentupdate($name);
     update_indicators();
-    markpages() if $auto_page_marks;
+    file_mark_pages() if $auto_page_marks;
     push @operations, ( localtime() . " - Open $lglobal{global_filename}" );
     oppopupdate() if $lglobal{oppop};
     saveset();
@@ -12811,10 +12818,6 @@ sub savefile {    # Determine which save routine to use and then use it
     update_indicators();
 }
 
-
-
-#  Convert DP page separators to internal mark
-
 ### Edit Menu
 sub cut {
     my @ranges      = $textwindow->tagRanges('sel');
@@ -12824,9 +12827,9 @@ sub cut {
         $textwindow->clipboardCut;
     }
     else {
-        $textwindow->addGlobStart;
+        $textwindow->addGlobStart;    # NOTE: Add to undo ring.
         $textwindow->clipboardColumnCut;
-        $textwindow->addGlobEnd;
+        $textwindow->addGlobEnd;      # NOTE: Add to undo ring.
     }
 }
 
