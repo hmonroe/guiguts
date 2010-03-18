@@ -1464,6 +1464,22 @@ sub search_menuitems {
     ];
 }
 
+sub bookmarks_menuitems {
+    [
+     map ( [ Button       => "Set Bookmark $_",
+             -command     => [ \&setbookmark, $_ ],
+             -accelerator => "Ctrl+Shift+$_"
+           ],
+           ( 1 .. 5 ) ),
+     [ 'separator', '' ],
+     map ( [ Button       => "Go To Bookmark $_",
+             -command     => [ \&gotobookmark, $_ ],
+             -accelerator => "Ctrl+$_"
+           ],
+           ( 1 .. 5 ) ),
+    ];
+}
+
 # FIXME: Reorganize the menu code order
 sub buildmenu {
     my $file = $menubar->cascade(
@@ -1478,27 +1494,17 @@ sub buildmenu {
         -menuitems => edit_menuitems,
     );
 
-        my $search = $menubar->cascade(
-        -label     => 'Search & ~Replace',
-        -tearoff   => 0,
-        -menuitems => search_menuitems,
-    );
+    my $search = $menubar->cascade(
+                                   -label     => 'Search & ~Replace',
+                                   -tearoff   => 0,
+                                   -menuitems => search_menuitems,
+                                  );
 
-    $menubar->Cascade(
-        qw/-label ~Bookmarks -tearoff 1 -menuitems/ => [
-            map ( [ Button       => "Set Bookmark $_",
-                    -command     => [ \&setbookmark, $_ ],
-                    -accelerator => "Ctrl+Shift+$_"
-                ],
-                ( 1 .. 5 ) ),
-            [ 'separator', '' ],
-            map ( [ Button       => "Go To Bookmark $_",
-                    -command     => [ \&gotobookmark, $_ ],
-                    -accelerator => "Ctrl+$_"
-                ],
-                ( 1 .. 5 ) ),
-        ],
-    );
+    my $bookmarks = $menubar->cascade(
+                                      -label => '~Bookmarks',
+                                      -tearoff => 1,
+                                      -menuitems => bookmarks_menuitems,
+                                     );
 
     $menubar->Cascade(
         -label     => '~Selection',
