@@ -1,6 +1,7 @@
 #$Id$
 
 package LineNumberText;
+print "DEBUG: Loading lib/LineNumberText...\n";
 
 use Tk;
 use Tk::widgets qw(ROText);
