@@ -1396,6 +1396,75 @@ sub edit_menuitems {
     ];
 }
 
+sub search_menuitems {
+    [    [ 'command', 'Search & ~Replace', -command => \&searchpopup ],
+         [ 'command', '~Stealth Scannos', -command => \&stealthscanno ],
+         [ 'command', 'Spell ~Check', -command => \&spellchecker ],
+         [ 'command', 'Goto ~Line...', -command => sub { gotoline();
+                                                         update_indicators();
+                                                         } ],
+         [ 'command', 'Goto ~Page', -command => sub { gotopage();
+                                                      update_indicators();
+                                                  } ],
+         [   'command', '~Which Line?',
+             -command => sub { $textwindow->WhatLineNumberPopUp }
+         ],
+         [ 'separator', '' ],
+         [ 'command', 'Find Proofer Comments', -command => \&find_proofer_comment ],
+         [ 'command', 'Find next /*..*/ block', -command => [\&nextblock, 'default', 'forward']],
+         [ 'command', 'Find previous /*..*/ block', -command =>[\&nextblock, 'default', 'reverse' ] ],
+         [   'command', 'Find next /#..#/ block',
+             -command => [ \&nextblock, 'block', 'forward' ]
+         ],
+         [   'command', 'Find previous /#..#/ block',
+             -command => [ \&nextblock, 'block', 'reverse' ]
+         ],
+         [   'command', 'Find next /$..$/ block',
+             -command => [ \&nextblock, 'stet', 'forward' ]
+         ],
+         [   'command', 'Find previous /$..$/ block',
+             -command => [ \&nextblock, 'stet', 'reverse' ]
+         ],
+         [   'command', 'Find next /p..p/ block',
+             -command => [ \&nextblock, 'poetry', 'forward' ]
+         ],
+         [   'command', 'Find previous /p..p/ block',
+             -command => [ \&nextblock, 'poetry', 'reverse' ]
+         ],
+         [   'command', 'Find next indented block',
+             -command => [ \&nextblock, 'indent', 'forward' ]
+         ],
+         [   'command', 'Find previous indented block',
+             -command => [ \&nextblock, 'indent', 'reverse' ]
+         ],
+         [ 'separator', '' ],
+         [   'command', 'Find ~Orphaned Brackets & Markup',
+             -command => \&brackets
+         ],
+         [ 'separator', '' ],
+         [   'command', 'Highlight double quotes in selection',
+             -command     => [ \&hilite, '"' ],
+             -accelerator => 'Ctrl+Shift+"'
+         ],
+         [   'command', 'Highlight single quotes in selection',
+             -command     => [ \&hilite, '\'' ],
+             -accelerator => 'Ctrl+\''
+         ],
+         [   'command', 'Highlight arbitrary characters in selection',
+             -command     => \&hilitepopup,
+             -accelerator => 'Ctrl+Alt+h'
+         ],
+         [   'command', 'Remove Highlights',
+             -command => sub {               # FIXME: sub search_rm_hilites
+                 $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+                 $textwindow->tagRemove( 'quotemark', '1.0', 'end' );
+             },
+             -accelerator => 'Ctrl+0'
+         ],
+    ];
+}
+
+# FIXME: Reorganize the menu code order
 sub buildmenu {
     my $file = $menubar->cascade(
         -label     => '~File',
@@ -1409,84 +1478,10 @@ sub buildmenu {
         -menuitems => edit_menuitems,
     );
 
-    $menubar->Cascade(
-        -label     => 'Sea~rch',
-        -tearoff   => 1,
-        -menuitems => [
-            [ Button => 'Search & ~Replace', -command => \&searchpopup ],
-            [ Button => '~Stealth Scannos',  -command => \&stealthscanno ],
-            [ Button => 'Spell ~Check',      -command => \&spellchecker ],
-            [   Button   => 'Goto ~Line...',
-                -command => sub { gotoline(); update_indicators(); }
-            ],
-            [   Button   => 'Goto ~Page...',
-                -command => sub { gotopage(); update_indicators(); }
-            ],
-            [   Button   => '~Which Line?',
-                -command => sub { $textwindow->WhatLineNumberPopUp }
-            ],
-
-            [ 'separator', '' ],
-
-            [   Button   => "Find Proofer Comments",
-                -command => \&find_proofer_comment
-            ],
-            [   Button   => 'Find next /*..*/ block',
-                -command => [ \&nextblock, 'default', 'forward' ]
-            ],
-            [   Button   => 'Find previous /*..*/ block',
-                -command => [ \&nextblock, 'default', 'reverse' ]
-            ],
-            [   Button   => 'Find next /#..#/ block',
-                -command => [ \&nextblock, 'block', 'forward' ]
-            ],
-            [   Button   => 'Find previous /#..#/ block',
-                -command => [ \&nextblock, 'block', 'reverse' ]
-            ],
-            [   Button   => 'Find next /$..$/ block',
-                -command => [ \&nextblock, 'stet', 'forward' ]
-            ],
-            [   Button   => 'Find previous /$..$/ block',
-                -command => [ \&nextblock, 'stet', 'reverse' ]
-            ],
-            [   Button   => 'Find next /p..p/ block',
-                -command => [ \&nextblock, 'poetry', 'forward' ]
-            ],
-            [   Button   => 'Find previous /p..p/ block',
-                -command => [ \&nextblock, 'poetry', 'reverse' ]
-            ],
-            [   Button   => 'Find next indented block',
-                -command => [ \&nextblock, 'indent', 'forward' ]
-            ],
-            [   Button   => 'Find previous indented block',
-                -command => [ \&nextblock, 'indent', 'reverse' ]
-            ],
-            ,
-            [ 'separator', '' ],
-            [   Button   => 'Find ~Orphaned Brackets & Markup',
-                -command => \&brackets
-            ],
-            [ 'separator', '' ],
-            [   Button       => 'Highlight double quotes in selection',
-                -command     => [ \&hilite, '"' ],
-                -accelerator => 'Ctrl+Shift+"'
-            ],
-            [   Button       => 'Highlight single quotes in selection',
-                -command     => [ \&hilite, '\'' ],
-                -accelerator => 'Ctrl+\''
-            ],
-            [   Button       => 'Highlight arbitrary characters in selection',
-                -command     => \&hilitepopup,
-                -accelerator => 'Ctrl+Alt+h'
-            ],
-            [   Button   => 'Remove Highlights',
-                -command => sub {               # FIXME: sub search_rm_hilites
-                    $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-                    $textwindow->tagRemove( 'quotemark', '1.0', 'end' );
-                },
-                -accelerator => 'Ctrl+0'
-            ],
-        ]
+        my $search = $menubar->cascade(
+        -label     => 'Search & ~Replace',
+        -tearoff   => 0,
+        -menuitems => search_menuitems,
     );
 
     $menubar->Cascade(
@@ -13839,10 +13834,11 @@ sub gotopage {
 }
 
 sub find_proofer_comment {
-    my $pattern = "[**";
+    my $pattern = '[**';
     my $comment = $textwindow->search( $pattern, "insert" );
-    my $index   = $textwindow->index("$comment +1c");
-    if ($comment) { $textwindow->SetCursor($index); }
+    if ($comment) { 
+        my $index   = $textwindow->index("$comment +1c");
+        $textwindow->SetCursor($index); }
 }
 
 sub nextblock {
