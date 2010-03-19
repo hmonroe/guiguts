@@ -1,0 +1,6 @@
+GuiGuts-0.2.10 (Some Stupid Code Name Here).
+
+
+This is a patch release. Mostly internal code reworking.
+
+Some highlights for past user visible changes:

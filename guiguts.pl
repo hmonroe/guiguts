@@ -981,12 +981,6 @@ sub highlightscannos {
 }
 
 ## The main menu building code.
-use subs qw{
-    file_menuitems
-    edit_menuitems
-    search_menuitems
-    help_menuitems
-};
 
 sub file_saveas {
     my ($name);
@@ -1397,88 +1391,124 @@ sub edit_menuitems {
 }
 
 sub search_menuitems {
-    [    [ 'command', 'Search & ~Replace', -command => \&searchpopup ],
-         [ 'command', '~Stealth Scannos', -command => \&stealthscanno ],
-         [ 'command', 'Spell ~Check', -command => \&spellchecker ],
-         [ 'command', 'Goto ~Line...', -command => sub { gotoline();
-                                                         update_indicators();
-                                                         } ],
-         [ 'command', 'Goto ~Page', -command => sub { gotopage();
-                                                      update_indicators();
-                                                  } ],
-         [   'command', '~Which Line?',
-             -command => sub { $textwindow->WhatLineNumberPopUp }
-         ],
-         [ 'separator', '' ],
-         [ 'command', 'Find Proofer Comments', -command => \&find_proofer_comment ],
-         [ 'command', 'Find next /*..*/ block', -command => [\&nextblock, 'default', 'forward']],
-         [ 'command', 'Find previous /*..*/ block', -command =>[\&nextblock, 'default', 'reverse' ] ],
-         [   'command', 'Find next /#..#/ block',
-             -command => [ \&nextblock, 'block', 'forward' ]
-         ],
-         [   'command', 'Find previous /#..#/ block',
-             -command => [ \&nextblock, 'block', 'reverse' ]
-         ],
-         [   'command', 'Find next /$..$/ block',
-             -command => [ \&nextblock, 'stet', 'forward' ]
-         ],
-         [   'command', 'Find previous /$..$/ block',
-             -command => [ \&nextblock, 'stet', 'reverse' ]
-         ],
-         [   'command', 'Find next /p..p/ block',
-             -command => [ \&nextblock, 'poetry', 'forward' ]
-         ],
-         [   'command', 'Find previous /p..p/ block',
-             -command => [ \&nextblock, 'poetry', 'reverse' ]
-         ],
-         [   'command', 'Find next indented block',
-             -command => [ \&nextblock, 'indent', 'forward' ]
-         ],
-         [   'command', 'Find previous indented block',
-             -command => [ \&nextblock, 'indent', 'reverse' ]
-         ],
-         [ 'separator', '' ],
-         [   'command', 'Find ~Orphaned Brackets & Markup',
-             -command => \&brackets
-         ],
-         [ 'separator', '' ],
-         [   'command', 'Highlight double quotes in selection',
-             -command     => [ \&hilite, '"' ],
-             -accelerator => 'Ctrl+Shift+"'
-         ],
-         [   'command', 'Highlight single quotes in selection',
-             -command     => [ \&hilite, '\'' ],
-             -accelerator => 'Ctrl+\''
-         ],
-         [   'command', 'Highlight arbitrary characters in selection',
-             -command     => \&hilitepopup,
-             -accelerator => 'Ctrl+Alt+h'
-         ],
-         [   'command', 'Remove Highlights',
-             -command => sub {               # FIXME: sub search_rm_hilites
-                 $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-                 $textwindow->tagRemove( 'quotemark', '1.0', 'end' );
-             },
-             -accelerator => 'Ctrl+0'
-         ],
+    [   [ 'command', 'Search & ~Replace', -command => \&searchpopup ],
+        [ 'command', '~Stealth Scannos',  -command => \&stealthscanno ],
+        [ 'command', 'Spell ~Check',      -command => \&spellchecker ],
+        [   'command',
+            'Goto ~Line...',
+            -command => sub {
+                gotoline();
+                update_indicators();
+                }
+        ],
+        [   'command',
+            'Goto ~Page',
+            -command => sub {
+                gotopage();
+                update_indicators();
+                }
+        ],
+        [   'command', '~Which Line?',
+            -command => sub { $textwindow->WhatLineNumberPopUp }
+        ],
+        [ 'separator', '' ],
+        [   'command',
+            'Find Proofer Comments',
+            -command => \&find_proofer_comment
+        ],
+        [   'command',
+            'Find next /*..*/ block',
+            -command => [ \&nextblock, 'default', 'forward' ]
+        ],
+        [   'command',
+            'Find previous /*..*/ block',
+            -command => [ \&nextblock, 'default', 'reverse' ]
+        ],
+        [   'command',
+            'Find next /#..#/ block',
+            -command => [ \&nextblock, 'block', 'forward' ]
+        ],
+        [   'command',
+            'Find previous /#..#/ block',
+            -command => [ \&nextblock, 'block', 'reverse' ]
+        ],
+        [   'command',
+            'Find next /$..$/ block',
+            -command => [ \&nextblock, 'stet', 'forward' ]
+        ],
+        [   'command',
+            'Find previous /$..$/ block',
+            -command => [ \&nextblock, 'stet', 'reverse' ]
+        ],
+        [   'command',
+            'Find next /p..p/ block',
+            -command => [ \&nextblock, 'poetry', 'forward' ]
+        ],
+        [   'command',
+            'Find previous /p..p/ block',
+            -command => [ \&nextblock, 'poetry', 'reverse' ]
+        ],
+        [   'command',
+            'Find next indented block',
+            -command => [ \&nextblock, 'indent', 'forward' ]
+        ],
+        [   'command',
+            'Find previous indented block',
+            -command => [ \&nextblock, 'indent', 'reverse' ]
+        ],
+        [ 'separator', '' ],
+        [   'command',
+            'Find ~Orphaned Brackets & Markup',
+            -command => \&brackets
+        ],
+        [ 'separator', '' ],
+        [   'command', 'Highlight double quotes in selection',
+            -command     => [ \&hilite, '"' ],
+            -accelerator => 'Ctrl+Shift+"'
+        ],
+        [   'command', 'Highlight single quotes in selection',
+            -command     => [ \&hilite, '\'' ],
+            -accelerator => 'Ctrl+\''
+        ],
+        [   'command', 'Highlight arbitrary characters in selection',
+            -command     => \&hilitepopup,
+            -accelerator => 'Ctrl+Alt+h'
+        ],
+        [   'command',
+            'Remove Highlights',
+            -command => sub {    # FIXME: sub search_rm_hilites
+                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+                $textwindow->tagRemove( 'quotemark', '1.0', 'end' );
+            },
+            -accelerator => 'Ctrl+0'
+        ],
     ];
 }
 
 sub bookmarks_menuitems {
-    [
-     map ( [ Button       => "Set Bookmark $_",
-             -command     => [ \&setbookmark, $_ ],
-             -accelerator => "Ctrl+Shift+$_"
-           ],
-           ( 1 .. 5 ) ),
-     [ 'separator', '' ],
-     map ( [ Button       => "Go To Bookmark $_",
-             -command     => [ \&gotobookmark, $_ ],
-             -accelerator => "Ctrl+$_"
-           ],
-           ( 1 .. 5 ) ),
+    [   map ( [ Button       => "Set Bookmark $_",
+                -command     => [ \&setbookmark, $_ ],
+                -accelerator => "Ctrl+Shift+$_"
+            ],
+            ( 1 .. 5 ) ),
+        [ 'separator', '' ],
+        map ( [ Button       => "Go To Bookmark $_",
+                -command     => [ \&gotobookmark, $_ ],
+                -accelerator => "Ctrl+$_"
+            ],
+            ( 1 .. 5 ) ),
     ];
 }
+
+# sub selection_menuitems { }
+# sub fixup_menuitems { }
+# sub text_menuitems { }
+# sub external_menuitems { }
+# sub unicode_menuitems { }
+# sub prefs_menuitems { }
+# sub prefs_paths_menuitems { }
+# sub prefs_toolbar_menuitems { }
+# sub help_menuitems { }
 
 # FIXME: Reorganize the menu code order
 sub buildmenu {
@@ -1495,16 +1525,23 @@ sub buildmenu {
     );
 
     my $search = $menubar->cascade(
-                                   -label     => 'Search & ~Replace',
-                                   -tearoff   => 0,
-                                   -menuitems => search_menuitems,
-                                  );
+        -label     => 'Search & ~Replace',
+        -tearoff   => 0,
+        -menuitems => search_menuitems,
+    );
 
     my $bookmarks = $menubar->cascade(
-                                      -label => '~Bookmarks',
-                                      -tearoff => 1,
-                                      -menuitems => bookmarks_menuitems,
-                                     );
+        -label     => '~Bookmarks',
+        -tearoff   => 1,
+        -menuitems => bookmarks_menuitems,
+    );
+
+    # my $selection = $menubar->cascade(
+    #                                   -label     => '~Selection',
+    #                                   -tearoff   => 1,
+    #                                   -menuitems => selection_menuitems,
+    #                                  );
+
 
     $menubar->Cascade(
         -label     => '~Selection',
@@ -2039,7 +2076,7 @@ sub buildmenu {
     );
 }
 
-## Toggle visible page markers
+## Toggle visible page markers. This is not line numbers but marks for pages.
 sub viewpagenums {
     if ( $lglobal{seepagenums} ) {
         $lglobal{seepagenums} = 0;
@@ -4324,8 +4361,7 @@ sub poetryhtml {
     else {
         my $end   = pop(@ranges);
         my $start = pop(@ranges);
-        my ( $lsr, $lsc, $ler, $lec, $step, $ital )
-            ;    # FIXME: Guessing $lsr is last_star_row, last_end
+        my ( $lsr, $lsc, $ler, $lec, $step, $ital );
         ( $lsr, $lsc ) = split /\./, $start;
         ( $ler, $lec ) = split /\./, $end;
         $step = $lsr;
@@ -8962,7 +8998,6 @@ sub working {
     }
 }
 
-# FIXME: Just throw this crap out
 sub handleDND {
     my ( $sel, $filename ) = shift;
     eval {    # In case of an error, do the SelectionGet in an eval block
@@ -11713,7 +11748,7 @@ sub dos_path {
 ## FIXME: These are barfing on Unix systems, apparently.
 # Normalize line endings
 #sub eol_convert {
-#    my $regex = qr(\cM\cJ|\cM|\cJ); # Windows/Mac/Unix
+#    my $regex = qr{\cM\cJ|\cM|\cJ}; # Windows/Mac/Unix
 #    my $line = shift(@_);
 #    $line =~ s/$regex/\n/g;
 #    return $line;
@@ -11721,7 +11756,7 @@ sub dos_path {
 
 #sub eol_whitespace {
 #    my $line = shift(@_);
-#    my $regex = qr([\t \xA0]+$); #tab space no-break space
+#    my $regex = qr{[\t \xA0]+$}; #tab space no-break space
 #    $line =~ s/$regex//;
 #    return $line;
 #}
@@ -13842,9 +13877,10 @@ sub gotopage {
 sub find_proofer_comment {
     my $pattern = '[**';
     my $comment = $textwindow->search( $pattern, "insert" );
-    if ($comment) { 
-        my $index   = $textwindow->index("$comment +1c");
-        $textwindow->SetCursor($index); }
+    if ($comment) {
+        my $index = $textwindow->index("$comment +1c");
+        $textwindow->SetCursor($index);
+    }
 }
 
 sub nextblock {
