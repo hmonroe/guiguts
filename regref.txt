@@ -1,4 +1,4 @@
-$Id:$
+$Id$
 
 GUIGUTS REGEX REFERENCE
 For the most part, guiguts uses a standard perl regex

@@ -1,4 +1,4 @@
-$Id:$
+$Id$
 
 Upgrading to a new Guiguts version.
 

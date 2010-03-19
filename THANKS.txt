@@ -1,4 +1,4 @@
-$Id:$
+$Id$
 
 Thanks to Steve Schulze (thundergnat) for single-handedly putting this
 thing to together in the first place.
