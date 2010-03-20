@@ -1719,10 +1719,9 @@ sub buildmenu {
         -tearoff   => 0,
         -menuitems => edit_menuitems,
     );
-
     my $search = $menubar->cascade(
         -label     => 'Search & ~Replace',
-        -tearoff   => 0,
+        -tearoff   => 1,
         -menuitems => search_menuitems,
     );
 
@@ -1813,7 +1812,7 @@ sub buildmenu {
 
     $menubar->Cascade(
         -label     => '~Prefs',
-        -tearoff   => 1,
+        -tearoff   => 0,
         -menuitems => [
             [ Button => 'Set Rewrap ~margins',   -command => \&setmargins ],
             [ Button => '~Font',                 -command => \&fontsize ],
@@ -2059,13 +2058,13 @@ sub buildmenu {
 
     # my $menubar->cascade(
     #                      -label => '~Help',
-    #                      -tearoff => 1,
+    #                      -tearoff => 0,
     #                      -menuitems => help_menuitems,
     #                     );
 
     $menubar->Cascade(
         -label     => '~Help',
-        -tearoff   => 1,
+        -tearoff   => 0,
         -menuitems => [
             [ Button => '~About',    -command => \&about_pop_up ],
             [ Button => '~Versions', -command => [ \&showversion, $top ] ],
