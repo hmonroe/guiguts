@@ -1500,15 +1500,211 @@ sub bookmarks_menuitems {
     ];
 }
 
-# sub selection_menuitems { }
-# sub fixup_menuitems { }
-# sub text_menuitems { }
-# sub external_menuitems { }
+sub selection_menuitems {
+    [   [   Button   => '~lowercase Selection',
+            -command => sub { case ('lc'); }
+        ],
+        [   Button   => '~Sentence case Selection',
+            -command => sub { case ('sc'); }
+        ],
+        [   Button   => '~Title Case Selection',
+            -command => sub { case ('tc'); }
+        ],
+        [   Button   => '~UPPERCASE Selection',
+            -command => sub { case ('uc'); }
+        ],
+        [ 'separator', '' ],
+        [   Button   => 'Surround Selection With....',
+            -command => \&surround
+        ],
+        [   Button   => 'Flood Fill Selection With....',
+            -command => sub {
+                $textwindow->addGlobStart;
+                flood();
+                $textwindow->addGlobEnd;
+                }
+        ],
+        [ 'separator', '' ],
+        [   Button   => 'Indent Selection 1',
+            -command => sub {
+                $textwindow->addGlobStart;
+                indent('in');
+                $textwindow->addGlobEnd;
+                }
+        ],
+        [   Button   => 'Indent Selection -1',
+            -command => sub {
+                $textwindow->addGlobStart;
+                indent('out');
+                $textwindow->addGlobEnd;
+                }
+        ],
+        [ 'separator', '' ],
+        [   Button   => '~Rewrap Selection',
+            -command => sub {
+                $textwindow->addGlobStart;
+                selectrewrap();
+                $textwindow->addGlobEnd;
+                }
+        ],
+        [   Button   => '~Block Rewrap Selection',
+            -command => sub {
+                $textwindow->addGlobStart;
+                blockrewrap();
+                $textwindow->addGlobEnd;
+                }
+        ],
+        [   Button   => 'Interrupt Rewrap',
+            -command => sub { $operationinterrupt = 1 }
+        ],
+        [ 'separator', '' ],
+        [ Button => 'ASCII ~Boxes',          -command => \&asciipopup ],
+        [ Button => '~Align text on string', -command => \&alignpopup ],
+        [ 'separator', '' ],
+        [   Button   => 'Convert To Named/Numeric Entities',
+            -command => sub {
+                $textwindow->addGlobStart;
+                tonamed();
+                $textwindow->addGlobEnd;
+                }
+        ],
+        [   Button   => 'Convert From Named/Numeric Entities',
+            -command => sub {
+                $textwindow->addGlobStart;
+                fromnamed();
+                $textwindow->addGlobEnd;
+                }
+        ],
+        [   Button   => 'Convert Fractions',
+            -command => sub {
+                my @ranges = $textwindow->tagRanges('sel');
+                $textwindow->addGlobStart;
+                if (@ranges) {
+                    while (@ranges) {
+                        my $end   = pop @ranges;
+                        my $start = pop @ranges;
+                        fracconv( $start, $end );
+                    }
+                }
+                else {
+                    fracconv( '1.0', 'end' );
+                }
+                $textwindow->addGlobEnd;
+                }
+        ],
+    ];
+}
+
+sub fixup_menuitems {
+    [   [   Button   => 'Run ~Word Frequency Routine',
+            -command => \&wordcount
+        ],
+        [ 'separator', '' ],
+        [ Button => 'Run ~Gutcheck',    -command => \&gutcheck ],
+        [ Button => 'Gutcheck options', -command => \&gutopts ],
+        [ Button => 'Run ~Jeebies',     -command => \&jeebiespop_up ],
+        [ 'separator', '' ],
+        [   Button   => 'Remove End-of-line Spaces',
+            -command => sub {
+                $textwindow->addGlobStart;
+                endofline();
+                $textwindow->addGlobEnd;
+                }
+        ],
+        [ Button => 'Run Fi~xup', -command => \&fixpopup ],
+        [ 'separator', '' ],
+        [   Button   => 'Fix ~Page Separators',
+            -command => \&separatorpopup
+        ],
+        [   Button   => 'Remove Blank Lines Before Page Separators',
+            -command => sub {
+                $textwindow->addGlobStart;
+                delblanklines();
+                $textwindow->addGlobEnd;
+                }
+        ],
+        [ 'separator', '' ],
+        [ Button => '~Footnote Fixup', -command => \&footnotepop ],
+        [ Button => '~HTML Fixup',     -command => \&markpopup ],
+        [ Button => '~Sidenote Fixup', -command => \&sidenotes ],
+        [   Button   => 'Reformat Poetry ~Line Numbers',
+            -command => \&poetrynumbers
+        ],
+        [   Button   => 'Convert Windows CP 1252 characters to Unicode',
+            -command => \&cp1252toUni
+        ],
+        [ 'separator', '' ],
+        [   Button   => 'ASCII Table Special Effects',
+            -command => \&tablefx
+        ],
+        [ 'separator', '' ],
+        [   Button   => 'Clean Up Rewrap ~Markers',
+            -command => sub {
+                $textwindow->addGlobStart;
+                cleanup();
+                $textwindow->addGlobEnd;
+                }
+        ],
+        [ 'separator', '' ],
+        [   Button   => 'Find Greek',
+            -command => \&findandextractgreek
+        ],
+
+        # FIXME: [   Button   => 'Convert Greek [STUB - does nothing yet]',
+        #    -command => \&convertgreek
+        # ],
+
+    ];
+}
+
+sub text_menuitems {
+    [   [   Button   => "Convert Italics",
+            -command => \&text_convert_italic
+        ],
+
+        [ Button => "Convert Bold", -command => \&text_convert_bold ],
+
+# FIXME: [ Button => "Delete [Blank Page]", -command => \&text_delete_blank_page ],
+
+ # FIXME: [ Button => "Convert Smallcaps", -command => \&text_convert_smcap ],
+
+        [   Button   => '~Add a Thought Break',
+            -command => sub {
+                $textwindow->addGlobStart;
+                text_thought_break();
+                $textwindow->addGlobEnd;
+                }
+        ],
+
+        [   Button   => 'Convert <tb> to asterisk break',
+            -command => sub {
+                $textwindow->addGlobStart;
+                text_convert_tb();
+                $textwindow->addGlobEnd;
+                }
+        ],
+
+        [ Button => "Options", -command => \&text_convert_options ],
+    ];
+}
+
+sub external_menuitems {
+    [   [   Button   => 'Setup External Operations',
+            -command => \&externalpopup
+        ],
+        [ 'separator', '' ],
+        map ( [ Button   => "~$_ $extops[$_]{label}",
+                -command => [ \&xtops, $_ ]
+            ],
+            ( 0 .. 9 ) ),
+    ];
+}
+
 # sub unicode_menuitems { }
 # sub prefs_menuitems { }
 # sub prefs_paths_menuitems { }
 # sub prefs_toolbar_menuitems { }
-# sub help_menuitems { }
+#sub help_menuitems { }
 
 # FIXME: Reorganize the menu code order
 sub buildmenu {
@@ -1536,223 +1732,33 @@ sub buildmenu {
         -menuitems => bookmarks_menuitems,
     );
 
-    # my $selection = $menubar->cascade(
-    #                                   -label     => '~Selection',
-    #                                   -tearoff   => 1,
-    #                                   -menuitems => selection_menuitems,
-    #                                  );
-
-
-    $menubar->Cascade(
+    my $selection = $menubar->cascade(
         -label     => '~Selection',
         -tearoff   => 1,
-        -menuitems => [
-            [   Button   => '~lowercase Selection',
-                -command => sub { case ('lc'); }
-            ],
-            [   Button   => '~Sentence case Selection',
-                -command => sub { case ('sc'); }
-            ],
-            [   Button   => '~Title Case Selection',
-                -command => sub { case ('tc'); }
-            ],
-            [   Button   => '~UPPERCASE Selection',
-                -command => sub { case ('uc'); }
-            ],
-            [ 'separator', '' ],
-            [   Button   => 'Surround Selection With....',
-                -command => \&surround
-            ],
-            [   Button   => 'Flood Fill Selection With....',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    flood();
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-            [ 'separator', '' ],
-            [   Button   => 'Indent Selection 1',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    indent('in');
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-            [   Button   => 'Indent Selection -1',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    indent('out');
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-            [ 'separator', '' ],
-            [   Button   => '~Rewrap Selection',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    selectrewrap();
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-            [   Button   => '~Block Rewrap Selection',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    blockrewrap();
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-            [   Button   => 'Interrupt Rewrap',
-                -command => sub { $operationinterrupt = 1 }
-            ],
-            [ 'separator', '' ],
-            [ Button => 'ASCII ~Boxes',          -command => \&asciipopup ],
-            [ Button => '~Align text on string', -command => \&alignpopup ],
-            [ 'separator', '' ],
-            [   Button   => 'Convert To Named/Numeric Entities',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    tonamed();
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-            [   Button   => 'Convert From Named/Numeric Entities',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    fromnamed();
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-            [   Button   => 'Convert Fractions',
-                -command => sub {
-                    my @ranges = $textwindow->tagRanges('sel');
-                    $textwindow->addGlobStart;
-                    if (@ranges) {
-                        while (@ranges) {
-                            my $end   = pop @ranges;
-                            my $start = pop @ranges;
-                            fracconv( $start, $end );
-                        }
-                    }
-                    else {
-                        fracconv( '1.0', 'end' );
-                    }
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-        ]
+        -menuitems => selection_menuitems,
     );
 
-    $menubar->Cascade(
+    my $fixup = $menubar->cascade(
         -label     => 'Fi~xup',
         -tearoff   => 1,
-        -menuitems => [
-            [   Button   => 'Run ~Word Frequency Routine',
-                -command => \&wordcount
-            ],
-            [ 'separator', '' ],
-            [ Button => 'Run ~Gutcheck',    -command => \&gutcheck ],
-            [ Button => 'Gutcheck options', -command => \&gutopts ],
-            [ Button => 'Run ~Jeebies',     -command => \&jeebiespop_up ],
-            [ 'separator', '' ],
-            [   Button   => 'Remove End-of-line Spaces',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    endofline();
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-            [ Button => 'Run Fi~xup', -command => \&fixpopup ],
-            [ 'separator', '' ],
-            [   Button   => 'Fix ~Page Separators',
-                -command => \&separatorpopup
-            ],
-            [   Button   => 'Remove Blank Lines Before Page Separators',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    delblanklines();
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-            [ 'separator', '' ],
-            [ Button => '~Footnote Fixup', -command => \&footnotepop ],
-            [ Button => '~HTML Fixup',     -command => \&markpopup ],
-            [ Button => '~Sidenote Fixup', -command => \&sidenotes ],
-            [   Button   => 'Reformat Poetry ~Line Numbers',
-                -command => \&poetrynumbers
-            ],
-            [   Button   => 'Convert Windows CP 1252 characters to Unicode',
-                -command => \&cp1252toUni
-            ],
-            [ 'separator', '' ],
-            [   Button   => 'ASCII Table Special Effects',
-                -command => \&tablefx
-            ],
-            [ 'separator', '' ],
-            [   Button   => 'Clean Up Rewrap ~Markers',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    cleanup();
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-            [ 'separator', '' ],
-            [   Button   => 'Find Greek',
-                -command => \&findandextractgreek
-            ],
-
-           # FIXME: [   Button   => 'Convert Greek [STUB - does nothing yet]',
-           #    -command => \&convertgreek
-           # ],
-        ]
+        -menuitems => fixup_menuitems,
     );
 
-    $menubar->Cascade(
+    # FIXME: Add accelarators and hot keys.
+    my $text = $menubar->cascade(
         -label     => 'Text Processing',
         -tearoff   => 1,
-        -menuitems => [
-            [   Button   => "Convert Italics",
-                -command => \&text_convert_italic
-            ],
-
-            [ Button => "Convert Bold", -command => \&text_convert_bold ],
-
-# FIXME: [ Button => "Delete [Blank Page]", -command => \&text_delete_blank_page ],
-
- # FIXME: [ Button => "Convert Smallcaps", -command => \&text_convert_smcap ],
-
-            [   Button   => '~Add a Thought Break',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    text_thought_break();
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-
-            [   Button   => 'Convert <tb> to asterisk break',
-                -command => sub {
-                    $textwindow->addGlobStart;
-                    text_convert_tb();
-                    $textwindow->addGlobEnd;
-                    }
-            ],
-
-            [ Button => "Options", -command => \&text_convert_options ],
-        ]
+        -menuitems => text_menuitems,
     );
 
-    $menubar->Cascade(
-        qw{-label Externa~l -tearoff 1 -menuitems} => [
-            [   Button   => 'Setup External Operations',
-                -command => \&externalpopup
-            ],
-            [ 'separator', '' ],
-            map ( [ Button   => "~$_ $extops[$_]{label}",
-                    -command => [ \&xtops, $_ ]
-                ],
-                ( 0 .. 9 ) ),
-        ],
+    my $external = $menubar->cascade(
+        -label     => 'External',
+        -tearoff   => 0,
+        -menuitems => external_menuitems,
     );
 
-    if ( $Tk::version ge 8.4 ) {
+    # FIXME: We'll leave this alone for now.
+    if ( $Tk::VERSION =~ m{804} ) {
         my %utfsorthash;
         for ( keys %{ $lglobal{utfblocks} } ) {
             $utfsorthash{ $lglobal{utfblocks}{$_}->[0] } = $_;
@@ -2050,6 +2056,13 @@ sub buildmenu {
             ],
         ]
     );
+
+    # my $menubar->cascade(
+    #                      -label => '~Help',
+    #                      -tearoff => 1,
+    #                      -menuitems => help_menuitems,
+    #                     );
+
     $menubar->Cascade(
         -label     => '~Help',
         -tearoff   => 1,
