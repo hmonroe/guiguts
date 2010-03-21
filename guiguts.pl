@@ -58,8 +58,8 @@ use Tk::widgets qw{Balloon
 
 ### Custom Guigut modules
 # FIXME: Move these into lib/Guiguts.
-use LineNumberText;
-use TextUnicode;
+use Guiguts::LineNumberText;
+use Guiguts::TextUnicode;
 use Guiguts::Greekgifs;
 
 # Ignore any watchdog timer alarms. Subroutines that take a long time to
