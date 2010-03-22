@@ -1,5 +1,6 @@
+# $Id$
+
 package Tk::ToolBar;
-print "DEBUG: Loading ToolBar...\n";
 
 use 5.005;
 use strict;
