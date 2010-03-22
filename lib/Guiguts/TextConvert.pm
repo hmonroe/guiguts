@@ -1,6 +1,6 @@
-#$Id$
+#$Id: TextConvert.pm 56 2008-09-27 17:37:26Z vlsimpson $
 
-package TextConvert;
+package Guiguts::TextConvert;
 
 use warnings;
 use strict;

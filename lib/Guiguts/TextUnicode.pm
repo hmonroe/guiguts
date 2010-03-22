@@ -1,7 +1,6 @@
 #$Id$
 
-package TextUnicode;
-print "DEBUG: Loading lib/Guiguts/TextUnicode...\n";
+package Guiguts::TextUnicode;
 
 use base qw(Tk::TextEdit);
 use File::Temp qw/tempfile/;
