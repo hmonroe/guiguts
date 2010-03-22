@@ -1,6 +1,6 @@
 #$Id$
 
-package Tk::LineNumberText;
+package Guiguts::LineNumberText;
 
 use Tk;
 use Tk::widgets qw(ROText);
