@@ -35,6 +35,7 @@ use HTML::TokeParser;
 use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
+use File::Path;
 
 use Tk;
 use Tk::widgets qw{Balloon
@@ -69,7 +70,7 @@ $SIG{INT} = sub { _exit() };
 
 ### Constants
 my $OS_WIN         = $^O =~ m{Win};
-my $VERSION        = '0.2.10';
+my $VERSION        = '0.2.11';
 my $APP_NAME       = 'GuiGuts';
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
@@ -100,6 +101,7 @@ our $globallastpath     = q{};
 our $globalspelldictopt = q{};
 our $globalspellpath    = q{};
 our $globalviewerpath   = q{};
+our $globalprojectdirectory     = q{};
 our $gutpath            = q{};
 our $highlightcolor     = '#a08dfc';
 our $history_size       = 20;
@@ -476,8 +478,8 @@ sub _bin_save {
         print $fh '$bookmarks[0] = \''
             . $textwindow->index('insert') . "';\n";
         for ( 1 .. 5 ) {
-            print $fh '$bookmarks[' 
-                . $_ 
+            print $fh '$bookmarks['
+                . $_
                 . '] = \''
                 . $textwindow->index( 'bkmk' . $_ ) . "';\n"
                 if $bookmarks[$_];
@@ -492,8 +494,8 @@ sub _bin_save {
             no warnings 'uninitialized';
             for my $round ( 1 .. $lglobal{numrounds} ) {
                 if ( defined $proofers{$page}->[$round] ) {
-                    print $fh '$proofers{\'' 
-                        . $page . '\'}[' 
+                    print $fh '$proofers{\''
+                        . $page . '\'}['
                         . $round
                         . '] = \''
                         . $proofers{$page}->[$round] . '\';' . "\n";
@@ -1700,6 +1702,19 @@ sub external_menuitems {
     ];
 }
 
+
+sub batch_menuitems {
+    [   [   Button   => "Set up image directories",
+            -command => \&batch_setupimagedirectories
+        ],
+
+
+
+    ];
+}
+
+
+
 # sub unicode_menuitems { }
 # sub prefs_menuitems { }
 # sub prefs_paths_menuitems { }
@@ -1754,6 +1769,12 @@ sub buildmenu {
         -label     => 'External',
         -tearoff   => 0,
         -menuitems => external_menuitems,
+    );
+
+    my $batch = $menubar->cascade(
+        -label     => 'Batc~h',
+        -tearoff   => 1,
+        -menuitems => batch_menuitems,
     );
 
     # FIXME: We'll leave this alone for now.
@@ -2256,7 +2277,7 @@ sub fnview {
         $lglobal{footviewpop}->Icon( -image => $icon );
         for my $findex ( 1 .. $lglobal{fntotal} ) {
             $ftext->insert( 'end',
-                      'footnote #' 
+                      'footnote #'
                     . $findex
                     . '  line.column - '
                     . $lglobal{fnarray}->[$findex][0]
@@ -2769,7 +2790,7 @@ sub footnoteshow {
         my $widget = $textwindow->{rtext};
         my ( $lx, $ly, $lw, $lh ) = $widget->dlineinfo($line);
         my $bottom = int(
-            (         $widget->height 
+            (         $widget->height
                     - 2 * $widget->cget( -bd )
                     - 2 * $widget->cget( -highlightthickness )
             ) / $lh / 2
@@ -5200,7 +5221,7 @@ sub htmlimage {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
-                                  "<div class=\"figleft\" style=\"width: " 
+                                  "<div class=\"figleft\" style=\"width: "
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -5209,7 +5230,7 @@ sub htmlimage {
                         $textwindow->delete( 'thisblockstart',
                             'thisblockend' );
                         $textwindow->insert( 'thisblockstart',
-                                  "<div class=\"figright\" style=\"width: " 
+                                  "<div class=\"figright\" style=\"width: "
                                 . $width
                                 . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
                         );
@@ -6018,7 +6039,7 @@ sub htmlautoconvert {
                 $ital = 0;
             }
             $lglobal{classhash}->{$indent}
-                = '    .poem span.i' 
+                = '    .poem span.i'
                 . $indent
                 . '     {display: block; margin-left: '
                 . $indent
@@ -6234,7 +6255,7 @@ sub htmlautoconvert {
                     $ital = 0;
                 }
                 $selection
-                    = '<span style="margin-left: ' 
+                    = '<span style="margin-left: '
                     . $indent . 'em;">'
                     . $selection
                     . '</span>';
@@ -6269,7 +6290,7 @@ sub htmlautoconvert {
                 $aname =~ s/<\/?[hscalup].*?>//g;
                 $aname = makeanchor( deaccent($selection) );
                 $textwindow->ntinsert( "$step.0",
-                          "<h2><a name=\"" 
+                          "<h2><a name=\""
                         . $aname
                         . "\" id=\""
                         . $aname
@@ -6282,7 +6303,7 @@ sub htmlautoconvert {
                     $selection =~ s/<[^>]+>//g;
                     $selection = "<b>$selection</b>";
                     push @contents,
-                          "<a href=\"#" 
+                          "<a href=\"#"
                         . $aname . "\">"
                         . $selection
                         . "</a><br />\n";
@@ -11556,11 +11577,11 @@ sub drag {
         '<B1-Motion>',
         sub {
             my $x
-                = $scrolledwidget->toplevel->width 
+                = $scrolledwidget->toplevel->width
                 - $lglobal{x}
                 + $scrolledwidget->toplevel->pointerx;
             my $y
-                = $scrolledwidget->toplevel->height 
+                = $scrolledwidget->toplevel->height
                 - $lglobal{y}
                 + $scrolledwidget->toplevel->pointery;
             ( $lglobal{x}, $lglobal{y} ) = (
@@ -17309,6 +17330,67 @@ sub text_convert_tb {
 }
 
 # FIXME: sub text_delete_blank_page { }
+
+### Batch Processing
+
+sub batch_setupimagedirectories {
+
+    return if ( confirmempty() =~ /cancel/i );
+    my $directory
+        = $top->chooseDirectory( -title =>
+            'Choose the top-level project directory.',
+        -initialdir => $globallastpath
+
+        );
+    return 0
+        unless ( -d $directory and defined $directory and $directory ne '' );
+    $top->Busy( -recurse => 1 );
+    my $pwd = getcwd();
+    chdir $directory;
+    $directory .= '/';
+    $directory      = os_normal($directory);
+    $globallastpath = $directory;
+    $globalprojectdirectory = $directory;
+
+    mkpath('images',$globalprojectdirectory);
+    mkpath('originals',$globalprojectdirectory);
+    use File::Copy;
+
+    chdir 'pngs';
+
+# use glob to expand wildcard
+for my $file ( <*> ) {
+ if ($file =~ /^[^0-9].*/ or $file=~/jpg$/) {copy( $file, $globalprojectdirectory.'\images' ) or warn "Cannot copy $file: $!";}
+}
+    chdir $globalprojectdirectory;
+
+for my $file ( <*> ) {
+ if ($file =~ /^project.*txt/ ) {copy( $file, 'original.txt' ) or warn "Cannot copy $file: $!";}
+}
+
+
+
+
+    my $options = $top->DialogBox(
+        -title   => "Batch",
+        -buttons => ["OK"],
+    );
+    my $italic_frame = $options->add('Frame')
+        ->pack( -side => 'top', -padx => 5, -pady => 3 );
+    my $italic_label = $italic_frame->Label(
+        -width => 25,
+        -text  =>    getcwd()
+    )->pack( -side => 'left' );
+    $options->Show;
+    $top->Unbusy( -recurse => 1 );
+
+    chdir $pwd;
+
+}
+
+
+
+
 
 # Popup for choosing replacement characters, etc.
 sub text_convert_options {
