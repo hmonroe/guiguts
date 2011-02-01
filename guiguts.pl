@@ -1358,7 +1358,7 @@ sub edit_menuitems {
 
         [ 'separator', '' ],
         [   'command', 'Copy',
-            -command     => sub { copy() },
+            -command     => sub { textcopy() },
             -accelerator => 'Ctrl+c'
         ],
         [   'command', 'Paste',
@@ -5329,7 +5329,7 @@ sub tnbrowse {
     }
     if ( $sw < 2 ) { $sw += 1 }
     $lglobal{htmlthumb}
-        ->copy( $lglobal{htmlorig}, -subsample => ($sw), -shrink );
+        ->textcopy( $lglobal{htmlorig}, -subsample => ($sw), -shrink );
     $lglobal{imagelbl}->configure(
         -image   => $lglobal{htmlthumb},
         -text    => 'Thumbnail',
@@ -6642,7 +6642,7 @@ sub entity {
         '\xa6' => '&brvbar;',
         '\xa7' => '&sect;',
         '\xa8' => '&uml;',
-        '\xa9' => '&copy;',
+        '\xa9' => '&textcopy;',
         '\xaa' => '&ordf;',
         '\xab' => '&laquo;',
         '\xac' => '&not;',
@@ -10133,7 +10133,7 @@ sub textbindings {
         '<<Copy>>' => '<Control-C>',
         '<Control-c>', '<F1>'
     );
-    $textwindow->bind( 'TextUnicode', '<<Copy>>' => \&copy );
+    $textwindow->bind( 'TextUnicode', '<<Copy>>' => \&textcopy );
     $textwindow->eventAdd(
         '<<Cut>>' => '<Control-X>',
         '<Control-x>', '<F2>'
@@ -12893,7 +12893,7 @@ sub cut {
     }
 }
 
-sub copy {
+sub textcopy {
     my @ranges      = $textwindow->tagRanges('sel');
     my $range_total = @ranges;
     return unless $range_total;
@@ -17364,11 +17364,16 @@ sub text_convert_options {
 }
 
 
+
+
+
+
 ### Batch Processing Added by Hunter Monroe
 
 ## Copy images to images directory
 sub batch_setupimagedirectories {
 
+# set a top level project directory as a global variable
     return if ( confirmempty() =~ /cancel/i );
     my $directory
         = $top->chooseDirectory( -title =>
@@ -17391,18 +17396,15 @@ sub batch_setupimagedirectories {
     use File::Copy;
 
     chdir 'pngs';
-
-for my $file ( <*> ) {
- if ($file =~ /^[^0-9].*/ or $file=~/jpg$/) {copy( $file, $globalprojectdirectory.'\images' ) or warn "Cannot copy $file: $!";}
-}
+    for my $file ( <*> ) {
+        if ($file =~ /^[^0-9].*/ or $file=~/jpg$/) {copy( $file, $globalprojectdirectory.'\images' ) or warn "Cannot copy $file: $!";}
+    }
     chdir $globalprojectdirectory;
 
-for my $file ( <*> ) {
- if ($file =~ /^project.*txt/ ) {copy( $file, 'original.txt' ) or warn "Cannot copy $file: $!";}
-}
-
+    for my $file ( <*> ) {
+        if ($file =~ /^project.*txt/ ) {copy( $file, 'original.txt' ) or warn "Cannot copy $file: $!";}
+    }
     $top->Unbusy( -recurse => 1 );
-
     chdir $pwd;
 
 }
