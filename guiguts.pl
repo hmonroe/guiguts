@@ -1687,6 +1687,7 @@ sub text_menuitems {
         ],
 
         [ Button => "Options", -command => \&text_convert_options ],
+        [ Button => "Batch", -command => \&batch_setupimagedirectories ],
     ];
 }
 
@@ -1702,16 +1703,6 @@ sub external_menuitems {
     ];
 }
 
-
-sub batch_menuitems {
-    [   [   Button   => "Set up image directories",
-            -command => \&batch_setupimagedirectories
-        ],
-
-
-
-    ];
-}
 
 
 
@@ -1771,11 +1762,11 @@ sub buildmenu {
         -menuitems => external_menuitems,
     );
 
-    my $batch = $menubar->cascade(
-        -label     => 'Batc~h',
-        -tearoff   => 1,
-        -menuitems => batch_menuitems,
-    );
+#    my $batch = $menubar->cascade(
+#        -label     => 'Batc~h',
+#        -tearoff   => 1,
+#       -menuitems => batch_menuitems,
+#    );
 
     # FIXME: We'll leave this alone for now.
     if ( $Tk::VERSION =~ m{804} ) {
@@ -17331,63 +17322,6 @@ sub text_convert_tb {
 
 # FIXME: sub text_delete_blank_page { }
 
-### Batch Processing
-
-sub batch_setupimagedirectories {
-
-    return if ( confirmempty() =~ /cancel/i );
-    my $directory
-        = $top->chooseDirectory( -title =>
-            'Choose the top-level project directory.',
-        -initialdir => $globallastpath
-
-        );
-    return 0
-        unless ( -d $directory and defined $directory and $directory ne '' );
-    $top->Busy( -recurse => 1 );
-    my $pwd = getcwd();
-    chdir $directory;
-    $directory .= '/';
-    $directory      = os_normal($directory);
-    $globallastpath = $directory;
-    $globalprojectdirectory = $directory;
-
-    mkpath('images',$globalprojectdirectory);
-    mkpath('originals',$globalprojectdirectory);
-    use File::Copy;
-
-    chdir 'pngs';
-
-# use glob to expand wildcard
-for my $file ( <*> ) {
- if ($file =~ /^[^0-9].*/ or $file=~/jpg$/) {copy( $file, $globalprojectdirectory.'\images' ) or warn "Cannot copy $file: $!";}
-}
-    chdir $globalprojectdirectory;
-
-for my $file ( <*> ) {
- if ($file =~ /^project.*txt/ ) {copy( $file, 'original.txt' ) or warn "Cannot copy $file: $!";}
-}
-
-
-
-
-    my $options = $top->DialogBox(
-        -title   => "Batch",
-        -buttons => ["OK"],
-    );
-    my $italic_frame = $options->add('Frame')
-        ->pack( -side => 'top', -padx => 5, -pady => 3 );
-    my $italic_label = $italic_frame->Label(
-        -width => 25,
-        -text  =>    getcwd()
-    )->pack( -side => 'left' );
-    $options->Show;
-    $top->Unbusy( -recurse => 1 );
-
-    chdir $pwd;
-
-}
-
 
 
 
@@ -17428,6 +17362,54 @@ sub text_convert_options {
     $options->Show;
     saveset();
 }
+
+
+### Batch Processing Added by Hunter Monroe
+
+## Copy images to images directory
+sub batch_setupimagedirectories {
+
+    return if ( confirmempty() =~ /cancel/i );
+    my $directory
+        = $top->chooseDirectory( -title =>
+            'Choose the top-level project directory.',
+        -initialdir => $globallastpath
+
+        );
+    return 0
+        unless ( -d $directory and defined $directory and $directory ne '' );
+    $top->Busy( -recurse => 1 );
+    my $pwd = getcwd();
+    chdir $directory;
+    $directory .= '/';
+    $directory      = os_normal($directory);
+    $globallastpath = $directory;
+    $globalprojectdirectory = $directory;
+
+    mkpath('images',$globalprojectdirectory);
+    mkpath('originals',$globalprojectdirectory);
+    use File::Copy;
+
+    chdir 'pngs';
+
+for my $file ( <*> ) {
+ if ($file =~ /^[^0-9].*/ or $file=~/jpg$/) {copy( $file, $globalprojectdirectory.'\images' ) or warn "Cannot copy $file: $!";}
+}
+    chdir $globalprojectdirectory;
+
+for my $file ( <*> ) {
+ if ($file =~ /^project.*txt/ ) {copy( $file, 'original.txt' ) or warn "Cannot copy $file: $!";}
+}
+
+    $top->Unbusy( -recurse => 1 );
+
+    chdir $pwd;
+
+}
+
+
+
+
 
 ### External
 sub externalpopup {    # Set up the external commands menu
