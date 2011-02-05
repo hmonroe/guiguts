@@ -1,8 +1,13 @@
 Allow side by side paging through text and images
 
+Fix bug so page numbers at beginning of a chapter comes after
+the horizontal rule
+
+Tool to help in removing hyphens (for instance, how often does a given word appear with or without hyphens);
+
 Convert [oe] to ligature and other character replacements
 
-Automatically use goodwords in spelling check
+Automatically use goodwords in spelling check--see code already under development
 
 Remove unused CSS
 
@@ -10,7 +15,9 @@ Automatic dehyphenator
 
 Automatic PNG resizer illustration allocator
 
-Index/contents recognizer--page linker
+Index/contents/illustration list recognizer--Help converting page numbers to hyperlinks
+
+Bug on hr vs. page numbers; 
 
 One click: find orphaned markup of any kind
 
@@ -20,8 +27,9 @@ Add a clear recent files function.
 
 Get GG icon date from source and make a new gg.ico.
 
-Label various operations as ### GutCheck ... ### End GutCheck.
+Center text between /F F/ markup as an option. 
 
+Label various operations as ### GutCheck ... ### End GutCheck.
 
 Fix option database.
 
@@ -87,4 +95,3 @@ README: Document various files, Changelog, Release, Thanks etc.
 Make TAGS file.
 
 add sub view_menuitems. toolbar, status bar, image, etc.
-

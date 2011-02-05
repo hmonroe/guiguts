@@ -1687,7 +1687,7 @@ sub text_menuitems {
         ],
 
         [ Button => "Options", -command => \&text_convert_options ],
-        [ Button => "Batch", -command => \&batch_setupimagedirectories ],
+        [ Button => "Move images to images directory", -command => \&batch_setupimagedirectories ],
     ];
 }
 
@@ -12133,7 +12133,7 @@ sub buildstatusbar {
     );
 }
 
-# Routine to update the status bar when somthing has changed.
+# Routine to update the status bar when something has changed.
 sub update_indicators {
     my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
     my ( $line, $column ) = split( /\./, $textwindow->index('insert') );
@@ -12374,6 +12374,8 @@ sub spellcheckfirst {
     getprojectdic();
     do "$lglobal{projectdictname}";
     $lglobal{lastmatchindex} = '1.0';
+    # TODO  Add good words to project dictionary
+    # addgoodwords();
 
     # get list of mispelled words in selection (or file if nothing selected)
     spellget_misspellings();
@@ -12736,6 +12738,20 @@ sub spelladdtexttags {
     $textwindow->yview('end');
     $textwindow->see( $lglobal{matchindex} );
 }
+
+#sub addgoodwords {
+#    spellmyaddword("Flinders");
+#    chdir $globallastpath;
+#    open(DAT, "good_w~1.txt") || die("Could not open file!");
+#    my @raw_data=<DAT>;
+#    close(DAT);
+#    my $word=q{};
+#    foreach my $word (@raw_data)
+#    {
+#        echo $word;
+#        spellmyaddword($word);
+#    }
+#}
 
 ## End Spellcheck
 
