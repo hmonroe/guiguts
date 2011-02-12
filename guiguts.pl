@@ -4,8 +4,6 @@
 
 # GuiGuts text editor
 
-#Copyright (C) 2008 V. L. Simpson <vlsimpson@users.sourceforge.net>
-
 #This program is free software; you can redistribute it and/or
 #modify it under the terms of the GNU General Public License
 #as published by the Free Software Foundation; either version 2
@@ -112,6 +110,7 @@ our $lmargin            = 1;
 our $markupthreshold    = 4;
 our $nobell             = 0;
 our $nohighlights       = 0;
+our $fblockscentered    = 0;
 our $notoolbar          = 0;
 our $operationinterrupt;
 our $pngspath         = q{};
@@ -1685,6 +1684,16 @@ sub text_menuitems {
                 $textwindow->addGlobEnd;
                 }
         ],
+        [   Button   => 'Small caps to all caps',
+            -command => sub {
+                text_convert_smallcaps();
+                }
+        ],
+        [   Button   => 'Remove small caps markup',
+            -command => sub {
+                text_remove_smallcaps_markup();
+                }
+        ],
 
         [ Button => "Options", -command => \&text_convert_options ],
         [ Button => "Move images to images directory", -command => \&batch_setupimagedirectories ],
@@ -1827,6 +1836,11 @@ sub buildmenu {
         -tearoff   => 0,
         -menuitems => [
             [ Button => 'Set Rewrap ~margins',   -command => \&setmargins ],
+            [   Checkbutton => '/F F/ blocks centered during rewrap',
+                -variable   => \$fblockscentered,
+                -onvalue    => 1,
+                -offvalue   => 0
+            ],
             [ Button => '~Font',                 -command => \&fontsize ],
             [ Button => 'Browser Start Command', -command => \&setbrowser ],
             [   Cascade  => 'Set File ~Paths',
@@ -11420,7 +11434,7 @@ EOM
 
         for (
             qw/activecolor auto_page_marks autobackup autosave autosaveinterval blocklmargin blockrmargin
-            defaultindent fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
+            defaultindent fblockscentered fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
             highlightcolor history_size jeebiesmode lmargin nobell nohighlights notoolbar rmargin
             rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm italic_char bold_char/
             )
@@ -14698,6 +14712,7 @@ sub selectrewrap {
         my $inblock        = 0;
         my $infront        = 0;
         my $enableindent;
+        my $fblock =0;
         my $leftmargin  = $blocklmargin;
         my $rightmargin = $blockrmargin;
         my $firstmargin = $blocklmargin;
@@ -14784,7 +14799,11 @@ sub selectrewrap {
                 $indent       = 4;
             }
             if ( $selection =~ /^\x7f*\/[Xx\$]/ ) { $inblock = 1 }
-            if ( $selection =~ /^\x7f*\/[fF]/ )   { $inblock = 1 }
+            if ( $selection =~ /^\x7f*\/[fF]/ )   {
+                $inblock = 1;
+                $enableindent  =1; # hkm added to allow centering of /F F/ blocks
+                $fblock = 1; # hkm added to allow centering of /F F/ blocks
+            }
             $textwindow->markSet( 'rewrapend', $thisblockend )
                 ; #Set a mark at the end of the text so it can be found after rewrap
             unless ( $selection =~ /^\x7f*\s*?(\*\s*){4}\*/ )
@@ -14792,7 +14811,7 @@ sub selectrewrap {
                 if ($inblock) {
                     if ($enableindent) {
                         $indentblockend = $textwindow->search( '-regex', '--',
-                            '^\x7f*[pP\*Ll]\/', $thisblockstart, $end );
+                            '^\x7f*[pP\*LlfF]\/', $thisblockstart, $end ); # hkm added fF
                         $indentblockend = $indentblockend || $end;
                         $textwindow->markSet( 'rewrapend', $indentblockend );
                         unless ($offset) { $offset = 0 }
@@ -14822,9 +14841,9 @@ sub selectrewrap {
                             $textline
                                 = $textwindow->get( "$line.0", "$line.end" );
                             next
-                                if ( ( $textline =~ /^\x7f*\/[pP\*Ll]/ )
-                                || ( $textline =~ /^\x7f*[pP\*Ll]\// ) );
-                            if ($enableindent) {
+                                if ( ( $textline =~ /^\x7f*\/[pP\*LlFf]/ ) # hkm added fF
+                                || ( $textline =~ /^\x7f*[pP\*LlFf]\// ) );
+                            if ($enableindent and $fblock==0) {
                                 $textwindow->insert( "$line.0",
                                     ( ' ' x $indent ) )
                                     if ( $indent > 0 );
@@ -14845,12 +14864,20 @@ sub selectrewrap {
                                     }
                                 }
                             }
+                            else { if ($enableindent and $fblock==1 and $fblockscentered==1) { # hkm inserted to center /F F/ blocks
+                                	$textline =~ s/^\s+//;
+                                	$textline =~ s/\s+$//;
+                                    $textwindow->replacewith( "$line.0", "$line.end",
+                                        ( ' ' x (($blockrmargin-length($textline))/2 )) . $textline);
+                                }
+                            }
                         }
                         $indent       = 0;
                         $offset       = 0;
                         $enableindent = 0;
                         $poem         = 0;
                         $inblock      = 0;
+                        $fblock      = 0; # hkm added
                     }
                 }
                 else {
@@ -17336,6 +17363,19 @@ sub text_convert_tb {
     $textwindow->FindAndReplaceAll( '-exact', '-nocase', '<tb>', $tb );
 }
 
+sub text_convert_smallcaps {
+        searchpopup();
+        searchoptset(qw/0 x x 1/);
+        $lglobal{searchentry}->insert( 'end', "<sc>(\\n?[^<]+)</sc>" );
+        $lglobal{replaceentry}->insert( 'end', "\\U\$1\\E" );
+}
+
+sub text_remove_smallcaps_markup {
+        searchpopup();
+        searchoptset(qw/0 x x 1/);
+        $lglobal{searchentry}->insert( 'end', "<sc>(\\n?[^<]+)</sc>" );
+        $lglobal{replaceentry}->insert( 'end', "\$1" );
+}
 # FIXME: sub text_delete_blank_page { }
 
 
