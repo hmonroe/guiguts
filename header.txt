@@ -167,6 +167,13 @@ table {
     text-indent: -3em; 
 }
 
+/* Transcriber's notes */
+.transnote {background-color: #E6E6FA;
+    color: black;
+     font-size:smaller;
+     padding:0.5em;
+     margin-bottom:5em;
+     font-family:sans-serif, serif; }
     </style>
   </head>
 <body>

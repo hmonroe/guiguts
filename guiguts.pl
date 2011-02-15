@@ -110,7 +110,7 @@ our $lmargin            = 1;
 our $markupthreshold    = 4;
 our $nobell             = 0;
 our $nohighlights       = 0;
-our $fblockscentered    = 0;
+our $fblockscentered    = 0; #hkm added--default is to not center /F F/ blocks
 our $notoolbar          = 0;
 our $operationinterrupt;
 our $pngspath         = q{};
