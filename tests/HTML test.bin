@@ -1,0 +1,15 @@
+%pagenumbers = (
+);
+
+$bookmarks[0] = '25.10';
+
+
+@operations = (
+'Mon Feb 14 22:11:12 2011 - File Saved',
+);
+
+$spellindexbkmrk = '';
+
+$scannoslistpath = '';
+
+1;
