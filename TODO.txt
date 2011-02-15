@@ -1,5 +1,3 @@
-Allow side by side paging through text and images
-
 Fix bug so page numbers at beginning of a chapter comes after
 the horizontal rule
 
