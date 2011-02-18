@@ -60,6 +60,8 @@ my $currentver = '.41';
 # lvl
 #   don't convert solitary l to I  followed by ' and text (corrects behavour for French)
 #
+# hmonroe
+#   Add button for upload by zip file rather than FTP; rearranged Page 7 so FTP items came later
 
 
 
@@ -95,6 +97,7 @@ our $gitalicsopen ="<i>";
 our $gitalicsclose="</i>";
 our $gboldopen ="<b>";
 our $gboldclose ="</b>";
+our $globalbrowserstart = 'start';
 our $gsupopen = "^{";
 our $gsupclose = "}";
 our $gzerobytetext = "[Blank Page]";
@@ -283,7 +286,7 @@ my $main = MainWindow->new(
 $main->geometry($geometry);
 
 # Set the minimum window size.
-$main->minsize(qw(600 480));
+$main->minsize(qw(600 520));
 
 # Set an interesting palette color combo.
 $main->setPalette("$palette");
@@ -307,7 +310,7 @@ my $page8 = $book->add("page8", -label => "Search", -raisecmd => sub{$interrupt 
 my $page3 = $book->add("page3", -label => "Headers & Footers", -raisecmd => sub {emptybox(); $interrupt = 1;chdir $pwd;});
 my $page4 = $book->add("page4", -label => "Change Directory", -raisecmd => sub {$interrupt = 1;chdir $pwd;});
 my $page6 = $book->add("page6", -label => "Program Prefs", -raisecmd => sub {$interrupt = 1;chdir $pwd;});
-my $page7 = $book->add("page7", -label => "FTP", -raisecmd => sub {$interrupt = 1; });
+my $page7 = $book->add("page7", -label => "Upload", -raisecmd => sub {$interrupt = 1; });
 my $page5 = $book->add("page5", -label => "About", -raisecmd => sub {$interrupt = 1;chdir $pwd;});
 
 ## Page 1 layout ##################################################################################################################
@@ -1660,6 +1663,83 @@ sub viewersel{
 
 my $p7frame = $page7->Frame()->pack(-side => 'top', -anchor => 'nw', -expand => 'y',-fill => 'both', -padx =>'10', -pady => '10');
 
+ my $pbatchbutframe =  $p7frame->Frame()->pack(-side => 'top', -anchor => 'n');
+
+ my $buildbatchbutton = $pbatchbutframe->Button(
+	-command =>		\&ftpbuildbatch,
+	-text =>		'Build Batch',
+	-width =>		'11'
+)->pack(-side => 'left', -padx => '2',-pady => '4', -anchor => 'n');
+
+ my $addfilebutton = $pbatchbutframe->Button(
+	-command =>		\&ftpaddfile,
+	-text =>		'Add a File',
+	-width =>		'11'
+)->pack(-side => 'left', -padx => '2',-pady => '4', -anchor => 'n');
+
+ my $zipbatchbutton = $pbatchbutframe->Button(
+	-command =>		\&ftpbatchzip,
+	-text =>		'Zip Batch Files',
+	-width =>		'12'
+)->pack(-side => 'left', -padx => '2',-pady => '4', -anchor => 'n');
+
+my $clearbatchbutton = $pbatchbutframe->Button(
+	-command =>		\&ftpclearbatch,
+	-text =>		'Clear Local List',
+	-width =>		'12'
+)->pack(-side => 'left', -padx => '2',-pady => '4', -anchor => 'n');
+
+ my $pbatchsendframe =  $p7frame->Frame()->pack(-side => 'top', -anchor => 'n');
+
+my $zipuplbutton = $pbatchsendframe->Button( # hkm added button to upload via the script rather than by FTP
+	-command =>		\&zipscriptupload,
+	-text =>		'Send ZIP by Upload Script',
+	-width =>		'25'
+)->pack(-side => 'left', -padx => '2',-pady => '4', -anchor => 'n');
+
+my $ftpuplbutton = $pbatchsendframe->Button(
+	-command =>		\&ftpupload,
+	-text =>		'Send Files by FTP',
+	-width =>		'15'
+)->pack(-side => 'left', -padx => '2',-pady => '4', -anchor => 'n');
+
+my $ftpstpbutton = $pbatchsendframe->Button(
+	-command =>		sub {$ftpinterrupt = 1; },
+	-text =>		'Stop Transfer',
+	-width =>		'11'
+)->pack(-side => 'left', -padx => '2',-pady => '4', -anchor => 'n');
+
+my $ftpmkdnldbutton = $pbatchsendframe->Button(
+	-command =>		\&ftpdownload,
+	-text =>		'Download',
+	-width =>		'11'
+)->pack(-side => 'left', -padx => '2', -pady => '4', -anchor => 'n');
+
+
+
+
+my $p7logframe = $p7frame->Frame()->pack(-side => 'top', -anchor => 'n', -pady => '2');
+
+my $ftplog = $p7logframe->Scrolled('ROText',
+ 	-scrollbars =>		'oe',
+ 	-background => 		'white',
+ 	-wrap => 		'word',
+ 	-width =>		'120',
+ 	-height => 		'8',
+ 	-font =>		$helv,
+ )->pack(-side => 'top', -anchor => 'n');
+BindMouseWheel($ftplog);
+
+my $p7status = $p7logframe->ROText(
+	-font =>	$helv,
+	-background => 'white',
+	-height =>	'1',
+	-width => 	'120',
+)->pack(-side => 'left', -anchor => 'n',-pady=>1);
+
+$p7status->insert('end',"No Connection....");
+
+
 my $p7statframe = $p7frame->Frame()->pack(-side => 'top', -anchor => 'n');
 my $p7host;
 my $p7user;
@@ -1768,71 +1848,6 @@ $p7buttonframe->Radiobutton(
 	-selectcolor => 'white',
 	-text =>	"Kilobits"
 )->pack(-side => 'left',-pady => '4');
-
-my $p7logframe = $p7frame->Frame()->pack(-side => 'top', -anchor => 'n', -pady => '2');
-
-my $ftplog = $p7logframe->Scrolled('ROText',
- 	-scrollbars =>		'oe',
- 	-background => 		'white',
- 	-wrap => 		'word',
- 	-width =>		'120',
- 	-height => 		'8',
- 	-font =>		$helv,
- )->pack(-side => 'top', -anchor => 'n');
-BindMouseWheel($ftplog);
-
-my $p7status = $p7logframe->ROText(
-	-font =>	$helv,
-	-background => 'white',
-	-height =>	'1',
-	-width => 	'120',
-)->pack(-side => 'left', -anchor => 'n',-pady=>1);
-
-$p7status->insert('end',"No Connection....");
-
- my $pbatchbutframe =  $p7frame->Frame()->pack(-side => 'top', -anchor => 'n');
-
- my $buildbatchbutton = $pbatchbutframe->Button(
-	-command =>		\&ftpbuildbatch,
-	-text =>		'Build Batch',
-	-width =>		'11'
-)->pack(-side => 'left', -padx => '2',-pady => '4', -anchor => 'n');
-
- my $addfilebutton = $pbatchbutframe->Button(
-	-command =>		\&ftpaddfile,
-	-text =>		'Add a File',
-	-width =>		'11'
-)->pack(-side => 'left', -padx => '2',-pady => '4', -anchor => 'n');
-
- my $zipbatchbutton = $pbatchbutframe->Button(
-	-command =>		\&ftpbatchzip,
-	-text =>		'Zip Batch Files',
-	-width =>		'12'
-)->pack(-side => 'left', -padx => '2',-pady => '4', -anchor => 'n');
-
-my $clearbatchbutton = $pbatchbutframe->Button(
-	-command =>		\&ftpclearbatch,
-	-text =>		'Clear Local List',
-	-width =>		'12'
-)->pack(-side => 'left', -padx => '2',-pady => '4', -anchor => 'n');
-
-my $ftpuplbutton = $pbatchbutframe->Button(
-	-command =>		\&ftpupload,
-	-text =>		'Send Files',
-	-width =>		'11'
-)->pack(-side => 'left', -padx => '2',-pady => '4', -anchor => 'n');
-
-my $ftpstpbutton = $pbatchbutframe->Button(
-	-command =>		sub {$ftpinterrupt = 1; },
-	-text =>		'Stop Transfer',
-	-width =>		'11'
-)->pack(-side => 'left', -padx => '2',-pady => '4', -anchor => 'n');
-
-my $ftpmkdnldbutton = $pbatchbutframe->Button(
-	-command =>		\&ftpdownload,
-	-text =>		'Download',
-	-width =>		'11'
-)->pack(-side => 'left', -padx => '2', -pady => '4', -anchor => 'n');
 
 my $pbatchentryframe =  $p7frame->Frame()->pack(-side => 'top', -anchor => 'n',);
 
@@ -2912,7 +2927,7 @@ sub filter {
                                      }
 
 if ($opt[82]){        #remove extra spaces from quotes
-              $line =~ s/^" /"/;  # start of line doublequote	      
+              $line =~ s/^" /"/;  # start of line doublequote	
               $line =~ s/ "$/"/;  #  end of line doublequote
               $line =~s/\s"-/"-/g;
               $line =~s/the\s"\s/the\s"/g;
@@ -2920,7 +2935,7 @@ if ($opt[82]){        #remove extra spaces from quotes
               $line =~s/(\s["']\s)/$1\[*double spaced quote?]/g; #mark if unresolvable
              }
 
-if ($opt[83]){    # mark potential missing space between words 
+if ($opt[83]){    # mark potential missing space between words
                $line =~s/([a-z][?!,;\.])([a-zA-Z])/$1\[\*Missing space?\]$2/g;
               }
 
@@ -3529,7 +3544,7 @@ else
 	emptybox();
 	unlink "footers.xxx";
   }
- 
+
 }
 
 sub emptybox{
@@ -3679,7 +3694,7 @@ sub delheaders {
 			    next if ($lines == 1 && $line eq "\n");
 			    print NEW $line if $lines;	# Print line of file
 			    $lines++;
-			    }   
+			    }
   # at this point, if $lines=1, the only line in the file has been deleted....
 		            if ($lines==1){print NEW "[Blank Page]";}	
                         close(TXT);  		 # Clean up file handles
@@ -3688,7 +3703,7 @@ sub delheaders {
 			rename("temp", $file);			# Rename temporary file to filename
 			}
 		    }
-	  
+	
 	chdir"..";
     }
 
@@ -3885,7 +3900,7 @@ sub batch{
 			p1log("\nFinished automatic header removal.\n");
 			zero();
 		}
-       
+
 		if ($opt[53]){
 			p1log("\nBatch mode automatic footer removal in progress... - Please wait.\n");
 			getfooters();
@@ -4459,6 +4474,11 @@ sub ftpupload{
 		$servlistbox->delete('0','end');
 		ftplogger("Can't upload files unless connected...\nOK.\n");
 	}
+}
+
+
+sub zipscriptupload{
+    runner("$globalbrowserstart","http://www.pgdp.net/noncvs/project_upload.php");
 }
 
 sub ftpdownload{
@@ -5512,4 +5532,3 @@ sub betagreek{
 	$phrase =~ s/\x{03CD}/y\//g;
 	return fromgreektr($phrase)
 }
-
