@@ -7567,6 +7567,7 @@ sub tidyrun {
     tidypop_up();
 }
 
+
 my @gsopt;
 
 sub gcheckpop_up {
