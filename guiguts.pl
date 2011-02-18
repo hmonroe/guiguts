@@ -1696,7 +1696,7 @@ sub text_menuitems {
         ],
 
         [ Button => "Options", -command => \&text_convert_options ],
-        [ Button => "Move images to images directory", -command => \&batch_setupimagedirectories ],
+#        [ Button => "Move images to images directory", -command => \&batch_setupimagedirectories ], # Not sure this adds much
     ];
 }
 
@@ -5603,6 +5603,13 @@ sub linkcheck {
     }
     $lglobal{linkchkbox}->insert( '6', "$count  anchors without links" );
     unlink $filename if $filename;
+}
+
+sub pagerefstolinks {
+        searchpopup();
+        searchoptset(qw/0 x x 1/);
+        $lglobal{searchentry}->insert( 'end', " ([0-9]+)" );
+        $lglobal{replaceentry}->insert( 'end', " <a href=\"#Page_\$1\">\$1</a>" ); 
 }
 
 sub htmlimages {
@@ -16899,6 +16906,12 @@ sub markpopup {    # FIXME: Rename html_popup
             -text  => 'HTML Tidy',
             -width => 16
         )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+        $f8->Button(
+            -activebackground => $activecolor,
+            -command          => \&pagerefstolinks,
+            -text             => 'Page Refs to Links',
+            -width            => 16
+        )->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
         $diventry->insert( 'end', ' style="margin-left: 2em;"' );
         $spanentry->insert( 'end', ' style="margin-left: 2em;"' );
         $lglobal{markpop}->protocol( 'WM_DELETE_WINDOW' =>
