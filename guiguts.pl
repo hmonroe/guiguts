@@ -5609,7 +5609,7 @@ sub pagerefstolinks {
         searchpopup();
         searchoptset(qw/0 x x 1/);
         $lglobal{searchentry}->insert( 'end', " ([0-9]+)" );
-        $lglobal{replaceentry}->insert( 'end', " <a href=\"#Page_\$1\">\$1</a>" ); 
+        $lglobal{replaceentry}->insert( 'end', " <a href=\"#Page_\$1\">\$1</a>" );
 }
 
 sub htmlimages {
@@ -16601,6 +16601,12 @@ sub markpopup {    # FIXME: Rename html_popup
             -text             => 'Auto Illus Search',
             -width            => 16,
         )->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
+        $f0->Button(
+            -activebackground => $activecolor,
+            -command          => sub { runner(cmdinterp('start $d$f$e')); },
+            -text             => 'View in Browser',
+            -width            => 16,
+        )->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
         my $pagecomments = $f0->Checkbutton(
             -variable    => \$lglobal{pagecmt},
             -selectcolor => $lglobal{checkcolor},
