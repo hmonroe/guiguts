@@ -18,6 +18,8 @@
 #along with this program; if not, write to the Free Software
 #Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+# TODO: move punctation outside markup  '(\p{Punct}+)(<\/[ib]>)' => '$2$1'
+
 use strict;
 use warnings;
 use FindBin;
@@ -34,6 +36,7 @@ use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
 use File::Path;
+use HTML::Lint;
 
 use Tk;
 use Tk::widgets qw{Balloon
@@ -68,7 +71,7 @@ $SIG{INT} = sub { _exit() };
 
 ### Constants
 my $OS_WIN         = $^O =~ m{Win};
-my $VERSION        = '0.2.11';
+my $VERSION        = '0.3.01';
 my $APP_NAME       = 'GuiGuts';
 my $no_proofer_url = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url
@@ -1418,6 +1421,10 @@ sub search_menuitems {
             -command => \&find_proofer_comment
         ],
         [   'command',
+            'Find Asterisks w/o slash',
+            -command => \&find_asterisks
+        ],
+        [   'command',
             'Find next /*..*/ block',
             -command => [ \&nextblock, 'default', 'forward' ]
         ],
@@ -1457,10 +1464,18 @@ sub search_menuitems {
             'Find previous indented block',
             -command => [ \&nextblock, 'indent', 'reverse' ]
         ],
+        [   'command',
+            'Find transliterations',
+            -command => \&find_transliterations
+        ],
         [ 'separator', '' ],
         [   'command',
-            'Find ~Orphaned Brackets & Markup',
+            'Find ~Orphaned Brackets',
             -command => \&brackets
+        ],
+        [   'command',
+            'Find Orphaned Markup',
+            -command => \&orphanedmarkup
         ],
         [ 'separator', '' ],
         [   'command', 'Highlight double quotes in selection',
@@ -1696,7 +1711,7 @@ sub text_menuitems {
         ],
 
         [ Button => "Options", -command => \&text_convert_options ],
-#        [ Button => "Move images to images directory", -command => \&batch_setupimagedirectories ], # Not sure this adds much
+        [ Button => "Move images to images directory", -command => \&batch_setupimagedirectories ], # Not sure this adds much
     ];
 }
 
@@ -5605,11 +5620,11 @@ sub linkcheck {
     unlink $filename if $filename;
 }
 
-sub pagerefstolinks {
+sub hyperlinkpagenums {
         searchpopup();
         searchoptset(qw/0 x x 1/);
-        $lglobal{searchentry}->insert( 'end', " ([0-9]+)" );
-        $lglobal{replaceentry}->insert( 'end', " <a href=\"#Page_\$1\">\$1</a>" );
+        $lglobal{searchentry}->insert( 'end', "(?<!\\d)(\\d{1,3})" );
+        $lglobal{replaceentry}->insert( 'end', "<a href=\"#Page_\$1\">\$1</a>" );
 }
 
 sub htmlimages {
@@ -7506,6 +7521,245 @@ sub tidypop_up {
 sub tidyrun {
     my $tidyoptions = shift;
     push @operations, ( localtime() . ' - Tidy' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    if ( $lglobal{tidypop} ) {
+        $lglobal{tidylistbox}->delete( '0', 'end' );
+    }
+    my ( $name, $fname, $path, $extension, @path );
+    $textwindow->focus;
+    update_indicators();
+    my $title = $top->cget('title');
+    if ( $title =~ /No File Loaded/ ) { savefile() }
+    my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
+    unless ($tidycommand) {
+        $tidycommand = $textwindow->getOpenFile(
+            -filetypes => $types,
+            -title     => 'Where is the Tidy executable?'
+        );
+    }
+    return unless $tidycommand;
+    $tidycommand = os_normal($tidycommand);
+    $tidycommand = dos_path($tidycommand) if $OS_WIN;
+    saveset();
+    $top->Busy( -recurse => 1 );
+    if ( $tidyoptions =~ /\-m/ ) {
+        $title =~ s/$window_title - //;    # FIXME: duped in gutcheck code
+        $title =~ s/edited - //;
+        $title = os_normal($title);
+        ( $fname, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
+        $title = dos_path($title) if $OS_WIN;
+        $name  = $title;
+        $name  = "${path}tidy.$fname$extension";
+    }
+    else {
+        $name = 'tidy.tmp';
+    }
+    if ( open my $td, '>', $name ) {
+        my $count = 0;
+        my $index = '1.0';
+        my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
+        while ( $textwindow->compare( $index, '<', 'end' ) ) {
+            my $end = $textwindow->index("$index  lineend +1c");
+            print $td $textwindow->get( $index, $end );
+            $index = $end;
+        }
+        close $td;
+    }
+    else {
+        warn "Could not open temp file for writing. $!";
+        my $dialog = $top->Dialog(
+            -text => 'Could not write to the '
+                . cwd()
+                . ' directory. Check for write permission or space problems.',
+            -bitmap  => 'question',
+            -title   => 'Tidy problem',
+            -buttons => [qw/OK/],
+        );
+        $dialog->Show;
+        return;
+    }
+    if ( $lglobal{tidypop} ) {
+        $lglobal{tidylistbox}->delete( '0', 'end' );
+    }
+    system(qq/$tidycommand $tidyoptions $name/);
+    $top->Unbusy;
+    $lglobal{tidylistbox}->insert( 'end', "Tidied file written to $name" )
+        if ( $tidyoptions =~ /\-m/ );
+    unlink 'tidy.tmp';
+    tidypop_up();
+}
+
+
+sub validatepop_up {
+    my ( %tidy, @tidylines );
+    my ( $line, $lincol );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    if ( $lglobal{tidypop} ) {
+        $lglobal{tidypop}->deiconify;
+    }
+    else {
+        $lglobal{tidypop} = $top->Toplevel;
+        $lglobal{tidypop}->title('Tidy');
+        $lglobal{tidypop}->geometry($geometry2) if $geometry2;
+        $lglobal{tidypop}->transient($top)      if $stayontop;
+        my $ptopframe = $lglobal{tidypop}->Frame->pack;
+        my $opsbutton = $ptopframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                tidyrun(' -f tidyerr.err -o null ');
+                unlink 'null' if ( -e 'null' );
+            },
+            -text  => 'Get Errors',
+            -width => 16
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+
+    #        my $opsbutton2 = $ptopframe->Button(
+    #            -activebackground => $activecolor,
+    #            -command          => sub { tidyrun(' -f tidyerr.err -m '); },
+    #            -text             => 'Generate Tidied File',
+    #            -width            => 16
+    #            )->pack(
+    #            -side   => 'left',
+    #            -pady   => 10,
+    #            -padx   => 2,
+    #            -anchor => 'n'
+    #            );
+        my $pframe = $lglobal{tidypop}
+            ->Frame->pack( -fill => 'both', -expand => 'both', );
+        $lglobal{tidylistbox} = $pframe->Scrolled(
+            'Listbox',
+            -scrollbars  => 'se',
+            -background  => 'white',
+            -font        => $lglobal{font},
+            -selectmode  => 'single',
+            -activestyle => 'none',
+            )->pack(
+            -anchor => 'nw',
+            -fill   => 'both',
+            -expand => 'both',
+            -padx   => 2,
+            -pady   => 2
+            );
+        drag( $lglobal{tidylistbox} );
+        $lglobal{tidypop}->protocol(
+            'WM_DELETE_WINDOW' => sub {
+                $lglobal{tidypop}->destroy;
+                undef $lglobal{tidypop};
+                %tidy      = ();
+                @tidylines = ();
+            }
+        );
+        $lglobal{tidypop}->Icon( -image => $icon );
+        BindMouseWheel( $lglobal{tidylistbox} );
+        $lglobal{tidylistbox}
+            ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
+        $lglobal{tidylistbox}->bind(
+            '<<view>>',
+            sub {    # FIXME: adapt for gutcheck
+                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+                my $line = $lglobal{tidylistbox}->get('active');
+                if ( $line =~ /^line/ ) {
+                    $textwindow->see( $tidy{$line} );
+                    $textwindow->markSet( 'insert', $tidy{$line} );
+                    update_indicators();
+                }
+                $textwindow->focus;
+                $lglobal{tidypop}->raise;
+                $geometry2 = $lglobal{tidypop}->geometry;
+            }
+        );
+        $lglobal{tidypop}->bind(
+            '<Configure>' => sub {
+                $lglobal{tidypop}->XEvent;
+                $geometry2 = $lglobal{tidypop}->geometry;
+                $lglobal{geometryupdate} = 1;
+            }
+        );
+        $lglobal{tidylistbox}->eventAdd(
+            '<<remove>>' => '<ButtonRelease-2>',
+            '<ButtonRelease-3>'
+        );
+        $lglobal{tidylistbox}->bind(
+            '<<remove>>',
+            sub {
+                $lglobal{tidylistbox}->activate(
+                    $lglobal{tidylistbox}->index(
+                        '@'
+                            . (
+                                  $lglobal{tidylistbox}->pointerx
+                                - $lglobal{tidylistbox}->rootx
+                            )
+                            . ','
+                            . (
+                                  $lglobal{tidylistbox}->pointery
+                                - $lglobal{tidylistbox}->rooty
+                            )
+                    )
+                );
+                $lglobal{tidylistbox}->selectionClear( 0, 'end' );
+                $lglobal{tidylistbox}
+                    ->selectionSet( $lglobal{tidylistbox}->index('active') );
+                $lglobal{tidylistbox}->delete('active');
+                $lglobal{tidylistbox}->after( $lglobal{delay} );
+            }
+        );
+        $lglobal{tidypop}->update;
+    }
+    $lglobal{tidylistbox}->focus;    # FIXME: Again for gutcheck, jeebies.
+    my $fh = FileHandle->new("< tidyerr.err");
+    unless ( defined($fh) ) {
+
+      # FIXME: original line: unless ( open( RESULTS, '<', 'tidyerr.err' ) ) {
+        my $dialog = $top->Dialog(
+            -text    => 'Could not find tidy error file.',
+            -bitmap  => 'question',
+            -title   => 'File not found',
+            -buttons => [qw/OK/],
+        );
+        $dialog->Show;
+    }
+    my $mark = 0;
+    %tidy      = ();
+    @tidylines = ();
+    my @marks = $textwindow->markNames;
+    for (@marks) {
+        if ( $_ =~ /^t\d+$/ ) {
+            $textwindow->markUnset($_);
+        }
+    }
+    while ( $line = <$fh> ) {
+        $line =~ s/^\s//g;
+        chomp $line;
+
+        no warnings 'uninitialized';
+        if ( ( $line =~ /^[lI\d]/ ) and ( $line ne $tidylines[-1] ) ) {
+            push @tidylines, $line;
+            $tidy{$line} = '';
+            $lincol = '';
+            if ( $line =~ /^line (\d+) column (\d+)/i ) {
+                $lincol = "$1.$2";
+                $mark++;
+                $textwindow->markSet( "t$mark", $lincol );
+                $tidy{$line} = "t$mark";
+            }
+        }
+    }
+    $fh->close;
+    unlink 'tidyerr.err';
+    $lglobal{tidylistbox}->insert( 'end', @tidylines );
+    $lglobal{tidylistbox}->yview( 'scroll', 1, 'units' );
+    $lglobal{tidylistbox}->update;
+    $lglobal{tidylistbox}->yview( 'scroll', -1, 'units' );
+}
+
+sub validaterun {
+    my $tidyoptions = shift;
+    push @operations, ( localtime() . ' - W3C Validate' );
     viewpagenums() if ( $lglobal{seepagenums} );
     if ( $lglobal{tidypop} ) {
         $lglobal{tidylistbox}->delete( '0', 'end' );
@@ -13945,6 +14199,18 @@ sub find_proofer_comment {
     }
 }
 
+sub find_asterisks {
+        searchpopup();
+        searchoptset(qw/0 x x 1/);
+            $lglobal{searchentry}->insert( 'end', "(?<!/)\\*(?!/)" );
+}
+
+sub find_transliterations {
+        searchpopup();
+        searchoptset(qw/0 x x 1/);
+            $lglobal{searchentry}->insert( 'end', "\\[[^FIS]" );
+}
+
 sub nextblock {
     my ( $mark, $direction ) = @_;
     unless ($searchstartindex) { $searchstartindex = '1.0' }
@@ -14237,6 +14503,12 @@ sub brackets {
     }
 }
 
+sub orphanedmarkup {
+        searchpopup();
+        searchoptset(qw/0 x x 1/);
+            $lglobal{searchentry}->insert( 'end', "\\<(\\w+)>\\n?[^<]+<(?!/\\1>)" );
+
+}
 sub hilite {
     my $mark = shift;
     $mark = quotemeta($mark)
@@ -15271,7 +15543,7 @@ sub wordcount {
         my $wcopt3 = $wcseframe->Checkbutton(
             -variable    => \$lglobal{suspects_only},
             -selectcolor => $lglobal{checkcolor},
-            -text        => 'Suspects'
+            -text        => 'Suspects only'
         )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
         my $wcopt1 = $wcseframe->Checkbutton(
             -variable    => \$lglobal{ignore_case},
@@ -16590,23 +16862,23 @@ sub markpopup {    # FIXME: Rename html_popup
             -command          => sub { htmlautoconvert() },
             -text             => 'Autogenerate HTML',
             -width            => 16
-        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 1 );
         $f0->Button(
             -text    => 'Custom Page Labels',
             -command => sub { pageadjust() },
-        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 1 );
         $f0->Button(
             -activebackground => $activecolor,
             -command          => sub { htmlimages(); },
             -text             => 'Auto Illus Search',
             -width            => 16,
-        )->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
-        $f0->Button(
+        )->grid( -row => 1, -column => 3, -padx => 1, -pady => 1 );
+        $f0->Button( #hkm added
             -activebackground => $activecolor,
             -command          => sub { runner(cmdinterp('start $d$f$e')); },
             -text             => 'View in Browser',
             -width            => 16,
-        )->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
+        )->grid( -row => 1, -column => 4, -padx => 1, -pady => 1 );
         my $pagecomments = $f0->Checkbutton(
             -variable    => \$lglobal{pagecmt},
             -selectcolor => $lglobal{checkcolor},
@@ -16638,8 +16910,8 @@ sub markpopup {    # FIXME: Rename html_popup
             -text        => 'Convert Fractions',
             -anchor      => 'w',
             )->grid(
-            -row    => 3,
-            -column => 1,
+            -row    => 2,
+            -column => 3,
             -padx   => 1,
             -pady   => 2,
             -sticky => 'w'
@@ -16652,7 +16924,7 @@ sub markpopup {    # FIXME: Rename html_popup
             -anchor      => 'w',
             )->grid(
             -row    => 3,
-            -column => 2,
+            -column => 1,
             -padx   => 1,
             -pady   => 2,
             -sticky => 'w'
@@ -16665,7 +16937,7 @@ sub markpopup {    # FIXME: Rename html_popup
             -anchor      => 'w',
             )->grid(
             -row    => 3,
-            -column => 4,
+            -column => 2,
             -padx   => 1,
             -pady   => 2,
             -sticky => 'w'
@@ -16899,10 +17171,16 @@ sub markpopup {    # FIXME: Rename html_popup
             ->Frame->pack( -side => 'top', -anchor => 'n' );
         $f8->Button(
             -activebackground => $activecolor,
+            -command          => \&hyperlinkpagenums,
+            -text             => 'Hyperlink Page Nums',
+            -width            => 16
+        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+        $f8->Button(
+            -activebackground => $activecolor,
             -command          => \&linkcheck,
             -text             => 'Link Checker',
             -width            => 16
-        )->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
         $f8->Button(
             -activebackground => $activecolor,
             -command          => sub {
@@ -16911,13 +17189,16 @@ sub markpopup {    # FIXME: Rename html_popup
             },
             -text  => 'HTML Tidy',
             -width => 16
-        )->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+        )->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
         $f8->Button(
             -activebackground => $activecolor,
-            -command          => \&pagerefstolinks,
-            -text             => 'Page Refs to Links',
-            -width            => 16
-        )->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
+            -command          => sub {
+                validaterun('-f onsgmls.err -o null');
+                unlink 'null' if ( -e 'null' );
+            },
+            -text  => 'W3C Validate',
+            -width => 16
+        )->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
         $diventry->insert( 'end', ' style="margin-left: 2em;"' );
         $spanentry->insert( 'end', ' style="margin-left: 2em;"' );
         $lglobal{markpop}->protocol( 'WM_DELETE_WINDOW' =>
