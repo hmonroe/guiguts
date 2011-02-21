@@ -130,6 +130,7 @@ our $spellindexbkmrk  = q{};
 our $stayontop        = 0;
 our $suspectindex;
 our $tidycommand  = q{};
+our $validatecommand  = q{};
 our $toolside     = 'bottom';
 our $utffontname  = 'Courier New';
 our $utffontsize  = 14;
@@ -1952,6 +1953,27 @@ sub buildmenu {
                             );
                             return unless $tidycommand;
                             $tidycommand = os_normal($tidycommand);
+                            saveset();
+                            }
+                    ],
+                    [   Button   => 'Locate W3C Validate (osgmls) Executable',
+                        -command => sub {
+                            my $types;
+                            if ($OS_WIN) {
+                                $types = [
+                                    [ 'Executable', [ '.exe', ] ],
+                                    [ 'All Files',  ['*'] ],
+                                ];
+                            }
+                            else {
+                                $types = [ [ 'All Files', ['*'] ] ];
+                            }
+                            $validatecommand = $textwindow->getOpenFile(
+                                -filetypes => $types,
+                                -title     => 'Where is the W3C Validate (osgmls) executable?'
+                            );
+                            return unless $validatecommand;
+                            $validatecommand = os_normal($validatecommand);
                             saveset();
                             }
                     ],
@@ -7589,24 +7611,23 @@ sub tidyrun {
     tidypop_up();
 }
 
-
 sub validatepop_up {
-    my ( %tidy, @tidylines );
+    my ( %validate, @validatelines );
     my ( $line, $lincol );
     viewpagenums() if ( $lglobal{seepagenums} );
-    if ( $lglobal{tidypop} ) {
-        $lglobal{tidypop}->deiconify;
+    if ( $lglobal{validatepop} ) {
+        $lglobal{validatepop}->deiconify;
     }
     else {
-        $lglobal{tidypop} = $top->Toplevel;
-        $lglobal{tidypop}->title('Tidy');
-        $lglobal{tidypop}->geometry($geometry2) if $geometry2;
-        $lglobal{tidypop}->transient($top)      if $stayontop;
-        my $ptopframe = $lglobal{tidypop}->Frame->pack;
+        $lglobal{validatepop} = $top->Toplevel;
+        $lglobal{validatepop}->title('Validate');
+        $lglobal{validatepop}->geometry($geometry2) if $geometry2;
+        $lglobal{validatepop}->transient($top)      if $stayontop;
+        my $ptopframe = $lglobal{validatepop}->Frame->pack;
         my $opsbutton = $ptopframe->Button(
             -activebackground => $activecolor,
             -command          => sub {
-                tidyrun(' -f tidyerr.err -o null ');
+                validaterun(' -f osgmls.err -o null ');
                 unlink 'null' if ( -e 'null' );
             },
             -text  => 'Get Errors',
@@ -7618,20 +7639,9 @@ sub validatepop_up {
             -anchor => 'n'
             );
 
-    #        my $opsbutton2 = $ptopframe->Button(
-    #            -activebackground => $activecolor,
-    #            -command          => sub { tidyrun(' -f tidyerr.err -m '); },
-    #            -text             => 'Generate Tidied File',
-    #            -width            => 16
-    #            )->pack(
-    #            -side   => 'left',
-    #            -pady   => 10,
-    #            -padx   => 2,
-    #            -anchor => 'n'
-    #            );
-        my $pframe = $lglobal{tidypop}
+        my $pframe = $lglobal{validatepop}
             ->Frame->pack( -fill => 'both', -expand => 'both', );
-        $lglobal{tidylistbox} = $pframe->Scrolled(
+        $lglobal{validatelistbox} = $pframe->Scrolled(
             'Listbox',
             -scrollbars  => 'se',
             -background  => 'white',
@@ -7645,78 +7655,78 @@ sub validatepop_up {
             -padx   => 2,
             -pady   => 2
             );
-        drag( $lglobal{tidylistbox} );
-        $lglobal{tidypop}->protocol(
+        drag( $lglobal{validatelistbox} );
+        $lglobal{validatepop}->protocol(
             'WM_DELETE_WINDOW' => sub {
-                $lglobal{tidypop}->destroy;
-                undef $lglobal{tidypop};
-                %tidy      = ();
-                @tidylines = ();
+                $lglobal{validatepop}->destroy;
+                undef $lglobal{validatepop};
+                %validate      = ();
+                @validatelines = ();
             }
         );
-        $lglobal{tidypop}->Icon( -image => $icon );
-        BindMouseWheel( $lglobal{tidylistbox} );
-        $lglobal{tidylistbox}
+        $lglobal{validatepop}->Icon( -image => $icon );
+        BindMouseWheel( $lglobal{validatelistbox} );
+        $lglobal{validatelistbox}
             ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
-        $lglobal{tidylistbox}->bind(
+        $lglobal{validatelistbox}->bind(
             '<<view>>',
-            sub {    # FIXME: adapt for gutcheck
+            sub {
                 $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-                my $line = $lglobal{tidylistbox}->get('active');
-                if ( $line =~ /^line/ ) {
-                    $textwindow->see( $tidy{$line} );
-                    $textwindow->markSet( 'insert', $tidy{$line} );
+                my $line = $lglobal{validatelistbox}->get('active');
+                if ( $line =~ /:E:/ ) {
+                    $textwindow->see( $validate{$line} );
+                    $textwindow->markSet( 'insert', $validate{$line} );
                     update_indicators();
                 }
                 $textwindow->focus;
-                $lglobal{tidypop}->raise;
-                $geometry2 = $lglobal{tidypop}->geometry;
+                $lglobal{validatepop}->raise;
+                $geometry2 = $lglobal{validatepop}->geometry;
             }
         );
-        $lglobal{tidypop}->bind(
+        $lglobal{validatepop}->bind(
             '<Configure>' => sub {
-                $lglobal{tidypop}->XEvent;
-                $geometry2 = $lglobal{tidypop}->geometry;
+                $lglobal{validatepop}->XEvent;
+                $geometry2 = $lglobal{validatepop}->geometry;
                 $lglobal{geometryupdate} = 1;
             }
         );
-        $lglobal{tidylistbox}->eventAdd(
+        $lglobal{validatelistbox}->eventAdd(
             '<<remove>>' => '<ButtonRelease-2>',
             '<ButtonRelease-3>'
         );
-        $lglobal{tidylistbox}->bind(
+        $lglobal{validatelistbox}->bind(
             '<<remove>>',
             sub {
-                $lglobal{tidylistbox}->activate(
-                    $lglobal{tidylistbox}->index(
+                $lglobal{validatelistbox}->activate(
+                    $lglobal{validatelistbox}->index(
                         '@'
                             . (
-                                  $lglobal{tidylistbox}->pointerx
-                                - $lglobal{tidylistbox}->rootx
+                                  $lglobal{validatelistbox}->pointerx
+                                - $lglobal{validatelistbox}->rootx
                             )
                             . ','
                             . (
-                                  $lglobal{tidylistbox}->pointery
-                                - $lglobal{tidylistbox}->rooty
+                                  $lglobal{validatelistbox}->pointery
+                                - $lglobal{validatelistbox}->rooty
                             )
                     )
                 );
-                $lglobal{tidylistbox}->selectionClear( 0, 'end' );
-                $lglobal{tidylistbox}
-                    ->selectionSet( $lglobal{tidylistbox}->index('active') );
-                $lglobal{tidylistbox}->delete('active');
-                $lglobal{tidylistbox}->after( $lglobal{delay} );
+                $lglobal{validatelistbox}->selectionClear( 0, 'end' );
+                $lglobal{validatelistbox}
+                    ->selectionSet( $lglobal{validatelistbox}->index('active') );
+                $lglobal{validatelistbox}->delete('active');
+                $lglobal{validatelistbox}->after( $lglobal{delay} );
             }
         );
-        $lglobal{tidypop}->update;
+        $lglobal{validatepop}->update;
     }
-    $lglobal{tidylistbox}->focus;    # FIXME: Again for gutcheck, jeebies.
-    my $fh = FileHandle->new("< tidyerr.err");
+    $lglobal{validatelistbox}->focus;    # FIXME: Again for gutcheck, jeebies.
+    my $fh = FileHandle->new("< osgmls.err");
     unless ( defined($fh) ) {
 
       # FIXME: original line: unless ( open( RESULTS, '<', 'tidyerr.err' ) ) {
         my $dialog = $top->Dialog(
-            -text    => 'Could not find tidy error file.',
+            -text    => 'Could not find validate error file.',
             -bitmap  => 'question',
             -title   => 'File not found',
             -buttons => [qw/OK/],
@@ -7724,8 +7734,8 @@ sub validatepop_up {
         $dialog->Show;
     }
     my $mark = 0;
-    %tidy      = ();
-    @tidylines = ();
+    %validate      = ();
+    @validatelines = ();
     my @marks = $textwindow->markNames;
     for (@marks) {
         if ( $_ =~ /^t\d+$/ ) {
@@ -7737,32 +7747,32 @@ sub validatepop_up {
         chomp $line;
 
         no warnings 'uninitialized';
-        if ( ( $line =~ /^[lI\d]/ ) and ( $line ne $tidylines[-1] ) ) {
-            push @tidylines, $line;
-            $tidy{$line} = '';
+        if ( 'a' ) { #( $line =~ /^[lI\d]/ ) and ( $line ne $tidylines[-1] )
+            push @validatelines, $line;
+            $validate{$line} = '';
             $lincol = '';
-            if ( $line =~ /^line (\d+) column (\d+)/i ) {
+            if ( $line =~ /:(\d+):(\d+)/ ) {
                 $lincol = "$1.$2";
                 $mark++;
                 $textwindow->markSet( "t$mark", $lincol );
-                $tidy{$line} = "t$mark";
+                $validate{$line} = "t$mark";
             }
         }
     }
     $fh->close;
-    unlink 'tidyerr.err';
-    $lglobal{tidylistbox}->insert( 'end', @tidylines );
-    $lglobal{tidylistbox}->yview( 'scroll', 1, 'units' );
-    $lglobal{tidylistbox}->update;
-    $lglobal{tidylistbox}->yview( 'scroll', -1, 'units' );
+    unlink 'osgmls.err';
+    $lglobal{validatelistbox}->insert( 'end', @validatelines );
+    $lglobal{validatelistbox}->yview( 'scroll', 1, 'units' );
+    $lglobal{validatelistbox}->update;
+    $lglobal{validatelistbox}->yview( 'scroll', -1, 'units' );
 }
 
 sub validaterun {
-    my $tidyoptions = shift;
+    my $validateoptions = shift;
     push @operations, ( localtime() . ' - W3C Validate' );
     viewpagenums() if ( $lglobal{seepagenums} );
-    if ( $lglobal{tidypop} ) {
-        $lglobal{tidylistbox}->delete( '0', 'end' );
+    if ( $lglobal{validatepop} ) {
+        $lglobal{validatelistbox}->delete( '0', 'end' );
     }
     my ( $name, $fname, $path, $extension, @path );
     $textwindow->focus;
@@ -7770,28 +7780,28 @@ sub validaterun {
     my $title = $top->cget('title');
     if ( $title =~ /No File Loaded/ ) { savefile() }
     my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
-    unless ($tidycommand) {
-        $tidycommand = $textwindow->getOpenFile(
+    unless ($validatecommand) {
+        $validatecommand = $textwindow->getOpenFile(
             -filetypes => $types,
-            -title     => 'Where is the Tidy executable?'
+            -title     => 'Where is the W3C Validate (osgmls) executable?'
         );
     }
-    return unless $tidycommand;
-    $tidycommand = os_normal($tidycommand);
-    $tidycommand = dos_path($tidycommand) if $OS_WIN;
+    return unless $validatecommand;
+    $validatecommand = os_normal($validatecommand);
+    $validatecommand = dos_path($validatecommand) if $OS_WIN;
     saveset();
     $top->Busy( -recurse => 1 );
-    if ( $tidyoptions =~ /\-m/ ) {
+    if ( $validateoptions =~ /\-m/ ) {
         $title =~ s/$window_title - //;    # FIXME: duped in gutcheck code
         $title =~ s/edited - //;
         $title = os_normal($title);
         ( $fname, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
         $title = dos_path($title) if $OS_WIN;
         $name  = $title;
-        $name  = "${path}tidy.$fname$extension";
+        $name  = "${path}onsgmls.$fname$extension";
     }
     else {
-        $name = 'tidy.tmp';
+        $name = 'validate.tmp';
     }
     if ( open my $td, '>', $name ) {
         my $count = 0;
@@ -7811,21 +7821,21 @@ sub validaterun {
                 . cwd()
                 . ' directory. Check for write permission or space problems.',
             -bitmap  => 'question',
-            -title   => 'Tidy problem',
+            -title   => 'Validate problem',
             -buttons => [qw/OK/],
         );
         $dialog->Show;
         return;
     }
-    if ( $lglobal{tidypop} ) {
-        $lglobal{tidylistbox}->delete( '0', 'end' );
+    if ( $lglobal{validatepop} ) {
+        $lglobal{validatelistbox}->delete( '0', 'end' );
     }
-    system(qq/$tidycommand $tidyoptions $name/);
+    system(qq/$validatecommand  -c c:\\dp\\opensp\\xhtml.soc -se -f osgmls.err $name/);
     $top->Unbusy;
-    $lglobal{tidylistbox}->insert( 'end', "Tidied file written to $name" )
-        if ( $tidyoptions =~ /\-m/ );
-    unlink 'tidy.tmp';
-    tidypop_up();
+    $lglobal{validatelistbox}->insert( 'end', "Tidied file written to $name" )
+        if ( $validateoptions =~ /\-m/ );
+    unlink 'validate.tmp';
+    validatepop_up();
 }
 
 
@@ -11708,7 +11718,7 @@ EOM
 
         for (
             qw/globallastpath globalspellpath globalspelldictopt globalviewerpath globalbrowserstart
-            gutpath jeebiespath scannospath tidycommand/
+            gutpath jeebiespath scannospath tidycommand validatecommand/
             )
         {
             print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
