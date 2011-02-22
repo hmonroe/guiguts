@@ -7745,13 +7745,14 @@ sub validatepop_up {
     while ( $line = <$fh> ) {
         $line =~ s/^\s//g;
         chomp $line;
+        $line =~ s/^.*:(\d+:\d+)/line $1/;
 
         no warnings 'uninitialized';
         if ( 'a' ) { #( $line =~ /^[lI\d]/ ) and ( $line ne $tidylines[-1] )
             push @validatelines, $line;
             $validate{$line} = '';
             $lincol = '';
-            if ( $line =~ /:(\d+):(\d+)/ ) {
+            if ( $line =~ /line (\d+):(\d+)/ ) {
                 $lincol = "$1.$2";
                 $mark++;
                 $textwindow->markSet( "t$mark", $lincol );
