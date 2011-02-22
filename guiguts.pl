@@ -1956,7 +1956,7 @@ sub buildmenu {
                             saveset();
                             }
                     ],
-                    [   Button   => 'Locate W3C Validate (osgmls) Executable',
+                    [   Button   => 'Locate W3C Validate (onsgmls) Executable',
                         -command => sub {
                             my $types;
                             if ($OS_WIN) {
@@ -1970,7 +1970,7 @@ sub buildmenu {
                             }
                             $validatecommand = $textwindow->getOpenFile(
                                 -filetypes => $types,
-                                -title     => 'Where is the W3C Validate (osgmls) executable?'
+                                -title     => 'Where is the W3C Validate (onsgmls) executable?'
                             );
                             return unless $validatecommand;
                             $validatecommand = os_normal($validatecommand);
@@ -7627,7 +7627,7 @@ sub validatepop_up {
         my $opsbutton = $ptopframe->Button(
             -activebackground => $activecolor,
             -command          => sub {
-                validaterun(' -f osgmls.err -o null ');
+                validaterun(' -f onsgmls.err -o null ');
                 unlink 'null' if ( -e 'null' );
             },
             -text  => 'Get Errors',
@@ -7721,7 +7721,7 @@ sub validatepop_up {
         $lglobal{validatepop}->update;
     }
     $lglobal{validatelistbox}->focus;    # FIXME: Again for gutcheck, jeebies.
-    my $fh = FileHandle->new("< osgmls.err");
+    my $fh = FileHandle->new("< onsgmls.err");
     unless ( defined($fh) ) {
 
       # FIXME: original line: unless ( open( RESULTS, '<', 'tidyerr.err' ) ) {
@@ -7748,20 +7748,19 @@ sub validatepop_up {
         $line =~ s/^.*:(\d+:\d+)/line $1/;
 
         no warnings 'uninitialized';
-        if ( 'a' ) { #( $line =~ /^[lI\d]/ ) and ( $line ne $tidylines[-1] )
-            push @validatelines, $line;
-            $validate{$line} = '';
-            $lincol = '';
-            if ( $line =~ /line (\d+):(\d+)/ ) {
-                $lincol = "$1.$2";
-                $mark++;
-                $textwindow->markSet( "t$mark", $lincol );
-                $validate{$line} = "t$mark";
-            }
+        push @validatelines, $line;
+        $validate{$line} = '';
+        $lincol = '';
+        if ( $line =~ /line (\d+):(\d+)/ ) {
+            $lincol = "$1.$2";
+            $lincol =~ s/\.0/\.1/; # change column zero to column 1
+            $mark++;
+            $textwindow->markSet( "t$mark", $lincol );
+            $validate{$line} = "t$mark";
         }
     }
     $fh->close;
-    unlink 'osgmls.err';
+    unlink 'onsgmls.err';
     $lglobal{validatelistbox}->insert( 'end', @validatelines );
     $lglobal{validatelistbox}->yview( 'scroll', 1, 'units' );
     $lglobal{validatelistbox}->update;
@@ -7784,7 +7783,7 @@ sub validaterun {
     unless ($validatecommand) {
         $validatecommand = $textwindow->getOpenFile(
             -filetypes => $types,
-            -title     => 'Where is the W3C Validate (osgmls) executable?'
+            -title     => 'Where is the W3C Validate (onsgmls) executable?'
         );
     }
     return unless $validatecommand;
@@ -7831,7 +7830,8 @@ sub validaterun {
     if ( $lglobal{validatepop} ) {
         $lglobal{validatelistbox}->delete( '0', 'end' );
     }
-    system(qq/$validatecommand  -c c:\\dp\\opensp\\xhtml.soc -se -f osgmls.err $name/);
+    my $validatepath = dirname($validatecommand);
+    system(qq/$validatecommand -D $validatepath -c xhtml.soc -se -f onsgmls.err $name/);
     $top->Unbusy;
     $lglobal{validatelistbox}->insert( 'end', "Tidied file written to $name" )
         if ( $validateoptions =~ /\-m/ );
