@@ -11698,7 +11698,7 @@ EOM
     my $thispath = $0;
     $thispath =~ s/[^\\]*$//;
     my $savefile = $thispath . 'setting.rc';
-    $geometry = $top->geometry unless $geometry;
+    $geometry = $top->geometry;  # unless $geometry;
     if ( open my $save_handle, '>', $savefile ) {
         print $save_handle $message;
         print $save_handle '@gcopt = (';
@@ -14219,7 +14219,7 @@ sub find_asterisks {
 sub find_transliterations {
         searchpopup();
         searchoptset(qw/0 x x 1/);
-            $lglobal{searchentry}->insert( 'end', "\\[[^FIS]" );
+            $lglobal{searchentry}->insert( 'end', "\\[[^FIS\\d]" );
 }
 
 sub nextblock {
