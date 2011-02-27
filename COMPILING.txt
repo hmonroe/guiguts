@@ -1,0 +1,11 @@
+$Id: UPGRADING.txt 305 2010-03-20 17:54:55Z vlsimpson $
+
+1. Install ActiveState Perl
+
+2. Put the three files from the following in c:\perl\bin: http://download.microsoft.com/download/vc15/patch/1.52/w95/en-us/nmake15.exe
+
+3. Run "cpanp" and then "i PAR::Packer"
+
+4. Install MinGW compiler if not already installed for instance from here: https://sourceforge.net/project/showfiles.php?group_id=2435&package_id=240780
+
+5. Run "tkpp" with source "guiguts.pl", choose "compile + execute" and "GUI".

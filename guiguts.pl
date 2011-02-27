@@ -24,6 +24,7 @@ use strict;
 use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
+use lib "c:/dp/sublive/trunk/lib"; # Seems necessary to use pp to create .exe file
 
 #use Data::Dumper;
 use Cwd;
@@ -36,7 +37,7 @@ use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
 use File::Path;
-use HTML::Lint;
+#use HTML::Lint;
 
 use Tk;
 use Tk::widgets qw{Balloon
@@ -16909,7 +16910,7 @@ sub markpopup {    # FIXME: Rename html_popup
             -anchor      => 'w',
             )->grid(
             -row    => 2,
-            -column => 3,
+            -column => 2,
             -padx   => 1,
             -pady   => 2,
             -sticky => 'w'
