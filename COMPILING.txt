@@ -8,4 +8,4 @@ $Id: UPGRADING.txt 305 2010-03-20 17:54:55Z vlsimpson $
 
 4. Install MinGW compiler if not already installed for instance from here: https://sourceforge.net/project/showfiles.php?group_id=2435&package_id=240780
 
-5. Run "tkpp" with source "guiguts.pl", choose "compile + execute" and "GUI".
+5. Run "tkpp" with source "guiguts.pl", choose "compile + execute" and "GUI". Rename setting.rc temporarily so it is not included.
