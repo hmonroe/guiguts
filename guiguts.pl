@@ -24,7 +24,8 @@ use strict;
 use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
-use lib "c:/dp/sublive/trunk/lib"; # Seems necessary to use pp to create .exe file
+#use lib "c:/dp/sublive/trunk/lib"; # Seems necessary to use pp to create .exe file
+#use lib "c:/prlold/lib";
 
 #use Data::Dumper;
 use Cwd;
@@ -36,7 +37,7 @@ use HTML::TokeParser;
 use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
-use File::Path;
+#use File::Path;
 #use HTML::Lint;
 
 use Tk;
@@ -5381,7 +5382,7 @@ sub tnbrowse {
     }
     if ( $sw < 2 ) { $sw += 1 }
     $lglobal{htmlthumb}
-        ->textcopy( $lglobal{htmlorig}, -subsample => ($sw), -shrink );
+        ->copy( $lglobal{htmlorig}, -subsample => ($sw), -shrink ); #hkm changed textcopy to copy
     $lglobal{imagelbl}->configure(
         -image   => $lglobal{htmlthumb},
         -text    => 'Thumbnail',
@@ -7378,10 +7379,12 @@ sub tidypop_up {
     my ( %tidy, @tidylines );
     my ( $line, $lincol );
     viewpagenums() if ( $lglobal{seepagenums} );
-    if ( $lglobal{tidypop} ) {
-        $lglobal{tidypop}->deiconify;
+    if ( $lglobal{tidypop} ) {    # delete window since links get off
+         #$lglobal{tidypop}->deiconify;
+         $lglobal{tidypop}->destroy;
+         undef $lglobal{tidypop};
     }
-    else {
+#    else {
         $lglobal{tidypop} = $top->Toplevel;
         $lglobal{tidypop}->title('Tidy');
         $lglobal{tidypop}->geometry($geometry2) if $geometry2;
@@ -7493,7 +7496,7 @@ sub tidypop_up {
             }
         );
         $lglobal{tidypop}->update;
-    }
+ #   }
     $lglobal{tidylistbox}->focus;    # FIXME: Again for gutcheck, jeebies.
     my $fh = FileHandle->new("< tidyerr.err");
     unless ( defined($fh) ) {
@@ -7616,10 +7619,13 @@ sub validatepop_up {
     my ( %validate, @validatelines );
     my ( $line, $lincol );
     viewpagenums() if ( $lglobal{seepagenums} );
-    if ( $lglobal{validatepop} ) {
-        $lglobal{validatepop}->deiconify;
+    if ( $lglobal{validatepop} ) {                   # delete window since links get off
+         $lglobal{validatepop}->destroy;
+         undef $lglobal{validatepop};
+
+#        $lglobal{validatepop}->deiconify;
     }
-    else {
+#    else {
         $lglobal{validatepop} = $top->Toplevel;
         $lglobal{validatepop}->title('Validate');
         $lglobal{validatepop}->geometry($geometry2) if $geometry2;
@@ -7673,6 +7679,7 @@ sub validatepop_up {
             '<<view>>',
             sub {
                 $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+                #$textwindow->tagRemove( 'sel', '1.0', 'end' ); # hkm added
                 my $line = $lglobal{validatelistbox}->get('active');
                 if ( $line =~ /:E:/ ) {
                     $textwindow->see( $validate{$line} );
@@ -7720,12 +7727,11 @@ sub validatepop_up {
             }
         );
         $lglobal{validatepop}->update;
-    }
+#    } # delete the box whenever rerun
     $lglobal{validatelistbox}->focus;    # FIXME: Again for gutcheck, jeebies.
     my $fh = FileHandle->new("< onsgmls.err");
     unless ( defined($fh) ) {
 
-      # FIXME: original line: unless ( open( RESULTS, '<', 'tidyerr.err' ) ) {
         my $dialog = $top->Dialog(
             -text    => 'Could not find validate error file.',
             -bitmap  => 'question',
