@@ -133,6 +133,7 @@ our $stayontop        = 0;
 our $suspectindex;
 our $tidycommand  = q{};
 our $validatecommand  = q{};
+our $validatecsscommand  = q{};
 our $toolside     = 'bottom';
 our $utffontname  = 'Courier New';
 our $utffontsize  = 14;
@@ -7846,6 +7847,238 @@ sub validaterun {
     validatepop_up();
 }
 
+sub validatecsspop_up {
+    my ( %validatecss, @validatecsslines );
+    my ( $line, $lincol );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    if ( $lglobal{validatecsspop} ) {                   # delete window since links get off
+         $lglobal{validatecsspop}->destroy;
+         undef $lglobal{validatecsspop};
+
+#        $lglobal{validatepop}->deiconify;
+    }
+#    else {
+        $lglobal{validatecsspop} = $top->Toplevel;
+        $lglobal{validatecsspop}->title('Validate CSS');
+        $lglobal{validatecsspop}->geometry($geometry2) if $geometry2;
+        $lglobal{validatecsspop}->transient($top)      if $stayontop;
+        my $ptopframe = $lglobal{validatecsspop}->Frame->pack;
+        my $opsbutton = $ptopframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                validatecssrun('');
+                unlink 'null' if ( -e 'null' );
+            },
+            -text  => 'Get Errors',
+            -width => 16
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+
+        my $pframe = $lglobal{validatecsspop}
+            ->Frame->pack( -fill => 'both', -expand => 'both', );
+        $lglobal{validatecsslistbox} = $pframe->Scrolled(
+            'Listbox',
+            -scrollbars  => 'se',
+            -background  => 'white',
+            -font        => $lglobal{font},
+            -selectmode  => 'single',
+            -activestyle => 'none',
+            )->pack(
+            -anchor => 'nw',
+            -fill   => 'both',
+            -expand => 'both',
+            -padx   => 2,
+            -pady   => 2
+            );
+        drag( $lglobal{validatecsslistbox} );
+        $lglobal{validatecsspop}->protocol(
+            'WM_DELETE_WINDOW' => sub {
+                $lglobal{validatecsspop}->destroy;
+                undef $lglobal{validatecsspop};
+                %validatecss      = ();
+                @validatecsslines = ();
+            }
+        );
+        $lglobal{validatecsspop}->Icon( -image => $icon );
+        BindMouseWheel( $lglobal{validatecsslistbox} );
+        $lglobal{validatecsslistbox}
+            ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
+        $lglobal{validatecsslistbox}->bind(
+            '<<view>>',
+            sub {
+                $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+                #$textwindow->tagRemove( 'sel', '1.0', 'end' ); # hkm added
+                my $line = $lglobal{validatecsslistbox}->get('active');
+                if ( $line =~ /:E:/ ) {
+                    $textwindow->see( $validatecss{$line} );
+                    $textwindow->markSet( 'insert', $validatecss{$line} );
+                    update_indicators();
+                }
+                $textwindow->focus;
+                $lglobal{validatecsspop}->raise;
+                $geometry2 = $lglobal{validatecsspop}->geometry;
+            }
+        );
+        $lglobal{validatecsspop}->bind(
+            '<Configure>' => sub {
+                $lglobal{validatecsspop}->XEvent;
+                $geometry2 = $lglobal{validatecsspop}->geometry;
+                $lglobal{geometryupdate} = 1;
+            }
+        );
+        $lglobal{validatecsslistbox}->eventAdd(
+            '<<remove>>' => '<ButtonRelease-2>',
+            '<ButtonRelease-3>'
+        );
+        $lglobal{validatecsslistbox}->bind(
+            '<<remove>>',
+            sub {
+                $lglobal{validatecsslistbox}->activate(
+                    $lglobal{validatecsslistbox}->index(
+                        '@'
+                            . (
+                                  $lglobal{validatecsslistbox}->pointerx
+                                - $lglobal{validatecsslistbox}->rootx
+                            )
+                            . ','
+                            . (
+                                  $lglobal{validatecsslistbox}->pointery
+                                - $lglobal{validatecsslistbox}->rooty
+                            )
+                    )
+                );
+                $lglobal{validatecsslistbox}->selectionClear( 0, 'end' );
+                $lglobal{validatecsslistbox}
+                    ->selectionSet( $lglobal{validatecsslistbox}->index('active') );
+                $lglobal{validatecsslistbox}->delete('active');
+                $lglobal{validatecsslistbox}->after( $lglobal{delay} );
+            }
+        );
+        $lglobal{validatecsspop}->update;
+#    } # delete the box whenever rerun
+    $lglobal{validatecsslistbox}->focus;    # FIXME: Again for gutcheck, jeebies.
+    my $fh = FileHandle->new("< errs.txt");
+    unless ( defined($fh) ) {
+
+        my $dialog = $top->Dialog(
+            -text    => 'Could not find CSS validate error file.',
+            -bitmap  => 'question',
+            -title   => 'File not found',
+            -buttons => [qw/OK/],
+        );
+        $dialog->Show;
+    }
+    my $mark = 0;
+    %validatecss      = ();
+    @validatecsslines = ();
+    my @marks = $textwindow->markNames;
+    for (@marks) {
+        if ( $_ =~ /^t\d+$/ ) {
+            $textwindow->markUnset($_);
+        }
+    }
+    while ( $line = <$fh> ) {
+        $line =~ s/^\s//g;
+        chomp $line;
+        $line =~ s/^.*:(\d+:\d+)/line $1/;
+
+        no warnings 'uninitialized';
+        push @validatecsslines, $line;
+        $validatecss{$line} = '';
+        $lincol = '';
+        if ( $line =~ /Line : (\d+)/ ) {
+            $lincol = "$1.1"; # Assume column 1. Does not work
+            $mark++;
+            $textwindow->markSet( "t$mark", $lincol );
+            $validatecss{$line} = "t$mark";
+        }
+    }
+    $fh->close;
+    unlink 'errs.txt';
+    $lglobal{validatecsslistbox}->insert( 'end', @validatecsslines );
+    $lglobal{validatecsslistbox}->yview( 'scroll', 1, 'units' );
+    $lglobal{validatecsslistbox}->update;
+    $lglobal{validatecsslistbox}->yview( 'scroll', -1, 'units' );
+}
+
+sub validatecssrun {
+    my $validatecssoptions = shift;
+    push @operations, ( localtime() . ' - W3C CSS Validate' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    if ( $lglobal{validatecsspop} ) {
+        $lglobal{validatecsslistbox}->delete( '0', 'end' );
+    }
+    my ( $name, $fname, $path, $extension, @path );
+    $textwindow->focus;
+    update_indicators();
+    my $title = $top->cget('title');
+    if ( $title =~ /No File Loaded/ ) { savefile() }
+    my $types = [ [ 'JAR file', [ '.jar', ] ], [ 'All Files', ['*'] ], ];
+    unless ($validatecsscommand) {
+        $validatecsscommand = $textwindow->getOpenFile(
+            -filetypes => $types,
+            -title     => 'Where is the W3C CSS Validate (css-validate.jar) executable?'
+        );
+    }
+    return unless $validatecsscommand;
+    $validatecsscommand = os_normal($validatecsscommand);
+    $validatecsscommand = dos_path($validatecsscommand) if $OS_WIN;
+    saveset();
+    $top->Busy( -recurse => 1 );
+    if ( $validatecssoptions =~ /\-m/ ) {
+        $title =~ s/$window_title - //;    # FIXME: duped in gutcheck code
+        $title =~ s/edited - //;
+        $title = os_normal($title);
+        ( $fname, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
+        $title = dos_path($title) if $OS_WIN;
+        $name  = $title;
+        $name  = "${path}onsgmls.$fname$extension";
+    }
+    else {
+        $name = 'validate.html';
+    }
+    if ( open my $td, '>', $name ) {
+        my $count = 0;
+        my $index = '1.0';
+        my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
+        while ( $textwindow->compare( $index, '<', 'end' ) ) {
+            my $end = $textwindow->index("$index  lineend +1c");
+            print $td $textwindow->get( $index, $end );
+            $index = $end;
+        }
+        close $td;
+    }
+    else {
+        warn "Could not open temp file for writing. $!";
+        my $dialog = $top->Dialog(
+            -text => 'Could not write to the '
+                . cwd()
+                . ' directory. Check for write permission or space problems.',
+            -bitmap  => 'question',
+            -title   => 'CSS Validate problem',
+            -buttons => [qw/OK/],
+        );
+        $dialog->Show;
+        return;
+    }
+    if ( $lglobal{validatecsspop} ) {
+        $lglobal{validatecsslistbox}->delete( '0', 'end' );
+    }
+    my $validatecsspath = dirname($validatecsscommand);
+#    system(qq/$validatecsscommand -D $validatecsspath -c xhtml.soc -se -f errs.txt $name/);
+#    system(qq/java -jar c:\/dp\/css\/css-validator.jar file:c:\/dp\/css\/test.html > errs.txt/);
+    my $pwd = getcwd;
+    system(qq/java -jar $validatecsscommand file:$pwd\/$name > errs.txt/);
+    $top->Unbusy;
+    $lglobal{validatecsslistbox}->insert( 'end', "Tidied file written to $name" )
+        if ( $validatecssoptions =~ /\-m/ );
+    unlink 'validate.html';
+    validatecsspop_up();
+}
 
 my @gsopt;
 
@@ -11726,7 +11959,7 @@ EOM
 
         for (
             qw/globallastpath globalspellpath globalspelldictopt globalviewerpath globalbrowserstart
-            gutpath jeebiespath scannospath tidycommand validatecommand/
+            gutpath jeebiespath scannospath tidycommand validatecommand validatecsscommand/
             )
         {
             print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
@@ -17216,7 +17449,16 @@ sub markpopup {    # FIXME: Rename html_popup
             },
             -text  => 'W3C Validate',
             -width => 16
-        )->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
+        )->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
+        $f8->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                validatecssrun('');
+                unlink 'null' if ( -e 'null' );
+            },
+            -text  => 'W3C CSS Validate',
+            -width => 16
+        )->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
         $diventry->insert( 'end', ' style="margin-left: 2em;"' );
         $spanentry->insert( 'end', ' style="margin-left: 2em;"' );
         $lglobal{markpop}->protocol( 'WM_DELETE_WINDOW' =>
