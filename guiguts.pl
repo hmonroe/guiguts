@@ -12665,7 +12665,8 @@ sub update_indicators {
     my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
     my ( $line, $column ) = split( /\./, $textwindow->index('insert') );
     $lglobal{current_line_label}->configure(
-        -text => "Ln: $line/" . ( $last_line - 1 ) . "  -  Col: $column" );
+        -text => "Ln: $line/" . ( $last_line - 1 ) . "  -  Col: $column" )
+        if ( $lglobal{current_line_label} );
     my $mode             = $textwindow->OverstrikeMode;
     my $overstrke_insert = ' I ';
     if ($mode) {
@@ -17447,8 +17448,8 @@ sub markpopup {    # FIXME: Rename html_popup
                 validaterun('-f onsgmls.err -o null');
                 unlink 'null' if ( -e 'null' );
             },
-            -text  => 'W3C Validate',
-            -width => 16
+            -text  => 'W3C Validate (local)',
+            -width => 24
         )->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
         $f8->Button(
             -activebackground => $activecolor,
@@ -17456,9 +17457,27 @@ sub markpopup {    # FIXME: Rename html_popup
                 validatecssrun('');
                 unlink 'null' if ( -e 'null' );
             },
-            -text  => 'W3C CSS Validate',
-            -width => 16
+            -text  => 'W3C CSS Validate (local)',
+            -width => 24
         )->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
+        $f8->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                validaterun('-f onsgmls.err -o null');
+                unlink 'null' if ( -e 'null' );
+            },
+            -text  => 'W3C Validate (remote)',
+            -width => 24
+        )->grid( -row => 3, -column => 1, -padx => 1, -pady => 2 );
+        $f8->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                validatecssrun('');
+                unlink 'null' if ( -e 'null' );
+            },
+            -text  => 'W3C CSS Validate (remote)',
+            -width => 24
+        )->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
         $diventry->insert( 'end', ' style="margin-left: 2em;"' );
         $spanentry->insert( 'end', ' style="margin-left: 2em;"' );
         $lglobal{markpop}->protocol( 'WM_DELETE_WINDOW' =>
