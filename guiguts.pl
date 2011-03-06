@@ -200,7 +200,7 @@ if ( eval { require Text::LevenshteinXS } )
 
 # load Image::Size if it is installed
 if ( eval { require Image::Size; 1; } )
-{
+{	
 	$lglobal{ImageSize} = 1;
 } else
 {
