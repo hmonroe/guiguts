@@ -37,6 +37,7 @@ use HTML::TokeParser;
 use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
+use WebService::Validator::HTML::W3C;
 #use File::Path;
 #use HTML::Lint;
 
@@ -138,6 +139,7 @@ our $toolside     = 'bottom';
 our $utffontname  = 'Courier New';
 our $utffontsize  = 14;
 our $vislnnm      = 0;
+our $w3cremote= 0;
 our $window_title = $APP_NAME . '-' . $VERSION;
 
 our %gc;
@@ -2016,6 +2018,12 @@ sub buildmenu {
             [   Checkbutton =>
                     'Leave Space After End-Of-Line Hyphens During Rewrap',
                 -variable => \$rwhyphenspace,
+                -onvalue  => 1,
+                -offvalue => 0
+            ],
+            [   Checkbutton =>
+                    'Do W3C Validation Remotely',
+                -variable => \$w3cremote,
                 -onvalue  => 1,
                 -offvalue => 0
             ],
@@ -7635,7 +7643,7 @@ sub validatepop_up {
         my $opsbutton = $ptopframe->Button(
             -activebackground => $activecolor,
             -command          => sub {
-                validaterun(' -f onsgmls.err -o null ');
+                if ($w3cremote) {validateremoterun();} else {validaterun('-f onsgmls.err -o null');}
                 unlink 'null' if ( -e 'null' );
             },
             -text  => 'Get Errors',
@@ -7732,7 +7740,6 @@ sub validatepop_up {
     $lglobal{validatelistbox}->focus;    # FIXME: Again for gutcheck, jeebies.
     my $fh = FileHandle->new("< onsgmls.err");
     unless ( defined($fh) ) {
-
         my $dialog = $top->Dialog(
             -text    => 'Could not find validate error file.',
             -bitmap  => 'question',
@@ -7769,6 +7776,7 @@ sub validatepop_up {
     }
     $fh->close;
     unlink 'onsgmls.err';
+    push @validatelines, "Validation is complete";
     $lglobal{validatelistbox}->insert( 'end', @validatelines );
     $lglobal{validatelistbox}->yview( 'scroll', 1, 'units' );
     $lglobal{validatelistbox}->update;
@@ -7841,9 +7849,137 @@ sub validaterun {
     my $validatepath = dirname($validatecommand);
     system(qq/$validatecommand -D $validatepath -c xhtml.soc -se -f onsgmls.err $name/);
     $top->Unbusy;
-    $lglobal{validatelistbox}->insert( 'end', "Tidied file written to $name" )
-        if ( $validateoptions =~ /\-m/ );
     unlink 'validate.tmp';
+    validatepop_up();
+}
+
+sub validateremoterun {
+    push @operations, ( localtime() . ' - W3C Validate Remote' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    if ( $lglobal{validatepop} ) {
+        $lglobal{validatelistbox}->delete( '0', 'end' );
+    }
+    my ( $name, $fname, $path, $extension, @path );
+    $textwindow->focus;
+    update_indicators();
+    my $title = $top->cget('title');
+    if ( $title =~ /No File Loaded/ ) { savefile() }
+    my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
+    $top->Busy( -recurse => 1 );
+    $name = 'validate.html';
+    if ( open my $td, '>', $name ) {
+        my $count = 0;
+        my $index = '1.0';
+        my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
+        while ( $textwindow->compare( $index, '<', 'end' ) ) {
+            my $end = $textwindow->index("$index  lineend +1c");
+            print $td $textwindow->get( $index, $end );
+            $index = $end;
+        }
+        close $td;
+    }
+    else {
+        warn "Could not open temp file for writing. $!";
+        my $dialog = $top->Dialog(
+            -text => 'Could not write to the '
+                . cwd()
+                . ' directory. Check for write permission or space problems.',
+            -bitmap  => 'question',
+            -title   => 'Validate problem',
+            -buttons => [qw/OK/],
+        );
+        $dialog->Show;
+        return;
+    }
+    if ( $lglobal{validatepop} ) {
+        $lglobal{validatelistbox}->delete( '0', 'end' );
+    }
+    my $validator = WebService::Validator::HTML::W3C->new(
+                detailed    =>  1
+            );
+    if (   $validator->validate_file( './validate.html' )) {
+        if ( open my $td, '>', "onsgmls.err" ) {
+            if ( $validator->is_valid ) {
+                print $td (" ");
+            } else {
+                 foreach my $error ( @{$validator->errors} ) {
+                     printf $td ("W3C:validate.tmp:%s:%s:Eremote:%s\n",
+                         $error->line, $error->col, $error->msg);
+                 }
+                 print $td "Remote response complete";
+             }
+             close $td;
+        }
+    } else {
+        printf ("Failed to validate: %s\n", $validator->validator_error);
+    }
+   $top->Unbusy;
+    unlink 'validate.html';
+    validatepop_up();
+}
+
+sub validatecssremote { # this does not work--does not  load the file
+    push @operations, ( localtime() . ' - W3C CSS Validate Remote' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    if ( $lglobal{validatepop} ) {
+        $lglobal{validatelistbox}->delete( '0', 'end' );
+    }
+    my ( $name, $fname, $path, $extension, @path );
+    $textwindow->focus;
+    update_indicators();
+    my $title = $top->cget('title');
+    if ( $title =~ /No File Loaded/ ) { savefile() }
+    my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
+    $top->Busy( -recurse => 1 );
+    $name = 'validate.html';
+    if ( open my $td, '>', $name ) {
+        my $count = 0;
+        my $index = '1.0';
+        my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
+        while ( $textwindow->compare( $index, '<', 'end' ) ) {
+            my $end = $textwindow->index("$index  lineend +1c");
+            print $td $textwindow->get( $index, $end );
+            $index = $end;
+        }
+        close $td;
+    }
+    else {
+        warn "Could not open temp file for writing. $!";
+        my $dialog = $top->Dialog(
+            -text => 'Could not write to the '
+                . cwd()
+                . ' directory. Check for write permission or space problems.',
+            -bitmap  => 'question',
+            -title   => 'Validate problem',
+            -buttons => [qw/OK/],
+        );
+        $dialog->Show;
+        return;
+    }
+    if ( $lglobal{validatepop} ) {
+        $lglobal{validatelistbox}->delete( '0', 'end' );
+    }
+    my $validator = WebService::Validator::HTML::W3C->new(
+                detailed    =>  1
+            );
+    if (   $validator->validate_file( './validate.html' )) {
+        if ( open my $td, '>', "onsgmls.err" ) {
+            if ( $validator->is_valid ) {
+                print $td (" ");
+            } else {
+                 foreach my $error ( @{$validator->errors} ) {
+                     printf $td ("W3C:validate.tmp:%s:%s:Eremote:%s\n",
+                         $error->line, $error->col, $error->msg);
+                 }
+                 print $td "Remote response complete";
+             }
+             close $td;
+        }
+    } else {
+        printf ("Failed to validate: %s\n", $validator->validator_error);
+    }
+   $top->Unbusy;
+    unlink 'validate.html';
     validatepop_up();
 }
 
@@ -11949,7 +12085,7 @@ EOM
             qw/activecolor auto_page_marks autobackup autosave autosaveinterval blocklmargin blockrmargin
             defaultindent fblockscentered fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
             highlightcolor history_size jeebiesmode lmargin nobell nohighlights notoolbar rmargin
-            rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm italic_char bold_char/
+            rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm w3cremote italic_char bold_char/
             )
         {
             print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
@@ -17445,11 +17581,11 @@ sub markpopup {    # FIXME: Rename html_popup
         $f8->Button(
             -activebackground => $activecolor,
             -command          => sub {
-                validaterun('-f onsgmls.err -o null');
+                if ($w3cremote) {validateremoterun();} else {validaterun('-f onsgmls.err -o null');}
                 unlink 'null' if ( -e 'null' );
             },
-            -text  => 'W3C Validate (local)',
-            -width => 24
+            -text  => 'W3C Validate',
+            -width => 16
         )->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
         $f8->Button(
             -activebackground => $activecolor,
@@ -17457,27 +17593,9 @@ sub markpopup {    # FIXME: Rename html_popup
                 validatecssrun('');
                 unlink 'null' if ( -e 'null' );
             },
-            -text  => 'W3C CSS Validate (local)',
-            -width => 24
+            -text  => 'W3C CSS Validate',
+            -width => 16
         )->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
-        $f8->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                validaterun('-f onsgmls.err -o null');
-                unlink 'null' if ( -e 'null' );
-            },
-            -text  => 'W3C Validate (remote)',
-            -width => 24
-        )->grid( -row => 3, -column => 1, -padx => 1, -pady => 2 );
-        $f8->Button(
-            -activebackground => $activecolor,
-            -command          => sub {
-                validatecssrun('');
-                unlink 'null' if ( -e 'null' );
-            },
-            -text  => 'W3C CSS Validate (remote)',
-            -width => 24
-        )->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
         $diventry->insert( 'end', ' style="margin-left: 2em;"' );
         $spanentry->insert( 'end', ' style="margin-left: 2em;"' );
         $lglobal{markpop}->protocol( 'WM_DELETE_WINDOW' =>
