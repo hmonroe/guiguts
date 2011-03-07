@@ -7471,18 +7471,18 @@ sub tidypop_up {
 	my ( %tidy, @tidylines );
 	my ( $line, $lincol );
 	viewpagenums() if ( $lglobal{seepagenums} );
-	if ( $lglobal{tidypop} ) {    # delete window since links get off
-		                          #$lglobal{tidypop}->deiconify;
-		$lglobal{tidypop}->destroy;
-		undef $lglobal{tidypop};
+	if ( $lglobal{errorcheckpop} ) {    # delete window since links get off
+		                          #$lglobal{errorcheckpop}->deiconify;
+		$lglobal{errorcheckpop}->destroy;
+		undef $lglobal{errorcheckpop};
 	}
 
 	#    else {
-	$lglobal{tidypop} = $top->Toplevel;
-	$lglobal{tidypop}->title('Tidy');
-	$lglobal{tidypop}->geometry($geometry2) if $geometry2;
-	$lglobal{tidypop}->transient($top)      if $stayontop;
-	my $ptopframe = $lglobal{tidypop}->Frame->pack;
+	$lglobal{errorcheckpop} = $top->Toplevel;
+	$lglobal{errorcheckpop}->title('Tidy');
+	$lglobal{errorcheckpop}->geometry($geometry2) if $geometry2;
+	$lglobal{errorcheckpop}->transient($top)      if $stayontop;
+	my $ptopframe = $lglobal{errorcheckpop}->Frame->pack;
 	my $opsbutton = $ptopframe->Button(
 		-activebackground => $activecolor,
 		-command          => sub {
@@ -7499,7 +7499,7 @@ sub tidypop_up {
 	  );
 
 	my $pframe =
-	  $lglobal{tidypop}->Frame->pack( -fill => 'both', -expand => 'both', );
+	  $lglobal{errorcheckpop}->Frame->pack( -fill => 'both', -expand => 'both', );
 	$lglobal{tidylistbox} = $pframe->Scrolled(
 		'Listbox',
 		-scrollbars  => 'se',
@@ -7515,15 +7515,15 @@ sub tidypop_up {
 		-pady   => 2
 	  );
 	drag( $lglobal{tidylistbox} );
-	$lglobal{tidypop}->protocol(
+	$lglobal{errorcheckpop}->protocol(
 		'WM_DELETE_WINDOW' => sub {
-			$lglobal{tidypop}->destroy;
-			undef $lglobal{tidypop};
+			$lglobal{errorcheckpop}->destroy;
+			undef $lglobal{errorcheckpop};
 			%tidy      = ();
 			@tidylines = ();
 		}
 	);
-	$lglobal{tidypop}->Icon( -image => $icon );
+	$lglobal{errorcheckpop}->Icon( -image => $icon );
 	BindMouseWheel( $lglobal{tidylistbox} );
 	$lglobal{tidylistbox}->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
 	$lglobal{tidylistbox}->bind(
@@ -7537,14 +7537,14 @@ sub tidypop_up {
 				update_indicators();
 			}
 			$textwindow->focus;
-			$lglobal{tidypop}->raise;
-			$geometry2 = $lglobal{tidypop}->geometry;
+			$lglobal{errorcheckpop}->raise;
+			$geometry2 = $lglobal{errorcheckpop}->geometry;
 		}
 	);
-	$lglobal{tidypop}->bind(
+	$lglobal{errorcheckpop}->bind(
 		'<Configure>' => sub {
-			$lglobal{tidypop}->XEvent;
-			$geometry2 = $lglobal{tidypop}->geometry;
+			$lglobal{errorcheckpop}->XEvent;
+			$geometry2 = $lglobal{errorcheckpop}->geometry;
 			$lglobal{geometryupdate} = 1;
 		}
 	);
@@ -7576,7 +7576,7 @@ sub tidypop_up {
 			$lglobal{tidylistbox}->after( $lglobal{delay} );
 		}
 	);
-	$lglobal{tidypop}->update;
+	$lglobal{errorcheckpop}->update;
 
 	#   }
 	$lglobal{tidylistbox}->focus;    # FIXME: Again for gutcheck, jeebies.
@@ -7631,7 +7631,7 @@ sub errorcheckrun {
 	my $errorcheckoptions = shift;
 	push @operations, ( localtime() . ' - $errorchecktype' );
 	viewpagenums() if ( $lglobal{seepagenums} );
-	if ( $lglobal{tidypop} ) {
+	if ( $lglobal{errorcheckpop} ) {
 		$lglobal{tidylistbox}->delete( '0', 'end' );
 	}
 	my ( $name, $fname, $path, $extension, @path );
@@ -7687,7 +7687,7 @@ sub errorcheckrun {
 		$dialog->Show;
 		return;
 	}
-	if ( $lglobal{tidypop} ) {
+	if ( $lglobal{errorcheckpop} ) {
 		$lglobal{tidylistbox}->delete( '0', 'end' );
 	}
 	system(qq/$tidycommand $errorcheckoptions $name/);
@@ -17687,7 +17687,7 @@ sub markpopup {    # FIXME: Rename html_popup
 			-text             => 'Link Checker',
 			-width            => 16
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
-		$f8->Button(
+		$f8->Button( 
 			-activebackground => $activecolor,
 			-command          => sub {
 				errorcheckrun('Tidy','-f tidyerr.err -o null');
