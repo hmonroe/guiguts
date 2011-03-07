@@ -7467,7 +7467,7 @@ sub undojoin {
 	convertfilnum();
 }
 
-sub tidypop_up {
+sub errorcheckpop_up {
 	my ( %tidy, @tidylines );
 	my ( $line, $lincol );
 	viewpagenums() if ( $lglobal{seepagenums} );
@@ -7500,7 +7500,7 @@ sub tidypop_up {
 
 	my $pframe =
 	  $lglobal{errorcheckpop}->Frame->pack( -fill => 'both', -expand => 'both', );
-	$lglobal{tidylistbox} = $pframe->Scrolled(
+	$lglobal{errorchecklistbox} = $pframe->Scrolled(
 		'Listbox',
 		-scrollbars  => 'se',
 		-background  => 'white',
@@ -7514,7 +7514,7 @@ sub tidypop_up {
 		-padx   => 2,
 		-pady   => 2
 	  );
-	drag( $lglobal{tidylistbox} );
+	drag( $lglobal{errorchecklistbox} );
 	$lglobal{errorcheckpop}->protocol(
 		'WM_DELETE_WINDOW' => sub {
 			$lglobal{errorcheckpop}->destroy;
@@ -7524,13 +7524,13 @@ sub tidypop_up {
 		}
 	);
 	$lglobal{errorcheckpop}->Icon( -image => $icon );
-	BindMouseWheel( $lglobal{tidylistbox} );
-	$lglobal{tidylistbox}->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
-	$lglobal{tidylistbox}->bind(
+	BindMouseWheel( $lglobal{errorchecklistbox} );
+	$lglobal{errorchecklistbox}->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
+	$lglobal{errorchecklistbox}->bind(
 		'<<view>>',
 		sub {    # FIXME: adapt for gutcheck
 			$textwindow->tagRemove( 'highlight', '1.0', 'end' );
-			my $line = $lglobal{tidylistbox}->get('active');
+			my $line = $lglobal{errorchecklistbox}->get('active');
 			if ( $line =~ /^line/ ) {
 				$textwindow->see( $tidy{$line} );
 				$textwindow->markSet( 'insert', $tidy{$line} );
@@ -7548,38 +7548,38 @@ sub tidypop_up {
 			$lglobal{geometryupdate} = 1;
 		}
 	);
-	$lglobal{tidylistbox}->eventAdd(
+	$lglobal{errorchecklistbox}->eventAdd(
 		'<<remove>>' => '<ButtonRelease-2>',
 		'<ButtonRelease-3>'
 	);
-	$lglobal{tidylistbox}->bind(
+	$lglobal{errorchecklistbox}->bind(
 		'<<remove>>',
 		sub {
-			$lglobal{tidylistbox}->activate(
-				$lglobal{tidylistbox}->index(
+			$lglobal{errorchecklistbox}->activate(
+				$lglobal{errorchecklistbox}->index(
 					'@'
 					  . (
-						$lglobal{tidylistbox}->pointerx -
-						  $lglobal{tidylistbox}->rootx
+						$lglobal{errorchecklistbox}->pointerx -
+						  $lglobal{errorchecklistbox}->rootx
 					  )
 					  . ','
 					  . (
-						$lglobal{tidylistbox}->pointery -
-						  $lglobal{tidylistbox}->rooty
+						$lglobal{errorchecklistbox}->pointery -
+						  $lglobal{errorchecklistbox}->rooty
 					  )
 				)
 			);
-			$lglobal{tidylistbox}->selectionClear( 0, 'end' );
-			$lglobal{tidylistbox}
-			  ->selectionSet( $lglobal{tidylistbox}->index('active') );
-			$lglobal{tidylistbox}->delete('active');
-			$lglobal{tidylistbox}->after( $lglobal{delay} );
+			$lglobal{errorchecklistbox}->selectionClear( 0, 'end' );
+			$lglobal{errorchecklistbox}
+			  ->selectionSet( $lglobal{errorchecklistbox}->index('active') );
+			$lglobal{errorchecklistbox}->delete('active');
+			$lglobal{errorchecklistbox}->after( $lglobal{delay} );
 		}
 	);
 	$lglobal{errorcheckpop}->update;
 
 	#   }
-	$lglobal{tidylistbox}->focus;    # FIXME: Again for gutcheck, jeebies.
+	$lglobal{errorchecklistbox}->focus;    # FIXME: Again for gutcheck, jeebies.
 	my $fh = FileHandle->new("< tidyerr.err");
 	unless ( defined($fh) ) {
 
@@ -7620,10 +7620,10 @@ sub tidypop_up {
 	}
 	$fh->close;
 	unlink 'tidyerr.err';
-	$lglobal{tidylistbox}->insert( 'end', @tidylines );
-	$lglobal{tidylistbox}->yview( 'scroll', 1, 'units' );
-	$lglobal{tidylistbox}->update;
-	$lglobal{tidylistbox}->yview( 'scroll', -1, 'units' );
+	$lglobal{errorchecklistbox}->insert( 'end', @tidylines );
+	$lglobal{errorchecklistbox}->yview( 'scroll', 1, 'units' );
+	$lglobal{errorchecklistbox}->update;
+	$lglobal{errorchecklistbox}->yview( 'scroll', -1, 'units' );
 }
 
 sub errorcheckrun {
@@ -7632,7 +7632,7 @@ sub errorcheckrun {
 	push @operations, ( localtime() . ' - $errorchecktype' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	if ( $lglobal{errorcheckpop} ) {
-		$lglobal{tidylistbox}->delete( '0', 'end' );
+		$lglobal{errorchecklistbox}->delete( '0', 'end' );
 	}
 	my ( $name, $fname, $path, $extension, @path );
 	$textwindow->focus;
@@ -7688,14 +7688,14 @@ sub errorcheckrun {
 		return;
 	}
 	if ( $lglobal{errorcheckpop} ) {
-		$lglobal{tidylistbox}->delete( '0', 'end' );
+		$lglobal{errorchecklistbox}->delete( '0', 'end' );
 	}
 	system(qq/$tidycommand $errorcheckoptions $name/);
 	$top->Unbusy;
-	$lglobal{tidylistbox}->insert( 'end', "Tidied file written to $name" )
+	$lglobal{errorchecklistbox}->insert( 'end', "Tidied file written to $name" )
 	  if ( $errorcheckoptions =~ /\-m/ );
 	unlink 'tidy.tmp';
-	tidypop_up();
+	errorcheckpop_up();
 }
 
 sub validatepop_up {
