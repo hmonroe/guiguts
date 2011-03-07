@@ -7486,7 +7486,7 @@ sub tidypop_up {
 	my $opsbutton = $ptopframe->Button(
 		-activebackground => $activecolor,
 		-command          => sub {
-			errorcheckrun(' -f tidyerr.err -o null ');
+			errorcheckrun('Tidy',' -f tidyerr.err -o null ');
 			unlink 'null' if ( -e 'null' );
 		},
 		-text  => 'Get Errors',
@@ -7627,8 +7627,9 @@ sub tidypop_up {
 }
 
 sub errorcheckrun {
+	my $errorchecktype = shift;
 	my $tidyoptions = shift;
-	push @operations, ( localtime() . ' - Tidy' );
+	push @operations, ( localtime() . ' - $errorchecktype' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	if ( $lglobal{tidypop} ) {
 		$lglobal{tidylistbox}->delete( '0', 'end' );
@@ -17689,7 +17690,7 @@ sub markpopup {    # FIXME: Rename html_popup
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				errorcheckrun('-f tidyerr.err -o null');
+				errorcheckrun('Tidy','-f tidyerr.err -o null');
 				unlink 'null' if ( -e 'null' );
 			},
 			-text  => 'HTML Tidy',
