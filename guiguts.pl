@@ -7628,7 +7628,7 @@ sub tidypop_up {
 
 sub errorcheckrun {
 	my $errorchecktype = shift;
-	my $tidyoptions = shift;
+	my $errorcheckoptions = shift;
 	push @operations, ( localtime() . ' - $errorchecktype' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	if ( $lglobal{tidypop} ) {
@@ -7643,7 +7643,7 @@ sub errorcheckrun {
 	unless ($tidycommand) {
 		$tidycommand = $textwindow->getOpenFile(
 			-filetypes => $types,
-			-title     => 'Where is the Tidy executable?'
+			-title     => 'Where is the $errorchecktype executable?'
 		);
 	}
 	return unless $tidycommand;
@@ -7651,7 +7651,7 @@ sub errorcheckrun {
 	$tidycommand = dos_path($tidycommand) if $OS_WIN;
 	saveset();
 	$top->Busy( -recurse => 1 );
-	if ( $tidyoptions =~ /\-m/ ) {
+	if ( $errorcheckoptions =~ /\-m/ ) {
 		$title =~ s/$window_title - //;    # FIXME: duped in gutcheck code
 		$title =~ s/edited - //;
 		$title = os_normal($title);
@@ -7681,7 +7681,7 @@ sub errorcheckrun {
 			  . cwd()
 			  . ' directory. Check for write permission or space problems.',
 			-bitmap  => 'question',
-			-title   => 'Tidy problem',
+			-title   => '$errorchecktype problem',
 			-buttons => [qw/OK/],
 		);
 		$dialog->Show;
@@ -7690,10 +7690,10 @@ sub errorcheckrun {
 	if ( $lglobal{tidypop} ) {
 		$lglobal{tidylistbox}->delete( '0', 'end' );
 	}
-	system(qq/$tidycommand $tidyoptions $name/);
+	system(qq/$tidycommand $errorcheckoptions $name/);
 	$top->Unbusy;
 	$lglobal{tidylistbox}->insert( 'end', "Tidied file written to $name" )
-	  if ( $tidyoptions =~ /\-m/ );
+	  if ( $errorcheckoptions =~ /\-m/ );
 	unlink 'tidy.tmp';
 	tidypop_up();
 }
