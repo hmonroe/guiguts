@@ -2804,8 +2804,8 @@ sub filter {
 			$line =~ s/^ ([\^_]\{)/$1/;
 		   };
 			$line =~ s/  / /g if $opt[0];			# Get rid of extra spaces
-			$line =~ s/\s(["'])\s(\p{Alpha}+)\s\1 / \1\2\1 /g;
-			$line =~ s/^(\s*)(\p{IsUpper}+)(\s\p{IsLower}+)/\1\u\L\2\E\3/ if $linecount < 7;
+			$line =~ s/\s(["'])\s(\p{Alpha}+)\s\1 / $1$2$1 /g;
+			$line =~ s/^(\s*)(\p{IsUpper}+)(\s\p{IsLower}+)/$1\u\L$2\E$3/ if $linecount < 7;
 			$line =~ s/£([\d,]*\d)(\D)/$1 Pounds $2/g if $opt[38];# Convert £ to Pounds intelligently
 			$line =~ s/(?<![ainu])j(?=\s)/;/g if $opt[46];	# Convert solitary j or at end of word (unless it follows a i n or u) to semicolon
                         if ($opt[50]){	# Convert Windows codepage 1252 glyphs 80-9F to Latin1 equivalents
