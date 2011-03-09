@@ -1814,7 +1814,7 @@ sub buildmenu {
 		}
 		if ( $lglobal{utfrangesort} ) {
 			$menubar->Cascade(
-				 qw/-label ~Unicode -tearoff 0 -menuitems/ => [
+				 qw/-label ~Unicode -tearoff 1 -menuitems/ => [
 					 [
 					   Radiobutton => 'Sort by Name',
 					   -variable   => \$lglobal{utfrangesort},
