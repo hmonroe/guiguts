@@ -23,8 +23,8 @@ use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
 
-#use lib "c:/dp/dp/lib"; # Seems necessary to use pp to create .exe file
-#use lib "c:/perl/lib";
+use lib "c:/dp/dp/lib"; # Seems necessary to use pp to create .exe file
+use lib "c:/perl/lib";
 
 #use Data::Dumper;
 use Cwd;
