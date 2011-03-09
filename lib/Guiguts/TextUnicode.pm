@@ -1,6 +1,6 @@
 #$Id$
 
-package TextUnicode;
+package Guiguts::TextUnicode;
 
 use base qw(Tk::TextEdit);
 use File::Temp qw/tempfile/;

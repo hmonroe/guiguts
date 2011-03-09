@@ -1,10 +1,10 @@
 $Id$
 
-Install GuiGuts. 
+Install GuiGuts.
 
 1. Install Perl.
    
-   Windows (use Winguts.exe to avoid step 1)
+   Windows
         1. Download and install ActiveState Perl.
         http://www.activestate.com/activeperl/downloads/
 

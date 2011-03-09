@@ -1,5 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- $Id$ -->
+
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1" />
@@ -167,13 +169,6 @@ table {
     text-indent: -3em; 
 }
 
-/* Transcriber's notes */
-.transnote {background-color: #E6E6FA;
-    color: black;
-     font-size:smaller;
-     padding:0.5em;
-     margin-bottom:5em;
-     font-family:sans-serif, serif; }
     </style>
   </head>
 <body>
