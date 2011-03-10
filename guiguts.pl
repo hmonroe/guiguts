@@ -36,7 +36,6 @@ use HTML::TokeParser;
 use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
-use WebService::Validator::HTML::W3C;
 
 #use File::Path;
 #use HTML::Lint;
@@ -7696,6 +7695,14 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 }
 
 sub validateremoterun {
+	unless (eval { require WebService::Validator::HTML::W3C } ) {
+		print
+	 "Install the module WebService::Validator::HTML::W3C to do W3C Validation remotely. Defaulting to local validation.\n";
+	 validaterun();
+	 return;
+	};
+	
+	
 	push @operations, ( localtime() . ' - W3C Validate Remote' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	if ( $lglobal{validatepop} ) {
