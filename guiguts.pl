@@ -7551,8 +7551,13 @@ sub errorcheckpop_up {
 	}
 	$fh->close;
 	unlink 'errors.err';
-	push @errorchecklines, "Check is complete";
-
+	my $size=@errorchecklines;
+	if (($errorchecktype eq "W3C Validate CSS") and ($size==0)){ # handle errors.err file with zero lines
+		print "size ".$size;
+		push @errorchecklines, "Could not perform validation: install java or use W3C CSS Validation web site.";
+	} else {
+		push @errorchecklines, "Check is complete";
+	}
 	$lglobal{errorchecklistbox}->insert( 'end', @errorchecklines );
 	$lglobal{errorchecklistbox}->yview( 'scroll', 1, 'units' );
 	$lglobal{errorchecklistbox}->update;
@@ -7890,9 +7895,6 @@ sub validatecssrun {
 	my $pwd = getcwd;
 	system(qq/java -jar $validatecsscommand file:$pwd\/$name > errors.err/);
 	$top->Unbusy;
-	$lglobal{validatecsslistbox}
-	  ->insert( 'end', "Tidied file written to $name" )
-	  if ( $validatecssoptions =~ /\-m/ );
 	unlink 'validate.html';
 	errorcheckpop_up("W3C Validate CSS");
 }
