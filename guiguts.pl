@@ -23,7 +23,7 @@ use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
 
-use lib "c:/dp/dp/lib"; # Seems necessary to use pp to create .exe file
+use lib "c:/dp/dp/lib";    # Seems necessary to use pp to create .exe file
 use lib "c:/perl/lib";
 
 #use Data::Dumper;
@@ -1364,7 +1364,7 @@ sub edit_menuitems {
 	   [
 		  'command',
 		  'Col Paste',
-		  -command => sub {                      # FIXME: sub edit_column_paste
+		  -command => sub {    # FIXME: sub edit_column_paste
 			  $textwindow->addGlobStart;
 			  $textwindow->clipboardColumnPaste;
 			  $textwindow->addGlobEnd;
@@ -7550,10 +7550,12 @@ sub errorcheckpop_up {
 	}
 	$fh->close;
 	unlink 'errors.err';
-	my $size=@errorchecklines;
-	if (($errorchecktype eq "W3C Validate CSS") and ($size==0)){ # handle errors.err file with zero lines
-		print "size ".$size;
-		push @errorchecklines, "Could not perform validation: install java or use W3C CSS Validation web site.";
+	my $size = @errorchecklines;
+	if ( ( $errorchecktype eq "W3C Validate CSS" ) and ( $size == 0 ) )
+	{    # handle errors.err file with zero lines
+		print "size " . $size;
+		push @errorchecklines,
+"Could not perform validation: install java or use W3C CSS Validation web site.";
 	} else {
 		push @errorchecklines, "Check is complete";
 	}
@@ -7580,13 +7582,15 @@ sub errorcheckrun {    # Right now only runs Tidy
 	unless ($tidycommand) {
 		$tidycommand =
 		  $textwindow->getOpenFile(
-							-filetypes => $types,
-							-title => 'Where is the $errorchecktype executable?'
+					-filetypes => $types,
+					-title => "Where is the " . $errorchecktype . " executable?"
 		  );
 	}
-	return unless $tidycommand;
-	$tidycommand = os_normal($tidycommand);
-	$tidycommand = dos_path($tidycommand) if $OS_WIN;
+	if ( $errorchecktype eq 'HTML Tidy' ) {
+		return unless $tidycommand;
+		$tidycommand = os_normal($tidycommand);
+		$tidycommand = dos_path($tidycommand) if $OS_WIN;
+	}
 	saveset();
 	$top->Busy( -recurse => 1 );
 	$name = 'errors.tmp';
@@ -7616,7 +7620,9 @@ sub errorcheckrun {    # Right now only runs Tidy
 	if ( $lglobal{errorcheckpop} ) {
 		$lglobal{errorchecklistbox}->delete( '0', 'end' );
 	}
-	system(qq/$tidycommand $errorcheckoptions $name/);
+	if ( $errorchecktype eq 'HTML Tidy' ) {
+		system(qq/$tidycommand $errorcheckoptions $name/);
+	}
 	$top->Unbusy;
 	unlink 'errors.tmp';
 	errorcheckpop_up($errorchecktype);
@@ -7689,20 +7695,16 @@ sub validaterun {
 qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 	$top->Unbusy;
 	unlink 'validate.tmp';
-
-	#	validatepop_up();
 	errorcheckpop_up("W3C Validate");
 }
 
 sub validateremoterun {
-	unless (eval { require WebService::Validator::HTML::W3C } ) {
+	unless ( eval { require WebService::Validator::HTML::W3C } ) {
 		print
-	 "Install the module WebService::Validator::HTML::W3C to do W3C Validation remotely. Defaulting to local validation.\n";
-	 validaterun();
-	 return;
-	};
-	
-	
+"Install the module WebService::Validator::HTML::W3C to do W3C Validation remotely. Defaulting to local validation.\n";
+		validaterun();
+		return;
+	}
 	push @operations, ( localtime() . ' - W3C Validate Remote' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	if ( $lglobal{validatepop} ) {
@@ -7764,8 +7766,6 @@ sub validateremoterun {
 	}
 	$top->Unbusy;
 	unlink 'validate.html';
-
-	#validatepop_up();
 	errorcheckpop_up("W3C Validate");
 }
 
