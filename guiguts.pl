@@ -5936,13 +5936,13 @@ sub htmlautoconvert {
 			   && ( $incontents eq '1.0' ) );
 
 		# Subscripts
-		html_convert_subscripts( $selection, $step );
+		html_convert_subscripts($textwindow, $selection, $step );
 
 		# Superscripts
-		html_convert_superscripts( $selection, $step );
+		html_convert_superscripts($textwindow, $selection, $step );
 
 		# Thought break conversion
-	html_convert_tb( $textwindow,$selection, $step );
+		html_convert_tb( $textwindow,$selection, $step );
 
 	 #    if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ )
 	 #        {
@@ -12071,34 +12071,8 @@ sub html_convert_codepage {
 	cp1252toUni();
 }
 
-sub html_convert_ampersands {
-	working("Converting Ampersands");
-	named( '&(?![\w#])', '&amp;' );
-	named( '&$',         '&amp;' );
-	named( '& ',         '&amp; ' );
-	named( '&c\.',       '&amp;c.' );
-	named( '&c,',        '&amp;c.,' );
-	named( '&c ',        '&amp;c. ' );
-}
 
-# double hyphens go to character entity ref. FIXME: Add option for real emdash.
-sub html_convert_emdashes {
-	working("Converting Emdashes");
-	named( '(?<=[^-!])--(?=[^>])', '&mdash;' );
-	named( '(?<=[^<])!--(?=[^>])', '!&mdash;' );
-	named( '(?<=[^-])--$',         '&mdash;' );
-	named( '^--(?=[^-])',          '&mdash;' );
-	named( "\x{A0}",               '&nbsp;' );
-}
 
-# convert latin1 and utf charactes to HTML Character Entity Reference's.
-sub html_convert_latin1 {
-	working("Converting Latin-1 Characters...");
-	for ( 128 .. 255 ) {
-		my $from = lc sprintf( "%x", $_ );
-		named( '\x' . $from, entity( '\x' . $from ) );
-	}
-}
 
 sub html_convert_utf {
 	my $blockstart = @_;
@@ -12195,26 +12169,6 @@ sub html_cleanup_markers {
 #    }
 #}
 
-sub html_convert_subscripts {
-	my ( $selection, $step ) = @_;
-
-	if ( $selection =~ s/_\{([^}]+?)\}/<sub>$1<\/sub>/g ) {
-		$textwindow->ntdelete( "$step.0", "$step.end" );
-		$textwindow->ntinsert( "$step.0", $selection );
-	}
-}
-
-# FIXME: Doesn't convert Gen^rl; workaround Gen^{rl}
-sub html_convert_superscripts {
-	my ( $selection, $step ) = @_;
-
-	if ( $selection =~ s/\^\{([^}]+?)\}/<sup>$1<\/sup>/g ) {
-		$textwindow->ntdelete( "$step.0", "$step.end" );
-		$textwindow->ntinsert( "$step.0", $selection );
-	}
-}
-
-#sub html_convert_tb {
 
 ### Internal Routines
 ## Status Bar
