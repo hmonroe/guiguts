@@ -6,7 +6,7 @@ BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&html_convert_tb &htmlbackup &html_convert_subscripts &html_convert_superscripts
-	&html_convert_ampersands &html_convert_emdashes &html_convert_latin1);
+	&html_convert_ampersands &html_convert_emdashes &html_convert_latin1 &html_convert_codepage &html_convert_utf);
 }
 
 sub html_convert_tb {
@@ -88,6 +88,45 @@ sub html_convert_latin1 {
 		&main::named( '\x' . $from, entity( '\x' . $from ) );
 	}
 }
+
+sub html_convert_codepage {
+	&main::working("Converting Windows Codepage 1252\ncharacters to Unicode");
+	&main::cp1252toUni();
+}
+
+sub html_convert_utf {
+	my ($textwindow,$blockstart) = @_;
+	if ( $lglobal{leave_utf} ) {
+		$blockstart =
+		  $textwindow->search(
+							   '-exact',             '--',
+							   'charset=iso-8859-1', '1.0',
+							   'end'
+		  );
+		if ($blockstart) {
+			$textwindow->ntdelete( $blockstart, "$blockstart+18c" );
+			$textwindow->ntinsert( $blockstart, 'charset=UTF-8' );
+		}
+	}
+	unless ( $lglobal{leave_utf} ) {
+		&main::working("Converting UTF-8...");
+		while (
+				$blockstart =
+				$textwindow->search(
+									 '-regexp',             '--',
+									 '[\x{100}-\x{65535}]', '1.0',
+									 'end'
+				)
+		  )
+		{
+			my $xchar = ord( $textwindow->get($blockstart) );
+			$textwindow->ntdelete($blockstart);
+			$textwindow->ntinsert( $blockstart, "&#$xchar;" );
+		}
+	}
+
+}
+
 
 
 1;

@@ -6604,7 +6604,7 @@ sub htmlautoconvert {
 
 	if ( !$lglobal{keep_latin1} ) { html_convert_latin1(); }
 
-	html_convert_utf($thisblockstart);
+	html_convert_utf($textwindow, $thisblockstart);
 
    #    if ( $lglobal{leave_utf} ) {
    #        $thisblockstart
@@ -12066,46 +12066,7 @@ sub dos_path {
 
 ## HTML processing routines
 
-sub html_convert_codepage {
-	working("Converting Windows Codepage 1252\ncharacters to Unicode");
-	cp1252toUni();
-}
 
-
-
-
-sub html_convert_utf {
-	my $blockstart = @_;
-	if ( $lglobal{leave_utf} ) {
-		$blockstart =
-		  $textwindow->search(
-							   '-exact',             '--',
-							   'charset=iso-8859-1', '1.0',
-							   'end'
-		  );
-		if ($blockstart) {
-			$textwindow->ntdelete( $blockstart, "$blockstart+18c" );
-			$textwindow->ntinsert( $blockstart, 'charset=UTF-8' );
-		}
-	}
-	unless ( $lglobal{leave_utf} ) {
-		working("Converting UTF-8...");
-		while (
-				$blockstart =
-				$textwindow->search(
-									 '-regexp',             '--',
-									 '[\x{100}-\x{65535}]', '1.0',
-									 'end'
-				)
-		  )
-		{
-			my $xchar = ord( $textwindow->get($blockstart) );
-			$textwindow->ntdelete($blockstart);
-			$textwindow->ntinsert( $blockstart, "&#$xchar;" );
-		}
-	}
-
-}
 
 # Set <head><title></title></head>
 #sub html_set_title { }
