@@ -6,6 +6,10 @@ Test
 Test[1]
 
 
+<sc>Small caps</sc>
+
+<u>underscore</u>
+
 
 FOOTNOTES:
 

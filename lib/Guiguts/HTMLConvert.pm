@@ -7,7 +7,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&html_convert_tb &htmlbackup &html_convert_subscripts &html_convert_superscripts
 	&html_convert_ampersands &html_convert_emdashes &html_convert_latin1 &html_convert_codepage &html_convert_utf
-	&html_cleanup_markers &html_convert_footnotes &html_convert_body)
+	&html_cleanup_markers &html_convert_footnotes &html_convert_body &html_convert_underscoresmallcaps)
 }
 
 sub html_convert_tb {
@@ -750,6 +750,68 @@ sub html_convert_body {
 		$step++;
 	}
 	push @contents, '</p>';
+
+	
+}
+
+sub html_convert_underscoresmallcaps {
+	my ($textwindow) = @_;
+	my $thisblockstart = '1.0';
+	
+	
+	
+	&main::working("Converting underscore and small caps markup");
+	while ( $thisblockstart =
+			$textwindow->search( '-exact', '--', '<u>', '1.0', 'end' ) )
+	{
+		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+3c" );
+		$textwindow->ntinsert( $thisblockstart, '<span class="u">' );
+	}
+	while ( $thisblockstart =
+			$textwindow->search( '-exact', '--', '</u>', '1.0', 'end' ) )
+	{
+		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+4c" );
+		$textwindow->ntinsert( $thisblockstart, '</span>' );
+	}
+	while ( $thisblockstart =
+			$textwindow->search( '-exact', '--', '<sc>', '1.0', 'end' ) )
+	{
+		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+4c" );
+		$textwindow->ntinsert( $thisblockstart, '<span class="smcap">' );
+	}
+	while ( $thisblockstart =
+			$textwindow->search( '-exact', '--', '</sc>', '1.0', 'end' ) )
+	{
+		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+5c" );
+		$textwindow->ntinsert( $thisblockstart, '</span>' );
+	}
+	while ( $thisblockstart =
+			$textwindow->search( '-exact', '--', '</pre></p>', '1.0', 'end' ) )
+	{
+		$textwindow->ntdelete( "$thisblockstart+6c", "$thisblockstart+10c" );
+	}
+	$thisblockstart = '1.0';
+	while (
+			$thisblockstart =
+			$textwindow->search(
+								 '-exact',        '--',
+								 '<p>FOOTNOTES:', $thisblockstart,
+								 'end'
+			)
+	  )
+	{
+		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+17c" );
+		$textwindow->insert( $thisblockstart,
+							 '<div class="footnotes"><h3>FOOTNOTES:</h3>' );
+		$thisblockstart =
+		  $textwindow->search( '-exact', '--', '<hr', $thisblockstart, 'end' );
+		if ($thisblockstart) {
+			$textwindow->insert( "$thisblockstart-3l", '</div>' );
+		} else {
+			$textwindow->insert( 'end-1l', '</div>' );
+			last;
+		}
+	}
 
 	
 }

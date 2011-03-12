@@ -5858,7 +5858,7 @@ sub htmlautoconvert {
   #    }
 
 
-	html_convert_underscoresmallcaps();
+	html_convert_underscoresmallcaps($textwindow);
 	
 	working("Converting\nSidenotes");
 	my $thisnoteend;
@@ -6036,67 +6036,6 @@ sub htmlautoconvert {
 	working();
 	$textwindow->Unbusy;
 	$textwindow->see('1.0');
-}
-
-sub html_convert_underscoresmallcaps {
-	my $thisblockstart = '1.0';
-	
-	
-	
-	#working("Converting underscore and small caps markup");
-	while ( $thisblockstart =
-			$textwindow->search( '-exact', '--', '<u>', '1.0', 'end' ) )
-	{
-		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+3c" );
-		$textwindow->ntinsert( $thisblockstart, '<span class="u">' );
-	}
-	while ( $thisblockstart =
-			$textwindow->search( '-exact', '--', '</u>', '1.0', 'end' ) )
-	{
-		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+4c" );
-		$textwindow->ntinsert( $thisblockstart, '</span>' );
-	}
-	while ( $thisblockstart =
-			$textwindow->search( '-exact', '--', '<sc>', '1.0', 'end' ) )
-	{
-		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+4c" );
-		$textwindow->ntinsert( $thisblockstart, '<span class="smcap">' );
-	}
-	while ( $thisblockstart =
-			$textwindow->search( '-exact', '--', '</sc>', '1.0', 'end' ) )
-	{
-		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+5c" );
-		$textwindow->ntinsert( $thisblockstart, '</span>' );
-	}
-	while ( $thisblockstart =
-			$textwindow->search( '-exact', '--', '</pre></p>', '1.0', 'end' ) )
-	{
-		$textwindow->ntdelete( "$thisblockstart+6c", "$thisblockstart+10c" );
-	}
-	$thisblockstart = '1.0';
-	while (
-			$thisblockstart =
-			$textwindow->search(
-								 '-exact',        '--',
-								 '<p>FOOTNOTES:', $thisblockstart,
-								 'end'
-			)
-	  )
-	{
-		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+17c" );
-		$textwindow->insert( $thisblockstart,
-							 '<div class="footnotes"><h3>FOOTNOTES:</h3>' );
-		$thisblockstart =
-		  $textwindow->search( '-exact', '--', '<hr', $thisblockstart, 'end' );
-		if ($thisblockstart) {
-			$textwindow->insert( "$thisblockstart-3l", '</div>' );
-		} else {
-			$textwindow->insert( 'end-1l', '</div>' );
-			last;
-		}
-	}
-
-	
 }
 
 sub entity {
