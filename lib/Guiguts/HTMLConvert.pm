@@ -6,7 +6,8 @@ BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&html_convert_tb &htmlbackup &html_convert_subscripts &html_convert_superscripts
-	&html_convert_ampersands &html_convert_emdashes &html_convert_latin1 &html_convert_codepage &html_convert_utf);
+	&html_convert_ampersands &html_convert_emdashes &html_convert_latin1 &html_convert_codepage &html_convert_utf
+	&html_cleanup_markers)
 }
 
 sub html_convert_tb {
@@ -127,6 +128,33 @@ sub html_convert_utf {
 
 }
 
+# FIXME: Should be a general purpose function
+sub html_cleanup_markers {
+	my ($textwindow, $blockstart, $xler, $xlec, $blockend ) = @_;
+
+	&main::working("Cleaning up\nblock Markers");
+
+	while ( $blockstart =
+		   $textwindow->search( '-regexp', '--', '^\/[\*\$\#]', '1.0', 'end' ) )
+	{
+		( $xler, $xlec ) = split /\./, $blockstart;
+		$blockend = "$xler.end";
+		$textwindow->ntdelete( "$blockstart-1c", $blockend );
+	}
+	while ( $blockstart =
+		   $textwindow->search( '-regexp', '--', '^[\*\$\#]\/', '1.0', 'end' ) )
+	{
+		( $xler, $xlec ) = split /\./, $blockstart;
+		$blockend = "$xler.end";
+		$textwindow->ntdelete( "$blockstart-1c", $blockend );
+	}
+	while ( $blockstart =
+		 $textwindow->search( '-regexp', '--', '<\/h\d><br />', '1.0', 'end' ) )
+	{
+		$textwindow->ntdelete( "$blockstart+5c", "$blockstart+9c" );
+	}
+
+}
 
 
 1;

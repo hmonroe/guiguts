@@ -5944,18 +5944,6 @@ sub htmlautoconvert {
 		# Thought break conversion
 		html_convert_tb( $textwindow,$selection, $step );
 
-	 #    if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ )
-	 #        {
-	 #            $textwindow->ntdelete( "$step.0", "$step.end" );
-	 #            $textwindow->ntinsert( "$step.0", $selection );
-	 #            next;
-	 #        }
-	 #        if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {
-	 #            $textwindow->ntdelete( "$step.0", "$step.end" );
-	 #            $textwindow->ntinsert( "$step.0", $selection );
-	 #            next;
-	 #        }
-	 #
 	 # /x|/X gets <pre>
 		if ( $selection =~ m"^/x"i ) {
 			$skip = 1;
@@ -6400,7 +6388,7 @@ sub htmlautoconvert {
 	}
 	push @contents, '</p>';
 
-	html_cleanup_markers( $thisblockstart, $ler, $lec, $thisblockend );
+	html_cleanup_markers($textwindow, $thisblockstart, $ler, $lec, $thisblockend );
 
   #    working("Cleaning up\nblock Markers");
   #    while ( $thisblockstart
@@ -12074,33 +12062,6 @@ sub dos_path {
 # Set author name in <title></title>
 #sub html_set_author { }
 
-# FIXME: Should be a general purpose function
-sub html_cleanup_markers {
-	my ( $blockstart, $xler, $xlec, $blockend ) = @_;
-
-	working("Cleaning up\nblock Markers");
-
-	while ( $blockstart =
-		   $textwindow->search( '-regexp', '--', '^\/[\*\$\#]', '1.0', 'end' ) )
-	{
-		( $xler, $xlec ) = split /\./, $blockstart;
-		$blockend = "$xler.end";
-		$textwindow->ntdelete( "$blockstart-1c", $blockend );
-	}
-	while ( $blockstart =
-		   $textwindow->search( '-regexp', '--', '^[\*\$\#]\/', '1.0', 'end' ) )
-	{
-		( $xler, $xlec ) = split /\./, $blockstart;
-		$blockend = "$xler.end";
-		$textwindow->ntdelete( "$blockstart-1c", $blockend );
-	}
-	while ( $blockstart =
-		 $textwindow->search( '-regexp', '--', '<\/h\d><br />', '1.0', 'end' ) )
-	{
-		$textwindow->ntdelete( "$blockstart+5c", "$blockstart+9c" );
-	}
-
-}
 
 #sub html_parse_header {
 #
