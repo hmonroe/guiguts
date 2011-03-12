@@ -84,7 +84,7 @@ our $auto_page_marks  = 1;
 our $autobackup       = 0;
 our $autosave         = 0;
 our $autosaveinterval = 5;
-our $bkmkhl           = '0';
+our $bkmkhl           = 0;
 our $blocklmargin     = 5;
 our $blockrmargin     = 72;
 our $blockwrap;
@@ -115,6 +115,7 @@ our $markupthreshold        = 4;
 our $nobell                 = 0;
 our $nohighlights           = 0;
 our $notoolbar              = 0;
+our $intelligentWF          = 0;
 our $operationinterrupt;
 our $pngspath         = q{};
 our $rmargin          = 72;
@@ -2048,6 +2049,12 @@ sub buildmenu {
 			   -offvalue   => 0
 			],
 			[
+			   Checkbutton => 'Filter Word Freqs Intelligently',
+			   -variable   => \$intelligentWF,
+			   -onvalue    => 1,
+			   -offvalue   => 0
+			],
+			[
 			   Cascade    => 'Toolbar Prefs',
 			   -tearoff   => 1,
 			   -menuitems => [
@@ -3590,6 +3597,7 @@ sub searchtext {
 			$end   = 'end';
 		}
 		$lglobal{searchop4}->deselect if ( defined $lglobal{search} );
+		$lglobal{lastsearchterm} = "resetresetreset";
 	}
 	my $searchterm = shift;
 	$searchterm = '' unless defined $searchterm;
@@ -4063,9 +4071,7 @@ sub orphans {
 	my $br = shift;
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 	my ( $thisindex, $open, $close, $crow, $ccol, $orow, $ocol, @op );
-	$open = '<' . $br . '>';
-	$open = '<' . $br . '>|<' . $br . ' [^>]*>'
-	  if ( ( $br eq 'p' ) || ( $br eq 'span' ) );
+	$open = '<' . $br . '>|<' . $br . ' [^>]*>';
 	$close = '<\/' . $br . '>';
 	my $end = $textwindow->index('end');
 	$thisindex = '1.0';
@@ -7364,6 +7370,41 @@ sub undojoin {
 	convertfilnum();
 }
 
+sub add_navigation_events {
+	my ( $dialog_box ) = @_;
+	$dialog_box->eventAdd(
+			'<<pnext>>' => '<Next>',
+			'<Prior>', '<Up>', '<Down>'
+	);
+	$dialog_box->bind(
+			'<<pnext>>',
+			sub {
+					$dialog_box->selectionClear( 0, 'end' );
+					$dialog_box->selectionSet( $dialog_box->index('active') );
+			}
+	);
+
+	$dialog_box->bind(
+		'<Home>',
+		sub {
+			$dialog_box->selectionClear( 0, 'end' );
+			$dialog_box->see(0);
+			$dialog_box->selectionSet(1);
+			$dialog_box->activate(1);
+		}
+	);
+	$dialog_box->bind(
+		'<End>',
+		sub {
+			$dialog_box->selectionClear( 0, 'end' );
+			$dialog_box->see( $dialog_box->index('end') );
+			$dialog_box->selectionSet( $dialog_box->index('end') - 1 );
+			$dialog_box->activate( $dialog_box->index('end') - 1 );
+		}
+	);
+}
+
+
 sub errorcheckpop_up {
 	my $errorchecktype = shift;
 	my ( %errors, @errorchecklines );
@@ -7861,6 +7902,9 @@ sub gcheckpop_up {
 		BindMouseWheel( $lglobal{gclistbox} );
 		$lglobal{gclistbox}->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
 		$lglobal{gclistbox}->bind( '<<view>>', sub { gcview() } );
+		
+		add_navigation_events($lglobal{gclistbox});
+
 		$lglobal{gcpop}->bind(
 			'<Configure>' => sub {
 				$lglobal{gcpop}->XEvent;
@@ -8087,10 +8131,17 @@ sub gcview {
 		$textwindow->see('end');
 		$textwindow->see( $gc{$line} );
 		$textwindow->markSet( 'insert', $gc{$line} );
+
+		# Highlight pretty close to GC error (2 chars before just in case error is at end of line)
+		$textwindow->tagAdd(
+				'highlight',
+				$gc{$line} . "- 2c",
+				$gc{$line} . " lineend"
+		);
 		update_indicators();
 	}
-	$textwindow->focus;
-	$lglobal{gcpop}->raise;
+	#don't focus    $textwindow->focus;
+	#leave main text on top    $lglobal{gcpop}->raise;
 	$geometry2 = $lglobal{gcpop}->geometry;
 }
 
@@ -8413,12 +8464,14 @@ sub ital_adjust {
 
 sub searchoptset {
 	my @opt = @_;
+	my $opt_count = @opt;
 
 # $sopt[0] --> 0 = pattern search               1 = whole word search
 # $sopt[1] --> 0 = case insensitive             1 = case sensitive search
 # $sopt[2] --> 0 = search forwards              1 = search backwards
 # $sopt[3] --> 0 = normal search term   1 = regex search term - 3 and 0 are mutually exclusive
-	for ( 0 .. 3 ) {
+# $sopt[4] --> 1 = start search at beginning
+	for ( 0 .. $opt_count-1 ) {
 		if ( defined( $lglobal{search} ) ) {
 			if ( $opt[$_] !~ /[a-zA-Z]/ ) {
 				$opt[$_]
@@ -8679,21 +8732,33 @@ sub commark {
 		utf8::decode($wholefile);
 	}
 	$wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
-	while ( $wholefile =~ m/(,"?\n*\s*"?\p{Upper}\p{Alnum}*)/g ) {
+	
+	if ($intelligentWF) {
+		# Skip if pattern is: . Hello, John
+		$wholefile =~ s/([\.\?\!]['"]*[\n\s]['"]*\p{Upper}\p{Alnum}*),([\n\s]['"]*\p{Upper})/$1 $2/g;
+		# Skip if pattern is: \n\nHello, John
+		$wholefile =~ s/(\n\n *['"]*\p{Upper}\p{Alnum}*),( ['"]*\p{Upper})/$1 $2/g;
+	}
+	while ( $wholefile =~ m/,(['"]*\n*\s*['"]*\p{Upper}\p{Alnum}*)([\.\?\!]?)/g ) {
 		my $word = $1;
+		next if $intelligentWF && $2 && $2 ne '';  # ignore if word followed by period, !, or ?
 		$wordw++;
-		$word =~ s/<\/?[bidhscalup].*?>//g;
-		$word =~ s/(\p{Alnum})'(\p{Alnum})/$1PQzJ$2/g;
-		$word =~ s/"/pQzJ/g;
-		$word =~ s/(\p{Alnum})\.(\p{Alnum})/$1PqzJ$2/g;
-		$word =~ s/(\p{Alnum})-(\p{Alnum})/$1PLXJ$2/g;
-		$word =~ s/[^\s\p{Alnum}]//g;
-		$word =~ s/PQzJ/'/g;
-		$word =~ s/PqzJ/./g;
-		$word =~ s/PLXJ/-/g;
-		$word =~ s/pQzJ/"/g;
-		$word =~ s/\P{Alnum}+$//g;
-		$word =~ s/\x{d}//g;
+
+		if ($wordw == 0) {
+			# FIXME: think this code DOESN'T WORK. skipping
+			$word =~ s/<\/?[bidhscalup].*?>//g;
+			$word =~ s/(\p{Alnum})'(\p{Alnum})/$1PQzJ$2/g;
+			$word =~ s/"/pQzJ/g;
+			$word =~ s/(\p{Alnum})\.(\p{Alnum})/$1PqzJ$2/g;
+			$word =~ s/(\p{Alnum})-(\p{Alnum})/$1PLXJ$2/g;
+			$word =~ s/[^\s\p{Alnum}]//g;
+			$word =~ s/PQzJ/'/g;
+			$word =~ s/PqzJ/./g;
+			$word =~ s/PLXJ/-/g;
+			$word =~ s/pQzJ/"/g;
+			$word =~ s/\P{Alnum}+$//g;
+			$word =~ s/\x{d}//g;
+		}
 		$word =~ s/\n/\\n/g;
 		$display{ ',' . $word }++;
 	}
@@ -8736,12 +8801,14 @@ sub itwords {
 		next if ( $num >= $markupthreshold );
 		$word =~ s/\n/\\n/g;
 		$display{$word}++;
+		$wordwo =~ s/\n/\\n/g;
 		$words{$wordwo} = $display{$word};
 	}
 	$wordw = scalar keys %display;
 	for my $wordwo ( keys %words ) {
-		while ( $wholefile =~ m/(?<=\W)\Q$wordwo\E(?=\W)/sg ) {
-			$wordwo =~ s/\n/\\n/g;
+			my $wordwo2 = $wordwo;
+			$wordwo2 =~ s/\\n/\n/g;
+			while ( $wholefile =~ m/(?<=\W)\Q$wordwo2\E(?=\W)/sg ) {
 			$display{$wordwo}++;
 		}
 		$display{$wordwo} = $display{$wordwo} - $words{$wordwo}
@@ -8778,21 +8845,24 @@ sub bangmark {
 		utf8::decode($wholefile);
 	}
 	$wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
-	while ( $wholefile =~ m/(\p{Alnum}+\."?\n*\s*"?\p{Lower}\p{Alnum}*)/g ) {
+	while ( $wholefile =~ m/(\p{Alnum}+\.['"]?\n*\s*['"]?\p{Lower}\p{Alnum}*)/g ) {
 		my $word = $1;
 		$wordw++;
-		$word =~ s/<\/?[bidhscalup].*?>//g;
-		$word =~ s/(\p{Alnum})'(\p{Alnum})/$1PQzJ$2/g;
-		$word =~ s/"/pQzJ/g;
-		$word =~ s/(\p{Alnum})\.(\s*\S)/$1PqzJ$2/g;
-		$word =~ s/(\p{Alnum})-(\p{Alnum})/$1PLXj$2/g;
-		$word =~ s/[^\s\p{Alnum}]//g;
-		$word =~ s/PQzJ/'/g;
-		$word =~ s/PqzJ/./g;
-		$word =~ s/PLXj/-/g;
-		$word =~ s/pQzJ/"/g;
-		$word =~ s/\P{Alnum}+$//g;
-		$word =~ s/\x{d}//g;
+		if ($wordw == 0) {
+			# FIXME: think this code DOESN'T WORK. skipping
+			$word =~ s/<\/?[bidhscalup].*?>//g;
+			$word =~ s/(\p{Alnum})'(\p{Alnum})/$1PQzJ$2/g;
+			$word =~ s/"/pQzJ/g;
+			$word =~ s/(\p{Alnum})\.(\s*\S)/$1PqzJ$2/g;
+			$word =~ s/(\p{Alnum})-(\p{Alnum})/$1PLXj$2/g;
+			$word =~ s/[^\s\p{Alnum}]//g;
+			$word =~ s/PQzJ/'/g;
+			$word =~ s/PqzJ/./g;
+			$word =~ s/PLXj/-/g;
+			$word =~ s/pQzJ/"/g;
+			$word =~ s/\P{Alnum}+$//g;
+			$word =~ s/\x{d}//g;
+		}
 		$word =~ s/\n/\\n/g;
 		$display{$word}++;
 	}
@@ -11617,8 +11687,10 @@ EOM
 			rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm w3cremote italic_char bold_char/
 		  )
 		{
-			print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
-			  eval '$' . $_, "';\n";
+			if (eval '$' . $_) {
+					print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
+						eval '$' . $_, "';\n";
+			}
 		}
 		print $save_handle "\n";
 
@@ -11627,8 +11699,10 @@ EOM
 			gutpath jeebiespath scannospath tidycommand validatecommand validatecsscommand/
 		  )
 		{
-			print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
-			  escape_problems( os_normal( eval '$' . $_ ) ), "';\n";
+			if (eval '$' . $_) {
+					print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
+						escape_problems( os_normal( eval '$' . $_ ) ), "';\n";
+			}
 		}
 
 		print $save_handle ("\n\@recentfile = (\n");
@@ -11670,13 +11744,15 @@ EOM
 }
 
 sub os_normal {
-	$_[0] =~ s|/|\\|g if $OS_WIN;
+	$_[0] =~ s|/|\\|g if $OS_WIN && $_[0];
 	return $_[0];
 }
 
 sub escape_problems {
-	$_[0] =~ s/\\+$/\\\\/g;
-	$_[0] =~ s/(?!<\\)'/\\'/g;
+  if ($_[0]) {
+		$_[0] =~ s/\\+$/\\\\/g;
+		$_[0] =~ s/(?!<\\)'/\\'/g;
+	}
 	return $_[0];
 }
 
@@ -12608,9 +12684,17 @@ sub spellcheckfirst {
 	spellguesses($term);    # get the guesses for the misspelling
 	spellshow_guesses();    # populate the listbox with guesses
 
+	$lglobal{hyphen_words} = ();	# hyphenated list of words
 	if ( scalar( $lglobal{seen} ) ) {
 		$lglobal{misspelledlabel}->configure( -text =>
 					"Not in Dictionary:  -  $lglobal{seen}->{$term} in text." );
+								
+		# collect hyphenated words for faster, more accurate spell-check later
+		foreach my $word ( keys %{ $lglobal{seen} } ) {
+			if ( $lglobal{seen}->{$word} >= 1 && $word =~ /-/) {
+					$lglobal{hyphen_words}->{$word} = $lglobal{seen}->{$word};
+			}
+		}
 	}
 	$lglobal{nextmiss} = 0;
 }
@@ -12694,12 +12778,34 @@ sub spellchecknext {
 						  . " | $#{$lglobal{misspelledlist}} words to check." );
 
 	if ( scalar( $lglobal{seen} ) ) {
+		my $spell_count_case = 0;
+		my $hyphen_count = 0;
+		my $cur_word = $lglobal{misspelledlist}[ $lglobal{nextmiss} ];
+		my $proper_case = lc($cur_word); $proper_case =~ s/(^\w)/\U$1\E/;
+		$spell_count_case += ($lglobal{seen}->{ uc($cur_word) } || 0)
+				if $cur_word ne uc($cur_word);  # Add the full-uppercase version to the count
+		$spell_count_case += ($lglobal{seen}->{ lc($cur_word) } || 0)
+				if $cur_word ne lc($cur_word);  # Add the full-lowercase version to the count
+		$spell_count_case += ($lglobal{seen}->{ $proper_case } || 0)
+				if $cur_word ne $proper_case;  # Add the propercase version to the count
+		foreach my $hyword ( keys %{ $lglobal{hyphen_words} } ) {
+				next if $hyword !~ /$cur_word/;
+				if ( $hyword =~ /^$cur_word-/ || $hyword =~ /-$cur_word$/ || $hyword =~ /-$cur_word-/ ) {
+						$hyphen_count += $lglobal{hyphen_words}->{$hyword};
+				}
+		}
+		my $spell_count_non_poss = 0;
+		$spell_count_non_poss = ($lglobal{seen}->{ $1 } || 0) if $cur_word =~ /^(.*)'s$/i;
+		$spell_count_non_poss = ($lglobal{seen}->{ $cur_word . '\'s' } || 0) if $cur_word !~ /^(.*)'s$/i;
+		$spell_count_non_poss += ($lglobal{seen}->{ $cur_word . '\'S' } || 0) if $cur_word !~ /^(.*)'s$/i;
 		$lglobal{misspelledlabel}->configure(
 			   -text => 'Not in Dictionary:  -  '
 				 . (
 				   $lglobal{seen}
 					 ->{ $lglobal{misspelledlist}[ $lglobal{nextmiss} ] } || '0'
 				 )
+				 . ( $spell_count_case+$spell_count_non_poss > 0 ? ", $spell_count_case, $spell_count_non_poss" : '' )
+				 . ( $hyphen_count > 0 ? ", $hyphen_count hyphens" : '' )
 				 . ' in text.'
 		);
 	}
@@ -13764,6 +13870,7 @@ sub stealthscanno {
 	$lglobal{doscannos} = 1;
 	$lglobal{search}->destroy if defined $lglobal{search};
 	undef $lglobal{search};
+    searchoptset(qw/x x x x 1/);  # force search to begin at start of doc
 	if ( loadscannos() ) {
 		saveset();
 		searchpopup();
@@ -15698,6 +15805,12 @@ sub wordcount {
 					  if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
 					searchoptset(qw/0 x x 1/);
 				}
+				if ($intelligentWF && $sword =~ /^\\,(\s|\\n)/ ) {
+					# during comma-Upper ck, ignore if name followed by period, !, or ?
+					# NOTE: sword will be used as a regular expression filter during display
+					$sword .= '([^\.\?\!]|$)';
+				}
+
 				if    ( $sword =~ /\*space\*/ )   { $sword = ' ' }
 				elsif ( $sword =~ /\*tab\*/ )     { $sword = "\t" }
 				elsif ( $sword =~ /\*newline\*/ ) { $sword = "\n" }
@@ -15749,36 +15862,7 @@ sub wordcount {
 				$lglobal{geometryupdate} = 1;
 			}
 		);
-		$lglobal{wclistbox}->eventAdd( '<<pnext>>' => '<Next>',
-									   '<Prior>', '<Up>', '<Down>' );
-		$lglobal{wclistbox}->bind(
-			'<<pnext>>',
-			sub {
-				$lglobal{wclistbox}->selectionClear( 0, 'end' );
-				$lglobal{wclistbox}
-				  ->selectionSet( $lglobal{wclistbox}->index('active') );
-			}
-		);
-		$lglobal{wclistbox}->bind(
-			'<Home>',
-			sub {
-				$lglobal{wclistbox}->selectionClear( 0, 'end' );
-				$lglobal{wclistbox}->see(0);
-				$lglobal{wclistbox}->selectionSet(1);
-				$lglobal{wclistbox}->activate(1);
-			}
-		);
-		$lglobal{wclistbox}->bind(
-			'<End>',
-			sub {
-				$lglobal{wclistbox}->selectionClear( 0, 'end' );
-				$lglobal{wclistbox}->see( $lglobal{wclistbox}->index('end') );
-				$lglobal{wclistbox}
-				  ->selectionSet( $lglobal{wclistbox}->index('end') - 1 );
-				$lglobal{wclistbox}
-				  ->activate( $lglobal{wclistbox}->index('end') - 1 );
-			}
-		);
+		add_navigation_events($lglobal{wclistbox});
 		$lglobal{popup}->bind(
 			'<Control-s>' => sub {
 				my ($name);
@@ -16183,14 +16267,16 @@ sub fixup {
 				$edited++ if $line =~ s/^lst/1st/;
 			}
 			if ( ${ $lglobal{fixopt} }[1] ) {
-				$edited++ if $line =~ s/ -/-/g;    # Remove space before hyphen
+				# Remove spaces before hyphen (only if hyphen isn't first on line, like poetry)
+				$edited++ if $line =~ s/(\S) +-/$1-/g;
 				$edited++ if $line =~ s/- /-/g;    # Remove space after hyphen
 				$edited++
 				  if $line =~ s/(?<![-])([-]*---)(?=[^\s\\"F-])/$1 /g
 				; # Except leave a space after a string of three or more hyphens
 			}
 			if ( ${ $lglobal{fixopt} }[2] ) {
-				$edited++ if $line =~ s/ +\.(?=\D)/\./g;
+				# Remove space before periods (only if not first on line, like poetry's ellipses)
+				$edited++ if $line =~ s/(\S) +\.(?=\D)/$1\./g;
 			}
 			;     # Get rid of space before periods
 			if ( ${ $lglobal{fixopt} }[3] ) {
@@ -17372,10 +17458,12 @@ sub cp1252toUni {
 		while ( $thisblockstart =
 				$textwindow->search( '-exact', '--', $term, '1.0', 'end' ) )
 		{
-			$textwindow->ntdelete( $thisblockstart, "$thisblockstart+1c" );
-			$textwindow->ntinsert( $thisblockstart, $cp{$term} );
+				# Use replacewith() to ensure change is tracked and saved
+				$textwindow->replacewith( $thisblockstart,
+						"$thisblockstart+1c", $cp{$term} );
 		}
 	}
+  update_indicators();
 }
 
 ## ASCII Table Special Effects
