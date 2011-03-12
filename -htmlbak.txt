@@ -1,0 +1,12 @@
+Test
+
+
+<tb>
+
+Test[1]
+
+
+
+FOOTNOTES:
+
+[Footnote 1: This is a footnote.]

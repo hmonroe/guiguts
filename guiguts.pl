@@ -5835,7 +5835,7 @@ sub htmlautoconvert {
 
 	html_convert_emdashes();
 
-    html_convert_footnotes();
+    html_convert_footnotes($textwindow);
 
 
 	working('Converting Body');
@@ -6562,96 +6562,6 @@ sub htmlautoconvert {
 	working();
 	$textwindow->Unbusy;
 	$textwindow->see('1.0');
-}
-
-sub html_convert_footnotes {
-	my $thisblank  = q{};
-	my $step = 0;
-	
-	
-	# Footnotes
-	$lglobal{fnsecondpass}  = 0;
-	$lglobal{fnsearchlimit} = 1;
-	working('Converting Footnotes');
-	footnotefixup();
-	getlz();
-	$textwindow->tagRemove( 'footnote',  '1.0', 'end' );
-	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
-	$textwindow->see('1.0');
-	$textwindow->update;
-
-	while (1) {
-		$step++;
-		last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
-		last unless $lglobal{fnarray}->[$step][0];
-		next unless $lglobal{fnarray}->[$step][3];
-		$textwindow->ntdelete( 'fne' . "$step" . '-1c', 'fne' . "$step" );
-		$textwindow->ntinsert( 'fne' . "$step", '</p></div>' );
-		$textwindow->ntinsert(
-							 (
-							   'fns' . "$step" . '+'
-								 . (
-									length( $lglobal{fnarray}->[$step][4] ) + 11
-								 )
-								 . "c"
-							 ),
-							 ']</span></a>'
-		);
-		$textwindow->ntdelete(
-							   'fns' . "$step" . '+'
-								 . (
-									length( $lglobal{fnarray}->[$step][4] ) + 10
-								 )
-								 . 'c',
-							   "fns" . "$step" . '+'
-								 . (
-									length( $lglobal{fnarray}->[$step][4] ) + 11
-								 )
-								 . 'c'
-		);
-		$textwindow->ntinsert(
-							   'fns' . "$step" . '+10c',
-							   "<div class=\"footnote\"><p><a name=\"Footnote_"
-								 . $lglobal{fnarray}->[$step][4] . '_'
-								 . $step
-								 . "\" id=\"Footnote_"
-								 . $lglobal{fnarray}->[$step][4] . '_'
-								 . $step
-								 . "\"></a><a href=\"#FNanchor_"
-								 . $lglobal{fnarray}->[$step][4] . '_'
-								 . $step
-								 . "\"><span class=\"label\">["
-		);
-		$textwindow->ntdelete( 'fns' . "$step", 'fns' . "$step" . '+10c' );
-		$textwindow->ntinsert( 'fnb' . "$step", '</a>' )
-		  if ( $lglobal{fnarray}->[$step][3] );
-		$textwindow->ntinsert(
-							   'fna' . "$step",
-							   "<a name=\"FNanchor_"
-								 . $lglobal{fnarray}->[$step][4] . '_'
-								 . $step
-								 . "\" id=\"FNanchor_"
-								 . $lglobal{fnarray}->[$step][4] . '_'
-								 . $step
-								 . "\"></a><a href=\"#Footnote_"
-								 . $lglobal{fnarray}->[$step][4] . '_'
-								 . $step
-								 . "\" class=\"fnanchor\">"
-		) if ( $lglobal{fnarray}->[$step][3] );
-
-		while (
-				$thisblank =
-				$textwindow->search(
-									 '-regexp', '--',
-									 '^$',      'fns' . "$step",
-									 "fne" . "$step"
-				)
-		  )
-		{
-			$textwindow->ntinsert( $thisblank, '</p><p>' );
-		}
-	}
-	
 }
 
 sub entity {
