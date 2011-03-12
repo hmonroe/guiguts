@@ -23,7 +23,7 @@ use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
 
-use lib "c:/dp/dp/lib";    # Seems necessary to use pp to create .exe file
+use lib "c:/dp/dp/lib";  # Seems necessary to use pp to create windows .exe file
 use lib "c:/perl/lib";
 
 #use Data::Dumper;
@@ -32,6 +32,7 @@ use Encode;
 use FileHandle;
 use File::Basename;
 use File::Temp qw/tempfile/;
+use File::Copy;
 use HTML::TokeParser;
 use IPC::Open2;
 use LWP::UserAgent;
@@ -5756,6 +5757,9 @@ sub htmlautoconvert {
 		}
 		$textwindow->ntdelete( '1.0', "$step.0 +1c" );
 	} else {
+		unless ( -e 'header.txt' ) {
+			copy( 'headerdefault.txt', 'header.txt' );
+		}
 		open my $infile, '<', 'header.txt'
 		  or warn "Could not open header file. $!\n";
 		while (<$infile>) {
@@ -7378,16 +7382,18 @@ sub errorcheckpop_up {
 		-activebackground => $activecolor,
 		-command          => sub {
 			if ( $errorchecktype eq 'HTML Tidy' ) {
-				errorcheckrun( $errorchecktype, ' -f errors.err -o null ' );
+				errorcheckrun($errorchecktype);
 			} else {
-				if ( $errorchecktype eq "W3C Validate" ) {
-					if   ($w3cremote) { validateremoterun(); }
-					else              { validaterun('-f errors.err -o null'); }
+				if ( $errorchecktype eq 'W3C Validate' ) {
+					errorcheckrun($errorchecktype);
 				} else {
-					if ( $errorchecktype eq 'W3C Validate CSS' ) {
-						validatecssrun('');
+					if ( $errorchecktype eq 'W3C Validate Remote' ) {
+						errorcheckrun($errorchecktype);
+					} else {
+						if ( $errorchecktype eq 'W3C Validate CSS' ) {
+							errorcheckrun($errorchecktype);   #validatecssrun('');
+						}
 					}
-
 				}
 			}
 			unlink 'null' if ( -e 'null' );
@@ -7485,7 +7491,7 @@ sub errorcheckpop_up {
 	my $fh = FileHandle->new("< errors.err");
 	unless ( defined($fh) ) {
 		my $dialog = $top->Dialog(
-					-text => 'Could not find' . $errorchecktype . 'error file.',
+					-text => 'Could not find ' . $errorchecktype . ' error file.',
 					-bitmap  => 'question',
 					-title   => 'File not found',
 					-buttons => [qw/OK/],
@@ -7565,9 +7571,15 @@ sub errorcheckpop_up {
 	$lglobal{errorchecklistbox}->yview( 'scroll', -1, 'units' );
 }
 
-sub errorcheckrun {    # Right now only runs Tidy
-	my $errorchecktype    = shift;
-	my $errorcheckoptions = shift;
+sub errorcheckrun {    # Runs Tidy and W3C Validate
+	my $errorchecktype = shift;
+	if ( $errorchecktype eq 'W3C Validate Remote' ) {
+		unless ( eval { require WebService::Validator::HTML::W3C } ) {
+			print
+"Install the module WebService::Validator::HTML::W3C to do W3C Validation remotely. Defaulting to local validation.\n";
+			$errorchecktype = 'W3C Validate';
+		}
+	}
 	push @operations, ( localtime() . ' - $errorchecktype' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	if ( $lglobal{errorcheckpop} ) {
@@ -7579,21 +7591,56 @@ sub errorcheckrun {    # Right now only runs Tidy
 	my $title = $top->cget('title');
 	if ( $title =~ /No File Loaded/ ) { savefile() }
 	my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
-	unless ($tidycommand) {
-		$tidycommand =
-		  $textwindow->getOpenFile(
-					-filetypes => $types,
-					-title => "Where is the " . $errorchecktype . " executable?"
-		  );
+	if ( $errorchecktype eq 'W3C Validate CSS' ) {
+		$types = [ [ 'JAR file', [ '.jar', ] ], [ 'All Files', ['*'] ], ];
 	}
 	if ( $errorchecktype eq 'HTML Tidy' ) {
+		unless ($tidycommand) {
+			$tidycommand =
+			  $textwindow->getOpenFile(
+					-filetypes => $types,
+					-title => "Where is the " . $errorchecktype . " executable?"
+			  );
+		}
 		return unless $tidycommand;
 		$tidycommand = os_normal($tidycommand);
 		$tidycommand = dos_path($tidycommand) if $OS_WIN;
+	} else {
+		if ( ( $errorchecktype eq "W3C Validate" ) and ( $w3cremote == 0 ) ) {
+			unless ($validatecommand) {
+				$validatecommand =
+				  $textwindow->getOpenFile(
+					 -filetypes => $types,
+					 -title => 'Where is the W3C Validate (onsgmls) executable?'
+				  );
+			}
+			return unless $validatecommand;
+			$validatecommand = os_normal($validatecommand);
+			$validatecommand = dos_path($validatecommand) if $OS_WIN;
+		} else {
+			if ( $errorchecktype eq 'W3C CSS Validate' ) {
+				unless ($validatecsscommand) {
+					$validatecsscommand =
+					  $textwindow->getOpenFile(
+						-filetypes => $types,
+						-title =>
+'Where is the W3C Validate CSS (css-validate.jar) executable?'
+					  );
+				}
+				return unless $validatecsscommand;
+				$validatecsscommand = os_normal($validatecsscommand);
+				$validatecsscommand = dos_path($validatecsscommand) if $OS_WIN;
+
+			}
+		}
 	}
 	saveset();
 	$top->Busy( -recurse => 1 );
-	$name = 'errors.tmp';
+	if ( ($errorchecktype eq 'W3C Validate Remote' ) or ($errorchecktype eq 'W3C Validate CSS')) {
+		$name = 'validate.html';
+	} else {
+		$name = 'errors.tmp';
+	}
 	if ( open my $td, '>', $name ) {
 		my $count = 0;
 		my $index = '1.0';
@@ -7621,152 +7668,50 @@ sub errorcheckrun {    # Right now only runs Tidy
 		$lglobal{errorchecklistbox}->delete( '0', 'end' );
 	}
 	if ( $errorchecktype eq 'HTML Tidy' ) {
-		system(qq/$tidycommand $errorcheckoptions $name/);
-	}
-	$top->Unbusy;
-	unlink 'errors.tmp';
-	errorcheckpop_up($errorchecktype);
-}
-
-sub validaterun {
-	my $validateoptions = shift;
-	push @operations, ( localtime() . ' - W3C Validate' );
-	viewpagenums() if ( $lglobal{seepagenums} );
-	if ( $lglobal{validatepop} ) {
-		$lglobal{validatelistbox}->delete( '0', 'end' );
-	}
-	my ( $name, $fname, $path, $extension, @path );
-	$textwindow->focus;
-	update_indicators();
-	my $title = $top->cget('title');
-	if ( $title =~ /No File Loaded/ ) { savefile() }
-	my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
-	unless ($validatecommand) {
-		$validatecommand =
-		  $textwindow->getOpenFile(
-					 -filetypes => $types,
-					 -title => 'Where is the W3C Validate (onsgmls) executable?'
-		  );
-	}
-	return unless $validatecommand;
-	$validatecommand = os_normal($validatecommand);
-	$validatecommand = dos_path($validatecommand) if $OS_WIN;
-	saveset();
-	$top->Busy( -recurse => 1 );
-	if ( $validateoptions =~ /\-m/ ) {
-		$title =~ s/$window_title - //;    # FIXME: duped in gutcheck code
-		$title =~ s/edited - //;
-		$title = os_normal($title);
-		( $fname, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
-		$title = dos_path($title) if $OS_WIN;
-		$name  = $title;
-		$name  = "${path}onsgmls.$fname$extension";
+		system(qq/$tidycommand  -f errors.err -o null  $name/);
 	} else {
-		$name = 'validate.tmp';
-	}
-	if ( open my $td, '>', $name ) {
-		my $count = 0;
-		my $index = '1.0';
-		my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
-		while ( $textwindow->compare( $index, '<', 'end' ) ) {
-			my $end = $textwindow->index("$index  lineend +1c");
-			print $td $textwindow->get( $index, $end );
-			$index = $end;
-		}
-		close $td;
-	} else {
-		warn "Could not open temp file for writing. $!";
-		my $dialog = $top->Dialog(
-				-text => 'Could not write to the '
-				  . cwd()
-				  . ' directory. Check for write permission or space problems.',
-				-bitmap  => 'question',
-				-title   => 'Validate problem',
-				-buttons => [qw/OK/],
-		);
-		$dialog->Show;
-		return;
-	}
-	if ( $lglobal{validatepop} ) {
-		$lglobal{validatelistbox}->delete( '0', 'end' );
-	}
-	my $validatepath = dirname($validatecommand);
-	system(
+		if ( $errorchecktype eq 'W3C Validate' ) {
+			if ( $w3cremote == 0 ) {
+				my $validatepath = dirname($validatecommand);
+				system(
 qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
-	$top->Unbusy;
-	unlink 'validate.tmp';
-	errorcheckpop_up("W3C Validate");
-}
-
-sub validateremoterun {
-	unless ( eval { require WebService::Validator::HTML::W3C } ) {
-		print
-"Install the module WebService::Validator::HTML::W3C to do W3C Validation remotely. Defaulting to local validation.\n";
-		validaterun();
-		return;
-	}
-	push @operations, ( localtime() . ' - W3C Validate Remote' );
-	viewpagenums() if ( $lglobal{seepagenums} );
-	if ( $lglobal{validatepop} ) {
-		$lglobal{validatelistbox}->delete( '0', 'end' );
-	}
-	my ( $name, $fname, $path, $extension, @path );
-	$textwindow->focus;
-	update_indicators();
-	my $title = $top->cget('title');
-	if ( $title =~ /No File Loaded/ ) { savefile() }
-	my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
-	$top->Busy( -recurse => 1 );
-	$name = 'validate.html';
-
-	if ( open my $td, '>', $name ) {
-		my $count = 0;
-		my $index = '1.0';
-		my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
-		while ( $textwindow->compare( $index, '<', 'end' ) ) {
-			my $end = $textwindow->index("$index  lineend +1c");
-			print $td $textwindow->get( $index, $end );
-			$index = $end;
-		}
-		close $td;
-	} else {
-		warn "Could not open temp file for writing. $!";
-		my $dialog = $top->Dialog(
-				-text => 'Could not write to the '
-				  . cwd()
-				  . ' directory. Check for write permission or space problems.',
-				-bitmap  => 'question',
-				-title   => 'Validate problem',
-				-buttons => [qw/OK/],
-		);
-		$dialog->Show;
-		return;
-	}
-	if ( $lglobal{validatepop} ) {
-		$lglobal{validatelistbox}->delete( '0', 'end' );
-	}
-	my $validator = WebService::Validator::HTML::W3C->new( detailed => 1 );
-	if ( $validator->validate_file('./validate.html') ) {
-		if ( open my $td, '>', "errors.err" ) {
-			if ( $validator->is_valid ) {
-				print $td (" ");
-			} else {
-				foreach my $error ( @{ $validator->errors } ) {
-					printf $td (
-								 "W3C:validate.tmp:%s:%s:Eremote:%s\n",
-								 $error->line, $error->col, $error->msg
-					);
-				}
-				print $td "Remote response complete";
 			}
-			close $td;
+		} else {
+			if ( $errorchecktype eq 'W3C Validate Remote' ) {
+				my $validator =
+				  WebService::Validator::HTML::W3C->new( detailed => 1 );
+				if ( $validator->validate_file('./validate.html') ) {
+					if ( open my $td, '>', "errors.err" ) {
+						if ( $validator->is_valid ) {
+							print $td (" ");
+						} else {
+							foreach my $error ( @{ $validator->errors } ) {
+								printf $td (
+										  "W3C:validate.tmp:%s:%s:Eremote:%s\n",
+										  $error->line, $error->col, $error->msg
+								);
+							}
+							print $td "Remote response complete";
+						}
+						close $td;
+					}
+				} else {
+					printf( "Failed to validate: %s\n",
+							$validator->validator_error );
+				}
+			} else {
+				if($errorchecktype eq 'W3C Validate CSS') {
+					my $validatecsspath = dirname($validatecsscommand);
+					my $pwd = getcwd;
+					print "running css";
+					system(qq/java -jar $validatecsscommand file:$pwd\/$name > errors.err/);
+				}
+			}
 		}
-	} else {
-		printf( "Failed to validate: %s\n", $validator->validator_error );
 	}
 	$top->Unbusy;
-	unlink 'validate.html';
-	errorcheckpop_up("W3C Validate");
+	unlink $name;
+	errorcheckpop_up($errorchecktype);
 }
 
 sub validatecssremote {    # this does not work--does not  load the file
@@ -7834,77 +7779,6 @@ sub validatecssremote {    # this does not work--does not  load the file
 	errorcheckpop_up('W3C Validate CSS');
 }
 
-sub validatecssrun {
-	my $validatecssoptions = shift;
-	push @operations, ( localtime() . ' - W3C CSS Validate' );
-	viewpagenums() if ( $lglobal{seepagenums} );
-	if ( $lglobal{validatecsspop} ) {
-		$lglobal{validatecsslistbox}->delete( '0', 'end' );
-	}
-	my ( $name, $fname, $path, $extension, @path );
-	$textwindow->focus;
-	update_indicators();
-	my $title = $top->cget('title');
-	if ( $title =~ /No File Loaded/ ) { savefile() }
-	my $types = [ [ 'JAR file', [ '.jar', ] ], [ 'All Files', ['*'] ], ];
-	unless ($validatecsscommand) {
-		$validatecsscommand =
-		  $textwindow->getOpenFile(
-				-filetypes => $types,
-				-title =>
-				  'Where is the W3C Validate CSS (css-validate.jar) executable?'
-		  );
-	}
-	return unless $validatecsscommand;
-	$validatecsscommand = os_normal($validatecsscommand);
-	$validatecsscommand = dos_path($validatecsscommand) if $OS_WIN;
-	saveset();
-	$top->Busy( -recurse => 1 );
-	if ( $validatecssoptions =~ /\-m/ ) {
-		$title =~ s/$window_title - //;    # FIXME: duped in gutcheck code
-		$title =~ s/edited - //;
-		$title = os_normal($title);
-		( $fname, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
-		$title = dos_path($title) if $OS_WIN;
-		$name  = $title;
-		$name  = "${path}onsgmls.$fname$extension";
-	} else {
-		$name = 'validate.html';
-	}
-	if ( open my $td, '>', $name ) {
-		my $count = 0;
-		my $index = '1.0';
-		my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
-		while ( $textwindow->compare( $index, '<', 'end' ) ) {
-			my $end = $textwindow->index("$index  lineend +1c");
-			print $td $textwindow->get( $index, $end );
-			$index = $end;
-		}
-		close $td;
-	} else {
-		warn "Could not open temp file for writing. $!";
-		my $dialog = $top->Dialog(
-				-text => 'Could not write to the '
-				  . cwd()
-				  . ' directory. Check for write permission or space problems.',
-				-bitmap  => 'question',
-				-title   => 'CSS Validate problem',
-				-buttons => [qw/OK/],
-		);
-		$dialog->Show;
-		return;
-	}
-	if ( $lglobal{validatecsspop} ) {
-		$lglobal{validatecsslistbox}->delete( '0', 'end' );
-	}
-	my $validatecsspath = dirname($validatecsscommand);
-
-	my $pwd = getcwd;
-	system(qq/java -jar $validatecsscommand file:$pwd\/$name > errors.err/);
-	$top->Unbusy;
-	unlink 'validate.html';
-	errorcheckpop_up("W3C Validate CSS");
-}
 
 my @gsopt;
 
@@ -9323,12 +9197,14 @@ sub BindMouseWheel {
 	} else {
 		$w->bind(
 			'<4>' => sub {
-				$_[0]->yview( 'scroll', -3, 'units' ) unless $Tk::strictMotif;
+				$_[0]->yview( 'scroll', -3, 'units' )
+				  unless $Tk::strictMotif;
 			}
 		);
 		$w->bind(
 			'<5>' => sub {
-				$_[0]->yview( 'scroll', +3, 'units' ) unless $Tk::strictMotif;
+				$_[0]->yview( 'scroll', +3, 'units' )
+				  unless $Tk::strictMotif;
 			}
 		);
 	}
@@ -9527,8 +9403,10 @@ sub tblspace {
 	} else {
 		$textwindow->addGlobStart;
 		my $cursor = $textwindow->index('insert');
-		my ( $erow, $ecol ) = split( /\./, ( $textwindow->index('tblend') ) );
-		my ( $srow, $scol ) = split( /\./, ( $textwindow->index('tblstart') ) );
+		my ( $erow, $ecol ) =
+		  split( /\./, ( $textwindow->index('tblend') ) );
+		my ( $srow, $scol ) =
+		  split( /\./, ( $textwindow->index('tblstart') ) );
 		my $tline = $textwindow->get( "$srow.0", "$srow.end" );
 		$tline =~ y/|/ /c;
 		while ( $erow >= $srow ) {
@@ -9552,8 +9430,10 @@ sub tblcompress {
 	} else {
 		$textwindow->addGlobStart;
 		my $cursor = $textwindow->index('insert');
-		my ( $erow, $ecol ) = split( /\./, ( $textwindow->index('tblend') ) );
-		my ( $srow, $scol ) = split( /\./, ( $textwindow->index('tblstart') ) );
+		my ( $erow, $ecol ) =
+		  split( /\./, ( $textwindow->index('tblend') ) );
+		my ( $srow, $scol ) =
+		  split( /\./, ( $textwindow->index('tblstart') ) );
 		while ( $erow >= $srow ) {
 			if ( $textwindow->get( "$erow.0", "$erow.end" ) =~ /^[ |]*$/ ) {
 				$textwindow->delete( "$erow.0 -1c", "$erow.end" );
@@ -9650,7 +9530,8 @@ sub coladjust {
 							   ''
 			);
 			unless ($blankline) {
-				$blankline = $_ if ( ( $_ =~ /^[ |]+$/ ) && ( $_ =~ /\|/ ) );
+				$blankline = $_
+				  if ( ( $_ =~ /^[ |]+$/ ) && ( $_ =~ /\|/ ) );
 			}
 			$cell .= ' ';
 			$cell =~ s/^\s+$//;
@@ -10407,8 +10288,9 @@ sub initialize {
 	$lglobal{checkcolor} = ($OS_WIN) ? 'white' : $activecolor;
 	my $scroll_gif =
 'R0lGODlhCAAQAIAAAAAAAP///yH5BAEAAAEALAAAAAAIABAAAAIUjAGmiMutopz0pPgwk7B6/3SZphQAOw==';
-	$lglobal{scrollgif} = $top->Photo( -data   => $scroll_gif,
-									   -format => 'gif', );
+	$lglobal{scrollgif} =
+	  $top->Photo( -data   => $scroll_gif,
+				   -format => 'gif', );
 }
 
 sub textbindings {
@@ -11221,12 +11103,14 @@ sub pageadjust {
 					$num
 				],
 			)->grid( -row => $row, -column => 4, -padx => 2 );
-			$pagetrack{$num}[5] =
-			  $frame1->Entry(
-					   -width    => 8,
-					   -validate => 'all',
-					   -vcmd => sub { return 0 if ( $_[0] =~ /\D/ ); return 1; }
-			  )->grid( -row => $row, -column => 5, -padx => 2 );
+			$pagetrack{$num}[5] = $frame1->Entry(
+				-width    => 8,
+				-validate => 'all',
+				-vcmd     => sub {
+					return 0 if ( $_[0] =~ /\D/ );
+					return 1;
+				}
+			)->grid( -row => $row, -column => 5, -padx => 2 );
 			if ( $page eq $pages[0] ) {
 				$pagetrack{$num}[5]->insert( 'end', $num );
 			}
@@ -11274,18 +11158,20 @@ sub pnumadjust {
 		$lglobal{pnumpop}->geometry( $lglobal{pnpopgoem} )
 		  if $lglobal{pnpopgoem};
 		my $frame2 = $lglobal{pnumpop}->Frame->pack( -pady => 5 );
-		my $upbutton = $frame2->Button(
-										-activebackground => $activecolor,
-										-command          => \&pmoveup,
-										-text             => 'Move Up',
-										-width            => 10
-		)->grid( -row => 1, -column => 2 );
-		my $leftbutton = $frame2->Button(
-										  -activebackground => $activecolor,
-										  -command          => \&pmoveleft,
-										  -text             => 'Move Left',
-										  -width            => 10
-		)->grid( -row => 2, -column => 1 );
+		my $upbutton =
+		  $frame2->Button(
+						   -activebackground => $activecolor,
+						   -command          => \&pmoveup,
+						   -text             => 'Move Up',
+						   -width            => 10
+		  )->grid( -row => 1, -column => 2 );
+		my $leftbutton =
+		  $frame2->Button(
+						   -activebackground => $activecolor,
+						   -command          => \&pmoveleft,
+						   -text             => 'Move Left',
+						   -width            => 10
+		  )->grid( -row => 2, -column => 1 );
 		$lglobal{pagenumentry} =
 		  $frame2->Entry(
 						  -background => 'yellow',
@@ -11301,25 +11187,28 @@ sub pnumadjust {
 						   -text             => 'Move Right',
 						   -width            => 10
 		  )->grid( -row => 2, -column => 3 );
-		my $downbutton = $frame2->Button(
-										  -activebackground => $activecolor,
-										  -command          => \&pmovedown,
-										  -text             => 'Move Down',
-										  -width            => 10
-		)->grid( -row => 3, -column => 2 );
+		my $downbutton =
+		  $frame2->Button(
+						   -activebackground => $activecolor,
+						   -command          => \&pmovedown,
+						   -text             => 'Move Down',
+						   -width            => 10
+		  )->grid( -row => 3, -column => 2 );
 		my $frame3 = $lglobal{pnumpop}->Frame->pack( -pady => 4 );
-		my $prevbutton = $frame3->Button(
-										  -activebackground => $activecolor,
-										  -command          => \&pgprevious,
-										  -text  => 'Previous Marker',
-										  -width => 14
-		)->grid( -row => 1, -column => 1 );
-		my $nextbutton = $frame3->Button(
-										  -activebackground => $activecolor,
-										  -command          => \&pgnext,
-										  -text             => 'Next Marker',
-										  -width            => 14
-		)->grid( -row => 1, -column => 2 );
+		my $prevbutton =
+		  $frame3->Button(
+						   -activebackground => $activecolor,
+						   -command          => \&pgprevious,
+						   -text             => 'Previous Marker',
+						   -width            => 14
+		  )->grid( -row => 1, -column => 1 );
+		my $nextbutton =
+		  $frame3->Button(
+						   -activebackground => $activecolor,
+						   -command          => \&pgnext,
+						   -text             => 'Next Marker',
+						   -width            => 14
+		  )->grid( -row => 1, -column => 2 );
 		my $frame4 = $lglobal{pnumpop}->Frame->pack( -pady => 5 );
 		$frame4->Label( -text => 'Adjust Page Offset', )
 		  ->grid( -row => 1, -column => 1 );
@@ -11793,8 +11682,12 @@ sub escape_problems {
 
 sub utflabel_bind {
 	my ( $widget, $block, $start, $end ) = @_;
-	$widget->bind( '<Enter>',
-				   sub { $widget->configure( -background => $activecolor ); } );
+	$widget->bind(
+		'<Enter>',
+		sub {
+			$widget->configure( -background => $activecolor );
+		}
+	);
 	$widget->bind( '<Leave>',
 				   sub { $widget->configure( -background => 'white' ); } );
 	$widget->bind(
@@ -11807,8 +11700,12 @@ sub utflabel_bind {
 
 sub utfchar_bind {
 	my $widget = shift;
-	$widget->bind( '<Enter>',
-				   sub { $widget->configure( -background => $activecolor ); } );
+	$widget->bind(
+		'<Enter>',
+		sub {
+			$widget->configure( -background => $activecolor );
+		}
+	);
 	$widget->bind( '<Leave>',
 				   sub { $widget->configure( -background => 'white' ) } );
 	$widget->bind(
@@ -13165,8 +13062,9 @@ sub savefile {    # Determine which save routine to use and then use it
 			return;
 		}
 		my ($name);
-		$name = $textwindow->getSaveFile( -title      => 'Save As',
-										  -initialdir => $globallastpath );
+		$name =
+		  $textwindow->getSaveFile( -title      => 'Save As',
+									-initialdir => $globallastpath );
 		if ( defined($name) and length($name) ) {
 			$textwindow->SaveUTF($name);
 			$name = os_normal($name);
@@ -13716,9 +13614,10 @@ sub searchpopup {
 																-padx => 2,
 																-anchor => 'w'
 			);
-			$aacheck = $sf6->Checkbutton(
-										  -text     => 'Auto Advance',
-										  -variable => \$lglobal{regaa},
+			$aacheck =
+			  $sf6->Checkbutton(
+								 -text     => 'Auto Advance',
+								 -variable => \$lglobal{regaa},
 			  )->pack(
 					   -side   => 'left',
 					   -pady   => 5,
@@ -13925,11 +13824,12 @@ sub spellchecker {    # Set up spell check window
 		my $spf2 =
 		  $lglobal{spellpopup}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
-		my $changebutton = $spf2->Button(
-										  -activebackground => $activecolor,
-										  -command => sub { spellreplace() },
-										  -text    => 'Change',
-										  -width   => 14
+		my $changebutton =
+		  $spf2->Button(
+						 -activebackground => $activecolor,
+						 -command          => sub { spellreplace() },
+						 -text             => 'Change',
+						 -width            => 14
 		  )->pack(
 				   -side   => 'left',
 				   -pady   => 2,
@@ -13937,11 +13837,13 @@ sub spellchecker {    # Set up spell check window
 				   -anchor => 'nw'
 		  );
 		my $ignorebutton = $spf2->Button(
-				-activebackground => $activecolor,
-				-command =>
-				  sub { shift @{ $lglobal{misspelledlist} }; spellchecknext() },
-				-text  => 'Skip <Ctrl+s>',
-				-width => 14
+			-activebackground => $activecolor,
+			-command          => sub {
+				shift @{ $lglobal{misspelledlist} };
+				spellchecknext();
+			},
+			-text  => 'Skip <Ctrl+s>',
+			-width => 14
 		  )->pack(
 				   -side   => 'left',
 				   -pady   => 2,
@@ -14346,7 +14248,8 @@ sub nextblock {
 			  if $searchstartindex;
 		}
 	}
-	$textwindow->markSet( 'insert', $searchstartindex ) if $searchstartindex;
+	$textwindow->markSet( 'insert', $searchstartindex )
+	  if $searchstartindex;
 	$textwindow->see($searchstartindex) if $searchstartindex;
 	$textwindow->update;
 	$textwindow->focus;
@@ -14378,56 +14281,64 @@ sub brackets {
 									 -value       => '[\(\)]',
 									 -text        => '(  )',
 		)->grid( -row => 1, -column => 1 );
-		my $ssel = $frame->Radiobutton(
-										-variable    => \$lglobal{brsel},
-										-selectcolor => $lglobal{checkcolor},
-										-value       => '[\[\]]',
-										-text        => '[  ]',
-		)->grid( -row => 1, -column => 2 );
-		my $csel = $frame->Radiobutton(
-										-variable    => \$lglobal{brsel},
-										-selectcolor => $lglobal{checkcolor},
-										-value       => '[\{\}]',
-										-text        => '{  }',
-		)->grid( -row => 1, -column => 3, -pady => 5 );
-		my $asel = $frame->Radiobutton(
-										-variable    => \$lglobal{brsel},
-										-selectcolor => $lglobal{checkcolor},
-										-value       => '[<>]',
-										-text        => '<  >',
-		)->grid( -row => 1, -column => 4, -pady => 5 );
+		my $ssel =
+		  $frame->Radiobutton(
+							   -variable    => \$lglobal{brsel},
+							   -selectcolor => $lglobal{checkcolor},
+							   -value       => '[\[\]]',
+							   -text        => '[  ]',
+		  )->grid( -row => 1, -column => 2 );
+		my $csel =
+		  $frame->Radiobutton(
+							   -variable    => \$lglobal{brsel},
+							   -selectcolor => $lglobal{checkcolor},
+							   -value       => '[\{\}]',
+							   -text        => '{  }',
+		  )->grid( -row => 1, -column => 3, -pady => 5 );
+		my $asel =
+		  $frame->Radiobutton(
+							   -variable    => \$lglobal{brsel},
+							   -selectcolor => $lglobal{checkcolor},
+							   -value       => '[<>]',
+							   -text        => '<  >',
+		  )->grid( -row => 1, -column => 4, -pady => 5 );
 		my $frame1 = $lglobal{brkpop}->Frame->pack;
-		my $dsel = $frame1->Radiobutton(
-										 -variable    => \$lglobal{brsel},
-										 -selectcolor => $lglobal{checkcolor},
-										 -value       => '\/\*|\*\/',
-										 -text        => '/* */',
-		)->grid( -row => 1, -column => 1, -pady => 5 );
-		my $nsel = $frame1->Radiobutton(
-										 -variable    => \$lglobal{brsel},
-										 -selectcolor => $lglobal{checkcolor},
-										 -value       => '\/#|#\/',
-										 -text        => '/# #/',
-		)->grid( -row => 1, -column => 2, -pady => 5 );
-		my $stsel = $frame1->Radiobutton(
-										  -variable    => \$lglobal{brsel},
-										  -selectcolor => $lglobal{checkcolor},
-										  -value       => '\/\$|\$\/',
-										  -text        => '/$ $/',
-		)->grid( -row => 1, -column => 3, -pady => 5 );
+		my $dsel =
+		  $frame1->Radiobutton(
+								-variable    => \$lglobal{brsel},
+								-selectcolor => $lglobal{checkcolor},
+								-value       => '\/\*|\*\/',
+								-text        => '/* */',
+		  )->grid( -row => 1, -column => 1, -pady => 5 );
+		my $nsel =
+		  $frame1->Radiobutton(
+								-variable    => \$lglobal{brsel},
+								-selectcolor => $lglobal{checkcolor},
+								-value       => '\/#|#\/',
+								-text        => '/# #/',
+		  )->grid( -row => 1, -column => 2, -pady => 5 );
+		my $stsel =
+		  $frame1->Radiobutton(
+								-variable    => \$lglobal{brsel},
+								-selectcolor => $lglobal{checkcolor},
+								-value       => '\/\$|\$\/',
+								-text        => '/$ $/',
+		  )->grid( -row => 1, -column => 3, -pady => 5 );
 		my $frame3 = $lglobal{brkpop}->Frame->pack;
-		my $psel = $frame3->Radiobutton(
-										 -variable    => \$lglobal{brsel},
-										 -selectcolor => $lglobal{checkcolor},
-										 -value       => '^\/[Pp]|[Pp]\/',
-										 -text        => '/p p/',
-		)->grid( -row => 2, -column => 1, -pady => 5 );
-		my $qusel = $frame3->Radiobutton(
-										  -variable    => \$lglobal{brsel},
-										  -selectcolor => $lglobal{checkcolor},
-										  -value       => '«|»',
-										  -text        => 'Angle quotes « »',
-		)->grid( -row => 2, -column => 2, -pady => 5 );
+		my $psel =
+		  $frame3->Radiobutton(
+								-variable    => \$lglobal{brsel},
+								-selectcolor => $lglobal{checkcolor},
+								-value       => '^\/[Pp]|[Pp]\/',
+								-text        => '/p p/',
+		  )->grid( -row => 2, -column => 1, -pady => 5 );
+		my $qusel =
+		  $frame3->Radiobutton(
+								-variable    => \$lglobal{brsel},
+								-selectcolor => $lglobal{checkcolor},
+								-value       => '«|»',
+								-text        => 'Angle quotes « »',
+		  )->grid( -row => 2, -column => 2, -pady => 5 );
 
 		my $gqusel =
 		  $frame3->Radiobutton(
@@ -14438,18 +14349,21 @@ sub brackets {
 		  )->grid( -row => 3, -column => 2 );
 
 		my $frame2 = $lglobal{brkpop}->Frame->pack;
-		my $brsearchbt = $frame2->Button(
-										  -activebackground => $activecolor,
-										  -text             => 'Search',
-										  -command          => \&brsearch,
-										  -width            => 10,
-		)->grid( -row => 1, -column => 2, -pady => 5 );
+		my $brsearchbt =
+		  $frame2->Button(
+						   -activebackground => $activecolor,
+						   -text             => 'Search',
+						   -command          => \&brsearch,
+						   -width            => 10,
+		  )->grid( -row => 1, -column => 2, -pady => 5 );
 		my $brnextbt = $frame2->Button(
 			-activebackground => $activecolor,
 			-text             => 'Next',
 			-command          => sub {
-				shift @{ $lglobal{brbrackets} } if @{ $lglobal{brbrackets} };
-				shift @{ $lglobal{brindicies} } if @{ $lglobal{brindicies} };
+				shift @{ $lglobal{brbrackets} }
+				  if @{ $lglobal{brbrackets} };
+				shift @{ $lglobal{brindicies} }
+				  if @{ $lglobal{brindicies} };
 				$textwindow->bell
 				  unless ( $lglobal{brbrackets}[1] || $nobell );
 				return unless $lglobal{brbrackets}[1];
@@ -14585,11 +14499,12 @@ sub hilite {
 		$textwindow->tagRemove( 'quotemark', '1.0', 'end' );
 		my $length;
 		while ($lastindex) {
-			$index = $textwindow->search(
-										  '-regexp',
-										  -count => \$length,
-										  '--', $mark, $lastindex, $thisblockend
-			);
+			$index =
+			  $textwindow->search(
+								   '-regexp',
+								   -count => \$length,
+								   '--', $mark, $lastindex, $thisblockend
+			  );
 			$textwindow->tagAdd( 'quotemark', $index,
 								 $index . ' +' . $length . 'c' )
 			  if $index;
@@ -15349,12 +15264,13 @@ sub asciipopup {
 		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'n' );
 		my $f1 =
 		  $lglobal{asciipop}->Frame->pack( -side => 'top', -anchor => 'n' );
-		my $leftjust = $f1->Radiobutton(
-										 -text        => 'left justified',
-										 -selectcolor => $lglobal{checkcolor},
-										 -variable => \$lglobal{asciijustify},
-										 -value    => 'left',
-		)->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
+		my $leftjust =
+		  $f1->Radiobutton(
+							-text        => 'left justified',
+							-selectcolor => $lglobal{checkcolor},
+							-variable    => \$lglobal{asciijustify},
+							-value       => 'left',
+		  )->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
 		my $centerjust =
 		  $f1->Radiobutton(
 							-text        => 'centered',
@@ -15362,17 +15278,19 @@ sub asciipopup {
 							-variable    => \$lglobal{asciijustify},
 							-value       => 'center',
 		  )->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
-		my $rightjust = $f1->Radiobutton(
-										  -selectcolor => $lglobal{checkcolor},
-										  -text        => 'right justified',
-										  -variable => \$lglobal{asciijustify},
-										  -value    => 'right',
-		)->grid( -row => 2, -column => 3, -padx => 1, -pady => 2 );
-		my $asciiw = $f1->Checkbutton(
-									   -variable    => \$lglobal{asciiwrap},
-									   -selectcolor => $lglobal{checkcolor},
-									   -text        => 'Don\'t Rewrap'
-		)->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
+		my $rightjust =
+		  $f1->Radiobutton(
+							-selectcolor => $lglobal{checkcolor},
+							-text        => 'right justified',
+							-variable    => \$lglobal{asciijustify},
+							-value       => 'right',
+		  )->grid( -row => 2, -column => 3, -padx => 1, -pady => 2 );
+		my $asciiw =
+		  $f1->Checkbutton(
+							-variable    => \$lglobal{asciiwrap},
+							-selectcolor => $lglobal{checkcolor},
+							-text        => 'Don\'t Rewrap'
+		  )->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
 		my $gobut = $f1->Button(
 								 -activebackground => $activecolor,
 								 -command          => sub { asciibox() },
@@ -16370,31 +16288,34 @@ sub separatorpopup {
 		$lglobal{pagepop}->title('Page separators');
 		my $sf1 =
 		  $lglobal{pagepop}->Frame->pack( -side => 'top', -anchor => 'n' );
-		my $joinbutton = $sf1->Button(
-									   -activebackground => $activecolor,
-									   -command   => sub { joinlines('j') },
-									   -text      => 'Join Lines',
-									   -underline => 0,
-									   -width     => 18
-		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-		my $joinhybutton = $sf1->Button(
-										 -activebackground => $activecolor,
-										 -command   => sub { joinlines('k') },
-										 -text      => 'Join, Keep Hyphen',
-										 -underline => 6,
-										 -width     => 18
-		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+		my $joinbutton =
+		  $sf1->Button(
+						-activebackground => $activecolor,
+						-command          => sub { joinlines('j') },
+						-text             => 'Join Lines',
+						-underline        => 0,
+						-width            => 18
+		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+		my $joinhybutton =
+		  $sf1->Button(
+						-activebackground => $activecolor,
+						-command          => sub { joinlines('k') },
+						-text             => 'Join, Keep Hyphen',
+						-underline        => 6,
+						-width            => 18
+		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
 
 		my $sf2 =
 		  $lglobal{pagepop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
-		my $blankbutton = $sf2->Button(
-										-activebackground => $activecolor,
-										-command   => sub { joinlines('l') },
-										-text      => 'Blank Line',
-										-underline => 6,
-										-width     => 12
-		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+		my $blankbutton =
+		  $sf2->Button(
+						-activebackground => $activecolor,
+						-command          => sub { joinlines('l') },
+						-text             => 'Blank Line',
+						-underline        => 6,
+						-width            => 12
+		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
 
 		my $sectjoinbutton =
 		  $sf2->Button(
@@ -16404,13 +16325,14 @@ sub separatorpopup {
 						-underline        => 7,
 						-width            => 12
 		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-		my $chjoinbutton = $sf2->Button(
-										 -activebackground => $activecolor,
-										 -command   => sub { joinlines('h') },
-										 -text      => 'New Chapter',
-										 -underline => 5,
-										 -width     => 12
-		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+		my $chjoinbutton =
+		  $sf2->Button(
+						-activebackground => $activecolor,
+						-command          => sub { joinlines('h') },
+						-text             => 'New Chapter',
+						-underline        => 5,
+						-width            => 12
+		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
 		my $sf3 =
 		  $lglobal{pagepop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
@@ -16433,20 +16355,22 @@ sub separatorpopup {
 		my $sf4 =
 		  $lglobal{pagepop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
-		my $refreshbutton = $sf4->Button(
-										  -activebackground => $activecolor,
-										  -command   => sub { convertfilnum() },
-										  -text      => 'Refresh',
-										  -underline => 0,
-										  -width     => 8
-		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-		my $undobutton = $sf4->Button(
-									   -activebackground => $activecolor,
-									   -command          => sub { undojoin() },
-									   -text             => 'Undo',
-									   -underline        => 0,
-									   -width            => 8
-		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+		my $refreshbutton =
+		  $sf4->Button(
+						-activebackground => $activecolor,
+						-command          => sub { convertfilnum() },
+						-text             => 'Refresh',
+						-underline        => 0,
+						-width            => 8
+		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+		my $undobutton =
+		  $sf4->Button(
+						-activebackground => $activecolor,
+						-command          => sub { undojoin() },
+						-text             => 'Undo',
+						-underline        => 0,
+						-width            => 8
+		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
 		my $delbutton = $sf4->Button(
 									  -activebackground => $activecolor,
 									  -command   => sub { joinlines('d') },
@@ -16454,12 +16378,13 @@ sub separatorpopup {
 									  -underline => 0,
 									  -width     => 8
 		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-		my $phelpbutton = $sf4->Button(
-										-activebackground => $activecolor,
-										-command => sub { phelppopup() },
-										-text    => '?',
-										-width   => 1
-		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+		my $phelpbutton =
+		  $sf4->Button(
+						-activebackground => $activecolor,
+						-command          => sub { phelppopup() },
+						-text             => '?',
+						-width            => 1
+		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
 		$lglobal{jsemiautomatic} = 1;
 	}
 	$lglobal{pagepop}->protocol(
@@ -16478,8 +16403,12 @@ sub separatorpopup {
 	$lglobal{pagepop}->Tk::bind( '<t>' => sub { joinlines('t') } );
 	$lglobal{pagepop}->Tk::bind( '<?>' => sub { phelppopup('?') } );
 	$lglobal{pagepop}->Tk::bind( '<r>' => \&convertfilnum );
-	$lglobal{pagepop}
-	  ->Tk::bind( '<v>' => sub { openpng(); $lglobal{pagepop}->raise; } );
+	$lglobal{pagepop}->Tk::bind(
+		'<v>' => sub {
+			openpng();
+			$lglobal{pagepop}->raise;
+		}
+	);
 	$lglobal{pagepop}->Tk::bind( '<u>' => \&undojoin );
 	$lglobal{pagepop}->Tk::bind(
 		'<a>' => sub {
@@ -16711,10 +16640,13 @@ sub footnotepop {
 							  -text     => 'Center on Search'
 		)->grid( -row => 7, -column => 1, -padx => 3, -pady => 4 );
 		$frame2->Button(
-				-activebackground => $activecolor,
-				-command => sub { $lglobal{fnsecondpass} = 0; footnotefixup() },
-				-text    => 'First Pass',
-				-width   => 14
+			-activebackground => $activecolor,
+			-command          => sub {
+				$lglobal{fnsecondpass} = 0;
+				footnotefixup();
+			},
+			-text  => 'First Pass',
+			-width => 14
 		)->grid( -row => 7, -column => 2, -padx => 2, -pady => 4 );
 		my $fnrb1 = $frame2->Radiobutton(
 			-text        => 'Inline',
@@ -16930,11 +16862,12 @@ sub markpopup {    # FIXME: Rename html_popup
 				   -sticky => 'w'
 		  );
 		$pageanchors->select;
-		my $fractions = $f0->Checkbutton(
-										  -variable => \$lglobal{autofraction},
-										  -selectcolor => $lglobal{checkcolor},
-										  -text        => 'Convert Fractions',
-										  -anchor      => 'w',
+		my $fractions =
+		  $f0->Checkbutton(
+							-variable    => \$lglobal{autofraction},
+							-selectcolor => $lglobal{checkcolor},
+							-text        => 'Convert Fractions',
+							-anchor      => 'w',
 		  )->grid(
 				   -row    => 2,
 				   -column => 3,
@@ -17091,12 +17024,13 @@ sub markpopup {    # FIXME: Rename html_popup
 							-variable    => \$lglobal{liststyle},
 							-value       => 'ol',
 		  )->grid( -row => 1, -column => 2 );
-		my $autolbutton = $f4->Button(
-							 -activebackground => $activecolor,
-							 -command => sub { autolist(); $textwindow->focus },
-							 -text    => 'Auto List',
-							 -width   => 16
-		)->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
+		my $autolbutton =
+		  $f4->Button(
+					   -activebackground => $activecolor,
+					   -command => sub { autolist(); $textwindow->focus },
+					   -text    => 'Auto List',
+					   -width   => 16
+		  )->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
 		$f4->Checkbutton(
 						  -text     => 'ML',
 						  -variable => \$lglobal{list_multiline},
@@ -17110,12 +17044,13 @@ sub markpopup {    # FIXME: Rename html_popup
 							-variable    => \$lglobal{tablecellalign},
 							-value       => ' align="left"',
 		  )->grid( -row => 2, -column => 1 );
-		my $censelect = $f4->Radiobutton(
-										 -text        => 'center',
-										 -selectcolor => $lglobal{checkcolor},
-										 -variable => \$lglobal{tablecellalign},
-										 -value    => ' align="center"',
-		)->grid( -row => 2, -column => 2 );
+		my $censelect =
+		  $f4->Radiobutton(
+							-text        => 'center',
+							-selectcolor => $lglobal{checkcolor},
+							-variable    => \$lglobal{tablecellalign},
+							-value       => ' align="center"',
+		  )->grid( -row => 2, -column => 2 );
 		my $rghtselect =
 		  $f4->Radiobutton(
 							-text        => 'right',
@@ -17222,7 +17157,7 @@ sub markpopup {    # FIXME: Rename html_popup
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				errorcheckrun( 'HTML Tidy', '-f errors.err -o null' );
+				errorcheckrun('HTML Tidy');
 				unlink 'null' if ( -e 'null' );
 			},
 			-text  => 'HTML Tidy',
@@ -17231,8 +17166,8 @@ sub markpopup {    # FIXME: Rename html_popup
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				if   ($w3cremote) { validateremoterun(); }
-				else              { validaterun('-f errors.err -o null'); }
+				if   ($w3cremote) { errorcheckrun('W3C Validate Remote') }
+				else              { errorcheckrun('W3C Validate'); }
 				unlink 'null' if ( -e 'null' );
 			},
 			-text  => 'W3C Validate',
@@ -17241,7 +17176,7 @@ sub markpopup {    # FIXME: Rename html_popup
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				validatecssrun('');
+				errorcheckrun('W3C Validate CSS'); #validatecssrun('');
 				unlink 'null' if ( -e 'null' );
 			},
 			-text  => 'W3C Validate CSS',
@@ -17764,16 +17699,18 @@ sub text_convert_options {
 
 	my $bold_frame =
 	  $options->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
-	my $bold_label = $bold_frame->Label(
-										 -width => 25,
-										 -text  => "Bold Replace Character"
-	)->pack( -side => 'left' );
-	my $bold_entry = $bold_frame->Entry(
-										 -width        => 6,
-										 -background   => 'white',
-										 -relief       => 'sunken',
-										 -textvariable => \$bold_char,
-	)->pack( -side => 'left' );
+	my $bold_label =
+	  $bold_frame->Label(
+						  -width => 25,
+						  -text  => "Bold Replace Character"
+	  )->pack( -side => 'left' );
+	my $bold_entry =
+	  $bold_frame->Entry(
+						  -width        => 6,
+						  -background   => 'white',
+						  -relief       => 'sunken',
+						  -textvariable => \$bold_char,
+	  )->pack( -side => 'left' );
 	$options->Show;
 	saveset();
 }
@@ -18024,16 +17961,18 @@ sub setmargins {
 	)->pack( -side => 'left' );
 	my $didntframe =
 	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
-	my $didntlabel = $didntframe->Label(
-									-width => 25,
-									-text => 'Default Indent for /*  */ Blocks',
-	)->pack( -side => 'left' );
-	my $didntmentry = $didntframe->Entry(
-										  -width        => 6,
-										  -background   => 'white',
-										  -relief       => 'sunken',
-										  -textvariable => \$defaultindent,
-	)->pack( -side => 'left' );
+	my $didntlabel =
+	  $didntframe->Label(
+						  -width => 25,
+						  -text  => 'Default Indent for /*  */ Blocks',
+	  )->pack( -side => 'left' );
+	my $didntmentry =
+	  $didntframe->Entry(
+						  -width        => 6,
+						  -background   => 'white',
+						  -relief       => 'sunken',
+						  -textvariable => \$defaultindent,
+	  )->pack( -side => 'left' );
 	$getmargins->Icon( -image => $icon );
 	$getmargins->Show;
 
@@ -18160,11 +18099,12 @@ sub setbrowser {
 "Enter the complete path to the executable.\n(Under Windows, you can use 'start' to use the default handler.\n"
 		. "Under OSX, 'open' will start the default browser.)" )
 	  ->grid( -row => 0, -column => 1, -columnspan => 2 );
-	my $browserentry = $browsepop->Entry(
-										  -width        => 60,
-										  -background   => 'white',
-										  -textvariable => $globalbrowserstart,
-	)->grid( -row => 1, -column => 1, -columnspan => 2, -pady => 3 );
+	my $browserentry =
+	  $browsepop->Entry(
+						 -width        => 60,
+						 -background   => 'white',
+						 -textvariable => $globalbrowserstart,
+	  )->grid( -row => 1, -column => 1, -columnspan => 2, -pady => 3 );
 	my $button_ok = $browsepop->Button(
 		-activebackground => $activecolor,
 		-text             => 'OK',
@@ -18243,12 +18183,13 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 		#}
 
 		$lglobal{toptool} = $top->ToolBar( -side => $toolside, -close => '30' );
-		$lglobal{toolfont} = $top->Font(
-										 -family => 'Times',
-										 -slant  => 'italic',
-										 -weight => 'bold',
-										 -size   => 9
-		);
+		$lglobal{toolfont} =
+		  $top->Font(
+					  -family => 'Times',
+					  -slant  => 'italic',
+					  -weight => 'bold',
+					  -size   => 9
+		  );
 		$lglobal{toptool}->separator;
 		$lglobal{toptool}->ToolButton(
 									   -image   => 'fileopen16',
@@ -18814,15 +18755,16 @@ sub hotkeyshelp {
 										 -expand => 'yes',
 										 -fill   => 'both'
 		  );
-		my $rotextbox = $frame->Scrolled(
-										  'ROText',
-										  -scrollbars => 'se',
-										  -background => 'white',
-										  -font       => '{Helvetica} 10',
-										  -width      => 80,
-										  -height     => 25,
-										  -wrap       => 'none',
-		)->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
+		my $rotextbox =
+		  $frame->Scrolled(
+							'ROText',
+							-scrollbars => 'se',
+							-background => 'white',
+							-font       => '{Helvetica} 10',
+							-width      => 80,
+							-height     => 25,
+							-wrap       => 'none',
+		  )->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
 		drag($rotextbox);
 		$rotextbox->focus;
 		$rotextbox->insert(    #FIXME: Make this a here doc.
@@ -19396,8 +19338,12 @@ sub greekpopup {
 				   -anchor => 'nw',
 				   -pady   => 5
 		  );
-		$lglobal{grtext}
-		  ->bind( '<FocusIn>', sub { $lglobal{hasfocus} = $lglobal{grtext} } );
+		$lglobal{grtext}->bind(
+			'<FocusIn>',
+			sub {
+				$lglobal{hasfocus} = $lglobal{grtext};
+			}
+		);
 		drag( $lglobal{grtext} );
 		if ( $Tk::version ge 8.4 ) {
 			my $bframe2 =
