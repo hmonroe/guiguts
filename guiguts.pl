@@ -65,6 +65,7 @@ use Tk::widgets qw{Balloon
 use Guiguts::LineNumberText;
 use Guiguts::TextUnicode;
 use Guiguts::Greekgifs;
+use Guiguts::HTMLConvert;
 
 # Ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
@@ -5743,7 +5744,7 @@ sub htmlautoconvert {
 	}
 	return if ( $lglobal{global_filename} =~ /No File Loaded/ );
 
-	htmlbackup();
+	htmlbackup($textwindow);
 
 	html_convert_codepage();
 
@@ -5941,7 +5942,7 @@ sub htmlautoconvert {
 		html_convert_superscripts( $selection, $step );
 
 		# Thought break conversion
-		html_convert_tb( $selection, $step );
+	html_convert_tb( $textwindow,$selection, $step );
 
 	 #    if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ )
 	 #        {
@@ -12064,18 +12065,18 @@ sub dos_path {
 #}
 
 ## HTML processing routines
-sub htmlbackup {
-	$textwindow->Busy;
-	my $savefn = $lglobal{global_filename};
-	$lglobal{global_filename} =~ s/\.[^\.]*?$//;
-	my $newfn = $lglobal{global_filename} . '-htmlbak.txt';
-	working("Saving backup of file\nto $newfn");
-	$textwindow->SaveUTF($newfn);
-	$lglobal{global_filename} = $newfn;
-	_bin_save();
-	$lglobal{global_filename} = $savefn;
-	$textwindow->FileName($savefn);
-}
+#sub htmlbackup {
+#	$textwindow->Busy;
+#	my $savefn = $lglobal{global_filename};
+#	$lglobal{global_filename} =~ s/\.[^\.]*?$//;
+#	my $newfn = $lglobal{global_filename} . '-htmlbak.txt';
+#	working("Saving backup of file\nto $newfn");
+#	$textwindow->SaveUTF($newfn);
+#	$lglobal{global_filename} = $newfn;
+#	_bin_save();
+#	$lglobal{global_filename} = $savefn;
+#	$textwindow->FileName($savefn);
+#}
 
 sub html_convert_codepage {
 	working("Converting Windows Codepage 1252\ncharacters to Unicode");
@@ -12225,23 +12226,23 @@ sub html_convert_superscripts {
 	}
 }
 
-sub html_convert_tb {
-	no warnings;    # FIXME: Warning-- Exiting subroutine via next
-	my ( $selection, $step ) = @_;
-
-	if ( $selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ ) {
-		$textwindow->ntdelete( "$step.0", "$step.end" );
-		$textwindow->ntinsert( "$step.0", $selection );
-		next;
-	}
-
-	if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {
-		$textwindow->ntdelete( "$step.0", "$step.end" );
-		$textwindow->ntinsert( "$step.0", $selection );
-		next;
-	}
-
-}
+#sub html_convert_tb {
+#	no warnings;    # FIXME: Warning-- Exiting subroutine via next
+#	my ( $selection, $step ) = @_;
+#
+#	if ( $selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ ) {
+#		$textwindow->ntdelete( "$step.0", "$step.end" );
+#		$textwindow->ntinsert( "$step.0", $selection );
+#		next;
+#	}
+#
+#	if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {
+#		$textwindow->ntdelete( "$step.0", "$step.end" );
+#		$textwindow->ntinsert( "$step.0", $selection );
+#		next;
+#	}
+#
+#}
 
 ### Internal Routines
 ## Status Bar
