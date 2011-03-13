@@ -1,0 +1,1171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Guiprep user guide</title>
+</head>
+<body>
+<h1 style="margin-left: 40px;"><a
+ href="http://mywebpages.comcast.net/thundergnat/guiprep.zip">guiprep.pl</a>&nbsp;
+<small style="font-weight: normal;"><small><small>Preprocessing toolkit
+- Current version .40</small></small></small></h1>
+<br>
+<a href="http://mywebpages.comcast.net/thundergnat/guiprep.zip">guiprep.pl</a>&nbsp;
+(644k)Includes both a perl script version and a compiled Windows
+executable. **NOTE** Both require that you have either perl 5.8.0 or
+later installed or the perl runtime libraries (<a
+ href="http://mywebpages.comcast.net/thundergnat/prl03.zip">prl03.zip</a>)
+installed. If you already have prl03 installed for guiguts, there is no
+need to download it again.<br>
+<br>
+<a href="http://mywebpages.comcast.net/thundergnat/winprep.zip"></a><br>
+<a href="http://mywebpages.comcast.net/thundergnat/prl03.zip">prl03.zip</a>
+- (5773k) perl runtime libraries - contains a full complement of perl
+libraries with Tk804.026
+installed to allow either perl scripts or the Gui* executables to run
+on your system. Installation instructions and information on
+compiling
+your own package on <a
+ href="http://mywebpages.comcast.net/thundergnat/tk804.html">this page.</a><br>
+<hr style="width: 100%; height: 2px;">
+<p>Written by Steve Schulze (thundergnat).<br>
+<br>
+Also see my post processing toolkit - <a
+ href="http://mywebpages.comcast.net/thundergnat/guiguts.html">Guiguts.pl</a></p>
+Questions or comments? Leave a message in the <a
+ href="http://www.pgdp.net/phpBB2/index.php">Distributed Proofreaders
+forums</a> or private message me as "thundergnat".<br>
+<br>
+Portions of this script are derived from <a
+ href="http://search.cpan.org/author/SARGIE/RTF-Tokenizer-1.01/lib/RTF/Tokenizer.pm">
+RTF::Tokenizer</a> by Peter Sergeant.<br>
+For more information on the RTF file format, SEE: <a
+ href="http://search.cpan.org/dist/RTF-Writer/lib/RTF/Cookbook.pod">The_RTF_Cookbook</a>
+by Sean M. Burke<br>
+<br>
+The included pngcrush.exe is a windows/dos compiled version of
+pngcrush, a png file compression tool. It will losslesly reduce the
+size of png files. Most image creation programs do not optimally
+compress png files. Get the latest version of pngcrush.exe at <a
+ href="http://sourceforge.net/project/showfiles.php?group_id=1689">sourceforge</a>
+(make sure you get the executable unless you are planning to compile it
+yourself) or go the the <a href="http://pmt.sourceforge.net/index.html">pngcrush
+home page</a> for more information. The version included with the
+script is the lowest common denominator version. If you have a MMX
+capable processor, a faster, MMX enabled version is available.
+Uncompress it and place it the pngcrush directory in the guiprep
+folder. Make sure the included readme text file is named "README.txt"
+so the help button can find it. Some distributions I have seen have the
+help file named just "README"<br>
+<br>
+<hr style="height: 2px; width: 60%;"> <br>
+This software has no guarantees as to it fitness to do this or any
+other task. Any damages to your computer, data, your mental health or
+anything else as a result of using this software are your problem and
+not mine. If not satisfied, your purchase price will be cheerfully
+refunded.<br>
+<br>
+This program may be freely distributed, used, and modified. Reverse
+engineering is condoned and encouraged. If you come up with some really
+cool addition (or even just an idea) let me know, and it may be
+included in future releases. If you do reuse some of my code, I would
+appreciate you mentioning it in the comments of <span
+ style="font-style: italic;">your</span> script and dropping me a line
+to let me know...<br>
+<br>
+<hr style="width: 100%; height: 2px;"> This script requires a perl
+interpreter to run. The <a
+ href="http://www.activestate.com/Products/Download/Get.plex?id=ActivePerl">
+ActiveState</a> perl interpreter is probably the most popular for
+Windows users. (95, 98, 98se, ME, NT, 2K, XP) They are also have
+versions available for Linux and Solaris. It's very functional and
+free. (They do ask that you register, but you can bypass the
+registration page without entering anything.) I personally would
+recommend the 5.8.0 distribution. For Windows users, you use the
+Microsoft Installer (MSI) version, it is very simple and automatic to
+set up. If you don't have Microsoft Installer, a link is included on
+the Activeperl download page.<br>
+<hr style="width: 100%; height: 2px;"> <span style="font-weight: bold;"><br>
+<a href="#What_is_it_for"><span style="font-weight: bold;">What is it
+for?</span></a><br>
+</span><span style="font-weight: bold;"><a href="#Whats_new"><span
+ style="font-weight: bold;">Whats new?</span></a><br>
+</span><span style="font-weight: bold;"><a
+ href="#Setting_up_the_text_files:"><span style="font-weight: bold;">Setting
+up the text files:</span></a><br>
+</span>
+<div style="margin-left: 40px;"> <a href="#with_RTF_Markup_Extraction:"><span
+ style="font-weight: bold;">with
+RTF Markup Extraction:</span></a><br>
+<span style="font-weight: bold;"><a
+ href="#without_RTF_Markup_Extraction:"><span style="font-weight: bold;"><span
+ style="font-style: italic;">without</span> RTF Markup Extraction:</span></a></span><br>
+<span style="font-weight: bold;"><a
+ href="#without_RTF_Markup_Extraction_or"><span
+ style="font-weight: bold;"><span style="font-style: italic;">without</span>
+RTF Markup Extraction <span style="font-style: italic;">or</span>
+Dehyphenization:</span></a></span> </div>
+<span style="font-weight: bold;"><span style="font-weight: bold;"><a
+ href="#Using_the_script:">Using the script:</a><br>
+</span></span>
+<div style="margin-left: 40px;"> <span style="font-weight: bold;"><span
+ style="font-weight: bold;"><a href="#Select_Options_tab">Select
+Options tab</a></span></span><br>
+<span style="font-weight: bold;"><span style="font-weight: bold;"><a
+ href="#Process_Text_tab">Process Text tab</a></span></span><br>
+<span style="font-weight: bold;"><span style="font-weight: bold;"><a
+ href="#Search_tab">Search tab</a></span></span><br>
+<span style="font-weight: bold;"><a href="#Header_Removal_tab">Remove
+Headers/Footers tab</a></span><br>
+<span style="font-weight: bold;"><a href="#Change_Directory_tab">Change
+Directory tab</a></span><br>
+<span style="font-weight: bold;"><a href="#Program_Prefs_tab">Program
+Prefs tab</a></span><br>
+<span style="font-weight: bold;"><a href="#FTP_tab">FTP tab</a></span></div>
+<span style="font-weight: bold;"><a href="#Troubleshooting:_">Troubleshooting</a><br>
+<a href="#Known_bugs_and_odd_behavior:">Known Bugs</a><br>
+<a href="./changelog.html">Changelog History</a><br>
+<br>
+</span>
+<hr style="width: 100%; height: 2px;"> <big><span
+ style="font-weight: bold;"><a name="What_is_it_for"></a>What is it for?</span></big><br>
+<br>
+Given a set of rtf files output from an Optical Character Recognition
+(OCR) program; this tool will extract text and italic and bold markup
+from the .rtf files and save it as text, rejoin end-of-line hyphenated
+words, filter out bad and undesirable characters, check for common
+scannos* and check for zero byte files to help automate preparation of
+files for <a href="http://www.pgdp.net/">Distributed Proofreaders</a>.
+If your .png files are in a directory named PNGS, it can rename the
+.png files into the upload format. It can also, if desired run a png
+size optimizer on the files. You can queue up several projects and
+process them in a batch. It provides a mechanism to semi automate
+header removal and provides hooks to link in your favorite text editor
+and image viewer to help check files. There is also a mini FTP client
+built in that automates uploading a project to the site.<br>
+<br>
+*[A scanno is like a typo... only from a scanner instead of a typist.]<br>
+<br>
+<hr style="width: 100%; height: 2px;"> <br>
+<span style="font-weight: bold;"><a name="Whats_new"></a><big>Whats new?<br>
+<br>
+</big></span><br><br>
+<hr style="width: 100%; height: 2px;"> <span style="font-weight: bold;"><br>
+<a name="Setting_up_the_text_files:"></a><big>Setting up the text files:</big><br>
+</span><br>
+There are two different dehyphenization routines. One works with a
+single set of files, the files with line breaks preserved; the format
+need by the Distributed Proofreaders site. The other will use two sets
+of files, one set with line breaks and one set without. The two set
+will yeild better accuracy during dehyphenization at the expense of
+slightly longer processing time and more disk storage space. To do two
+set dehyphenization, save the text from ABBYY FineReader (or
+possibly other OCR packages;
+should work as long as they produce standard, well formed rtf files)
+two times in two different directories. Assuming you have a project
+directory named "PROJECT", under the project directory you will need
+two directories "textw" and "textwo". "textw" stands for "text with
+line breaks" and "textwo" stands for "text without line breaks". If you
+are only going to do single set dehyphenization, you only need to
+follow the instructions for the "textw" directory.<br>
+<br>
+<a name="with_RTF_Markup_Extraction:"></a>&nbsp;<span
+ style="font-weight: bold;">with RTF Markup Extraction:</span><br>
+<br>
+In ABBYY after all of your images are loaded and OCRed, select File
+=&gt; Save Text As;<br>
+<br>
+<div style="margin-left: 40px;"> &nbsp;<img
+ style="width: 340px; height: 379px;" alt="menu" title=""
+ src="pics/menu.png"> </div>
+<br>
+<br>
+<br>
+A dialog box will pop up.<br>
+<br>
+In the "textw" directory, save the text with the settings: Save as type
+<span style="font-weight: bold;">Rich text Format</span>, <span
+ style="font-weight: bold;">Create a separate file for each page</span>,
+<span style="font-weight: bold;">Retain font and font size</span>. On
+the RTF tab of the Formats Settings, check <span
+ style="font-weight: bold;">Keep page breaks</span> and <span
+ style="font-weight: bold;">Keep line breaks</span> and uncheck
+everything else. It doesn't matter what the File name is set to. The
+default is probably fine.<br>
+<br>
+<div style="margin-left: 40px;"> <img
+ style="width: 430px; height: 393px;" alt="text1" title=""
+ src="pics/textw1.png"> <img style="width: 344px; height: 353px;"
+ alt="textw2" title="textw2" src="pics/textw2.png"> </div>
+<br>
+<br>
+<br>
+<br>
+<br>
+In the "textwo" directory, save the text with the settings: Save as
+type <span style="font-weight: bold;">Rich text Format</span>, <span
+ style="font-weight: bold;">Create a separate file for each page</span>,<span
+ style="font-weight: bold;">Retain font and font size</span>. On the
+RTF tab of the Formats Settings, check <span style="font-weight: bold;">Keep
+page breaks</span> and <span
+ style="font-weight: bold; text-decoration: underline;">Remove optional
+hyphens</span> and uncheck everything else. Make sure the File name is
+set the same as in the textw directory.<br>
+<br>
+<div style="margin-left: 40px;"> <img
+ style="width: 430px; height: 393px;" alt="textwo1" title=""
+ src="pics/textwo1.png">&nbsp; <img
+ style="width: 346px; height: 355px;" alt="textwo2" title=""
+ src="pics/textwo2.png"> </div>
+<br>
+<br>
+<br>
+<br>
+<span style="font-weight: bold;"><span style="font-style: italic;"><a
+ name="without_RTF_Markup_Extraction:"></a>without</span> RTF Markup
+Extraction:</span><br>
+<br>
+If you don't want to do markup extraction, (or your OCR package won't
+support RTF files) you can skip saving the files as RTFs and just save
+them as plain text files. Again, to do dehyphenization, you will need
+to save the files in two directories, textw and textwo.<br>
+<br>
+Save the text with line breaks in textw. The ISO Latin-1 code page will
+give you pretty good results for English and most European languages.
+The site works with ISO Latin-1 so that may be least problematic to fit
+into the character space used. Windows codepage 1252 should also work
+well since it overlaps Latin1 very closely and where it doesn't, the
+filter routine will convert characters that don't fall within Latin1.
+This may actually yield better results than trying to force the OCR to
+fit the text into the Latin1 character set.<br>
+<br>
+<div style="margin-left: 40px;"> <img
+ style="width: 783px; height: 396px;" alt="textw" title="textw"
+ src="pics/txtw.png"> </div>
+<br>
+<br>
+<br>
+<br>
+<br>
+The textwo directory should use all of the same settings except that <span
+ style="font-weight: bold;">Keep line breaks</span> needs to be
+unchecked. Be sure to use the same code page and file names in both the
+textw and textwo directories.<br>
+<br>
+<div style="margin-left: 40px;"> <img
+ style="width: 779px; height: 394px;" alt="textwo" title="textwo"
+ src="pics/txtwo.png"> </div>
+<br>
+<br>
+<br>
+At this point the script is used exactly the same way except you'll
+skip the Extract Markup routine.<br>
+<br>
+<a name="without_RTF_Markup_Extraction_or"></a><br>
+&nbsp;<span style="font-weight: bold;"><span style="font-style: italic;">without</span>
+RTF Markup Extraction <span style="font-style: italic;">or</span>
+Dehyphenization:<br>
+</span><br>
+If you are using a different OCR package that can't save as rtf or do
+automatic line rejoining, you may need to skip those two functions.
+Save the files in a directory named "text" using the same settings as
+for textw without RTF extraction above. Uncheck both Extract and
+Dehyphenate under the Process Text tab. <br>
+<br>
+<br>
+<br>
+<hr style="width: 100%; height: 2px;"> <br>
+<big><span style="font-weight: bold;"><a name="Using_the_script:"></a>
+Using the script:</span></big><br>
+<br>
+When you run the script, a Graphical User Interface will pop up
+allowing you to select options, select the working directory, and
+process the text files. One implication of this is that the script no
+longer NEEDS to run from the working directory. In fact, it will work
+better if run you it from the same directory each time, changing to the
+working directory after it starts, because it will save all of the
+option settings in directory it is started in - in a file named
+settings.rc, (rc is a standard extension for resource file). and it
+will look for the scannos.rc file in the startup directory. The script
+remembers the last directory you were working in and reopens to that
+directory the next time you run it.<br>
+<br>
+<big><span style="font-weight: bold;"><a name="Select_Options_tab"></a>Select
+Options tab</span></big><br>
+<br>
+The <span style="font-weight: bold;">Select Options</span> tab will
+allow you to adjust the markup used for italics and bold extraction and
+set the options you want the filter routine to run. The <span
+ style="font-weight: bold;">Save Settings</span> button will save your
+markup and selections from session to session. The <span
+ style="font-weight: bold;">Default Markup</span> button will change
+all the markup text back to defaults. If there is little or no bold in
+your text, you may want to disable bold extraction to cut down on false
+positives. The other settings are all options for the filter routine.
+See discussion below under Filtering for suggestions and explanations
+for different settings.<br>
+<br>
+There are a few options having to do with batch processing.<br>
+<br>
+<span style="font-weight: bold;">Extract Bold Markup</span> - If you
+don't have much bold text in your project you may want to diable this
+to cut sdown on false positives, especially for lower quality scans.<br>
+<br>
+<span style="font-weight: bold;">Insert cell delimiters in tables</span>
+- If you have tables in your project, the script will try to keep the
+layout as much as it can. The cells usually will not come out exactly
+as the origional, so youcan add markers "|", between the cells to help
+the proofers align them .<big><br>
+<br>
+</big><span style="font-weight: bold;">Extract sub/superscript markup</span>
+- Select whether to extract sub and super scriptws while doing mrkup
+extraction.<br>
+<br>
+<span style="font-weight: bold;">Dehyphenate using German style
+hyphens; "="</span> - Option to dehyphenate German texts.<br>
+<br>
+<span style="font-weight: bold;">Header Removal</span> - You can now
+select whether you want to run automatic header removal on your text
+files during batch processing. It will automatically remove the top
+line from every text file. THIS MAY POSSIBLY REMOVE LINES THAT
+SHOULDN'T BE REMOVED. USE WITH CARE. It is highly recommended that
+header removal be done in interactive mode if feasible.<br>
+<br>
+<span style="font-weight: bold;">Build a zip of the project files</span>
+- The site promises to soon have the capability to upload the project
+files a a zip file. Possibly through a web interface rather than FTP.
+This option will generate a zip archive containing all of the files in
+the "text" and "pngs" directories. (or whatever you chose to name your
+image directory) It will be written to the project directory with the
+name of the project directory used as the name of the zip file.<br>
+<br>
+<br>
+<hr style="height: 2px; width: 60%;"> <span style="font-weight: bold;">Filtering
+options:<br>
+<br>
+<br>
+&nbsp;</span> As of now, the pattern substitution/filtering functions
+the script will perform are:<br>
+<br>
+<br>
+<span style="font-weight: bold;">&#8226; Remove extra (multiple)
+spaces in text</span>. - Highly recommended. Makes all of the other
+filtering more effective. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert Windows-1252
+codepage glyphs 80-9F</span>. - Highly recommended. Will need to be
+fixed eventually, may as well do it now. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Remove spaces at end of
+line</span>. - Recommended. Not a big deal either way but may make the
+proofers job easier. Will help later during rewrapping. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert spaced hyphens to
+em dashes</span>. - Recommended. Correct behavior for most texts. Not
+recommended for math texts. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert multiple
+consecutive underscores to em dashes</span>. - Recommended. Correct
+behavior for most texts. Default on.<br>
+&nbsp;<br>
+<span style="font-weight: bold;">&#8226; Remove spaces on either
+side of hyphens</span>. - Highly recommended. Easily automated
+formatting fix. Correct behavior more than 99% of the time.Not
+recommended for math texts. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert double commas to a
+singe double quote.</span> - Recommended. Usually correct behavior.
+Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Remove spaces on either
+side of em dashes</span>. - Highly recommended. Easily automated
+formatting fix. Correct behavior more than 99% of the time. Not
+recommended for math texts. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Remove space before periods</span>.
+- Highly recommended. Easily automated formatting fix. Correct behavior
+more than 99% of the time. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Remove space before
+exclamation points</span>. - Highly recommended. Easily automated
+formatting fix. Correct behavior more than 99% of the time. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Remove space before
+question marks</span>. - Highly recommended. Easily automated
+formatting fix. Correct behavior more than 99% of the time. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Remove space before commas</span>.
+- Highly recommended. Easily automated formatting fix. Correct behavior
+more than 99% of the time. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Remove space before
+semicolons</span>. - Highly recommended. Easily automated formatting
+fix. Correct behavior more than 99% of the time. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Remove space after opening
+and before closing brackets.</span> - Recommended. Easily automated
+formatting fix. Correct behavior most of the time. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Strip space after start
+&amp; before end doublequotes.</span> - Highly recommended. Easily
+automated formatting fix. Correct behavior more than 99% of the time.
+Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Ensure space before
+ellipses except after period.</span> - Recommended. Easily automated
+formatting fix. Correct behavior most of the time. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert two adjacent
+single quotes to a single double quote</span>. - Highly recommended.
+Easily automated formatting fix. Correct behavior more than 99% of the
+time. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert solitary 1 to I,
+if not at beginning of line, or if preceded by quotes</span>. -
+Recommended. Depends on text. For vast majority does much more good
+than harm. Default on. *See note<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert solitary lowercase
+l to I if preceded by space or quotes</span>. - Recommended. Depends on
+text. For vast majority does much more good than harm. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert solitary 0
+preceded by quotes to O</span>. - Recommended. Depends on text. For
+vast majority does much more good than harm. *See note below. Default
+on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert vulgar fractions
+(&frac14;,&frac12;, &frac34;) to "1/4", "1/2" and "3/4"</span>. - Your
+choice. Depends on book. Depends on your preference. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert &sup2; and</span> <span
+ style="font-weight: bold;">&sup3;</span> <span
+ style="font-weight: bold;">to "^2" and "^3"</span>. - Your choice.
+Depends on book. Depends on your preference. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert &pound; to
+"Pounds".</span> - Your choice. Depends on book. Depends on your
+preference. Default off. *See note below:<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert &cent; to "cents".</span>
+- Your choice. Depends on book. Depends on your preference. Default
+off. *See note below:<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert &sect; to
+"Section".</span> - Your choice. Depends on book. Depends on your
+preference. Default off.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert &deg; to "degrees"</span>.
+- Your choice. Depends on book. Depends on your preference. Default off.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert forward slash (/)
+at a word end to comma apostrophe(,')</span>. - Your choice. Depends on
+book. Depends on your preference. Default on. (Will ignore slash after
+less than &lt;/)<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert \v or \\ to w</span>.
+- Your choice. Fairly common scanno.&nbsp; Depends on your preference.
+Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert solitary j or at
+end of word not proceeded by "a,e,n or u" to semicolon</span>. - Your
+choice. Depends on book. Depends on your preference. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert string 'tli' to
+'th' if it is a the beginning of a word</span>. - Very highly
+recommended for English texts, especially if you are going to run the
+Scanno check. Recommended with caution for non-English. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert string 'tii' to
+'th' if it is at the beginning of a word</span>.- Very highly
+recommended for English texts, especially if you are going to run the
+Scanno check. Recommended with caution for non-English. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert string 'wli' to
+'wh' if it is at the beginning of a word</span>.- Very highly
+recommended for English texts, especially if you are going to run the
+Scanno check. Recommended with caution for non-English. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert string 'rn' to 'm'
+if it is at the beginning of a word</span>.- Very highly recommended
+for English texts, especially if you are going to run the Scanno check.
+Recommended with caution for non-English. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert string 'hl' to
+'bl' if it is at the beginning of a word</span>.- Very highly
+recommended for English texts, especially if you are going to run the
+Scanno check. Recommended with caution for non-English. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert string 'hr' to
+'br' if it is at the beginning of a word</span>.- Very highly
+recommended for English texts, especially if you are going to run the
+Scanno check. Recommended with caution for non-English. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert string 'rnp' to
+'mp' in a word</span>.- Very highly recommended for English texts,
+especially if you are going to run the Scanno check. Recommended with
+caution for non-English. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert vv at the
+beginning of a word to w</span> - Recommended, default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert !! at the
+beginning of a word to H</span> - Recommended, default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert initial X not
+followed by e to N</span> - Also takes into account Roman Numerals,
+Recommended, default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert ! inside a word to
+l</span> - Recommended, default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert '11 to 'll</span>
+- Recommended, default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert rnm in a word to mm</span>
+- Recommended, default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert string 'cb' to
+'ch' in a word</span>.- Very highly recommended for English texts,
+especially if you are going to run the Scanno check. Recommended with
+caution for non-English. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert string 'gbt' to
+'ght' in a word</span>.- Very highly recommended for English texts,
+especially if you are going to run the Scanno check. Recommended with
+caution for non-English. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert string '[ai]hle'
+to '[ai]ble' in a word</span>.- Very highly recommended for English
+texts, especially if you are going to run the Scanno check. Recommended
+with caution for non-English. Default on. [ai] means: either a or i .<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert cl at the end of a
+word to d</span> - Recommended, default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert pbt in a word to
+pht</span> - Recommended, default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert whole words string
+'to he' to 'to be'</span>.- Very highly recommended. Almost always
+correct behavior. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Move punctuation outside
+of markup</span>.- Highly recommended if you have extracted markup.
+Otherwise not. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Remove empty lines from
+the top of the file</span>. - Highly recommended. Easily automated
+formatting fix. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Convert multiple
+concurrent empty lines to a single</span>. - Recommended. Usually
+correct behavior. Easy to fix if not. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; Remove empty lines from
+the bottom of the file</span>. - Highly recommended. Easily automated
+formatting fix. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; If top line has nothing
+but digits, (page number) delete it</span>. - Recommended. Up to your
+personal preference. Default on.<br>
+<br>
+<span style="font-weight: bold;">&#8226; If bottom line has nothing
+but digits, (page number) delete it</span>. - Recommended. Up to your
+personal preference. Default on.<br>
+<br>
+They are all selectable from the options page.<br>
+<br>
+The "improbable character combination" filters (tli, rn, wli, hl, hr,
+rnp, cb, gbh, [ai]hle) DEFINITELY should be run if you intend to run <span
+ style="font-weight: bold;">Fix Common Scannos</span>. Those filters
+reduce the number of checks that need to be done by scanno routine by
+330 words yet effectively add several thousand.<br>
+<br>
+*After ad hoc testing of about 50 texts pulled from PG at random,
+solitary I is about 90 times more likely than solitary 1. If instances
+at the beginning of lines are ignored, it rises to about 150 times.
+Pretty good odds I think.<br>
+<br>
+*Solitary 0 (With nothing but space on either side) is automatically
+converted to O. This is non negotiable. Because of the way the
+dehyphenate subroutine works, if it encounters a solitary 0 in the
+text, it will delete the rest of the paragraph. I would rather have a
+few misconverted O's then deleted paragraphs. (It's not really the
+dehyphenate subroutines fault, it's more just a consequence of perls
+weak variable typing, but I digress.) This is not just my dehyphenate
+routine, aldarondo's has the same problem but doesn't trap it.<br>
+<br>
+* &pound; to "Pounds" uses some intelligence when it converts. It will
+move the "Pounds" to <span style="font-style: italic;">after</span>
+the number. I.E. &pound;30 will become '30 Pounds' <span
+ style="font-style: italic;">not</span> 'Pounds 30'<br>
+<br>
+* &cent; converts to "cents" unless it follows a solitary 1, in which
+case it converts to "cent"<br>
+<hr style="height: 2px; width: 60%;"> <big><span
+ style="font-weight: bold;"><a name="Change_Directory_tab"></a>Change
+Directory tab</span></big><br>
+<br>
+You can select the directory you want to work in in the <span
+ style="font-weight: bold;">Change Directory</span> tab. The top bar
+shows what directory is the "current directory". In general, to run the
+Extract and Dehyphen scripts you will need the "textw" and "textwo"
+directories visible in the Change To selection box. The other text
+processing routines need the text directory, which will be created by
+the dehyphen routine, if necessary. The png processing routines will
+need to see the pngs directory. Click on the directory name to move to
+that directory or on the " .. " to move up one level. All of the
+routines expect to run from the same directory. (The parent directory
+of pngs, textw, textwo and [eventually] text.) If you want to run the
+script in batch mode, select one or more directories containing the
+files to be processed in the right hand box. All of the batch functions
+work exactly like the interactive functions, they just allow you to
+queue a bunch of projects up and process them all with one command.<br>
+<br>
+Remember, to do interactive processing you need to be <span
+ style="font-style: italic;">IN</span> the project directory, for batch
+processing you need to be <span style="font-style: italic;">ABOVE</span>
+the project directory. Remove headers can only be done in interactive
+mode, so you will need to be <span style="font-style: italic;">IN</span>
+the project directory to do it.<br>
+<br>
+<br>
+<hr style="height: 2px; width: 60%;"> <big><span
+ style="font-weight: bold;"><a name="Process_Text_tab"></a>Process Text
+tab</span></big><br>
+<br>
+Once your options are set up and you are set to the right directory, go
+to the <span style="font-weight: bold;">Process Text</span> tab. In
+this tab you can run the different routines on the text files. You can
+run individual routines, mix and match or select <span
+ style="font-weight: bold;">Do All Selected</span> to run all the
+subroutines you select in one batch. Different routines have different
+prerequisites so you can't necessarily run the routines out of order
+and get good results.<br>
+<br>
+The <span style="font-weight: bold;">Extract Markup</span> routine
+expects to find the directory "textw" (and optionally "textwo" if you
+are using the original dehyphenate routine) with rtf format files in
+them. It will extract the text and markup and put the extracted files
+in the same directory with a .txt extension.<br>
+<br>
+The <span style="font-weight: bold;">Dehyphenate</span> routine
+expects to find the "textw" and optionally "textwo" directories with
+.txt files in them. Whether the .txt are as a result of the Extract
+routine or just .txt format files saved directly from Abby is
+immaterial. It will put the merged files into a directory named "text",
+creating it if it doesn't already exist. **WARNING: any files with a
+.txt extension in the "text" when Dehyphenate runs WILL BE DELETED.
+WITHOUT WARNING OR ASKING.**<br>
+<br>
+The <span style="font-weight: bold;">Rename</span>, <span
+ style="font-weight: bold;">Filter</span>, <span
+ style="font-weight: bold;">Correct Common Scannos</span> and <span
+ style="font-weight: bold;">Fix Zero Byte</span> routines all expect to
+find the "text" directory with .txt files in it. Again the files may be
+from Dehyphen routine or may not.<br>
+<br>
+<span style="font-weight: bold;">Rename Png Files</span> expects to
+find the "pngs" directory with your .png files in it. It will rename
+all of the .png files in the upload format.<br>
+<br>
+<span style="font-weight: bold;">Run Pngcrush</span> expects to find
+the "pngs" directory with your .png files in it. It will run pngcrush
+on each file to optimize the compression and reduce the size. The
+default settings will change reduce the palette to the minimum
+necessary. It <span style="font-style: italic;">does</span> save the
+original files in a directory " _pngsback_" so you can easily recover
+them. If interrupted part way through, it will pick up where it left
+off the next time you start it. As a consequence, if you interrupt it,
+the pngs directory WILL NOT have all of the files in it. Make sure you
+have the same number of text and png files before you upload them.<br>
+<br>
+If you are going to run both <span style="font-weight: bold;">Filter</span>
+and <span style="font-weight: bold;">Fix Common Scannos</span>, is <span
+ style="font-style: italic;">highly</span> recommended that you run <span
+ style="font-weight: bold;">Filter</span> first, <span
+ style="font-style: italic;">then</span> <span
+ style="font-weight: bold;">Fix Common Scannos</span>. <span
+ style="font-weight: bold;">Fix Common Scannos</span> will check your
+files for over 3000 of the most common mis-scanned English words and
+correct them. It should be used with caution on non-english texts
+though. It <span style="font-style: italic;">probably</span> won't
+hurt but you should check a bunch of pages afterwords to be sure. (It
+probably won't help either.)<br>
+<br>
+It is recommended that the <span style="font-weight: bold;">Fix Zero
+Byte Files</span> routine be run last, though the order is not <span
+ style="font-style: italic;">really</span> critical.<br>
+<br>
+<span style="font-weight: bold;">Convert to ISO-8859-1</span> NEEDS to
+be run on files for the original DP site but SHOULD NOT be run on files
+for DPEU.&nbsp; This will transliterate any Greek characters and
+convert any other characters outside of Latin-1 to question marks.
+Hopefully the original DP site will be converting to Unicode in the
+near future and make this function unnecessary. <br>
+<br>
+In general, the routines should be run in top to bottom order. If you
+run them by selecting the routines you want to run, then pressing <span
+ style="font-weight: bold;">Do All Selected</span>, they will
+automatically run in the optimal order.<br>
+<br>
+The <span style="font-weight: bold;">Start Processing</span> and <span
+ style="font-weight: bold;">Interrupt Processing</span> buttons will
+start and stop processing job. If you have a batch queued up, it will
+run the batch. Otherwise, it will run in interactive mode in the
+current directory. <span style="font-weight: bold;"><br>
+<br>
+</span>For batch processing, <span style="font-weight: bold;">Start
+Processing</span> will run <span style="font-weight: bold;">Do All
+Selected</span> on each project. You can select and deselect routines
+and <span style="font-weight: bold;">Process Batch</span> will follow
+your selections. If you <span style="font-style: italic;">really</span>
+want to, you can change options and selections <span
+ style="font-style: italic;">while</span> the batch is in progress....
+but you probably shouldn't. The small box in the lower left shows the
+status of the current batch.<br>
+<br>
+<span style="font-weight: bold;">?</span> will pop a terse help message.<br>
+<br>
+<span style="font-weight: bold;">Clear Status Box</span> will clear the
+messages from the status box.<br>
+<br>
+<br>
+<hr style="height: 2px; width: 60%;"> <span style="font-weight: bold;">Fix
+Common Scannos:</span><br>
+<br>
+The scannos word list was pulled from the Distributed Proofreaders CVS
+site. There are approximately 3400 words in the scannos list (though
+the improbable letter combination filters make about 330 of them
+redundant) &gt;From the description in the scannos list header:<br>
+<br>
+# Word list derived from Moby project data, cut for top 2000 frequency
+and word<br>
+# of 6 characters or less (to reduce size and assuming that longer
+words will<br>
+# be closely examined by the proofreaders). The resulting list was
+processed<br>
+# through perl scripts which generated scannos by replacement (see
+below).<br>
+# This result was then filtered to eliminate valid words from the
+generated<br>
+# "error" list (left side) to eliminate false positives.<br>
+#<br>
+# The common scannos from gutcheck and PRTK were then added, as well as
+some<br>
+# additional scannos provided by numerous DP proofreaders.<br>
+#<br>
+# The resulting list was then tested against just over 1 million words
+of raw<br>
+# OCR output provided by charlz. Further false positives were
+discovered and<br>
+# removed. The actual hit rate for this code is about 1 scanno detected
+per 30k<br>
+# words of input text. The actual accuracy rate against the corpus
+provided by<br>
+# charlz is: 2 false positives out of 122 scannos detected, or 98.3%
+accurate.<br>
+# Seems worthwhile to me. :)<br>
+<br>
+<br>
+If you come up with misscanned word that you think should be in the
+scanno list, let me know. Words that commonly are misscanned for each
+other (like bad / had or and / arid) are NOT good additions. Those are
+better off in Big_Bills' stealth scannos list.<br>
+<br>
+<hr style="height: 2px; width: 60%;"> <big style="font-weight: bold;"><a
+ name="Header_Removal_tab"></a>Header/Footer Removal tab</big><br>
+<br>Often the top line of a page is a book or chapter title that will be removed
+anyway: the bottom line sometimes also contains things you would like to remove, such as page numbers, book section letters, or, if using  third party provided page scans, such text as e.g "Digitized by Microsoft" This tool will help semi automate removing them. The procedure is similar for both removing page headers or footers. <span>
+When all of the processing routines have been performed, you can go to
+the <span style="font-weight: bold;">Header/Footer Removal</span> tab to
+delete the top lines and/or last lines of each text file, if desired. To do this in interactive mode, you will need to be <span
+ style="font-style: italic;">IN</span> the project directory. If remove
+headers is run in batch mode, it will automatically remove the top line
+of EVERY text file (unless the top line is the blank page markup) and
+then run the Fix Zero Byte Files routine to catch any emptied files.<br>
+<br>
+
+<span style="font-weight: bold;">Get Headers</span>. This will load a list
+of the top lines of each file. Select the ones you want to delete
+(probably easier to <span style="font-style: italic;">select all</span>,
+then <span style="font-style: italic;">un</span>select the ones you <span
+ style="font-style: italic;">don't</span> want to delete) then press <span
+ style="font-weight: bold;">Remove Selected</span> to write the changes
+to the affected files. <br>
+For removing footers, the procedure is the same except you begin by pressing <span
+ style="font-weight: bold;">Get Footers</span>, which will display page footers for deletion.<br>
+If you like, you can repeat selection/deletion to see if there
+are any others you would like to remove. Repeat as necessary. If the
+top line of a file is the blank page markup (from the select options
+tab) <span style="font-weight: bold;">Remove Headers</span> <span
+ style="font-style: italic;">will not</span> delete it, you will have
+to delete it manually if you want to remove it.<br>
+If you accidentally remove lines you didn't intent to, will probably
+be easiest to go back to <span style="font-weight: bold;">Process Text</span>
+and run <span style="font-weight: bold;">Dehyphenate</span>, <span
+ style="font-weight: bold;">Rename,</span> <span
+ style="font-weight: bold;">Filter</span>, <span
+ style="font-weight: bold;">Fix Common Scannos</span> and <span
+ style="font-weight: bold;">Fix Zero Byte Files</span> again to
+regenerate the files, then rerun <span style="font-weight: bold;">Remove
+Headers</span>. It would not be necessary to rerun <span
+ style="font-weight: bold;">Extract</span>, since those files are
+stored in a different directory. Alternately, you may want to back up
+your text files with the <span style="font-weight: bold;">Make Backups</span>
+function on the <span style="font-weight: bold;">Process Text</span>
+tab before you run <span style="font-weight: bold;">Remove Headers/Footers</span>
+so you can revert easily if problems arise.<br>
+<br>
+After you <span style="font-weight: bold;">Get Headers</span>, you can
+easily edit the file that the header is part of by double left clicking
+on the header to open your text editor. Set up your text editor on the <span
+ style="font-weight: bold;">Program Prefs</span> tab. If you <span
+ style="font-style: italic;">DO</span> edit some of the files this way,
+remember to refresh the header list before running <span
+ style="font-weight: bold;">Remove Selected</span>. You can also link
+an image viewer so you can compare image and text side by side (Much
+like the site! :-) ) <a href="http://www.irfanview.com">Irfanview</a>
+works really well for this. And it's free! <a
+ href="http://www.xnview.com/">XnView</a> is another great free image
+viewer that works well. Invoke your image viewer by left then right
+clicking on a file header. **<span style="font-style: italic;">Will not
+work in Winprep.exe</span>. <span style="font-style: italic;">Winprep
+cannot run external programs</span>.**<br>
+<br>
+&nbsp;If you use <a href="http://www.irfanview.com">Irfanview</a>, for
+best results, set View-&gt;Display options to 'Fit only big images to
+window'.<br>
+<br>
+If you use <a href="http://www.xnview.com/">XnView</a>, it's a little
+more complex. Go to Tools-&gt;Options-&gt;View and check 'Maximize view
+when open' and set 'Auto image size' to 'Fit image to window, large
+only.' Go to Tools-&gt;Options-&gt;Misc and check 'Remember last
+position/size'<br>
+<br>
+<span style="font-weight: bold;">*Caveat*</span> There is a bug in the
+command line parsing in <a href="http://www.xnview.com/">XnView</a>.
+If you have a directory with a space in the name, in the path to XnView
+(like 'Program Files' for instance), it will fail with a 'File not
+found' error. As long as there are no directories with spaces in the
+name in the path, it will work fine. <a href="http://www.irfanview.com">Irfanview</a>
+and other image viewers I have tested don't have this problem.<br>
+<br>
+<br>
+<hr style="height: 2px; width: 60%;"> <big><span
+ style="font-weight: bold;"><a name="Search_tab"></a>Search tab</span></big><br>
+<br>
+The <span style="font-weight: bold;">Search</span> tab has search and
+replace functions that will search through the text files and display
+the files with the search term and allow you to modify them, if
+desired. This is a strictly interactive tab. It is handy to check for
+project specific scanning errors or to check up on synchronization
+errors during dehyphenization. (Search for '**') Maybe after your are
+done all your processing, you decide that you shouldn't have done bold
+extraction after all. Just do a search and replace on &lt;b&gt; and
+&lt;/b&gt;.<br>
+There are some options to do case insensitive searching or search for
+whole words only to narrow down what the search function will find.<br>
+When you perform a search, if the search text is found, the whole file
+it is in will be displayed in the text window with the found text
+highlighted and the cursor just before it. If the search text is not
+found in any of the remaining files, a dialog will pop up informing you.<br>
+<br>
+<br>
+<br>
+The buttons are pretty self explanatory. The <span
+ style="font-weight: bold;">Save Open File</span> button saves the text
+that is currently displayed in the window to the file, overwriting the
+original. <span style="font-weight: bold;">Search</span> looks for the
+next occurrence of the search term. If you already have a text file
+open and press <span style="font-weight: bold;">Search</span>, it will
+proceed with the search starting from the open file. <span
+ style="font-weight: bold;">Replace</span> substitutes the <span
+ style="font-weight: bold;">Replacement Text</span> for the <span
+ style="font-weight: bold;">Search Text</span> in the window, and saves
+the file. To cancel an in progress search, change the <span
+ style="font-weight: bold;">Search Text</span>, that will reset the
+file index counter to the beginning. <span style="font-weight: bold;">Replace
+&amp; Search</span> (<span style="font-weight: bold;">R &amp; S</span>)
+just combines the <span style="font-weight: bold;">Replace</span> and <span
+ style="font-weight: bold;">Search</span> buttons into one function
+call. <span style="font-weight: bold;">Replace All</span> will call <span
+ style="font-weight: bold;">Replace</span> and <span
+ style="font-weight: bold;">Search</span> until all of the files have
+been searched. It will reset the file index counter to zero before it
+starts so if you are performing a manual search, get halfway through
+the files and then press <span style="font-weight: bold;">Replace All</span>,
+it will start over again at the first file.<br>
+<br>
+<br>
+<hr style="height: 2px; width: 60%;"> <big><span
+ style="font-weight: bold;"><a name="Program_Prefs_tab"></a>Program
+Prefs tab</span></big><br>
+<br>
+There is a <span style="font-weight: bold;">Program Prefs</span> tab
+where you can set some preferences which affect how the program looks
+and runs. You can change the color palette the the script uses, you can
+associate a text editor with the script to allow easy checking and
+editing of files while you are doing header removal and you can
+associate an image viewer to do side-by-side comparisons with text.<br>
+<br>
+The default palette is CornSilk2. I also like PeachPuff2, Bisque2,
+CadetBlue3 and Ivory3. Some truly painful ones are chartruse1,
+IndianRed1, brown1 and DarkOrchid2. Ouch!<br>
+<br>
+You can now specify what the name of the directory containing your png
+files is on this tab. Default is 'pngs'. Avoid using directory names
+with spaces in them.<br>
+<br>
+For Windows users, you will probably want to use wordpad or notepad or
+some equivalent for your text editor. <a
+ href="http://www.irfanview.com">Irfanview</a> or <a
+ href="http://www.xnview.com/">XnView</a> or an equivalent for an image
+viewer.<br>
+<br>
+The default locations for notepad and wordpad are:<br>
+<br>
+Win 95, 98, 98SE, ME &amp; XP:<br>
+C:\WINDOWS\NOTEPAD.EXE&nbsp;&nbsp;&nbsp;<br>
+C:\Program Files\Accessories\WORDPAD.EXE<br>
+<br>
+Win NT &amp; 2K<br>
+C:\WINNT\NOTEPAD.EXE<br>
+C:\Program Files\Windows NT\Accessories\WORDPAD.EXE<br>
+<br>
+<br>
+<br>
+<br>
+<hr style="height: 2px; width: 60%;"> <big><span
+ style="font-weight: bold;"><a name="FTP_tab"></a>FTP tab</span></big><br>
+<br>
+There is an FTP client included which will help automate uploading the
+project to the Distributed Proofreaders FTP server.<br>
+<br>
+<br>
+A simple moderate featured FTP client. Suitable for uploading to DP and
+minor maintenance.<br>
+<br>
+From left to right in rows....<br>
+<br>
+<span style="font-weight: bold;">Host name</span> (Text Entry) -
+Defaults to pgdp01.archive.org<br>
+<span style="font-weight: bold;">User name</span> (Text Entry) - Get it
+from the Project Managers page. Will be saved from session to session
+if Save User &amp; Password is checked.<br>
+<span style="font-weight: bold;">Password</span> (Text Entry) - Get it
+from the Project Managers page. Will be saved from session to session
+if Save User &amp; Password is checked.<br>
+<span style="font-weight: bold;">Home Directory</span> (Text Entry) -
+Set a prefered home directory on the FTP server if desired. Will
+automatically change to that directory when you connect.<br>
+<br>
+<span style="font-weight: bold;">Connect To Host</span> (Push Button) -
+Initiate FTP connection. Will fail if you have no internet connection.
+May take a while.<br>
+<span style="font-weight: bold;">Disconnect</span> (Push Button) -
+Break FTP connection.<br>
+<span style="font-weight: bold;">Save Log File</span> (Push Button) -
+Save a session log to a file.<br>
+<span style="font-weight: bold;">Clear Log</span> (Push Button) - Clear
+Session log.<br>
+<span style="font-weight: bold;">?</span> (Push Button) - A terse help
+file with a brief explanation of how to use the client.<br>
+<span style="font-weight: bold;">Save User &amp; Password</span> (Check
+box) - Option to save User name and Password.<br>
+<br>
+<span style="font-weight: bold;">Session Log</span> (Text Readout) -
+Commands and feedback issued during session.<br>
+<br>
+<span style="font-weight: bold;">Connection Status Box</span> (Text
+Readout) - Connection monitor.<br>
+<br>
+<span style="font-weight: bold;">Build Batch</span> (Push Button) -
+Make a standard batch. Adds all the .txt files in the text directory
+and all the .png files in the pngs directory.<br>
+<span style="font-weight: bold;">Add a File&nbsp;</span> (Push Button)
+- Mostly to upload a few files instead of a standard batch. Adds a
+filename to the batch.<br>
+<span style="font-weight: bold;">Zip Batch Files</span> (Push Button) -
+Zip all of the batch files into one zip archive. New functionality on
+the site coming soon.<br>
+<span style="font-weight: bold;">Clear Local List</span> (Push Button)
+- Cancel batch before it is sent and clear batch list. Will interrupt
+batch in progress.<br>
+<span style="font-weight: bold;">Send Files</span> (Push Button) -
+Transfer all of the files in the batch list to the FTP host in binary
+mode.<br>
+<span style="font-weight: bold;">Stop Transfer</span> (Push Button) -
+Interrupt a batch transfer in progress. Uploads can be resumed.
+Downloads must be reinitialized.<br>
+<span style="font-weight: bold;">Download</span> (Push Button) - Select
+a file or directory on the remote server and press Download. A dialog
+will pop up to select a directory to download to. Alternate (file) -
+double left click.<br>
+<br>
+<span style="font-weight: bold;">Make New Directory</span> (Push
+Button) - Make a directory on the remote host in the current directory
+using the directory name from the Directory Name text entry.<br>
+<span style="font-weight: bold;">Directory Name</span> (Text Entry) -
+Name to use when making a new directory on the remote server.<br>
+<span style="font-weight: bold;">Chdir Sel</span> (Push Button) -
+Select a directory on the remote server and press Change to to change
+to it. Alternate (directory) double - left click.<br>
+<span style="font-weight: bold;">Chdir Up</span> (Push Button) - Change
+directory on the remote server up one level. Alternate double - left
+click on double dot entry "..".<br>
+<span style="font-weight: bold;">Rename</span> (Push Button) - Select a
+file or directory on the remote server then push Rename to rename it.<br>
+<span style="font-weight: bold;">Delete</span> (Push Button) - Select a
+file or directory on the remote server then push Delete to delete it.<br>
+<br>
+<span style="font-weight: bold;">Remote Directory</span> (Text Readout)
+- The directory you are currently browsing / working in on the remote
+host.<br>
+<br>
+<span style="font-weight: bold;">Local Listing</span> (Text Readout) -
+List of files that will be uploaded when Send Files is pressed.<br>
+<span style="font-weight: bold;">Remote Listing</span> (Text Readout) -
+A listing of all of the files and directories in the current directory
+on the remote host.<br>
+<br>
+The directory listing shows files prefixed by 'FILE - ' with the byte
+size after. Directories are prefixed by 'DIR -&nbsp; ' (except the
+double dot entry ".." which is short hand for "parent directory").<br>
+<br>
+To <span style="font-weight: bold;">Change Directories</span> on the
+remote host, double left click on a directory name in the remote
+directory listing.<br>
+<br>
+To <span style="font-weight: bold;">Download</span> a file or
+directory, left click then right click on it.(Or just double left click
+a file name) A dialog will pop up to select a download directory. When
+downloading multiple single files, don't try to start the next before
+the previous one is finished. It will cause problems with the script.<br>
+<br>
+When downloading a directory, the script will make a directory with the
+same name as the remote directory that it is downloading in the local
+directory that you choose through the download dialog.<br>
+The directory download dialog may be somewhat confusing. Double left
+click on a directory name or drive name to change to it, or on ".." to
+go up one directory. When the target directory (where you want the new
+directory to be placed) is in the text box below, press OK to start the
+download. The script will create the new directory, if necessary, and
+download the files into it, overwriting without warning any same name
+files that may already be in it.<br>
+At the bottom of the dialog there is a filename filter box. By default,
+(filter left blank, equivalent to '.' [any character]) all of the files
+in the selected remote directory will be downloaded. If you only want
+the text files, put <span style="font-weight: bold;">.txt</span> in
+the filter box. If you only want the PNG files put <span
+ style="font-weight: bold;">.png</span>. If you put a <span
+ style="font-weight: bold;">2</span> in the filter box, you'll get all
+of the files that have a 2 in the name. (002.txt, 002.png, 012.txt,
+012.png, 020.txt, 020.png.... etc.) It uses perl regular expressions to
+evaluate the pattern so you can build a much more complex matching
+filter if desired.<br>
+<br>
+To interrupt a batch download or upload in progress, press <span
+ style="font-weight: bold;">Stop Transfer</span>. This will stop the
+batch transfer after the current file is finished. To stop immediately,
+press <span style="font-weight: bold;">Disconnect</span>.<br>
+&nbsp;<br>
+To <span style="font-weight: bold;">Delete</span> a file or directory,
+select it (left click) then press <span style="font-weight: bold;">Delete</span>.<br>
+Directories do not need to be empty to be deleted. A dialog will pop up
+to ask for confirmation.<br>
+<span style="font-weight: bold;">MAKE SURE YOU <span
+ style="font-style: italic;">REALLY</span> WANT TO DO THIS. IT CAN <span
+ style="font-style: italic;">NOT</span> BE UNDONE.<br>
+<br>
+</span>You can view files in the local list (if they are text or image
+files) by double left clicking on them.<br>
+<br>
+You can remove one or several files from the local list by highlighting
+the file name(s) then double right clicking, or clear the list with the
+<span style="font-weight: bold;">Clear File List</span> push button.<br>
+<br>
+For files in the local list, double click on a file name to view it (if
+it is a text or image file).<br>
+<br>
+Select one or more file names and double right click to remove the
+names from the list.<br>
+<br>
+The script does directory caching to drastically speed up walking the
+tree. It does not save the cache when you close the program.<br>
+<br>
+<hr style="width: 100%; height: 2px;"> <span style="font-weight: bold;"><br>
+<br>
+<a name="Troubleshooting:_"></a>Troubleshooting:</span><br>
+<br>
+The script tries to figure out whether it can run the way it expects
+and tries to warn you if it has a problem.<br>
+<br>
+If it warns that it can't find files or a directory, you probably
+selected the wrong directory as a working directory or you may being
+running in the wrong mode, (batch instead of interactive or vice versa)
+or possibly you have incorrect options selected. (Running extract when
+you don't have rtf files.) Remember, for interactive mode, the textw
+and textwo directories (and possibly text and pngs) should be visible
+in the change directory box. For batch mode, you need to select the <span
+ style="font-style: italic;">parent</span> directory of the textw and
+textwo directories.<br>
+<br>
+Warnings about the scannos file are a result of a missing or corrupted
+scannos.rc file. If you edit the file, be sure to follow the format
+shown.<br>
+<br>
+One thing that will produce odd results is to feed the script RTF files
+that contain 16 bit characters. (Unicode or UTF-8) It is really
+designed to work with 8 bit characters using code page Windows 1252 or
+ISO Latin-1. If you end up with page after page of question marks, you
+probably are saving your RTF files as 16 bit characters.<br>
+<br>
+If you somehow get the window set larger than your desktop and can't
+get to an edge to resize it, delete the settings.rc file in the startup
+directory. That will reset all of the settings to defaults, which will
+reduce the window to 640x480 pixels. Alternately, you can edit the
+settings.rc file with a text editor and remove the line that starts:
+$geometry = .<br>
+<br>
+<br style="font-weight: bold;">
+<span style="font-weight: bold;"><a name="Known_bugs_and_odd_behavior:"></a>Known
+bugs and odd behavior:</span><br>
+<br>
+<br>
+When viewing a file through the Headers tab, you may have an unexpected
+or wrong file open up. Due to the way list boxes are handled under Tk,
+you need to specifically select (left click) an entry before you can
+act on it (right click). If you haven't selected an entry, either the
+last entry in the list or the previous selection is defaulted to. The
+actual mouse pointer position is ignored on right click.<br>
+<br>
+Customized open and close markup markers are not sanity checked. The
+script will not check or care if you use inappropriate markers. For
+instance you can set both italics and bold to use the same markup, or,
+even worse, use a marker which will occur normally in the text. If you
+specify "the" and "and" or even "&nbsp;&nbsp;&nbsp;&nbsp; " for your
+italics open and close markers, the script will uncomplainingly use
+them. Probably not a good idea.<br>
+<br>
+If you switch away from the Process text tab while a batch or job is
+running, it will automatically cancel the job to prevent contamination
+of other directories. Each tab has its own peculiarities about where it
+needs to run and if you try to switch to one while another is
+processing, it could cause problems.<br>
+<br>
+The FTP client blocks while it is waiting for a response from the FTP
+server. It appears that the program has locked up but it is just
+waiting for something to happen. If the connection is lost, it will
+return immediately. On a dial-up connection, for large transfers, (the
+initial directory listing, for instance) it can take between 30 - 60
+seconds to respond. Be patient. It <span style="font-style: italic;">is</span>
+working.<br>
+<br>
+<br>
+<br>
+</span>
+<hr style="width: 100%; height: 2px;"> <br>
+<br>
+</body>
+</html>
