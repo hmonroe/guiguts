@@ -5707,28 +5707,13 @@ sub makeanchor {
 # FIXME: Split this into separate functions, eventually into HTMLconvert.pm
 sub htmlautoconvert {
 	viewpagenums() if ( $lglobal{seepagenums} );
-	my $aname = q{};
 	my $author;
-	my $blkquot = 0;
-	my $cflag   = 0;
-	my $front;
 	my $headertext;
-	my $inblock    = 0;
 	my $incontents = '1.0';
-	my $indent     = 0;
-	my $intitle    = 0;
-	my $ital       = 0;
-	my $listmark   = 0;
-	my $pgoffset   = 0;
-	my $poetry     = 0;
 	my $selection  = q{};
-	my $skip       = 0;
-	my $thisblank  = q{};
 	my $thisblockend;
 	my $thisblockstart = '1.0';
 	my $thisend        = q{};
-
-	# FIXME: May as well put all uninit vars in a single my();
 	my $title;
 	my ( $ler, $lec, $step );    # FIXME: last_end_row|column
 	my @contents = ("<p>\n");
@@ -5833,152 +5818,12 @@ sub htmlautoconvert {
 
 	html_cleanup_markers($textwindow, $thisblockstart, $ler, $lec, $thisblockend );
 
-  #    working("Cleaning up\nblock Markers");
-  #    while ( $thisblockstart
-  #        = $textwindow->search( '-regexp', '--', '^\/[\*\$\#]', '1.0', 'end' )
-  #        )
-  #    {
-  #        ( $ler, $lec ) = split /\./, $thisblockstart;
-  #        $thisblockend = "$ler.end";
-  #        $textwindow->ntdelete( "$thisblockstart-1c", $thisblockend );
-  #    }
-  #    while ( $thisblockstart
-  #        = $textwindow->search( '-regexp', '--', '^[\*\$\#]\/', '1.0', 'end' )
-  #        )
-  #    {
-  #        ( $ler, $lec ) = split /\./, $thisblockstart;
-  #        $thisblockend = "$ler.end";
-  #        $textwindow->ntdelete( "$thisblockstart-1c", $thisblockend );
-  #    }
-  #    while ( $thisblockstart
-  #        = $textwindow->search( '-regexp', '--', '<\/h\d><br />', '1.0',
-  #            'end' ) )
-  #    {
-  #        $textwindow->ntdelete( "$thisblockstart+5c", "$thisblockstart+9c" );
-  #    }
-
-
 	html_convert_underscoresmallcaps($textwindow);
 	
-	working("Converting\nSidenotes");
-	my $thisnoteend;
-	my $length;
-	while (
-			$thisblockstart =
-			$textwindow->search(
-								 '-regexp',
-								 '-count' => \$length,
-								 '--', '(<p>)?\[Sidenote:\s*', '1.0', 'end'
-			)
-	  )
-	{
-		$textwindow->ntdelete( $thisblockstart,
-							   $thisblockstart . '+' . $length . 'c' );
-		$textwindow->ntinsert( $thisblockstart, '<div class="sidenote">' );
-		$thisnoteend = $textwindow->search( '--', ']', $thisblockstart, 'end' );
-		while ( $textwindow->get( "$thisblockstart+1c", $thisnoteend ) =~ /\[/ )
-		{
-			$thisblockstart = $thisnoteend;
-			$thisnoteend =
-			  $textwindow->search( '--', ']</p>', $thisblockstart, 'end' );
-		}
-		$textwindow->ntdelete( $thisnoteend, "$thisnoteend+5c" )
-		  if $thisnoteend;
-		$textwindow->ntinsert( $thisnoteend, '</div>' ) if $thisnoteend;
-	}
-	while ( $thisblockstart =
-			$textwindow->search( '--', '</div></div></p>', '1.0', 'end' ) )
-	{
-		$textwindow->ntdelete( "$thisblockstart+12c", "$thisblockstart+16c" );
-	}
-	if ( $lglobal{pageanch} || $lglobal{pagecmt} ) {
-
-		working("Inserting Page Markup");
-		$|++;
-		my ( $mark, $markindex );
-		my @marknames = sort $textwindow->markNames;
-		for $mark (@marknames) {
-			if ( $mark =~ /Pg(\S+)/ ) {
-				my $num = $pagenumbers{$mark}{label};
-				$num =~ s/Pg // if defined $num;
-				$num = $1 unless $pagenumbers{$mark}{action};
-				next unless length $num;
-				$num =~ s/^0+(\d)/$1/;
-				$markindex = $textwindow->index($mark);
-				my $check =
-				  $textwindow->get( $markindex . 'linestart',
-									$markindex . 'linestart +4c' );
-				if ( $check =~ /<h[12]>/ ) {
-					$markindex = $textwindow->index("$mark-1l lineend")
-					  ;    # FIXME: HTML page number hangs here
-				}
-				$textwindow->ntinsert(
-					$markindex,
-"<span class=\"pagenum\"><a name=\"Page_$num\" id=\"Page_$num\">[Pg $num]</a></span>"
-				) if $lglobal{pageanch};
-
-#$textwindow->ntinsert($markindex,"<span class="pagenum" id=\"Page_".$num."\">[Pg $num]</span>") if $lglobal{pageanch};
-# FIXME: this is hanging up somewhere.
-				$textwindow->ntinsert( $markindex,
-									   '<!-- Page ' . $num . ' -->' )
-				  if ( $lglobal{pagecmt} and $num );
-				my $pstart =
-				  $textwindow->search( '-backwards', '-exact', '--', '<p>',
-									   $markindex, '1.0' )
-				  || '1.0';
-				my $pend =
-				  $textwindow->search( '-backwards', '-exact', '--', '</p>',
-									   $markindex, '1.0' )
-				  || '1.0';
-				my $sstart =
-				  $textwindow->search( '-backwards', '-exact', '--', '<div ',
-									   $markindex, '1.0' )
-				  || '1.0';
-				my $send =
-				  $textwindow->search( '-backwards', '-exact', '--', '</div>',
-									   $markindex, $pend )
-				  || $pend;
-				if ( $textwindow->compare( $pend, '>=', $pstart ) ) {
-					$textwindow->ntinsert( $markindex, '<p>' )
-					  unless ( $textwindow->compare( $send, '<', $sstart ) );
-				}
-				my $anchorend =
-				  $textwindow->search( '-exact', '--', ']</a></span>',
-									   $markindex, 'end' );
-				$anchorend = $textwindow->index("$anchorend+12c");
-				$pstart =
-				  $textwindow->search( '-exact', '--', '<p>', $anchorend,
-									   'end' )
-				  || 'end';
-				$pend =
-				  $textwindow->search( '-exact', '--', '</p>', $anchorend,
-									   'end' )
-				  || 'end';
-				$sstart =
-				  $textwindow->search( '-exact', '--', '<div ', $anchorend,
-									   'end' )
-				  || 'end';
-				$send =
-				  $textwindow->search(
-									   '-exact', '--',
-									   '</div>', $anchorend,
-									   $sstart
-				  ) || $sstart;
-				if ( $textwindow->compare( $pend, '>=', $pstart ) ) {
-					$textwindow->ntinsert( $anchorend, '</p>' )
-					  unless ( $textwindow->compare( $send, '<', $sstart ) );
-				}
-			}
-		}
-	}
-	{
-		local $" = '';
-		$textwindow->insert(
-			$incontents,
-"\n\n<!-- Autogenerated TOC. Modify or delete as required. -->\n@contents\n<!-- End Autogenerated TOC. -->\n\n"
-		) if @contents;
-	}
-
+	html_convert_sidenotes($textwindow);
+	
+	html_convert_pageanchors($textwindow, $incontents, @contents);
+	
 	working("Converting Named\n and Numeric Characters");
 	named( ' >', ' &gt;' );
 	named( '< ', '&lt; ' );
@@ -5987,27 +5832,6 @@ sub htmlautoconvert {
 
 	html_convert_utf($textwindow, $thisblockstart);
 
-   #    if ( $lglobal{leave_utf} ) {
-   #        $thisblockstart
-   #            = $textwindow->search( '-exact', '--', 'charset=iso-8859-1',
-   #            '1.0', 'end' );
-   #        if ($thisblockstart) {
-   #            $textwindow->ntdelete( $thisblockstart, "$thisblockstart+18c" );
-   #            $textwindow->ntinsert( $thisblockstart, 'charset=UTF-8' );
-   #        }
-   #    }
-   #    unless ( $lglobal{leave_utf} ) {
-   #        while (
-   #            $thisblockstart = $textwindow->search(
-   #                '-regexp', '--', '[\x{100}-\x{65535}]', '1.0', 'end'
-   #            )
-   #            )
-   #        {
-   #            my $xchar = ord( $textwindow->get($thisblockstart) );
-   #            $textwindow->ntdelete($thisblockstart);
-   #            $textwindow->ntinsert( $thisblockstart, "&#$xchar;" );
-   #        }
-   #    }
 
 	fracconv( '1.0', 'end' ) if $lglobal{autofraction};
 	$textwindow->ntinsert( '1.0', $headertext );
@@ -6037,6 +5861,21 @@ sub htmlautoconvert {
 	$textwindow->Unbusy;
 	$textwindow->see('1.0');
 }
+
+sub htmlbackup {
+	my ($textwindow ) = @_;
+	$textwindow->Busy;
+	my $savefn = $lglobal{global_filename};
+	$lglobal{global_filename} =~ s/\.[^\.]*?$//;
+	my $newfn = $lglobal{global_filename} . '-htmlbak.txt';
+	&main::working("Saving backup of file\nto $newfn");
+	$textwindow->SaveUTF($newfn);
+	$lglobal{global_filename} = $newfn;
+	&main::_bin_save();
+	$lglobal{global_filename} = $savefn;
+	$textwindow->FileName($savefn);
+}
+
 
 sub entity {
 	my $char = shift;
