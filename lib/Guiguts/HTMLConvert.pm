@@ -1,5 +1,3 @@
-#$Id: HTMLConvert.pm 56 2008-09-27 17:37:26Z vlsimpson $
-
 package Guiguts::HTMLConvert;
 
 BEGIN {

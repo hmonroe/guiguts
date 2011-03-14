@@ -18,6 +18,7 @@
 #along with this program; if not, write to the Free Software
 #Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+#use criticism 'gentle';
 use strict;
 use warnings;
 use FindBin;
@@ -37,6 +38,7 @@ use HTML::TokeParser;
 use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
+use Test::More;
 
 #use File::Path;
 #use HTML::Lint;
@@ -105,6 +107,7 @@ our $globalspelldictopt     = q{};
 our $globalspellpath        = q{};
 our $globalviewerpath       = q{};
 our $globalprojectdirectory = q{};
+# In the next release version, provide default paths for each OS
 our $gutpath                = 'C:\dp\gutcheck\gutcheck.exe';
 our $highlightcolor         = '#a08dfc';
 our $history_size           = 20;
@@ -488,9 +491,9 @@ sub _bin_save {
 		if ($pngspath) {
 			print $fh "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
 		}
-		my ( $page, $prfr );
+		my (  $prfr );
 		delete $proofers{''};
-		foreach $page ( sort keys %proofers ) {
+		foreach my $page ( sort keys %proofers ) {
 
 			no warnings 'uninitialized';
 			for my $round ( 1 .. $lglobal{numrounds} ) {
@@ -6787,7 +6790,7 @@ sub errorcheckpop_up {
 				}
 			}
 		} else {
-			if ( $errorchecktype eq "W3C Validate" ) {
+			if ( ($errorchecktype eq "W3C Validate" ) or ($errorchecktype eq "W3C Validate Remote" )) {
 				$line =~ s/^.*:(\d+:\d+)/line $1/;
 				push @errorchecklines, $line;
 				$errors{$line} = '';
@@ -6940,14 +6943,20 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 			}
 		} else {
 			if ( $errorchecktype eq 'W3C Validate Remote' ) {
+				print 'Starting remote validate';
 				my $validator =
 				  WebService::Validator::HTML::W3C->new( detailed => 1 );
 				if ( $validator->validate_file('./validate.html') ) {
+					print 'Validate 1';
 					if ( open my $td, '>', "errors.err" ) {
+						print 'Validate 2';
 						if ( $validator->is_valid ) {
+							print 'Validate 2.1';
 							print $td (" ");
 						} else {
+							print 'Validate 2.2';
 							foreach my $error ( @{ $validator->errors } ) {
+								print 'Validate 2.3';
 								printf $td (
 										  "W3C:validate.tmp:%s:%s:Eremote:%s\n",
 										  $error->line, $error->col, $error->msg
@@ -6958,8 +6967,12 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 						close $td;
 					}
 				} else {
-					printf( "Failed to validate: %s\n",
-							$validator->validator_error );
+						print 'Validate 3';
+					if ( open my $td, '>', "errors.err" ) {
+						print 'Validate 4';
+						print $td 'Could not contact remote validator; try using local validator onsgmls.';
+						close $td;
+					}
 				}
 			} else {
 				if($errorchecktype eq 'W3C Validate CSS') {
