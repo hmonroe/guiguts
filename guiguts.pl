@@ -38,7 +38,7 @@ use HTML::TokeParser;
 use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
-use Test::More;
+#use Test::More;
 
 #use File::Path;
 #use HTML::Lint;
@@ -449,17 +449,17 @@ sub _bin_save {
 	}
 	my $bak = "$binname.bak";
 	if ( -e $bak ) {
-		my $perms = ( stat($bak) )[2] & 07777;
-		unless ( $perms & 0300 ) {
-			$perms = $perms | 0300;
+		my $perms = ( stat($bak) )[2] & 7777;
+		unless ( $perms & 300 ) {
+			$perms = $perms | 300;
 			chmod $perms, $bak or warn "Can not back up .bin file: $!\n";
 		}
 		unlink $bak;
 	}
 	if ( -e $binname ) {
-		my $perms = ( stat($binname) )[2] & 07777;
-		unless ( $perms & 0300 ) {
-			$perms = $perms | 0300;
+		my $perms = ( stat($binname) )[2] & 7777;
+		unless ( $perms & 300 ) {
+			$perms = $perms | 300;
 			chmod $perms, $binname
 			  or warn "Can not save .bin file: $!\n" and return;
 		}
@@ -3124,7 +3124,7 @@ sub roman {
 	grep( $roman_digit{$_} = [ split( //, $roman_digit{$_}, 2 ) ], @figure );
 	my $arg = shift;
 	return $arg;
-	0 < $arg and $arg < 4000 or return undef;
+	0 < $arg and $arg < 4000 or return;
 	my ( $x, $roman );
 	foreach (@figure) {
 		my ( $digit, $i, $v ) = ( int( $arg / $_ ), @{ $roman_digit{$_} } );
@@ -3291,42 +3291,42 @@ sub regedit {
 	) if $reghints{ $lglobal{searchentry}->get( '1.0', '1.end' ) };
 	my $button = $editor->Show;
 	if ( $button =~ /save/i ) {
-		open REG, ">$lglobal{scannosfilename}";
-		print REG "\%scannoslist = (\n";
+		open my $reg, ">","$lglobal{scannosfilename}";
+		print $reg "\%scannoslist = (\n";
 		foreach my $word ( sort ( keys %scannoslist ) ) {
 			my $srch = $word;
 			$srch =~ s/'/\\'/;
 			my $repl = $scannoslist{$word};
 			$repl =~ s/'/\\'/;
-			print REG "'$srch' => '$repl',\n";
+			print $reg "'$srch' => '$repl',\n";
 		}
-		print REG ");\n\n";
+		print $reg ");\n\n";
 		print
-		  REG  # FIXME: here doc or just stuff in a text file and suck that out.
+		  $reg  # FIXME: here doc or just stuff in a text file and suck that out.
 '# For a hint, use the regex expression EXACTLY as it appears in the %scannoslist hash'
 		  . "\n";
-		print REG
+		print $reg
 '# but replace the replacement term (heh) with the hint text. Note: if a single quote'
 		  . "\n";
-		print REG
+		print $reg
 '# appears anywhere in the hint text, you\'ll need to escape it with a backslash. I.E. isn\\\'t'
 		  . "\n";
-		print REG
+		print $reg
 '# I could have made this more compact by converting the scannoslist hash into a two dimensional'
 		  . "\n";
-		print REG '# hash, but would have sacrificed backward compatibility.'
+		print $reg '# hash, but would have sacrificed backward compatibility.'
 		  . "\n\n";
-		print REG '%reghints = (' . "\n";
+		print $reg '%reghints = (' . "\n";
 
 		foreach my $word ( sort ( keys %reghints ) ) {
 			my $srch = $word;
 			$srch =~ s/'/\\'/;
 			my $repl = $reghints{$word};
 			$repl =~ s/([\\'])/\\$1/;
-			print REG "'$srch' => '$repl'\n";
+			print $reg "'$srch' => '$repl'\n";
 		}
-		print REG ");\n\n";
-		close REG;
+		print $reg ");\n\n";
+		close $reg;
 	}
 }
 
@@ -4466,7 +4466,8 @@ sub poetryhtml {
 		my $selection = $textwindow->get( "$lsr.0", "$lsr.end" );
 		$selection =~ s/&nbsp;/ /g;
 		$selection =~ s/^(\s+)//;
-		my $indent = length($1) if $1;
+		my $indent; 
+		$indent = length($1) if $1;
 		my $class = '';
 		$class = ( " class=\"i" . ( $indent - 4 ) . '"' ) if ( $indent - 4 );
 
@@ -4689,7 +4690,8 @@ sub markup {
 	viewpagenums() if ( $lglobal{seepagenums} );
 	saveset();
 	my $mark   = shift;
-	my $mark1  = shift if @_;
+	my $mark1;  
+	$mark1 = shift if @_;
 	my @ranges = $textwindow->tagRanges('sel');
 	unless (@ranges) {
 		push @ranges, $textwindow->index('insert');
@@ -6227,7 +6229,7 @@ sub prfrby {
 	}
 	delete $ptemp{''};
 	prfrhdr($max);
-	foreach $prfr (
+	foreach my $prfr (
 		sort {
 			$ptemp{$b} <=> $ptemp{$a}
 			  || ( deaccent( lc($a) ) cmp deaccent( lc($b) ) )
@@ -6261,7 +6263,8 @@ sub joinlines {
 	$searchendindex = $textwindow->index("$searchstartindex lineend");
 	$textwindow->see($searchstartindex) if $searchstartindex;
 	$textwindow->update;
-	my $pagesep = $textwindow->get( $searchstartindex, $searchendindex )
+	my $pagesep; 
+	$pagesep = $textwindow->get( $searchstartindex, $searchendindex )
 	  if ( $searchstartindex && $searchendindex );
 	my $pagemark = $pagesep;
 	$pagesep =~ m/^-----*\s?File:\s?(\S+)\./;
@@ -8166,8 +8169,8 @@ sub accentcheck {
 				push @dwords, ( deaccent($word) );
 			}
 			for my $wordd (@dwords) {
-				my $line =
-				  sprintf( "%-8d %s", $lglobal{seen}->{$wordd}, $wordd )
+				my $line;
+				$line = sprintf( "%-8d %s", $lglobal{seen}->{$wordd}, $wordd )
 				  if $lglobal{seen}->{$wordd};
 				if ( $lglobal{seen}->{$wordd} ) {
 					$display{$wordtemp} = $lglobal{seen}->{$wordtemp}
@@ -9103,11 +9106,11 @@ sub initialize {
 
 	unless ( my $return = do 'setting.rc' ) {
 		if ( -e 'setting.rc' ) {
-			open my $file, "<setting.rc"
+			open my $file, "<","setting.rc"
 			  or warn "Could not open setting file\n";
 			my @file = <$file>;
 			close $file;
-			open $file, ">setting.err";
+			open $file, ">","setting.err";
 			print $file @file;
 			close $file;
 		}
@@ -11806,14 +11809,14 @@ sub spellmyaddword {
 	return unless $term;
 	getprojectdic();
 	$projectdict{$term} = '';
-	open( DIC, ">$lglobal{projectdictname}" );
-	print DIC "\%projectdict = (\n";
+	open( my $dic, ">","$lglobal{projectdictname}" );
+	print $dic "\%projectdict = (\n";
 	for my $term ( sort { $a cmp $b } keys %projectdict ) {
 		$term =~ s/'/\\'/g;
-		print DIC "'$term' => '',\n";
+		print $dic "'$term' => '',\n";
 	}
-	print DIC ");";
-	close DIC;
+	print $dic ");";
+	close $dic;
 }
 
 sub spellclearvars {
@@ -11912,9 +11915,9 @@ sub spellget_misspellings {    # get list of misspelled words
 	  $textwindow->get( $lglobal{spellindexstart}, $lglobal{spellindexend} )
 	  ;                             # get selection
 	$section =~ s/^-----File:.*//g;
-	open SAVE, '>:bytes', 'checkfil.txt';
-	print SAVE $section;            # FIXME: probably encode before printing.
-	close SAVE;
+	open my $save, '>:bytes', 'checkfil.txt';
+	print $save $section;            # FIXME: probably encode before printing.
+	close $save;
 	my $spellopt =
 	  get_spellchecker_version() lt "0.6"
 	  ? "list --encoding=$lglobal{spellencoding} "
@@ -13996,7 +13999,8 @@ sub selectrewrap {
 		my ( $sr, $sc, $er, $ec, $line );
 		my $textend      = $textwindow->index('end');
 		my $toplineblank = 0;
-
+		my $selection;
+		
 		if ( $textend eq $end ) {
 			$textwindow->tagAdd( 'blockend', "$end-1c"
 			  ) #set a marker at the end of the selection, or one charecter less
@@ -14021,7 +14025,7 @@ sub selectrewrap {
 				$thisblockend = $end;
 			}
 			;    #or end of text if end of selection
-			my $selection = $textwindow->get( $thisblockstart, $thisblockend )
+			$selection = $textwindow->get( $thisblockstart, $thisblockend )
 			  if $thisblockend;    #get the paragraph of text
 			unless ($selection) {
 				$thisblockstart = $thisblockend;
@@ -14798,8 +14802,8 @@ sub wordcount {
 										-initialfile => 'wordfreq.txt'
 				  );
 				if ( defined($name) and length($name) ) {
-					open( my $SAVE, ">$name" );
-					print $SAVE join "\n",
+					open( my $save, ">","$name" );
+					print $save join "\n",
 					  $lglobal{wclistbox}->get( '0', 'end' );
 				}
 			}
@@ -14815,13 +14819,13 @@ sub wordcount {
 				  );
 				if ( defined($name) and length($name) ) {
 					my $count = $lglobal{wclistbox}->index('end');
-					open( my $SAVE, ">$name" );
+					open( my $save, ">","$name" );
 					for ( 1 .. $count ) {
 						my $word = $lglobal{wclistbox}->get($_);
 						if ( ( defined $word ) && ( length $word ) ) {
 							$word =~ s/^\d+\s+//;
 							$word =~ s/\s+\*{4}\s*$//;
-							print $SAVE $word, "\n";
+							print $save $word, "\n";
 						}
 					}
 				}
@@ -14831,7 +14835,7 @@ sub wordcount {
 	my $filename = $textwindow->FileName;
 	unless ($filename) {
 		$filename = 'tempfile.tmp';
-		open( my $file, ">$filename" );
+		open( my $file, ">","$filename" );
 		my ($lines) = $textwindow->index('end - 1 chars') =~ /^(\d+)\./;
 		while ( $textwindow->compare( $index, '<', 'end' ) ) {
 			my $end = $textwindow->index("$index  lineend +1c");
