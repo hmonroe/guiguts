@@ -508,7 +508,7 @@ sub _bin_save {
 		}
 		print $fh "\n\n";
 		print $fh "\@operations = (\n";
-		for $mark (@operations) {
+		for my $mark (@operations) {
 			$mark = escape_problems($mark);
 			print $fh "'$mark',\n";
 		}
@@ -1204,7 +1204,7 @@ sub file_guess_page_marks {
 				my $end = $textwindow->index('end');
 				$end = int( $end + .5 );
 				my $average = ( int( $line25 + .5 ) / 25 );
-				for $pnum ( 1 .. 24 ) {
+				for my $pnum ( 1 .. 24 ) {
 					$lnum = int( ( $pnum - 1 ) * $average ) + 1;
 					if ( $totpages > 999 ) {
 						$number = sprintf '%04s', $pnum;
@@ -1217,7 +1217,7 @@ sub file_guess_page_marks {
 				$average =
 				  ( ( int( $linex + .5 ) ) - ( int( $line25 + .5 ) ) ) /
 				  ( $pagex - 25 );
-				for $pnum ( 1 .. $pagex - 26 ) {
+				for my $pnum ( 1 .. $pagex - 26 ) {
 					$lnum = int( ( $pnum - 1 ) * $average ) + 1 + $line25;
 					if ( $totpages > 999 ) {
 						$number = sprintf '%04s', $pnum + 25;
@@ -1229,7 +1229,7 @@ sub file_guess_page_marks {
 				}
 				$average =
 				  ( $end - int( $linex + .5 ) ) / ( $totpages - $pagex );
-				for $pnum ( 1 .. ( $totpages - $pagex ) ) {
+				for my $pnum ( 1 .. ( $totpages - $pagex ) ) {
 					$lnum = int( ( $pnum - 1 ) * $average ) + 1 + $linex;
 					if ( $totpages > 999 ) {
 						$number = sprintf '%04s', $pnum + $pagex;
@@ -2451,8 +2451,7 @@ sub footnotemove {
 	autoendlz();
 	getlz();
 	$lglobal{fnindex} = 1;
-	foreach $lz ( @{ $lglobal{fnlzs} } ) {
-
+	foreach my $lz ( @{ $lglobal{fnlzs} } ) {
 		if ( $lglobal{fnarray}->[ $lglobal{fnindex} ][0] ) {
 			while (
 					$textwindow->compare(
@@ -2479,7 +2478,7 @@ sub footnotemove {
 		$lglobal{fnindex}--;
 	}
 	$zone = 0;
-	foreach $lz ( @{ $lglobal{fnlzs} } ) {
+	foreach my $lz ( @{ $lglobal{fnlzs} } ) {
 		$textwindow->insert( $textwindow->index("LZ$zone +10c"),
 							 $footnotes{$lz} )
 		  if $footnotes{$lz};
@@ -3124,8 +3123,7 @@ sub roman {
 	my @figure      = reverse sort keys %roman_digit;
 	grep( $roman_digit{$_} = [ split( //, $roman_digit{$_}, 2 ) ], @figure );
 	my $arg = shift;
-	return undef
-	  unless defined $arg;
+	return $arg;
 	0 < $arg and $arg < 4000 or return undef;
 	my ( $x, $roman );
 	foreach (@figure) {
@@ -3383,7 +3381,7 @@ sub regdel {
 	delete $scannoslist{$st};
 	$lglobal{scannosindex}--;
 	@{ $lglobal{scannosarray} } = ();
-	foreach $word ( sort ( keys %scannoslist ) ) {
+	foreach my $word ( sort ( keys %scannoslist ) ) {
 		push @{ $lglobal{scannosarray} }, $word;
 	}
 	regload();
@@ -4325,7 +4323,7 @@ sub asciibox {
 		( $sr, $sc ) = split /\./, $start;
 		( $er, $ec ) = split /\./, $end;
 
-		for $linenum ( $sr .. $er - 2 ) {
+		for my $linenum ( $sr .. $er - 2 ) {
 			$line = $textwindow->get( "$linenum.0", "$linenum.end" );
 			$line =~ s/^\s*//;
 			$line =~ s/\s*$//;
@@ -4372,7 +4370,7 @@ sub aligntext {
 		$textwindow->addGlobStart;
 		( $sr, $sc ) = split /\./, $start;
 		( $er, $ec ) = split /\./, $end;
-		for $linenum ( $sr .. $er - 1 ) {
+		for my $linenum ( $sr .. $er - 1 ) {
 			$indexpos[$linenum] =
 			  $textwindow->search( '--', $lglobal{alignstring},
 								   "$linenum.0 -1c",
@@ -4385,7 +4383,7 @@ sub aligntext {
 			if ( $c > $textindex ) { $textindex = $c }
 			$indexpos[$linenum] = $c;
 		}
-		for $linenum ( $sr .. $er ) {
+		for my $linenum ( $sr .. $er ) {
 			if ( $indexpos[$linenum] > (-1) ) {
 				$textwindow->insert(
 									 "$linenum.0",
@@ -5707,109 +5705,28 @@ sub makeanchor {
 	return $linkname;
 }
 
-# FIXME: Split this into separate functions, eventually into HTMLconvert.pm
 sub htmlautoconvert {
 	viewpagenums() if ( $lglobal{seepagenums} );
-	my $author;
 	my $headertext;
-	my $incontents = '1.0';
-	my $selection  = q{};
-	my $thisblockend;
-	my $thisblockstart = '1.0';
-	my $thisend        = q{};
-	my $title;
-	my ( $ler, $lec, $step );    # FIXME: last_end_row|column
 	my @contents = ("<p>\n");
 	my @last5 = [ 1, 1, 1, 1, 1 ];
 
 	return if ( $lglobal{global_filename} =~ /No File Loaded/ );
-
-	htmlbackup($textwindow);
+	# Backup file
+	$textwindow->Busy;
+	my $savefn = $lglobal{global_filename};
+	$lglobal{global_filename} =~ s/\.[^\.]*?$//;
+	my $newfn = $lglobal{global_filename} . '-htmlbak.txt';
+	working("Saving backup of file\nto $newfn");
+	$textwindow->SaveUTF($newfn);
+	$lglobal{global_filename} = $newfn;
+	_bin_save();
+	$lglobal{global_filename} = $savefn;
+	$textwindow->FileName($savefn);
 
 	html_convert_codepage();
 
-	#    html_parse_header( $selection, $headertext, $title, $author);
-	working('Parsing Header');
-
-	$selection = $textwindow->get( '1.0', '1.end' );
-	if ( $selection =~ /DOCTYPE/ ) {
-		$step = 1;
-		while (1) {
-			$selection = $textwindow->get( "$step.0", "$step.end" );
-			$headertext .= ( $selection . "\n" );
-			$textwindow->ntdelete( "$step.0", "$step.end" );
-			last if ( $selection =~ /^\<body/ );
-			$step++;
-			last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
-		}
-		$textwindow->ntdelete( '1.0', "$step.0 +1c" );
-	} else {
-		unless ( -e 'header.txt' ) {
-			copy( 'headerdefault.txt', 'header.txt' );
-		}
-		open my $infile, '<', 'header.txt'
-		  or warn "Could not open header file. $!\n";
-		while (<$infile>) {
-			$_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-
-			# FIXME: $_ = eol_convert($_);
-			$headertext .= $_;
-		}
-		close $infile;
-	}
-
-	$step = 0;
-	while (1) {
-		$step++;
-		last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
-		$selection = $textwindow->get( "$step.0", "$step.end" );
-		next if ( $selection =~ /^\[Illustr/i );    # Skip Illustrations
-		next if ( $selection =~ /^\/[\$f]/i );      # Skip /$|/F tags
-		next unless length($selection);
-		$title = $selection;
-		$title =~ s/[,.]$//;
-		$title = lc($title);
-		$title =~ s/(^\W*\w)/\U$1\E/;
-		$title =~ s/([\s\n]+\W*\w)/\U$1\E/g;
-		last if $title;
-	}
-	if ($title) {
-		$headertext =~ s/TITLE/$title/ if $title;
-		$textwindow->ntinsert( "$step.0",   '<h1>' );
-		$textwindow->ntinsert( "$step.end", '</h1>' );
-	}
-	while (1) {
-		$step++;
-		last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
-		$selection = $textwindow->get( "$step.0", "$step.end" );
-		if ( ( $selection =~ /^by/i ) and ( $step < 100 ) ) {
-			last if ( $selection =~ /[\/[Ff]/ );
-			if ( $selection =~ /^by$/i ) {
-				$selection = '<h3>' . $selection . '</h3>';
-				$textwindow->ntdelete( "$step.0", "$step.end" );
-				$textwindow->ntinsert( "$step.0", $selection );
-				do {
-					$step++;
-					$selection = $textwindow->get( "$step.0", "$step.end" );
-				} until ( $selection ne "" );
-				$author = $selection;
-				$author =~ s/,$//;
-			} else {
-				$author = $selection;
-				$author =~ s/\s$//i;
-			}
-		}
-		$selection = '<h2>' . $selection . '</h2>' if $author;
-		$textwindow->ntdelete( "$step.0", "$step.end" );
-		$textwindow->ntinsert( "$step.0", $selection );
-		last if $author || ( $step > 100 );
-	}
-	if ($author) {
-		$author =~ s/^by //i;
-		$author = ucfirst( lc($author) );
-		$author     =~ s/(\W)(\w)/$1\U$2\E/g;
-		$headertext =~ s/AUTHOR/$author/;
-	}
+	$headertext = html_parse_header( $textwindow, $headertext);
 
 	html_convert_ampersands();
 
@@ -5817,67 +5734,21 @@ sub htmlautoconvert {
 
     html_convert_footnotes($textwindow);
 
-	html_convert_body($textwindow, @contents);
+	html_convert_body($textwindow, $headertext, @contents);
 
-	html_cleanup_markers($textwindow, $thisblockstart, $ler, $lec, $thisblockend );
+	html_cleanup_markers($textwindow);
 
 	html_convert_underscoresmallcaps($textwindow);
 	
 	html_convert_sidenotes($textwindow);
 	
-	html_convert_pageanchors($textwindow, $incontents, @contents);
+	html_convert_pageanchors($textwindow, @contents);
 	
-	working("Converting Named\n and Numeric Characters");
-	named( ' >', ' &gt;' );
-	named( '< ', '&lt; ' );
-
-	if ( !$lglobal{keep_latin1} ) { html_convert_latin1(); }
-
-	html_convert_utf($textwindow, $thisblockstart);
-
-
-	fracconv( '1.0', 'end' ) if $lglobal{autofraction};
-	$textwindow->ntinsert( '1.0', $headertext );
-	if ( $lglobal{leave_utf} ) {
-		$thisblockstart =
-		  $textwindow->search(
-							   '-exact',             '--',
-							   'charset=iso-8859-1', '1.0',
-							   'end'
-		  );
-		if ($thisblockstart) {
-			$textwindow->ntdelete( $thisblockstart, "$thisblockstart+18c" );
-			$textwindow->ntinsert( $thisblockstart, 'charset=utf-8' );
-		}
-	}
-	$textwindow->ntinsert( 'end', "\n<\/body>\n<\/html>" );
-	$thisblockstart = $textwindow->search( '--', '</style', '1.0', '250.0' );
-	$thisblockstart = '75.0' unless $thisblockstart;
-	$thisblockstart =
-	  $textwindow->search( -backwards, '--', '}', $thisblockstart, '10.0' );
-	for ( reverse( sort( values( %{ $lglobal{classhash} } ) ) ) ) {
-		$textwindow->ntinsert( $thisblockstart . ' +1l linestart', $_ )
-		  if keys %{ $lglobal{classhash} };
-	}
-	%{ $lglobal{classhash} } = ();
-	working();
-	$textwindow->Unbusy;
-	$textwindow->see('1.0');
+	html_convert_utf($textwindow);
+	
+	html_wrapup($textwindow,$headertext);
 }
 
-sub htmlbackup {
-	my ($textwindow ) = @_;
-	$textwindow->Busy;
-	my $savefn = $lglobal{global_filename};
-	$lglobal{global_filename} =~ s/\.[^\.]*?$//;
-	my $newfn = $lglobal{global_filename} . '-htmlbak.txt';
-	&main::working("Saving backup of file\nto $newfn");
-	$textwindow->SaveUTF($newfn);
-	$lglobal{global_filename} = $newfn;
-	&main::_bin_save();
-	$lglobal{global_filename} = $savefn;
-	$textwindow->FileName($savefn);
-}
 
 
 sub entity {
@@ -6296,7 +6167,7 @@ sub prfrbypage {
 sub prfrbyname {
 	my ( $page, $prfr, %proofersort );
 	my $max = 8;
-	for $page ( keys %proofers ) {
+	for my $page ( keys %proofers ) {
 		for ( 1 .. $lglobal{numrounds} ) {
 			$max = length $proofers{$page}->[$_]
 			  if ( $proofers{$page}->[$_]
@@ -6304,7 +6175,7 @@ sub prfrbyname {
 		}
 	}
 	$lglobal{prfrrotextbox}->delete( '1.0', 'end' );
-	foreach $page ( keys %proofers ) {
+	foreach my $page ( keys %proofers ) {
 		for ( 1 .. $lglobal{numrounds} ) {
 			$proofersort{ $proofers{$page}->[$_] }[$_]++
 			  if $proofers{$page}->[$_];
@@ -6314,7 +6185,7 @@ sub prfrbyname {
 	}
 	prfrhdr($max);
 	delete $proofersort{''};
-	foreach $prfr ( sort { deaccent( lc($a) ) cmp deaccent( lc($b) ) }
+	foreach my $prfr ( sort { deaccent( lc($a) ) cmp deaccent( lc($b) ) }
 					( keys %proofersort ) )
 	{
 		for ( 1 .. $lglobal{numrounds} ) {
@@ -6335,7 +6206,7 @@ sub prfrby {
 	my $which = shift;
 	my ( $page, $prfr, %proofersort, %ptemp );
 	my $max = 8;
-	for $page ( keys %proofers ) {
+	for my $page ( keys %proofers ) {
 		for ( 1 .. $lglobal{numrounds} ) {
 			$max = length $proofers{$page}->[$_]
 			  if ( $proofers{$page}->[$_]
@@ -6343,7 +6214,7 @@ sub prfrby {
 		}
 	}
 	$lglobal{prfrrotextbox}->delete( '1.0', 'end' );
-	foreach $page ( keys %proofers ) {
+	foreach my $page ( keys %proofers ) {
 		for ( 1 .. $lglobal{numrounds} ) {
 			$proofersort{ $proofers{$page}->[$_] }[$_]++
 			  if $proofers{$page}->[$_];
@@ -6351,7 +6222,7 @@ sub prfrby {
 			  if $proofers{$page}->[$_];
 		}
 	}
-	foreach $prfr ( keys(%proofersort) ) {
+	foreach my $prfr ( keys(%proofersort) ) {
 		$ptemp{$prfr} = ( $proofersort{$prfr}[$which] || '0' );
 	}
 	delete $ptemp{''};
@@ -7561,7 +7432,7 @@ sub gutwindowpopulate {
 	return unless defined $lglobal{gcpop};
 	my ( $line, $flag, $count, $start );
 	$lglobal{gclistbox}->delete( '0', 'end' );
-	foreach $line ( @{$linesref} ) {
+	foreach my $line ( @{$linesref} ) {
 		$flag = 0;
 		$start++ unless ( index( $line, 'Line', 0 ) > 0 );
 		next unless defined $gc{$line};
@@ -7878,7 +7749,7 @@ sub harmonicspop {
 		$lglobal{hlistbox}
 		  ->insert( 'end', "$wc 1st order harmonics for $active." );
 	}
-	foreach $word ( sort { deaccent( lc $a ) cmp deaccent( lc $b ) }
+	foreach my $word ( sort { deaccent( lc $a ) cmp deaccent( lc $b ) }
 					( keys %{ $lglobal{harmonic} } ) )
 	{
 		$line =
@@ -8437,7 +8308,7 @@ sub stealthcheck {
 		$list{$word}   = '';
 		$list{$scanno} = '';
 	}
-	foreach $word ( keys %{ $lglobal{seen} } ) {
+	foreach my $word ( keys %{ $lglobal{seen} } ) {
 		next unless exists( $list{$word} );
 		$wordw++;
 		$display{$word} = $lglobal{seen}->{$word};
@@ -9095,12 +8966,12 @@ sub step2grid {
 	$selection = '';
 	$row       = 0;
 	$col       = 0;
-	for $row (@tbl) {
+	for my $row (@tbl) {
 		for (@$row) {
 			$_ = wrapper( 0, 0, 20, $_ );
 		}
 	}
-	for $row (@tbl) {
+	for my $row (@tbl) {
 		my $line;
 		while (1) {
 			my $num;
@@ -9157,7 +9028,7 @@ sub tblautoc {
 		}
 		$row++;
 	}
-	for $row ( 0 .. $#tbl ) {
+	for my $row ( 0 .. $#tbl ) {
 		for my $word ( 0 .. $#cols ) {
 			$tbl[$row][$word] = '' unless defined $tbl[$row][$word];
 			my $pad = ' ' x ( $cols[$word] - ( length $tbl[$row][$word] ) );
@@ -10946,7 +10817,7 @@ EOM
 		print $save_handle (");\n\n");
 
 		print $save_handle ("\@extops = (\n");
-		for $index ( 0 .. $#extops ) {
+		for my $index ( 0 .. $#extops ) {
 			my $label   = escape_problems( $extops[$index]{label} );
 			my $command = escape_problems( $extops[$index]{command} );
 			print $save_handle
@@ -10960,7 +10831,7 @@ EOM
 
 		print $save_handle ("\@search_history = (\n");
 		my @array = @search_history;
-		for $index (@array) {
+		for my $index (@array) {
 			$index =~ s/([^A-Za-z0-9 ])/'\x{'.(sprintf "%x", ord $1).'}'/eg;
 			print $save_handle qq/\t"$index",\n/;
 		}
@@ -10969,7 +10840,7 @@ EOM
 		print $save_handle ("\@replace_history = (\n");
 
 		@array = @replace_history;
-		for $index (@array) {
+		for my $index (@array) {
 			$index =~ s/([^A-Za-z0-9 ])/'\x{'.(sprintf "%x", ord $1).'}'/eg;
 			print $save_handle qq/\t"$index",\n/;
 		}
@@ -11296,46 +11167,6 @@ sub dos_path {
 #    $line =~ s/$regex//;
 #    return $line;
 #}
-
-## HTML processing routines
-
-
-
-# Set <head><title></title></head>
-#sub html_set_title { }
-
-# Set author name in <title></title>
-#sub html_set_author { }
-
-
-#sub html_parse_header {
-#
-#    working('Parsing Header');
-#
-#    $selection = $textwindow->get( '1.0', '1.end' );
-#    if ( $selection =~ /DOCTYPE/ ) {
-#        $step = 1;
-#        while (1) {
-#            $selection = $textwindow->get( "$step.0", "$step.end" );
-#            $headertext .= ( $selection . "\n" );
-#            $textwindow->ntdelete( "$step.0", "$step.end" );
-#            last if ( $selection =~ /^\<body/ );
-#            $step++;
-#            last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
-#        }
-#        $textwindow->ntdelete( '1.0', "$step.0 +1c" );
-#    } else {
-#        open my $infile, '<', 'header.txt'
-#            or warn "Could not open header file. $!\n";
-#        while (<$infile>) {
-#            $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
-#            # FIXME: $_ = eol_convert($_);
-#            $headertext .= $_;
-#        }
-#        close $infile;
-#    }
-#}
-
 
 ### Internal Routines
 ## Status Bar
@@ -11977,7 +11808,7 @@ sub spellmyaddword {
 	$projectdict{$term} = '';
 	open( DIC, ">$lglobal{projectdictname}" );
 	print DIC "\%projectdict = (\n";
-	for $term ( sort { $a cmp $b } keys %projectdict ) {
+	for my $term ( sort { $a cmp $b } keys %projectdict ) {
 		$term =~ s/'/\\'/g;
 		print DIC "'$term' => '',\n";
 	}
@@ -12093,7 +11924,7 @@ sub spellget_misspellings {    # get list of misspelled words
 	  ;    # feed the text to aspell, get an array of misspelled words out
 	chomp @templist;    # get rid of any newlines
 
-	foreach $word (@templist) {
+	foreach my $word (@templist) {
 		next if ( exists( $projectdict{$word} ) );
 		push @{ $lglobal{misspelledlist} },
 		  $word;        # filter out project dictionary word list.
@@ -12119,7 +11950,7 @@ sub spellignoreall {
 	return unless $word;
 	my @ignorelist = @{ $lglobal{misspelledlist} }; # copy the mispellings array
 	@{ $lglobal{misspelledlist} } = ();             # then clear it
-	foreach $next (@ignorelist)
+	foreach my $next (@ignorelist)
 	{    # then put all of the words you are NOT ignoring back into the
 		    # mispellings list
 		push @{ $lglobal{misspelledlist} }, $next
@@ -14255,7 +14086,7 @@ sub selectrewrap {
 						( $er, $ec ) = split /\./, $indentblockend;
 						unless ($offset) {
 							$offset = 100;
-							for $line ( $sr + 1 .. $er - 1 ) {
+							for my $line ( $sr + 1 .. $er - 1 ) {
 								$textline =
 								  $textwindow->get( "$line.0", "$line.end" );
 								if ($textline) {
@@ -14273,7 +14104,7 @@ sub selectrewrap {
 							}
 							$indent = $indent - $offset;
 						}
-						for $line ( $sr .. $er - 1 ) {
+						for my $line ( $sr .. $er - 1 ) {
 							$textline =
 							  $textwindow->get( "$line.0", "$line.end" );
 							next
@@ -16922,7 +16753,7 @@ sub externalpopup {    # Set up the external commands menu
 			. "\$p = the number of the page that the cursor is currently in.\n"
 		)->pack;
 		my $f1 = $lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-		for $menutempvar ( 0 .. 9 ) {
+		for my $menutempvar ( 0 .. 9 ) {
 			$f1->Entry(
 						-width        => 50,
 						-background   => 'white',

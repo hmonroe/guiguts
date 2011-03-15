@@ -6,7 +6,7 @@ BEGIN {
 	@EXPORT=qw(&html_convert_tb  &html_convert_subscripts &html_convert_superscripts
 	&html_convert_ampersands &html_convert_emdashes &html_convert_latin1 &html_convert_codepage &html_convert_utf
 	&html_cleanup_markers &html_convert_footnotes &html_convert_body &html_convert_underscoresmallcaps 
-	&html_convert_sidenotes &html_convert_pageanchors)
+	&html_convert_sidenotes &html_convert_pageanchors &html_parse_header &html_wrapup &htmlbackup)
 }
 
 sub html_convert_tb {
@@ -71,7 +71,7 @@ sub html_convert_latin1 {
 	&main::working("Converting Latin-1 Characters...");
 	for ( 128 .. 255 ) {
 		my $from = lc sprintf( "%x", $_ );
-		&main::named( '\x' . $from, entity( '\x' . $from ) );
+		&main::named( '\x' . $from, &main::entity( '\x' . $from ) );
 	}
 }
 
@@ -81,7 +81,8 @@ sub html_convert_codepage {
 }
 
 sub html_convert_utf {
-	my ($textwindow,$blockstart) = @_;
+	my ($textwindow) = @_;
+	my $blockstart;
 	if ( $lglobal{leave_utf} ) {
 		$blockstart =
 		  $textwindow->search(
@@ -111,11 +112,22 @@ sub html_convert_utf {
 		}
 	}
 
+	&main::working("Converting Named\n and Numeric Characters");
+	&main::named( ' >', ' &gt;' );
+	&main::named( '< ', '&lt; ' );
+
+	if ( !$lglobal{keep_latin1} ) { html_convert_latin1(); }
+
+
 }
 
 # FIXME: Should be a general purpose function
 sub html_cleanup_markers {
-	my ($textwindow, $blockstart, $xler, $xlec, $blockend ) = @_;
+	my ($textwindow) = @_;
+	my $thisblockend;
+	my $thisblockstart = '1.0';
+	my $thisend        = q{};
+	my ( $ler, $lec);   
 
 	&main::working("Cleaning up\nblock Markers");
 
@@ -140,7 +152,6 @@ sub html_cleanup_markers {
 	}
 
 }
-
 
 sub html_convert_footnotes {
 	my ($textwindow ) = @_;
@@ -234,14 +245,14 @@ sub html_convert_footnotes {
 }
 
 sub html_convert_body {
-	my ($textwindow, @contents) = @_;
+	my ($textwindow, $headertext, @contents) = @_;
 	&main::working('Converting Body');
 	my $aname = q{};
 	my $author;
 	my $blkquot = 0;
 	my $cflag   = 0;
 	my $front;
-	my $headertext;
+	#my $headertext;
 	my $inblock    = 0;
 	my $incontents = '1.0';
 	my $indent     = 0;
@@ -735,8 +746,6 @@ sub html_convert_body {
 		$step++;
 	}
 	push @contents, '</p>';
-
-	
 }
 
 sub html_convert_underscoresmallcaps {
@@ -840,13 +849,13 @@ sub html_convert_sidenotes {
 	
 }
 
-
 sub html_convert_pageanchors {
-	
-	my ($textwindow, $incontents, @contents) = @_;	
+	my ($textwindow, @contents) = @_;	
+	my $incontents = '1.0';
+
 	if ( $lglobal{pageanch} || $lglobal{pagecmt} ) {
 
-		working("Inserting Page Markup");
+		&main::working("Inserting Page Markup");
 		$|++;
 		my ( $mark, $markindex );
 		my @marknames = sort $textwindow->markNames;
@@ -932,6 +941,132 @@ sub html_convert_pageanchors {
 		) if @contents;
 	}
 
+	
+}
+
+sub html_parse_header {
+	my ($textwindow, $headertext) = @_;
+	my $selection;
+	my $step;
+	my $title;
+	my $author;
+	&main::working('Parsing Header');
+
+	$selection = $textwindow->get( '1.0', '1.end' );
+	if ( $selection =~ /DOCTYPE/ ) {
+		$step = 1;
+		while (1) {
+			$selection = $textwindow->get( "$step.0", "$step.end" );
+			$headertext .= ( $selection . "\n" );
+			$textwindow->ntdelete( "$step.0", "$step.end" );
+			last if ( $selection =~ /^\<body/ );
+			$step++;
+			last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
+		}
+		$textwindow->ntdelete( '1.0', "$step.0 +1c" );
+	} else {
+		unless ( -e 'header.txt' ) {
+			copy( 'headerdefault.txt', 'header.txt' );
+		}
+		open my $infile, '<', 'header.txt'
+		  or warn "Could not open header file. $!\n";
+		while (<$infile>) {
+			$_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
+			# FIXME: $_ = eol_convert($_);
+			$headertext .= $_;
+		}
+		close $infile;
+	}
+
+	$step = 0;
+	while (1) {
+		$step++;
+		last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
+		$selection = $textwindow->get( "$step.0", "$step.end" );
+		next if ( $selection =~ /^\[Illustr/i );    # Skip Illustrations
+		next if ( $selection =~ /^\/[\$f]/i );      # Skip /$|/F tags
+		next unless length($selection);
+		$title = $selection;
+		$title =~ s/[,.]$//;
+		$title = lc($title);
+		$title =~ s/(^\W*\w)/\U$1\E/;
+		$title =~ s/([\s\n]+\W*\w)/\U$1\E/g;
+		last if $title;
+	}
+	if ($title) {
+		$headertext =~ s/TITLE/$title/ if $title;
+		$textwindow->ntinsert( "$step.0",   '<h1>' );
+		$textwindow->ntinsert( "$step.end", '</h1>' );
+	}
+	while (1) {
+		$step++;
+		last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
+		$selection = $textwindow->get( "$step.0", "$step.end" );
+		if ( ( $selection =~ /^by/i ) and ( $step < 100 ) ) {
+			last if ( $selection =~ /[\/[Ff]/ );
+			if ( $selection =~ /^by$/i ) {
+				$selection = '<h3>' . $selection . '</h3>';
+				$textwindow->ntdelete( "$step.0", "$step.end" );
+				$textwindow->ntinsert( "$step.0", $selection );
+				do {
+					$step++;
+					$selection = $textwindow->get( "$step.0", "$step.end" );
+				} until ( $selection ne "" );
+				$author = $selection;
+				$author =~ s/,$//;
+			} else {
+				$author = $selection;
+				$author =~ s/\s$//i;
+			}
+		}
+		$selection = '<h2>' . $selection . '</h2>' if $author;
+		$textwindow->ntdelete( "$step.0", "$step.end" );
+		$textwindow->ntinsert( "$step.0", $selection );
+		last if $author || ( $step > 100 );
+	}
+	if ($author) {
+		$author =~ s/^by //i;
+		$author = ucfirst( lc($author) );
+		$author     =~ s/(\W)(\w)/$1\U$2\E/g;
+		$headertext =~ s/AUTHOR/$author/;
+	}
+	return $headertext;
+	
+}
+
+sub html_wrapup {
+
+	my ($textwindow,$headertext) = @_;
+	my $thisblockstart;
+
+	&main::fracconv( '1.0', 'end' ) if $lglobal{autofraction};
+	$textwindow->ntinsert( '1.0', $headertext );
+	if ( $lglobal{leave_utf} ) {
+		$thisblockstart =
+		  $textwindow->search(
+							   '-exact',             '--',
+							   'charset=iso-8859-1', '1.0',
+							   'end'
+		  );
+		if ($thisblockstart) {
+			$textwindow->ntdelete( $thisblockstart, "$thisblockstart+18c" );
+			$textwindow->ntinsert( $thisblockstart, 'charset=utf-8' );
+		}
+	}
+	$textwindow->ntinsert( 'end', "\n<\/body>\n<\/html>" );
+	$thisblockstart = $textwindow->search( '--', '</style', '1.0', '250.0' );
+	$thisblockstart = '75.0' unless $thisblockstart;
+	$thisblockstart =
+	  $textwindow->search( -backwards, '--', '}', $thisblockstart, '10.0' );
+	for ( reverse( sort( values( %{ $lglobal{classhash} } ) ) ) ) {
+		$textwindow->ntinsert( $thisblockstart . ' +1l linestart', $_ )
+		  if keys %{ $lglobal{classhash} };
+	}
+	%{ $lglobal{classhash} } = ();
+	&main::working();
+	$textwindow->Unbusy;
+	$textwindow->see('1.0');
 	
 }
 
