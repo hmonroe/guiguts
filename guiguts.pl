@@ -7914,10 +7914,10 @@ sub itwords {
 	}
 	$wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
 	$markupthreshold = 0 unless $markupthreshold;
-	while ( $wholefile =~ m/(<[iIbB]>)(.*?)(<\/[IiBb]>)/sg ) {
-		my $word   = $1 . $2 . $3;
-		my $wordwo = $2;
-		my $num    = 0;
+   	while ($wholefile =~ m/(<(i|I|b|B|sc)>)(.*?)(<\/(i|I|b|B|sc)>)/sg){ 
+    	my $word = $1.$3.$4; 
+      	my $wordwo = $3;
+      	my $num    = 0;
 		$num++ while ( $word =~ /(\S\s)/g );
 		next if ( $num >= $markupthreshold );
 		$word =~ s/\n/\\n/g;
@@ -14639,7 +14639,7 @@ sub wordcount {
 				 }
 			],
 			[ 'Check Spelling', \&wfspellcheck ],
-			[ 'Ital/Bold Words', \&itwords, \&ital_adjust ],
+			[ 'Ital/Bold/SC	 Words', \&itwords, \&ital_adjust ],
 			[ 'ALL CAPS',        \&capscheck ],
 			[ 'MiXeD CasE',      \&mixedcasecheck ],
 			[ 'Initial Caps',    \&initcapcheck ],
