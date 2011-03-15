@@ -4754,7 +4754,7 @@ sub markup {
 				}
 			}
 		} elsif ( $mark eq 'hr' ) {
-			$textwindow->insert( 'insert', '<hr style="width: 95%;" />' );
+			$textwindow->insert( 'insert', '<hr class="full" />' );
 		} elsif ( $mark eq '&nbsp;' ) {
 			my ( $lsr, $lsc, $ler, $lec, $step );
 			( $lsr, $lsc ) = split /\./, $thisblockstart;

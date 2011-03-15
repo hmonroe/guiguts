@@ -13,13 +13,13 @@ sub html_convert_tb {
 	no warnings;    # FIXME: Warning-- Exiting subroutine via next
 	my ($textwindow, $selection, $step ) = @_;
 
-	if ( $selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ ) {
+	if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr class="tb" \/>/ ) { 
 		$textwindow->ntdelete( "$step.0", "$step.end" );
 		$textwindow->ntinsert( "$step.0", $selection );
 		next;
 	}
 
-	if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {
+	if ($selection =~ s/<tb>/<hr class="tb" \/>/ ) {
 		$textwindow->ntdelete( "$step.0", "$step.end" );
 		$textwindow->ntinsert( "$step.0", $selection );
 		next;

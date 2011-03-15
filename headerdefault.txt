@@ -34,6 +34,10 @@ hr {
     clear: both;
 }
 
+hr.tb   {width: 45%;} 
+hr.chap {width: 65%; page-break-before: always;} 
+hr.full {width: 95%;}
+
 table { 
     margin-left: auto; 
     margin-right: auto;
