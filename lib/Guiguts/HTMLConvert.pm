@@ -16,7 +16,7 @@ sub html_convert_tb {
 	if ( $selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ ) {
 		$textwindow->ntdelete( "$step.0", "$step.end" );
 		$textwindow->ntinsert( "$step.0", $selection );
-		$next;
+		next;
 	}
 
 	if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {
@@ -121,7 +121,6 @@ sub html_convert_utf {
 
 }
 
-# FIXME: Should be a general purpose function
 sub html_cleanup_markers {
 	my ($textwindow) = @_;
 	my $thisblockend;
@@ -857,9 +856,9 @@ sub html_convert_pageanchors {
 
 		&main::working("Inserting Page Markup");
 		$|++;
-		my ( $mark, $markindex );
+		my $markindex;
 		my @marknames = sort $textwindow->markNames;
-		for $mark (@marknames) {
+		for my $mark (@marknames) {
 			if ( $mark =~ /Pg(\S+)/ ) {
 				my $num = $pagenumbers{$mark}{label};
 				$num =~ s/Pg // if defined $num;
