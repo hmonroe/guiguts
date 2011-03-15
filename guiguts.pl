@@ -5751,8 +5751,6 @@ sub htmlautoconvert {
 	html_wrapup($textwindow,$headertext);
 }
 
-
-
 sub entity {
 	my $char = shift;
 	my %markuphash = (
@@ -5915,7 +5913,7 @@ sub named {
 }
 
 # FIXME: Page separator removal help. Rename.
-sub phelppopup {
+sub pageseparatorhelppopup {
 	my $help_text = <<'EOM';
     Join Lines - join lines removing any spaces, asterisks and hyphens as necessary. - Hotkey j
     Join, Keep hyphen - join lines removing any spaces and asterisks as necessary. - Hotkey k
@@ -15396,7 +15394,7 @@ sub separatorpopup {
 		my $phelpbutton =
 		  $sf4->Button(
 						-activebackground => $activecolor,
-						-command          => sub { phelppopup() },
+						-command          => sub { pageseparatorhelppopup() },
 						-text             => '?',
 						-width            => 1
 		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
@@ -15416,7 +15414,7 @@ sub separatorpopup {
 	$lglobal{pagepop}->Tk::bind( '<h>' => sub { joinlines('h') } );
 	$lglobal{pagepop}->Tk::bind( '<d>' => sub { joinlines('d') } );
 	$lglobal{pagepop}->Tk::bind( '<t>' => sub { joinlines('t') } );
-	$lglobal{pagepop}->Tk::bind( '<?>' => sub { phelppopup('?') } );
+	$lglobal{pagepop}->Tk::bind( '<?>' => sub { pageseparatorhelppopup('?') } );
 	$lglobal{pagepop}->Tk::bind( '<r>' => \&convertfilnum );
 	$lglobal{pagepop}->Tk::bind(
 		'<v>' => sub {
