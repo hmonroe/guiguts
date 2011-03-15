@@ -38,6 +38,7 @@ use HTML::TokeParser;
 use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
+
 #use Test::More;
 
 #use File::Path;
@@ -107,19 +108,20 @@ our $globalspelldictopt     = q{};
 our $globalspellpath        = q{};
 our $globalviewerpath       = q{};
 our $globalprojectdirectory = q{};
+
 # In the next release version, provide default paths for each OS
-our $gutpath                = 'C:\dp\gutcheck\gutcheck.exe';
-our $highlightcolor         = '#a08dfc';
-our $history_size           = 20;
-our $italic_char            = "_";
-our $jeebiesmode            = 'p';
-our $jeebiespath            = 'C:\dp\tools\jeebies\jeebies.exe';
-our $lmargin                = 1;
-our $markupthreshold        = 4;
-our $nobell                 = 0;
-our $nohighlights           = 0;
-our $notoolbar              = 0;
-our $intelligentWF          = 0;
+our $gutpath         = 'C:\dp\gutcheck\gutcheck.exe';
+our $highlightcolor  = '#a08dfc';
+our $history_size    = 20;
+our $italic_char     = "_";
+our $jeebiesmode     = 'p';
+our $jeebiespath     = 'C:\dp\tools\jeebies\jeebies.exe';
+our $lmargin         = 1;
+our $markupthreshold = 4;
+our $nobell          = 0;
+our $nohighlights    = 0;
+our $notoolbar       = 0;
+our $intelligentWF   = 0;
 our $operationinterrupt;
 our $pngspath         = q{};
 our $rmargin          = 72;
@@ -348,7 +350,9 @@ die "ERROR: too many files specified. \n" if ( @ARGV > 1 );
 if (@ARGV) {
 	$lglobal{global_filename} = shift @ARGV;
 	if ( -e $lglobal{global_filename} ) {
-		$top->update;  # it may be a big file, draw the window, and then load it
+		my $userfn = $lglobal{global_filename};
+		$top->update;
+		$lglobal{global_filename} = $userfn;
 		openfile( $lglobal{global_filename} );
 	}
 } else {
@@ -491,7 +495,7 @@ sub _bin_save {
 		if ($pngspath) {
 			print $fh "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
 		}
-		my (  $prfr );
+		my ($prfr);
 		delete $proofers{''};
 		foreach my $page ( sort keys %proofers ) {
 
@@ -3291,7 +3295,7 @@ sub regedit {
 	) if $reghints{ $lglobal{searchentry}->get( '1.0', '1.end' ) };
 	my $button = $editor->Show;
 	if ( $button =~ /save/i ) {
-		open my $reg, ">","$lglobal{scannosfilename}";
+		open my $reg, ">", "$lglobal{scannosfilename}";
 		print $reg "\%scannoslist = (\n";
 		foreach my $word ( sort ( keys %scannoslist ) ) {
 			my $srch = $word;
@@ -3301,8 +3305,7 @@ sub regedit {
 			print $reg "'$srch' => '$repl',\n";
 		}
 		print $reg ");\n\n";
-		print
-		  $reg  # FIXME: here doc or just stuff in a text file and suck that out.
+		print $reg # FIXME: here doc or just stuff in a text file and suck that out.
 '# For a hint, use the regex expression EXACTLY as it appears in the %scannoslist hash'
 		  . "\n";
 		print $reg
@@ -4073,7 +4076,7 @@ sub orphans {
 	my $br = shift;
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 	my ( $thisindex, $open, $close, $crow, $ccol, $orow, $ocol, @op );
-	$open = '<' . $br . '>|<' . $br . ' [^>]*>';
+	$open  = '<' . $br . '>|<' . $br . ' [^>]*>';
 	$close = '<\/' . $br . '>';
 	my $end = $textwindow->index('end');
 	$thisindex = '1.0';
@@ -4466,7 +4469,7 @@ sub poetryhtml {
 		my $selection = $textwindow->get( "$lsr.0", "$lsr.end" );
 		$selection =~ s/&nbsp;/ /g;
 		$selection =~ s/^(\s+)//;
-		my $indent; 
+		my $indent;
 		$indent = length($1) if $1;
 		my $class = '';
 		$class = ( " class=\"i" . ( $indent - 4 ) . '"' ) if ( $indent - 4 );
@@ -4689,8 +4692,8 @@ sub autolist {
 sub markup {
 	viewpagenums() if ( $lglobal{seepagenums} );
 	saveset();
-	my $mark   = shift;
-	my $mark1;  
+	my $mark = shift;
+	my $mark1;
 	$mark1 = shift if @_;
 	my @ranges = $textwindow->tagRanges('sel');
 	unless (@ranges) {
@@ -5714,6 +5717,7 @@ sub htmlautoconvert {
 	my @last5 = [ 1, 1, 1, 1, 1 ];
 
 	return if ( $lglobal{global_filename} =~ /No File Loaded/ );
+
 	# Backup file
 	$textwindow->Busy;
 	my $savefn = $lglobal{global_filename};
@@ -5728,27 +5732,27 @@ sub htmlautoconvert {
 
 	html_convert_codepage();
 
-	$headertext = html_parse_header( $textwindow, $headertext);
+	$headertext = html_parse_header( $textwindow, $headertext );
 
 	html_convert_ampersands();
 
 	html_convert_emdashes();
 
-    html_convert_footnotes($textwindow);
+	html_convert_footnotes($textwindow);
 
-	html_convert_body($textwindow, $headertext, @contents);
+	html_convert_body( $textwindow, $headertext, @contents );
 
 	html_cleanup_markers($textwindow);
 
 	html_convert_underscoresmallcaps($textwindow);
-	
+
 	html_convert_sidenotes($textwindow);
-	
-	html_convert_pageanchors($textwindow, @contents);
-	
+
+	html_convert_pageanchors( $textwindow, @contents );
+
 	html_convert_utf($textwindow);
-	
-	html_wrapup($textwindow,$headertext);
+
+	html_wrapup( $textwindow, $headertext );
 }
 
 sub entity {
@@ -6186,7 +6190,7 @@ sub prfrbyname {
 	prfrhdr($max);
 	delete $proofersort{''};
 	foreach my $prfr ( sort { deaccent( lc($a) ) cmp deaccent( lc($b) ) }
-					( keys %proofersort ) )
+					   ( keys %proofersort ) )
 	{
 		for ( 1 .. $lglobal{numrounds} ) {
 			$proofersort{$prfr}[$_] = "0" unless $proofersort{$prfr}[$_];
@@ -6261,7 +6265,7 @@ sub joinlines {
 	$searchendindex = $textwindow->index("$searchstartindex lineend");
 	$textwindow->see($searchstartindex) if $searchstartindex;
 	$textwindow->update;
-	my $pagesep; 
+	my $pagesep;
 	$pagesep = $textwindow->get( $searchstartindex, $searchendindex )
 	  if ( $searchstartindex && $searchendindex );
 	my $pagemark = $pagesep;
@@ -6467,17 +6471,15 @@ sub undojoin {
 }
 
 sub add_navigation_events {
-	my ( $dialog_box ) = @_;
-	$dialog_box->eventAdd(
-			'<<pnext>>' => '<Next>',
-			'<Prior>', '<Up>', '<Down>'
-	);
+	my ($dialog_box) = @_;
+	$dialog_box->eventAdd( '<<pnext>>' => '<Next>',
+						   '<Prior>', '<Up>', '<Down>' );
 	$dialog_box->bind(
-			'<<pnext>>',
-			sub {
-					$dialog_box->selectionClear( 0, 'end' );
-					$dialog_box->selectionSet( $dialog_box->index('active') );
-			}
+		'<<pnext>>',
+		sub {
+			$dialog_box->selectionClear( 0, 'end' );
+			$dialog_box->selectionSet( $dialog_box->index('active') );
+		}
 	);
 
 	$dialog_box->bind(
@@ -6499,7 +6501,6 @@ sub add_navigation_events {
 		}
 	);
 }
-
 
 sub errorcheckpop_up {
 	my $errorchecktype = shift;
@@ -6528,7 +6529,7 @@ sub errorcheckpop_up {
 						errorcheckrun($errorchecktype);
 					} else {
 						if ( $errorchecktype eq 'W3C Validate CSS' ) {
-							errorcheckrun($errorchecktype);   #validatecssrun('');
+							errorcheckrun($errorchecktype); #validatecssrun('');
 						}
 					}
 				}
@@ -6628,10 +6629,10 @@ sub errorcheckpop_up {
 	my $fh = FileHandle->new("< errors.err");
 	unless ( defined($fh) ) {
 		my $dialog = $top->Dialog(
-					-text => 'Could not find ' . $errorchecktype . ' error file.',
-					-bitmap  => 'question',
-					-title   => 'File not found',
-					-buttons => [qw/OK/],
+				  -text => 'Could not find ' . $errorchecktype . ' error file.',
+				  -bitmap  => 'question',
+				  -title   => 'File not found',
+				  -buttons => [qw/OK/],
 		);
 		$dialog->Show;
 	}
@@ -6662,7 +6663,9 @@ sub errorcheckpop_up {
 				}
 			}
 		} else {
-			if ( ($errorchecktype eq "W3C Validate" ) or ($errorchecktype eq "W3C Validate Remote" )) {
+			if (    ( $errorchecktype eq "W3C Validate" )
+				 or ( $errorchecktype eq "W3C Validate Remote" ) )
+			{
 				$line =~ s/^.*:(\d+:\d+)/line $1/;
 				push @errorchecklines, $line;
 				$errors{$line} = '';
@@ -6773,7 +6776,9 @@ sub errorcheckrun {    # Runs Tidy and W3C Validate
 	}
 	saveset();
 	$top->Busy( -recurse => 1 );
-	if ( ($errorchecktype eq 'W3C Validate Remote' ) or ($errorchecktype eq 'W3C Validate CSS')) {
+	if (    ( $errorchecktype eq 'W3C Validate Remote' )
+		 or ( $errorchecktype eq 'W3C Validate CSS' ) )
+	{
 		$name = 'validate.html';
 	} else {
 		$name = 'errors.tmp';
@@ -6839,19 +6844,21 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 						close $td;
 					}
 				} else {
-						print 'Validate 3';
+					print 'Validate 3';
 					if ( open my $td, '>', "errors.err" ) {
 						print 'Validate 4';
-						print $td 'Could not contact remote validator; try using local validator onsgmls.';
+						print $td
+'Could not contact remote validator; try using local validator onsgmls.';
 						close $td;
 					}
 				}
 			} else {
-				if($errorchecktype eq 'W3C Validate CSS') {
+				if ( $errorchecktype eq 'W3C Validate CSS' ) {
 					my $validatecsspath = dirname($validatecsscommand);
-					my $pwd = getcwd;
+					my $pwd             = getcwd;
 					print "running css";
-					system(qq/java -jar $validatecsscommand file:$pwd\/$name > errors.err/);
+					system(
+qq/java -jar $validatecsscommand file:$pwd\/$name > errors.err/ );
 				}
 			}
 		}
@@ -6925,7 +6932,6 @@ sub validatecssremote {    # this does not work--does not  load the file
 	unlink 'validate.html';
 	errorcheckpop_up('W3C Validate CSS');
 }
-
 
 my @gsopt;
 
@@ -7008,8 +7014,8 @@ sub gcheckpop_up {
 		BindMouseWheel( $lglobal{gclistbox} );
 		$lglobal{gclistbox}->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
 		$lglobal{gclistbox}->bind( '<<view>>', sub { gcview() } );
-		
-		add_navigation_events($lglobal{gclistbox});
+
+		add_navigation_events( $lglobal{gclistbox} );
 
 		$lglobal{gcpop}->bind(
 			'<Configure>' => sub {
@@ -7238,14 +7244,13 @@ sub gcview {
 		$textwindow->see( $gc{$line} );
 		$textwindow->markSet( 'insert', $gc{$line} );
 
-		# Highlight pretty close to GC error (2 chars before just in case error is at end of line)
-		$textwindow->tagAdd(
-				'highlight',
-				$gc{$line} . "- 2c",
-				$gc{$line} . " lineend"
-		);
+# Highlight pretty close to GC error (2 chars before just in case error is at end of line)
+		$textwindow->tagAdd( 'highlight',
+							 $gc{$line} . "- 2c",
+							 $gc{$line} . " lineend" );
 		update_indicators();
 	}
+
 	#don't focus    $textwindow->focus;
 	#leave main text on top    $lglobal{gcpop}->raise;
 	$geometry2 = $lglobal{gcpop}->geometry;
@@ -7569,7 +7574,7 @@ sub ital_adjust {
 }
 
 sub searchoptset {
-	my @opt = @_;
+	my @opt       = @_;
 	my $opt_count = @opt;
 
 # $sopt[0] --> 0 = pattern search               1 = whole word search
@@ -7577,7 +7582,7 @@ sub searchoptset {
 # $sopt[2] --> 0 = search forwards              1 = search backwards
 # $sopt[3] --> 0 = normal search term   1 = regex search term - 3 and 0 are mutually exclusive
 # $sopt[4] --> 1 = start search at beginning
-	for ( 0 .. $opt_count-1 ) {
+	for ( 0 .. $opt_count - 1 ) {
 		if ( defined( $lglobal{search} ) ) {
 			if ( $opt[$_] !~ /[a-zA-Z]/ ) {
 				$opt[$_]
@@ -7751,7 +7756,7 @@ sub harmonicspop {
 		  ->insert( 'end', "$wc 1st order harmonics for $active." );
 	}
 	foreach my $word ( sort { deaccent( lc $a ) cmp deaccent( lc $b ) }
-					( keys %{ $lglobal{harmonic} } ) )
+					   ( keys %{ $lglobal{harmonic} } ) )
 	{
 		$line =
 		  sprintf( "%-8d %s", $lglobal{seen}->{$word}, $word )
@@ -7838,19 +7843,29 @@ sub commark {
 		utf8::decode($wholefile);
 	}
 	$wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
-	
+
 	if ($intelligentWF) {
+
 		# Skip if pattern is: . Hello, John
-		$wholefile =~ s/([\.\?\!]['"]*[\n\s]['"]*\p{Upper}\p{Alnum}*),([\n\s]['"]*\p{Upper})/$1 $2/g;
+		$wholefile =~
+s/([\.\?\!]['"]*[\n\s]['"]*\p{Upper}\p{Alnum}*),([\n\s]['"]*\p{Upper})/$1 $2/g;
+
 		# Skip if pattern is: \n\nHello, John
-		$wholefile =~ s/(\n\n *['"]*\p{Upper}\p{Alnum}*),( ['"]*\p{Upper})/$1 $2/g;
+		$wholefile =~
+		  s/(\n\n *['"]*\p{Upper}\p{Alnum}*),( ['"]*\p{Upper})/$1 $2/g;
 	}
-	while ( $wholefile =~ m/,(['"]*\n*\s*['"]*\p{Upper}\p{Alnum}*)([\.\?\!]?)/g ) {
+	while (
+		   $wholefile =~ m/,(['"]*\n*\s*['"]*\p{Upper}\p{Alnum}*)([\.\?\!]?)/g )
+	{
 		my $word = $1;
-		next if $intelligentWF && $2 && $2 ne '';  # ignore if word followed by period, !, or ?
+		next
+		  if $intelligentWF
+			  && $2
+			  && $2 ne '';    # ignore if word followed by period, !, or ?
 		$wordw++;
 
-		if ($wordw == 0) {
+		if ( $wordw == 0 ) {
+
 			# FIXME: think this code DOESN'T WORK. skipping
 			$word =~ s/<\/?[bidhscalup].*?>//g;
 			$word =~ s/(\p{Alnum})'(\p{Alnum})/$1PQzJ$2/g;
@@ -7912,9 +7927,9 @@ sub itwords {
 	}
 	$wordw = scalar keys %display;
 	for my $wordwo ( keys %words ) {
-			my $wordwo2 = $wordwo;
-			$wordwo2 =~ s/\\n/\n/g;
-			while ( $wholefile =~ m/(?<=\W)\Q$wordwo2\E(?=\W)/sg ) {
+		my $wordwo2 = $wordwo;
+		$wordwo2 =~ s/\\n/\n/g;
+		while ( $wholefile =~ m/(?<=\W)\Q$wordwo2\E(?=\W)/sg ) {
 			$display{$wordwo}++;
 		}
 		$display{$wordwo} = $display{$wordwo} - $words{$wordwo}
@@ -7951,10 +7966,13 @@ sub bangmark {
 		utf8::decode($wholefile);
 	}
 	$wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
-	while ( $wholefile =~ m/(\p{Alnum}+\.['"]?\n*\s*['"]?\p{Lower}\p{Alnum}*)/g ) {
+	while (
+		   $wholefile =~ m/(\p{Alnum}+\.['"]?\n*\s*['"]?\p{Lower}\p{Alnum}*)/g )
+	{
 		my $word = $1;
 		$wordw++;
-		if ($wordw == 0) {
+		if ( $wordw == 0 ) {
+
 			# FIXME: think this code DOESN'T WORK. skipping
 			$word =~ s/<\/?[bidhscalup].*?>//g;
 			$word =~ s/(\p{Alnum})'(\p{Alnum})/$1PQzJ$2/g;
@@ -9104,11 +9122,11 @@ sub initialize {
 
 	unless ( my $return = do 'setting.rc' ) {
 		if ( -e 'setting.rc' ) {
-			open my $file, "<","setting.rc"
+			open my $file, "<", "setting.rc"
 			  or warn "Could not open setting file\n";
 			my @file = <$file>;
 			close $file;
-			open $file, ">","setting.err";
+			open $file, ">", "setting.err";
 			print $file @file;
 			close $file;
 		}
@@ -10793,9 +10811,9 @@ EOM
 			rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm w3cremote italic_char bold_char/
 		  )
 		{
-			if (eval '$' . $_) {
-					print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
-						eval '$' . $_, "';\n";
+			if ( eval '$' . $_ ) {
+				print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
+				  eval '$' . $_, "';\n";
 			}
 		}
 		print $save_handle "\n";
@@ -10805,9 +10823,9 @@ EOM
 			gutpath jeebiespath scannospath tidycommand validatecommand validatecsscommand/
 		  )
 		{
-			if (eval '$' . $_) {
-					print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
-						escape_problems( os_normal( eval '$' . $_ ) ), "';\n";
+			if ( eval '$' . $_ ) {
+				print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
+				  escape_problems( os_normal( eval '$' . $_ ) ), "';\n";
 			}
 		}
 
@@ -10855,7 +10873,7 @@ sub os_normal {
 }
 
 sub escape_problems {
-  if ($_[0]) {
+	if ( $_[0] ) {
 		$_[0] =~ s/\\+$/\\\\/g;
 		$_[0] =~ s/(?!<\\)'/\\'/g;
 	}
@@ -11610,15 +11628,15 @@ sub spellcheckfirst {
 	spellguesses($term);    # get the guesses for the misspelling
 	spellshow_guesses();    # populate the listbox with guesses
 
-	$lglobal{hyphen_words} = ();	# hyphenated list of words
+	$lglobal{hyphen_words} = ();    # hyphenated list of words
 	if ( scalar( $lglobal{seen} ) ) {
 		$lglobal{misspelledlabel}->configure( -text =>
 					"Not in Dictionary:  -  $lglobal{seen}->{$term} in text." );
-								
+
 		# collect hyphenated words for faster, more accurate spell-check later
 		foreach my $word ( keys %{ $lglobal{seen} } ) {
-			if ( $lglobal{seen}->{$word} >= 1 && $word =~ /-/) {
-					$lglobal{hyphen_words}->{$word} = $lglobal{seen}->{$word};
+			if ( $lglobal{seen}->{$word} >= 1 && $word =~ /-/ ) {
+				$lglobal{hyphen_words}->{$word} = $lglobal{seen}->{$word};
 			}
 		}
 	}
@@ -11705,32 +11723,47 @@ sub spellchecknext {
 
 	if ( scalar( $lglobal{seen} ) ) {
 		my $spell_count_case = 0;
-		my $hyphen_count = 0;
-		my $cur_word = $lglobal{misspelledlist}[ $lglobal{nextmiss} ];
-		my $proper_case = lc($cur_word); $proper_case =~ s/(^\w)/\U$1\E/;
-		$spell_count_case += ($lglobal{seen}->{ uc($cur_word) } || 0)
-				if $cur_word ne uc($cur_word);  # Add the full-uppercase version to the count
-		$spell_count_case += ($lglobal{seen}->{ lc($cur_word) } || 0)
-				if $cur_word ne lc($cur_word);  # Add the full-lowercase version to the count
-		$spell_count_case += ($lglobal{seen}->{ $proper_case } || 0)
-				if $cur_word ne $proper_case;  # Add the propercase version to the count
+		my $hyphen_count     = 0;
+		my $cur_word         = $lglobal{misspelledlist}[ $lglobal{nextmiss} ];
+		my $proper_case      = lc($cur_word);
+		$proper_case =~ s/(^\w)/\U$1\E/;
+		$spell_count_case += ( $lglobal{seen}->{ uc($cur_word) } || 0 )
+		  if $cur_word ne uc($cur_word)
+		;    # Add the full-uppercase version to the count
+		$spell_count_case += ( $lglobal{seen}->{ lc($cur_word) } || 0 )
+		  if $cur_word ne lc($cur_word)
+		;    # Add the full-lowercase version to the count
+		$spell_count_case += ( $lglobal{seen}->{$proper_case} || 0 )
+		  if $cur_word ne
+			  $proper_case;    # Add the propercase version to the count
+
 		foreach my $hyword ( keys %{ $lglobal{hyphen_words} } ) {
-				next if $hyword !~ /$cur_word/;
-				if ( $hyword =~ /^$cur_word-/ || $hyword =~ /-$cur_word$/ || $hyword =~ /-$cur_word-/ ) {
-						$hyphen_count += $lglobal{hyphen_words}->{$hyword};
-				}
+			next if $hyword !~ /$cur_word/;
+			if (    $hyword =~ /^$cur_word-/
+				 || $hyword =~ /-$cur_word$/
+				 || $hyword =~ /-$cur_word-/ )
+			{
+				$hyphen_count += $lglobal{hyphen_words}->{$hyword};
+			}
 		}
 		my $spell_count_non_poss = 0;
-		$spell_count_non_poss = ($lglobal{seen}->{ $1 } || 0) if $cur_word =~ /^(.*)'s$/i;
-		$spell_count_non_poss = ($lglobal{seen}->{ $cur_word . '\'s' } || 0) if $cur_word !~ /^(.*)'s$/i;
-		$spell_count_non_poss += ($lglobal{seen}->{ $cur_word . '\'S' } || 0) if $cur_word !~ /^(.*)'s$/i;
+		$spell_count_non_poss = ( $lglobal{seen}->{$1} || 0 )
+		  if $cur_word =~ /^(.*)'s$/i;
+		$spell_count_non_poss = ( $lglobal{seen}->{ $cur_word . '\'s' } || 0 )
+		  if $cur_word !~ /^(.*)'s$/i;
+		$spell_count_non_poss += ( $lglobal{seen}->{ $cur_word . '\'S' } || 0 )
+		  if $cur_word !~ /^(.*)'s$/i;
 		$lglobal{misspelledlabel}->configure(
 			   -text => 'Not in Dictionary:  -  '
 				 . (
 				   $lglobal{seen}
 					 ->{ $lglobal{misspelledlist}[ $lglobal{nextmiss} ] } || '0'
 				 )
-				 . ( $spell_count_case+$spell_count_non_poss > 0 ? ", $spell_count_case, $spell_count_non_poss" : '' )
+				 . (
+					 $spell_count_case + $spell_count_non_poss > 0
+					 ? ", $spell_count_case, $spell_count_non_poss"
+					 : ''
+				 )
 				 . ( $hyphen_count > 0 ? ", $hyphen_count hyphens" : '' )
 				 . ' in text.'
 		);
@@ -11807,7 +11840,7 @@ sub spellmyaddword {
 	return unless $term;
 	getprojectdic();
 	$projectdict{$term} = '';
-	open( my $dic, ">","$lglobal{projectdictname}" );
+	open( my $dic, ">", "$lglobal{projectdictname}" );
 	print $dic "\%projectdict = (\n";
 	for my $term ( sort { $a cmp $b } keys %projectdict ) {
 		$term =~ s/'/\\'/g;
@@ -11914,7 +11947,7 @@ sub spellget_misspellings {    # get list of misspelled words
 	  ;                             # get selection
 	$section =~ s/^-----File:.*//g;
 	open my $save, '>:bytes', 'checkfil.txt';
-	print $save $section;            # FIXME: probably encode before printing.
+	print $save $section;           # FIXME: probably encode before printing.
 	close $save;
 	my $spellopt =
 	  get_spellchecker_version() lt "0.6"
@@ -12796,7 +12829,7 @@ sub stealthscanno {
 	$lglobal{doscannos} = 1;
 	$lglobal{search}->destroy if defined $lglobal{search};
 	undef $lglobal{search};
-    searchoptset(qw/x x x x 1/);  # force search to begin at start of doc
+	searchoptset(qw/x x x x 1/);    # force search to begin at start of doc
 	if ( loadscannos() ) {
 		saveset();
 		searchpopup();
@@ -12806,7 +12839,7 @@ sub stealthscanno {
 	$lglobal{doscannos} = 0;
 }
 
-sub spellchecker {    # Set up spell check window
+sub spellchecker {                  # Set up spell check window
 	push @operations, ( localtime() . ' - Spellcheck' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	oppopupdate()  if $lglobal{oppop};
@@ -13998,7 +14031,7 @@ sub selectrewrap {
 		my $textend      = $textwindow->index('end');
 		my $toplineblank = 0;
 		my $selection;
-		
+
 		if ( $textend eq $end ) {
 			$textwindow->tagAdd( 'blockend', "$end-1c"
 			  ) #set a marker at the end of the selection, or one charecter less
@@ -14732,9 +14765,10 @@ sub wordcount {
 					  if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
 					searchoptset(qw/0 x x 1/);
 				}
-				if ($intelligentWF && $sword =~ /^\\,(\s|\\n)/ ) {
-					# during comma-Upper ck, ignore if name followed by period, !, or ?
-					# NOTE: sword will be used as a regular expression filter during display
+				if ( $intelligentWF && $sword =~ /^\\,(\s|\\n)/ ) {
+
+		# during comma-Upper ck, ignore if name followed by period, !, or ?
+		# NOTE: sword will be used as a regular expression filter during display
 					$sword .= '([^\.\?\!]|$)';
 				}
 
@@ -14789,7 +14823,7 @@ sub wordcount {
 				$lglobal{geometryupdate} = 1;
 			}
 		);
-		add_navigation_events($lglobal{wclistbox});
+		add_navigation_events( $lglobal{wclistbox} );
 		$lglobal{popup}->bind(
 			'<Control-s>' => sub {
 				my ($name);
@@ -14800,7 +14834,7 @@ sub wordcount {
 										-initialfile => 'wordfreq.txt'
 				  );
 				if ( defined($name) and length($name) ) {
-					open( my $save, ">","$name" );
+					open( my $save, ">", "$name" );
 					print $save join "\n",
 					  $lglobal{wclistbox}->get( '0', 'end' );
 				}
@@ -14817,7 +14851,7 @@ sub wordcount {
 				  );
 				if ( defined($name) and length($name) ) {
 					my $count = $lglobal{wclistbox}->index('end');
-					open( my $save, ">","$name" );
+					open( my $save, ">", "$name" );
 					for ( 1 .. $count ) {
 						my $word = $lglobal{wclistbox}->get($_);
 						if ( ( defined $word ) && ( length $word ) ) {
@@ -14833,7 +14867,7 @@ sub wordcount {
 	my $filename = $textwindow->FileName;
 	unless ($filename) {
 		$filename = 'tempfile.tmp';
-		open( my $file, ">","$filename" );
+		open( my $file, ">", "$filename" );
 		my ($lines) = $textwindow->index('end - 1 chars') =~ /^(\d+)\./;
 		while ( $textwindow->compare( $index, '<', 'end' ) ) {
 			my $end = $textwindow->index("$index  lineend +1c");
@@ -15194,7 +15228,8 @@ sub fixup {
 				$edited++ if $line =~ s/^lst/1st/;
 			}
 			if ( ${ $lglobal{fixopt} }[1] ) {
-				# Remove spaces before hyphen (only if hyphen isn't first on line, like poetry)
+
+ # Remove spaces before hyphen (only if hyphen isn't first on line, like poetry)
 				$edited++ if $line =~ s/(\S) +-/$1-/g;
 				$edited++ if $line =~ s/- /-/g;    # Remove space after hyphen
 				$edited++
@@ -15202,7 +15237,8 @@ sub fixup {
 				; # Except leave a space after a string of three or more hyphens
 			}
 			if ( ${ $lglobal{fixopt} }[2] ) {
-				# Remove space before periods (only if not first on line, like poetry's ellipses)
+
+# Remove space before periods (only if not first on line, like poetry's ellipses)
 				$edited++ if $line =~ s/(\S) +\.(?=\D)/$1\./g;
 			}
 			;     # Get rid of space before periods
@@ -16189,7 +16225,7 @@ sub markpopup {    # FIXME: Rename html_popup
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				errorcheckrun('W3C Validate CSS'); #validatecssrun('');
+				errorcheckrun('W3C Validate CSS');    #validatecssrun('');
 				unlink 'null' if ( -e 'null' );
 			},
 			-text  => 'W3C Validate CSS',
@@ -16385,12 +16421,13 @@ sub cp1252toUni {
 		while ( $thisblockstart =
 				$textwindow->search( '-exact', '--', $term, '1.0', 'end' ) )
 		{
-				# Use replacewith() to ensure change is tracked and saved
-				$textwindow->replacewith( $thisblockstart,
-						"$thisblockstart+1c", $cp{$term} );
+
+			# Use replacewith() to ensure change is tracked and saved
+			$textwindow->replacewith( $thisblockstart, "$thisblockstart+1c",
+									  $cp{$term} );
 		}
 	}
-  update_indicators();
+	update_indicators();
 }
 
 ## ASCII Table Special Effects
