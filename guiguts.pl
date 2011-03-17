@@ -1685,6 +1685,7 @@ sub fixup_menuitems {
 		  Button   => 'Convert Windows CP 1252 characters to Unicode',
 		  -command => \&cp1252toUni
 	   ],
+		[   Button => 'HTML Auto ~Index (List)', -command => \&autoindex ], 
 	   [ 'separator', '' ],
 	   [ Button => 'ASCII Table Special Effects', -command => \&tablefx ],
 	   [ 'separator', '' ],
@@ -2190,14 +2191,12 @@ sub buildmenu {
 		-menuitems => [
 			[ Button => '~About',    -command => \&about_pop_up ],
 			[ Button => '~Versions', -command => [ \&showversion, $top ] ],
-			[
-			   Button   => '~Manual',
-			   -command => sub {        # FIXME: sub this out.
-				   runner("$globalbrowserstart guiguts.html")
-					 if ( -e 'guiguts.html' );
-				 }
-			],
-
+			[   Button   => '~Manual', 
+                -command => sub {        # FIXME: sub this out. 
+                    runner("$globalbrowserstart http://www.pgdp.net/wiki/PPTools/Guiguts") 
+                        if ( -e 'ggmanual.html' ); 
+                    } 
+            ],
 			# FIXME: Disable update check until it works
 			#[ Button => 'Check For ~Updates',     -command => \&checkver ],
 			[ Button => '~Hot keys',              -command => \&hotkeyshelp ],
@@ -5738,21 +5737,25 @@ sub htmlautoconvert {
 
 	html_convert_emdashes();
 
-	html_convert_footnotes($textwindow);
+	$lglobal{fnsecondpass}  = 0;
+	$lglobal{fnsearchlimit} = 1;
+	html_convert_footnotes($textwindow,$lglobal{fnarray});
 
-	html_convert_body( $textwindow, $headertext, @contents );
+	html_convert_body( $textwindow, $headertext,
+	$lglobal{cssblockmarkup},$lglobal{poetrynumbers},$lglobal{classhash},
+	 @contents );
 
 	html_cleanup_markers($textwindow);
 
 	html_convert_underscoresmallcaps($textwindow);
 
 	html_convert_sidenotes($textwindow);
+	
+	html_convert_pageanchors( $textwindow,$lglobal{pageanch}, $lglobal{pagecmt},@contents);
 
-	html_convert_pageanchors( $textwindow, @contents );
+	html_convert_utf($textwindow,$lglobal{leave_utf},$lglobal{keep_latin1});
 
-	html_convert_utf($textwindow);
-
-	html_wrapup( $textwindow, $headertext );
+	html_wrapup( $textwindow, $headertext ,$lglobal{leave_utf},$lglobal{autofraction},$lglobal{classhash});
 }
 
 sub entity {
@@ -11929,8 +11932,8 @@ sub spellcheckrange {
 	my @ranges = $textwindow->tagRanges('sel');
 	$operationinterrupt = 0;
 	if (@ranges) {
-		$lglobal{spellindexend}   = $ranges[0];
-		$lglobal{spellindexstart} = $ranges[-1];
+		$lglobal{spellindexstart} = $ranges[0]; 
+		$lglobal{spellindexend} = $ranges[-1];		
 	} else {
 		$lglobal{spellindexstart} = '1.0';
 		$lglobal{spellindexend}   = $textwindow->index('end');
@@ -19007,5 +19010,68 @@ sub uchar {
 		$characteristics->bind( '<Return>' => sub { $doit->invoke } );
 	}
 }
+sub autoindex { 
+    viewpagenums() if ( $lglobal{seepagenums} ); 
+    my @ranges = $textwindow->tagRanges('sel'); 
+    unless (@ranges) { 
+        push @ranges, $textwindow->index('insert'); 
+        push @ranges, $textwindow->index('insert'); 
+    } 
+    my $range_total = @ranges; 
+    if ( $range_total == 0 ) { 
+        return; 
+    } 
+    else { 
+        $textwindow->addGlobStart; 
+        my $end       = pop(@ranges); 
+        my $start     = pop(@ranges); 
+        my $paragraph = 0; 
+        my ( $lsr, $lsc ) = split /\./, $start; 
+        my ( $ler, $lec ) = split /\./, $end; 
+        my $step = $lsr; 
+        my $blanks = 0; 
+        my $first = 1; 
+        my $indent = 0; 
+         while ( $textwindow->get( "$step.0", "$step.end" ) eq '' ) { 
+            $step++; 
+        } 
+        while ( $step <= $ler ) { 
+            my $selection = $textwindow->get( "$step.0", "$step.end" ); 
+            unless ($selection) { $step++; $blanks++; next } 
+            $selection = addpagelinks ( $selection ); 
+            if ( $first == 1 ) { $blanks = 2; $first = 0 } 
+            if ( $blanks == 2 ) { 
+                $selection = '<li class="ifrst">' . $selection . '</li>'; 
+                $first = 0; 
+            } 
+            if ( $blanks == 1 ) { 
+                $selection = '<li class="indx">' . $selection . '</li>'; 
+            } 
+            if ( $selection =~ /^(\s+)/ ) { 
+                $indent = ( int( (length($1) + 1 ) / 2) ); 
+                $selection =~ s/^\s+//; 
+                $selection = '<li class="isub' . $indent . '">' . $selection . '</li>'; 
+            } 
+            $textwindow->delete( "$step.0", "$step.end" ); 
+            $selection =~ s/<li<\/li>//; 
+            $textwindow->insert( "$step.0", $selection ); 
+            $blanks = 0; 
+            $step++; 
+        } 
+        $textwindow->insert( "$ler.end", "</ul>\n" ); 
+        $textwindow->insert( $start, '<ul class="index">' ); 
+        $textwindow->addGlobEnd; 
+    } 
+} 
+
+sub addpagelinks { 
+    my $selection = shift; 
+    $selection =~ s/(\d{1,3})-(\d{1,3})/<a href="#Page_$1">$1-$2<\/a>/g; 
+    $selection =~ s/(\d{1,3})([,;\.])/<a href="#Page_$1">$1<\/a>$2/g; 
+    $selection =~ s/\s(\d{1,3})\s/ <a href="#Page_$1">$1<\/a> /g; 
+    $selection =~ s/(\d{1,3})$/<a href="#Page_$1">$1<\/a>/; 
+    return $selection; 
+} 
+
 
 MainLoop;

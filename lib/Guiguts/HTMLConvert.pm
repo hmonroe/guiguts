@@ -14,12 +14,14 @@ sub html_convert_tb {
 	my ($textwindow, $selection, $step ) = @_;
 
 	if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr class="tb" \/>/ ) { 
+	#if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ ){ 
 		$textwindow->ntdelete( "$step.0", "$step.end" );
 		$textwindow->ntinsert( "$step.0", $selection );
 		next;
 	}
 
 	if ($selection =~ s/<tb>/<hr class="tb" \/>/ ) {
+ 	#if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {		
 		$textwindow->ntdelete( "$step.0", "$step.end" );
 		$textwindow->ntinsert( "$step.0", $selection );
 		next;
@@ -81,9 +83,9 @@ sub html_convert_codepage {
 }
 
 sub html_convert_utf {
-	my ($textwindow) = @_;
+	my ($textwindow,$leave_utf,$keep_latin1) = @_;
 	my $blockstart;
-	if ( $lglobal{leave_utf} ) {
+	if ( $leave_utf ) {
 		$blockstart =
 		  $textwindow->search(
 							   '-exact',             '--',
@@ -95,7 +97,7 @@ sub html_convert_utf {
 			$textwindow->ntinsert( $blockstart, 'charset=UTF-8' );
 		}
 	}
-	unless ( $lglobal{leave_utf} ) {
+	unless ( $leave_utf ) {
 		&main::working("Converting UTF-8...");
 		while (
 				$blockstart =
@@ -116,7 +118,7 @@ sub html_convert_utf {
 	&main::named( ' >', ' &gt;' );
 	&main::named( '< ', '&lt; ' );
 
-	if ( !$lglobal{keep_latin1} ) { html_convert_latin1(); }
+	if ( !$keep_latin1 ) { html_convert_latin1(); }
 
 
 }
@@ -153,14 +155,12 @@ sub html_cleanup_markers {
 }
 
 sub html_convert_footnotes {
-	my ($textwindow ) = @_;
+	my ($textwindow,$fnarray) = @_;
 	my $thisblank  = q{};
 	my $step = 0;
 	
 	
-	# Footnotes
-	$lglobal{fnsecondpass}  = 0;
-	$lglobal{fnsearchlimit} = 1;
+	
 	&main::working('Converting Footnotes');
 	&main::footnotefixup();
 	&main::getlz();
@@ -172,15 +172,15 @@ sub html_convert_footnotes {
 	while (1) {
 		$step++;
 		last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
-		last unless $lglobal{fnarray}->[$step][0];
-		next unless $lglobal{fnarray}->[$step][3];
+		last unless $fnarray->[$step][0];
+		next unless $fnarray->[$step][3];
 		$textwindow->ntdelete( 'fne' . "$step" . '-1c', 'fne' . "$step" );
 		$textwindow->ntinsert( 'fne' . "$step", '</p></div>' );
 		$textwindow->ntinsert(
 							 (
 							   'fns' . "$step" . '+'
 								 . (
-									length( $lglobal{fnarray}->[$step][4] ) + 11
+									length( $fnarray->[$step][4] ) + 11
 								 )
 								 . "c"
 							 ),
@@ -189,44 +189,44 @@ sub html_convert_footnotes {
 		$textwindow->ntdelete(
 							   'fns' . "$step" . '+'
 								 . (
-									length( $lglobal{fnarray}->[$step][4] ) + 10
+									length( $fnarray->[$step][4] ) + 10
 								 )
 								 . 'c',
 							   "fns" . "$step" . '+'
 								 . (
-									length( $lglobal{fnarray}->[$step][4] ) + 11
+									length( $fnarray->[$step][4] ) + 11
 								 )
 								 . 'c'
 		);
 		$textwindow->ntinsert(
 							   'fns' . "$step" . '+10c',
 							   "<div class=\"footnote\"><p><a name=\"Footnote_"
-								 . $lglobal{fnarray}->[$step][4] . '_'
+								 . $fnarray->[$step][4] . '_'
 								 . $step
 								 . "\" id=\"Footnote_"
-								 . $lglobal{fnarray}->[$step][4] . '_'
+								 . $fnarray->[$step][4] . '_'
 								 . $step
 								 . "\"></a><a href=\"#FNanchor_"
-								 . $lglobal{fnarray}->[$step][4] . '_'
+								 . $fnarray->[$step][4] . '_'
 								 . $step
 								 . "\"><span class=\"label\">["
 		);
 		$textwindow->ntdelete( 'fns' . "$step", 'fns' . "$step" . '+10c' );
 		$textwindow->ntinsert( 'fnb' . "$step", '</a>' )
-		  if ( $lglobal{fnarray}->[$step][3] );
+		  if ( $fnarray->[$step][3] );
 		$textwindow->ntinsert(
 							   'fna' . "$step",
 							   "<a name=\"FNanchor_"
-								 . $lglobal{fnarray}->[$step][4] . '_'
+								 . $fnarray->[$step][4] . '_'
 								 . $step
 								 . "\" id=\"FNanchor_"
-								 . $lglobal{fnarray}->[$step][4] . '_'
+								 . $fnarray->[$step][4] . '_'
 								 . $step
 								 . "\"></a><a href=\"#Footnote_"
-								 . $lglobal{fnarray}->[$step][4] . '_'
+								 . $fnarray->[$step][4] . '_'
 								 . $step
 								 . "\" class=\"fnanchor\">"
-		) if ( $lglobal{fnarray}->[$step][3] );
+		) if ( $fnarray->[$step][3] );
 
 		while (
 				$thisblank =
@@ -244,7 +244,7 @@ sub html_convert_footnotes {
 }
 
 sub html_convert_body {
-	my ($textwindow, $headertext, @contents) = @_;
+	my ($textwindow, $headertext, $cssblockmarkup,$poetrynumbers,$classhash, @contents) = @_;
 	&main::working('Converting Body');
 	my $aname = q{};
 	my $author;
@@ -271,8 +271,8 @@ sub html_convert_body {
 	my ( $ler, $lec );
 	
 	$thisblockend = $textwindow->index('end');
-	my ( $blkopen, $blkclose );
-	if ( $lglobal{cssblockmarkup} ) {
+	my ( $blkopen, $blkclose);
+	if ( $cssblockmarkup ) {
 		$blkopen  = '<div class="blockquot"><p>';
 		$blkclose = '</p></div>';
 	} else {
@@ -369,7 +369,7 @@ sub html_convert_body {
 			$step++;
 			next;
 		}
-		if ( $lglobal{poetrynumbers} && ( $selection =~ s/\s\s(\d+)$// ) ) {
+		if ( $poetrynumbers && ( $selection =~ s/\s\s(\d+)$// ) ) {
 			$selection .= '<span class="linenum">' . $1 . '</span>';
 			$textwindow->ntdelete( "$step.0", "$step.end" );
 			$textwindow->ntinsert( "$step.0", $selection );
@@ -436,7 +436,7 @@ sub html_convert_body {
 				}
 				$ital = 0;
 			}
-			$lglobal{classhash}->{$indent} =
+			$classhash->{$indent} =
 			    '    .poem span.i' 
 			  . $indent
 			  . '     {display: block; margin-left: '
@@ -849,10 +849,10 @@ sub html_convert_sidenotes {
 }
 
 sub html_convert_pageanchors {
-	my ($textwindow, @contents) = @_;	
+	my ($textwindow,$pageanch,$pagecmt, @contents) = @_;
 	my $incontents = '1.0';
 
-	if ( $lglobal{pageanch} || $lglobal{pagecmt} ) {
+	if ( $pageanch || $pagecmt ) {
 
 		&main::working("Inserting Page Markup");
 		$|++;
@@ -876,13 +876,13 @@ sub html_convert_pageanchors {
 				$textwindow->ntinsert(
 					$markindex,
 "<span class=\"pagenum\"><a name=\"Page_$num\" id=\"Page_$num\">[Pg $num]</a></span>"
-				) if $lglobal{pageanch};
+				) if $pageanch;
 
-#$textwindow->ntinsert($markindex,"<span class="pagenum" id=\"Page_".$num."\">[Pg $num]</span>") if $lglobal{pageanch};
+#$textwindow->ntinsert($markindex,"<span class="pagenum" id=\"Page_".$num."\">[Pg $num]</span>") if $pageanch;
 # FIXME: this is hanging up somewhere.
 				$textwindow->ntinsert( $markindex,
 									   '<!-- Page ' . $num . ' -->' )
-				  if ( $lglobal{pagecmt} and $num );
+				  if ( $pagecmt and $num );
 				my $pstart =
 				  $textwindow->search( '-backwards', '-exact', '--', '<p>',
 									   $markindex, '1.0' )
@@ -965,7 +965,7 @@ sub html_parse_header {
 		$textwindow->ntdelete( '1.0', "$step.0 +1c" );
 	} else {
 		unless ( -e 'header.txt' ) {
-			copy( 'headerdefault.txt', 'header.txt' );
+			&main::copy( 'headerdefault.txt', 'header.txt' );
 		}
 		open my $infile, '<', 'header.txt'
 		  or warn "Could not open header file. $!\n";
@@ -1036,12 +1036,12 @@ sub html_parse_header {
 
 sub html_wrapup {
 
-	my ($textwindow,$headertext) = @_;
+	my ($textwindow,$headertext,$leave_utf,$autofraction,$classhash) = @_;
 	my $thisblockstart;
 
-	&main::fracconv( '1.0', 'end' ) if $lglobal{autofraction};
+	&main::fracconv( '1.0', 'end' ) if $autofraction;
 	$textwindow->ntinsert( '1.0', $headertext );
-	if ( $lglobal{leave_utf} ) {
+	if ( $leave_utf ) {
 		$thisblockstart =
 		  $textwindow->search(
 							   '-exact',             '--',
@@ -1058,11 +1058,11 @@ sub html_wrapup {
 	$thisblockstart = '75.0' unless $thisblockstart;
 	$thisblockstart =
 	  $textwindow->search( -backwards, '--', '}', $thisblockstart, '10.0' );
-	for ( reverse( sort( values( %{ $lglobal{classhash} } ) ) ) ) {
+	for ( reverse( sort( values( %{ $classhash } ) ) ) ) {
 		$textwindow->ntinsert( $thisblockstart . ' +1l linestart', $_ )
-		  if keys %{ $lglobal{classhash} };
+		  if keys %{ $classhash };
 	}
-	%{ $lglobal{classhash} } = ();
+	%{ $classhash } = ();
 	&main::working();
 	$textwindow->Unbusy;
 	$textwindow->see('1.0');

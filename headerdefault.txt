@@ -37,6 +37,13 @@ hr {
 hr.tb   {width: 45%;} 
 hr.chap {width: 65%; page-break-before: always;} 
 hr.full {width: 95%;}
+ul.index { list-style-type: none; } 
+li.ifrst { margin-top: 1em; } 
+li.indx { margin-top: .5em; } 
+li.isub1 {text-indent: 1em;} 
+li.isub2 {text-indent: 2em;} 
+li.isub3 {text-indent: 3em;} 
+
 
 table { 
     margin-left: auto; 
