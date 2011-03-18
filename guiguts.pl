@@ -3579,6 +3579,7 @@ sub searchtext {
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
 	$searchstartindex = $textwindow->index('insert') unless $searchstartindex;
+	my $searchstartingpoint=$textwindow->index('insert');
 
 	if ( $range_total == 0 && $lglobal{selectionsearch} ) {
 		$start = $textwindow->index('insert');
@@ -3755,6 +3756,10 @@ sub searchtext {
 			$textwindow->bell unless $nobell;
 			$lglobal{searchbutton}->flash if defined $lglobal{search};
 			$lglobal{searchbutton}->flash if defined $lglobal{search};
+			# If nothing found, return cursor to starting point
+			$searchendindex = $searchstartingpoint ;
+			$textwindow->markSet( 'insert', $searchstartingpoint );
+			$textwindow->see($searchstartingpoint);
 		}
 	}
 	updatesearchlabels();
