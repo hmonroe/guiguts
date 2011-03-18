@@ -77,7 +77,7 @@ $SIG{INT} = sub { _exit() };
 
 ### Constants
 my $OS_WIN          = $^O =~ m{Win};
-my $VERSION         = '0.4.01';
+my $VERSION         = '0.4.02';
 my $APP_NAME        = 'GuiGuts';
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
@@ -14642,7 +14642,7 @@ sub wordcount {
 				 }
 			],
 			[ 'Check Spelling', \&wfspellcheck ],
-			[ 'Ital/Bold/SC	 Words', \&itwords, \&ital_adjust ],
+			[ 'Ital/Bold/SC', \&itwords, \&ital_adjust ],
 			[ 'ALL CAPS',        \&capscheck ],
 			[ 'MiXeD CasE',      \&mixedcasecheck ],
 			[ 'Initial Caps',    \&initcapcheck ],
