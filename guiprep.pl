@@ -55,7 +55,7 @@ my $currentver = '.41';
 #      mark possible missing spaces between words/sentences
 #  remove footers in batch mode.
 #  mark blank pages after header/footer removal
-#
+#  added regular expression searches
 #
 # lvl
 #   don't convert solitary l to I  followed by ' and text (corrects behavour for French)
@@ -90,6 +90,7 @@ my $debug = 0;
 
 # Global vars ########################################################################################
 
+our $matchlength=0;
 our $gextractbold = 1;
 our $gitalicsopen ="<i>";
 our $gitalicsclose="</i>";
@@ -98,6 +99,8 @@ our $gboldclose ="</b>";
 our $gsupopen = "^{";
 our $gsupclose = "}";
 our $gzerobytetext = "[Blank Page]";
+
+
 our @opt = (
 1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,
@@ -160,7 +163,7 @@ our @opt = (
 # $opt[48] = Save FTP User & Password
 # $opt[49] = Batch pngcrush
 # $opt[50] = Convert Windows codepage 1252 glyphs 80-9F to Latin1 equivalents
-# $opt[51] = Search case insensitive
+# $opt[51] = Search case insensitive --now not used
 # $opt[52] = Automatically Remove Headers during batch processing.
 # $opt[53] = Automatically Remove Footers during batch processing
 # $opt[54] = Build a standard upload batch and zip it to the project directory
@@ -171,7 +174,7 @@ our @opt = (
 # $opt[59] = Convert \v or \\\\ to w.
 # $opt[60] = Convert double commas to double quote.
 # $opt[61] = Insert cell delimiters, "|" in tables.
-# $opt[62] = Search whole word
+# $opt[62] = Search whole word   --now not used
 # $opt[62] = Strip space after start & before end doublequotes.
 # $opt[63] = Convert cl at the end of a word to d.
 # $opt[64] = Convert pbt in a word to pht.
@@ -194,6 +197,12 @@ our @opt = (
 # $opt[81] = Convert '11 to 'll and remove any preceding space
 # $opt[82] = despace quotes/mark dubious spaces
 # $opt[83] = mark missing space between words/sentences
+
+our @searchoption=(0,0,0);
+# searchoption[0] = regular expression
+# searchoption[1] = case insensitive
+# searchoption[2] = whole word
+
 
 our $gpalette = 'grey80';
 our $gcrushoptions =  '-bit_depth 1 -reduce ';
@@ -2036,13 +2045,19 @@ my $searchsavebutton = $p8f2->Button(
 )->pack(-side => 'left', -pady => '1', -padx => '2', -anchor => 'nw');
 
 my $p8cb51 = $p8f2->Checkbutton(
-	-variable => 	\$opt[51],
+	-variable => 	\$searchoption[0],
+	-selectcolor => 'white',
+	-text => 	'Regular Expression'
+)->pack(-side => 'left', -anchor => 'n', -pady => '1');
+
+my $p8cb52 = $p8f2->Checkbutton(
+	-variable => 	\$searchoption[1],
 	-selectcolor => 'white',
 	-text => 	'Case Insensitive'
 )->pack(-side => 'left', -anchor => 'n', -pady => '1');
 
 my $p8cb53 = $p8f2->Checkbutton(
-	-variable => 	\$opt[62],
+	-variable => 	\$searchoption[2],
 	-selectcolor => 'white',
 	-text => 	'Whole word only'
 )->pack(-side => 'left', -anchor => 'n', -pady => '1');
@@ -2380,13 +2395,12 @@ my($i);
 									$intable = 0;
 
 				}elsif ($argument eq "i" )      { 	if ($parameter eq "0" ) { 	# Italics markup
-										if  ($italflag) {
-											print TXTFILE $italicsclose;
-											pop @flag;
-											print TXTFILE (" ") if ($space);
-											$space = $italflag = 0;
-										}
-									} else {
+										if  ($italflag) {									print TXTFILE $italicsclose;
+      	pop @flag;
+       	print TXTFILE (" ") if ($space);
+       	$space = $italflag = 0;
+   	}
+       } else {
 										unless($italflag || $pardflag){
 											print TXTFILE $italicsopen;
 											$italflag=1; $space = 0;
@@ -3316,7 +3330,7 @@ sub pngcrushstart{
 		close BAT;
 		system "run.bat";
 #		unlink "run.bat";
-	}				#if not windows, assume Linux, the following works under Slackware at least...
+	}				#if not windows, assume Linux, the following works under Mint & Slackware at least...
 	else {	$crushstart="pngcrush ";
                 system $crushstart." ".$crushoptions." ".$infile." ".$outfile." >err\n\n";
 
@@ -3747,9 +3761,9 @@ sub delfooters {
 
 
 sub helphr{
-	my $cdhelpbox = $main->messageBox(-title => "Help with Header Removal", -type => "OK", -icon => 'question',
-	-message => '   Click on Get Headers to get a list showing the fisrts line from each file in the text directory. '.
-        'Get Footers will show the last line from each file.Check each line and if you would like to remove it, select it.'.
+	my $cdhelpbox = $main->messageBox(-title => "Help with Header/Footer Removal", -type => "OK", -icon => 'question',
+	-message => '   Click on Get Headers to get a list showing the first line from each file in the text directory, '.
+        'or click on Get Footers to show the last line from each file.Check each line and if you would like to remove it, select it.'.
         'Selected lines will have a white background. '.
 	'Alternately you can use the Select All, Unselect All and Toggle Selection buttons to make bulk changes to the '.
 	'selection list. Once you are satisfied with your selection list, press Remove Selected to write all of the changes '.
@@ -4959,14 +4973,15 @@ sub search{
 				searchtext($searchterm)
 			}
 		}elsif ($foundfile = searchfiles()){			# There was a successful search in tk text
-			$searchendindex = '0.0';
+				
+	              $searchendindex = '0.0';
 			searchtext($searchterm);
 		}
 	}else{
 		$search = 0;						# Must be a new search, initialize variables
 		$thissearch = $searchterm;
-		if ($foundfile = searchfiles()){			# Found a file with the search text?
-				$searchendindex = '0.0';
+		if ($foundfile = searchfiles()){			# Found a file with the search text?	
+		$searchendindex = '0.0';
 		}
 		searchtext($searchterm);				# Do a Tk text search on the file
 	}
@@ -5004,24 +5019,33 @@ sub searchtext{
 	my $searchterm = shift;
 	my $tempindex;
 	my $exactsearch = $searchterm;
+        if ($searchoption[0])
+        {	$searchstartindex = $displaybox->search('-regexp','--',$exactsearch, $searchendindex, 'end');
+	}
+        else
+	{
 	$exactsearch =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;	# escape meta characters for whole word matching
-	if (($opt[62]) && ($opt[51])){							# use the appropriate search.
+        if (($searchoption[2]) && ($searchoption[1])){							# use the appropriate search.
 		$searchstartindex = $displaybox->search('-nocase', '-regexp','--', '(?<=\b)'.$exactsearch.'(?=\b)', $searchendindex, 'end');
-	}elsif(($opt[62]) && !($opt[51])){
+	}elsif(($searchoption[2]) && !($searchoption[1])){
 		$searchstartindex = $displaybox->search('-regexp','--','(?<=\b)'.$exactsearch.'(?=\b)', $searchendindex, 'end');
-	}elsif(!($opt[62]) && ($opt[51])){
+
+	}elsif(!($searchoption[2]) && ($searchoption[1])){
 		$searchstartindex = $displaybox->search('-nocase','--', $searchterm, $searchendindex, 'end');
-	}elsif(!($opt[62]) && !($opt[51])){
+	}elsif(!($searchoption[2]) && !($searchoption[1])){
 		$searchstartindex = $displaybox->search('--', $searchterm, $searchendindex, 'end');
 	}
+        }
 	$tempindex = $searchstartindex;
 	$tempindex =~ s/(?<=\.)(\d\b)/00$1/;
 	$tempindex =~ s/(?<=\.)(\d\d\b)/0$1/;				# fix up index variables, can't have leading zeros in decimal portion. (char position)
-	$searchendindex = sprintf("%.3f", (length($searchterm)/1000 + $tempindex));		# Arrg. Took me HOURS to track THAT one down....
+	$searchendindex = sprintf("%.3f", ($matchlength/1000 + $tempindex));		# Arrg. Took me HOURS to track THAT one down....
 	$searchendindex =~ s/(?<=\.)0+(\d+)/$1/;
-	$displaybox->markSet('insert',$searchstartindex) if $searchstartindex;	# position the cursor at the index
-	$displaybox->tagAdd('highlight',$searchstartindex,$searchendindex)if $searchstartindex;	# highlight the text
-	$displaybox->see($searchstartindex)if $searchstartindex;				# scroll text box, if necessary, to make found text visible
+        if ($searchstartindex){
+	  $displaybox->markSet('insert',$searchstartindex);# position the cursor at the index
+	  $displaybox->tagAdd('highlight',$searchstartindex,$searchendindex);                                      # highlight the text
+	  $displaybox->see($searchstartindex);    # scroll text box, if necessary, to make found text visible
+        }
 	return $searchstartindex;								# return index of where found text started
 }
 
@@ -5032,8 +5056,12 @@ sub searchfiles{
 	$filesearchindex++;
 	$displaybox->delete('1.0','end');				# clean out text box
 	$searchfile->delete('1.0','end');				# and file name
-	$searchterm =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;	# escape any meta characters in search term
-	$searchterm = lc($searchterm) if $opt[51];			# make search term lower case if case insensitive
+       if (!$searchoption[0]){                              # leave searchstring alone if regular expression specified
+	$searchterm =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;	# escape any meta characters in search term 
+	if ($searchoption[1]){
+           $searchterm = lc($searchterm)
+            } 	      	# make search term lower case if case insensitive
+       }
 	if ($searchterm ne ''){						# if not a new search
 		if (chdir"text"){
 			$filenumber = scalar @searchfilelist;		# get the number of files
@@ -5060,14 +5088,24 @@ sub searchfiles{
 			$file = <INFILE>;
 			close INFILE;
 		}
-		if ($opt[51]){						# lower case copy of whole file if case insensitive
+
+		$wordsearchterm = $searchterm;
+
+		 # only change file/search pattern if regex not selected
+                  if ((!$searchoption[0])&&($searchoption[1])){						# lower case copy of whole file if case insensitive
 			$lcfile = lc($file);
 		}else{
 			$lcfile = $file;
+                     }
+                  if ((!$searchoption[0])&&($searchoption[2])){     
+                $wordsearchterm = ('\b'.$searchterm.'\b') 	# build a search pattern for whole word searching 
 		}
-		$wordsearchterm = $searchterm;
-		$wordsearchterm = ('\b'.$searchterm.'\b') if $opt[62];	# build a search pattern for whole word searching
-		if (((!$opt[62])&&($lcfile =~ /$wordsearchterm/))||(($opt[62])&&($lcfile =~ /$wordsearchterm/))){ # if a word is found matching an option set
+		if ($lcfile =~ /$wordsearchterm/){ # if a word is found matching an option set
+		        $matchlength=length($&);  
+          # so we know what length string matched to the search term: a regular
+          # expression can match a much shorter string, which can mess up 
+          # search/replace if we don't allow for it
+		
 			utf8::decode($file);							# convert unicode
 			$displaybox->insert('end',$file);			# dump the file into the textbox
 			$displaybox->yview('scroll',1,'units');
@@ -5083,7 +5121,7 @@ sub searchfiles{
 
 	$main->messageBox(
 		-icon => 'error', 					# Let user know
-		-message => "No more occurances of text string \"".$searchentry->get."\" found.",
+		-message => "No more occurrences of text string \"".$searchentry->get."\" found.",
 		-title => 'Text not found.',
 		-type => 'Ok',
 	);
@@ -5095,7 +5133,7 @@ sub searchfiles{
 }
 
 sub replace{
-	my $replaceterm = shift;						# get replacement text
+	my $replaceterm = shift;				 # get replacement text
 	$displaybox->delete($searchstartindex,$searchendindex)if $searchstartindex;	# delete found text
 	$displaybox->insert($searchstartindex,$replaceterm)if $searchstartindex;	# insert replacement text
 	searchsave();
