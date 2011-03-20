@@ -16703,7 +16703,7 @@ sub findandextractgreek {
 sub auto_show_page_images {
 	my $updatingindicators = @_;
 	my ( $pagenum, $number );
-	my $dosfile;
+	my $imagefile;
 	$globalimagepath = $globallastpath unless $globalimagepath;
 	if ( defined( $lglobal{autoshowimagepop} ) ) {
 		$lglobal{autoshowimagepop}->deiconify;
@@ -16735,6 +16735,7 @@ sub auto_show_page_images {
 									-justify    => 'center',
 									-background => 'white',
 	)->grid( -row => 1, -column => 1 );
+	print ':'.get_image_file().':';
 	$number = $lglobal{page_num_label}->cget( -text )
 	  if defined $lglobal{page_num_label};
 	$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
@@ -16748,10 +16749,10 @@ sub auto_show_page_images {
 		setpngspath() unless ( -e "$pngspath$pagenum.png" );
 	}
 	if ($pngspath) {
-		$dosfile = "$pngspath$pagenum.png";
-		unless ( -e $dosfile ) {
-			$dosfile = "$pngspath$pagenum.jpg";
-			unless ( -e $dosfile ) {
+		$imagefile = "$pngspath$pagenum.png";
+		unless ( -e $imagefile ) {
+			$imagefile = "$pngspath$pagenum.jpg";
+			unless ( -e $imagefile ) {
 				my $response =
 				  $top->messageBox(
 					-icon => 'error',
@@ -16765,7 +16766,7 @@ sub auto_show_page_images {
 			}
 		}
 		if ($OS_WIN) {
-			$dosfile = dos_path($dosfile);
+			$imagefile = dos_path($imagefile);
 		}
 		# show the page image
 		my @geom = split /[x+]/, $top->geometry;
@@ -16773,7 +16774,7 @@ sub auto_show_page_images {
 		$lglobal{pageimgresized} = $top->Photo(-width=>$geom[0],-height=> ($geom[1]));
 		$lglobal{pageimgorig}->blank;
 		$lglobal{pageimgresized}->blank;
-		my $name = $dosfile;
+		my $name = $imagefile;
 		my ( $fn, $ext );
 		( $fn, $globalimagepath, $ext ) = fileparse( $name, '(?<=\.)[^\.]*$' );
 		$globalimagepath = os_normal($globalimagepath);
@@ -16808,6 +16809,36 @@ sub auto_show_page_images {
 	} else {
 		setpngspath();
 	}
+}
+
+sub get_image_file {
+	my $number;
+	my $pagenum;
+	my $imagefile;
+	$number = $lglobal{page_num_label}->cget( -text )
+	  if defined $lglobal{page_num_label};
+	$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
+	$pagenum = $number || '001';
+	unless ($pngspath) {
+		if ($OS_WIN) {
+			$pngspath = "${globallastpath}pngs\\";
+		} else {
+			$pngspath = "${globallastpath}pngs/";
+		}
+		setpngspath() unless ( -e "$pngspath$pagenum.png" );
+	}
+	if ($pngspath) {
+		$imagefile = "$pngspath$pagenum.png";
+		unless ( -e $imagefile ) {
+			$imagefile = "$pngspath$pagenum.jpg";
+			unless ( -e $imagefile ) {
+			}
+		}
+		if ($OS_WIN) {
+			$imagefile = dos_path($imagefile);
+		}
+	}
+	return $imagefile;
 }
 
 sub text_convert_italic {
