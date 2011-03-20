@@ -786,15 +786,16 @@ sub tglprfbar {
 
 # Routine to handle image viewer file requests
 sub openpng {
-	my ( $pagenum, $number );
-	$number = $lglobal{page_num_label}->cget( -text )
-	  if defined $lglobal{page_num_label};
-	$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
-	$pagenum = $number || '001';
-	viewerpath() unless $globalviewerpath;
+	my $dospath;
 	my $dosfile;
+	my ( $pagenum, $number );
 	unless ($pngspath) {
-
+		$number = $lglobal{page_num_label}->cget( -text )
+		  if defined $lglobal{page_num_label};
+		$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
+		$pagenum = $number || '001';
+		viewerpath() unless $globalviewerpath;
+		
 		if ($OS_WIN) {
 			$pngspath = "${globallastpath}pngs\\";
 		} else {
@@ -804,7 +805,6 @@ sub openpng {
 	}
 	if ($pngspath) {
 		if ($globalviewerpath) {
-			my $dospath;
 			$dospath = $globalviewerpath;
 			$dosfile = "$pngspath$pagenum.png";
 			unless ( -e $dosfile ) {
@@ -828,8 +828,6 @@ sub openpng {
 			}
 			runner( $dospath, $dosfile );
 		}
-	} else {
-		setpngspath();
 	}
 }
 
@@ -1685,7 +1683,7 @@ sub fixup_menuitems {
 		  Button   => 'Convert Windows CP 1252 characters to Unicode',
 		  -command => \&cp1252toUni
 	   ],
-		[   Button => 'HTML Auto ~Index (List)', -command => \&autoindex ], 
+	   [ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
 	   [ 'separator', '' ],
 	   [ Button => 'ASCII Table Special Effects', -command => \&tablefx ],
 	   [ 'separator', '' ],
@@ -1709,6 +1707,10 @@ sub fixup_menuitems {
 
 sub text_menuitems {
 	[
+	   [
+		  Button   => "Auto Show Page Images",
+		  -command => \&auto_show_page_images
+	   ],
 	   [ Button => "Convert Italics", -command => \&text_convert_italic ],
 	   [ Button => "Convert Bold",    -command => \&text_convert_bold ],
 	   [
@@ -2191,12 +2193,15 @@ sub buildmenu {
 		-menuitems => [
 			[ Button => '~About',    -command => \&about_pop_up ],
 			[ Button => '~Versions', -command => [ \&showversion, $top ] ],
-			[   Button   => '~Manual', 
-                -command => sub {        # FIXME: sub this out. 
-                    runner("$globalbrowserstart http://www.pgdp.net/wiki/PPTools/Guiguts") 
-                        if ( -e 'ggmanual.html' ); 
-                    } 
-            ],
+			[
+			   Button   => '~Manual',
+			   -command => sub {        # FIXME: sub this out.
+				   runner(
+"$globalbrowserstart http://www.pgdp.net/wiki/PPTools/Guiguts"
+				   ) if ( -e 'ggmanual.html' );
+				 }
+			],
+
 			# FIXME: Disable update check until it works
 			#[ Button => 'Check For ~Updates',     -command => \&checkver ],
 			[ Button => '~Hot keys',              -command => \&hotkeyshelp ],
@@ -3579,7 +3584,7 @@ sub searchtext {
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
 	$searchstartindex = $textwindow->index('insert') unless $searchstartindex;
-	my $searchstartingpoint=$textwindow->index('insert');
+	my $searchstartingpoint = $textwindow->index('insert');
 
 	if ( $range_total == 0 && $lglobal{selectionsearch} ) {
 		$start = $textwindow->index('insert');
@@ -3756,8 +3761,9 @@ sub searchtext {
 			$textwindow->bell unless $nobell;
 			$lglobal{searchbutton}->flash if defined $lglobal{search};
 			$lglobal{searchbutton}->flash if defined $lglobal{search};
+
 			# If nothing found, return cursor to starting point
-			$searchendindex = $searchstartingpoint ;
+			$searchendindex = $searchstartingpoint;
 			$textwindow->markSet( 'insert', $searchstartingpoint );
 			$textwindow->see($searchstartingpoint);
 		}
@@ -5744,23 +5750,25 @@ sub htmlautoconvert {
 
 	$lglobal{fnsecondpass}  = 0;
 	$lglobal{fnsearchlimit} = 1;
-	html_convert_footnotes($textwindow,$lglobal{fnarray});
+	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
 
-	html_convert_body( $textwindow, $headertext,
-	$lglobal{cssblockmarkup},$lglobal{poetrynumbers},$lglobal{classhash},
-	 @contents );
+	html_convert_body( $textwindow, $headertext, $lglobal{cssblockmarkup},
+					   $lglobal{poetrynumbers}, $lglobal{classhash},
+					   @contents );
 
 	html_cleanup_markers($textwindow);
 
 	html_convert_underscoresmallcaps($textwindow);
 
 	html_convert_sidenotes($textwindow);
-	
-	html_convert_pageanchors( $textwindow,$lglobal{pageanch}, $lglobal{pagecmt},@contents);
 
-	html_convert_utf($textwindow,$lglobal{leave_utf},$lglobal{keep_latin1});
+	html_convert_pageanchors( $textwindow, $lglobal{pageanch},
+							  $lglobal{pagecmt}, @contents );
 
-	html_wrapup( $textwindow, $headertext ,$lglobal{leave_utf},$lglobal{autofraction},$lglobal{classhash});
+	html_convert_utf( $textwindow, $lglobal{leave_utf}, $lglobal{keep_latin1} );
+
+	html_wrapup( $textwindow, $headertext, $lglobal{leave_utf},
+				 $lglobal{autofraction}, $lglobal{classhash} );
 }
 
 sub entity {
@@ -7922,10 +7930,10 @@ sub itwords {
 	}
 	$wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
 	$markupthreshold = 0 unless $markupthreshold;
-   	while ($wholefile =~ m/(<(i|I|b|B|sc)>)(.*?)(<\/(i|I|b|B|sc)>)/sg){ 
-    	my $word = $1.$3.$4; 
-      	my $wordwo = $3;
-      	my $num    = 0;
+	while ( $wholefile =~ m/(<(i|I|b|B|sc)>)(.*?)(<\/(i|I|b|B|sc)>)/sg ) {
+		my $word   = $1 . $3 . $4;
+		my $wordwo = $3;
+		my $num    = 0;
 		$num++ while ( $word =~ /(\S\s)/g );
 		next if ( $num >= $markupthreshold );
 		$word =~ s/\n/\\n/g;
@@ -11435,7 +11443,7 @@ sub update_indicators {
 	my ( $mark, $pnum );
 	my $markindex = $textwindow->index('insert');
 	if ( $filename ne 'No File Loaded' or defined $lglobal{prepfile} ) {
-		$lglobal{page_num_label}->configure( -text => 'Img: XXX' )
+		$lglobal{page_num_label}->configure( -text => 'Img: 001' )
 		  if defined $lglobal{page_num_label};
 		$lglobal{page_label}->configure( -text => ("Lbl: None ") )
 		  if defined $lglobal{page_label};
@@ -11443,6 +11451,7 @@ sub update_indicators {
 		while ($mark) {
 			if ( $mark =~ /Pg(\S+)/ ) {
 				$pnum = $1;
+				unless ($pnum eq $lglobal{pageimageviewed}) { auto_show_page_images('1') }
 				unless ( defined( $lglobal{page_num_label} ) ) {
 					$lglobal{page_num_label} =
 					  $counter_frame->Label(
@@ -11937,8 +11946,8 @@ sub spellcheckrange {
 	my @ranges = $textwindow->tagRanges('sel');
 	$operationinterrupt = 0;
 	if (@ranges) {
-		$lglobal{spellindexstart} = $ranges[0]; 
-		$lglobal{spellindexend} = $ranges[-1];		
+		$lglobal{spellindexstart} = $ranges[0];
+		$lglobal{spellindexend}   = $ranges[-1];
 	} else {
 		$lglobal{spellindexstart} = '1.0';
 		$lglobal{spellindexend}   = $textwindow->index('end');
@@ -14647,16 +14656,16 @@ sub wordcount {
 				 }
 			],
 			[ 'Check Spelling', \&wfspellcheck ],
-			[ 'Ital/Bold/SC', \&itwords, \&ital_adjust ],
-			[ 'ALL CAPS',        \&capscheck ],
-			[ 'MiXeD CasE',      \&mixedcasecheck ],
-			[ 'Initial Caps',    \&initcapcheck ],
-			[ 'Character Cnts',  \&charsortcheck ],
-			[ 'Check , Upper',   \&commark ],
-			[ 'Check . Lower',   \&bangmark ],
-			[ 'Check Accents',   \&accentcheck ],
-			[ 'Unicode > FF',    \&unicheck ],
-			[ 'Stealtho Check',  \&stealthcheck ],
+			[ 'Ital/Bold/SC',   \&itwords, \&ital_adjust ],
+			[ 'ALL CAPS',       \&capscheck ],
+			[ 'MiXeD CasE',     \&mixedcasecheck ],
+			[ 'Initial Caps',   \&initcapcheck ],
+			[ 'Character Cnts', \&charsortcheck ],
+			[ 'Check , Upper',  \&commark ],
+			[ 'Check . Lower',  \&bangmark ],
+			[ 'Check Accents',  \&accentcheck ],
+			[ 'Unicode > FF',   \&unicheck ],
+			[ 'Stealtho Check', \&stealthcheck ],
 		);
 		my ( $row, $col, $inc ) = ( 0, 0, 0 );
 		for (@wfbuttons) {
@@ -16691,6 +16700,116 @@ sub findandextractgreek {
 
 ### Text Processing
 
+sub auto_show_page_images {
+	my $updatingindicators = @_;
+	my ( $pagenum, $number );
+	my $dosfile;
+	$globalimagepath = $globallastpath unless $globalimagepath;
+	if ( defined( $lglobal{autoshowimagepop} ) ) {
+		$lglobal{autoshowimagepop}->deiconify;
+		$lglobal{autoshowimagepop}->raise;
+		$lglobal{autoshowimagepop}->focus;
+	} else {
+		$lglobal{autoshowimagepop} = $top->Toplevel;
+		$lglobal{autoshowimagepop}->title('Auto Page Image');
+		$lglobal{autoshowimagepop}->geometry($geometry2) if $geometry2;
+	}
+	$lglobal{autoshowimagepop}->protocol(
+		'WM_DELETE_WINDOW' => sub {
+			$lglobal{autoshowimagepop}->destroy;
+			undef $lglobal{autoshowimagepop};
+		}
+	);
+	$lglobal{autoshowimagepop}->bind(
+		'<Configure>' => sub {
+			$lglobal{autoshowimagepop}->XEvent;
+			$geometry2 = $lglobal{autoshowimagepop}->geometry;
+			$lglobal{geometryupdate} = 1;
+			#print ':'.$geometry2;
+		}
+	);
+	
+	my $f = $lglobal{autoshowimagepop}->Frame->pack;
+	$lglobal{imagelbl} = $f->Label(
+									-text       => 'Image',
+									-justify    => 'center',
+									-background => 'white',
+	)->grid( -row => 1, -column => 1 );
+	$number = $lglobal{page_num_label}->cget( -text )
+	  if defined $lglobal{page_num_label};
+	$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
+	$pagenum = $number || '001';
+	unless ($pngspath) {
+		if ($OS_WIN) {
+			$pngspath = "${globallastpath}pngs\\";
+		} else {
+			$pngspath = "${globallastpath}pngs/";
+		}
+		setpngspath() unless ( -e "$pngspath$pagenum.png" );
+	}
+	if ($pngspath) {
+		$dosfile = "$pngspath$pagenum.png";
+		unless ( -e $dosfile ) {
+			$dosfile = "$pngspath$pagenum.jpg";
+			unless ( -e $dosfile ) {
+				my $response =
+				  $top->messageBox(
+					-icon => 'error',
+					-message =>
+"File $pngspath$pagenum.(png|jpg) not found.\nDo you need to change the path?",
+					-title => 'Problem with file',
+					-type  => 'YesNo',
+				  );
+				setpngspath() if $response =~ m{yes}i;
+				return;
+			}
+		}
+		if ($OS_WIN) {
+			$dosfile = dos_path($dosfile);
+		}
+		# show the page image
+		my @geom = split /[x+]/, $top->geometry;
+		$lglobal{pageimgorig}  = $top->Photo;
+		$lglobal{pageimgresized} = $top->Photo(-width=>$geom[0],-height=> ($geom[1]));
+		$lglobal{pageimgorig}->blank;
+		$lglobal{pageimgresized}->blank;
+		my $name = $dosfile;
+		my ( $fn, $ext );
+		( $fn, $globalimagepath, $ext ) = fileparse( $name, '(?<=\.)[^\.]*$' );
+		$globalimagepath = os_normal($globalimagepath);
+		$ext =~ s/jpg/jpeg/;
+		if ( lc($ext) eq 'gif' ) {
+			$lglobal{pageimgorig}->read( $name, -shrink );
+		} else {
+			$lglobal{pageimgorig}->read( $name, -format => $ext, -shrink );
+		}
+		my $pageorigwidth=$lglobal{pageimgorig}->width;
+		my $pageorigheight=$lglobal{pageimgorig}->height;
+		print $pageorigwidth.':'.$pageorigheight.' \n';
+		print $lglobal{autoshowimagepop}->geometry;
+		#print 'geom:'.$geom[0].':'.$geom[1];
+		my $sw =  ( $lglobal{pageimgorig}->width ) / $geom[0] ;
+		my $sh =  ( $lglobal{pageimgorig}->height ) / $geom[1] ;
+		print "sw:".$sw.":"."sh:".$sh;
+		if ( $sh > $sw ) {
+			$sw = $sh;
+		}
+		#if ( $sw < 2 ) { $sw += 1 }
+		$sw +=1;
+		$lglobal{pageimgresized}
+		  ->copy( $lglobal{pageimgorig},-subsample => ($sw) ); # -width=>$geom[0],-height=>$geom[1],,  -shrink 
+		$lglobal{imagelbl}->configure(
+									   -image   => $lglobal{pageimgresized},
+									   -text    => 'Page Image',
+									   -justify => 'center',
+		);
+		$lglobal{pageimageviewed}=$pagenum;
+		print 'Pagenum:'.$pagenum.':';
+	} else {
+		setpngspath();
+	}
+}
+
 sub text_convert_italic {
 	my $italic  = qr/<\/?i>/;
 	my $replace = $italic_char;
@@ -16703,7 +16822,6 @@ sub text_convert_bold {
 	$textwindow->FindAndReplaceAll( '-regexp', '-nocase', $bold, $replace );
 }
 
-#sub text_convert_smcap { }
 
 ## Insert a "Thought break" (duh)
 sub text_thought_break {
@@ -17210,7 +17328,7 @@ sub viewerpath {    #Find your image viewer
 
 sub setpngspath {
 	my $path =
-	  $textwindow->chooseDirectory(-title => 'Choose the image file directory.',
+	  $textwindow->chooseDirectory(-title => 'Choose the PNGs file directory.',
 								   -initialdir => "$globallastpath" . "pngs", );
 	return unless defined $path and -e $path;
 	$path .= '/';
@@ -17224,24 +17342,6 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 		$lglobal{toptool}->destroy;
 		undef $lglobal{toptool};
 	} elsif ( !$notoolbar && !$lglobal{toptool} ) {
-
-# FIXME: if Tk::ToolBar isn't available, show a message and disable
-# the toolbar
-# if ( !$lglobal{ToolBar} ) {
-#     my $dbox = $top->Dialog(
-#         -text =>
-#             'Tk::ToolBar package not found, unable to create Toolbar. The toolbar will be disabled.',
-#         -title   => 'Unable to create Toolbar.',
-#         -buttons => ['OK']
-#     );
-#     $dbox->Show;
-
-		#     # disable toolbar in settings
-		#     $notoolbar = 1;
-		#     saveset();
-		#     return;
-		#}
-
 		$lglobal{toptool} = $top->ToolBar( -side => $toolside, -close => '30' );
 		$lglobal{toolfont} =
 		  $top->Font(
@@ -19015,68 +19115,69 @@ sub uchar {
 		$characteristics->bind( '<Return>' => sub { $doit->invoke } );
 	}
 }
-sub autoindex { 
-    viewpagenums() if ( $lglobal{seepagenums} ); 
-    my @ranges = $textwindow->tagRanges('sel'); 
-    unless (@ranges) { 
-        push @ranges, $textwindow->index('insert'); 
-        push @ranges, $textwindow->index('insert'); 
-    } 
-    my $range_total = @ranges; 
-    if ( $range_total == 0 ) { 
-        return; 
-    } 
-    else { 
-        $textwindow->addGlobStart; 
-        my $end       = pop(@ranges); 
-        my $start     = pop(@ranges); 
-        my $paragraph = 0; 
-        my ( $lsr, $lsc ) = split /\./, $start; 
-        my ( $ler, $lec ) = split /\./, $end; 
-        my $step = $lsr; 
-        my $blanks = 0; 
-        my $first = 1; 
-        my $indent = 0; 
-         while ( $textwindow->get( "$step.0", "$step.end" ) eq '' ) { 
-            $step++; 
-        } 
-        while ( $step <= $ler ) { 
-            my $selection = $textwindow->get( "$step.0", "$step.end" ); 
-            unless ($selection) { $step++; $blanks++; next } 
-            $selection = addpagelinks ( $selection ); 
-            if ( $first == 1 ) { $blanks = 2; $first = 0 } 
-            if ( $blanks == 2 ) { 
-                $selection = '<li class="ifrst">' . $selection . '</li>'; 
-                $first = 0; 
-            } 
-            if ( $blanks == 1 ) { 
-                $selection = '<li class="indx">' . $selection . '</li>'; 
-            } 
-            if ( $selection =~ /^(\s+)/ ) { 
-                $indent = ( int( (length($1) + 1 ) / 2) ); 
-                $selection =~ s/^\s+//; 
-                $selection = '<li class="isub' . $indent . '">' . $selection . '</li>'; 
-            } 
-            $textwindow->delete( "$step.0", "$step.end" ); 
-            $selection =~ s/<li<\/li>//; 
-            $textwindow->insert( "$step.0", $selection ); 
-            $blanks = 0; 
-            $step++; 
-        } 
-        $textwindow->insert( "$ler.end", "</ul>\n" ); 
-        $textwindow->insert( $start, '<ul class="index">' ); 
-        $textwindow->addGlobEnd; 
-    } 
-} 
 
-sub addpagelinks { 
-    my $selection = shift; 
-    $selection =~ s/(\d{1,3})-(\d{1,3})/<a href="#Page_$1">$1-$2<\/a>/g; 
-    $selection =~ s/(\d{1,3})([,;\.])/<a href="#Page_$1">$1<\/a>$2/g; 
-    $selection =~ s/\s(\d{1,3})\s/ <a href="#Page_$1">$1<\/a> /g; 
-    $selection =~ s/(\d{1,3})$/<a href="#Page_$1">$1<\/a>/; 
-    return $selection; 
-} 
+sub autoindex {
+	viewpagenums() if ( $lglobal{seepagenums} );
+	my @ranges = $textwindow->tagRanges('sel');
+	unless (@ranges) {
+		push @ranges, $textwindow->index('insert');
+		push @ranges, $textwindow->index('insert');
+	}
+	my $range_total = @ranges;
+	if ( $range_total == 0 ) {
+		return;
+	} else {
+		$textwindow->addGlobStart;
+		my $end       = pop(@ranges);
+		my $start     = pop(@ranges);
+		my $paragraph = 0;
+		my ( $lsr, $lsc ) = split /\./, $start;
+		my ( $ler, $lec ) = split /\./, $end;
+		my $step   = $lsr;
+		my $blanks = 0;
+		my $first  = 1;
+		my $indent = 0;
 
+		while ( $textwindow->get( "$step.0", "$step.end" ) eq '' ) {
+			$step++;
+		}
+		while ( $step <= $ler ) {
+			my $selection = $textwindow->get( "$step.0", "$step.end" );
+			unless ($selection) { $step++; $blanks++; next }
+			$selection = addpagelinks($selection);
+			if ( $first == 1 ) { $blanks = 2; $first = 0 }
+			if ( $blanks == 2 ) {
+				$selection = '<li class="ifrst">' . $selection . '</li>';
+				$first     = 0;
+			}
+			if ( $blanks == 1 ) {
+				$selection = '<li class="indx">' . $selection . '</li>';
+			}
+			if ( $selection =~ /^(\s+)/ ) {
+				$indent = ( int( ( length($1) + 1 ) / 2 ) );
+				$selection =~ s/^\s+//;
+				$selection =
+				  '<li class="isub' . $indent . '">' . $selection . '</li>';
+			}
+			$textwindow->delete( "$step.0", "$step.end" );
+			$selection =~ s/<li<\/li>//;
+			$textwindow->insert( "$step.0", $selection );
+			$blanks = 0;
+			$step++;
+		}
+		$textwindow->insert( "$ler.end", "</ul>\n" );
+		$textwindow->insert( $start,     '<ul class="index">' );
+		$textwindow->addGlobEnd;
+	}
+}
+
+sub addpagelinks {
+	my $selection = shift;
+	$selection =~ s/(\d{1,3})-(\d{1,3})/<a href="#Page_$1">$1-$2<\/a>/g;
+	$selection =~ s/(\d{1,3})([,;\.])/<a href="#Page_$1">$1<\/a>$2/g;
+	$selection =~ s/\s(\d{1,3})\s/ <a href="#Page_$1">$1<\/a> /g;
+	$selection =~ s/(\d{1,3})$/<a href="#Page_$1">$1<\/a>/;
+	return $selection;
+}
 
 MainLoop;
