@@ -795,7 +795,7 @@ sub openpng {
 		$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
 		$pagenum = $number || '001';
 		viewerpath() unless $globalviewerpath;
-		
+
 		if ($OS_WIN) {
 			$pngspath = "${globallastpath}pngs\\";
 		} else {
@@ -11451,7 +11451,8 @@ sub update_indicators {
 		while ($mark) {
 			if ( $mark =~ /Pg(\S+)/ ) {
 				$pnum = $1;
-				unless ($pnum eq $lglobal{pageimageviewed}) { auto_show_page_images('1') }
+
+	 #unless ($pnum eq $lglobal{pageimageviewed}) { auto_show_page_images('1') }
 				unless ( defined( $lglobal{page_num_label} ) ) {
 					$lglobal{page_num_label} =
 					  $counter_frame->Label(
@@ -16725,87 +16726,96 @@ sub auto_show_page_images {
 			$lglobal{autoshowimagepop}->XEvent;
 			$geometry2 = $lglobal{autoshowimagepop}->geometry;
 			$lglobal{geometryupdate} = 1;
+
 			#print ':'.$geometry2;
 		}
 	);
-	
+
 	my $f = $lglobal{autoshowimagepop}->Frame->pack;
 	$lglobal{imagelbl} = $f->Label(
 									-text       => 'Image',
 									-justify    => 'center',
 									-background => 'white',
 	)->grid( -row => 1, -column => 1 );
-	print ':'.get_image_file().':';
-	$number = $lglobal{page_num_label}->cget( -text )
-	  if defined $lglobal{page_num_label};
-	$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
-	$pagenum = $number || '001';
-	unless ($pngspath) {
-		if ($OS_WIN) {
-			$pngspath = "${globallastpath}pngs\\";
-		} else {
-			$pngspath = "${globallastpath}pngs/";
-		}
-		setpngspath() unless ( -e "$pngspath$pagenum.png" );
-	}
+#	print ':' . get_image_file() . ':';
+#	$number = $lglobal{page_num_label}->cget( -text )
+#	  if defined $lglobal{page_num_label};
+#	$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
+#	$pagenum = $number || '001';
+#	unless ($pngspath) {
+#
+#		if ($OS_WIN) {
+#			$pngspath = "${globallastpath}pngs\\";
+#		} else {
+#			$pngspath = "${globallastpath}pngs/";
+#		}
+#		setpngspath() unless ( -e "$pngspath$pagenum.png" );
+#	}
 	if ($pngspath) {
-		$imagefile = "$pngspath$pagenum.png";
-		unless ( -e $imagefile ) {
-			$imagefile = "$pngspath$pagenum.jpg";
-			unless ( -e $imagefile ) {
-				my $response =
-				  $top->messageBox(
-					-icon => 'error',
-					-message =>
-"File $pngspath$pagenum.(png|jpg) not found.\nDo you need to change the path?",
-					-title => 'Problem with file',
-					-type  => 'YesNo',
-				  );
-				setpngspath() if $response =~ m{yes}i;
-				return;
-			}
-		}
-		if ($OS_WIN) {
-			$imagefile = dos_path($imagefile);
-		}
-		# show the page image
+		$imagefile = get_image_file();
+
+#		$imagefile = "$pngspath$pagenum.png";
+#		unless ( -e $imagefile ) {
+#			$imagefile = "$pngspath$pagenum.jpg";
+#			unless ( -e $imagefile ) {
+#				my $response =
+#				  $top->messageBox(
+#					-icon => 'error',
+#					-message =>
+#"File $pngspath$pagenum.(png|jpg) not found.\nDo you need to change the path?",
+#					-title => 'Problem with file',
+#					-type  => 'YesNo',
+#				  );
+#				setpngspath() if $response =~ m{yes}i;
+#				return;
+#			}
+#		}
+#		if ($OS_WIN) {
+#			$imagefile = dos_path($imagefile);
+#		}
+# show the page image
 		my @geom = split /[x+]/, $top->geometry;
-		$lglobal{pageimgorig}  = $top->Photo;
-		$lglobal{pageimgresized} = $top->Photo(-width=>$geom[0],-height=> ($geom[1]));
+		$lglobal{pageimgorig} = $top->Photo;
+		$lglobal{pageimgresized} =
+		  $top->Photo( -width => $geom[0], -height => ( $geom[1] ) );
 		$lglobal{pageimgorig}->blank;
 		$lglobal{pageimgresized}->blank;
 		my $name = $imagefile;
 		my ( $fn, $ext );
 		( $fn, $globalimagepath, $ext ) = fileparse( $name, '(?<=\.)[^\.]*$' );
-		$globalimagepath = os_normal($globalimagepath);
+
+		#$globalimagepath = os_normal($globalimagepath);
 		$ext =~ s/jpg/jpeg/;
 		if ( lc($ext) eq 'gif' ) {
 			$lglobal{pageimgorig}->read( $name, -shrink );
 		} else {
 			$lglobal{pageimgorig}->read( $name, -format => $ext, -shrink );
 		}
-		my $pageorigwidth=$lglobal{pageimgorig}->width;
-		my $pageorigheight=$lglobal{pageimgorig}->height;
-		print $pageorigwidth.':'.$pageorigheight.' \n';
+		my $pageorigwidth  = $lglobal{pageimgorig}->width;
+		my $pageorigheight = $lglobal{pageimgorig}->height;
+		print $pageorigwidth. ':' . $pageorigheight . ' \n';
 		print $lglobal{autoshowimagepop}->geometry;
+
 		#print 'geom:'.$geom[0].':'.$geom[1];
-		my $sw =  ( $lglobal{pageimgorig}->width ) / $geom[0] ;
-		my $sh =  ( $lglobal{pageimgorig}->height ) / $geom[1] ;
-		print "sw:".$sw.":"."sh:".$sh;
+		my $sw = ( $lglobal{pageimgorig}->width ) / $geom[0];
+		my $sh = ( $lglobal{pageimgorig}->height ) / $geom[1];
+		print "sw:" . $sw . ":" . "sh:" . $sh;
 		if ( $sh > $sw ) {
 			$sw = $sh;
 		}
+
 		#if ( $sw < 2 ) { $sw += 1 }
-		$sw +=1;
+		$sw += 1;
 		$lglobal{pageimgresized}
-		  ->copy( $lglobal{pageimgorig},-subsample => ($sw) ); # -width=>$geom[0],-height=>$geom[1],,  -shrink 
+		  ->copy( $lglobal{pageimgorig}, -subsample => ($sw) )
+		  ;    # -width=>$geom[0],-height=>$geom[1],,  -shrink
 		$lglobal{imagelbl}->configure(
 									   -image   => $lglobal{pageimgresized},
 									   -text    => 'Page Image',
 									   -justify => 'center',
 		);
-		$lglobal{pageimageviewed}=$pagenum;
-		print 'Pagenum:'.$pagenum.':';
+		$lglobal{pageimageviewed} = $pagenum;
+		print 'Pagenum:' . $pagenum . ':';
 	} else {
 		setpngspath();
 	}
@@ -16852,7 +16862,6 @@ sub text_convert_bold {
 	my $replace = "$bold_char";
 	$textwindow->FindAndReplaceAll( '-regexp', '-nocase', $bold, $replace );
 }
-
 
 ## Insert a "Thought break" (duh)
 sub text_thought_break {
@@ -17359,8 +17368,9 @@ sub viewerpath {    #Find your image viewer
 
 sub setpngspath {
 	my $path =
-	  $textwindow->chooseDirectory(-title => 'Choose the PNGs file directory.',
-								   -initialdir => "$globallastpath" . "pngs", );
+	  $textwindow->chooseDirectory( -title => 'Choose the PNGs file directory.',
+									-initialdir => "$globallastpath" . "pngs",
+	  );
 	return unless defined $path and -e $path;
 	$path .= '/';
 	$path     = os_normal($path);
