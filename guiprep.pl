@@ -5004,9 +5004,9 @@ sub searchsave{
 		utf8::encode $file;
 		print SAVE $file;
 		close SAVE;
-		$displaybox->ResetUndo;
-
+                $displaybox->ResetUndo;
 }
+
 sub searchclear{
 	$displaybox->delete('1.0','end');
 	$searchfile->delete('1.0','end');
@@ -5134,9 +5134,16 @@ sub searchfiles{
 
 sub replace{
 	my $replaceterm = shift;				 # get replacement text
-	$displaybox->delete($searchstartindex,$searchendindex)if $searchstartindex;	# delete found text
-	$displaybox->insert($searchstartindex,$replaceterm)if $searchstartindex;	# insert replacement text
+      if ($searchstartindex){
+	$displaybox->delete($searchstartindex,$searchendindex);  # delete found text
+    	$displaybox->insert($searchstartindex,$replaceterm);	# insert replacement text
+       }
 	searchsave();
+# Then make sure that place with replaced text is still visible
+# Without the following redraw, the box sometimes scrolls down away from the 
+# replaced text, so the user can'rt easilt see the replace worked
+	$displaybox->markSet('insert',$searchstartindex);# position the cursor
+	$displaybox->see($searchstartindex);    # scroll text box, 
 }
 
 sub replaceall{
