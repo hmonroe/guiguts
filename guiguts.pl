@@ -788,46 +788,16 @@ sub tglprfbar {
 sub openpng {
 	my $dospath;
 	my $dosfile;
-	my ( $pagenum, $number );
-	unless ($pngspath) {
-		$number = $lglobal{page_num_label}->cget( -text )
-		  if defined $lglobal{page_num_label};
-		$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
-		$pagenum = $number || '001';
-		viewerpath() unless $globalviewerpath;
-
-		if ($OS_WIN) {
-			$pngspath = "${globallastpath}pngs\\";
-		} else {
-			$pngspath = "${globallastpath}pngs/";
-		}
-		setpngspath() unless ( -e "$pngspath$pagenum.png" );
-	}
-	if ($pngspath) {
-		if ($globalviewerpath) {
+	my $imagefile=get_image_file();
+	if ($imagefile && $globalviewerpath) {
 			$dospath = $globalviewerpath;
-			$dosfile = "$pngspath$pagenum.png";
-			unless ( -e $dosfile ) {
-				$dosfile = "$pngspath$pagenum.jpg";
-				unless ( -e $dosfile ) {
-					my $response =
-					  $top->messageBox(
-						-icon => 'error',
-						-message =>
-"File $pngspath$pagenum.(png|jpg) not found.\nDo you need to change the path?",
-						-title => 'Problem with file',
-						-type  => 'YesNo',
-					  );
-					setpngspath() if $response =~ m{yes}i;
-					return;
-				}
-			}
 			if ($OS_WIN) {
 				$dospath = dos_path($dospath);
-				$dosfile = dos_path($dosfile);
 			}
-			runner( $dospath, $dosfile );
-		}
+			runner( $dospath,$imagefile );
+	}
+	else {
+		setpngspath();
 	}
 }
 
@@ -6715,7 +6685,7 @@ sub errorcheckpop_up {
 	my $size = @errorchecklines;
 	if ( ( $errorchecktype eq "W3C Validate CSS" ) and ( $size == 0 ) )
 	{    # handle errors.err file with zero lines
-		print "size " . $size;
+		#print "size " . $size;
 		push @errorchecklines,
 "Could not perform validation: install java or use W3C CSS Validation web site.";
 	} else {
@@ -6836,20 +6806,20 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 			}
 		} else {
 			if ( $errorchecktype eq 'W3C Validate Remote' ) {
-				print 'Starting remote validate';
+				#print 'Starting remote validate';
 				my $validator =
 				  WebService::Validator::HTML::W3C->new( detailed => 1 );
 				if ( $validator->validate_file('./validate.html') ) {
-					print 'Validate 1';
+					#print 'Validate 1';
 					if ( open my $td, '>', "errors.err" ) {
-						print 'Validate 2';
+						#print 'Validate 2';
 						if ( $validator->is_valid ) {
-							print 'Validate 2.1';
-							print $td (" ");
+							#print 'Validate 2.1';
+							#print $td (" ");
 						} else {
-							print 'Validate 2.2';
+							#print 'Validate 2.2';
 							foreach my $error ( @{ $validator->errors } ) {
-								print 'Validate 2.3';
+								#print 'Validate 2.3';
 								printf $td (
 										  "W3C:validate.tmp:%s:%s:Eremote:%s\n",
 										  $error->line, $error->col, $error->msg
@@ -6860,9 +6830,9 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 						close $td;
 					}
 				} else {
-					print 'Validate 3';
+					#print 'Validate 3';
 					if ( open my $td, '>', "errors.err" ) {
-						print 'Validate 4';
+						#print 'Validate 4';
 						print $td
 'Could not contact remote validator; try using local validator onsgmls.';
 						close $td;
@@ -6872,7 +6842,7 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 				if ( $errorchecktype eq 'W3C Validate CSS' ) {
 					my $validatecsspath = dirname($validatecsscommand);
 					my $pwd             = getcwd;
-					print "running css";
+					#print "running css";
 					system(
 qq/java -jar $validatecsscommand file:$pwd\/$name > errors.err/ );
 				}
@@ -16726,8 +16696,6 @@ sub auto_show_page_images {
 			$lglobal{autoshowimagepop}->XEvent;
 			$geometry2 = $lglobal{autoshowimagepop}->geometry;
 			$lglobal{geometryupdate} = 1;
-
-			#print ':'.$geometry2;
 		}
 	);
 
@@ -16737,43 +16705,9 @@ sub auto_show_page_images {
 									-justify    => 'center',
 									-background => 'white',
 	)->grid( -row => 1, -column => 1 );
-#	print ':' . get_image_file() . ':';
-#	$number = $lglobal{page_num_label}->cget( -text )
-#	  if defined $lglobal{page_num_label};
-#	$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
-#	$pagenum = $number || '001';
-#	unless ($pngspath) {
-#
-#		if ($OS_WIN) {
-#			$pngspath = "${globallastpath}pngs\\";
-#		} else {
-#			$pngspath = "${globallastpath}pngs/";
-#		}
-#		setpngspath() unless ( -e "$pngspath$pagenum.png" );
-#	}
-	if ($pngspath) {
-		$imagefile = get_image_file();
-
-#		$imagefile = "$pngspath$pagenum.png";
-#		unless ( -e $imagefile ) {
-#			$imagefile = "$pngspath$pagenum.jpg";
-#			unless ( -e $imagefile ) {
-#				my $response =
-#				  $top->messageBox(
-#					-icon => 'error',
-#					-message =>
-#"File $pngspath$pagenum.(png|jpg) not found.\nDo you need to change the path?",
-#					-title => 'Problem with file',
-#					-type  => 'YesNo',
-#				  );
-#				setpngspath() if $response =~ m{yes}i;
-#				return;
-#			}
-#		}
-#		if ($OS_WIN) {
-#			$imagefile = dos_path($imagefile);
-#		}
-# show the page image
+	$imagefile = get_image_file();
+	if ($imagefile) {
+		# show the page image
 		my @geom = split /[x+]/, $top->geometry;
 		$lglobal{pageimgorig} = $top->Photo;
 		$lglobal{pageimgresized} =
@@ -16783,8 +16717,6 @@ sub auto_show_page_images {
 		my $name = $imagefile;
 		my ( $fn, $ext );
 		( $fn, $globalimagepath, $ext ) = fileparse( $name, '(?<=\.)[^\.]*$' );
-
-		#$globalimagepath = os_normal($globalimagepath);
 		$ext =~ s/jpg/jpeg/;
 		if ( lc($ext) eq 'gif' ) {
 			$lglobal{pageimgorig}->read( $name, -shrink );
@@ -16793,17 +16725,14 @@ sub auto_show_page_images {
 		}
 		my $pageorigwidth  = $lglobal{pageimgorig}->width;
 		my $pageorigheight = $lglobal{pageimgorig}->height;
-		print $pageorigwidth. ':' . $pageorigheight . ' \n';
+		#print $pageorigwidth. ':' . $pageorigheight . ' \n';
 		print $lglobal{autoshowimagepop}->geometry;
-
-		#print 'geom:'.$geom[0].':'.$geom[1];
 		my $sw = ( $lglobal{pageimgorig}->width ) / $geom[0];
 		my $sh = ( $lglobal{pageimgorig}->height ) / $geom[1];
-		print "sw:" . $sw . ":" . "sh:" . $sh;
+		#print "sw:" . $sw . ":" . "sh:" . $sh;
 		if ( $sh > $sw ) {
 			$sw = $sh;
 		}
-
 		#if ( $sw < 2 ) { $sw += 1 }
 		$sw += 1;
 		$lglobal{pageimgresized}
@@ -16814,10 +16743,10 @@ sub auto_show_page_images {
 									   -text    => 'Page Image',
 									   -justify => 'center',
 		);
-		$lglobal{pageimageviewed} = $pagenum;
-		print 'Pagenum:' . $pagenum . ':';
 	} else {
-		setpngspath();
+		unless ($updatingindicators){
+			setpngspath();
+		}
 	}
 }
 
@@ -16848,6 +16777,7 @@ sub get_image_file {
 			$imagefile = dos_path($imagefile);
 		}
 	}
+	$lglobal{pageimageviewed} = $pagenum;
 	return $imagefile;
 }
 
