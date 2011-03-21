@@ -164,12 +164,45 @@ To stop text getting too long and unwieldy, the changelog covering previous vers
 </span>
 <br>
 <br>
-Search and replace now allows regular expression.  Regular expressions in Search and replace will not work if searching for newlines ( \n in the expression).<br>
+Regular expressions in Search and replace will not work if searching for newlines ( \n in the expression).<br>
 I <i>think</i> this is because the edit dialog box holds the current page as 
-an array of strings, with no newline characters. If you want to search for a
-pattern at the beginning of a line , use <b>^pattern</b>, for a pattern at the
-end of a line, use <b>pattern$</b>. 
-
+an array of strings, one for each line, possibly ending with a newline. 
+So expressions searching over a linebreak won't work properly (or at all?)
+ If you want to search for a pattern at the beginning of a line , e.g <b>\npattern</b>, 
+use <b>^pattern</b> instead. For a pattern at the end of a line, use 
+<b>pattern$</b>. 
+<br>
+<br>
+When viewing a file through the Headers tab, you may have an unexpected
+or wrong file open up. Due to the way list boxes are handled under Tk,
+you need to specifically select (left click) an entry before you can
+act on it (right click). If you haven't selected an entry, either the
+last entry in the list or the previous selection is defaulted to. The
+actual mouse pointer position is ignored on right click.<br>
+<br>
+Customized open and close markup markers are not sanity checked. The
+script will not check or care if you use inappropriate markers. For
+instance you can set both italics and bold to use the same markup, or,
+even worse, use a marker which will occur normally in the text. If you
+specify "the" and "and" or even "&nbsp;&nbsp;&nbsp;&nbsp; " for your
+italics open and close markers, the script will uncomplainingly use
+them. Probably not a good idea.<br>
+<br>
+If you switch away from the Process text tab while a batch or job is
+running, it will automatically cancel the job to prevent contamination
+of other directories. Each tab has its own peculiarities about where it
+needs to run and if you try to switch to one while another is
+processing, it could cause problems.<br>
+<br>
+The FTP client blocks while it is waiting for a response from the FTP
+server. It appears that the program has locked up but it is just
+waiting for something to happen. If the connection is lost, it will
+return immediately. On a dial-up connection, for large transfers, (the
+initial directory listing, for instance) it can take between 30 - 60
+seconds to respond. Be patient. It <span style="font-style: italic;">is</span>
+working.<br>
+<br>
+<br>
 <br>
 </span>
 
@@ -1182,43 +1215,6 @@ reduce the window to 640x480 pixels. Alternately, you can edit the
 settings.rc file with a text editor and remove the line that starts:
 $geometry = .<br>
 <br>
-<br style="font-weight: bold;">
-<span style="font-weight: bold;"><a name="Known_bugs_and_odd_behavior:"></a>Known
-bugs and odd behavior:</span><br>
-<br>
-<br>
-When viewing a file through the Headers tab, you may have an unexpected
-or wrong file open up. Due to the way list boxes are handled under Tk,
-you need to specifically select (left click) an entry before you can
-act on it (right click). If you haven't selected an entry, either the
-last entry in the list or the previous selection is defaulted to. The
-actual mouse pointer position is ignored on right click.<br>
-<br>
-Customized open and close markup markers are not sanity checked. The
-script will not check or care if you use inappropriate markers. For
-instance you can set both italics and bold to use the same markup, or,
-even worse, use a marker which will occur normally in the text. If you
-specify "the" and "and" or even "&nbsp;&nbsp;&nbsp;&nbsp; " for your
-italics open and close markers, the script will uncomplainingly use
-them. Probably not a good idea.<br>
-<br>
-If you switch away from the Process text tab while a batch or job is
-running, it will automatically cancel the job to prevent contamination
-of other directories. Each tab has its own peculiarities about where it
-needs to run and if you try to switch to one while another is
-processing, it could cause problems.<br>
-<br>
-The FTP client blocks while it is waiting for a response from the FTP
-server. It appears that the program has locked up but it is just
-waiting for something to happen. If the connection is lost, it will
-return immediately. On a dial-up connection, for large transfers, (the
-initial directory listing, for instance) it can take between 30 - 60
-seconds to respond. Be patient. It <span style="font-style: italic;">is</span>
-working.<br>
-<br>
-<br>
-<br>
-</span>
 <hr style="width: 100%; height: 2px;"> <br>
 <br>
 </body>
