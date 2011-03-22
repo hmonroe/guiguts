@@ -11386,6 +11386,42 @@ sub create_img_button {
     return ();
 } 
 
+# New subroutine "create_see_image_button" extracted - Mon Mar 21 22:18:18 2011.
+#
+sub create_see_image_button {
+    my $counter_frame = shift;
+
+				unless ( $lglobal{page_label} ) {
+ 					$lglobal{page_label} =
+ 					  $counter_frame->Label(
+											 -text       => 'Lbl: None ',
+											 -background => 'gray',
+											 -relief     => 'ridge',
+					  )->grid( -row => 1, -column => 4 );
+					_butbind( $lglobal{page_label} );
+ 					$lglobal{page_label}->bind(
+ 						'<1>',
+						sub {
+							$lglobal{page_label}
+ 							  ->configure( -relief => 'sunken' );
+							gotolabel();
+						}
+					);
+					$lglobal{page_label}->bind(
+ 						'<3>',
+						sub {
+							$lglobal{page_label}
+ 							  ->configure( -relief => 'sunken' );
+							pageadjust();
+						}
+					);
+					$lglobal{statushelp}->attach( $lglobal{page_label},
+ 						-balloonmsg => "Page label assigned to current page." );
+				}
+
+    return ();
+} 
+
 # Routine to update the status bar when something has changed.
 #
 sub update_indicators {
@@ -11492,33 +11528,7 @@ sub update_indicators {
 "Open Image corresponding to current page in an external viewer."
 					);
 				}
-				unless ( $lglobal{page_label} ) {
-					$lglobal{page_label} =
-					  $counter_frame->Label(
-											 -text       => 'Lbl: None ',
-											 -background => 'gray',
-											 -relief     => 'ridge',
-					  )->grid( -row => 1, -column => 4 );
-					_butbind( $lglobal{page_label} );
-					$lglobal{page_label}->bind(
-						'<1>',
-						sub {
-							$lglobal{page_label}
-							  ->configure( -relief => 'sunken' );
-							gotolabel();
-						}
-					);
-					$lglobal{page_label}->bind(
-						'<3>',
-						sub {
-							$lglobal{page_label}
-							  ->configure( -relief => 'sunken' );
-							pageadjust();
-						}
-					);
-					$lglobal{statushelp}->attach( $lglobal{page_label},
-						-balloonmsg => "Page label assigned to current page." );
-				}
+				create_see_image_button ();
 				$lglobal{page_num_label}->configure( -text => "Img: $pnum" )
 				  if defined $lglobal{page_num_label};
 				my $label = $pagenumbers{"Pg$pnum"}{label};
