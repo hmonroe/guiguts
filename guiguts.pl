@@ -11476,10 +11476,9 @@ sub update_see_img_button {
 	}
 }
 
+# Routine to update the status bar when something has changed.
+#
 sub update_indicators {
-
-	# Routine to update the status bar when something has changed.
-	#
 	my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
 	my ( $line,      $column )   = split( /\./, $textwindow->index('insert') );
 	$lglobal{current_line_label}->configure(
@@ -11521,52 +11520,34 @@ sub update_indicators {
 	$lglobal{global_filename} = $filename;
 	$textwindow->idletasks;
 	my ( $mark, $pnum );
+	$pnum = get_page_number();
 	my $markindex = $textwindow->index('insert');
 	if ( $filename ne 'No File Loaded' or defined $lglobal{prepfile} ) {
 		$lglobal{page_num_label}->configure( -text => 'Img: 001' )
 		  if defined $lglobal{page_num_label};
 		$lglobal{page_label}->configure( -text => ("Lbl: None ") )
 		  if defined $lglobal{page_label};
-		$mark = $textwindow->markPrevious($markindex);
-		while ($mark) {
-			if ( $mark =~ /Pg(\S+)/ ) {
-				$pnum = $1;
-				if (    $lglobal{autoshowimagepop}
-					 && $pnum
-					 && $lglobal{pageimageviewed} )
-				{
-					if ( $pnum != "$lglobal{pageimageviewed}" ) {
-						print '$pnumb' . ':' 
-						  . $pnum
-						  . '$lglobal{pageimageviewed}b' . ':'
-						  . $lglobal{pageimageviewed};
-						$lglobal{pageimageviewed} = $pnum;
-						auto_show_page_images('1');
-					}
-				}
+
+		if (    $lglobal{autoshowimagepop}
+			 && $pnum
+			 && $lglobal{pageimageviewed} )
+		{
+			if ( $pnum != "$lglobal{pageimageviewed}" ) {
 				$lglobal{pageimageviewed} = $pnum;
-				update_img_button($pnum);
-				update_see_img_button();
-				update_label_button();
-				$lglobal{page_num_label}->configure( -text => "Img: $pnum" )
-				  if defined $lglobal{page_num_label};
-				my $label = $pagenumbers{"Pg$pnum"}{label};
-				if ( defined $label && length $label ) {
-					$lglobal{page_label}
-					  ->configure( -text => ("Lbl: $label ") );
-				} else {
-					$lglobal{page_label}->configure( -text => ("Lbl: None ") );
-				}
-				last;
-			} else {
-				if ( $textwindow->index('insert') >
-					 ( $textwindow->index($mark) + 400 ) )
-				{
-					last;
-				}
-				$mark = $textwindow->markPrevious($mark) if $mark;
-				next;
+				auto_show_page_images('1');
 			}
+		}
+		$lglobal{pageimageviewed} = $pnum;
+		update_img_button($pnum);
+		update_see_img_button();
+		update_label_button();
+		$lglobal{page_num_label}->configure( -text => "Img: $pnum" )
+		  if defined $lglobal{page_num_label};
+		my $label = $pagenumbers{"Pg$pnum"}{label};
+		if ( defined $label && length $label ) {
+			$lglobal{page_label}->configure( -text => ("Lbl: $label ") );
+		} else {
+			$lglobal{page_label}->configure( -text => ("Lbl: None ") );
 		}
 		if ( ( scalar %proofers ) && ( defined( $lglobal{pagebutton} ) ) ) {
 			unless ( defined( $lglobal{proofbutton} ) ) {
@@ -16800,9 +16781,9 @@ sub auto_show_page_images {
 		  ->copy( $lglobal{pageimgorig}, -subsample => ($sw) )
 		  ;    # -width=>$geom[0],-height=>$geom[1],,  -shrink
 		$lglobal{imagelbl}->configure(
-						   -image   => $lglobal{pageimgresized},
-						   -text    => 'Page Image',
-						   -justify => 'center',
+									   -image   => $lglobal{pageimgresized},
+									   -text    => 'Page Image',
+									   -justify => 'center',
 		);
 	} else {
 		unless ($updatingindicators) {
