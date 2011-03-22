@@ -11476,9 +11476,25 @@ sub update_see_img_button {
 	}
 }
 
+# New subroutine "update_img_lbl_values" extracted - Tue Mar 22 00:08:26 2011.
+#
+sub update_img_lbl_values {
+    my $pnum = shift;
+    my $pagenumbers = shift;
+
+		$lglobal{page_num_label}->configure( -text => "Img: $pnum" )
+		  if defined $lglobal{page_num_label};
+	my $label = $pagenumbers->{"Pg$pnum"}{label};
+		if ( defined $label && length $label ) {
+			$lglobal{page_label}->configure( -text => ("Lbl: $label ") );
+		} else {
+			$lglobal{page_label}->configure( -text => ("Lbl: None ") );
+		}
+}
+
+sub update_indicators {
 # Routine to update the status bar when something has changed.
 #
-sub update_indicators {
 	my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
 	my ( $line,      $column )   = split( /\./, $textwindow->index('insert') );
 	$lglobal{current_line_label}->configure(
@@ -11501,13 +11517,12 @@ sub update_indicators {
 		  unless ( $lglobal{scanno_hl} );
 	}
 	$filename = os_normal($filename);
-	my $edit_flag = '';
+	$lglobal{global_filename} = $filename;
 
-	update_ordinal_button();
+	my $edit_flag = '';
 	if ( $textwindow->numberChanges ) {
 		$edit_flag = 'edited';
 	}
-
 	# window label format: GG-version - [edited] - [file name]
 	if ($edit_flag) {
 		$top->configure(
@@ -11516,8 +11531,9 @@ sub update_indicators {
 		$top->configure( -title => $window_title . " - " . $filename );
 	}
 
+	update_ordinal_button();
+
 	#FIXME: need some logic behind this
-	$lglobal{global_filename} = $filename;
 	$textwindow->idletasks;
 	my ( $mark, $pnum );
 	$pnum = get_page_number();
@@ -11541,14 +11557,7 @@ sub update_indicators {
 		update_img_button($pnum);
 		update_see_img_button();
 		update_label_button();
-		$lglobal{page_num_label}->configure( -text => "Img: $pnum" )
-		  if defined $lglobal{page_num_label};
-		my $label = $pagenumbers{"Pg$pnum"}{label};
-		if ( defined $label && length $label ) {
-			$lglobal{page_label}->configure( -text => ("Lbl: $label ") );
-		} else {
-			$lglobal{page_label}->configure( -text => ("Lbl: None ") );
-		}
+		update_img_lbl_values($pnum);
 		if ( ( scalar %proofers ) && ( defined( $lglobal{pagebutton} ) ) ) {
 			unless ( defined( $lglobal{proofbutton} ) ) {
 				$lglobal{proofbutton} =
