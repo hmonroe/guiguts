@@ -11407,7 +11407,6 @@ sub update_indicators {
 	}
 
 	#FIXME: need some logic behind this
-
 	$lglobal{global_filename} = $filename;
 	$textwindow->idletasks;
 	my ( $mark, $pnum );
@@ -11421,8 +11420,14 @@ sub update_indicators {
 		while ($mark) {
 			if ( $mark =~ /Pg(\S+)/ ) {
 				$pnum = $1;
-
-	 #unless ($pnum eq $lglobal{pageimageviewed}) { auto_show_page_images('1') }
+	 			if ($lglobal{autoshowimagepop} && $pnum && $lglobal{pageimageviewed}){
+	 				if ($pnum != "$lglobal{pageimageviewed}") {
+						print '$pnumb'.':'.$pnum.'$lglobal{pageimageviewed}b'.':'.$lglobal{pageimageviewed};
+	 					$lglobal{pageimageviewed}=$pnum;
+	 					auto_show_page_images('1');
+	 				}
+	 			}
+				$lglobal{pageimageviewed}=$pnum;
 				unless ( defined( $lglobal{page_num_label} ) ) {
 					$lglobal{page_num_label} =
 					  $counter_frame->Label(
@@ -16672,19 +16677,27 @@ sub findandextractgreek {
 ### Text Processing
 
 sub auto_show_page_images {
-	my $updatingindicators = @_;
+	#print 'autoshowpageimages';
+	my ($updatingindicators) = @_;
 	my ( $pagenum, $number );
 	my $imagefile;
 	$globalimagepath = $globallastpath unless $globalimagepath;
 	if ( defined( $lglobal{autoshowimagepop} ) ) {
-		$lglobal{autoshowimagepop}->deiconify;
-		$lglobal{autoshowimagepop}->raise;
-		$lglobal{autoshowimagepop}->focus;
-	} else {
-		$lglobal{autoshowimagepop} = $top->Toplevel;
-		$lglobal{autoshowimagepop}->title('Auto Page Image');
-		$lglobal{autoshowimagepop}->geometry($geometry2) if $geometry2;
+		$lglobal{autoshowimagepop}->destroy;
+		undef $lglobal{autoshowimagepop};
 	}
+	$lglobal{autoshowimagepop} = $top->Toplevel;
+	$lglobal{autoshowimagepop}->title('Auto Page Image');
+	$lglobal{autoshowimagepop}->geometry($geometry2) if $geometry2;
+#	if ( defined( $lglobal{autoshowimagepop} ) ) {
+#		$lglobal{autoshowimagepop}->deiconify;
+#		$lglobal{autoshowimagepop}->raise;
+#		$lglobal{autoshowimagepop}->focus;
+#	} else {
+#		$lglobal{autoshowimagepop} = $top->Toplevel;
+#		$lglobal{autoshowimagepop}->title('Auto Page Image');
+#		$lglobal{autoshowimagepop}->geometry($geometry2) if $geometry2;
+#	}
 	$lglobal{autoshowimagepop}->protocol(
 		'WM_DELETE_WINDOW' => sub {
 			$lglobal{autoshowimagepop}->destroy;
@@ -16706,6 +16719,7 @@ sub auto_show_page_images {
 									-background => 'white',
 	)->grid( -row => 1, -column => 1 );
 	$imagefile = get_image_file();
+	print 'img:'.$imagefile.':';
 	if ($imagefile) {
 		# show the page image
 		my @geom = split /[x+]/, $top->geometry;
@@ -16726,7 +16740,7 @@ sub auto_show_page_images {
 		my $pageorigwidth  = $lglobal{pageimgorig}->width;
 		my $pageorigheight = $lglobal{pageimgorig}->height;
 		#print $pageorigwidth. ':' . $pageorigheight . ' \n';
-		print $lglobal{autoshowimagepop}->geometry;
+		#print $lglobal{autoshowimagepop}->geometry;
 		my $sw = ( $lglobal{pageimgorig}->width ) / $geom[0];
 		my $sh = ( $lglobal{pageimgorig}->height ) / $geom[1];
 		#print "sw:" . $sw . ":" . "sh:" . $sh;
@@ -16750,14 +16764,32 @@ sub auto_show_page_images {
 	}
 }
 
+sub get_page_number {
+	my ( $mark, $pnum );
+	my $markindex = $textwindow->index('insert');
+	my $filename = $textwindow->FileName;
+	$filename = 'No File Loaded' unless ( defined($filename) );
+	if ( $filename ne 'No File Loaded' or defined $lglobal{prepfile} ) {
+		$mark = $textwindow->markPrevious($markindex);
+		if ($mark) {
+			if ( $mark =~ /Pg(\S+)/ ) {
+				return $1 | '001';
+			}
+		}
+	}
+	return '001';
+}
+
 sub get_image_file {
 	my $number;
 	my $pagenum;
 	my $imagefile;
-	$number = $lglobal{page_num_label}->cget( -text )
-	  if defined $lglobal{page_num_label};
-	$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
-	$pagenum = $number || '001';
+#	$number = $lglobal{page_num_label}->cget( -text )
+#	  if defined $lglobal{page_num_label};
+#	$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
+	$pagenum = get_page_number();
+	print 'pg:'.$pagenum.':';	
+	$lglobal{pageimageviewed} = $pagenum;
 	unless ($pngspath) {
 		if ($OS_WIN) {
 			$pngspath = "${globallastpath}pngs\\";
@@ -16777,7 +16809,6 @@ sub get_image_file {
 			$imagefile = dos_path($imagefile);
 		}
 	}
-	$lglobal{pageimageviewed} = $pagenum;
 	return $imagefile;
 }
 
