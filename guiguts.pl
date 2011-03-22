@@ -11347,7 +11347,47 @@ sub buildstatusbar {
 	);
 }
 
+# New subroutine "create_img_button" extracted - Mon Mar 21 21:56:01 2011.
+#
+sub create_img_button {
+    my $pnum = shift;
+
+				unless ( defined( $lglobal{page_num_label} ) ) {
+					$lglobal{page_num_label} =
+					  $counter_frame->Label(
+											 -text       => "Img: $pnum",
+											 -width      => 8,
+											 -background => 'gray',
+											 -relief     => 'ridge',
+					  )->grid( -row => 1, -column => 2, -sticky => 'nw' );
+					$lglobal{page_num_label}->bind(
+						'<1>',
+						sub {
+							$lglobal{page_num_label}
+ 							  ->configure( -relief => 'sunken' );
+							gotopage();
+							update_indicators();
+						}
+					);
+					$lglobal{page_num_label}->bind(
+ 						'<3>',
+						sub {
+							$lglobal{page_num_label}
+ 							  ->configure( -relief => 'sunken' );
+							viewpagenums();
+							update_indicators();
+						}
+					);
+					_butbind( $lglobal{page_num_label} );
+ 					$lglobal{statushelp}->attach( $lglobal{page_num_label},
+ 						   -balloonmsg => "Image/Page name for current page." );
+				}
+
+    return ();
+} 
+
 # Routine to update the status bar when something has changed.
+#
 sub update_indicators {
 	my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
 	my ( $line,      $column )   = split( /\./, $textwindow->index('insert') );
@@ -11428,36 +11468,7 @@ sub update_indicators {
 	 				}
 	 			}
 				$lglobal{pageimageviewed}=$pnum;
-				unless ( defined( $lglobal{page_num_label} ) ) {
-					$lglobal{page_num_label} =
-					  $counter_frame->Label(
-											 -text       => "Img: $pnum",
-											 -width      => 8,
-											 -background => 'gray',
-											 -relief     => 'ridge',
-					  )->grid( -row => 1, -column => 2, -sticky => 'nw' );
-					$lglobal{page_num_label}->bind(
-						'<1>',
-						sub {
-							$lglobal{page_num_label}
-							  ->configure( -relief => 'sunken' );
-							gotopage();
-							update_indicators();
-						}
-					);
-					$lglobal{page_num_label}->bind(
-						'<3>',
-						sub {
-							$lglobal{page_num_label}
-							  ->configure( -relief => 'sunken' );
-							viewpagenums();
-							update_indicators();
-						}
-					);
-					_butbind( $lglobal{page_num_label} );
-					$lglobal{statushelp}->attach( $lglobal{page_num_label},
-						   -balloonmsg => "Image/Page name for current page." );
-				}
+				create_img_button ($pnum);
 				unless ( defined( $lglobal{pagebutton} ) ) {
 					$lglobal{pagebutton} =
 					  $counter_frame->Label(
