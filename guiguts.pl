@@ -11422,6 +11422,33 @@ sub create_see_image_button {
 
 # Routine to update the status bar when something has changed.
 #
+# New subroutine "update_ordinal_button" extracted - Mon Mar 21 22:53:33 2011.
+#
+sub update_ordinal_button {
+
+	my $ordinal   = ord( $textwindow->get('insert') );
+	my $hexi      = uc sprintf( "%04x", $ordinal );
+	if ( $lglobal{longordlabel} ) {
+		my $msg = charnames::viacode($ordinal) || '';
+		my $msgln = length(" Dec $ordinal : Hex $hexi : $msg ");
+
+		no warnings 'uninitialized';
+		$lglobal{ordmaxlength} = $msgln
+		  if ( $msgln > $lglobal{ordmaxlength} );
+		$lglobal{ordinallabel}->configure(
+								   -text => " Dec $ordinal : Hex $hexi : $msg ",
+								   -width   => $lglobal{ordmaxlength},
+								   -justify => 'left'
+		);
+
+	} else {
+		$lglobal{ordinallabel}->configure(
+										  -text => " Dec $ordinal : Hex $hexi ",
+										  -width => 18
+		) if ( $lglobal{ordinallabel} );
+	}
+}
+
 sub update_indicators {
 	my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
 	my ( $line,      $column )   = split( /\./, $textwindow->index('insert') );
@@ -11446,28 +11473,8 @@ sub update_indicators {
 	}
 	$filename = os_normal($filename);
 	my $edit_flag = '';
-	my $ordinal   = ord( $textwindow->get('insert') );
-	my $hexi      = uc sprintf( "%04x", $ordinal );
 
-	if ( $lglobal{longordlabel} ) {
-		my $msg = charnames::viacode($ordinal) || '';
-		my $msgln = length(" Dec $ordinal : Hex $hexi : $msg ");
-
-		no warnings 'uninitialized';
-		$lglobal{ordmaxlength} = $msgln
-		  if ( $msgln > $lglobal{ordmaxlength} );
-		$lglobal{ordinallabel}->configure(
-								   -text => " Dec $ordinal : Hex $hexi : $msg ",
-								   -width   => $lglobal{ordmaxlength},
-								   -justify => 'left'
-		);
-
-	} else {
-		$lglobal{ordinallabel}->configure(
-										  -text => " Dec $ordinal : Hex $hexi ",
-										  -width => 18
-		) if ( $lglobal{ordinallabel} );
-	}
+	update_ordinal_button ();
 	if ( $textwindow->numberChanges ) {
 		$edit_flag = 'edited';
 	}
