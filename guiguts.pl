@@ -11389,8 +11389,6 @@ sub create_img_button {
 # New subroutine "create_see_image_button" extracted - Mon Mar 21 22:18:18 2011.
 #
 sub create_see_image_button {
-    my $counter_frame = shift;
-
 				unless ( $lglobal{page_label} ) {
  					$lglobal{page_label} =
  					  $counter_frame->Label(
