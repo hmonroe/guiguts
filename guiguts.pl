@@ -16800,9 +16800,9 @@ sub auto_show_page_images {
 		  ->copy( $lglobal{pageimgorig}, -subsample => ($sw) )
 		  ;    # -width=>$geom[0],-height=>$geom[1],,  -shrink
 		$lglobal{imagelbl}->configure(
-									   -image   => $lglobal{pageimgresized},
-									   -text    => 'Page Image',
-									   -justify => 'center',
+						   -image   => $lglobal{pageimgresized},
+						   -text    => 'Page Image',
+						   -justify => 'center',
 		);
 	} else {
 		unless ($updatingindicators) {
@@ -16812,19 +16812,24 @@ sub auto_show_page_images {
 }
 
 sub get_page_number {
-	my ( $mark, $pnum );
+	my $pnum;
 	my $markindex = $textwindow->index('insert');
-	my $filename  = $textwindow->FileName;
-	$filename = 'No File Loaded' unless ( defined($filename) );
-	if ( $filename ne 'No File Loaded' or defined $lglobal{prepfile} ) {
-		$mark = $textwindow->markPrevious($markindex);
-		if ($mark) {
-			if ( $mark =~ /Pg(\S+)/ ) {
-				return $1 | '001';
+	my $mark      = $textwindow->markPrevious($markindex);
+	while ($mark) {
+		if ( $mark =~ /Pg(\S+)/ ) {
+			$pnum = $1;
+			last;
+		} else {
+			if ( $textwindow->index('insert') >
+				 ( $textwindow->index($mark) + 400 ) )
+			{
+				last;
 			}
+			$mark = $textwindow->markPrevious($mark) if $mark;
+			next;
 		}
 	}
-	return '001';
+	return $pnum;
 }
 
 sub get_image_file {
