@@ -11359,7 +11359,6 @@ sub buildstatusbar {
 #
 sub update_img_button {
 	my $pnum = shift;
-
 	unless ( defined( $lglobal{page_num_label} ) ) {
 		$lglobal{page_num_label} =
 		  $counter_frame->Label(
@@ -11479,22 +11478,70 @@ sub update_see_img_button {
 # New subroutine "update_img_lbl_values" extracted - Tue Mar 22 00:08:26 2011.
 #
 sub update_img_lbl_values {
-    my $pnum = shift;
-    my $pagenumbers = shift;
+	my $pnum        = shift;
+	my $pagenumbers = shift;
 
-		$lglobal{page_num_label}->configure( -text => "Img: $pnum" )
-		  if defined $lglobal{page_num_label};
+	$lglobal{page_num_label}->configure( -text => "Img: $pnum" )
+	  if defined $lglobal{page_num_label};
 	my $label = $pagenumbers->{"Pg$pnum"}{label};
-		if ( defined $label && length $label ) {
-			$lglobal{page_label}->configure( -text => ("Lbl: $label ") );
-		} else {
-			$lglobal{page_label}->configure( -text => ("Lbl: None ") );
+	if ( defined $label && length $label ) {
+		$lglobal{page_label}->configure( -text => ("Lbl: $label ") );
+	} else {
+		$lglobal{page_label}->configure( -text => ("Lbl: None ") );
+	}
+}
+
+#
+# New subroutine "update_proofers_button" extracted - Tue Mar 22 00:13:24 2011.
+#
+sub update_proofers_button {
+	my $pnum = shift;
+	if ( ( scalar %proofers ) && ( defined( $lglobal{pagebutton} ) ) ) {
+		unless ( defined( $lglobal{proofbutton} ) ) {
+			$lglobal{proofbutton} =
+			  $counter_frame->Label(
+									 -text       => 'See Proofers',
+									 -width      => 11,
+									 -relief     => 'ridge',
+									 -background => 'gray',
+			  )->grid( -row => 1, -column => 5 );
+			$lglobal{proofbutton}->bind(
+				'<1>',
+				sub {
+					$lglobal{proofbutton}->configure( -relief => 'sunken' );
+					showproofers();
+				}
+			);
+			$lglobal{proofbutton}->bind(
+				'<3>',
+				sub {
+					$lglobal{proofbutton}->configure( -relief => 'sunken' );
+					tglprfbar();
+				}
+			);
+			_butbind( $lglobal{proofbutton} );
+			$lglobal{statushelp}->attach( $lglobal{proofbutton},
+							  -balloonmsg => "Proofers for the current page." );
 		}
+		{
+
+			no warnings 'uninitialized';
+			my ( $pg, undef ) = each %proofers;
+			for my $round ( 1 .. 8 ) {
+				last unless defined $proofers{$pg}->[$round];
+				$lglobal{numrounds} = $round;
+				$lglobal{proofbar}[$round]->configure(
+					   -text => "  Round $round  $proofers{$pnum}->[$round]  " )
+				  if $lglobal{proofbarvisible};
+			}
+		}
+	}
 }
 
 sub update_indicators {
-# Routine to update the status bar when something has changed.
-#
+
+	# Routine to update the status bar when something has changed.
+	#
 	my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
 	my ( $line,      $column )   = split( /\./, $textwindow->index('insert') );
 	$lglobal{current_line_label}->configure(
@@ -11523,6 +11570,7 @@ sub update_indicators {
 	if ( $textwindow->numberChanges ) {
 		$edit_flag = 'edited';
 	}
+
 	# window label format: GG-version - [edited] - [file name]
 	if ($edit_flag) {
 		$top->configure(
@@ -11558,46 +11606,7 @@ sub update_indicators {
 		update_see_img_button();
 		update_label_button();
 		update_img_lbl_values($pnum);
-		if ( ( scalar %proofers ) && ( defined( $lglobal{pagebutton} ) ) ) {
-			unless ( defined( $lglobal{proofbutton} ) ) {
-				$lglobal{proofbutton} =
-				  $counter_frame->Label(
-										 -text       => 'See Proofers',
-										 -width      => 11,
-										 -relief     => 'ridge',
-										 -background => 'gray',
-				  )->grid( -row => 1, -column => 5 );
-				$lglobal{proofbutton}->bind(
-					'<1>',
-					sub {
-						$lglobal{proofbutton}->configure( -relief => 'sunken' );
-						showproofers();
-					}
-				);
-				$lglobal{proofbutton}->bind(
-					'<3>',
-					sub {
-						$lglobal{proofbutton}->configure( -relief => 'sunken' );
-						tglprfbar();
-					}
-				);
-				_butbind( $lglobal{proofbutton} );
-				$lglobal{statushelp}->attach( $lglobal{proofbutton},
-							  -balloonmsg => "Proofers for the current page." );
-			}
-			{
-
-				no warnings 'uninitialized';
-				my ( $pg, undef ) = each %proofers;
-				for my $round ( 1 .. 8 ) {
-					last unless defined $proofers{$pg}->[$round];
-					$lglobal{numrounds} = $round;
-					$lglobal{proofbar}[$round]->configure( -text =>
-								"  Round $round  $proofers{$pnum}->[$round]  " )
-					  if $lglobal{proofbarvisible};
-				}
-			}
-		}
+		update_proofers_button($pnum);
 	}
 	$textwindow->tagRemove( 'bkmk', '1.0', 'end' ) unless $bkmkhl;
 	if ( $lglobal{geometryupdate} ) {
@@ -16707,8 +16716,6 @@ sub findandextractgreek {
 ### Text Processing
 
 sub auto_show_page_images {
-
-	#print 'autoshowpageimages';
 	my ($updatingindicators) = @_;
 	my ( $pagenum, $number );
 	my $imagefile;
@@ -16720,16 +16727,6 @@ sub auto_show_page_images {
 	$lglobal{autoshowimagepop} = $top->Toplevel;
 	$lglobal{autoshowimagepop}->title('Auto Page Image');
 	$lglobal{autoshowimagepop}->geometry($geometry2) if $geometry2;
-
-	#	if ( defined( $lglobal{autoshowimagepop} ) ) {
-	#		$lglobal{autoshowimagepop}->deiconify;
-	#		$lglobal{autoshowimagepop}->raise;
-	#		$lglobal{autoshowimagepop}->focus;
-	#	} else {
-	#		$lglobal{autoshowimagepop} = $top->Toplevel;
-	#		$lglobal{autoshowimagepop}->title('Auto Page Image');
-	#		$lglobal{autoshowimagepop}->geometry($geometry2) if $geometry2;
-	#	}
 	$lglobal{autoshowimagepop}->protocol(
 		'WM_DELETE_WINDOW' => sub {
 			$lglobal{autoshowimagepop}->destroy;
@@ -16751,7 +16748,6 @@ sub auto_show_page_images {
 									-background => 'white',
 	)->grid( -row => 1, -column => 1 );
 	$imagefile = get_image_file();
-	print 'img:' . $imagefile . ':';
 	if ($imagefile) {
 
 		# show the page image
@@ -16802,7 +16798,7 @@ sub auto_show_page_images {
 }
 
 sub get_page_number {
-	my $pnum;
+	my $pnum      = '001';
 	my $markindex = $textwindow->index('insert');
 	my $mark      = $textwindow->markPrevious($markindex);
 	while ($mark) {
@@ -16826,12 +16822,7 @@ sub get_image_file {
 	my $number;
 	my $pagenum;
 	my $imagefile;
-
-	#	$number = $lglobal{page_num_label}->cget( -text )
-	#	  if defined $lglobal{page_num_label};
-	#	$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
 	$pagenum = get_page_number();
-	print 'pg:' . $pagenum . ':';
 	$lglobal{pageimageviewed} = $pagenum;
 	unless ($pngspath) {
 		if ($OS_WIN) {
