@@ -788,15 +788,14 @@ sub tglprfbar {
 sub openpng {
 	my $dospath;
 	my $dosfile;
-	my $imagefile=get_image_file();
-	if ($imagefile && $globalviewerpath) {
-			$dospath = $globalviewerpath;
-			if ($OS_WIN) {
-				$dospath = dos_path($dospath);
-			}
-			runner( $dospath,$imagefile );
-	}
-	else {
+	my $imagefile = get_image_file();
+	if ( $imagefile && $globalviewerpath ) {
+		$dospath = $globalviewerpath;
+		if ($OS_WIN) {
+			$dospath = dos_path($dospath);
+		}
+		runner( $dospath, $imagefile );
+	} else {
 		setpngspath();
 	}
 }
@@ -6685,7 +6684,7 @@ sub errorcheckpop_up {
 	my $size = @errorchecklines;
 	if ( ( $errorchecktype eq "W3C Validate CSS" ) and ( $size == 0 ) )
 	{    # handle errors.err file with zero lines
-		#print "size " . $size;
+		    #print "size " . $size;
 		push @errorchecklines,
 "Could not perform validation: install java or use W3C CSS Validation web site.";
 	} else {
@@ -6806,19 +6805,25 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 			}
 		} else {
 			if ( $errorchecktype eq 'W3C Validate Remote' ) {
+
 				#print 'Starting remote validate';
 				my $validator =
 				  WebService::Validator::HTML::W3C->new( detailed => 1 );
 				if ( $validator->validate_file('./validate.html') ) {
+
 					#print 'Validate 1';
 					if ( open my $td, '>', "errors.err" ) {
+
 						#print 'Validate 2';
 						if ( $validator->is_valid ) {
+
 							#print 'Validate 2.1';
 							#print $td (" ");
 						} else {
+
 							#print 'Validate 2.2';
 							foreach my $error ( @{ $validator->errors } ) {
+
 								#print 'Validate 2.3';
 								printf $td (
 										  "W3C:validate.tmp:%s:%s:Eremote:%s\n",
@@ -6830,8 +6835,10 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 						close $td;
 					}
 				} else {
+
 					#print 'Validate 3';
 					if ( open my $td, '>', "errors.err" ) {
+
 						#print 'Validate 4';
 						print $td
 'Could not contact remote validator; try using local validator onsgmls.';
@@ -6842,6 +6849,7 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 				if ( $errorchecktype eq 'W3C Validate CSS' ) {
 					my $validatecsspath = dirname($validatecsscommand);
 					my $pwd             = getcwd;
+
 					#print "running css";
 					system(
 qq/java -jar $validatecsscommand file:$pwd\/$name > errors.err/ );
@@ -11349,85 +11357,77 @@ sub buildstatusbar {
 
 # New subroutine "create_img_button" extracted - Mon Mar 21 21:56:01 2011.
 #
-sub create_img_button {
-    my $pnum = shift;
+sub update_img_button {
+	my $pnum = shift;
 
-				unless ( defined( $lglobal{page_num_label} ) ) {
-					$lglobal{page_num_label} =
-					  $counter_frame->Label(
-											 -text       => "Img: $pnum",
-											 -width      => 8,
-											 -background => 'gray',
-											 -relief     => 'ridge',
-					  )->grid( -row => 1, -column => 2, -sticky => 'nw' );
-					$lglobal{page_num_label}->bind(
-						'<1>',
-						sub {
-							$lglobal{page_num_label}
- 							  ->configure( -relief => 'sunken' );
-							gotopage();
-							update_indicators();
-						}
-					);
-					$lglobal{page_num_label}->bind(
- 						'<3>',
-						sub {
-							$lglobal{page_num_label}
- 							  ->configure( -relief => 'sunken' );
-							viewpagenums();
-							update_indicators();
-						}
-					);
-					_butbind( $lglobal{page_num_label} );
- 					$lglobal{statushelp}->attach( $lglobal{page_num_label},
- 						   -balloonmsg => "Image/Page name for current page." );
-				}
+	unless ( defined( $lglobal{page_num_label} ) ) {
+		$lglobal{page_num_label} =
+		  $counter_frame->Label(
+								 -text       => "Img: $pnum",
+								 -width      => 8,
+								 -background => 'gray',
+								 -relief     => 'ridge',
+		  )->grid( -row => 1, -column => 2, -sticky => 'nw' );
+		$lglobal{page_num_label}->bind(
+			'<1>',
+			sub {
+				$lglobal{page_num_label}->configure( -relief => 'sunken' );
+				gotopage();
+				update_indicators();
+			}
+		);
+		$lglobal{page_num_label}->bind(
+			'<3>',
+			sub {
+				$lglobal{page_num_label}->configure( -relief => 'sunken' );
+				viewpagenums();
+				update_indicators();
+			}
+		);
+		_butbind( $lglobal{page_num_label} );
+		$lglobal{statushelp}->attach( $lglobal{page_num_label},
+						   -balloonmsg => "Image/Page name for current page." );
+	}
 
-    return ();
-} 
+	return ();
+}
 
-# New subroutine "create_see_image_button" extracted - Mon Mar 21 22:18:18 2011.
+# New subroutine "update_see_image_button" extracted - Mon Mar 21 22:18:18 2011.
 #
-sub create_see_image_button {
-				unless ( $lglobal{page_label} ) {
- 					$lglobal{page_label} =
- 					  $counter_frame->Label(
-											 -text       => 'Lbl: None ',
-											 -background => 'gray',
-											 -relief     => 'ridge',
-					  )->grid( -row => 1, -column => 4 );
-					_butbind( $lglobal{page_label} );
- 					$lglobal{page_label}->bind(
- 						'<1>',
-						sub {
-							$lglobal{page_label}
- 							  ->configure( -relief => 'sunken' );
-							gotolabel();
-						}
-					);
-					$lglobal{page_label}->bind(
- 						'<3>',
-						sub {
-							$lglobal{page_label}
- 							  ->configure( -relief => 'sunken' );
-							pageadjust();
-						}
-					);
-					$lglobal{statushelp}->attach( $lglobal{page_label},
- 						-balloonmsg => "Page label assigned to current page." );
-				}
+sub update_label_button {
+	unless ( $lglobal{page_label} ) {
+		$lglobal{page_label} =
+		  $counter_frame->Label(
+								 -text       => 'Lbl: None ',
+								 -background => 'gray',
+								 -relief     => 'ridge',
+		  )->grid( -row => 1, -column => 4 );
+		_butbind( $lglobal{page_label} );
+		$lglobal{page_label}->bind(
+			'<1>',
+			sub {
+				$lglobal{page_label}->configure( -relief => 'sunken' );
+				gotolabel();
+			}
+		);
+		$lglobal{page_label}->bind(
+			'<3>',
+			sub {
+				$lglobal{page_label}->configure( -relief => 'sunken' );
+				pageadjust();
+			}
+		);
+		$lglobal{statushelp}->attach( $lglobal{page_label},
+						-balloonmsg => "Page label assigned to current page." );
+	}
+	return ();
+}
 
-    return ();
-} 
-
-# Routine to update the status bar when something has changed.
-#
 # New subroutine "update_ordinal_button" extracted - Mon Mar 21 22:53:33 2011.
 #
 sub update_ordinal_button {
-
-	my $ordinal   = ord( $textwindow->get('insert') );
-	my $hexi      = uc sprintf( "%04x", $ordinal );
+	my $ordinal = ord( $textwindow->get('insert') );
+	my $hexi = uc sprintf( "%04x", $ordinal );
 	if ( $lglobal{longordlabel} ) {
 		my $msg = charnames::viacode($ordinal) || '';
 		my $msgln = length(" Dec $ordinal : Hex $hexi : $msg ");
@@ -11449,7 +11449,37 @@ sub update_ordinal_button {
 	}
 }
 
+# New subroutine "update_see_img_button" extracted - Mon Mar 21 23:23:36 2011.
+#
+sub update_see_img_button {
+	unless ( defined( $lglobal{pagebutton} ) ) {
+		$lglobal{pagebutton} =
+		  $counter_frame->Label(
+								 -text       => 'See Image',
+								 -width      => 9,
+								 -relief     => 'ridge',
+								 -background => 'gray',
+		  )->grid( -row => 1, -column => 3 );
+		$lglobal{pagebutton}->bind(
+			'<1>',
+			sub {
+				$lglobal{pagebutton}->configure( -relief => 'sunken' );
+				openpng();
+			}
+		);
+		$lglobal{pagebutton}->bind( '<3>', sub { setpngspath() } );
+		_butbind( $lglobal{pagebutton} );
+		$lglobal{statushelp}->attach( $lglobal{pagebutton},
+			 -balloonmsg =>
+			   "Open Image corresponding to current page in an external viewer."
+		);
+	}
+}
+
 sub update_indicators {
+
+	# Routine to update the status bar when something has changed.
+	#
 	my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
 	my ( $line,      $column )   = split( /\./, $textwindow->index('insert') );
 	$lglobal{current_line_label}->configure(
@@ -11474,7 +11504,7 @@ sub update_indicators {
 	$filename = os_normal($filename);
 	my $edit_flag = '';
 
-	update_ordinal_button ();
+	update_ordinal_button();
 	if ( $textwindow->numberChanges ) {
 		$edit_flag = 'edited';
 	}
@@ -11501,39 +11531,23 @@ sub update_indicators {
 		while ($mark) {
 			if ( $mark =~ /Pg(\S+)/ ) {
 				$pnum = $1;
-	 			if ($lglobal{autoshowimagepop} && $pnum && $lglobal{pageimageviewed}){
-	 				if ($pnum != "$lglobal{pageimageviewed}") {
-						print '$pnumb'.':'.$pnum.'$lglobal{pageimageviewed}b'.':'.$lglobal{pageimageviewed};
-	 					$lglobal{pageimageviewed}=$pnum;
-	 					auto_show_page_images('1');
-	 				}
-	 			}
-				$lglobal{pageimageviewed}=$pnum;
-				create_img_button ($pnum);
-				unless ( defined( $lglobal{pagebutton} ) ) {
-					$lglobal{pagebutton} =
-					  $counter_frame->Label(
-											 -text       => 'See Image',
-											 -width      => 9,
-											 -relief     => 'ridge',
-											 -background => 'gray',
-					  )->grid( -row => 1, -column => 3 );
-					$lglobal{pagebutton}->bind(
-						'<1>',
-						sub {
-							$lglobal{pagebutton}
-							  ->configure( -relief => 'sunken' );
-							openpng();
-						}
-					);
-					$lglobal{pagebutton}->bind( '<3>', sub { setpngspath() } );
-					_butbind( $lglobal{pagebutton} );
-					$lglobal{statushelp}->attach( $lglobal{pagebutton},
-						-balloonmsg =>
-"Open Image corresponding to current page in an external viewer."
-					);
+				if (    $lglobal{autoshowimagepop}
+					 && $pnum
+					 && $lglobal{pageimageviewed} )
+				{
+					if ( $pnum != "$lglobal{pageimageviewed}" ) {
+						print '$pnumb' . ':' 
+						  . $pnum
+						  . '$lglobal{pageimageviewed}b' . ':'
+						  . $lglobal{pageimageviewed};
+						$lglobal{pageimageviewed} = $pnum;
+						auto_show_page_images('1');
+					}
 				}
-				create_see_image_button ();
+				$lglobal{pageimageviewed} = $pnum;
+				update_img_button($pnum);
+				update_see_img_button();
+				update_label_button();
 				$lglobal{page_num_label}->configure( -text => "Img: $pnum" )
 				  if defined $lglobal{page_num_label};
 				my $label = $pagenumbers{"Pg$pnum"}{label};
@@ -16703,6 +16717,7 @@ sub findandextractgreek {
 ### Text Processing
 
 sub auto_show_page_images {
+
 	#print 'autoshowpageimages';
 	my ($updatingindicators) = @_;
 	my ( $pagenum, $number );
@@ -16715,15 +16730,16 @@ sub auto_show_page_images {
 	$lglobal{autoshowimagepop} = $top->Toplevel;
 	$lglobal{autoshowimagepop}->title('Auto Page Image');
 	$lglobal{autoshowimagepop}->geometry($geometry2) if $geometry2;
-#	if ( defined( $lglobal{autoshowimagepop} ) ) {
-#		$lglobal{autoshowimagepop}->deiconify;
-#		$lglobal{autoshowimagepop}->raise;
-#		$lglobal{autoshowimagepop}->focus;
-#	} else {
-#		$lglobal{autoshowimagepop} = $top->Toplevel;
-#		$lglobal{autoshowimagepop}->title('Auto Page Image');
-#		$lglobal{autoshowimagepop}->geometry($geometry2) if $geometry2;
-#	}
+
+	#	if ( defined( $lglobal{autoshowimagepop} ) ) {
+	#		$lglobal{autoshowimagepop}->deiconify;
+	#		$lglobal{autoshowimagepop}->raise;
+	#		$lglobal{autoshowimagepop}->focus;
+	#	} else {
+	#		$lglobal{autoshowimagepop} = $top->Toplevel;
+	#		$lglobal{autoshowimagepop}->title('Auto Page Image');
+	#		$lglobal{autoshowimagepop}->geometry($geometry2) if $geometry2;
+	#	}
 	$lglobal{autoshowimagepop}->protocol(
 		'WM_DELETE_WINDOW' => sub {
 			$lglobal{autoshowimagepop}->destroy;
@@ -16745,8 +16761,9 @@ sub auto_show_page_images {
 									-background => 'white',
 	)->grid( -row => 1, -column => 1 );
 	$imagefile = get_image_file();
-	print 'img:'.$imagefile.':';
+	print 'img:' . $imagefile . ':';
 	if ($imagefile) {
+
 		# show the page image
 		my @geom = split /[x+]/, $top->geometry;
 		$lglobal{pageimgorig} = $top->Photo;
@@ -16758,6 +16775,7 @@ sub auto_show_page_images {
 		my ( $fn, $ext );
 		( $fn, $globalimagepath, $ext ) = fileparse( $name, '(?<=\.)[^\.]*$' );
 		$ext =~ s/jpg/jpeg/;
+
 		if ( lc($ext) eq 'gif' ) {
 			$lglobal{pageimgorig}->read( $name, -shrink );
 		} else {
@@ -16765,14 +16783,17 @@ sub auto_show_page_images {
 		}
 		my $pageorigwidth  = $lglobal{pageimgorig}->width;
 		my $pageorigheight = $lglobal{pageimgorig}->height;
+
 		#print $pageorigwidth. ':' . $pageorigheight . ' \n';
 		#print $lglobal{autoshowimagepop}->geometry;
 		my $sw = ( $lglobal{pageimgorig}->width ) / $geom[0];
 		my $sh = ( $lglobal{pageimgorig}->height ) / $geom[1];
+
 		#print "sw:" . $sw . ":" . "sh:" . $sh;
 		if ( $sh > $sw ) {
 			$sw = $sh;
 		}
+
 		#if ( $sw < 2 ) { $sw += 1 }
 		$sw += 1;
 		$lglobal{pageimgresized}
@@ -16784,7 +16805,7 @@ sub auto_show_page_images {
 									   -justify => 'center',
 		);
 	} else {
-		unless ($updatingindicators){
+		unless ($updatingindicators) {
 			setpngspath();
 		}
 	}
@@ -16793,7 +16814,7 @@ sub auto_show_page_images {
 sub get_page_number {
 	my ( $mark, $pnum );
 	my $markindex = $textwindow->index('insert');
-	my $filename = $textwindow->FileName;
+	my $filename  = $textwindow->FileName;
 	$filename = 'No File Loaded' unless ( defined($filename) );
 	if ( $filename ne 'No File Loaded' or defined $lglobal{prepfile} ) {
 		$mark = $textwindow->markPrevious($markindex);
@@ -16810,11 +16831,12 @@ sub get_image_file {
 	my $number;
 	my $pagenum;
 	my $imagefile;
-#	$number = $lglobal{page_num_label}->cget( -text )
-#	  if defined $lglobal{page_num_label};
-#	$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
+
+	#	$number = $lglobal{page_num_label}->cget( -text )
+	#	  if defined $lglobal{page_num_label};
+	#	$number =~ s/.+? (\S+)/$1/ if defined $lglobal{page_num_label};
 	$pagenum = get_page_number();
-	print 'pg:'.$pagenum.':';	
+	print 'pg:' . $pagenum . ':';
 	$lglobal{pageimageviewed} = $pagenum;
 	unless ($pngspath) {
 		if ($OS_WIN) {
