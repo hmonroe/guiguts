@@ -1533,7 +1533,7 @@ sub selection_menuitems {
 		  Button   => 'Flood Fill Selection With....',
 		  -command => sub {
 			  $textwindow->addGlobStart;
-			  flood();
+			  $lglobal{floodpop}=flood($textwindow,$top,$lglobal{floodpop},$lglobal{font},$activecolor,$icon);
 			  $textwindow->addGlobEnd;
 			}
 	   ],
@@ -4380,39 +4380,6 @@ sub aligntext {
 		}
 		$textwindow->addGlobEnd;
 	}
-}
-
-sub floodfill {
-	my @ranges = $textwindow->tagRanges('sel');
-	return unless @ranges;
-	$lglobal{ffchar} = ' ' unless length $lglobal{ffchar};
-	$textwindow->addGlobStart;
-	while (@ranges) {
-		my $end       = pop(@ranges);
-		my $start     = pop(@ranges);
-		my $selection = $textwindow->get( $start, $end );
-		my $temp = substr(
-						   $lglobal{ffchar} x (
-												(
-												  ( length $selection ) /
-													( length $lglobal{ffchar} )
-												) + 1
-						   ),
-						   0,
-						   ( length $selection )
-		);
-		chomp $selection;
-		my @temparray = split( /\n/, $selection );
-		my $replacement;
-		for (@temparray) {
-			$replacement .= substr( $temp, 0, ( length $_ ), '' );
-			$replacement .= "\n";
-		}
-		chomp $replacement;
-		$textwindow->replacewith( $start, $end, $replacement );
-	}
-	$textwindow->addGlobEnd;
-
 }
 
 sub poetryhtml {
@@ -9063,7 +9030,6 @@ sub initialize {
 	$lglobal{codewarn}         = 1;
 	$lglobal{cssblockmarkup}   = 0;
 	$lglobal{delay}            = 50;
-	$lglobal{ffchar}           = '';
 	$lglobal{footstyle}        = 'end';
 	$lglobal{ftnoteindexstart} = '1.0';
 	$lglobal{groutp}           = 'l';
@@ -13712,57 +13678,6 @@ sub gotobookmark {
 }
 
 ### Selection
-
-sub flood {
-	if ( defined( $lglobal{floodpop} ) ) {
-		$lglobal{floodpop}->deiconify;
-		$lglobal{floodpop}->raise;
-		$lglobal{floodpop}->focus;
-	} else {
-		$lglobal{floodpop} = $top->Toplevel;
-		$lglobal{floodpop}->title('Flood Fill String:');
-		my $f =
-		  $lglobal{floodpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-		$f->Label( -text =>
-"Flood fill string.\n(Blank will default to spaces.)\nHotkey Control+w",
-		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
-		my $f1 =
-		  $lglobal{floodpop}->Frame->pack(
-										   -side   => 'top',
-										   -anchor => 'n',
-										   -expand => 'y',
-										   -fill   => 'x'
-		  );
-		my $floodch = $f1->Entry(
-								  -background   => 'white',
-								  -font         => $lglobal{font},
-								  -relief       => 'sunken',
-								  -textvariable => \$lglobal{ffchar},
-		  )->pack(
-				   -side   => 'left',
-				   -pady   => 5,
-				   -padx   => 2,
-				   -anchor => 'w',
-				   -expand => 'y',
-				   -fill   => 'x'
-		  );
-		my $f2 =
-		  $lglobal{floodpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-		my $gobut = $f2->Button(
-								 -activebackground => $activecolor,
-								 -command          => sub { floodfill() },
-								 -text             => 'Flood Fill',
-								 -width            => 16
-		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
-		$lglobal{floodpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{floodpop}->destroy;
-				undef $lglobal{floodpop};
-			}
-		);
-		$lglobal{floodpop}->Icon( -image => $icon );
-	}
-}
 
 sub indent {
 	saveset();

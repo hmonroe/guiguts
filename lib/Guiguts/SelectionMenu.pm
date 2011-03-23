@@ -3,7 +3,7 @@ package Guiguts::SelectionMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&case &surround)
+	@EXPORT=qw(&case &surround &flood)
 }
 
 sub case {
@@ -110,6 +110,94 @@ sub surroundit {
 							  $pre . $textwindow->get( $start, $end ) . $post );
 	}
 	$textwindow->addGlobEnd;
+}
+
+sub flood {
+	my ($textwindow,$top,$floodpop,$font,$activecolor,$icon) = @_;
+	my $ffchar;
+	if ( defined( $floodpop ) ) {
+		$floodpop->deiconify;
+		$floodpop->raise;
+		$floodpop->focus;
+	} else {
+		$floodpop = $top->Toplevel;
+		$floodpop->title('Flood Fill String:');
+		my $f =
+		  $floodpop->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f->Label( -text =>
+"Flood fill string.\n(Blank will default to spaces.)\nHotkey Control+w",
+		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
+		my $f1 =
+		  $floodpop->Frame->pack(
+										   -side   => 'top',
+										   -anchor => 'n',
+										   -expand => 'y',
+										   -fill   => 'x'
+		  );
+		my $floodch = $f1->Entry(
+								  -background   => 'white',
+								  -font         => $font,
+								  -relief       => 'sunken',
+								  -textvariable => \$ffchar,
+		  )->pack(
+				   -side   => 'left',
+				   -pady   => 5,
+				   -padx   => 2,
+				   -anchor => 'w',
+				   -expand => 'y',
+				   -fill   => 'x'
+		  );
+		my $f2 =
+		  $floodpop->Frame->pack( -side => 'top', -anchor => 'n' );
+		my $gobut = $f2->Button(
+								 -activebackground => $activecolor,
+								 -command          => sub { floodfill($textwindow,$ffchar) },
+								 -text             => 'Flood Fill',
+								 -width            => 16
+		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
+		$floodpop->protocol(
+			'WM_DELETE_WINDOW' => sub {
+				$floodpop->destroy;
+				undef $floodpop;
+			}
+		);
+		$floodpop->Icon( -image => $icon );
+	}
+	return $floodpop;
+}
+
+sub floodfill {
+	my ($textwindow,$ffchar) = @_;
+	my @ranges = $textwindow->tagRanges('sel');
+	return unless @ranges;
+	$ffchar = ' ' unless length $ffchar;
+	$textwindow->addGlobStart;
+	while (@ranges) {
+		my $end       = pop(@ranges);
+		my $start     = pop(@ranges);
+		my $selection = $textwindow->get( $start, $end );
+		my $temp = substr(
+						   $ffchar x (
+												(
+												  ( length $selection ) /
+													( length $ffchar )
+												) + 1
+						   ),
+						   0,
+						   ( length $selection )
+		);
+		chomp $selection;
+		my @temparray = split( /\n/, $selection );
+		my $replacement;
+		for (@temparray) {
+			$replacement .= substr( $temp, 0, ( length $_ ), '' );
+			$replacement .= "\n";
+		}
+		chomp $replacement;
+		$textwindow->replacewith( $start, $end, $replacement );
+	}
+	$textwindow->addGlobEnd;
+
 }
 
 
