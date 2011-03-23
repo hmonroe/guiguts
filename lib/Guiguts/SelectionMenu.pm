@@ -3,7 +3,7 @@ package Guiguts::SelectionMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&case &surround &flood)
+	@EXPORT=qw(&case &surround &flood &indent)
 }
 
 sub case {
@@ -200,6 +200,145 @@ sub floodfill {
 
 }
 
+
+sub indent {
+	&main::saveset();
+	my ($textwindow,$indent,$operationinterrupt) = @_;
+	#my $indent      = shift;
+	my @ranges      = $textwindow->tagRanges('sel');
+	my $range_total = @ranges;
+	$operationinterrupt = 0;
+	if ( $range_total == 0 ) {
+		return;
+	} else {
+		my @selarray;
+		if ( $indent eq 'up' ) { @ranges = reverse @ranges }
+		while (@ranges) {
+			my $end            = pop(@ranges);
+			my $start          = pop(@ranges);
+			my $thisblockstart = int($start) . '.0';
+			my $thisblockend   = int($end) . '.0';
+			my $index          = $thisblockstart;
+			if ( $thisblockstart == $thisblockend ) {
+				my $char;
+				if ( $indent eq 'in' ) {
+					if ( $textwindow->compare( $end, '==', "$end lineend" ) ) {
+						$char = ' ';
+					} else {
+						$char = $textwindow->get($end);
+						$textwindow->delete($end);
+					}
+					$textwindow->insert( $start, $char )
+					  unless (
+						 $textwindow->get( $start, "$start lineend" ) =~ /^$/ );
+					$end = "$end+1c"
+					  unless (
+							 $textwindow->get( $end, "$end lineend" ) =~ /^$/ );
+					push @selarray, ( "$start+1c", $end );
+				} elsif ( $indent eq 'out' ) {
+					if (
+						 $textwindow->compare( $start, '==', "$start linestart"
+						 )
+					  )
+					{
+						push @selarray, ( $start, $end );
+						next;
+					} else {
+						$char = $textwindow->get("$start-1c");
+						$textwindow->insert( $end, $char );
+						$textwindow->delete("$start-1c");
+						push @selarray, ( "$start-1c", "$end-1c" );
+					}
+				}
+			} else {
+				while ( $index <= $thisblockend ) {
+					if ( $indent eq 'in' ) {
+						$textwindow->insert( $index, ' ' )
+						  unless (
+								 $textwindow->get( $index, "$index lineend" ) =~
+								 /^$/ );
+					} elsif ( $indent eq 'out' ) {
+						if ( $textwindow->get( $index, "$index+1c" ) eq ' ' ) {
+							$textwindow->delete( $index, "$index+1c" );
+						}
+					}
+					$index++;
+					$index .= '.0';
+				}
+				push @selarray, ( $thisblockstart, "$thisblockend lineend" );
+			}
+			if ( $indent eq 'up' ) {
+				my $temp = $end, $end = $start;
+				$start = $temp;
+				if ( $textwindow->compare( "$start linestart", '==', '1.0' ) ) {
+					push @selarray, ( $start, $end );
+					push @selarray, @ranges;
+					last;
+				} else {
+					while (
+							$textwindow->compare(
+											  "$end-1l", '>=', "$end-1l lineend"
+							)
+					  )
+					{
+						$textwindow->insert( "$end-1l lineend", ' ' );
+					}
+					my $templine = $textwindow->get( "$start-1l", "$end-1l" );
+					$textwindow->replacewith( "$start-1l", "$end-1l",
+										 ( $textwindow->get( $start, $end ) ) );
+					push @selarray, ( "$start-1l", "$end-1l" );
+					while (@ranges) {
+						$start = pop(@ranges);
+						$end   = pop(@ranges);
+						$textwindow->replacewith( "$start-1l", "$end-1l",
+										 ( $textwindow->get( $start, $end ) ) );
+						push @selarray, ( "$start-1l", "$end-1l" );
+					}
+					$textwindow->replacewith( $start, $end, $templine );
+				}
+			} elsif ( $indent eq 'dn' ) {
+				if (
+					 $textwindow->compare(
+									  "$end+1l", '>=', $textwindow->index('end')
+					 )
+				  )
+				{
+					push @selarray, ( $start, $end );
+					push @selarray, @ranges;
+					last;
+				} else {
+					while (
+							$textwindow->compare(
+											  "$end+1l", '>=', "$end+1l lineend"
+							)
+					  )
+					{
+						$textwindow->insert( "$end+1l lineend", ' ' );
+					}
+					my $templine = $textwindow->get( "$start+1l", "$end+1l" );
+					$textwindow->replacewith( "$start+1l", "$end+1l",
+										 ( $textwindow->get( $start, $end ) ) );
+					push @selarray, ( "$start+1l", "$end+1l" );
+					while (@ranges) {
+						$end   = pop(@ranges);
+						$start = pop(@ranges);
+						$textwindow->replacewith( "$start+1l", "$end+1l",
+										 ( $textwindow->get( $start, $end ) ) );
+						push @selarray, ( "$start+1l", "$end+1l" );
+					}
+					$textwindow->replacewith( $start, $end, $templine );
+				}
+			}
+			$textwindow->focus;
+			$textwindow->tagRemove( 'sel', '1.0', 'end' );
+		}
+		while (@selarray) {
+			my $end   = pop(@selarray);
+			my $start = pop(@selarray);
+			$textwindow->tagAdd( 'sel', $start, $end );
+		}
+	}
+}
 
 
 1;
