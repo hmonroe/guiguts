@@ -69,6 +69,8 @@ use Guiguts::LineNumberText;
 use Guiguts::TextUnicode;
 use Guiguts::Greekgifs;
 use Guiguts::HTMLConvert;
+use Guiguts::TextProcessingMenu;
+use Guiguts::SelectionMenu;
 
 # Ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
@@ -1508,19 +1510,19 @@ sub selection_menuitems {
 	[
 	   [
 		  Button   => '~lowercase Selection',
-		  -command => sub { case ('lc'); }
+		  -command => sub { case ($textwindow,'lc'); }
 	   ],
 	   [
 		  Button   => '~Sentence case Selection',
-		  -command => sub { case ('sc'); }
+		  -command => sub { case ($textwindow,'sc'); }
 	   ],
 	   [
 		  Button   => '~Title Case Selection',
-		  -command => sub { case ('tc'); }
+		  -command => sub { case ($textwindow,'tc'); }
 	   ],
 	   [
 		  Button   => '~UPPERCASE Selection',
-		  -command => sub { case ('uc'); }
+		  -command => sub { case ($textwindow,'uc'); }
 	   ],
 	   [ 'separator', '' ],
 	   [
@@ -1680,13 +1682,13 @@ sub text_menuitems {
 		  Button   => "Auto Show Page Images",
 		  -command => \&auto_show_page_images
 	   ],
-	   [ Button => "Convert Italics", -command => \&text_convert_italic ],
-	   [ Button => "Convert Bold",    -command => \&text_convert_bold ],
+	   [ Button => "Convert Italics", -command => sub{text_convert_italic($textwindow,$italic_char) }],
+	   [ Button => "Convert Bold",    -command => sub{text_convert_bold($textwindow ,$bold_char)} ],
 	   [
 		  Button   => '~Add a Thought Break',
 		  -command => sub {
 			  $textwindow->addGlobStart;
-			  text_thought_break();
+			  text_thought_break($textwindow);
 			  $textwindow->addGlobEnd;
 			}
 	   ],
@@ -1694,7 +1696,7 @@ sub text_menuitems {
 		  Button   => 'Convert <tb> to asterisk break',
 		  -command => sub {
 			  $textwindow->addGlobStart;
-			  text_convert_tb();
+			  text_convert_tb($textwindow);
 			  $textwindow->addGlobEnd;
 			}
 	   ],
@@ -9562,10 +9564,10 @@ sub textbindings {
 			}
 		}
 	);
-	$textwindow->bind( 'TextUnicode', '<Control-l>' => sub { case ('lc'); } );
-	$textwindow->bind( 'TextUnicode', '<Control-u>' => sub { case ('uc'); } );
+	$textwindow->bind( 'TextUnicode', '<Control-l>' => sub { case ($textwindow,'lc'); } );
+	$textwindow->bind( 'TextUnicode', '<Control-u>' => sub { case ($textwindow,'uc'); } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-t>' => sub { case ('tc'); $top->break } );
+					   '<Control-t>' => sub { case ($textwindow,'tc'); $top->break } );
 	$textwindow->bind(
 		'TextUnicode',
 		'<Control-Z>' => sub {
@@ -13730,42 +13732,6 @@ sub gotobookmark {
 
 ### Selection
 
-sub case {
-	saveset();
-	my $marker      = shift;
-	my @ranges      = $textwindow->tagRanges('sel');
-	my $range_total = @ranges;
-	my $done        = '';
-	if ( $range_total == 0 ) {
-		return;
-	} else {
-		$textwindow->addGlobStart;
-		while (@ranges) {
-			my $end            = pop(@ranges);
-			my $start          = pop(@ranges);
-			my $thisblockstart = $start;
-			my $thisblockend   = $end;
-			my $selection = $textwindow->get( $thisblockstart, $thisblockend );
-			my @words     = ();
-			my $buildsentence = '';
-			if ( $marker eq 'uc' ) {
-				$done = uc($selection);
-			} elsif ( $marker eq 'lc' ) {
-				$done = lc($selection);
-			} elsif ( $marker eq 'sc' ) {
-				$done = lc($selection);
-				$done =~ s/(^\W*\w)/\U$1\E/;
-			} elsif ( $marker eq 'tc' ) {
-				$done = lc($selection);
-				$done =~ s/(^\W*\w)/\U$1\E/;
-				$done =~ s/([\s\n]+\W*\w)/\U$1\E/g;
-			}
-			$textwindow->replacewith( $start, $end, $done );
-		}
-		$textwindow->addGlobEnd;
-	}
-}
-
 sub surround {
 	if ( defined( $lglobal{surpop} ) ) {
 		$lglobal{surpop}->deiconify;
@@ -16769,13 +16735,8 @@ sub auto_show_page_images {
 		}
 		my $pageorigwidth  = $lglobal{pageimgorig}->width;
 		my $pageorigheight = $lglobal{pageimgorig}->height;
-
-		#print $pageorigwidth. ':' . $pageorigheight . ' \n';
-		#print $lglobal{autoshowimagepop}->geometry;
 		my $sw = ( $lglobal{pageimgorig}->width ) / $geom[0];
 		my $sh = ( $lglobal{pageimgorig}->height ) / $geom[1];
-
-		#print "sw:" . $sw . ":" . "sh:" . $sh;
 		if ( $sh > $sw ) {
 			$sw = $sh;
 		}
@@ -16844,88 +16805,6 @@ sub get_image_file {
 		}
 	}
 	return $imagefile;
-}
-
-sub text_convert_italic {
-	my $italic  = qr/<\/?i>/;
-	my $replace = $italic_char;
-	$textwindow->FindAndReplaceAll( '-regexp', '-nocase', $italic, $replace );
-}
-
-sub text_convert_bold {
-	my $bold    = qr{</?b>};
-	my $replace = "$bold_char";
-	$textwindow->FindAndReplaceAll( '-regexp', '-nocase', $bold, $replace );
-}
-
-## Insert a "Thought break" (duh)
-sub text_thought_break {
-	$textwindow->insert( ( $textwindow->index('insert') ) . ' lineend',
-						 '       *' x 5 );
-}
-
-sub text_DP_tb {
-	$textwindow->insert( $textwindow->index('insert') . ' lineend', '<tb>' );
-}
-
-sub text_convert_tb {
-	my $tb = '       *       *       *       *       *';
-	$textwindow->FindAndReplaceAll( '-exact', '-nocase', '<tb>', $tb );
-}
-
-sub text_convert_smallcaps {
-	searchpopup();
-	searchoptset(qw/0 x x 1/);
-	$lglobal{searchentry}->insert( 'end', "<sc>(\\n?[^<]+)</sc>" );
-	$lglobal{replaceentry}->insert( 'end', "\\U\$1\\E" );
-}
-
-sub text_remove_smallcaps_markup {
-	searchpopup();
-	searchoptset(qw/0 x x 1/);
-	$lglobal{searchentry}->insert( 'end', "<sc>(\\n?[^<]+)</sc>" );
-	$lglobal{replaceentry}->insert( 'end', "\$1" );
-}
-
-# FIXME: sub text_delete_blank_page { }
-
-# Popup for choosing replacement characters, etc.
-sub text_convert_options {
-
-	my $options = $top->DialogBox( -title   => "Text Processing Options",
-								   -buttons => ["OK"], );
-
-	my $italic_frame =
-	  $options->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
-	my $italic_label =
-	  $italic_frame->Label(
-							-width => 25,
-							-text  => "Italic Replace Character"
-	  )->pack( -side => 'left' );
-	my $italic_entry =
-	  $italic_frame->Entry(
-							-width        => 6,
-							-background   => 'white',
-							-relief       => 'sunken',
-							-textvariable => \$italic_char,
-	  )->pack( -side => 'left' );
-
-	my $bold_frame =
-	  $options->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
-	my $bold_label =
-	  $bold_frame->Label(
-						  -width => 25,
-						  -text  => "Bold Replace Character"
-	  )->pack( -side => 'left' );
-	my $bold_entry =
-	  $bold_frame->Entry(
-						  -width        => 6,
-						  -background   => 'white',
-						  -relief       => 'sunken',
-						  -textvariable => \$bold_char,
-	  )->pack( -side => 'left' );
-	$options->Show;
-	saveset();
 }
 
 ### External
@@ -19215,5 +19094,61 @@ sub addpagelinks {
 	$selection =~ s/(\d{1,3})$/<a href="#Page_$1">$1<\/a>/;
 	return $selection;
 }
+
+sub text_convert_smallcaps {
+	searchpopup();
+	searchoptset(qw/0 x x 1/);
+	$lglobal{searchentry}->insert( 'end', "<sc>(\\n?[^<]+)</sc>" );
+	$lglobal{replaceentry}->insert( 'end', "\\U\$1\\E" );
+}
+
+sub text_remove_smallcaps_markup {
+	searchpopup();
+	searchoptset(qw/0 x x 1/);
+	$lglobal{searchentry}->insert( 'end', "<sc>(\\n?[^<]+)</sc>" );
+	$lglobal{replaceentry}->insert( 'end', "\$1" );
+}
+
+# FIXME: sub text_delete_blank_page { }
+
+# Popup for choosing replacement characters, etc.
+sub text_convert_options {
+
+	my $options = $top->DialogBox( -title   => "Text Processing Options",
+								   -buttons => ["OK"], );
+
+	my $italic_frame =
+	  $options->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $italic_label =
+	  $italic_frame->Label(
+							-width => 25,
+							-text  => "Italic Replace Character"
+	  )->pack( -side => 'left' );
+	my $italic_entry =
+	  $italic_frame->Entry(
+							-width        => 6,
+							-background   => 'white',
+							-relief       => 'sunken',
+							-textvariable => \$italic_char,
+	  )->pack( -side => 'left' );
+
+	my $bold_frame =
+	  $options->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $bold_label =
+	  $bold_frame->Label(
+						  -width => 25,
+						  -text  => "Bold Replace Character"
+	  )->pack( -side => 'left' );
+	my $bold_entry =
+	  $bold_frame->Entry(
+						  -width        => 6,
+						  -background   => 'white',
+						  -relief       => 'sunken',
+						  -textvariable => \$bold_char,
+	  )->pack( -side => 'left' );
+	$options->Show;
+	saveset();
+}
+
 
 MainLoop;
