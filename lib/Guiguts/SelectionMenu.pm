@@ -75,7 +75,7 @@ sub surround {
 		my $gobut = $f2->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				&main::surroundit( $surstrt->get, $surend->get );
+				surroundit( $surstrt->get, $surend->get ,$textwindow);
 			},
 			-text  => 'OK',
 			-width => 16
@@ -91,6 +91,25 @@ sub surround {
 		$surpop->Icon( -image => $icon );
 	}
 	return $surpop
+}
+
+sub surroundit {
+	my ( $pre, $post,$textwindow ) = @_;
+	$pre  =~ s/\\n/\n/;
+	$post =~ s/\\n/\n/;
+	my @ranges = $textwindow->tagRanges('sel');
+	unless (@ranges) {
+		push @ranges, $textwindow->index('insert');
+		push @ranges, $textwindow->index('insert');
+	}
+	$textwindow->addGlobStart;
+	while (@ranges) {
+		my $end   = pop(@ranges);
+		my $start = pop(@ranges);
+		$textwindow->replacewith( $start, $end,
+							  $pre . $textwindow->get( $start, $end ) . $post );
+	}
+	$textwindow->addGlobEnd;
 }
 
 

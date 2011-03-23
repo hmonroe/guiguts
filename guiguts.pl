@@ -4415,25 +4415,6 @@ sub floodfill {
 
 }
 
-sub surroundit {
-	my ( $pre, $post ) = @_;
-	$pre  =~ s/\\n/\n/;
-	$post =~ s/\\n/\n/;
-	my @ranges = $textwindow->tagRanges('sel');
-	unless (@ranges) {
-		push @ranges, $textwindow->index('insert');
-		push @ranges, $textwindow->index('insert');
-	}
-	$textwindow->addGlobStart;
-	while (@ranges) {
-		my $end   = pop(@ranges);
-		my $start = pop(@ranges);
-		$textwindow->replacewith( $start, $end,
-							  $pre . $textwindow->get( $start, $end ) . $post );
-	}
-	$textwindow->addGlobEnd;
-}
-
 sub poetryhtml {
 	viewpagenums() if ( $lglobal{seepagenums} );
 	my @ranges      = $textwindow->tagRanges('sel');
