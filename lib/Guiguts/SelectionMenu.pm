@@ -3,7 +3,52 @@ package Guiguts::SelectionMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&case &surround &flood &indent &asciibox &aligntext &tonamed)
+	@EXPORT=qw(&case &surround &flood &indent &asciibox &aligntext &tonamed &fromnamed)
+}
+
+sub fromnamed {
+	my ($textwindow) = @_;
+	my @ranges      = $textwindow->tagRanges('sel');
+	my $range_total = @ranges;
+	if ( $range_total == 0 ) {
+		return;
+	} else {
+		while (@ranges) {
+			my $end   = pop @ranges;
+			my $start = pop @ranges;
+			$textwindow->markSet( 'srchend', $end );
+			my ( $thisblockstart, $length );
+			&main::named( '&amp;',   '&',  $start, 'srchend' );
+			&main::named( '&quot;',  '"',  $start, 'srchend' );
+			&main::named( '&mdash;', '--', $start, 'srchend' );
+			&main::named( ' &gt;',   ' >', $start, 'srchend' );
+			&main::named( '&lt; ',   '< ', $start, 'srchend' );
+			my $from;
+
+			for ( 160 .. 255 ) {
+				$from = lc sprintf( "%x", $_ );
+				&main::named( &main::entity( '\x' . $from ), chr($_), $start, 'srchend' );
+			}
+			while (
+					$thisblockstart =
+					$textwindow->search(
+										 '-regexp',
+										 '-count' => \$length,
+										 '--', '&#\d+;', $start, $end
+					)
+			  )
+			{
+				my $xchar =
+				  $textwindow->get( $thisblockstart,
+									$thisblockstart . '+' . $length . 'c' );
+				$textwindow->ntdelete( $thisblockstart,
+									   $thisblockstart . '+' . $length . 'c' );
+				$xchar =~ s/&#(\d+);/$1/;
+				$textwindow->ntinsert( $thisblockstart, chr($xchar) );
+			}
+			$textwindow->markUnset('srchend');
+		}
+	}
 }
 
 sub tonamed {

@@ -1591,7 +1591,7 @@ sub selection_menuitems {
 		  Button   => 'Convert From Named/Numeric Entities',
 		  -command => sub {
 			  $textwindow->addGlobStart;
-			  fromnamed();
+			  fromnamed($textwindow);
 			  $textwindow->addGlobEnd;
 			}
 	   ],
@@ -14000,50 +14000,6 @@ sub alignpopup {
 			}
 		);
 		$lglobal{alignpop}->Icon( -image => $icon );
-	}
-}
-
-sub fromnamed {
-	my @ranges      = $textwindow->tagRanges('sel');
-	my $range_total = @ranges;
-	if ( $range_total == 0 ) {
-		return;
-	} else {
-		while (@ranges) {
-			my $end   = pop @ranges;
-			my $start = pop @ranges;
-			$textwindow->markSet( 'srchend', $end );
-			my ( $thisblockstart, $length );
-			named( '&amp;',   '&',  $start, 'srchend' );
-			named( '&quot;',  '"',  $start, 'srchend' );
-			named( '&mdash;', '--', $start, 'srchend' );
-			named( ' &gt;',   ' >', $start, 'srchend' );
-			named( '&lt; ',   '< ', $start, 'srchend' );
-			my $from;
-
-			for ( 160 .. 255 ) {
-				$from = lc sprintf( "%x", $_ );
-				named( entity( '\x' . $from ), chr($_), $start, 'srchend' );
-			}
-			while (
-					$thisblockstart =
-					$textwindow->search(
-										 '-regexp',
-										 '-count' => \$length,
-										 '--', '&#\d+;', $start, $end
-					)
-			  )
-			{
-				my $xchar =
-				  $textwindow->get( $thisblockstart,
-									$thisblockstart . '+' . $length . 'c' );
-				$textwindow->ntdelete( $thisblockstart,
-									   $thisblockstart . '+' . $length . 'c' );
-				$xchar =~ s/&#(\d+);/$1/;
-				$textwindow->ntinsert( $thisblockstart, chr($xchar) );
-			}
-			$textwindow->markUnset('srchend');
-		}
 	}
 }
 
