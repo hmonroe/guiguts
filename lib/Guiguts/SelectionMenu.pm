@@ -3,7 +3,84 @@ package Guiguts::SelectionMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&case &surround &flood &indent)
+	@EXPORT=qw(&case &surround &flood &indent &asciibox)
+}
+
+sub asciibox {
+	my ($textwindow,$asciiwrap,$asciiwidth,$ascii,$asciijustify) = @_;
+	my @ranges      = $textwindow->tagRanges('sel');
+	my $range_total = @ranges;
+	if ( $range_total == 0 ) {
+		return;
+	} else {
+		my ( $linenum, $line, $sr, $sc, $er, $ec, $lspaces, $rspaces );
+		my $end   = pop(@ranges);
+		my $start = pop(@ranges);
+		$textwindow->markSet( 'asciistart', $start );
+		$textwindow->markSet( 'asciiend',   $end );
+		my $saveleft  = $lmargin;
+		my $saveright = $rmargin;
+		$textwindow->addGlobStart;
+		$lmargin = 0;
+		$rmargin = ( $asciiwidth - 4 );
+		&main::selectrewrap unless $asciiwrap;
+		$lmargin = $saveleft;
+		$rmargin = $saveright;
+		$textwindow->insert(
+							 'asciistart',
+							 ${ $ascii }[0]
+							   . (
+								   ${ $ascii }[1] x
+									 ( $asciiwidth - 2 )
+							   )
+							   . ${ $ascii }[2] . "\n"
+		);
+		$textwindow->insert(
+							 'asciiend',
+							 "\n" 
+							   . ${ $ascii }[6]
+							   . (
+								   ${ $ascii }[7] x
+									 ( $asciiwidth - 2 )
+							   )
+							   . ${ $ascii }[8] . "\n"
+		);
+		$start = $textwindow->index('asciistart');
+		$end   = $textwindow->index('asciiend');
+		( $sr, $sc ) = split /\./, $start;
+		( $er, $ec ) = split /\./, $end;
+
+		for my $linenum ( $sr .. $er - 2 ) {
+			$line = $textwindow->get( "$linenum.0", "$linenum.end" );
+			$line =~ s/^\s*//;
+			$line =~ s/\s*$//;
+			if ( $asciijustify eq 'left' ) {
+				$lspaces = 1;
+				$rspaces = ( $asciiwidth - 3 ) - length($line);
+			} elsif ( $asciijustify eq 'center' ) {
+				$lspaces = ( $asciiwidth - 2 ) - length($line);
+				if ( $lspaces % 2 ) {
+					$rspaces = ( $lspaces / 2 ) + .5;
+					$lspaces = $rspaces - 1;
+				} else {
+					$rspaces = $lspaces / 2;
+					$lspaces = $rspaces;
+				}
+			} elsif ( $asciijustify eq 'right' ) {
+				$rspaces = 1;
+				$lspaces = ( $asciiwidth - 3 ) - length($line);
+			}
+			$line =
+			    ${ $ascii }[3]
+			  . ( ' ' x $lspaces )
+			  . $line
+			  . ( ' ' x $rspaces )
+			  . ${ $ascii }[5];
+			$textwindow->delete( "$linenum.0", "$linenum.end" );
+			$textwindow->insert( "$linenum.0", $line );
+		}
+		$textwindow->addGlobEnd;
+	}
 }
 
 sub case {

@@ -4263,83 +4263,6 @@ sub wrapper {
 	return ($paragraph);
 }
 
-sub asciibox {
-	my $marker      = shift(@_);
-	my @ranges      = $textwindow->tagRanges('sel');
-	my $range_total = @ranges;
-	if ( $range_total == 0 ) {
-		return;
-	} else {
-		my ( $linenum, $line, $sr, $sc, $er, $ec, $lspaces, $rspaces );
-		my $end   = pop(@ranges);
-		my $start = pop(@ranges);
-		$textwindow->markSet( 'asciistart', $start );
-		$textwindow->markSet( 'asciiend',   $end );
-		my $saveleft  = $lmargin;
-		my $saveright = $rmargin;
-		$textwindow->addGlobStart;
-		$lmargin = 0;
-		$rmargin = ( $lglobal{asciiwidth} - 4 );
-		&selectrewrap unless $lglobal{asciiwrap};
-		$lmargin = $saveleft;
-		$rmargin = $saveright;
-		$textwindow->insert(
-							 'asciistart',
-							 ${ $lglobal{ascii} }[0]
-							   . (
-								   ${ $lglobal{ascii} }[1] x
-									 ( $lglobal{asciiwidth} - 2 )
-							   )
-							   . ${ $lglobal{ascii} }[2] . "\n"
-		);
-		$textwindow->insert(
-							 'asciiend',
-							 "\n" 
-							   . ${ $lglobal{ascii} }[6]
-							   . (
-								   ${ $lglobal{ascii} }[7] x
-									 ( $lglobal{asciiwidth} - 2 )
-							   )
-							   . ${ $lglobal{ascii} }[8] . "\n"
-		);
-		$start = $textwindow->index('asciistart');
-		$end   = $textwindow->index('asciiend');
-		( $sr, $sc ) = split /\./, $start;
-		( $er, $ec ) = split /\./, $end;
-
-		for my $linenum ( $sr .. $er - 2 ) {
-			$line = $textwindow->get( "$linenum.0", "$linenum.end" );
-			$line =~ s/^\s*//;
-			$line =~ s/\s*$//;
-			if ( $lglobal{asciijustify} eq 'left' ) {
-				$lspaces = 1;
-				$rspaces = ( $lglobal{asciiwidth} - 3 ) - length($line);
-			} elsif ( $lglobal{asciijustify} eq 'center' ) {
-				$lspaces = ( $lglobal{asciiwidth} - 2 ) - length($line);
-				if ( $lspaces % 2 ) {
-					$rspaces = ( $lspaces / 2 ) + .5;
-					$lspaces = $rspaces - 1;
-				} else {
-					$rspaces = $lspaces / 2;
-					$lspaces = $rspaces;
-				}
-			} elsif ( $lglobal{asciijustify} eq 'right' ) {
-				$rspaces = 1;
-				$lspaces = ( $lglobal{asciiwidth} - 3 ) - length($line);
-			}
-			$line =
-			    ${ $lglobal{ascii} }[3]
-			  . ( ' ' x $lspaces )
-			  . $line
-			  . ( ' ' x $rspaces )
-			  . ${ $lglobal{ascii} }[5];
-			$textwindow->delete( "$linenum.0", "$linenum.end" );
-			$textwindow->insert( "$linenum.0", $line );
-		}
-		$textwindow->addGlobEnd;
-	}
-}
-
 sub aligntext {
 	my $marker      = shift(@_);
 	my @ranges      = $textwindow->tagRanges('sel');
@@ -14068,7 +13991,9 @@ sub asciipopup {
 		  )->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
 		my $gobut = $f1->Button(
 								 -activebackground => $activecolor,
-								 -command          => sub { asciibox() },
+								 -command          => sub { 
+								 	asciibox($textwindow,$lglobal{asciiwrap},$lglobal{asciiwidth},
+								 	$lglobal{ascii},$lglobal{asciijustify}) },
 								 -text             => 'Draw Box',
 								 -width            => 16
 		)->grid( -row => 4, -column => 2, -padx => 1, -pady => 2 );
