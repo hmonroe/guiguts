@@ -3,7 +3,49 @@ package Guiguts::SelectionMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&case &surround &flood &indent &asciibox)
+	@EXPORT=qw(&case &surround &flood &indent &asciibox &aligntext)
+}
+
+sub aligntext {
+	my ($textwindow,$alignstring) = @_;
+	my @ranges      = $textwindow->tagRanges('sel');
+	my $range_total = @ranges;
+	if ( $range_total == 0 ) {
+		return;
+	} else {
+		my $textindex = 0;
+		my ( $linenum, $line, $sr, $sc, $er, $ec, $r, $c, @indexpos );
+		my $end   = pop(@ranges);
+		my $start = pop(@ranges);
+		$textwindow->addGlobStart;
+		( $sr, $sc ) = split /\./, $start;
+		( $er, $ec ) = split /\./, $end;
+		for my $linenum ( $sr .. $er - 1 ) {
+			$indexpos[$linenum] =
+			  $textwindow->search( '--', $alignstring,
+								   "$linenum.0 -1c",
+								   "$linenum.end" );
+			if ( $indexpos[$linenum] ) {
+				( $r, $c ) = split /\./, $indexpos[$linenum];
+			} else {
+				$c = -1;
+			}
+			if ( $c > $textindex ) { $textindex = $c }
+			$indexpos[$linenum] = $c;
+		}
+		for my $linenum ( $sr .. $er ) {
+			if ( $indexpos[$linenum] > (-1) ) {
+				$textwindow->insert(
+									 "$linenum.0",
+									 (
+										' ' x
+										  ( $textindex - $indexpos[$linenum] )
+									 )
+				);
+			}
+		}
+		$textwindow->addGlobEnd;
+	}
 }
 
 sub asciibox {

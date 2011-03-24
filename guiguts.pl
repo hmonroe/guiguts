@@ -4263,48 +4263,6 @@ sub wrapper {
 	return ($paragraph);
 }
 
-sub aligntext {
-	my $marker      = shift(@_);
-	my @ranges      = $textwindow->tagRanges('sel');
-	my $range_total = @ranges;
-	if ( $range_total == 0 ) {
-		return;
-	} else {
-		my $textindex = 0;
-		my ( $linenum, $line, $sr, $sc, $er, $ec, $r, $c, @indexpos );
-		my $end   = pop(@ranges);
-		my $start = pop(@ranges);
-		$textwindow->addGlobStart;
-		( $sr, $sc ) = split /\./, $start;
-		( $er, $ec ) = split /\./, $end;
-		for my $linenum ( $sr .. $er - 1 ) {
-			$indexpos[$linenum] =
-			  $textwindow->search( '--', $lglobal{alignstring},
-								   "$linenum.0 -1c",
-								   "$linenum.end" );
-			if ( $indexpos[$linenum] ) {
-				( $r, $c ) = split /\./, $indexpos[$linenum];
-			} else {
-				$c = -1;
-			}
-			if ( $c > $textindex ) { $textindex = $c }
-			$indexpos[$linenum] = $c;
-		}
-		for my $linenum ( $sr .. $er ) {
-			if ( $indexpos[$linenum] > (-1) ) {
-				$textwindow->insert(
-									 "$linenum.0",
-									 (
-										' ' x
-										  ( $textindex - $indexpos[$linenum] )
-									 )
-				);
-			}
-		}
-		$textwindow->addGlobEnd;
-	}
-}
-
 sub poetryhtml {
 	viewpagenums() if ( $lglobal{seepagenums} );
 	my @ranges      = $textwindow->tagRanges('sel');
@@ -14031,7 +13989,7 @@ sub alignpopup {
 		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
 		my $gobut = $f1->Button(
 								 -activebackground => $activecolor,
-								 -command          => [ \&aligntext ],
+								 -command          => [ sub{aligntext($textwindow,$lglobal{alignstring})} ],
 								 -text             => 'Align selected text',
 								 -width            => 16
 		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
