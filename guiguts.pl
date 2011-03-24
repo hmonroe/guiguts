@@ -1583,7 +1583,7 @@ sub selection_menuitems {
 		  Button   => 'Convert To Named/Numeric Entities',
 		  -command => sub {
 			  $textwindow->addGlobStart;
-			  tonamed();
+			  tonamed($textwindow);
 			  $textwindow->addGlobEnd;
 			}
 	   ],
@@ -14000,52 +14000,6 @@ sub alignpopup {
 			}
 		);
 		$lglobal{alignpop}->Icon( -image => $icon );
-	}
-}
-
-sub tonamed {
-	my @ranges      = $textwindow->tagRanges('sel');
-	my $range_total = @ranges;
-	if ( $range_total == 0 ) {
-		return;
-	} else {
-		while (@ranges) {
-			my $end   = pop @ranges;
-			my $start = pop @ranges;
-			$textwindow->markSet( 'srchend', $end );
-			my $thisblockstart;
-			named( '&(?![\w#])',           '&amp;',   $start, 'srchend' );
-			named( '&$',                   '&amp;',   $start, 'srchend' );
-			named( '"',                    '&quot;',  $start, 'srchend' );
-			named( '(?<=[^-!])--(?=[^>])', '&mdash;', $start, 'srchend' );
-			named( '(?<=[^-])--$',         '&mdash;', $start, 'srchend' );
-			named( '^--(?=[^-])',          '&mdash;', $start, 'srchend' );
-			named( '& ',                   '&amp; ',  $start, 'srchend' );
-			named( '&c\.',                 '&amp;c.', $start, 'srchend' );
-			named( ' >',                   ' &gt;',   $start, 'srchend' );
-			named( '< ',                   '&lt; ',   $start, 'srchend' );
-			my $from;
-
-			for ( 128 .. 255 ) {
-				$from = lc sprintf( "%x", $_ );
-				named( '\x' . $from, entity( '\x' . $from ), $start,
-					   'srchend' );
-			}
-			while (
-					$thisblockstart =
-					$textwindow->search(
-										 '-regexp',             '--',
-										 '[\x{100}-\x{65535}]', $start,
-										 'srchend'
-					)
-			  )
-			{
-				my $xchar = ord( $textwindow->get($thisblockstart) );
-				$textwindow->ntdelete( $thisblockstart, "$thisblockstart+1c" );
-				$textwindow->ntinsert( $thisblockstart, "&#$xchar;" );
-			}
-			$textwindow->markUnset('srchend');
-		}
 	}
 }
 
