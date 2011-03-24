@@ -3,7 +3,33 @@ package Guiguts::SelectionMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&case &surround &flood &indent &asciibox &aligntext &tonamed &fromnamed)
+	@EXPORT=qw(&case &surround &flood &indent &asciibox &aligntext &tonamed &fromnamed &fracconv)
+}
+
+sub fracconv {
+	my ($textwindow, $start, $end ) = @_;
+	my %frachash = (
+					 '\b1\/2\b' => '&frac12;',
+					 '\b1\/4\b' => '&frac14;',
+					 '\b3\/4\b' => '&frac34;',
+	);
+	my ( $ascii, $html, $length );
+	my $thisblockstart = 1;
+	while ( ( $ascii, $html ) = each(%frachash) ) {
+		while (
+				$thisblockstart =
+				$textwindow->search(
+									 '-regexp',
+									 '-count' => \$length,
+									 '--', "-?$ascii", $start, $end
+				)
+		  )
+		{
+			$textwindow->replacewith( $thisblockstart,
+									  $thisblockstart . "+$length c", $html );
+		}
+	}
+
 }
 
 sub fromnamed {

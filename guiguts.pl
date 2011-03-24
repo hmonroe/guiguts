@@ -1604,10 +1604,10 @@ sub selection_menuitems {
 				  while (@ranges) {
 					  my $end   = pop @ranges;
 					  my $start = pop @ranges;
-					  fracconv( $start, $end );
+					  fracconv($textwindow, $start, $end );
 				  }
 			  } else {
-				  fracconv( '1.0', 'end' );
+				  fracconv($textwindow, '1.0', 'end' );
 			  }
 			  $textwindow->addGlobEnd;
 			}
@@ -14001,32 +14001,6 @@ sub alignpopup {
 		);
 		$lglobal{alignpop}->Icon( -image => $icon );
 	}
-}
-
-sub fracconv {
-	my ( $start, $end ) = @_;
-	my %frachash = (
-					 '\b1\/2\b' => '&frac12;',
-					 '\b1\/4\b' => '&frac14;',
-					 '\b3\/4\b' => '&frac34;',
-	);
-	my ( $ascii, $html, $length );
-	my $thisblockstart = 1;
-	while ( ( $ascii, $html ) = each(%frachash) ) {
-		while (
-				$thisblockstart =
-				$textwindow->search(
-									 '-regexp',
-									 '-count' => \$length,
-									 '--', "-?$ascii", $start, $end
-				)
-		  )
-		{
-			$textwindow->replacewith( $thisblockstart,
-									  $thisblockstart . "+$length c", $html );
-		}
-	}
-
 }
 
 ### Fixup

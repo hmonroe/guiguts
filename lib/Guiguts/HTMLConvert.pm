@@ -1039,7 +1039,7 @@ sub html_wrapup {
 	my ($textwindow,$headertext,$leave_utf,$autofraction,$classhash) = @_;
 	my $thisblockstart;
 
-	&main::fracconv( '1.0', 'end' ) if $autofraction;
+	&main::fracconv( $textwindow,'1.0', 'end' ) if $autofraction;
 	$textwindow->ntinsert( '1.0', $headertext );
 	if ( $leave_utf ) {
 		$thisblockstart =
