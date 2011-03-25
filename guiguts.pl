@@ -33,6 +33,7 @@ use Encode;
 use FileHandle;
 use File::Basename;
 use File::Spec::Functions qw(rel2abs);
+use File::Spec::Functions qw(catfile);
 use File::Temp qw/tempfile/;
 use File::Copy;
 use HTML::TokeParser;
@@ -141,12 +142,12 @@ our $utffontsize        = 14;
 our $vislnnm            = 0;
 our $w3cremote          = 0;
 our $window_title       = $APP_NAME . '-' . $VERSION;
-# In the next release version, provide default paths for each OS
-our $gutpath         = 'C:\dp\gutcheck\gutcheck.exe';
-our $jeebiespath     = 'C:\dp\tools\jeebies\jeebies.exe';
-our $tidycommand        = 'C:\dp\tools\tidy\tidy.exe';
-our $validatecommand    = 'C:\dp\tools\W3CVAL~1\onsgmls.exe';
-our $validatecsscommand = 'C:\dp\tools\W3CVAL~1\CSS-VA~1.JAR';
+# These are set to the default Windows values in initialize()
+our $gutpath         = '';
+our $jeebiespath     = '';
+our $tidycommand        = '';
+our $validatecommand    = '';
+our $validatecsscommand = '';
 
 our %gc;
 our %jeeb;
@@ -8863,9 +8864,19 @@ sub initialize {
 			close $file;
 		}
 	}
-	$lglobal{guigutsdirectory}=dirname(rel2abs($0)) unless defined $lglobal{guigutsdirectory};
-	
-
+	if ($OS_WIN) {
+		$lglobal{guigutsdirectory}=dirname(rel2abs($0)) unless defined $lglobal{guigutsdirectory};
+		print $gutpath=catfile($lglobal{guigutsdirectory},'tools','gutcheck','gutcheck.exe') 
+			unless $gutpath;
+		print $jeebiespath=catfile($lglobal{guigutsdirectory},'tools','jeebies','jeebies.exe') 
+			unless $jeebiespath;
+		print $tidycommand=catfile($lglobal{guigutsdirectory},'tools','tidy','tidy.exe') 
+			unless $tidycommand;
+		print $validatecommand=catfile($lglobal{guigutsdirectory},'tools','W3C','onsgmls.exe') 
+			unless $validatecommand;
+		print $validatecsscommand=catfile($lglobal{guigutsdirectory},'tools','W3C','css-validator.jar') 
+			unless $validatecsscommand;
+	}
 	%{ $lglobal{utfblocks} } = (
 		'Alphabetic Presentation Forms' => [ 'FB00', 'FB4F' ],
 		'Arabic Presentation Forms-A'   => [ 'FB50', 'FDCF' ]
