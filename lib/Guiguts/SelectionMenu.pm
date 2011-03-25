@@ -3,7 +3,312 @@ package Guiguts::SelectionMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&case &surround &flood &indent &asciibox &aligntext &tonamed &fromnamed &fracconv)
+	@EXPORT=qw(&case &surround &flood &indent &asciibox &aligntext &tonamed &fromnamed &fracconv
+	&selectrewrap)
+}
+
+sub selectrewrap {
+	my ($textwindow, $seepagenums,$scanno_hl ) = @_;
+	
+	&main::viewpagenums() if ( $seepagenums );
+	&main::saveset();
+	my $marker      = shift @_;
+	my @ranges      = $textwindow->tagRanges('sel');
+	my $range_total = @ranges;
+	my $thisblockstart;
+	my $start;
+	my $scannosave = $scanno_hl;
+	$scanno_hl = 0;
+	$main::operationinterrupt = 0;
+
+	if ( $range_total == 0 ) {
+		return;
+	} else {
+		my $end = pop(@ranges);    #get the end index of the selection
+		$start = pop(@ranges);     #get the start index of the selection
+		my @marklist = $textwindow->dump( -mark, $start, $end )
+		  ;                        #see if there any page markers set
+		my ( $markname, @savelist, $markindex, %markhash );
+		while (@marklist) {        #save the pagemarkers if they have been set
+			shift @marklist;
+			$markname  = shift @marklist;
+			$markindex = shift @marklist;
+			if ( $markname =~ /Pg\S+/ ) {
+				$textwindow->insert( $markindex, "\x7f" )
+				  ;                #mark the page breaks for rewrapping
+				push @savelist, $markname;
+			}
+		}
+		while ( $textwindow->get($start) =~ /^\s*\n/ )
+		{                          #if the selection starts on a blank line
+			$start = $textwindow->index(
+					   "$start+1c") #advance the selection start until it isn't.
+		}
+		while ( $textwindow->get("$end+1c") =~ /^\s*\n/ )
+		{    #if the selection ends at the end of a line but not over it
+			$end = $textwindow->index( "$end+1c"
+			  )    #advance the selection end until it does. (traps odd spaces
+		}    #at paragraph end bug)
+		$thisblockstart = $start;
+		my $thisblockend   = $end;
+		my $indentblockend = $end;
+		my $inblock        = 0;
+		my $infront        = 0;
+		my $enableindent;
+		my $fblock      = 0;
+		my $leftmargin  = $main::blocklmargin;
+		my $rightmargin = $main::blocklmargin;
+		my $firstmargin = $main::blocklmargin;
+		my ( $rewrapped, $initial_tab, $subsequent_tab, $spaces );
+		my $indent = 0;
+		my $offset = 0;
+		my $poem   = 0;
+		my $textline;
+		my $lastend = $start;
+		my ( $sr, $sc, $er, $ec, $line );
+		my $textend      = $textwindow->index('end');
+		my $toplineblank = 0;
+		my $selection;
+
+		if ( $textend eq $end ) {
+			$textwindow->tagAdd( 'blockend', "$end-1c"
+			  ) #set a marker at the end of the selection, or one charecter less
+		} else {    #if the selection ends at the text end
+			$textwindow->tagAdd( 'blockend', $end );
+		}
+		if ( $textwindow->get( '1.0', '1.end' ) eq '' )
+		{           #trap top line delete bug
+			$toplineblank = 1;
+		}
+		&main::opstop();
+		$spaces = 0;
+		while (1) {
+			$indent = $defaultindent;
+			$thisblockend =
+			  $textwindow->search( '-regex', '--', '^(\x7f)*$', $thisblockstart,
+								   $end );    #find end of paragraph
+			if ($thisblockend) {
+				$thisblockend =
+				  $textwindow->index( $thisblockend . ' lineend' );
+			} else {
+				$thisblockend = $end;
+			}
+			;    #or end of text if end of selection
+			$selection = $textwindow->get( $thisblockstart, $thisblockend )
+			  if $thisblockend;    #get the paragraph of text
+			unless ($selection) {
+				$thisblockstart = $thisblockend;
+				$thisblockstart = $textwindow->index("$thisblockstart+1c");
+				last
+				  if ( $textwindow->compare( $thisblockstart, '>=', $end ) );
+				last if $main::operationinterrupt;
+				next;
+			}
+			last
+			  if (    ( $thisblockend eq $lastend )
+				   || ( $textwindow->compare( $thisblockend, '<', $lastend ) ) )
+			  ;                    #quit if the search isn't advancing
+			$textwindow->see($thisblockend);
+			$textwindow->update;
+
+			#$firstmargin = $leftmargin if $blockwrap;
+			if ( $selection =~ /^\x7f*\/\#/ ) {
+				$main::blockwrap   = 1;
+				$leftmargin  = $main::blocklmargin + 1;
+				$firstmargin = $main::blocklmargin + 1;
+				$rightmargin = $main::blocklmargin;
+				if ( $selection =~ /^\x7f*\/#\[(\d+)/ )
+				{    #check for block rewrapping with parameter markup
+					if ($1) { $leftmargin = $1 + 1 }
+					$firstmargin = $leftmargin;
+				}
+				if ( $selection =~ /^\x7f*\/#\[(\d+)?(\.)(\d+)/ ) {
+					if ( length $3 ) { $firstmargin = $3 + 1 }
+				}
+				if ( $selection =~ /^\x7f*\/#\[(\d+)?(\.)?(\d+)?,(\d+)/ ) {
+					if ($4) { $rightmargin = $4 }
+				}
+			}
+			if ( $selection =~ /^\x7f*\/[\*Ll]/ ) {
+				$inblock      = 1;
+				$enableindent = 1;
+			}    #check for no rewrap markup
+			if ( $selection =~ /^\x7f*\/\*\[(\d+)/ ) { $indent = $1 }
+			if ( $selection =~ /^\x7f*\/[pP]/ ) {
+				$inblock      = 1;
+				$enableindent = 1;
+				$poem         = 1;
+				$indent       = 4;
+			}
+			if ( $selection =~ /^\x7f*\/[Xx\$]/ ) { $inblock = 1 }
+			if ( $selection =~ /^\x7f*\/[fF]/ ) {
+				$inblock = 1;
+			}
+			$textwindow->markSet( 'rewrapend', $thisblockend )
+			  ; #Set a mark at the end of the text so it can be found after rewrap
+			unless ( $selection =~ /^\x7f*\s*?(\*\s*){4}\*/ )
+			{    #skip rewrap if paragraph is a thought break
+				if ($inblock) {
+					if ($enableindent) {
+						$indentblockend = $textwindow->search( '-regex', '--',
+									'^\x7f*[pP\*Ll]\/', $thisblockstart, $end );
+						$indentblockend = $indentblockend || $end;
+						$textwindow->markSet( 'rewrapend', $indentblockend );
+						unless ($offset) { $offset = 0 }
+						( $sr, $sc ) = split /\./, $thisblockstart;
+						( $er, $ec ) = split /\./, $indentblockend;
+						unless ($offset) {
+							$offset = 100;
+							for my $line ( $sr + 1 .. $er - 1 ) {
+								$textline =
+								  $textwindow->get( "$line.0", "$line.end" );
+								if ($textline) {
+									$textwindow->search(
+											'-regexp',
+											'-count' => \$spaces,
+											'--', '^\s+', "$line.0", "$line.end"
+									);
+									unless ($spaces) { $spaces = 0 }
+									if ( $spaces < $offset ) {
+										$offset = $spaces;
+									}
+									$spaces = 0;
+								}
+							}
+							$indent = $indent - $offset;
+						}
+						for my $line ( $sr .. $er - 1 ) {
+							$textline =
+							  $textwindow->get( "$line.0", "$line.end" );
+							next
+							  if (    ( $textline =~ /^\x7f*\/[pP\*Ll]/ )
+								   || ( $textline =~ /^\x7f*[pP\*LlFf]\// ) );
+							if ( $enableindent and $fblock == 0 ) {
+								$textwindow->insert( "$line.0",
+													 ( ' ' x $indent ) )
+								  if ( $indent > 0 );
+								if ( $indent < 0 ) {
+									if (
+										 $textwindow->get( "$line.0",
+											  "$line.@{[abs $indent]}" ) =~ /\S/
+									  )
+									{
+										while (
+											$textwindow->get("$line.0") eq ' ' )
+										{
+											$textwindow->delete("$line.0");
+										}
+									} else {
+										$textwindow->delete( "$line.0",
+													 "$line.@{[abs $indent]}" );
+									}
+								}
+							} else {
+							}
+						}
+						$indent       = 0;
+						$offset       = 0;
+						$enableindent = 0;
+						$poem         = 0;
+						$inblock      = 0;
+					}
+				} else {
+					$selection =~ s/<i>/\x8d/g
+					  ; #convert some characters that will interfere with rewrap
+					$selection =~ s/<\/i>/\x8e/g;
+					$selection =~ s/\[/\x8A/g;
+					$selection =~ s/\]/\x9A/g;
+					$selection =~ s/\(/\x9d/g;
+					$selection =~ s/\)/\x98/g;
+					if ($main::blockwrap) {
+						$rewrapped =
+						  &main::wrapper( $leftmargin,  $firstmargin,
+								   $rightmargin, $selection );
+					} else {    #rewrap the paragraph
+						$rewrapped =
+						  &main::wrapper( $main::lmargin, $main::lmargin, $main::rmargin, $selection );
+					}
+					$rewrapped =~ s/\x8d/<i>/g;     #convert the characters back
+					$rewrapped =~ s/\x8e/<\/i>/g;
+					$rewrapped =~ s/\x8A/\[/g;
+					$rewrapped =~ s/\x9A/\]/g;
+					$rewrapped =~ s/\x98/\)/g;
+					$rewrapped =~ s/\x9d/\(/g;
+					$textwindow->delete( $thisblockstart, $thisblockend )
+					  ;    #delete the original paragraph
+					$textwindow->insert( $thisblockstart, $rewrapped )
+					  ;    #insert the rewrapped paragraph
+					my @endtemp = $textwindow->tagRanges('blockend')
+					  ;    #find the end of the rewrapped text
+					$end = shift @endtemp;
+				}
+			}
+			if ( $selection =~ /^\x7f*[XxFf\$]\//m ) {
+				$inblock      = 0;
+				$indent       = 0;
+				$offset       = 0;
+				$enableindent = 0;
+				$poem         = 0;
+			}
+			if ( $selection =~ /\x7f*#\// ) { $main::blockwrap = 0 }
+			last unless $end;
+			$thisblockstart =
+			  $textwindow->index('rewrapend');    #advance to the next paragraph
+			$lastend = $textwindow->index("$thisblockstart+1c")
+			  ;    #track where the end of the last paragraph was
+			while (1) {
+				$thisblockstart = $textwindow->index("$thisblockstart+1l")
+				  ; #if there are blank lines before the next paragraph, advance past them
+				last
+				  if ( $textwindow->compare( $thisblockstart, '>=', 'end' ) );
+				next
+				  if (
+					   $textwindow->get( $thisblockstart,
+										 "$thisblockstart lineend" ) eq ''
+				  );
+				last;
+			}
+			$main::blockwrap = 0
+			  if $main::operationinterrupt
+			;       #reset blockwrap if rewrap routine is interrupted
+			last if $main::operationinterrupt;    #then quit
+			last
+			  if ( $thisblockstart eq $end )
+			  ;    #quit if next paragrapn starts at end of selection
+			&main::update_indicators();    # update line and page numbers
+		}
+		&main::killstoppop();
+		$main::operationinterrupt = 0;
+		$textwindow->focus;
+		$textwindow->update;
+		$textwindow->Busy( -recurse => 1 );
+		if (@savelist) {            #if there are saved page markers
+
+			while (@savelist) {     #reinsert them
+				$markname = shift @savelist;
+				$markindex =
+				  $textwindow->search( '-regex', '--', '\x7f', '1.0', 'end' );
+				$textwindow->delete($markindex);   #then remove the page markers
+				$textwindow->markSet( $markname, $markindex );
+				$textwindow->markGravity( $markname, 'left' );
+			}
+		}
+		if ( $start eq '1.0' ) {    #reinsert deleted top line if it was removed
+			if ( $toplineblank == 1 ) {    #(kinda half assed but it works)
+				$textwindow->insert( '1.0', "\n" );
+			}
+		}
+		$textwindow->tagRemove( 'blockend', '1.0', 'end' );
+	}
+	while (1) {
+		$thisblockstart =
+		  $textwindow->search( '-regexp', '--', '^[\x7f\s]+$', '1.0', 'end' );
+		last unless $thisblockstart;
+		$textwindow->delete( $thisblockstart, "$thisblockstart lineend" );
+	}
+	$textwindow->see($start);
+	#$lglobal{scanno_hl} = $scannosave;
+	$textwindow->Unbusy( -recurse => 1 );
 }
 
 sub fracconv {
@@ -440,11 +745,11 @@ sub floodfill {
 
 sub indent {
 	&main::saveset();
-	my ($textwindow,$indent,$operationinterrupt) = @_;
+	my ($textwindow,$indent) = @_;
 	#my $indent      = shift;
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
-	$operationinterrupt = 0;
+	$main::operationinterrupt = 0;
 	if ( $range_total == 0 ) {
 		return;
 	} else {
