@@ -32,6 +32,7 @@ use Cwd;
 use Encode;
 use FileHandle;
 use File::Basename;
+use File::Spec::Functions qw(rel2abs);
 use File::Temp qw/tempfile/;
 use File::Copy;
 use HTML::TokeParser;
@@ -110,14 +111,10 @@ our $globalspelldictopt     = q{};
 our $globalspellpath        = q{};
 our $globalviewerpath       = q{};
 our $globalprojectdirectory = q{};
-
-# In the next release version, provide default paths for each OS
-our $gutpath         = 'C:\dp\gutcheck\gutcheck.exe';
 our $highlightcolor  = '#a08dfc';
 our $history_size    = 20;
 our $italic_char     = "_";
 our $jeebiesmode     = 'p';
-our $jeebiespath     = 'C:\dp\tools\jeebies\jeebies.exe';
 our $lmargin         = 1;
 our $markupthreshold = 4;
 our $nobell          = 0;
@@ -138,15 +135,18 @@ our $singleterm       = 1;
 our $spellindexbkmrk  = q{};
 our $stayontop        = 0;
 our $suspectindex;
-our $tidycommand        = 'C:\dp\tools\tidy\tidy.exe';
-our $validatecommand    = 'C:\dp\tools\W3CVAL~1\onsgmls.exe';
-our $validatecsscommand = 'C:\dp\tools\W3CVAL~1\CSS-VA~1.JAR';
 our $toolside           = 'bottom';
 our $utffontname        = 'Courier New';
 our $utffontsize        = 14;
 our $vislnnm            = 0;
 our $w3cremote          = 0;
 our $window_title       = $APP_NAME . '-' . $VERSION;
+# In the next release version, provide default paths for each OS
+our $gutpath         = 'C:\dp\gutcheck\gutcheck.exe';
+our $jeebiespath     = 'C:\dp\tools\jeebies\jeebies.exe';
+our $tidycommand        = 'C:\dp\tools\tidy\tidy.exe';
+our $validatecommand    = 'C:\dp\tools\W3CVAL~1\onsgmls.exe';
+our $validatecsscommand = 'C:\dp\tools\W3CVAL~1\CSS-VA~1.JAR';
 
 our %gc;
 our %jeeb;
@@ -6563,26 +6563,13 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 			}
 		} else {
 			if ( $errorchecktype eq 'W3C Validate Remote' ) {
-
-				#print 'Starting remote validate';
 				my $validator =
 				  WebService::Validator::HTML::W3C->new( detailed => 1 );
 				if ( $validator->validate_file('./validate.html') ) {
-
-					#print 'Validate 1';
 					if ( open my $td, '>', "errors.err" ) {
-
-						#print 'Validate 2';
 						if ( $validator->is_valid ) {
-
-							#print 'Validate 2.1';
-							#print $td (" ");
 						} else {
-
-							#print 'Validate 2.2';
 							foreach my $error ( @{ $validator->errors } ) {
-
-								#print 'Validate 2.3';
 								printf $td (
 										  "W3C:validate.tmp:%s:%s:Eremote:%s\n",
 										  $error->line, $error->col, $error->msg
@@ -6593,11 +6580,7 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 						close $td;
 					}
 				} else {
-
-					#print 'Validate 3';
 					if ( open my $td, '>', "errors.err" ) {
-
-						#print 'Validate 4';
 						print $td
 'Could not contact remote validator; try using local validator onsgmls.';
 						close $td;
@@ -6607,8 +6590,6 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 				if ( $errorchecktype eq 'W3C Validate CSS' ) {
 					my $validatecsspath = dirname($validatecsscommand);
 					my $pwd             = getcwd;
-
-					#print "running css";
 					system(
 qq/java -jar $validatecsscommand file:$pwd\/$name > errors.err/ );
 				}
@@ -8882,6 +8863,8 @@ sub initialize {
 			close $file;
 		}
 	}
+	$lglobal{guigutsdirectory}=dirname(rel2abs($0)) unless defined $lglobal{guigutsdirectory};
+	
 
 	%{ $lglobal{utfblocks} } = (
 		'Alphabetic Presentation Forms' => [ 'FB00', 'FB4F' ],
