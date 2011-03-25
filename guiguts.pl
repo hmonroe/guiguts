@@ -3231,7 +3231,7 @@ sub regedit {
 	)->pack;
 	my $regreplacelabel =
 	  $editor->add( 'Label', -text => 'Replacement Term' )->pack;
-	$lglobal{regsearch} = $editor->add(
+	$lglobal{regreplace} = $editor->add(
 										'Text',
 										-background => 'white',
 										-width      => 40,
@@ -3279,7 +3279,7 @@ sub regedit {
 									$lglobal{searchentry}->get( '1.0', '1.end' )
 								 )
 	) if $lglobal{searchentry}->get( '1.0', '1.end' );
-	$lglobal{regsearch}->insert(
+	$lglobal{regreplace}->insert(
 								 'end',
 								 (
 									$lglobal{replaceentry}
@@ -3339,10 +3339,10 @@ sub regload {
 	my $word = '';
 	$word = $lglobal{scannosarray}[ $lglobal{scannosindex} ];
 	$lglobal{regsearch}->delete( '1.0', 'end' );
-	$lglobal{regsearch}->delete( '1.0', 'end' );
+	$lglobal{regreplace}->delete( '1.0', 'end' );
 	$lglobal{reghinted}->delete( '1.0', 'end' );
 	$lglobal{regsearch}->insert( 'end', $word ) if defined $word;
-	$lglobal{regsearch}->insert( 'end', $scannoslist{$word} )
+	$lglobal{regreplace}->insert( 'end', $scannoslist{$word} )
 	  if defined $word;
 	$lglobal{reghinted}->insert( 'end', $reghints{$word} ) if defined $word;
 }
