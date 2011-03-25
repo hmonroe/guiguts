@@ -1947,8 +1947,9 @@ sub buildmenu {
 						  }
 						  $tidycommand =
 							$textwindow->getOpenFile(
-									   -filetypes => $types,
-									   -title => 'Where is the Tidy executable?'
+									-filetypes => $types,
+									-initialdir => dirname($tidycommand),
+									-title => 'Where is the Tidy executable?'
 							);
 						  return unless $tidycommand;
 						  $tidycommand = os_normal($tidycommand);
@@ -1970,11 +1971,36 @@ sub buildmenu {
 						  $validatecommand =
 							$textwindow->getOpenFile(
 							  -filetypes => $types,
+							  -initialdir => dirname($validatecommand),
 							  -title =>
 'Where is the W3C Validate (onsgmls) executable?'
 							);
 						  return unless $validatecommand;
 						  $validatecommand = os_normal($validatecommand);
+						  saveset();
+						}
+				   ],
+				   [
+					  Button   => 'Locate W3C CSS Validator (css-validator.jar) Executable',
+					  -command => sub {
+						  my $types;
+						  if ($OS_WIN) {
+							  $types = [
+										 [ 'Executable', [ '.jar', ] ],
+										 [ 'All Files',  ['*'] ],
+							  ];
+						  } else {
+							  $types = [ [ 'All Files', ['*'] ] ];
+						  }
+						  $validatecsscommand =
+							$textwindow->getOpenFile(
+							  -filetypes => $types,
+							  -initialdir => dirname($validatecsscommand),
+							  -title =>
+'Where is the W3C CSS Validator (css-validator.jar) executable?'
+							);
+						  return unless $validatecsscommand;
+						  $validatecsscommand = os_normal($validatecsscommand);
 						  saveset();
 						}
 				   ],
@@ -8866,15 +8892,15 @@ sub initialize {
 	}
 	if ($OS_WIN) {
 		$lglobal{guigutsdirectory}=dirname(rel2abs($0)) unless defined $lglobal{guigutsdirectory};
-		print $gutpath=catfile($lglobal{guigutsdirectory},'tools','gutcheck','gutcheck.exe') 
+		$gutpath=catfile($lglobal{guigutsdirectory},'tools','gutcheck','gutcheck.exe') 
 			unless $gutpath;
-		print $jeebiespath=catfile($lglobal{guigutsdirectory},'tools','jeebies','jeebies.exe') 
+		$jeebiespath=catfile($lglobal{guigutsdirectory},'tools','jeebies','jeebies.exe') 
 			unless $jeebiespath;
-		print $tidycommand=catfile($lglobal{guigutsdirectory},'tools','tidy','tidy.exe') 
+		$tidycommand=catfile($lglobal{guigutsdirectory},'tools','tidy','tidy.exe') 
 			unless $tidycommand;
-		print $validatecommand=catfile($lglobal{guigutsdirectory},'tools','W3C','onsgmls.exe') 
+		$validatecommand=catfile($lglobal{guigutsdirectory},'tools','W3C','onsgmls.exe') 
 			unless $validatecommand;
-		print $validatecsscommand=catfile($lglobal{guigutsdirectory},'tools','W3C','css-validator.jar') 
+		$validatecsscommand=catfile($lglobal{guigutsdirectory},'tools','W3C','css-validator.jar') 
 			unless $validatecsscommand;
 	}
 	%{ $lglobal{utfblocks} } = (
