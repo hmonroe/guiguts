@@ -73,6 +73,7 @@ use Guiguts::Greekgifs;
 use Guiguts::HTMLConvert;
 use Guiguts::TextProcessingMenu;
 use Guiguts::SelectionMenu;
+use Guiguts::BookmarksMenu;
 
 # Ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
@@ -1490,19 +1491,58 @@ sub search_menuitems {
 
 sub bookmarks_menuitems {
 	[
-	   map ( [
-				Button       => "Set Bookmark $_",
-				-command     => [ \&setbookmark, $_ ],
-				-accelerator => "Ctrl+Shift+$_"
+	   [
+				Button       => "Set Bookmark 1",
+				-command     => [ sub {setbookmark ($textwindow,1) }],
+				-accelerator => "Ctrl+Shift+1"
 			 ],
-			 ( 1 .. 5 ) ),
+	   [
+				Button       => "Set Bookmark 2",
+				-command     => [ sub {setbookmark ($textwindow,2) }],
+				-accelerator => "Ctrl+Shift+2"
+			 ],
+	   [
+				Button       => "Set Bookmark 3",
+				-command     => [ sub {setbookmark ($textwindow,3) }],
+				-accelerator => "Ctrl+Shift+3"
+			 ],
+	   [
+				Button       => "Set Bookmark 4",
+				-command     => [ sub {setbookmark ($textwindow,4) }],
+				-accelerator => "Ctrl+Shift+4"
+			 ],
+	   [
+				Button       => "Set Bookmark 5",
+				-command     => [ sub {setbookmark ($textwindow,5) }],
+				-accelerator => "Ctrl+Shift+5"
+			 ],
+		,
 	   [ 'separator', '' ],
-	   map ( [
-				Button       => "Go To Bookmark $_",
-				-command     => [ \&gotobookmark, $_ ],
-				-accelerator => "Ctrl+$_"
+	    [
+				Button       => "Go To Bookmark 1",
+				-command     => [ sub {gotobookmark($textwindow,1)} ],
+				-accelerator => "Ctrl+1"
 			 ],
-			 ( 1 .. 5 ) ),
+	    [
+				Button       => "Go To Bookmark 2",
+				-command     => [ sub {gotobookmark($textwindow,2)} ],
+				-accelerator => "Ctrl+2"
+			 ],
+	    [
+				Button       => "Go To Bookmark 3",
+				-command     => [ sub {gotobookmark($textwindow,3)} ],
+				-accelerator => "Ctrl+3"
+			 ],
+	    [
+				Button       => "Go To Bookmark 4",
+				-command     => [ sub {gotobookmark($textwindow,4)} ],
+				-accelerator => "Ctrl+4"
+			 ],
+	    [
+				Button       => "Go To Bookmark 5",
+				-command     => [ sub {gotobookmark($textwindow,5)} ],
+				-accelerator => "Ctrl+5"
+			 ]
 	];
 }
 
@@ -9381,25 +9421,25 @@ sub textbindings {
 		}
 	);
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-Shift-exclam>' => sub { setbookmark('1') } );
+					   '<Control-Shift-exclam>' => sub { setbookmark($textwindow,'1') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-Shift-at>' => sub { setbookmark('2') } );
+					   '<Control-Shift-at>' => sub { setbookmark($textwindow,'2') } );
 	$textwindow->bind( 'TextUnicode',
-					 '<Control-Shift-numbersign>' => sub { setbookmark('3') } );
+					 '<Control-Shift-numbersign>' => sub { setbookmark($textwindow,'3') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-Shift-dollar>' => sub { setbookmark('4') } );
+					   '<Control-Shift-dollar>' => sub { setbookmark($textwindow,'4') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-Shift-percent>' => sub { setbookmark('5') } );
+					   '<Control-Shift-percent>' => sub { setbookmark($textwindow,'5') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-KeyPress-1>' => sub { gotobookmark('1') } );
+					   '<Control-KeyPress-1>' => sub { gotobookmark($textwindow,'1') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-KeyPress-2>' => sub { gotobookmark('2') } );
+					   '<Control-KeyPress-2>' => sub { gotobookmark($textwindow,'2') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-KeyPress-3>' => sub { gotobookmark('3') } );
+					   '<Control-KeyPress-3>' => sub { gotobookmark($textwindow,'3') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-KeyPress-4>' => sub { gotobookmark('4') } );
+					   '<Control-KeyPress-4>' => sub { gotobookmark($textwindow,'4') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-KeyPress-5>' => sub { gotobookmark('5') } );
+					   '<Control-KeyPress-5>' => sub { gotobookmark($textwindow,'5') } );
 	$textwindow->bind(
 		'TextUnicode',
 		'<Alt-Left>' => sub {
@@ -11910,7 +11950,7 @@ sub openfile {    # and open it
 			if ( $bookmarks[$_] ) {
 				$textwindow->markSet( 'insert', $bookmarks[$_] );
 				$textwindow->markSet( "bkmk$_", $bookmarks[$_] );
-				setbookmark($_);
+				setbookmark($textwindow,$_);
 			}
 		}
 		$bookmarks[0] ||= '1.0';
@@ -13474,35 +13514,6 @@ sub hilitepopup {
 }
 
 ### Bookmarks
-
-sub setbookmark {
-	my $index    = '';
-	my $indexb   = '';
-	my $bookmark = shift;
-	if ( $bookmarks[$bookmark] ) {
-		$indexb = $textwindow->index("bkmk$bookmark");
-	}
-	$index = $textwindow->index('insert');
-	if ( $bookmarks[$bookmark] ) {
-		$textwindow->tagRemove( 'bkmk', $indexb, "$indexb+1c" );
-	}
-	if ( $index ne $indexb ) {
-		$textwindow->markSet( "bkmk$bookmark", $index );
-	}
-	$bookmarks[$bookmark] = $index;
-	$textwindow->tagAdd( 'bkmk', $index, "$index+1c" );
-}
-
-sub gotobookmark {
-	my $bookmark = shift;
-	$textwindow->bell unless ( $bookmarks[$bookmark] || $nobell );
-	$textwindow->see("bkmk$bookmark") if $bookmarks[$bookmark];
-	$textwindow->markSet( 'insert', "bkmk$bookmark" )
-	  if $bookmarks[$bookmark];
-	update_indicators();
-	$textwindow->tagAdd( 'bkmk', "bkmk$bookmark", "bkmk$bookmark+1c" )
-	  if $bookmarks[$bookmark];
-}
 
 ### Selection
 
