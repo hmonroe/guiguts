@@ -997,7 +997,6 @@ sub file_close {
 	return if ( confirmempty() =~ m{cancel}i );
 	clearvars();
 	update_indicators();
-
 }
 
 sub file_include {    # FIXME: Should include even if no file loaded.
