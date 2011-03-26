@@ -70,10 +70,11 @@ use Tk::widgets qw{Balloon
 use Guiguts::LineNumberText;
 use Guiguts::TextUnicode;
 use Guiguts::Greekgifs;
-use Guiguts::HTMLConvert;
-use Guiguts::TextProcessingMenu;
+use Guiguts::SearchReplaceMenu;
 use Guiguts::SelectionMenu;
 use Guiguts::BookmarksMenu;
+use Guiguts::TextProcessingMenu;
+use Guiguts::HTMLConvert;
 
 # Ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
@@ -3208,19 +3209,6 @@ sub arabic {
 		$arabic += ( $last_digit = $roman2arabic{$_} );
 	}
 	return $arabic;
-}
-
-sub add_search_history {
-	my ( $widget, $history_array_ref ) = @_;
-	my @temparray = @$history_array_ref;
-	@$history_array_ref = ();
-	my $term = $widget->get( '1.0', '1.end' );
-	push @$history_array_ref, $term;
-	for (@temparray) {
-		next if $_ eq $term;
-		push @$history_array_ref, $_;
-		last if @$history_array_ref >= $history_size;
-	}
 }
 
 sub search_history {
@@ -12107,7 +12095,7 @@ sub searchpopup {
 		$lglobal{searchbutton} = $sf11->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				add_search_history( $lglobal{searchentry}, \@search_history );
+				add_search_history( $lglobal{searchentry}, \@search_history,$history_size );
 				searchtext('');
 			},
 			-text  => 'Search',
@@ -12255,7 +12243,7 @@ sub searchpopup {
 			-activebackground => $activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
-				add_search_history( $lglobal{searchentry}, \@search_history );
+				add_search_history( $lglobal{searchentry}, \@search_history,$history_size );
 				searchtext('');
 			},
 			-text  => 'R & S',
@@ -12270,7 +12258,7 @@ sub searchpopup {
 			-activebackground => $activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
-				add_search_history( $lglobal{replaceentry}, \@replace_history );
+				add_search_history( $lglobal{replaceentry}, \@replace_history ,$history_size);
 			},
 			-text  => 'Replace',
 			-width => 6
