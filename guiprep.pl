@@ -5219,16 +5219,23 @@ sub BindMouseWheel{
 	}
 } # end BindMouseWheel
 
+
 sub runner{
 	my $args;
 	$args = join ' ', @_;
 	if ($^O =~ /Win/) {
 		$args = '"'.$args.'"';
-	}else{
-		$args .= ' &';
+        	system "perl spawn.pl $args";
+      #windows might not need spawn.pl if something like the next line 
+      # works, but I don't have Win to test it:
+                system("START $args");
+      
+	}else{ 
+# at least in linux, don't need to use spawn.pl
+		$args .= ' &';   
+                system($args);
 	}
-	system "perl spawn.pl $args";
-}
+     }
 
 sub fromgreektr{
 	my $phrase = shift;
