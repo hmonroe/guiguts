@@ -6464,7 +6464,6 @@ sub errorcheckpop_up {
 				 or ( $errorchecktype eq "W3C Validate Remote" ) )
 			{
 				$line =~ s/^.*:(\d+:\d+)/line $1/;
-				
 				$errors{$line} = '';
 				$lincol = '';
 				if ( $line =~ /line (\d+):(\d+):/ ) {
