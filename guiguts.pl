@@ -6464,10 +6464,11 @@ sub errorcheckpop_up {
 				 or ( $errorchecktype eq "W3C Validate Remote" ) )
 			{
 				$line =~ s/^.*:(\d+:\d+)/line $1/;
-				push @errorchecklines, $line;
+				
 				$errors{$line} = '';
 				$lincol = '';
-				if ( $line =~ /line (\d+):(\d+)/ ) {
+				if ( $line =~ /line (\d+):(\d+):/ ) {
+					push @errorchecklines, $line;
 					$lincol = "$1.$2";
 					$lincol =~ s/\.0/\.1/;    # change column zero to column 1
 					$mark++;
