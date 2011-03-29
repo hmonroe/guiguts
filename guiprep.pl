@@ -5225,7 +5225,7 @@ sub runner{
 	$args = join ' ', @_;
 	if ($^O =~ /Win/) {
 		$args = '"'.$args.'"';
-        	system "perl spawn.pl $args";
+      #  	system "perl spawn.pl $args";
       #windows might not need spawn.pl if something like the next line 
       # works, but I don't have Win to test it:
                 system("START $args");
