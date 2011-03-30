@@ -11553,10 +11553,10 @@ sub spellchecknext {
 	  ;                           # get a list of guesses for the misspelling
 	spellshow_guesses();          # and put them in the guess list
 	update_indicators();          # update the status bar
+	if ($#{$lglobal{misspelledlist}}) { $globalspelldictopt= '<default>'}
 	$lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
-						  . ( $globalspelldictopt || '<default>' )
+						  . ( $globalspelldictopt || 'No dictionary!' ) 
 						  . " | $#{$lglobal{misspelledlist}} words to check." );
-
 	if ( scalar( $lglobal{seen} ) ) {
 		my $spell_count_case = 0;
 		my $hyphen_count     = 0;
@@ -11805,7 +11805,7 @@ sub spellget_misspellings {    # get list of misspelled words
 						  . " | $#{$lglobal{misspelledlist}} words to check." );
 	} else {
 		$lglobal{spellpopup}->configure(  -title => 'Current Dictionary - '
-										. ( $globalspelldictopt || '<default>' )
+										. ( $globalspelldictopt || 'No dictionary!' )
 										. ' | No Misspelled Words Found.' );
 	}
 	$top->Unbusy( -recurse => 0 );    # done processing
@@ -12691,7 +12691,7 @@ sub spellchecker {                  # Set up spell check window
 		$lglobal{spellpopup} = $top->Toplevel;
 		$lglobal{spellpopup}
 		  ->title(    'Current Dictionary - ' . $globalspelldictopt
-				   || '<default>' );
+				   || 'No dictionary!' );
 		my $spf1 =
 		  $lglobal{spellpopup}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
@@ -16580,7 +16580,7 @@ sub spelloptions {
 	)->pack;
 	$spelldictxt->delete( '1.0', 'end' );
 	$spelldictxt->insert( '1.0', $globalspelldictopt );
-	$dictlist->insert( 'end', "<default>" );
+	#$dictlist->insert( 'end', "No dictionary!" );
 
 	if ($globalspellpath) {
 		$OS_WIN
@@ -16602,7 +16602,7 @@ sub spelloptions {
 			my $selection = $dictlist->get('active');
 			$spelldictxt->delete( '1.0', 'end' );
 			$spelldictxt->insert( '1.0', $selection );
-			$selection = '' if $selection eq "<default>";
+			$selection = '' if $selection eq "No dictionary!";
 			$globalspelldictopt = $selection;
 			saveset();
 			aspellstart();
