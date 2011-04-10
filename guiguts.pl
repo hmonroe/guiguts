@@ -11557,7 +11557,8 @@ sub spellchecknext {
 	  ;                           # get a list of guesses for the misspelling
 	spellshow_guesses();          # and put them in the guess list
 	update_indicators();          # update the status bar
-	if ($#{$lglobal{misspelledlist}}) { $globalspelldictopt= '<default>'}
+	#Katt--causes loss of spell dictionary. commenting out for now
+	# if ($#{$lglobal{misspelledlist}}) { $globalspelldictopt= '<default>'}
 	$lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
 						  . ( $globalspelldictopt || 'No dictionary!' ) 
 						  . " | $#{$lglobal{misspelledlist}} words to check." );
@@ -11745,6 +11746,7 @@ sub spellguesses {    #feed aspell a word to get a list of guess
 	chop $list if substr($list,length($list)-1,1) eq "\r";     # if chomp didn't take care of both \r and \n in Windows...
 	@{ $lglobal{guesslist} } =
 	  ( split /, /, $list );    # split the words into an array
+	$list = <IN>;               # throw away extra newline
 	$textwindow->Unbusy;        # done processing
 }
 
