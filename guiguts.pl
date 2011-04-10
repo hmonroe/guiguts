@@ -167,7 +167,7 @@ our @pageindex;
 our @recentfile;
 our @replace_history;
 our @search_history;
-our @sopt = ( 1, 0, 0, 0 );
+our @sopt = ( 1, 0, 0, 0, 0 );
 our @extops = (
 		  {
 			'label'   => 'W3C Markup Validation Service',
@@ -1004,7 +1004,7 @@ sub file_close {
 sub file_include {    # FIXME: Should include even if no file loaded.
 	my ($name);
 	my $types = [
-				  [ 'Text Files', [ '.txt', '.text', '.ggp', 'htm', 'html' ] ],
+				  [ 'Text Files', [ '.txt', '.text', '.ggp', '.htm', '.html', '.rst' ] ],
 				  [ 'All Files', ['*'] ],
 	];
 	return if $lglobal{global_filename} =~ m{No File Loaded};
@@ -5249,6 +5249,7 @@ sub linkcheck {
 			return unless ( $lglobal{linkchkbox}->curselection );
 			my @savesets = @sopt;
 			searchoptset(qw/0 x x 0/);
+			searchfromstartifnew($sword);
 			searchtext($sword);
 			searchoptset(@savesets);
 			$top->raise;
@@ -7031,8 +7032,9 @@ sub gcview {
 		$textwindow->see( $gc{$line} );
 		$textwindow->markSet( 'insert', $gc{$line} );
 
-# Highlight pretty close to GC error (2 chars before just in case error is at end of line)
-		$textwindow->tagAdd( 'highlight',
+		# Highlight pretty close to GC error (2 chars before just in case error is at end of line)
+		$textwindow->tagAdd(
+							 'highlight',
 							 $gc{$line} . "- 2c",
 							 $gc{$line} . " lineend" );
 		update_indicators();
@@ -7360,6 +7362,14 @@ sub ital_adjust {
 	$markuppop->Icon( -image => $icon );
 }
 
+# Reset search from start of doc if new search term
+sub searchfromstartifnew {
+  my $new_term = shift;
+  if ( $new_term ne $lglobal{lastsearchterm} ) {
+      searchoptset(qw/x x x x 1/);
+  }
+}
+
 sub searchoptset {
 	my @opt       = @_;
 	my $opt_count = @opt;
@@ -7476,6 +7486,7 @@ sub harmonicspop {
 					searchoptset(qw/0 x x 1/);
 					$sword = "(?<=-)$sword|$sword(?=-)";
 				}
+				searchfromstartifnew($sword);
 				searchtext($sword);
 				searchoptset(@savesets);
 				$geometry3 = $lglobal{hpopup}->geometry;
@@ -7634,25 +7645,17 @@ sub commark {
 	if ($intelligentWF) {
 
 		# Skip if pattern is: . Hello, John
-		$wholefile =~
-s/([\.\?\!]['"]*[\n\s]['"]*\p{Upper}\p{Alnum}*),([\n\s]['"]*\p{Upper})/$1 $2/g;
+		$wholefile =~ s/([\.\?\!]['"]*[\n\s]['"]*\p{Upper}\p{Alnum}*),([\n\s]['"]*\p{Upper})/$1 $2/g;
 
 		# Skip if pattern is: \n\nHello, John
-		$wholefile =~
-		  s/(\n\n *['"]*\p{Upper}\p{Alnum}*),( ['"]*\p{Upper})/$1 $2/g;
+		$wholefile =~ s/(\n\n *['"]*\p{Upper}\p{Alnum}*),( ['"]*\p{Upper})/$1 $2/g;
 	}
-	while (
-		   $wholefile =~ m/,(['"]*\n*\s*['"]*\p{Upper}\p{Alnum}*)([\.\?\!]?)/g )
-	{
+	while ( $wholefile =~ m/,(['"]*\n*\s*['"]*\p{Upper}\p{Alnum}*)([\.\?\!]?)/g ) {
 		my $word = $1;
-		next
-		  if $intelligentWF
-			  && $2
-			  && $2 ne '';    # ignore if word followed by period, !, or ?
+		next if $intelligentWF && $2 && $2 ne '';  # ignore if word followed by period, !, or ?
 		$wordw++;
 
-		if ( $wordw == 0 ) {
-
+		if ($wordw == 0) {
 			# FIXME: think this code DOESN'T WORK. skipping
 			$word =~ s/<\/?[bidhscalup].*?>//g;
 			$word =~ s/(\p{Alnum})'(\p{Alnum})/$1PQzJ$2/g;
@@ -10606,7 +10609,8 @@ EOM
 			qw/activecolor auto_page_marks autobackup autosave autosaveinterval blocklmargin blockrmargin
 			defaultindent fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
 			highlightcolor history_size jeebiesmode lmargin nobell nohighlights notoolbar rmargin
-			rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm w3cremote italic_char bold_char/
+			rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm w3cremote
+      intelligentWF italic_char bold_char/
 		  )
 		{
 			if ( eval '$' . $_ ) {
@@ -11738,10 +11742,9 @@ sub spellguesses {    #feed aspell a word to get a list of guess
 	  s/.*\: //;    # remove incidental stuff (word, index, number of guesses)
 	$list =~ s/\#.*0/\*none\*/;    # oops, no guesses, put a notice in.
 	chomp $list;    # remove newline
-	chop $list;     # and something else that listbox doesn't like
+	chop $list if substr($list,length($list)-1,1) eq "\r";     # if chomp didn't take care of both \r and \n in Windows...
 	@{ $lglobal{guesslist} } =
 	  ( split /, /, $list );    # split the words into an array
-	$list = <IN>;               # throw away extra newline
 	$textwindow->Unbusy;        # done processing
 }
 
@@ -11868,7 +11871,7 @@ sub file_open {    # Find a text file to open
 	my ($name);
 	return if ( confirmempty() =~ /cancel/i );
 	my $types = [
-				  [ 'Text Files', [qw/.txt .text .ggp .htm .html .bk1 .bk2/] ],
+				  [ 'Text Files', [qw/.txt .text .ggp .htm .html .rst .bk1 .bk2/] ],
 				  [ 'All Files',  ['*'] ],
 	];
 	$name = $textwindow->getOpenFile(
@@ -12722,6 +12725,7 @@ sub spellchecker {                  # Set up spell check window
 							  -scrollbars => 'osoe',
 							  -font       => $lglobal{font},
 							  -width      => 40,
+							  -height     => 4,
 		  )->pack( -side => 'top', -anchor => 'n', -padx => 6, -pady => 6 );
 		my $spf2 =
 		  $lglobal{spellpopup}
@@ -13896,6 +13900,7 @@ sub wordcount {
 						$sword = "(?<=-)$sword|$sword(?=-)";
 					}
 				}
+				searchfromstartifnew($sword);
 				searchtext($sword);
 				searchoptset(@savesets);
 				$top->raise;
@@ -14342,8 +14347,7 @@ sub fixup {
 				$edited++ if $line =~ s/^lst/1st/;
 			}
 			if ( ${ $lglobal{fixopt} }[1] ) {
-
- # Remove spaces before hyphen (only if hyphen isn't first on line, like poetry)
+				# Remove spaces before hyphen (only if hyphen isn't first on line, like poetry)
 				$edited++ if $line =~ s/(\S) +-/$1-/g;
 				$edited++ if $line =~ s/- /-/g;    # Remove space after hyphen
 				$edited++
@@ -14351,8 +14355,7 @@ sub fixup {
 				; # Except leave a space after a string of three or more hyphens
 			}
 			if ( ${ $lglobal{fixopt} }[2] ) {
-
-# Remove space before periods (only if not first on line, like poetry's ellipses)
+				# Remove space before periods (only if not first on line, like poetry's ellipses)
 				$edited++ if $line =~ s/(\S) +\.(?=\D)/$1\./g;
 			}
 			;     # Get rid of space before periods
