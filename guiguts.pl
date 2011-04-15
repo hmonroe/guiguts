@@ -11557,8 +11557,6 @@ sub spellchecknext {
 	  ;                           # get a list of guesses for the misspelling
 	spellshow_guesses();          # and put them in the guess list
 	update_indicators();          # update the status bar
-	#Katt--causes loss of spell dictionary. commenting out for now
-	# if ($#{$lglobal{misspelledlist}}) { $globalspelldictopt= '<default>'}
 	$lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
 						  . ( $globalspelldictopt || 'No dictionary!' ) 
 						  . " | $#{$lglobal{misspelledlist}} words to check." );
