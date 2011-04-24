@@ -83,7 +83,7 @@ $SIG{INT} = sub { _exit() };
 
 ### Constants
 my $OS_WIN          = $^O =~ m{Win};
-my $VERSION         = '0.4.02';
+my $VERSION         = '0.2.7'; #0.4.02';
 my $APP_NAME        = 'GuiGuts';
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
@@ -2241,7 +2241,7 @@ sub buildmenu {
 			],
 
 			# FIXME: Disable update check until it works
-			#[ Button => 'Check For ~Updates',     -command => \&checkver ],
+			[ Button => 'Check For ~Updates',     -command => \&checkver ],
 			[ Button => '~Hot keys',              -command => \&hotkeyshelp ],
 			[ Button => '~Function History',      -command => \&opspop_up ],
 			[ Button => '~Greek Transliteration', -command => \&greekpopup ],
@@ -16895,46 +16895,47 @@ END
 
 # Check to see if this is the most recent version
 # FIXME: Doesn't work.
-# sub checkver {
-#     my ( $dbox, $answer );
-#     my $ua = LWP::UserAgent->new(
-#         env_proxy  => 1,
-#         keep_alive => 1,
-#         timeout    => 30,
-#     );
-#     my $response = $ua->get('http://guiguts.sourceforge.net/ggversion.txt');
-#     unless ( $response->content ) {
-#         $dbox = $top->Dialog(
-#             -text =>
-#                 'Could not check for updates, unable to connect to server.',
-#             -bitmap  => 'error',
-#             -title   => 'Could not connect.',
-#             -buttons => ['Ok']
-#         );
-#         $dbox->Show;
-#         return;
-#     }
-#     if ( $response->content gt $VERSION ) {
-#         print $response->content;
-#         $dbox = $top->Dialog(
-#             -text =>
-#                 "A newer version is available.\nDo you want to go to the home page?",
-#             -title   => 'Newer version available.',
-#             -buttons => [ 'Ok', 'Cancel' ]
-#         );
-#     }
-#     else {
-#         $dbox = $top->Dialog(
-#             -text    => 'This is the most current version.',
-#             -title   => 'Up to date.',
-#             -buttons => ['Cancel']
-#         );
-#     }
-#     $answer = $dbox->Show;
-#     if ( $answer =~ /ok/i ) {
-#         runner("$globalbrowserstart http://guiguts.sourceforge.net/");
-#     }
-# }
+ sub checkver {
+     my ( $dbox, $answer );
+     my $ua = LWP::UserAgent->new(
+         env_proxy  => 1,
+         keep_alive => 1,
+         timeout    => 30,
+     );
+     my $response = $ua->get('http://guiguts.sourceforge.net/ggversion.txt');
+     unless ( $response->content ) {
+         $dbox = $top->Dialog(
+             -text =>
+                 'Could not check for updates, unable to connect to server.',
+             -bitmap  => 'error',
+             -title   => 'Could not connect.',
+             -buttons => ['Ok']
+         );
+         $dbox->Show;
+         return;
+     }
+     print $response->content;
+     if ( $response->content gt "\"$VERSION\"" ) {
+         print $response->content;
+         $dbox = $top->Dialog(
+             -text =>
+                 "A newer version is available.\nDo you want to go to the home page?",
+             -title   => 'Newer version available.',
+             -buttons => [ 'Ok', 'Cancel' ]
+         );
+     }
+     else {
+         $dbox = $top->Dialog(
+             -text    => 'This is the most current version.',
+             -title   => 'Up to date.',
+             -buttons => ['Cancel']
+         );
+     }
+     $answer = $dbox->Show;
+     if ( $answer =~ /ok/i ) {
+         runner("$globalbrowserstart http://sourceforge.net/projects/guiguts/");
+     }
+ }
 
 sub hotkeyshelp {
 	if ( defined( $lglobal{hotpop} ) ) {
