@@ -1600,7 +1600,7 @@ sub selection_menuitems {
 		  Button   => '~Rewrap Selection',
 		  -command => sub {
 			  $textwindow->addGlobStart;
-			  selectrewrap($textwindow,$lglobal{seepagenums},$lglobal{scanno_hl});
+			  selectrewrap($textwindow,$lglobal{seepagenums},$lglobal{scanno_hl}, $rwhyphenspace);
 			  $textwindow->addGlobEnd;
 			}
 	   ],
@@ -2484,7 +2484,7 @@ sub footnotetidy {
 		$end = $textwindow->index( 'fne' . $lglobal{fnindex} );
 		$textwindow->delete("$end-1c");
 		$textwindow->tagAdd( 'sel', 'fns' . $lglobal{fnindex}, "$end+1c" );
-		selectrewrap($textwindow,$lglobal{seepagenums},$lglobal{scanno_hl});
+		selectrewrap($textwindow,$lglobal{seepagenums},$lglobal{scanno_hl}, $rwhyphenspace);
 		$lglobal{fnindex}++;
 		last if $lglobal{fnindex} > $lglobal{fntotal};
 	}
@@ -8560,7 +8560,7 @@ sub coladjust {
 			my $wrapped =
 			  wrapper( 0, 0,
 					   ( $col[$colindex] - $col[ ( $colindex - 1 ) ] + $dir ),
-					   $templine );
+					   $templine, $rwhyphenspace );
 			push @tblwr, $wrapped;
 		}
 		my $rowcount = 0;
@@ -8725,7 +8725,8 @@ sub grid2step {
 			my $wrapped;
 			$wrapped = wrapper(
 								( $cell * 5 ), ( $cell * 5 ),
-								$lglobal{stepmaxwidth}, $tbl[$row][$_]
+								$lglobal{stepmaxwidth}, $tbl[$row][$_],
+								$rwhyphenspace
 			) if $tbl[$row][$_];
 			$wrapped = " \n" unless $wrapped;
 			my @temparray = split( /\n/, $wrapped );
@@ -8777,7 +8778,7 @@ sub step2grid {
 	$col       = 0;
 	for my $row (@tbl) {
 		for (@$row) {
-			$_ = wrapper( 0, 0, 20, $_ );
+			$_ = wrapper( 0, 0, 20, $_ ,$rwhyphenspace);
 		}
 	}
 	for my $row (@tbl) {
@@ -13511,7 +13512,7 @@ sub hilitepopup {
 
 sub blockrewrap {
 	$blockwrap = 1;
-	selectrewrap($textwindow,$lglobal{seepagenums},$lglobal{scanno_hl});
+	selectrewrap($textwindow,$lglobal{seepagenums},$lglobal{scanno_hl}, $rwhyphenspace);
 	$blockwrap = 0;
 }
 

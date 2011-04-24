@@ -15,6 +15,7 @@ sub wrapper {
 	my $firstmargin = shift;
 	my $rightmargin = shift;
 	my $paragraph   = shift;
+	my $rwhyphenspace = shift;
 	$leftmargin--  if $leftmargin;
 	$firstmargin-- if $firstmargin;
 	$rightmargin++;
@@ -303,10 +304,11 @@ sub selectrewrap {
 					if ($main::blockwrap) {
 						$rewrapped =
 						  &main::wrapper( $leftmargin,  $firstmargin,
-								   $rightmargin, $selection );
+								   $rightmargin, $selection, $rwhyphenspace );
 					} else {    #rewrap the paragraph
 						$rewrapped =
-						  &main::wrapper( $main::lmargin, $main::lmargin, $main::rmargin, $selection );
+						  &main::wrapper( $main::lmargin, $main::lmargin, $main::rmargin, $selection,  
+						  $rwhyphenspace);
 					}
 					$rewrapped =~ s/\x8d/<i>/g;     #convert the characters back
 					$rewrapped =~ s/\x8e/<\/i>/g;
