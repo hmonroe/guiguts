@@ -16914,7 +16914,6 @@ END
          $dbox->Show;
          return;
      }
-     print $response->content;
      if ( $response->content gt "\"$VERSION\"" ) {
          print $response->content;
          $dbox = $top->Dialog(
