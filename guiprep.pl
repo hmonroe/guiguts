@@ -41,17 +41,14 @@ my $currentver = '.41';
 #   Page footers removal subroutine added
 #   merged in these options from rfrank's cpprep:
 #      Remove HTML markup (bold, italic, small caps)
-#      Remove space before 'll
-#      Remove space from I 'm,
-#      Remove space from (s)he 's
-#      Remove space from we 've
-#      Remove space from we 'll
-#      Remove space before n't
-#      Remove space from I 'll
-#      Remove space from I 've
-#      Remove space from I 's
-#      Convert '11 -> 'll
 #      some of the "Spaceyquotes" regexps
+#      Remove space before 'll
+#      Remove space before  'm,
+#      Remove space before  's
+#      Remove space before  've
+#      Remove space before n't
+#      Remove space before 've
+#      Convert '11 -> 'll
 #      mark possible missing spaces between words/sentences
 #  remove footers in batch mode.
 #  mark blank pages after header/footer removal
@@ -108,9 +105,9 @@ our @opt = (
 1,1,1,1,1,1,1,1,0,0,
 0,1,1,1,1,1,1,0,1,0,
 1,0,0,0,0,1,1,1,1,1,
-1,1,1,1,1,1,0,1,1,1,
+1,1,1,1,1,0,1,1,1,1,
 1,1,0,0,1,1,1,0,0,1,
-1,1,1); # 82
+1,1,1,0); # 83
 
 # $opt[0] = Convert multiple spaces to single space.
 # $opt[1] = Remove end of line spaces.
@@ -163,40 +160,39 @@ our @opt = (
 # $opt[48] = Save FTP User & Password
 # $opt[49] = Batch pngcrush
 # $opt[50] = Convert Windows codepage 1252 glyphs 80-9F to Latin1 equivalents
-# $opt[51] = Search case insensitive --now not used
-# $opt[52] = Automatically Remove Headers during batch processing.
-# $opt[53] = Automatically Remove Footers during batch processing
-# $opt[54] = Build a standard upload batch and zip it to the project directory
-# $opt[55] = Convert cb in a word to ch.
-# $opt[56] = Convert gbt in a word to ght.
-# $opt[57] = Convert [ai]hle in a word to [ai]ble.
-# $opt[58] = Convert he to be if it follows to.
-# $opt[59] = Convert \v or \\\\ to w.
-# $opt[60] = Convert double commas to double quote.
-# $opt[61] = Insert cell delimiters, "|" in tables.
-# $opt[62] = Search whole word   --now not used
-# $opt[62] = Strip space after start & before end doublequotes.
-# $opt[63] = Convert cl at the end of a word to d.
-# $opt[64] = Convert pbt in a word to pht.
-# $opt[65] = Convert rnm in a word to mm.
-# $opt[66] = Batch run Englifh function
-# $opt[67] = Extract sub/superscript markup
-# $opt[68] = Convert vv at the beginning of a word to W
-# $opt[69] = Convert !! at the beginning of a word to H
-# $opt[70] = Convert X at the beginning of a word not followed by e to N
-# $opt[71] = Convert ! in the middle of a word to l
-# $opt[72] = Convert '!! to 'll
-# $opt[73] = Use German style hyphens; "="
-# $opt[74] = Convert to ISO 8859-1
-# $opt[75] = Strip garbage punctuation from beginning of line.
-# $opt[76] = Strip garbage punctuation from end of line.
-# $opt[77] = Save files containing hyphenated and dehyphenated words
-# $opt[78] = Extract <sc> </sc> maarkup for small caps
-# $opt[79] = Remove HTML markup
-# $opt[80] = Remove space from words with apostrophes
-# $opt[81] = Convert '11 to 'll and remove any preceding space
-# $opt[82] = despace quotes/mark dubious spaces
-# $opt[83] = mark missing space between words/sentences
+# $opt[51] = Automatically Remove Headers during batch processing.
+# $opt[52] = Automatically Remove Footers during batch processing
+# $opt[53] = Build a standard upload batch and zip it to the project directory
+# $opt[54] = Convert cb in a word to ch.
+# $opt[55] = Convert gbt in a word to ght.
+# $opt[56] = Convert [ai]hle in a word to [ai]ble.
+# $opt[57] = Convert he to be if it follows to.
+# $opt[58] = Convert \v or \\\\ to w.
+# $opt[59] = Convert double commas to double quote.
+# $opt[60] = Insert cell delimiters, "|" in tables.
+# $opt[61] = Strip space after start & before end doublequotes.
+# $opt[62] = Convert cl at the end of a word to d.
+# $opt[63] = Convert pbt in a word to pht.
+# $opt[64] = Convert rnm in a word to mm.
+# $opt[65] = Batch run Englifh function
+# $opt[66] = Extract sub/superscript markup
+# $opt[67] = Convert vv at the beginning of a word to W
+# $opt[68] = Convert !! at the beginning of a word to H
+# $opt[69] = Convert X at the beginning of a word not followed by e to N
+# $opt[70] = Convert ! in the middle of a word to l
+# $opt[71] = Convert '!! to 'll
+# $opt[72] = Use German style hyphens; "="
+# $opt[73] = Convert to ISO 8859-1
+# $opt[74] = Strip garbage punctuation from beginning of line.
+# $opt[75] = Strip garbage punctuation from end of line.
+# $opt[76] = Save files containing hyphenated and dehyphenated words
+# $opt[77] = Extract <sc> </sc> markup for small caps
+# $opt[78] = Remove HTML markup
+# $opt[79] = Remove space from words with apostrophes
+# $opt[80] = Convert '11 to 'll and remove any preceding space
+# $opt[81] = despace quotes/mark dubious spaces
+# $opt[82] = mark missing space between words/sentences
+# $opt[83] = convert period in a number to decimal point
 
 our @searchoption=(0,0,0);
 # searchoption[0] = regular expression
@@ -265,7 +261,7 @@ my $startrnm = 1;
 
 do 'settings.rc';
 
-$opt[78] = 1;
+$opt[77] = 1;
 
 $ftphostname  = 'pgdp.net' if ($ftphostname eq 'pgdp01.archive.org'); # Temporary force change from old server.
 
@@ -395,7 +391,7 @@ my $spellchk = $p1b1f ->Button(
 	-width =>		'17'
 )->grid(-row=>5,-column=>2,-pady => '1');
 my $p2cb31 = $p1b1f->Checkbutton(
-	-variable => 	\$opt[66],
+	-variable => 	\$opt[65],
 	-selectcolor => 'white',
 )->grid(-row=>6,-column=>1,-pady => '1');
 my $spellchk = $p1b1f ->Button(
@@ -413,7 +409,7 @@ my $zero = $p1b1f ->Button(
 	-width =>		'17'
 )->grid(-row=>7,-column=>2,-pady => '1');
 my $p2cb74 = $p1b1f->Checkbutton(
-	-variable => 	\$opt[74],
+	-variable => 	\$opt[73],
 	-selectcolor => 'white',
 )->grid(-row=>8,-column=>1,-pady => '1');
 my $rename = $p1b1f ->Button(
@@ -606,56 +602,56 @@ my $p2cb23 = $p2o4->Checkbutton(
 )->grid(-row=>0, -column =>1 ,-padx => '5', -sticky => 'w');
 
 my $p2cb61 = $p2o4->Checkbutton(
-	-variable => 	\$opt[61],
+	-variable => 	\$opt[60],
 	-selectcolor => 'white',
 	-text =>	'Insert cell delimiters, "|" in tables.',
 )->grid(-row=>0, -column =>2 ,-padx => '5', -sticky => 'w');
 
 
 my $p2cb67 = $p2o4->Checkbutton(
-	-variable => 	\$opt[67],
+	-variable => 	\$opt[66],
 	-selectcolor => 'white',
 	-text =>	'Extract sub/superscript markup',
 )->grid(-row=>1, -column =>1 ,-padx => '5', -sticky => 'w');
 
 my $p2cb73 = $p2o4->Checkbutton(
-	-variable => 	\$opt[73],
+	-variable => 	\$opt[72],
 	-selectcolor => 'white',
 	-text =>	'Dehyphenate using German style hyphens; "="',
-	-command =>	sub{if ($opt[73]){$hyphen = "="}else{$hyphen = "-"}},
+	-command =>	sub{if ($opt[72]){$hyphen = "="}else{$hyphen = "-"}},
 )->grid(-row=>1, -column =>2 ,-padx => '5', -sticky => 'w');
 
 my $p2cb78 = $p2o4->Checkbutton(
-	-variable => 	\$opt[78],
+	-variable => 	\$opt[77],
 	-selectcolor => 'white',
 	-text =>	'Insert small caps markup during RTF extraction',
-	-command =>	sub{if ($opt[73]){$hyphen = "="}else{$hyphen = "-"}},
+	-command =>	sub{if ($opt[72]){$hyphen = "="}else{$hyphen = "-"}},
 )->grid(-row=>2, -column =>1 ,-padx => '5', -sticky => 'w');
 
 my $p2cb77 = $p2o4->Checkbutton(
-	-variable => 	\$opt[77],
+	-variable => 	\$opt[76],
 	-selectcolor => 'white',
 	-text =>	'Save hyphens.txt & dehyphen.txt containing hyphenated and dehyphenated words from the dehyphenate routine.',
-	-command =>	sub{if ($opt[73]){$hyphen = "="}else{$hyphen = "-"}},
+	-command =>	sub{if ($opt[72]){$hyphen = "="}else{$hyphen = "-"}},
 )->grid(-row=>3, -column =>1, -columnspan => 2, -padx => '5', -sticky => 'w');
 
 
 my $batchremove = $p2o4->Checkbutton(
-	-variable => 	\$opt[52],
+	-variable => 	\$opt[51],
 	-selectcolor => 'white',
 	-text =>	"Automatically Remove Headers during batch processing. Be sure you understand the implications before enabling.",
 )->grid(-row=>4, -column =>1, -columnspan => 2, -padx => '5', -sticky => 'w');
 
 
 my $batchremove = $p2o4->Checkbutton(
-	-variable => 	\$opt[53],
+	-variable => 	\$opt[52],
 	-selectcolor => 'white',
 	-text =>	"Automatically Remove Footers during batch processing. Be sure you understand the implications before enabling.",
 )->grid(-row=>5, -column =>1, -columnspan => 2, -padx => '5', -sticky => 'w');
 
 
 my $batchzip = $p2o4->Checkbutton(
-	-variable => 	\$opt[54],
+	-variable => 	\$opt[53],
 	-selectcolor => 'white',
 	-text =>	"Build a standard upload batch and zip it to the project directory during batch processing.",
 )->grid(-row=>6, -column =>1, -columnspan => 2, -padx => '5', -sticky => 'w');
@@ -713,7 +709,7 @@ my $p2cb2 = $p2opts->Checkbutton(
 ++$grow;
 
 my $p2cb60 = $p2opts->Checkbutton(
-	-variable => 	\$opt[60],
+	-variable => 	\$opt[59],
 	-selectcolor => 'white',
 	-text =>	'Convert double commas to double quote.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
@@ -867,7 +863,7 @@ my $p2cb45 = $p2opts->Checkbutton(
 ++$grow;
 
 my $p2cb59 = $p2opts->Checkbutton(
-	-variable => 	\$opt[59],
+	-variable => 	\$opt[58],
 	-selectcolor => 'white',
 	-text =>	'Convert \v or \\\\ to w.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
@@ -949,7 +945,7 @@ my $p2cb43 = $p2opts->Checkbutton(
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
 my $p2cb68 = $p2opts->Checkbutton(
-	-variable => 	\$opt[68],
+	-variable => 	\$opt[67],
 	-selectcolor => 'white',
 	-text =>	'Convert vv at the beginning of a word to w.',
 )->grid(-row => $grow, -column => 2 ,-padx => '5', -sticky => 'w');
@@ -957,13 +953,13 @@ my $p2cb68 = $p2opts->Checkbutton(
 ++$grow;
 
 my $p2cb69 = $p2opts->Checkbutton(
-	-variable => 	\$opt[69],
+	-variable => 	\$opt[68],
 	-selectcolor => 'white',
 	-text =>	'Convert !! at the beginning of a word to H',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
 my $p2cb70 = $p2opts->Checkbutton(
-	-variable => 	\$opt[70],
+	-variable => 	\$opt[69],
 	-selectcolor => 'white',
 	-text =>	'Convert initial X not followed by e to N.',
 )->grid(-row => $grow, -column => 2 ,-padx => '5', -sticky => 'w');
@@ -972,13 +968,13 @@ my $p2cb70 = $p2opts->Checkbutton(
 ++$grow;
 
 my $p2cb71 = $p2opts->Checkbutton(
-	-variable => 	\$opt[71],
+	-variable => 	\$opt[70],
 	-selectcolor => 'white',
 	-text =>	'Convert ! inside a word to l.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
 my $p2cb72 = $p2opts->Checkbutton(
-	-variable => 	\$opt[72],
+	-variable => 	\$opt[71],
 	-selectcolor => 'white',
 	-text =>	'Convert \'!! to \'ll.',
 )->grid(-row => $grow, -column => 2 ,-padx => '5', -sticky => 'w');
@@ -986,13 +982,13 @@ my $p2cb72 = $p2opts->Checkbutton(
 ++$grow;
 
 my $p2cb80 = $p2opts->Checkbutton(
-	-variable => 	\$opt[80],
+	-variable => 	\$opt[79],
 	-selectcolor => 'white',
 	-text =>	'Remove space before  apostrophes.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
 my $p2cb81 = $p2opts->Checkbutton(
-	-variable => 	\$opt[81],
+	-variable => 	\$opt[80],
 	-selectcolor => 'white',
 	-text =>	'Convert \'11 to \'ll.',
 )->grid(-row => $grow, -column => 2 ,-padx => '5', -sticky => 'w');
@@ -1001,14 +997,14 @@ my $p2cb81 = $p2opts->Checkbutton(
 ++$grow;
 
 my $p2cb65 = $p2opts->Checkbutton(
-	-variable => 	\$opt[65],
+	-variable => 	\$opt[64],
 	-selectcolor => 'white',
 	-text =>	'Convert rnm in a word to mm.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
 
 my $p2cb55 = $p2opts->Checkbutton(
-	-variable => 	\$opt[55],
+	-variable => 	\$opt[54],
 	-selectcolor => 'white',
 	-text =>	'Convert cb in a word to ch.',
 )->grid(-row => $grow, -column => 2 ,-padx => '5', -sticky => 'w');
@@ -1016,14 +1012,14 @@ my $p2cb55 = $p2opts->Checkbutton(
 ++$grow;
 
 my $p2cb56 = $p2opts->Checkbutton(
-	-variable => 	\$opt[56],
+	-variable => 	\$opt[55],
 	-selectcolor => 'white',
 	-text =>	'Convert gbt in a word to ght.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
 
 my $p2cb57 = $p2opts->Checkbutton(
-	-variable => 	\$opt[57],
+	-variable => 	\$opt[56],
 	-selectcolor => 'white',
 	-text =>	'Convert [ai]hle in a word to [ai]ble.',
 )->grid(-row => $grow, -column => 2 ,-padx => '5', -sticky => 'w');
@@ -1032,14 +1028,14 @@ my $p2cb57 = $p2opts->Checkbutton(
 
 
 my $p2cb63 = $p2opts->Checkbutton(
-	-variable => 	\$opt[63],
+	-variable => 	\$opt[62],
 	-selectcolor => 'white',
 	-text =>	'Convert cl at the end of a word to d.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
 
 my $p2cb64 = $p2opts->Checkbutton(
-	-variable => 	\$opt[64],
+	-variable => 	\$opt[63],
 	-selectcolor => 'white',
 	-text =>	'Convert pbt in a word to pht.',
 )->grid(-row => $grow, -column => 2 ,-padx => '5', -sticky => 'w');
@@ -1047,7 +1043,7 @@ my $p2cb64 = $p2opts->Checkbutton(
 ++$grow;
 
 my $p2cb58 = $p2opts->Checkbutton(
-	-variable => 	\$opt[58],
+	-variable => 	\$opt[57],
 	-selectcolor => 'white',
 	-text =>	'Convert he to be if it follows to.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
@@ -1064,7 +1060,7 @@ my $p2cb44 = $p2opts->Checkbutton(
 
 
 my $p2cb75 = $p2opts->Checkbutton(
-	-variable => 	\$opt[75],
+	-variable => 	\$opt[74],
 	-selectcolor => 'white',
 	-text =>	'Strip garbage punctuation from beginning of line.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
@@ -1118,7 +1114,7 @@ my $p2cb22 = $p2opts->Checkbutton(
 
 
 my $p2cb79 = $p2opts->Checkbutton(
-	-variable => 	\$opt[79],
+	-variable => 	\$opt[78],
 	-selectcolor => 'white',
 	-text =>	'Remove HTML markup (bold, italics, smallcap).',
 )->grid(-row => $grow, -column => 2 ,-padx => '5', -sticky => 'w');
@@ -1127,17 +1123,23 @@ my $p2cb79 = $p2opts->Checkbutton(
 ++$grow;
 
 my $p2cb82 = $p2opts->Checkbutton(
-	-variable => 	\$opt[82],
+	-variable => 	\$opt[81],
 	-selectcolor => 'white',
 	-text =>	'Tidy up/mark dubious spaced quotes.',
 )->grid(-row => $grow, -column => 2 ,-padx => '5', -sticky => 'w');
 
 
 my $p2cb83 = $p2opts->Checkbutton(
-	-variable => 	\$opt[83],
+	-variable => 	\$opt[82],
 	-selectcolor => 'white',
 	-text =>	'Mark possible missing spaces between word/sentences.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
+
+my $p2cb83 = $p2opts->Checkbutton(
+	-variable => 	\$opt[83],
+	-selectcolor => 'white',
+	-text =>	'Convert period (.) in a number to decimal point (·)',
+)->grid(-row => $grow, -column => 2 ,-padx => '5', -sticky => 'w');
 
 
 ###################################################################################################################################
@@ -2242,11 +2244,11 @@ sub doall{
 	return 0 if $interrupt;
 	splchk() if $opt[31];
 	return 0 if $interrupt;
-	englifh() if $opt[66];
+	englifh() if $opt[65];
 	return 0 if $interrupt;
 	zero() if $opt[33];
 	return 0 if $interrupt;
-	conv() if $opt[74];
+	conv() if $opt[73];
 	pngrename() if $opt[47];
 	return 0 if $interrupt;
 	pngcrush() if $opt[49];
@@ -2375,13 +2377,13 @@ my($i);
 									} else {
 										$curcpg="ascii"
 									}
-				}elsif ($argument eq "sub")     { $sub = 1 if $opt[67];
-				}elsif ($argument eq "super")   { $sup = 1 if $opt[67];
+				}elsif ($argument eq "sub")     { $sub = 1 if $opt[66];
+				}elsif ($argument eq "super")   { $sup = 1 if $opt[66];
 				}elsif ($argument eq "nosupersub")  {
-									print TXTFILE ("}")if ($sub&&$opt[67]);
-									print TXTFILE ("$supclose")if ($sup&&$opt[67]);
+									print TXTFILE ("}")if ($sub&&$opt[66]);
+									print TXTFILE ("$supclose")if ($sup&&$opt[66]);
 									$sub = $sup = 0;
-				}elsif ($argument eq "intbl") { $intable = 1; print TXTFILE ('|')if $opt[61];
+				}elsif ($argument eq "intbl") { $intable = 1; print TXTFILE ('|')if $opt[60];
 				}elsif ($argument eq "row")     { @row=(); print TXTFILE ("\n"); $lastcell = 0;
 				}elsif ($argument eq "cellx")   {
 									push @row, (int(($parameter-$lastcell)/120)+1);
@@ -2424,13 +2426,13 @@ my($i);
 										}
 									}
 				}elsif ($argument eq "scaps" )  { 	if ($parameter eq "0" ){	# Small caps markup
-										if ($capsflag and $opt[78]){
+										if ($capsflag and $opt[77]){
 											print TXTFILE '</sc>';
 											pop @flag;
 										}
 										$capsflag = 0;
 									} else {
-										if ($opt[78]) {
+										if ($opt[77]) {
 											unless($capsflag || $pardflag){
 												print TXTFILE '<sc>';
 												push @flag,'</sc>';
@@ -2467,7 +2469,7 @@ my($i);
 						$textsz += length($argument);
 						$argument =~ s/ /\xA0/g;
 					};
-					if($capsflag and !$opt[78]){
+					if($capsflag and !$opt[77]){
 						print TXTFILE (uc($argument));
 					}else{
 						print TXTFILE ($argument);
@@ -2660,8 +2662,8 @@ sub dehyphen{
 	}
 
 	p1log("Dehyphenating text files...\n");
-	open (HYFILE, ">hyphens.txt") if $opt[77];
-	open (NOHYFILE, ">dehyphen.txt")if $opt[77];
+	open (HYFILE, ">hyphens.txt") if $opt[76];
+	open (NOHYFILE, ">dehyphen.txt")if $opt[76];
 	my $tracker;
 	foreach $list(@listing) {
 		local($^W); 							# Turn off warnings locally
@@ -2697,20 +2699,20 @@ sub dehyphen{
 				($startword =~/^\b[dt]?ed/)||($startword =~/^\b[\w]?ly/)||($startword =~ /^\ber[s]?/)||($startword =~/^\b[mst]?ent[s]?/)||($startword =~/^\b[\w]?ie[s]?/)||
 				($startword eq 'ness')||($endword eq 'con')||($endword eq 'ad')||($endword eq 'as')||($endword eq 'en')||($endword eq 'un')||($endword eq 're')||($endword eq 'de')||($endword eq 'im')) {
 					$thisline =~ s/[\w']*?$hyphen$/$word$punct/;		#if so, save it and move any punctuation up to the previous line
-					if ($opt[77]){print NOHYFILE "$word \t$list  1\n" unless ($word eq $hyphen)};
+					if ($opt[76]){print NOHYFILE "$word \t$list  1\n" unless ($word eq $hyphen)};
 				}elsif($startword eq $hyphen){
 				# hmmmm.. there wasn't a word entity starting the next line. better leave it alone.
 					$thisline =~ s/[\w']*?$hyphen$/$endword$hyphen/;
 				}elsif( $startword =~ /^[A-Z]|^[0-9]/ ) {
 					# if the startword starts with a Capital letter or a number, leave the hyphen
 					$thisline =~ s/[\w']*?( ?)$hyphen$/$endword$hyphen$1$startword$punct/;
-					print HYFILE "$endword$hyphen$1$startword \t$list  2\n" if $opt[77];
+					print HYFILE "$endword$hyphen$1$startword \t$list  2\n" if $opt[76];
 				}elsif( exists($seen{$startword}) || (exists($seen{$endword})&&( ($endword ne 'as')&&($endword ne 'be')&&($endword ne 'in')&&($endword ne 'on')) ) ){
 					$thisline =~ s/[\w']*?( ?)$hyphen$/$endword$hyphen$1$startword$punct/;
-					print HYFILE "$endword$hyphen$1$startword \t$list  3  $word\n" if $opt[77];
+					print HYFILE "$endword$hyphen$1$startword \t$list  3  $word\n" if $opt[76];
 				}else {							# Word not found in dictionary or prefix/suffix list? leave the hyphen but move it up
 					$thisline =~ s/$endword$hyphen$/$endword$startword$punct/;
-					print NOHYFILE "$endword$startword \t$list  4\n" if $opt[77];
+					print NOHYFILE "$endword$startword \t$list  4\n" if $opt[76];
 				}
 
                           $nextline =~ s/^([$hyphen\w'<]+\w*)([^\p{IsSpace}]*)\s*//; 	#clean up the word half from the next line
@@ -2727,8 +2729,8 @@ sub dehyphen{
 		if ($interrupt){break(); return 0};
 	}
 	p1log("\nFinished.\n");
-	close NOHYFILE if $opt[77];
-	close HYFILE if $opt[77];
+	close NOHYFILE if $opt[76];
+	close HYFILE if $opt[76];
 	%seen = ();
 }
 ##########################################################################################################
@@ -2794,7 +2796,7 @@ sub filter {
 ##### Pre-processing only! Use with care after proofing! #################################################################
 			$linelength = length($line) if (length($line)> $linelength);  # for short last line check
 
-			$line =~ s/\s{3,}[\p{Punct}\s]+$// if $opt[75];
+			$line =~ s/\s{3,}[\p{Punct}\s]+$// if $opt[74];
 
 	  if ($opt[76]){          # dubious first character in line
 		       $line =~ s/^[\^_](?!\{)//;
@@ -2834,7 +2836,7 @@ sub filter {
 				   }
 			$line =~ s/[\x96\xAD\x{2010}\x{2011}]/-/g;		#Convert ASCII and unicode dashes and hyphens to std DP format.
 			$line =~ s/[\x97\x{2012}\x{2013}\x{2014}\x{2015}]/--/g;	# these will cause all kinds of grief if left untrapped
-			$line =~ s/,,/"/g if $opt[60];			# Convert double commas to a Double quote
+			$line =~ s/,,/"/g if $opt[59];			# Convert double commas to a Double quote
 			$line =~ s/__/--/g if $opt[42];			# Convert multiple consecutive underscores to em dash
 			$line =~ s/ -$/--/g if $opt[36];		# Convert unlikly hyphens to em dashes
 			$line =~ s/ - /--/g if $opt[36];		# Convert unlikly hyphens to em dashes
@@ -2866,8 +2868,8 @@ sub filter {
 			$line =~ s/²/\^2/g if $opt[15];			# Convert superscript 2 to ^2
 			$line =~ s/³/\^3/g if $opt[15];			# Convert superscript 3 to ^3
 			$line =~ s/(?<=')\/\/(?=\W)/ll/g if $opt[45]; 	# Convert double forward slash
-			$line =~ s/\\v/w/g if $opt[59]; 		# Convert backslash v to w
-			$line =~ s/\\\\/w/g if $opt[59]; 		# Convert double backslash to w
+			$line =~ s/\\v/w/g if $opt[58]; 		# Convert backslash v to w
+			$line =~ s/\\\\/w/g if $opt[58]; 		# Convert double backslash to w
 			if ($opt[16]){while($line =~ s/(?<=\b)tli(\w*)/th$1/){push @{$fixup{$file}},"tli$1 to th$1";$impossibles++;}};# Convert tli at the beginning of a word to th
 			if ($opt[16]){while($line =~ s/(?<=\b)Tli(\w*)/Th$1/){push @{$fixup{$file}},"Tli$1 to Th$1";$impossibles++;}};# Convert Tli at the beginning of a word to Th
 			if ($opt[11]){while($line =~ s/(?<=\b)tii(\w*)/th$1/){push @{$fixup{$file}},"tii$1 to th$1";$impossibles++;}};# Convert tii at the beginning of a word to th
@@ -2891,63 +2893,62 @@ sub filter {
 			if ($opt[27]){while($line =~ s/(?<=\b)Wb(\w*)/Wh$1/){push @{$fixup{$file}},"Wb$1 to Wh$1";$impossibles++;}};	# Convert Wb at the beginning of a word to Wh
 			if ($opt[34]){while($line =~ s/(?<=\b)hl(\w*)/bl$1/){push @{$fixup{$file}},"hl$1 to bl$1";$impossibles++;}};	# Convert hl at the beginning of a word to bl
 			if ($opt[35]){while($line =~ s/(?<=\b)hr(\w*)/br$1/){push @{$fixup{$file}},"hr$1 to br$1";$impossibles++;}};	# Convert hr at the beginning of a word to br
-			if ($opt[68]){while($line =~ s/(?<=\b)VV(\w*)/W$1/){push @{$fixup{$file}},"VV$1 to W$1";$impossibles++;}};	# Convert vv at the beginning of a word to W
-			if ($opt[68]){while($line =~ s/(?<=\b)[vV]{2}(\w*)/w$1/){push @{$fixup{$file}},"vv$1 to w$1";$impossibles++;}};	# Convert vv at the beginning of a word to W
-			if ($opt[69]){while($line =~ s/\!\!(\w+)/H$1/){push @{$fixup{$file}},"!!$1 to H$1";$impossibles++;}};	# Convert !! at the beginning of a word to H
-			if ($opt[70]){while($line =~ s/(?<=\b)X([^eEIVXDLMC\s-]\w*)/N$1/){push @{$fixup{$file}},"X$1 to N$1";$impossibles++;}};	# Convert X at the beginning of a word not followed by e to N
-			if ($opt[71]){while($line =~ s/(\w+)\!(\w+)/$1l$2/){push @{$fixup{$file}},"$1!$2 to $1l$2";$impossibles++;}};	# Convert ! in the middle of a word to l
-			if ($opt[72]){          	# Convert !! to  ll
+			if ($opt[67]){while($line =~ s/(?<=\b)VV(\w*)/W$1/){push @{$fixup{$file}},"VV$1 to W$1";$impossibles++;}};	# Convert vv at the beginning of a word to W
+			if ($opt[67]){while($line =~ s/(?<=\b)[vV]{2}(\w*)/w$1/){push @{$fixup{$file}},"vv$1 to w$1";$impossibles++;}};	# Convert vv at the beginning of a word to W
+			if ($opt[68]){while($line =~ s/\!\!(\w+)/H$1/){push @{$fixup{$file}},"!!$1 to H$1";$impossibles++;}};	# Convert !! at the beginning of a word to H
+			if ($opt[69]){while($line =~ s/(?<=\b)X([^eEIVXDLMC\.\s-]\w*)/N$1/){push @{$fixup{$file}},"X$1 to N$1";$impossibles++;}};	# Convert X at the beginning of a word not followed by e to N   
+			if ($opt[70]){while($line =~ s/(\w+)\!(\w+)/$1l$2/){push @{$fixup{$file}},"$1!$2 to $1l$2";$impossibles++;}};	# Convert ! in the middle of a word to l
+			if ($opt[71]){          	# Convert !! to  ll
                                       while($line =~ s/[(\w*)| ]'11\b/$1'll/){
                                           push @{$fixup{$file}},"$1'11 to $1'll";
                                           $impossibles++;
                                           }
                                      }
-                         if ($opt[81]){                 #convert '11 to 'll  space before 'll
+                         if ($opt[80]){                 #convert '11 to 'll  space before 'll
                                       while($line =~ s/'11/'ll/){
                                               push @{$fixup{$file}},"'11 converted to 'll";
 				              }
                                       }
 
 
-                        if ($opt[80]){      #remove spaces from apostrophe'd words...
-                                      $line =~ s/ 'll/'ll/g;
-                                      $line =~s/\bI\s'm\b/I'm/g;
-                                      $line =~ s/\bhe\s's\b/he's/g;
-                                      $line =~ s/\bHe\s's\b/He's/g;
-                                      $line =~ s/\bshe\s's\b/she's/g;
-                                      $line =~ s/\bShe\s's\b/She's/g;
-                                      $line =~ s/\bwe\s'll\b/we'll/g;
+                        if ($opt[79]){      #remove spaces from apostrophe'd words...
+                                      $line =~ s/ 'll\b/'ll/g;
+                                      $line =~ s/ 'm\b/'m/g;
+                                      $line =~ s/ 's\b/'s/g;
+                                      $line =~ s/ 'll\b/'ll/g;
                                       $line =~ s/ n't\b/n't/g;
-                                      $line =~s/\bI\s'll\b/I'll/g;
-                                      $line =~s/\bI\s've\b/I've/g;
-                                      $line =~s/\bI\s's\b\b/I's/g;
-                                      $line =~s/\bI\s'd\b/\bI'd/g;
-                                      $line =~s/\s've\b/'ve/g;
-                                     }
+                                      $line =~ s/ 've\b/'ve/g;
+                                      $line =~ s/ 'd\b/'d/g;
+                                      $line =~ s/ 're\b/'re/g; 
+                                       }
 
-if ($opt[82]){        #remove extra spaces from quotes 
-              $line =~ s/^(["']) /$1/;  #  start of line     
-              $line =~ s/ (["'])$/$1/;  #  end of line
-         #     $line =~s/\s"-/"-/g;
-          #    $line =~s/the\s"\s/the\s"/g;
-           #   $line =~s/,\s(["'] )/,$2/g;      # comma, space, quote, space
-            #  $line =~s/\.\s(["'] )/\.$2/g;      # period, space, quote, space
-            #  $line =~s/(["'])\s([;:,])/$1$2/g;    # quote, space, punctuation
-            #  $line =~s/\s(['"][;:,])/$1/g;        # space, quote, punctuation
-            #  $line =~s/(\s['"]\s)/$1\[*double spaced quote?]/g; #mark if unresolvable     
+if ($opt[81]){        #remove extra spaces from quotes
+              $line =~ s/^(["']) /$1/;       #  start of line
+              $line =~ s/ (["'])$/$1/;       #  end of line
+              $line =~s/the\s"\s/the\s"/g;   
+           #  $line =~s/\s"-/"-/g;
+           #  $line =~s/,\s(["'] )/,$2/g;      # comma, space, quote, space
+           #  $line =~s/\.\s(["'] )/\.$2/g;      # period, space, quote, space
+           #  $line =~s/(["'])\s([;:,])/$1$2/g;    # quote, space, punctuation
+           #  $line =~s/\s(['"][;:,])/$1/g;        # space, quote, punctuation
+           #  $line =~s/(\s['"]\s)/$1\[*double spaced quote?]/g; #mark if unresolvable
              }
 
-if ($opt[83]){
+if ($opt[82]){
 #              $line =~s/([a-z)]\.([a-z])/$1 $2/g;  # 90% of time this occurs, it is missing space
-               # mark possible missing space between words 
- #              $line =~s/([a-z)]\.([A-Z])/$1\[\*Missing space?\]$2/g; 
+               # mark possible missing space between words
+ #              $line =~s/([a-z)]\.([A-Z])/$1\[\*Missing space?\]$2/g;
                $line =~s/([a-z][,";\.])([a-zA-Z])/$1\[\*Missing space?\]$2/g;
               }
+
+  if ($opt[83]){                # replace period in a number with decimal point
+                  $line =~s/([0-9])\.([0-9])/$1·$2/g;
+		}
 
 		if ($opt[43]){while($line =~ s/(\w*?)rnp(\w*)/$1mp$2/){push @{$fixup{$file}},"$1rnp$2 to $1mp$2";$impossibles++;};# Convert rnp in a word to mp
 				while ($line =~ s/([tT])umpike/$1urnpike/){pop @ {$fixup{$file}};$impossibles--}};
 
-       if ($opt[55]){# Convert cb in a word to ch
+       if ($opt[54]){# Convert cb in a word to ch
 	   while($line =~ s/(\w*)cb\b/$1ch/){
                      push @{$fixup{$file}},"$1cb to $1ch";
                      $impossibles++;
@@ -2957,17 +2958,17 @@ if ($opt[83]){
                      $impossibles++;
                  };
            };
-			if ($opt[56]){while($line =~ s/(\w*?)gbt(\w*)/$1ght$2/){push @{$fixup{$file}},"$1gbtp$2 to $1ght$2";$impossibles++;}};# Convert gbt in a word to ght
-			if ($opt[64]){while($line =~ s/(\w*?)pbt(\w*)/$1pht$2/){push @{$fixup{$file}},"$1pbtp$2 to $1pht$2";$impossibles++;}};# Convert pbt in a word to pht
-			if ($opt[65]){while($line =~ s/(\w*?)mrn(\w*)/$1mm$2/){push @{$fixup{$file}},"$1mrn$2 to $1mm$2";$impossibles++;}};# Convert mrn in a word to mm
-			if ($opt[57]){while($line =~ s/(\w*?)([ai])hle(\w*)/$1$2ble$3/){push @{$fixup{$file}},"$1$2hle$3 to $1$2ble$3";$impossibles++;}};# Convert [ai]hle in a word to [ai]ble
-			if ($opt[63]){while($line =~ s/(\w*?)cl(?=\b)/$1d/){push @{$fixup{$file}},"$1cl to $1d";$impossibles++;}};	# Convert cl at the end of a word to d
-			if ($opt[58]){while($line =~ s/\bto he\b/to be/){push @{$fixup{$file}},"\"to he\" to \"to be\"";$impossibles++;}};# Convert to he to to be
+			if ($opt[55]){while($line =~ s/(\w*?)gbt(\w*)/$1ght$2/){push @{$fixup{$file}},"$1gbtp$2 to $1ght$2";$impossibles++;}};# Convert gbt in a word to ght
+			if ($opt[63]){while($line =~ s/(\w*?)pbt(\w*)/$1pht$2/){push @{$fixup{$file}},"$1pbtp$2 to $1pht$2";$impossibles++;}};# Convert pbt in a word to pht
+			if ($opt[64]){while($line =~ s/(\w*?)mrn(\w*)/$1mm$2/){push @{$fixup{$file}},"$1mrn$2 to $1mm$2";$impossibles++;}};# Convert mrn in a word to mm
+			if ($opt[56]){while($line =~ s/(\w*?)([ai])hle(\w*)/$1$2ble$3/){push @{$fixup{$file}},"$1$2hle$3 to $1$2ble$3";$impossibles++;}};# Convert [ai]hle in a word to [ai]ble
+			if ($opt[62]){while($line =~ s/(\w*?)cl(?=\b)/$1d/){push @{$fixup{$file}},"$1cl to $1d";$impossibles++;}};	# Convert cl at the end of a word to d
+			if ($opt[57]){while($line =~ s/\bto he\b/to be/){push @{$fixup{$file}},"\"to he\" to \"to be\"";$impossibles++;}};# Convert to he to to be
 			$line =~ s/([?!]) "/$1"/g;
 			$line =~ s/ !/!/g if $opt[5];  							# Get rid of space before exclamation points
  			$line =~ s/ $// if $opt[1];							# Get rid of spaces at end of line
 
-                        if ($opt[79]){           # remove HTML markup if required-- done before any other markup operation)
+                        if ($opt[78]){           # remove HTML markup if required-- done before any other markup operation)
                                     $line =~ s/$italicsopen//g;
                                     $line =~ s/$italicsclose//g;
                                     $line =~ s/$boldopen//g;
@@ -2975,7 +2976,7 @@ if ($opt[83]){
                                     $line =~s/<\/sc>//g;
                                     $line =~s/<sc>//g;
                                    }
- 			$line =~ s/(\p{Punct}+)(<\/sc>)/$2$1/g if $opt[78];				# Move punctuation outside of markup
+ 			$line =~ s/(\p{Punct}+)(<\/sc>)/$2$1/g if $opt[77];				# Move punctuation outside of markup
 			$line =~ s/ $italicsclose/$italicsclose/g;					# Close up spaces in markup
 			$line =~ s/$italicsclose(\p{Alpha})/$italicsclose $1/g;				# Close up spaces in markup
 			$line =~ s/([\p{Alpha}>])([^\p{Alpha}>]+?)($italicsclose)/$1$3$2/g if $opt[44];	# Move punctuation outside of markup
@@ -2987,11 +2988,11 @@ if ($opt[83]){
 			$line =~ s/($boldopen)(['"])/$2$1/g if $opt[44];				# Move punctuation outside of markup
 			$line =~ s/$boldclose$italicsclose/$italicsclose$boldclose/g;			# Fix nested markup
 			$line =~ s/$regi|$regb//g; 							# Get rid of empty markup
-			$line =~ s/  / /g if $opt[0];					                
+			$line =~ s/  / /g if $opt[0];
 
 #                           $line =~ s/(?<!\r)\n/\r\n/;
-                       # make sure all lines end with CR/LF           
-    	
+                       # make sure all lines end with CR/LF
+
 
 	# Final clean up of extra spaces **Duplicate but necessary**
 			$line =~ s/\xA0/ /g;								# Convert nonbreaking spaces to regular spaces, needs to be last to preserve table layouts
@@ -3028,7 +3029,7 @@ if ($opt[83]){
 		}
 		utf8::decode($line);
 
-  if ($opt[78]){	            # Close up spaces in markup
+  if ($opt[77]){	            # Close up spaces in markup
 		$line =~ s/(\s+)(<\/sc>)/$2$1/g;
  		$line =~ s/(<sc>)(\s+)/$2$1/g;
  		$line =~ s/(\p{Punct}+)(<\/sc>)/$2$1/g; # Move punctuation outside of markup
@@ -3555,7 +3556,7 @@ else
 	emptybox();
 	unlink "footers.xxx";
   }
- 
+
 }
 
 sub emptybox{
@@ -3705,16 +3706,16 @@ sub delheaders {
 			    next if ($lines == 1 && $line eq "\n");
 			    print NEW $line if $lines;	# Print line of file
 			    $lines++;
-			    }   
+			    }
   # at this point, if $lines=1, the only line in the file has been deleted....
-		            if ($lines==1){print NEW "[Blank Page]";}	
+		            if ($lines==1){print NEW "[Blank Page]";}
                         close(TXT);  		 # Clean up file handles
 			close(NEW);
 			unlink "$file";				# Delete file
 			rename("temp", $file);			# Rename temporary file to filename
 			}
 		    }
-	  
+
 	chdir"..";
     }
 
@@ -3904,22 +3905,22 @@ sub batch{
 		chdir $bdir;
 		p1log("Batch processing files in the $bdir directory.\n");
 		doall();
-		if ($opt[52]){
+		if ($opt[51]){
 			p1log("\nBatch mode automatic header removal in progress... - Please wait.\n");
 			getheaders();
 			delheaders();
 			p1log("\nFinished automatic header removal.\n");
 			zero();
 		}
-       
-		if ($opt[53]){
+
+		if ($opt[52]){
 			p1log("\nBatch mode automatic footer removal in progress... - Please wait.\n");
 			getfooters();
 			delfooters();
 			p1log("\nFinished automatic header removal.\n");
 			zero();
 		}
-		if ($opt[54]){
+		if ($opt[53]){
 			p1log("\nBuilding zip file of project files... - Please wait.\n");
 			$book->raise('page7');
 			$book->update;
@@ -4973,14 +4974,14 @@ sub search{
 				searchtext($searchterm)
 			}
 		}elsif ($foundfile = searchfiles()){			# There was a successful search in tk text
-				
+
 	              $searchendindex = '0.0';
 			searchtext($searchterm);
 		}
 	}else{
 		$search = 0;						# Must be a new search, initialize variables
 		$thissearch = $searchterm;
-		if ($foundfile = searchfiles()){			# Found a file with the search text?	
+		if ($foundfile = searchfiles()){			# Found a file with the search text?
 		$searchendindex = '0.0';
 		}
 		searchtext($searchterm);				# Do a Tk text search on the file
@@ -5057,7 +5058,7 @@ sub searchfiles{
 	$displaybox->delete('1.0','end');				# clean out text box
 	$searchfile->delete('1.0','end');				# and file name
        if (!$searchoption[0]){                              # leave searchstring alone if regular expression specified
-	$searchterm =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;	# escape any meta characters in search term 
+	$searchterm =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;	# escape any meta characters in search term
 	if ($searchoption[1]){
            $searchterm = lc($searchterm)
             } 	      	# make search term lower case if case insensitive
@@ -5097,15 +5098,15 @@ sub searchfiles{
 		}else{
 			$lcfile = $file;
                      }
-                  if ((!$searchoption[0])&&($searchoption[2])){     
-                $wordsearchterm = ('\b'.$searchterm.'\b') 	# build a search pattern for whole word searching 
+                  if ((!$searchoption[0])&&($searchoption[2])){
+                $wordsearchterm = ('\b'.$searchterm.'\b') 	# build a search pattern for whole word searching
 		}
 		if ($lcfile =~ /$wordsearchterm/){ # if a word is found matching an option set
-		        $matchlength=length($&);  
+		        $matchlength=length($&);
           # so we know what length string matched to the search term: a regular
-          # expression can match a much shorter string, which can mess up 
+          # expression can match a much shorter string, which can mess up
           # search/replace if we don't allow for it
-		
+
 			utf8::decode($file);							# convert unicode
 			$displaybox->insert('end',$file);			# dump the file into the textbox
 			$displaybox->yview('scroll',1,'units');
@@ -5140,10 +5141,10 @@ sub replace{
        }
 	searchsave();
 # Then make sure that place with replaced text is still visible
-# Without the following redraw, the box sometimes scrolls down away from the 
+# Without the following redraw, the box sometimes scrolls down away from the
 # replaced text, so the user can'rt easilt see the replace worked
 	$displaybox->markSet('insert',$searchstartindex);# position the cursor
-	$displaybox->see($searchstartindex);    # scroll text box, 
+	$displaybox->see($searchstartindex);    # scroll text box,
 }
 
 sub replaceall{
@@ -5226,13 +5227,13 @@ sub runner{
 	if ($^O =~ /Win/) {
 		$args = '"'.$args.'"';
         	system "perl spawn.pl $args";
-      #windows might not need spawn.pl if something like the next line 
+      #windows might not need spawn.pl if something like the next line
       # works, but I don't have Win to test it:
       #          system("START $args");
       # doesn't work :(
-	}else{ 
+	}else{
 # at least in linux, don't need to use spawn.pl
-		$args .= ' &';   
+		$args .= ' &';
                 system($args);
 	}
      }
