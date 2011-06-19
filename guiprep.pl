@@ -601,14 +601,14 @@ my $p2cb23 = $p2o4->Checkbutton(
 	-text =>	'Extract Bold markup from rtf files.',
 )->grid(-row=>0, -column =>1 ,-padx => '5', -sticky => 'w');
 
-my $p2cb61 = $p2o4->Checkbutton(
+my $p2cb60 = $p2o4->Checkbutton(
 	-variable => 	\$opt[60],
 	-selectcolor => 'white',
 	-text =>	'Insert cell delimiters, "|" in tables.',
 )->grid(-row=>0, -column =>2 ,-padx => '5', -sticky => 'w');
 
 
-my $p2cb67 = $p2o4->Checkbutton(
+my $p2cb66 = $p2o4->Checkbutton(
 	-variable => 	\$opt[66],
 	-selectcolor => 'white',
 	-text =>	'Extract sub/superscript markup',
@@ -621,14 +621,14 @@ my $p2cb73 = $p2o4->Checkbutton(
 	-command =>	sub{if ($opt[72]){$hyphen = "="}else{$hyphen = "-"}},
 )->grid(-row=>1, -column =>2 ,-padx => '5', -sticky => 'w');
 
-my $p2cb78 = $p2o4->Checkbutton(
+my $p2cb77 = $p2o4->Checkbutton(
 	-variable => 	\$opt[77],
 	-selectcolor => 'white',
 	-text =>	'Insert small caps markup during RTF extraction',
 	-command =>	sub{if ($opt[72]){$hyphen = "="}else{$hyphen = "-"}},
 )->grid(-row=>2, -column =>1 ,-padx => '5', -sticky => 'w');
 
-my $p2cb77 = $p2o4->Checkbutton(
+my $p2cb76 = $p2o4->Checkbutton(
 	-variable => 	\$opt[76],
 	-selectcolor => 'white',
 	-text =>	'Save hyphens.txt & dehyphen.txt containing hyphenated and dehyphenated words from the dehyphenate routine.',
@@ -708,7 +708,7 @@ my $p2cb2 = $p2opts->Checkbutton(
 
 ++$grow;
 
-my $p2cb60 = $p2opts->Checkbutton(
+my $p2cb59 = $p2opts->Checkbutton(
 	-variable => 	\$opt[59],
 	-selectcolor => 'white',
 	-text =>	'Convert double commas to double quote.',
@@ -862,7 +862,7 @@ my $p2cb45 = $p2opts->Checkbutton(
 
 ++$grow;
 
-my $p2cb59 = $p2opts->Checkbutton(
+my $p2cb58 = $p2opts->Checkbutton(
 	-variable => 	\$opt[58],
 	-selectcolor => 'white',
 	-text =>	'Convert \v or \\\\ to w.',
@@ -944,7 +944,7 @@ my $p2cb43 = $p2opts->Checkbutton(
 	-text =>	'Convert rnp in a word to mp.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
-my $p2cb68 = $p2opts->Checkbutton(
+my $p2cb67 = $p2opts->Checkbutton(
 	-variable => 	\$opt[67],
 	-selectcolor => 'white',
 	-text =>	'Convert vv at the beginning of a word to w.',
@@ -952,13 +952,13 @@ my $p2cb68 = $p2opts->Checkbutton(
 
 ++$grow;
 
-my $p2cb69 = $p2opts->Checkbutton(
+my $p2cb68 = $p2opts->Checkbutton(
 	-variable => 	\$opt[68],
 	-selectcolor => 'white',
 	-text =>	'Convert !! at the beginning of a word to H',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
-my $p2cb70 = $p2opts->Checkbutton(
+my $p2cb69 = $p2opts->Checkbutton(
 	-variable => 	\$opt[69],
 	-selectcolor => 'white',
 	-text =>	'Convert initial X not followed by e to N.',
@@ -967,13 +967,13 @@ my $p2cb70 = $p2opts->Checkbutton(
 
 ++$grow;
 
-my $p2cb71 = $p2opts->Checkbutton(
+my $p2cb70 = $p2opts->Checkbutton(
 	-variable => 	\$opt[70],
 	-selectcolor => 'white',
 	-text =>	'Convert ! inside a word to l.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
-my $p2cb72 = $p2opts->Checkbutton(
+my $p2cb71 = $p2opts->Checkbutton(
 	-variable => 	\$opt[71],
 	-selectcolor => 'white',
 	-text =>	'Convert \'!! to \'ll.',
@@ -981,13 +981,13 @@ my $p2cb72 = $p2opts->Checkbutton(
 
 ++$grow;
 
-my $p2cb80 = $p2opts->Checkbutton(
+my $p2cb79 = $p2opts->Checkbutton(
 	-variable => 	\$opt[79],
 	-selectcolor => 'white',
 	-text =>	'Remove space before  apostrophes.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
-my $p2cb81 = $p2opts->Checkbutton(
+my $p2cb80 = $p2opts->Checkbutton(
 	-variable => 	\$opt[80],
 	-selectcolor => 'white',
 	-text =>	'Convert \'11 to \'ll.',
@@ -996,14 +996,14 @@ my $p2cb81 = $p2opts->Checkbutton(
 
 ++$grow;
 
-my $p2cb65 = $p2opts->Checkbutton(
+my $p2cb64 = $p2opts->Checkbutton(
 	-variable => 	\$opt[64],
 	-selectcolor => 'white',
 	-text =>	'Convert rnm in a word to mm.',
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
 
-my $p2cb55 = $p2opts->Checkbutton(
+my $p2cb54 = $p2opts->Checkbutton(
 	-variable => 	\$opt[54],
 	-selectcolor => 'white',
 	-text =>	'Convert cb in a word to ch.',
@@ -1018,7 +1018,7 @@ my $p2cb56 = $p2opts->Checkbutton(
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
 
-my $p2cb57 = $p2opts->Checkbutton(
+my $p2cb56 = $p2opts->Checkbutton(
 	-variable => 	\$opt[56],
 	-selectcolor => 'white',
 	-text =>	'Convert [ai]hle in a word to [ai]ble.',
@@ -1027,7 +1027,7 @@ my $p2cb57 = $p2opts->Checkbutton(
 ++$grow;
 
 
-my $p2cb63 = $p2opts->Checkbutton(
+my $p2cb62 = $p2opts->Checkbutton(
 	-variable => 	\$opt[62],
 	-selectcolor => 'white',
 	-text =>	'Convert cl at the end of a word to d.',
@@ -1059,7 +1059,7 @@ my $p2cb44 = $p2opts->Checkbutton(
 ++$grow;
 
 
-my $p2cb75 = $p2opts->Checkbutton(
+my $p2cb74 = $p2opts->Checkbutton(
 	-variable => 	\$opt[74],
 	-selectcolor => 'white',
 	-text =>	'Strip garbage punctuation from beginning of line.',
@@ -1075,7 +1075,7 @@ my $p2cb18 = $p2opts->Checkbutton(
 ++$grow;
 
 
-my $p2cb76 = $p2opts->Checkbutton(
+my $p2cb75 = $p2opts->Checkbutton(
 	-variable => 	\$opt[76],
 	-selectcolor => 'white',
 	-text =>	'Strip garbage punctuation from end of line.',
@@ -1113,7 +1113,7 @@ my $p2cb22 = $p2opts->Checkbutton(
 )->grid(-row => $grow, -column => 1 ,-padx => '5', -sticky => 'w');
 
 
-my $p2cb79 = $p2opts->Checkbutton(
+my $p2cb78 = $p2opts->Checkbutton(
 	-variable => 	\$opt[78],
 	-selectcolor => 'white',
 	-text =>	'Remove HTML markup (bold, italics, smallcap).',
@@ -1122,14 +1122,14 @@ my $p2cb79 = $p2opts->Checkbutton(
 
 ++$grow;
 
-my $p2cb82 = $p2opts->Checkbutton(
+my $p2cb81 = $p2opts->Checkbutton(
 	-variable => 	\$opt[81],
 	-selectcolor => 'white',
 	-text =>	'Tidy up/mark dubious spaced quotes.',
 )->grid(-row => $grow, -column => 2 ,-padx => '5', -sticky => 'w');
 
 
-my $p2cb83 = $p2opts->Checkbutton(
+my $p2cb82 = $p2opts->Checkbutton(
 	-variable => 	\$opt[82],
 	-selectcolor => 'white',
 	-text =>	'Mark possible missing spaces between word/sentences.',
@@ -2912,14 +2912,11 @@ sub filter {
 
 
                         if ($opt[79]){      #remove spaces from apostrophe'd words...
-                                      $line =~ s/ 'll\b/'ll/g;
-                                      $line =~ s/ 'm\b/'m/g;
-                                      $line =~ s/ 's\b/'s/g;
-                                      $line =~ s/ 'll\b/'ll/g;
-                                      $line =~ s/ n't\b/n't/g;
-                                      $line =~ s/ 've\b/'ve/g;
-                                      $line =~ s/ 'd\b/'d/g;
-                                      $line =~ s/ 're\b/'re/g; 
+                                      $line =~ s/ '([LL|ll])\b/'$1/g;
+                                      $line =~ s/ '([dDmMsS])\b/'$1/g;
+                                      $line =~ s/ ([n't|N'T])\b/$1/g;
+                                      $line =~ s/ '([ve|VE])\b/'$1/g;
+                                      $line =~ s/ '([re|RE])\b/'$1/g; 
                                        }
 
 if ($opt[81]){        #remove extra spaces from quotes
