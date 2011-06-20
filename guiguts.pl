@@ -13497,6 +13497,13 @@ sub searchpopup {
                 $top->raise;
             }
         );
+        $lglobal{search}->Tk::bind(
+            '<Escape>' => sub {
+                $lglobal{search}->destroy if defined $lglobal{search};
+                undef $lglobal{search};            
+           }
+       );
+        
     }
     if ( length $searchterm ) {
         $lglobal{searchentry}->delete( '1.0', 'end' );
@@ -13753,12 +13760,17 @@ sub spellchecker {    # Set up spell check window
         );
         $lglobal{spellpopup}->bind( '<Return>',
             sub { $lglobal{spellpopup}->focus; spellreplace() } );
+        $lglobal{spellpopup}->bind( '<Escape>',
+            sub { $lglobal{spellpopup}->destroy if defined $lglobal{spellpopup};
+                undef $lglobal{spellpopup};
+            } );
         $lglobal{spellpopup}->Icon( -image => $icon );
         $lglobal{spellpopup}->transient($top) if $stayontop;
         $lglobal{replacementlist}
             ->bind( '<Double-Button-1>', \&spellmisspelled_replace );
         $lglobal{replacementlist}->bind( '<Triple-Button-1>',
             sub { spellmisspelled_replace(); spellreplace() } );
+
         BindMouseWheel( $lglobal{replacementlist} );
         spelloptions()
             unless $globalspellpath; # Check to see if we know where Aspell is
@@ -13800,6 +13812,12 @@ sub gotoline {
                 }
             }
         );
+    $lglobal{gotolinepop}->bind('<Escape>' => sub { 
+        $lglobal{gotolinepop}->destroy;
+        undef $lglobal{gotolinepop};
+        }
+    ); 
+
         $lglobal{gotolinepop}->resizable( 'no', 'no' );
         my $frame = $lglobal{gotolinepop}->Frame->pack( -fill => 'x' );
         $frame->Label( -text => 'Enter Line number: ' )
@@ -17955,6 +17973,7 @@ sub spelloptions {
         -title   => 'Spellcheck Options',
         -buttons => ['Close']
     );
+    $spellop->bind('<Escape>' => sub { $spellop->destroy; });
     my $spellpathlabel
         = $spellop->add( 'Label', -text => 'Aspell executable file?' )->pack;
     my $spellpathentry
