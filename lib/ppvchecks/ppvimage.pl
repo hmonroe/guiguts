@@ -15,10 +15,13 @@ my $vnum  = "1.03k";
 my @book = ();
 my @css = ();
 my $srctext;
+my $homedir;
 
 if ( $#ARGV >= 0 ) {
   # Skip the GUI and just process the text
   $srctext = $ARGV[0];
+  $homedir = $ARGV[1];
+  
   runProgram();
   exit;
 }
@@ -105,7 +108,7 @@ sub exitProgram {
 }
 
 sub runProgram {
-  my $outfile = dirname($srctext)."/ppvimage.log";
+  my $outfile = dirname($srctext)."/errors.err"; # modified by hmonroe 
   open LOGFILE,"> $outfile" || die "output file error\n";
   print LOGFILE "program " . basename($0) . " version $vnum\n\n";
   print LOGFILE "processing $srctext to $outfile\n\n";
@@ -389,7 +392,7 @@ sub jpegsize {
       if (length($ht)==0) {
         print LOGFILE ("$warn: <img> has empty length attribute\n");
         }
-      $imgfile = dirname($srctext)."/".$src;
+      $imgfile = $homedir."/".$src;
       if (($wd ne "X") or ($ht ne "X")) {
         print LOGFILE ("    coded ");
         if ($wd ne "X") {
