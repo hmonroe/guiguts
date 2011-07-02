@@ -9,9 +9,9 @@
     </title>
     <style type="text/css">
 
-body { 
-    margin-left: 10%; 
-    margin-right: 10%; 
+body {
+    margin-left: 10%;
+    margin-right: 10%;
 }
 
     h1,h2,h3,h4,h5,h6 {
@@ -19,13 +19,19 @@ body {
     clear: both;
 }
 
-p { 
-    margin-top: .75em; 
-    text-align: justify; 
-    margin-bottom: .75em; 
+p {
+    margin-top: .75em;
+    text-align: justify;
+    margin-bottom: .75em;
 }
 
-hr { 
+.p2       {margin-top: 2em;}
+.p4       {margin-top: 4em;}
+.p6       {margin-top: 6em;}
+
+
+
+hr {
     width: 33%;
     margin-top: 2em;
     margin-bottom: 2em;
@@ -34,21 +40,31 @@ hr {
     clear: both;
 }
 
-hr.tb   {width: 45%;} 
-hr.chap {width: 65%; page-break-before: always;} 
+hr.tb   {width: 45%;}
+hr.chap {width: 65%; page-break-before: always;}
 hr.full {width: 95%;}
-ul.index { list-style-type: none; } 
-li.ifrst { margin-top: 1em; } 
-li.indx { margin-top: .5em; } 
-li.isub1 {text-indent: 1em;} 
-li.isub2 {text-indent: 2em;} 
-li.isub3 {text-indent: 3em;} 
+
+hr.r5  {width: 5%; margin-top: 1em; margin-bottom: 1em;}
+hr.r65 {width: 65%; margin-top: 3em; margin-bottom: 3em;}
 
 
-table { 
-    margin-left: auto; 
+ul.index { list-style-type: none; }
+li.ifrst { margin-top: 1em; }
+li.indx { margin-top: .5em; }
+li.isub1 {text-indent: 1em;}
+li.isub2 {text-indent: 2em;}
+li.isub3 {text-indent: 3em;}
+
+
+table {
+    margin-left: auto;
     margin-right: auto;
 }
+
+    .tdl      {text-align: left;}
+    .tdr      {text-align: right;}
+    .tdc      {text-align: center;}
+
 
 .pagenum { /* uncomment the next line for invisible page numbers */
     /*  visibility: hidden;  */
@@ -59,30 +75,30 @@ table {
 } /* page numbers */
 
 .linenum {
-    position: absolute; 
-    top: auto; 
+    position: absolute;
+    top: auto;
     left: 4%;
 } /* poetry number */
 
 .blockquot {
-    margin-left: 5%; 
+    margin-left: 5%;
     margin-right: 10%;
 }
 
-.sidenote { 
-    width: 20%; 
-    padding-bottom: .5em; 
+.sidenote {
+    width: 20%;
+    padding-bottom: .5em;
     padding-top: .5em;
-    padding-left: .5em; 
-    padding-right: .5em; 
-    margin-left: 1em; 
+    padding-left: .5em;
+    padding-right: .5em;
+    margin-left: 1em;
     float: right;
-    clear: right; 
-    margin-top: 1em; 
-    font-size: smaller; 
+    clear: right;
+    margin-top: 1em;
+    font-size: smaller;
     color: black;
-    background: #eeeeee; 
-    border: dashed 1px; 
+    background: #eeeeee;
+    border: dashed 1px;
 }
 
 .bb       {border-bottom: solid 2px;}
@@ -99,37 +115,37 @@ table {
 
 .smcap    {font-variant: small-caps;}
 
-.u        {text-decoration: underline;} 
+.u        {text-decoration: underline;}
 
 .caption  {font-weight: bold;}
 
 /* Images */
 .figcenter   {
-    margin: auto; 
+    margin: auto;
     text-align: center;
 }
 
-.figleft { 
-    float: left; 
-    clear: left; 
-    margin-left: 0; 
+.figleft {
+    float: left;
+    clear: left;
+    margin-left: 0;
     margin-bottom: 1em;
-    margin-top: 1em; 
-    margin-right: 1em; 
-    padding: 0; 
-    text-align: center; 
+    margin-top: 1em;
+    margin-right: 1em;
+    padding: 0;
+    text-align: center;
 }
 
-.figright { 
-    float: right; 
-    clear: right; 
-    margin-left: 1em; 
+.figright {
+    float: right;
+    clear: right;
+    margin-left: 1em;
     margin-bottom:
-    1em; 
-    margin-top: 1em; 
-    margin-right: 0; 
-    padding: 0; 
-    text-align: center; 
+    1em;
+    margin-top: 1em;
+    margin-right: 0;
+    padding: 0;
+    text-align: center;
 }
 
 /* Footnotes */
@@ -139,17 +155,17 @@ table {
 
 .footnote .label  {position: absolute; right: 84%; text-align: right;}
 
-.fnanchor { 
-    vertical-align: super; 
-    font-size: .8em; 
+.fnanchor {
+    vertical-align: super;
+    font-size: .8em;
     text-decoration:
-    none; 
+    none;
 }
 
 /* Poetry */
 .poem {
-    margin-left:10%; 
-    margin-right:10%; 
+    margin-left:10%;
+    margin-right:10%;
     text-align: left;
 }
 
@@ -157,25 +173,25 @@ table {
 
 .poem .stanza {margin: 1em 0em 1em 0em;}
 
-.poem span.i0 { 
-    display: block; 
-    margin-left: 0em; 
+.poem span.i0 {
+    display: block;
+    margin-left: 0em;
     padding-left: 3em;
-    text-indent: -3em; 
+    text-indent: -3em;
 }
 
-.poem span.i2 { 
-    display: block; 
-    margin-left: 2em; 
+.poem span.i2 {
+    display: block;
+    margin-left: 2em;
     padding-left: 3em;
-    text-indent: -3em; 
+    text-indent: -3em;
 }
 
-.poem span.i4 { 
-    display: block; 
-    margin-left: 4em; 
+.poem span.i4 {
+    display: block;
+    margin-left: 4em;
     padding-left: 3em;
-    text-indent: -3em; 
+    text-indent: -3em;
 }
 
 /* Transcriber's notes */
