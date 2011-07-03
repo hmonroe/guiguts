@@ -29,8 +29,6 @@ p {
 .p4       {margin-top: 4em;}
 .p6       {margin-top: 6em;}
 
-
-
 hr {
     width: 33%;
     margin-top: 2em;
@@ -47,14 +45,12 @@ hr.full {width: 95%;}
 hr.r5  {width: 5%; margin-top: 1em; margin-bottom: 1em;}
 hr.r65 {width: 65%; margin-top: 3em; margin-bottom: 3em;}
 
-
 ul.index { list-style-type: none; }
 li.ifrst { margin-top: 1em; }
 li.indx { margin-top: .5em; }
 li.isub1 {text-indent: 1em;}
 li.isub2 {text-indent: 2em;}
 li.isub3 {text-indent: 3em;}
-
 
 table {
     margin-left: auto;
@@ -64,7 +60,6 @@ table {
     .tdl      {text-align: left;}
     .tdr      {text-align: right;}
     .tdc      {text-align: center;}
-
 
 .pagenum { /* uncomment the next line for invisible page numbers */
     /*  visibility: hidden;  */
