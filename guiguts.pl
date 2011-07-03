@@ -5386,13 +5386,6 @@ sub linkcheck {
 		$badlink{$_} = $_ if ( $_ =~ m/\\|\%5C|\s|\%20/ );
 		delete $imagefiles{$_} if ( defined $imagefiles{$_} );
 	}
-	$lglobal{linkchkbox}->insert( 'end', "$anchors named anchors" );
-	$lglobal{linkchkbox}
-	  ->insert( 'end', "$ids unnamed anchors (tag with id attribute)" );
-	$lglobal{linkchkbox}->insert( 'end', "$ilinks internal links" );
-	$lglobal{linkchkbox}->insert( 'end', "$images image links" );
-	$lglobal{linkchkbox}->insert( 'end', "$css CSS style image links" );
-	$lglobal{linkchkbox}->insert( 'end', "$elinks external links", '', '' );
 	$lglobal{linkchkbox}
 	  ->insert( 'end', 'INTERNAL LINKS WITHOUT ANCHORS. - (CRITICAL)', '' );
 
@@ -5444,6 +5437,13 @@ sub linkcheck {
 		}
 		$lglobal{linkchkbox}->insert( 'end', '' );
 	}
+	$lglobal{linkchkbox}->insert( 'end', "$anchors named anchors" );
+	$lglobal{linkchkbox}
+	  ->insert( 'end', "$ids unnamed anchors (tag with id attribute)" );
+	$lglobal{linkchkbox}->insert( 'end', "$ilinks internal links" );
+	$lglobal{linkchkbox}->insert( 'end', "$images image links" );
+	$lglobal{linkchkbox}->insert( 'end', "$css CSS style image links" );
+	$lglobal{linkchkbox}->insert( 'end', "$elinks external links", '', '' );
 	$lglobal{linkchkbox}
 	  ->insert( 'end', '', 'ANCHORS WITHOUT LINKS. - (INFORMATIONAL)', '' );
 	for ( natural_sort_alpha( keys %anchor ) ) {
@@ -6329,7 +6329,6 @@ sub add_navigation_events {
 
 sub errorcheckpop_up {
 	my $errorchecktype = shift;
-	errorcheckrun($errorchecktype); 
 	my ( %errors, @errorchecklines );
 	my ( $line,   $lincol );
 	viewpagenums() if ( $lglobal{seepagenums} );
@@ -6437,89 +6436,116 @@ sub errorcheckpop_up {
 		}
 	);
 	$lglobal{errorcheckpop}->update;
-	$lglobal{errorchecklistbox}->focus;    # FIXME: Again for gutcheck, jeebies.
-	my $fh = FileHandle->new("< errors.err");
-	unless ( defined($fh) ) {
-		my $dialog = $top->Dialog(
-				  -text => 'Could not find ' . $errorchecktype . ' error file.',
-				  -bitmap  => 'question',
-				  -title   => 'File not found',
-				  -buttons => [qw/OK/],
+
+	# End presentation; begin logic
+	my (@errorchecktypes);    # Multiple errorchecktypes in one popup
+	if ( $errorchecktype eq 'Check All' ) {
+		@errorchecktypes = (
+							 'W3C Validate',
+							 'HTML Tidy',
+							 'Image Check',
+							 'W3C Validate CSS',
+							 'PPV HTML'
 		);
-		$dialog->Show;
+	} else {
+		@errorchecktypes = ($errorchecktype);
 	}
-	my $mark = 0;
 	%errors          = ();
 	@errorchecklines = ();
+	my $mark  = 0;
 	my @marks = $textwindow->markNames;
 	for (@marks) {
 		if ( $_ =~ /^t\d+$/ ) {
 			$textwindow->markUnset($_);
 		}
 	}
-	while ( $line = <$fh> ) {
-		$line =~ s/^\s//g;
-		chomp $line;
-		no warnings 'uninitialized';
-		if ( $errorchecktype eq 'HTML Tidy' ) {
-			if (     ( $line =~ /^[lI\d]/ )
-				 and ( $line ne $errorchecklines[-1] ) )
-			{
-				push @errorchecklines, $line;
-				$errors{$line} = '';
-				$lincol = '';
-				if ( $line =~ /^line (\d+) column (\d+)/i ) {
-					$lincol = "$1.$2";
-					$mark++;
-					$textwindow->markSet( "t$mark", $lincol );
-					$errors{$line} = "t$mark";
-				}
-			}
-		} else {
-			if (    ( $errorchecktype eq "W3C Validate" )
-				 or ( $errorchecktype eq "W3C Validate Remote" ) )
-			{
-				$line =~ s/^.*:(\d+:\d+)/line $1/;
-				$errors{$line} = '';
-				$lincol = '';
-				if ( $line =~ /line (\d+):(\d+):/ ) {
-					push @errorchecklines, $line;
-					$lincol = "$1.$2";
-					$lincol =~ s/\.0/\.1/;    # change column zero to column 1
-					$mark++;
-					$textwindow->markSet( "t$mark", $lincol );
-					$errors{$line} = "t$mark";
-				}
-			} else {
-				if (    ( $errorchecktype eq "W3C Validate CSS" ) # anything else with line/column reference
-					 or ( $errorchecktype eq "PPV HTML" )
-					 or ( $errorchecktype eq "Image Check" )
-					 or ( $errorchecktype eq "PPV Text" ) )
+	foreach my $thiserrorchecktype (@errorchecktypes) {
+		errorcheckrun($thiserrorchecktype);
+		push @errorchecklines, "Beginning check: " . $thiserrorchecktype;
+		$lglobal{errorchecklistbox}
+		  ->focus;    # FIXME: Again for gutcheck, jeebies.
+		my $fh = FileHandle->new("< errors.err");
+		unless ( defined($fh) ) {
+			my $dialog = $top->Dialog(
+									   -text => 'Could not find '
+										 . $thiserrorchecktype
+										 . ' error file.',
+									   -bitmap  => 'question',
+									   -title   => 'File not found',
+									   -buttons => [qw/OK/],
+			);
+			$dialog->Show;
+		}
+		while ( $line = <$fh> ) {
+			$line =~ s/^\s//g;
+			chomp $line;
+			# Skip rest of CSS 
+			if (($thiserrorchecktype eq 'W3C Validate CSS') and ($line =~ /^To show your readers/i)) {last;}
+			no warnings 'uninitialized';
+			if ( $thiserrorchecktype eq 'HTML Tidy' ) {
+				if (     ( $line =~ /^[lI\d]/ )
+					 and ( $line ne $errorchecklines[-1] ) )
 				{
-					$line =~ s/^.*:(\d+:\d+)/line $1/;
 					push @errorchecklines, $line;
 					$errors{$line} = '';
 					$lincol = '';
-					if ( $line =~ /Line : (\d+)/ ) {
-						$lincol = "$1.1";    # Assume column 1. Does not work
+					if ( $line =~ /^line (\d+) column (\d+)/i ) {
+						$lincol = "$1.$2";
 						$mark++;
 						$textwindow->markSet( "t$mark", $lincol );
 						$errors{$line} = "t$mark";
 					}
 				}
+			} else {
+				if (    ( $thiserrorchecktype eq "W3C Validate" )
+					 or ( $thiserrorchecktype eq "W3C Validate Remote" ) )
+				{
+					$line =~ s/^.*:(\d+:\d+)/line $1/;
+					$errors{$line} = '';
+					$lincol = '';
+					if ( $line =~ /line (\d+):(\d+):/ ) {
+						push @errorchecklines, $line;
+						$lincol = "$1.$2";
+						$lincol =~ s/\.0/\.1/;  # change column zero to column 1
+						$mark++;
+						$textwindow->markSet( "t$mark", $lincol );
+						$errors{$line} = "t$mark";
+					}
+				} else {
+					if (
+						( $thiserrorchecktype eq "W3C Validate CSS"
+						)    # anything else with line/column reference
+						or ( $thiserrorchecktype eq "PPV HTML" )
+						or ( $thiserrorchecktype eq "Image Check" )
+						or ( $thiserrorchecktype eq "PPV Text" )
+					  )
+					{
+						$line =~ s/^.*:(\d+:\d+)/line $1/;
+						push @errorchecklines, $line;
+						$errors{$line} = '';
+						$lincol = '';
+						if ( $line =~ /Line : (\d+)/ ) {
+							$lincol = "$1.1";   # Assume column 1. Does not work
+							$mark++;
+							$textwindow->markSet( "t$mark", $lincol );
+							$errors{$line} = "t$mark";
+						}
+					}
 
+				}
 			}
 		}
-	}
-	$fh->close;
-	unlink 'errors.err';
-	my $size = @errorchecklines;
-	if ( ( $errorchecktype eq "W3C Validate CSS" ) and ( $size == 0 ) )
-	{    # handle errors.err file with zero lines
-		push @errorchecklines,
+		$fh->close;
+		unlink 'errors.err';
+		my $size = @errorchecklines;
+		if ( ( $thiserrorchecktype eq "W3C Validate CSS" ) and ( $size == 0 ) )
+		{    # handle errors.err file with zero lines
+			push @errorchecklines,
 "Could not perform validation: install java or use W3C CSS Validation web site.";
-	} else {
-		push @errorchecklines, "Check is complete";
+		} else {
+			push @errorchecklines, "Check is complete: " . $thiserrorchecktype;
+			push @errorchecklines, "";
+		}
 	}
 	$lglobal{errorchecklistbox}->insert( 'end', @errorchecklines );
 	$lglobal{errorchecklistbox}->yview( 'scroll', 1, 'units' );
@@ -6691,7 +6717,8 @@ qq/perl lib\/ppvchecks\/pptxt.pl -i $name -o errors.err/ );
 	}
 	$top->Unbusy;
 	unlink $name;
-#	errorcheckpop_up($errorchecktype);
+
+	#	errorcheckpop_up($errorchecktype);
 }
 
 sub validatecssremote {    # this does not work--does not  load the file
@@ -15445,10 +15472,10 @@ sub markpopup {    # FIXME: Rename html_popup
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				errorcheckpop_up('SuperCheck');
+				errorcheckpop_up('Check All');
 				unlink 'null' if ( -e 'null' );
 			},
-			-text  => 'SuperCheck',
+			-text  => 'Check All',
 			-width => 16
 		)->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
 		$diventry->insert( 'end', ' style="margin-left: 2em;"' );
