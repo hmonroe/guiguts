@@ -1677,7 +1677,7 @@ sub fixup_menuitems {
 	   [
 		  Button   => 'PPV Text',
 		  -command => sub {
-			  errorcheckrun('PPV Text');
+			  errorcheckpop_up('PPV Text');
 			  unlink 'null' if ( -e 'null' );
 		  },
 	   ],
@@ -6329,6 +6329,7 @@ sub add_navigation_events {
 
 sub errorcheckpop_up {
 	my $errorchecktype = shift;
+	errorcheckrun($errorchecktype); 
 	my ( %errors, @errorchecklines );
 	my ( $line,   $lincol );
 	viewpagenums() if ( $lglobal{seepagenums} );
@@ -6344,7 +6345,7 @@ sub errorcheckpop_up {
 	my $opsbutton = $ptopframe->Button(
 		-activebackground => $activecolor,
 		-command          => sub {
-			errorcheckrun($errorchecktype);
+			errorcheckpop_up($errorchecktype);
 			unlink 'null' if ( -e 'null' );
 		},
 		-text  => 'Get Errors',
@@ -6490,7 +6491,7 @@ sub errorcheckpop_up {
 					$errors{$line} = "t$mark";
 				}
 			} else {
-				if (    ( $errorchecktype eq "W3C Validate CSS" )
+				if (    ( $errorchecktype eq "W3C Validate CSS" ) # anything else with line/column reference
 					 or ( $errorchecktype eq "PPV HTML" )
 					 or ( $errorchecktype eq "Image Check" )
 					 or ( $errorchecktype eq "PPV Text" ) )
@@ -6515,7 +6516,6 @@ sub errorcheckpop_up {
 	my $size = @errorchecklines;
 	if ( ( $errorchecktype eq "W3C Validate CSS" ) and ( $size == 0 ) )
 	{    # handle errors.err file with zero lines
-		    #print "size " . $size;
 		push @errorchecklines,
 "Could not perform validation: install java or use W3C CSS Validation web site.";
 	} else {
@@ -6691,7 +6691,7 @@ qq/perl lib\/ppvchecks\/pptxt.pl -i $name -o errors.err/ );
 	}
 	$top->Unbusy;
 	unlink $name;
-	errorcheckpop_up($errorchecktype);
+#	errorcheckpop_up($errorchecktype);
 }
 
 sub validatecssremote {    # this does not work--does not  load the file
@@ -15399,7 +15399,7 @@ sub markpopup {    # FIXME: Rename html_popup
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				errorcheckrun('HTML Tidy');
+				errorcheckpop_up('HTML Tidy');
 				unlink 'null' if ( -e 'null' );
 			},
 			-text  => 'HTML Tidy',
@@ -15408,8 +15408,8 @@ sub markpopup {    # FIXME: Rename html_popup
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				if   ($w3cremote) { errorcheckrun('W3C Validate Remote') }
-				else              { errorcheckrun('W3C Validate'); }
+				if   ($w3cremote) { errorcheckpop_up('W3C Validate Remote') }
+				else              { errorcheckpop_up('W3C Validate'); }
 				unlink 'null' if ( -e 'null' );
 			},
 			-text  => 'W3C Validate',
@@ -15418,7 +15418,7 @@ sub markpopup {    # FIXME: Rename html_popup
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				errorcheckrun('W3C Validate CSS');    #validatecssrun('');
+				errorcheckpop_up('W3C Validate CSS');    #validatecssrun('');
 				unlink 'null' if ( -e 'null' );
 			},
 			-text  => 'W3C Validate CSS',
@@ -15427,7 +15427,7 @@ sub markpopup {    # FIXME: Rename html_popup
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				errorcheckrun('PPV HTML');
+				errorcheckpop_up('PPV HTML');
 				unlink 'null' if ( -e 'null' );
 			},
 			-text  => 'PPV HTML',
@@ -15436,7 +15436,7 @@ sub markpopup {    # FIXME: Rename html_popup
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				errorcheckrun('Image Check');
+				errorcheckpop_up('Image Check');
 				unlink 'null' if ( -e 'null' );
 			},
 			-text  => 'Image Check',
@@ -15445,7 +15445,7 @@ sub markpopup {    # FIXME: Rename html_popup
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				errorcheckrun('SuperCheck');
+				errorcheckpop_up('SuperCheck');
 				unlink 'null' if ( -e 'null' );
 			},
 			-text  => 'SuperCheck',
