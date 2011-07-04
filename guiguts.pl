@@ -5446,6 +5446,7 @@ sub linkcheck {
 	$lglobal{linkchkbox}->insert( 'end', "$elinks external links", '', '' );
 	$lglobal{linkchkbox}
 	  ->insert( 'end', '', 'ANCHORS WITHOUT LINKS. - (INFORMATIONAL)', '' );
+
 	for ( natural_sort_alpha( keys %anchor ) ) {
 		unless ( exists $link{$_} ) {
 			$lglobal{linkchkbox}->insert( 'end', "$anchor{$_}" );
@@ -5461,6 +5462,259 @@ sub hyperlinkpagenums {
 	searchoptset(qw/0 x x 1/);
 	$lglobal{searchentry}->insert( 'end', "(?<!\\d)(\\d{1,3})" );
 	$lglobal{replaceentry}->insert( 'end', "<a href=\"#Page_\$1\">\$1</a>" );
+}
+
+sub linkcheckrun {
+	open LOGFILE, "> errors.err" || die "output file error\n";
+	#printf LOGFILE "Link check\n";
+
+	if ( defined( $lglobal{lcpop} ) ) {
+		$lglobal{lcpop}->deiconify;
+		$lglobal{lcpop}->raise;
+		$lglobal{lcpop}->focus;
+	} else {
+
+		$lglobal{lcpop} = $top->Toplevel;
+		$lglobal{lcpop}->title('Link Check');
+		my $frame =
+		  $lglobal{lcpop}->Frame->pack->pack(
+											  -anchor => 'nw',
+											  -expand => 'yes',
+											  -fill   => 'both'
+		  );
+		$lglobal{linkchkbox} =
+		  $frame->Scrolled(
+							'Listbox',
+							-scrollbars  => 'se',
+							-background  => 'white',
+							-font        => '{Courier} 10',
+							-height      => 40,
+							-width       => 60,
+							-activestyle => 'none',
+		  )->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
+		drag( $lglobal{linkchkbox} );
+		$lglobal{lcpop}->protocol(
+			'WM_DELETE_WINDOW' => sub {
+				$lglobal{lcpop}->destroy;
+				undef $lglobal{lcpop};
+			}
+		);
+		$lglobal{lcpop}->Icon( -image => $icon );
+	}
+	BindMouseWheel( $lglobal{linkchkbox} );
+	$lglobal{linkchkbox}->eventAdd( '<<search>>' => '<ButtonRelease-2>',
+									'<ButtonRelease-3>' );
+	$lglobal{linkchkbox}->bind(
+		'<<search>>',
+		sub {
+			$lglobal{linkchkbox}->activate(
+										$lglobal{linkchkbox}->index(
+											'@'
+											  . (
+												$lglobal{linkchkbox}->pointerx -
+												  $lglobal{linkchkbox}->rootx
+											  )
+											  . ','
+											  . (
+												$lglobal{linkchkbox}->pointery -
+												  $lglobal{linkchkbox}->rooty
+											  )
+										)
+			);
+			$lglobal{linkchkbox}->selectionClear( 0, 'end' );
+			$lglobal{linkchkbox}
+			  ->selectionSet( $lglobal{linkchkbox}->index('active') );
+			my $sword = $lglobal{linkchkbox}->get('active');
+			return unless ( defined $sword and length $sword );
+			searchpopup();
+			searchoptset(qw/0 x x 0/);
+			$lglobal{searchentry}->delete( '1.0', 'end' );
+			$lglobal{searchentry}->insert( 'end', $sword );
+			updatesearchlabels();
+		}
+	);
+	$lglobal{linkchkbox}->eventAdd( '<<find>>' => '<Double-Button-1>' );
+	$lglobal{linkchkbox}->bind(
+		'<<find>>',
+		sub {
+			my $sword = $lglobal{linkchkbox}->get('active');
+			return unless ( defined $sword and length $sword );
+			return unless $lglobal{linkchkbox}->index('active');
+			return unless ( $lglobal{linkchkbox}->curselection );
+			my @savesets = @sopt;
+			searchoptset(qw/0 x x 0/);
+			searchfromstartifnew($sword);
+			searchtext($sword);
+			searchoptset(@savesets);
+			$top->raise;
+		}
+	);
+	$lglobal{linkchkbox}->delete( '0', 'end' );
+	$lglobal{linkchkbox}->update;
+	my ( %anchor,  %id,  %link,   %image,  %badlink, $length, $upper );
+	my ( $anchors, $ids, $ilinks, $elinks, $images,  $count,  $css ) =
+	  ( 0, 0, 0, 0, 0, 0, 0 );
+	my @warning = ();
+	my $fname   = $lglobal{global_filename};
+	if ( $fname =~ /(No File Loaded)/ ) {
+		$lglobal{linkchkbox}
+		  ->insert( 'end', "You need to save your file first." );
+		return;
+	}
+	$fname = dos_path( $lglobal{global_filename} ) if $OS_WIN;
+	my ( $f, $d, $e ) = fileparse( $fname, qr{\.[^\.]*$} );
+	my %imagefiles;
+	my @ifiles   = ();
+	my $imagedir = '';
+	push @warning, '';
+	my ( $fh, $filename );
+
+	if ( $textwindow->numberChanges ) {
+		( $fh, $filename ) = tempfile();
+		my ($lines) = $textwindow->index('end - 1 chars') =~ /^(\d+)\./;
+		my $index = '1.0';
+		while ( $textwindow->compare( $index, '<', 'end' ) ) {
+			my $end = $textwindow->index("$index lineend +1c");
+			my $line = $textwindow->get( $index, $end );
+			print $fh $line;
+			$index = $end;
+		}
+		$fname = $filename;
+		close $fh;
+	}
+	my $parser = HTML::TokeParser->new($fname);
+	while ( my $token = $parser->get_token ) {
+		if ( $token->[0] eq 'S' and $token->[1] eq 'style' ) {
+			$token = $parser->get_token;
+			if ( $token->[0] eq 'T' and $token->[2] ) {
+				my @urls = $token->[1] =~ m/\burl\(['"](.+?)['"]\)/gs;
+				for my $img (@urls) {
+					if ($img) {
+						if ( !$imagedir ) {
+							$imagedir = $img;
+							$imagedir =~ s/\/.*?$/\//;
+							@ifiles = glob( $d . $imagedir . '*.*' );
+							for (@ifiles) { $_ =~ s/\Q$d\E// }
+							for (@ifiles) { $imagefiles{$_} = '' }
+						}
+						$image{$img}++;
+						$upper++ if ( $img ne lc($img) );
+						delete $imagefiles{$img}
+						  if (    ( defined $imagefiles{$img} )
+							   || ( defined $link{$img} ) );
+						push @warning,
+						  "WARNING! $img contains uppercase characters!"
+						  if ( $img ne lc($img) );
+						push @warning, "CRITICAL! Image file: $img not found!"
+						  unless ( -e $d . $img );
+						$css++;
+					}
+				}
+			}
+		}
+		next unless $token->[0] eq 'S';
+		my $url    = $token->[2]{href} || '';
+		my $anchor = $token->[2]{name} || '';
+		my $img    = $token->[2]{src}  || '';
+		my $id     = $token->[2]{id}   || '';
+		if ($anchor) {
+			$anchor{ '#' . $anchor } = $anchor;
+			$anchors++;
+		} elsif ($id) {
+			$id{ '#' . $id } = $id;
+			$ids++;
+		}
+		if ( $url =~ m/^(#?)(.+)$/ ) {
+			$link{ $1 . $2 } = $2;
+			$ilinks++ if $1;
+			$elinks++ unless $1;
+		}
+		if ($img) {
+			if ( !$imagedir ) {
+				$imagedir = $img;
+				$imagedir =~ s/\/.*?$/\//;
+				@ifiles = glob( $d . $imagedir . '*.*' );
+				for (@ifiles) { $_ =~ s/\Q$d\E// }
+				for (@ifiles) { $imagefiles{$_} = '' }
+			}
+			$image{$img}++;
+			$upper++ if ( $img ne lc($img) );
+			delete $imagefiles{$img}
+			  if (    ( defined $imagefiles{$img} )
+				   || ( defined $link{$img} ) );
+			push @warning, "WARNING! $img contains uppercase characters!"
+			  if ( $img ne lc($img) );
+			push @warning, "CRITICAL! Image file: $img not found!"
+			  unless ( -e $d . $img );
+			$images++;
+		}
+	}
+	for ( keys %link ) {
+		$badlink{$_} = $_ if ( $_ =~ m/\\|\%5C|\s|\%20/ );
+		delete $imagefiles{$_} if ( defined $imagefiles{$_} );
+	}
+	print LOGFILE "INTERNAL LINKS WITHOUT ANCHORS. - (CRITICAL)\n";
+
+	for ( natural_sort_alpha( keys %link ) ) {
+		unless (    ( defined $anchor{$_} )
+				 || ( defined $id{$_} )
+				 || ( $link{$_} eq $_ ) )
+		{
+			print LOGFILE "#$link{$_}\n";
+			$count++;
+		}
+	}
+	print LOGFILE "$count internal links without anchors\n";
+	print LOGFILE "EXTERNAL LINKS. - (CRITICAL)\n";
+	my $externflag;
+	for ( natural_sort_alpha( keys %link ) ) {
+		if ( $link{$_} eq $_ ) {
+			if ( $_ =~ /:\/\// ) {
+				print LOGFILE "$link{$_}\n" ;
+			} else {
+				my $temp = $_;
+				$temp =~ s/^([^#]+).*/$1/;
+				unless ( -e $d . $temp ) {
+					  print LOGFILE "local file(s) not found!\n" 
+					  unless $externflag;
+					print LOGFILE "$link{$_}\n" ;
+					$externflag++;
+				}
+			}
+		}
+	}
+	print LOGFILE "LINKS WITH BAD CHARACTERS. - (CRITICAL)\n";
+	for ( natural_sort_alpha( keys %badlink ) ) {
+		print LOGFILE "$badlink{$_}\n";
+	}
+	print LOGFILE "IMAGE LINKS/FILES WITH PROBLEMS. - (CRITICAL)\n";
+	print LOGFILE @warning if @warning;
+	print LOGFILE "";
+	if ( keys %imagefiles ) {
+		for ( natural_sort_alpha( keys %imagefiles ) ) {
+			print LOGFILE "WARNING! File " . $_ . " not used!\n" 
+			  if ( $_ =~ /\.(png|jpg|gif|bmp)/ );
+		}
+		print LOGFILE "";
+	}
+	print LOGFILE "Link statistics:\n";
+	print LOGFILE "$anchors named anchors\n";
+	print LOGFILE "$ids unnamed anchors (tag with id attribute)\n";
+	print LOGFILE "$ilinks internal links\n";
+	print LOGFILE "$images image links\n";
+	print LOGFILE "$css CSS style image links\n";
+	print LOGFILE "$elinks external links\n";
+	print LOGFILE "ANCHORS WITHOUT LINKS. - (INFORMATIONAL)\n";
+
+	for ( natural_sort_alpha( keys %anchor ) ) {
+		unless ( exists $link{$_} ) {
+			print LOGFILE "$anchor{$_}\n" ;
+			$count++;
+		}
+	}
+	print LOGFILE "$count  anchors without links\n";
+	unlink $filename if $filename;
+	close LOGFILE;
 }
 
 sub htmlimages {
@@ -6444,6 +6698,7 @@ sub errorcheckpop_up {
 							 'W3C Validate',
 							 'HTML Tidy',
 							 'Image Check',
+							 'Link Check',
 							 'W3C Validate CSS',
 							 'PPV HTML'
 		);
@@ -6479,8 +6734,13 @@ sub errorcheckpop_up {
 		while ( $line = <$fh> ) {
 			$line =~ s/^\s//g;
 			chomp $line;
-			# Skip rest of CSS 
-			if (($thiserrorchecktype eq 'W3C Validate CSS') and ($line =~ /^To show your readers/i)) {last;}
+
+			# Skip rest of CSS
+			if (     ( $thiserrorchecktype eq 'W3C Validate CSS' )
+				 and ( $line =~ /^To show your readers/i ) )
+			{
+				last;
+			}
 			no warnings 'uninitialized';
 			if ( $thiserrorchecktype eq 'HTML Tidy' ) {
 				if (     ( $line =~ /^[lI\d]/ )
@@ -6517,6 +6777,7 @@ sub errorcheckpop_up {
 						)    # anything else with line/column reference
 						or ( $thiserrorchecktype eq "PPV HTML" )
 						or ( $thiserrorchecktype eq "Image Check" )
+						or ( $thiserrorchecktype eq "Link Check" )
 						or ( $thiserrorchecktype eq "PPV Text" )
 					  )
 					{
@@ -6696,18 +6957,26 @@ qq/java -jar $validatecsscommand file:$pwd\/$name > errors.err/ );
 					if ( $errorchecktype eq 'PPV HTML' ) {
 						system(
 qq/perl lib\/ppvchecks\/pphtml.pl -i $name -o errors.err/ );
-					} else {
-						if ( $errorchecktype eq 'Image Check' ) {
-							$fname = dos_path( $lglobal{global_filename} )
-							  if $OS_WIN;
-							my ( $f, $d, $e ) =
-							  fileparse( $fname, qr{\.[^\.]*$} );
-							system(
-								 qq/perl lib\/ppvchecks\/ppvimage.pl $name $d/);
-						} else {
-							if ( $errorchecktype eq 'PPV Text' ) {
+					}
+
+					else {
+						if ( $errorchecktype eq 'Link Check' ) {
+							linkcheckrun;
+						}
+
+						else {
+							if ( $errorchecktype eq 'Image Check' ) {
+								$fname = dos_path( $lglobal{global_filename} )
+								  if $OS_WIN;
+								my ( $f, $d, $e ) =
+								  fileparse( $fname, qr{\.[^\.]*$} );
 								system(
+qq/perl lib\/ppvchecks\/ppvimage.pl $name $d/ );
+							} else {
+								if ( $errorchecktype eq 'PPV Text' ) {
+									system(
 qq/perl lib\/ppvchecks\/pptxt.pl -i $name -o errors.err/ );
+								}
 							}
 						}
 					}
@@ -15478,6 +15747,15 @@ sub markpopup {    # FIXME: Rename html_popup
 			-text  => 'Check All',
 			-width => 16
 		)->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
+		$f8->Button(
+			 -activebackground => $activecolor,
+		     -command          => sub {
+				errorcheckpop_up('Link Check');
+				unlink 'null' if ( -e 'null' );
+			},
+			 -text             => 'Link Check2',
+			 -width            => 16
+		)->grid( -row => 3, -column => 3, -padx => 1, -pady => 2 );
 		$diventry->insert( 'end', ' style="margin-left: 2em;"' );
 		$spanentry->insert( 'end', ' style="margin-left: 2em;"' );
 		$lglobal{markpop}->protocol(
