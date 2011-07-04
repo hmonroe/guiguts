@@ -5467,98 +5467,13 @@ sub hyperlinkpagenums {
 sub linkcheckrun {
 	open LOGFILE, "> errors.err" || die "output file error\n";
 	#printf LOGFILE "Link check\n";
-
-	if ( defined( $lglobal{lcpop} ) ) {
-		$lglobal{lcpop}->deiconify;
-		$lglobal{lcpop}->raise;
-		$lglobal{lcpop}->focus;
-	} else {
-
-		$lglobal{lcpop} = $top->Toplevel;
-		$lglobal{lcpop}->title('Link Check');
-		my $frame =
-		  $lglobal{lcpop}->Frame->pack->pack(
-											  -anchor => 'nw',
-											  -expand => 'yes',
-											  -fill   => 'both'
-		  );
-		$lglobal{linkchkbox} =
-		  $frame->Scrolled(
-							'Listbox',
-							-scrollbars  => 'se',
-							-background  => 'white',
-							-font        => '{Courier} 10',
-							-height      => 40,
-							-width       => 60,
-							-activestyle => 'none',
-		  )->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
-		drag( $lglobal{linkchkbox} );
-		$lglobal{lcpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{lcpop}->destroy;
-				undef $lglobal{lcpop};
-			}
-		);
-		$lglobal{lcpop}->Icon( -image => $icon );
-	}
-	BindMouseWheel( $lglobal{linkchkbox} );
-	$lglobal{linkchkbox}->eventAdd( '<<search>>' => '<ButtonRelease-2>',
-									'<ButtonRelease-3>' );
-	$lglobal{linkchkbox}->bind(
-		'<<search>>',
-		sub {
-			$lglobal{linkchkbox}->activate(
-										$lglobal{linkchkbox}->index(
-											'@'
-											  . (
-												$lglobal{linkchkbox}->pointerx -
-												  $lglobal{linkchkbox}->rootx
-											  )
-											  . ','
-											  . (
-												$lglobal{linkchkbox}->pointery -
-												  $lglobal{linkchkbox}->rooty
-											  )
-										)
-			);
-			$lglobal{linkchkbox}->selectionClear( 0, 'end' );
-			$lglobal{linkchkbox}
-			  ->selectionSet( $lglobal{linkchkbox}->index('active') );
-			my $sword = $lglobal{linkchkbox}->get('active');
-			return unless ( defined $sword and length $sword );
-			searchpopup();
-			searchoptset(qw/0 x x 0/);
-			$lglobal{searchentry}->delete( '1.0', 'end' );
-			$lglobal{searchentry}->insert( 'end', $sword );
-			updatesearchlabels();
-		}
-	);
-	$lglobal{linkchkbox}->eventAdd( '<<find>>' => '<Double-Button-1>' );
-	$lglobal{linkchkbox}->bind(
-		'<<find>>',
-		sub {
-			my $sword = $lglobal{linkchkbox}->get('active');
-			return unless ( defined $sword and length $sword );
-			return unless $lglobal{linkchkbox}->index('active');
-			return unless ( $lglobal{linkchkbox}->curselection );
-			my @savesets = @sopt;
-			searchoptset(qw/0 x x 0/);
-			searchfromstartifnew($sword);
-			searchtext($sword);
-			searchoptset(@savesets);
-			$top->raise;
-		}
-	);
-	$lglobal{linkchkbox}->delete( '0', 'end' );
-	$lglobal{linkchkbox}->update;
 	my ( %anchor,  %id,  %link,   %image,  %badlink, $length, $upper );
 	my ( $anchors, $ids, $ilinks, $elinks, $images,  $count,  $css ) =
 	  ( 0, 0, 0, 0, 0, 0, 0 );
 	my @warning = ();
 	my $fname   = $lglobal{global_filename};
 	if ( $fname =~ /(No File Loaded)/ ) {
-		$lglobal{linkchkbox}
-		  ->insert( 'end', "You need to save your file first." );
+		print LOGFILE "You need to save your file first.";
 		return;
 	}
 	$fname = dos_path( $lglobal{global_filename} ) if $OS_WIN;
@@ -6986,8 +6901,6 @@ qq/perl lib\/ppvchecks\/pptxt.pl -i $name -o errors.err/ );
 	}
 	$top->Unbusy;
 	unlink $name;
-
-	#	errorcheckpop_up($errorchecktype);
 }
 
 sub validatecssremote {    # this does not work--does not  load the file
