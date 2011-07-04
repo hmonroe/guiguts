@@ -5466,7 +5466,6 @@ sub hyperlinkpagenums {
 
 sub linkcheckrun {
 	open LOGFILE, "> errors.err" || die "output file error\n";
-	#printf LOGFILE "Link check\n";
 	my ( %anchor,  %id,  %link,   %image,  %badlink, $length, $upper );
 	my ( $anchors, $ids, $ilinks, $elinks, $images,  $count,  $css ) =
 	  ( 0, 0, 0, 0, 0, 0, 0 );
@@ -5518,9 +5517,9 @@ sub linkcheckrun {
 						  if (    ( defined $imagefiles{$img} )
 							   || ( defined $link{$img} ) );
 						push @warning,
-						  "WARNING! $img contains uppercase characters!"
+						  "$img contains uppercase characters!"
 						  if ( $img ne lc($img) );
-						push @warning, "CRITICAL! Image file: $img not found!"
+						push @warning, "Image file: $img not found!"
 						  unless ( -e $d . $img );
 						$css++;
 					}
@@ -5557,9 +5556,9 @@ sub linkcheckrun {
 			delete $imagefiles{$img}
 			  if (    ( defined $imagefiles{$img} )
 				   || ( defined $link{$img} ) );
-			push @warning, "WARNING! $img contains uppercase characters!"
+			push @warning, "$img contains uppercase characters!"
 			  if ( $img ne lc($img) );
-			push @warning, "CRITICAL! Image file: $img not found!"
+			push @warning, "Image file: $img not found!"
 			  unless ( -e $d . $img );
 			$images++;
 		}
@@ -5568,24 +5567,20 @@ sub linkcheckrun {
 		$badlink{$_} = $_ if ( $_ =~ m/\\|\%5C|\s|\%20/ );
 		delete $imagefiles{$_} if ( defined $imagefiles{$_} );
 	}
-	print LOGFILE "INTERNAL LINKS WITHOUT ANCHORS. - (CRITICAL)\n";
-
 	for ( natural_sort_alpha( keys %link ) ) {
 		unless (    ( defined $anchor{$_} )
 				 || ( defined $id{$_} )
 				 || ( $link{$_} eq $_ ) )
 		{
-			print LOGFILE "#$link{$_}\n";
+			print LOGFILE "Internal link without anchor: #$link{$_}\n";
 			$count++;
 		}
 	}
-	print LOGFILE "$count internal links without anchors\n";
-	print LOGFILE "EXTERNAL LINKS. - (CRITICAL)\n";
 	my $externflag;
 	for ( natural_sort_alpha( keys %link ) ) {
 		if ( $link{$_} eq $_ ) {
 			if ( $_ =~ /:\/\// ) {
-				print LOGFILE "$link{$_}\n" ;
+				print LOGFILE "External link: $link{$_}\n" ;
 			} else {
 				my $temp = $_;
 				$temp =~ s/^([^#]+).*/$1/;
@@ -5598,16 +5593,14 @@ sub linkcheckrun {
 			}
 		}
 	}
-	print LOGFILE "LINKS WITH BAD CHARACTERS. - (CRITICAL)\n";
 	for ( natural_sort_alpha( keys %badlink ) ) {
-		print LOGFILE "$badlink{$_}\n";
+		print LOGFILE "Link with bad characters: $badlink{$_}\n";
 	}
-	print LOGFILE "IMAGE LINKS/FILES WITH PROBLEMS. - (CRITICAL)\n";
 	print LOGFILE @warning if @warning;
 	print LOGFILE "";
 	if ( keys %imagefiles ) {
 		for ( natural_sort_alpha( keys %imagefiles ) ) {
-			print LOGFILE "WARNING! File " . $_ . " not used!\n" 
+			print LOGFILE "File " . $_ . " not used!\n" 
 			  if ( $_ =~ /\.(png|jpg|gif|bmp)/ );
 		}
 		print LOGFILE "";
@@ -6653,6 +6646,12 @@ sub errorcheckpop_up {
 			# Skip rest of CSS
 			if (     ( $thiserrorchecktype eq 'W3C Validate CSS' )
 				 and ( $line =~ /^To show your readers/i ) )
+			{
+				last;
+			}
+			# Skip verbose informational warnngs in Link Check
+			if (     ( $thiserrorchecktype eq 'Link Check' )
+				 and ( $line =~ /^Link statistics/i ) )
 			{
 				last;
 			}
