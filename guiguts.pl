@@ -5336,9 +5336,9 @@ sub linkcheck {
 						  if (    ( defined $imagefiles{$img} )
 							   || ( defined $link{$img} ) );
 						push @warning,
-						  "WARNING! $img contains uppercase characters!"
+						  "WARNING! $img contains uppercase characters!\n"
 						  if ( $img ne lc($img) );
-						push @warning, "CRITICAL! Image file: $img not found!"
+						push @warning, "CRITICAL! Image file: $img not found!\n"
 						  unless ( -e $d . $img );
 						$css++;
 					}
@@ -5375,9 +5375,9 @@ sub linkcheck {
 			delete $imagefiles{$img}
 			  if (    ( defined $imagefiles{$img} )
 				   || ( defined $link{$img} ) );
-			push @warning, "WARNING! $img contains uppercase characters!"
+			push @warning, "WARNING! $img contains uppercase characters!\n"
 			  if ( $img ne lc($img) );
-			push @warning, "CRITICAL! Image file: $img not found!"
+			push @warning, "CRITICAL! Image file: $img not found!\n"
 			  unless ( -e $d . $img );
 			$images++;
 		}
@@ -5517,9 +5517,9 @@ sub linkcheckrun {
 						  if (    ( defined $imagefiles{$img} )
 							   || ( defined $link{$img} ) );
 						push @warning,
-						  "$img contains uppercase characters!"
+						  "$img contains uppercase characters!\n"
 						  if ( $img ne lc($img) );
-						push @warning, "Image file: $img not found!"
+						push @warning, "Image file: $img not found!\n"
 						  unless ( -e $d . $img );
 						$css++;
 					}
@@ -5556,9 +5556,9 @@ sub linkcheckrun {
 			delete $imagefiles{$img}
 			  if (    ( defined $imagefiles{$img} )
 				   || ( defined $link{$img} ) );
-			push @warning, "$img contains uppercase characters!"
+			push @warning, "$img contains uppercase characters!\n"
 			  if ( $img ne lc($img) );
-			push @warning, "Image file: $img not found!"
+			push @warning, "Image file: $img not found!\n"
 			  unless ( -e $d . $img );
 			$images++;
 		}
@@ -6656,7 +6656,9 @@ sub errorcheckpop_up {
 				last;
 			}
 			no warnings 'uninitialized';
-			if ( $thiserrorchecktype eq 'HTML Tidy' ) {
+			if ( ($thiserrorchecktype eq 'HTML Tidy' ) or
+					 ( $thiserrorchecktype eq "Image Check" )
+			) {
 				if (     ( $line =~ /^[lI\d]/ )
 					 and ( $line ne $errorchecklines[-1] ) )
 				{
@@ -6672,7 +6674,8 @@ sub errorcheckpop_up {
 				}
 			} else {
 				if (    ( $thiserrorchecktype eq "W3C Validate" )
-					 or ( $thiserrorchecktype eq "W3C Validate Remote" ) )
+					 or ( $thiserrorchecktype eq "W3C Validate Remote" ) 
+					 )
 				{
 					$line =~ s/^.*:(\d+:\d+)/line $1/;
 					$errors{$line} = '';
@@ -6690,7 +6693,6 @@ sub errorcheckpop_up {
 						( $thiserrorchecktype eq "W3C Validate CSS"
 						)    # anything else with line/column reference
 						or ( $thiserrorchecktype eq "PPV HTML" )
-						or ( $thiserrorchecktype eq "Image Check" )
 						or ( $thiserrorchecktype eq "Link Check" )
 						or ( $thiserrorchecktype eq "PPV Text" )
 					  )
@@ -6701,6 +6703,7 @@ sub errorcheckpop_up {
 						$lincol = '';
 						if ( $line =~ /Line : (\d+)/ ) {
 							$lincol = "$1.1";   # Assume column 1. Does not work
+							print "Lincol is $lincol\n";
 							$mark++;
 							$textwindow->markSet( "t$mark", $lincol );
 							$errors{$line} = "t$mark";
