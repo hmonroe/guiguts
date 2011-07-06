@@ -6655,6 +6655,13 @@ sub errorcheckpop_up {
 			{
 				last;
 			}
+			if      ( $thiserrorchecktype eq 'PPV HTML' )
+			{
+				if ( $line =~ /^-/i ) { # skip lines beginning with '-'	
+				next;}
+				if ( $line =~ /^Verbose checks/i ) { # stop with verbose specials check	
+				last;}
+			}
 			no warnings 'uninitialized';
 			if ( ($thiserrorchecktype eq 'HTML Tidy' ) or
 					 ( $thiserrorchecktype eq "Image Check" )
