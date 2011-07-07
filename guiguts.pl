@@ -5516,10 +5516,9 @@ sub linkcheckrun {
 						delete $imagefiles{$img}
 						  if (    ( defined $imagefiles{$img} )
 							   || ( defined $link{$img} ) );
-						push @warning,
-						  "$img contains uppercase characters!\n"
+						push @warning, "+$img: contains uppercase characters!\n"
 						  if ( $img ne lc($img) );
-						push @warning, "Image file: $img not found!\n"
+						push @warning, "+$img: not found!\n"
 						  unless ( -e $d . $img );
 						$css++;
 					}
@@ -5556,9 +5555,9 @@ sub linkcheckrun {
 			delete $imagefiles{$img}
 			  if (    ( defined $imagefiles{$img} )
 				   || ( defined $link{$img} ) );
-			push @warning, "$img contains uppercase characters!\n"
+			push @warning, "+$img: contains uppercase characters!\n"
 			  if ( $img ne lc($img) );
-			push @warning, "Image file: $img not found!\n"
+			push @warning, "+$img: not found!\n"
 			  unless ( -e $d . $img );
 			$images++;
 		}
@@ -5572,7 +5571,7 @@ sub linkcheckrun {
 				 || ( defined $id{$_} )
 				 || ( $link{$_} eq $_ ) )
 		{
-			print LOGFILE "Internal link without anchor: #$link{$_}\n";
+			print LOGFILE "+#$link{$_}: Internal link without anchor\n";
 			$count++;
 		}
 	}
@@ -5580,27 +5579,27 @@ sub linkcheckrun {
 	for ( natural_sort_alpha( keys %link ) ) {
 		if ( $link{$_} eq $_ ) {
 			if ( $_ =~ /:\/\// ) {
-				print LOGFILE "External link: $link{$_}\n" ;
+				print LOGFILE "+$link{$_}: External link\n";
 			} else {
 				my $temp = $_;
 				$temp =~ s/^([^#]+).*/$1/;
 				unless ( -e $d . $temp ) {
-					  print LOGFILE "local file(s) not found!\n" 
+					print LOGFILE "local file(s) not found!\n"
 					  unless $externflag;
-					print LOGFILE "$link{$_}\n" ;
+					print LOGFILE "+$link{$_}:\n";
 					$externflag++;
 				}
 			}
 		}
 	}
 	for ( natural_sort_alpha( keys %badlink ) ) {
-		print LOGFILE "Link with bad characters: $badlink{$_}\n";
+		print LOGFILE "+$badlink{$_}: Link with bad characters\n";
 	}
 	print LOGFILE @warning if @warning;
 	print LOGFILE "";
 	if ( keys %imagefiles ) {
 		for ( natural_sort_alpha( keys %imagefiles ) ) {
-			print LOGFILE "File " . $_ . " not used!\n" 
+			print LOGFILE "+" . $_ . ": File not used!\n"
 			  if ( $_ =~ /\.(png|jpg|gif|bmp)/ );
 		}
 		print LOGFILE "";
@@ -5616,7 +5615,7 @@ sub linkcheckrun {
 
 	for ( natural_sort_alpha( keys %anchor ) ) {
 		unless ( exists $link{$_} ) {
-			print LOGFILE "$anchor{$_}\n" ;
+			print LOGFILE "$anchor{$_}\n";
 			$count++;
 		}
 	}
@@ -6558,6 +6557,15 @@ sub errorcheckpop_up {
 				$textwindow->see( $errors{$line} );
 				$textwindow->markSet( 'insert', $errors{$line} );
 				update_indicators();
+			} else {
+				if ( $line =~ /^\+(.*):/ ) {    # search on text between + and :
+					my @savesets = @sopt;
+					searchoptset(qw/0 x x 0/);
+					searchfromstartifnew($1);
+					searchtext($1);
+					searchoptset(@savesets);
+					$top->raise;
+				}
 			}
 			$textwindow->focus;
 			$lglobal{errorcheckpop}->raise;
@@ -6644,26 +6652,40 @@ sub errorcheckpop_up {
 			chomp $line;
 
 			# Skip rest of CSS
-			if (     ( $thiserrorchecktype eq 'W3C Validate CSS' )
-				 and ( $line =~ /^To show your readers/i ) )
+			if (
+				 ( $thiserrorchecktype eq 'W3C Validate CSS' )
+				 and (    ( $line =~ /^To show your readers/i )
+					   or ( $line =~ /^Valid CSS Information/i ) )
+			  )
 			{
 				last;
 			}
+			if (
+				( $line =~
+				   /^$/i )   # skip some unnecessary lines from W3C Validate CSS
+				or ( $line =~ /^{output/i ) or ( $line =~ /^W3C/i )
+			  )
+			{
+				next;
+			}
+
 			# Skip verbose informational warnngs in Link Check
 			if (     ( $thiserrorchecktype eq 'Link Check' )
 				 and ( $line =~ /^Link statistics/i ) )
 			{
 				last;
 			}
-			if      ( $thiserrorchecktype eq 'PPV HTML' )
-			{
-				if ( $line =~ /^-/i ) { # skip lines beginning with '-'	
-				next;}
-				if ( $line =~ /^Verbose checks/i ) { # stop with verbose specials check	
-				last;}
+			if ( $thiserrorchecktype eq 'PPV HTML' ) {
+				if ( $line =~ /^-/i ) {    # skip lines beginning with '-'
+					next;
+				}
+				if ( $line =~ /^Verbose checks/i )
+				{                          # stop with verbose specials check
+					last;
+				}
 			}
 			no warnings 'uninitialized';
-			if ($thiserrorchecktype eq 'HTML Tidy' ) {
+			if ( $thiserrorchecktype eq 'HTML Tidy' ) {
 				if (     ( $line =~ /^[lI\d]/ )
 					 and ( $line ne $errorchecklines[-1] ) )
 				{
@@ -6679,9 +6701,9 @@ sub errorcheckpop_up {
 				}
 			} else {
 				if (    ( $thiserrorchecktype eq "W3C Validate" )
-					 or ( $thiserrorchecktype eq "W3C Validate Remote" ) 
-					 or ( $thiserrorchecktype eq "PPV HTML" ) 
-					or ( $thiserrorchecktype eq "Image Check" ))
+					 or ( $thiserrorchecktype eq "W3C Validate Remote" )
+					 or ( $thiserrorchecktype eq "PPV HTML" )
+					 or ( $thiserrorchecktype eq "Image Check" ) )
 				{
 					$line =~ s/^.*:(\d+:\d+)/line $1/;
 					$line =~ s/^(\d+:\d+)/line $1/;
@@ -6696,24 +6718,20 @@ sub errorcheckpop_up {
 						$errors{$line} = "t$mark";
 					}
 				} else {
-					if (
-						( $thiserrorchecktype eq "W3C Validate CSS"
-						)    # anything else with line/column reference
-						or ( $thiserrorchecktype eq "Link Check" )
-						or ( $thiserrorchecktype eq "PPV Text" )
-					  )
+					if (    ( $thiserrorchecktype eq "W3C Validate CSS" )
+						 or ( $thiserrorchecktype eq "PPV Text" ) )
 					{
-						$line =~ s/^.*:(\d+:\d+)/line $1/;
+						$line =~ s/Line : (\d+)/line $1:1/;
 						push @errorchecklines, $line;
 						$errors{$line} = '';
 						$lincol = '';
-						if ( $line =~ /Line : (\d+)/ ) {
-							$lincol = "$1.1";   # Assume column 1. Does not work
+						if ( $line =~ /line (\d+):(\d+)/ ) {
+							$lincol = "$1.$2";
 							$mark++;
 							$textwindow->markSet( "t$mark", $lincol );
 							$errors{$line} = "t$mark";
 						}
-					} 
+					}
 				}
 			}
 		}
@@ -6721,7 +6739,7 @@ sub errorcheckpop_up {
 		unlink 'errors.err';
 		my $size = @errorchecklines;
 		if ( ( $thiserrorchecktype eq "W3C Validate CSS" ) and ( $size == 0 ) )
-		{    # handle errors.err file with zero lines
+		{                               # handle errors.err file with zero lines
 			push @errorchecklines,
 "Could not perform validation: install java or use W3C CSS Validation web site.";
 		} else {
@@ -15667,13 +15685,13 @@ sub markpopup {    # FIXME: Rename html_popup
 			-width => 16
 		)->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
 		$f8->Button(
-			 -activebackground => $activecolor,
-		     -command          => sub {
+			-activebackground => $activecolor,
+			-command          => sub {
 				errorcheckpop_up('Link Check');
 				unlink 'null' if ( -e 'null' );
 			},
-			 -text             => 'Link Check2',
-			 -width            => 16
+			-text  => 'Link Check2',
+			-width => 16
 		)->grid( -row => 3, -column => 3, -padx => 1, -pady => 2 );
 		$diventry->insert( 'end', ' style="margin-left: 2em;"' );
 		$spanentry->insert( 'end', ' style="margin-left: 2em;"' );
