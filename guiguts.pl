@@ -5483,6 +5483,10 @@ sub linkcheckrun {
 	push @warning, '';
 	my ( $fh, $filename );
 
+	my $temp = $textwindow->FileName;
+	if ($temp =~ /projectid/i){
+		print LOGFILE "Choose a human readable filename: $temp\n";
+	}
 	if ( $textwindow->numberChanges ) {
 		( $fh, $filename ) = tempfile();
 		my ($lines) = $textwindow->index('end - 1 chars') =~ /^(\d+)\./;
@@ -6719,7 +6723,9 @@ sub errorcheckpop_up {
 					}
 				} else {
 					if (    ( $thiserrorchecktype eq "W3C Validate CSS" )
-						 or ( $thiserrorchecktype eq "PPV Text" ) )
+						 or ( $thiserrorchecktype eq "Link Check" ) 
+						 or ( $thiserrorchecktype eq "PPV Text" ) 
+						 )
 					{
 						$line =~ s/Line : (\d+)/line $1:1/;
 						push @errorchecklines, $line;
@@ -15626,8 +15632,11 @@ sub markpopup {    # FIXME: Rename html_popup
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
 		$f8->Button(
 					 -activebackground => $activecolor,
-					 -command          => \&linkcheck,
-					 -text             => 'Link Checker',
+			-command          => sub {
+				errorcheckpop_up('Link Check');
+				unlink 'null' if ( -e 'null' );
+			},
+					 -text             => 'Link Check',
 					 -width            => 16
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
 		$f8->Button(
@@ -15685,15 +15694,6 @@ sub markpopup {    # FIXME: Rename html_popup
 			-text  => 'Check All',
 			-width => 16
 		)->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
-		$f8->Button(
-			-activebackground => $activecolor,
-			-command          => sub {
-				errorcheckpop_up('Link Check');
-				unlink 'null' if ( -e 'null' );
-			},
-			-text  => 'Link Check2',
-			-width => 16
-		)->grid( -row => 3, -column => 3, -padx => 1, -pady => 2 );
 		$diventry->insert( 'end', ' style="margin-left: 2em;"' );
 		$spanentry->insert( 'end', ' style="margin-left: 2em;"' );
 		$lglobal{markpop}->protocol(
