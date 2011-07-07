@@ -6663,9 +6663,7 @@ sub errorcheckpop_up {
 				last;}
 			}
 			no warnings 'uninitialized';
-			if ( ($thiserrorchecktype eq 'HTML Tidy' ) or
-					 ( $thiserrorchecktype eq "Image Check" )
-			) {
+			if ($thiserrorchecktype eq 'HTML Tidy' ) {
 				if (     ( $line =~ /^[lI\d]/ )
 					 and ( $line ne $errorchecklines[-1] ) )
 				{
@@ -6682,12 +6680,14 @@ sub errorcheckpop_up {
 			} else {
 				if (    ( $thiserrorchecktype eq "W3C Validate" )
 					 or ( $thiserrorchecktype eq "W3C Validate Remote" ) 
-					 )
+					 or ( $thiserrorchecktype eq "PPV HTML" ) 
+					or ( $thiserrorchecktype eq "Image Check" ))
 				{
 					$line =~ s/^.*:(\d+:\d+)/line $1/;
+					$line =~ s/^(\d+:\d+)/line $1/;
 					$errors{$line} = '';
 					$lincol = '';
-					if ( $line =~ /line (\d+):(\d+):/ ) {
+					if ( $line =~ /line (\d+):(\d+)/ ) {
 						push @errorchecklines, $line;
 						$lincol = "$1.$2";
 						$lincol =~ s/\.0/\.1/;  # change column zero to column 1
@@ -6699,7 +6699,6 @@ sub errorcheckpop_up {
 					if (
 						( $thiserrorchecktype eq "W3C Validate CSS"
 						)    # anything else with line/column reference
-						or ( $thiserrorchecktype eq "PPV HTML" )
 						or ( $thiserrorchecktype eq "Link Check" )
 						or ( $thiserrorchecktype eq "PPV Text" )
 					  )
@@ -6710,13 +6709,11 @@ sub errorcheckpop_up {
 						$lincol = '';
 						if ( $line =~ /Line : (\d+)/ ) {
 							$lincol = "$1.1";   # Assume column 1. Does not work
-							print "Lincol is $lincol\n";
 							$mark++;
 							$textwindow->markSet( "t$mark", $lincol );
 							$errors{$line} = "t$mark";
 						}
-					}
-
+					} 
 				}
 			}
 		}
@@ -16121,12 +16118,6 @@ sub findandextractgreek {
 		$lglobal{grtext}->insert( '1.0', $text );
 	}
 }
-
-## Convert Greek
-# sub convertgreek {
-
-#     # does nothing yet
-# }
 
 ### Text Processing
 

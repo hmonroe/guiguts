@@ -364,7 +364,7 @@ sub runProgram {
 				if ( not( $src =~ m/^images\// ) )
 				{    # image not in images directory
 					print LOGFILE (
-							 "line $lineindex column 1 image file not in images directory for $src\n");
+							 "line $lineindex:1 image file not in images directory for $src\n");
 				}
 				my $alt = $img;
 				$alt =~ s/^.*alt=(['"].*$)/$1/i;
@@ -390,7 +390,7 @@ sub runProgram {
 				if ( length($ttlqt) > 0 ) {
 					#print LOGFILE ("  title=$ttlqt$ttl$ttlqt\n");
 				}
-				$warn   = " line $lineindex column 1";
+				$warn   = " line $lineindex:1";
 				my $wdstyl = "X";
 				my $htstyl = "X";
 
@@ -493,7 +493,7 @@ sub runProgram {
 		}    # avoid reporting files less than 512 bytes as 0 KB
 		     #printf LOGFILE "  Filesize: %u KB\n", $size;
 		if ( $size > 50 ) {
-			print LOGFILE "line $lineindex column 1 ";
+			print LOGFILE "line $lineindex:1 ";
 			printf LOGFILE "filesize %uKB exceeds 50KB for $src\n", $size;
 		}
 	}

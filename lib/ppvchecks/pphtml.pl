@@ -107,7 +107,7 @@ sub runProgram {
 								 $line );
 			}
 			if ( $lastline =~ /^$/ and $line =~ /^$/ ) {
-				$count += 1;
+				#count += 1;
 				printf LOGFILE ( "%d:1 Double-blank\n", $count );
 			}
 			$lastline = $line;
@@ -122,50 +122,37 @@ sub runProgram {
 			}
 			if ( $line =~ /\S\/>/ ) {
 				printf LOGFILE ( "%d:1 Closing tag: %s\n", $count, $line );
-				if ( $line =~ /&amp;amp/ ) {
-					printf LOGFILE ( "%d:1 Ampersand: %s\n", $count, $line );
-				}
-				if ( $line =~ /<p>\./ ) {
-					printf LOGFILE ( "%d:1 Possible PPG command: %s\n", $_ );
-				}
-				if ( $line =~ /\`/ ) {
-					printf LOGFILE ( "%d:1 Tick-mark check: %s\n", $count,
-									 $line );
-				}
-				if ( $line =~ /[^=]''/ ) {
-					printf LOGFILE ( "%d:1 Quote problem: %s\n", $count,
-									 $line );
-				}
-
-				# left single quote followed by whitespace
-				if ($line =~ /\&#8216;\s/) {
-					printf LOGFILE ( "Smart quote1: %s\n", $_ );
-				}
-
-				# left double quote followed by whitespace
-				if ($line =~ /\&#8220;\s/) {
-					printf LOGFILE ( "Smart quote2: %s\n", $_ );
-				}
-
-				# right double quote at start of line
-				if ($line =~ /^\&#8221;/) {
-					printf LOGFILE ( "Smart quote3: %s\n", $_ );
-				}
-
-				# right double quote at start of line
-				if ($line =~ /<p>\&#8221;/) {
-					printf LOGFILE ( "Smart quote4: %s\n", $_ );
-				}
-
-				# left double quote at end of line
-				if ($line=~/\&#8220;$/) {
-					printf LOGFILE ( "Smart quote5: %s\n", $_ );
-				}
-
-				# left double quote at end of line
-				if ($line=~/\&#8220;<\/p>/) {
-					printf LOGFILE ( "Smart quote6: %s\n", $_ );
-				}
+			}
+			if ( $line =~ /&amp;amp/ ) {
+				printf LOGFILE ( "%d:1 Ampersand: %s\n", $count, $line );
+			}
+			if ( $line =~ /<p>\./ ) {
+				printf LOGFILE ( "%d:1 Possible PPG command: %s\n", $count,
+								 $line );
+			}
+			if ( $line =~ /\`/ ) {
+				printf LOGFILE ( "%d:1 Tick-mark check: %s\n", $count, $line );
+			}
+			if ( $line =~ /[^=]''/ ) {
+				printf LOGFILE ( "%d:1 Quote problem: %s\n", $count, $line );
+			}
+			if ( $line =~ /\&#8216;\s/ ) {
+				printf LOGFILE ( "%d:1 Left single quote followed by whitespace: %s\n", $count, $line );
+			}
+			if ( $line =~ /\&#8220;\s/ ) {
+				printf LOGFILE ( "%d:1 Left double quote followed by whitespace: %s\n", $count, $line );
+			}
+			if ( $line =~ /^\&#8221;/ ) {
+				printf LOGFILE ( "%d:1 Right double quote at start of line: %s\n", $count, $line );
+			}
+			if ( $line =~ /<p>\&#8221;/ ) {
+				printf LOGFILE ( "%d:1 Right double quote at start of line: %s\n", $count, $line );
+			}
+			if ( $line =~ /\&#8220;$/ ) {
+				printf LOGFILE ( "%d:1 Left double quote at end of line: %s\n", $count, $line );
+			}
+			if ( $line =~ /\&#8220;<\/p>/ ) {
+				printf LOGFILE ( "%d:1 Left double quote at end of line: %s\n", $count, $line );
 			}
 		}
 
