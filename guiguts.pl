@@ -6662,8 +6662,8 @@ sub errorcheckpop_up {
 			}
 			if (
 				( $line =~
-				   /^$/i )   # skip some unnecessary lines from W3C Validate CSS
-				or ( $line =~ /^{output/i ) or ( $line =~ /^W3C/i )
+				   /^\s*$/i )   # skip some unnecessary lines from W3C Validate CSS
+				or ( $line =~ /^{output/i ) or ( $line =~ /^W3C/i ) or ( $line =~ /^URI/i )
 			  )
 			{
 				next;
@@ -6726,7 +6726,8 @@ sub errorcheckpop_up {
 						$errors{$line} = '';
 						$lincol = '';
 						if ( $line =~ /line (\d+):(\d+)/ ) {
-							$lincol = "$1.$2";
+							my $plusone = $1+1;
+							$lincol = "$plusone.$2";
 							$mark++;
 							$textwindow->markSet( "t$mark", $lincol );
 							$errors{$line} = "t$mark";
