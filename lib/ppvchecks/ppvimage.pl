@@ -316,15 +316,20 @@ sub runProgram {
 	}
 
 	sub imgcheck {
-		              #print LOGFILE ("\n----- checking images -----\n");
 		my $keepreading = 0;
 		my $haveimage   = 0;
 		my $img         = "";
+		my $stylewidth =0;
+		my $stylewidthline = 0;
 
-		#    my($x,$y)=(0,0);
+
 		$lineindex=0;
 		foreach $_ (@book) {    # find <img> tags and filenames
 			$lineindex++;
+			if (/style="width: (\d+)px/) {
+				$stylewidth=$1;
+				$stylewidthline=$lineindex;
+			}
 			$haveimage = 0;
 			if ($keepreading) {
 				$img = $img . " " . $_;
@@ -356,7 +361,7 @@ sub runProgram {
 			if ($haveimage) {
 				if ( not( $img =~ m/\/>/ ) ) {
 					print LOGFILE (
-						  "--> $img\n  WARNING: img tag not properly closed\n");
+						  "line $lineindex:1 img tag not properly closed $img\n");
 				}
 				$src = $img;
 				$src =~ s/^.*src=['"]([^'" ]*)['"].*$/$1/i;
@@ -454,13 +459,17 @@ sub runProgram {
 					print LOGFILE ("$warn image file $src not found\n");
 					next;
 				};
+				if ($wd ne $stylewidth) {
+					print LOGFILE (
+"line $stylewidthline:1 img tag width is $wd width in style tag is $stylewidth for $src\n"
+					);
+				}
 				&imgdimens;
 				if ( ( $wd ne $x ) or ( $ht ne $y ) ) {
 					print LOGFILE (
 "$warn coded dimensions are $wd $ht but actual dimensions are $x $y for $src\n"
 					);
 				}
-
 			}
 		}
 	}

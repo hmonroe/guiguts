@@ -5226,9 +5226,13 @@ sub linkcheckrun {
 	push @warning, '';
 	my ( $fh, $filename );
 
-	my $temp = $textwindow->FileName;
-	if ($temp =~ /projectid/i){
-		print LOGFILE "Choose a human readable filename: $temp\n";
+	my @temp = split(/[\\\/]/,$textwindow->FileName);
+	my $tempfilename = $temp[-1];
+	if ($tempfilename =~ /projectid/i){
+		print LOGFILE "Choose a human readable filename: $tempfilename\n";
+	}
+	if ($tempfilename =~ /[A-Z]/){
+		print LOGFILE "Use only lower case in filename: $tempfilename\n";
 	}
 	if ( $textwindow->numberChanges ) {
 		( $fh, $filename ) = tempfile();
