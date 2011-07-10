@@ -492,7 +492,7 @@ sub runProgram {
 			$size = 1;
 		}    # avoid reporting files less than 512 bytes as 0 KB
 		     #printf LOGFILE "  Filesize: %u KB\n", $size;
-		if ( $size > 50 ) {
+		if ( $size > 100 ) {
 			print LOGFILE "line $lineindex:1 ";
 			printf LOGFILE "filesize %uKB exceeds 50KB for $src\n", $size;
 		}

@@ -82,7 +82,8 @@ sub runProgram {
 				$printing = 0;
 			}
 			if ($printing) {
-				printf LOGFILE ( "%d:1 Check title: %s\n", $count, $line );
+				printf LOGFILE ( "%d:1 Confirm title:\n", $count, trim($line) );
+				printf LOGFILE ( "%d:1 %s\n", $count, trim($line) );
 			}
 		}
 	}
@@ -106,11 +107,6 @@ sub runProgram {
 				printf LOGFILE ( "%d:1 Missing table summary: %s\n", $count,
 								 $line );
 			}
-			if ( $lastline =~ /^$/ and $line =~ /^$/ ) {
-				#count += 1;
-				printf LOGFILE ( "%d:1 Double-blank\n", $count );
-			}
-			$lastline = $line;
 			if ( $line =~ /Blank Page/ ) {
 				printf LOGFILE ( "%d:1 Blank page\n", $count );
 			}
@@ -168,6 +164,11 @@ sub runProgram {
 				printf LOGFILE ( "  %s\n", $line );
 				$count += 1;
 			}
+			if ( $lastline =~ /^$/ and $line =~ /^$/ ) {
+				#count += 1;
+				printf LOGFILE ( "%d:1 Double-blank\n", $count );
+			}
+			$lastline = $line;
 		}
 		printf LOGFILE ( "  *** %d suspected missing mdashes\n", $count );
 
