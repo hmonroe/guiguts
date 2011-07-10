@@ -340,7 +340,7 @@ sub runProgram {
 				}
 			}
 			if ( not $found ) {
-				print LOGFILE "CSS possibly not used: $cssdef\n";
+				print LOGFILE "+$cssdef: CSS possibly not used\n";
 			}
 		}
 
@@ -358,7 +358,7 @@ sub runProgram {
 				}
 			}
 			if ( not $found ) {
-				print LOGFILE "CSS possibly not defined: $cssused\n";
+				print LOGFILE "+$cssused: CSS possibly not defined\n";
 			}
 		}
 

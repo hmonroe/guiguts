@@ -6468,6 +6468,9 @@ sub errorcheckpop_up {
 						$textwindow->markSet( "t$mark", $lincol );
 						$errors{$line} = "t$mark";
 					}
+					if ($line =~ /^\+/) {
+						push @errorchecklines, $line;
+					}
 				} else {
 					if (    ( $thiserrorchecktype eq "W3C Validate CSS" )
 						 or ( $thiserrorchecktype eq "Link Check" ) 

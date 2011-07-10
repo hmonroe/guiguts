@@ -503,7 +503,7 @@ sub runProgram {
 		     #printf LOGFILE "  Filesize: %u KB\n", $size;
 		if ( $size > 100 ) {
 			print LOGFILE "line $lineindex:1 ";
-			printf LOGFILE "filesize %uKB exceeds 50KB for $src\n", $size;
+			printf LOGFILE "filesize %uKB exceeds 100KB for $src\n", $size;
 		}
 	}
 ##################################
