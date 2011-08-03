@@ -435,31 +435,11 @@ sub runProgram {
 				}
 				$imgfile = $homedir . "/" . $src;
 
-				#      if (($wd ne "X") or ($ht ne "X")) {
-				#        print LOGFILE ("    coded ");
-				#        if ($wd ne "X") {
-				#          print LOGFILE ("width=\"$wd\" ");
-				#          }
-				#        if ($ht ne "X") {
-				#          print LOGFILE ("height=\"$ht\"");
-				#          }
-				#        print LOGFILE ("\n");
-				#        }
-				#      if (($wdstyl ne "X") or ($htstyl ne "X")) {
-				#        print LOGFILE ("   styled ");
-				#        if ($wdstyl ne "X") {
-				#          print LOGFILE ("width: $wdstyl; ");
-				#          }
-				#        if ($htstyl ne "X") {
-				#          print LOGFILE ("height: $htstyl;");
-				#          }
-				#        print LOGFILE ("\n");
-				#        }
 				open( IMGFILE, "<", $imgfile ) || do {
 					print LOGFILE ("$warn image file $src not found\n");
 					next;
 				};
-				if ($wd ne $stylewidth) {
+				if (($wd ne $stylewidth) and ($lineindex-$stylewidthline<5)) {
 					print LOGFILE (
 "line $stylewidthline:1 img tag width is $wd width in style tag is $stylewidth for $src\n"
 					);

@@ -11484,7 +11484,7 @@ sub spellcheckfirst {
 	@{ $lglobal{misspelledlist} } = ();
 	viewpagenums() if ( $lglobal{seepagenums} );
 	getprojectdic();
-	do "$lglobal{projectdictname}";
+	do "$lglobal{projectdictname}"; # this does not seem to do anything
 	$lglobal{lastmatchindex} = '1.0';
 
 	# Add good words to project dictionary
@@ -11734,6 +11734,7 @@ sub spellmyaddword {
 	}
 	print $dic ");";
 	close $dic;
+	print "$lglobal{projectdictname}";
 }
 
 sub spellclearvars {

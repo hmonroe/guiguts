@@ -126,7 +126,7 @@ sub adjacent_spaces {
     $lc++;
     if ($line =~ /  / and $line !~ /^\s/) {
       $adjsp_count += 1;
-      printf LOGFILE ("  line %4d: %s\n", $lc, $line);
+      printf LOGFILE ("line %d:1 %s\n", $lc, $line);
     }
   }
   if ($adjsp_count > 0) {

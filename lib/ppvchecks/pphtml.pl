@@ -357,7 +357,7 @@ sub runProgram {
 					$found++;
 				}
 			}
-			if ( not $found ) {
+			if (( not $found ) and (not $cssused eq "blockquote")) {
 				print LOGFILE "+$cssused: CSS possibly not defined\n";
 			}
 		}
