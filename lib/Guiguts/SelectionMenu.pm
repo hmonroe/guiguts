@@ -30,7 +30,7 @@ sub wrapper {
 		$word = shift @words;
 		next unless defined $word and length $word;
 		if ( $word =~ /\/#/ ) {
-			$firstmargin = $leftmargin = $blocklmargin;
+			$firstmargin = $leftmargin = $main::blocklmargin;
 			if ( $word =~ /^\x7f*\/#\x8A(\d+)/ )
 			{    #check for block rewrapping with parameter markup
 				if ( length $1 ) {
@@ -138,7 +138,7 @@ sub selectrewrap {
 		my $enableindent;
 		my $fblock      = 0;
 		my $leftmargin  = $main::blocklmargin;
-		my $rightmargin = $main::blocklmargin;
+		my $rightmargin = $main::blockrmargin;
 		my $firstmargin = $main::blocklmargin;
 		my ( $rewrapped, $initial_tab, $subsequent_tab, $spaces );
 		my $indent = 0;
@@ -197,7 +197,7 @@ sub selectrewrap {
 				$main::blockwrap   = 1;
 				$leftmargin  = $main::blocklmargin + 1;
 				$firstmargin = $main::blocklmargin + 1;
-				$rightmargin = $main::blocklmargin;
+				$rightmargin = $main::blockrmargin;
 				if ( $selection =~ /^\x7f*\/#\[(\d+)/ )
 				{    #check for block rewrapping with parameter markup
 					if ($1) { $leftmargin = $1 + 1 }
