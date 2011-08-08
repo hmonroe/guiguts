@@ -11333,7 +11333,6 @@ sub update_see_img_button {
 #
 sub update_img_lbl_values {
 	my $pnum        = shift;
-	#my $pagenumbers = shift;
 
 	$lglobal{page_num_label}->configure( -text => "Img: $pnum" )
 	  if defined $lglobal{page_num_label};

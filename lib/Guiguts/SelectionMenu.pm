@@ -164,7 +164,7 @@ sub selectrewrap {
 		&main::opstop();
 		$spaces = 0;
 		while (1) {
-			$indent = $defaultindent;
+			$indent = $main::defaultindent;
 			$thisblockend =
 			  $textwindow->search( '-regex', '--', '^(\x7f)*$', $thisblockstart,
 								   $end );    #find end of paragraph
