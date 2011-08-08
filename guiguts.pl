@@ -83,7 +83,7 @@ $SIG{INT} = sub { _exit() };
 
 ### Constants
 my $OS_WIN   = $^O =~ m{Win};
-my $VERSION  = '0.2.11';         #0.4.02';
+my $VERSION  = '0.2.11';        #0.4.02';
 my $APP_NAME = 'GuiGuts';
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
@@ -351,18 +351,24 @@ toolbar_toggle();
 $top->geometry($geometry) if $geometry;
 
 ( $lglobal{global_filename} ) = @ARGV;
+
 die "ERROR: too many files specified. \n" if ( @ARGV > 1 );
 
+if($lglobal{global_filename} eq 'runtest') {
+	$lglobal{runtest}=1;
+}
 if (@ARGV) {
 	$lglobal{global_filename} = shift @ARGV;
+	
 	if ( -e $lglobal{global_filename} ) {
 		my $userfn = $lglobal{global_filename};
 		$top->update;
 		$lglobal{global_filename} = $userfn;
 		openfile( $lglobal{global_filename} );
 	}
+	 
 } else {
-	$lglobal{global_filename} = 'No File Loaded';
+	$lglobal{global_filename} = 'No File Loaded' unless ($lglobal{global_filename} eq 'runtest');
 }
 
 set_autosave() if $autosave;
@@ -5226,12 +5232,12 @@ sub linkcheckrun {
 	push @warning, '';
 	my ( $fh, $filename );
 
-	my @temp = split(/[\\\/]/,$textwindow->FileName);
+	my @temp = split( /[\\\/]/, $textwindow->FileName );
 	my $tempfilename = $temp[-1];
-	if ($tempfilename =~ /projectid/i){
+	if ( $tempfilename =~ /projectid/i ) {
 		print LOGFILE "Choose a human readable filename: $tempfilename\n";
 	}
-	if ($tempfilename =~ /[A-Z]/){
+	if ( $tempfilename =~ /[A-Z]/ ) {
 		print LOGFILE "Use only lower case in filename: $tempfilename\n";
 	}
 	if ( $textwindow->numberChanges ) {
@@ -6412,9 +6418,11 @@ sub errorcheckpop_up {
 				last;
 			}
 			if (
-				( $line =~
-				   /^\s*$/i )   # skip some unnecessary lines from W3C Validate CSS
-				or ( $line =~ /^{output/i ) or ( $line =~ /^W3C/i ) or ( $line =~ /^URI/i )
+				( $line =~ /^\s*$/i
+				)    # skip some unnecessary lines from W3C Validate CSS
+				or ( $line =~ /^{output/i )
+				or ( $line =~ /^W3C/i )
+				or ( $line =~ /^URI/i )
 			  )
 			{
 				next;
@@ -6468,21 +6476,20 @@ sub errorcheckpop_up {
 						$textwindow->markSet( "t$mark", $lincol );
 						$errors{$line} = "t$mark";
 					}
-					if ($line =~ /^\+/) {
+					if ( $line =~ /^\+/ ) {
 						push @errorchecklines, $line;
 					}
 				} else {
 					if (    ( $thiserrorchecktype eq "W3C Validate CSS" )
-						 or ( $thiserrorchecktype eq "Link Check" ) 
-						 or ( $thiserrorchecktype eq "PPV Text" ) 
-						 )
+						 or ( $thiserrorchecktype eq "Link Check" )
+						 or ( $thiserrorchecktype eq "PPV Text" ) )
 					{
 						$line =~ s/Line : (\d+)/line $1:1/;
 						push @errorchecklines, $line;
 						$errors{$line} = '';
 						$lincol = '';
 						if ( $line =~ /line (\d+):(\d+)/ ) {
-							my $plusone = $1+1;
+							my $plusone = $1 + 1;
 							$lincol = "$plusone.$2";
 							$mark++;
 							$textwindow->markSet( "t$mark", $lincol );
@@ -6496,7 +6503,7 @@ sub errorcheckpop_up {
 		unlink 'errors.err';
 		my $size = @errorchecklines;
 		if ( ( $thiserrorchecktype eq "W3C Validate CSS" ) and ( $size == 0 ) )
-		{                               # handle errors.err file with zero lines
+		{    # handle errors.err file with zero lines
 			push @errorchecklines,
 "Could not perform validation: install java or use W3C CSS Validation web site.";
 		} else {
@@ -8923,6 +8930,7 @@ sub initialize {
 	$lglobal{longordlabel}     = 0;
 	$lglobal{proofbarvisible}  = 0;
 	$lglobal{regaa}            = 0;
+	$lglobal{runtests}         = 0;
 	$lglobal{seepagenums}      = 0;
 	$lglobal{selectionsearch}  = 0;
 	$lglobal{showblocksize}    = 1;
@@ -11332,7 +11340,7 @@ sub update_see_img_button {
 # New subroutine "update_img_lbl_values" extracted - Tue Mar 22 00:08:26 2011.
 #
 sub update_img_lbl_values {
-	my $pnum        = shift;
+	my $pnum = shift;
 
 	$lglobal{page_num_label}->configure( -text => "Img: $pnum" )
 	  if defined $lglobal{page_num_label};
@@ -11483,7 +11491,7 @@ sub spellcheckfirst {
 	@{ $lglobal{misspelledlist} } = ();
 	viewpagenums() if ( $lglobal{seepagenums} );
 	getprojectdic();
-	do "$lglobal{projectdictname}"; # this does not seem to do anything
+	do "$lglobal{projectdictname}";    # this does not seem to do anything
 	$lglobal{lastmatchindex} = '1.0';
 
 	# Add good words to project dictionary
@@ -15381,13 +15389,13 @@ sub markpopup {    # FIXME: Rename html_popup
 					 -width            => 16
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
 		$f8->Button(
-					 -activebackground => $activecolor,
+			-activebackground => $activecolor,
 			-command          => sub {
 				errorcheckpop_up('Link Check');
 				unlink 'null' if ( -e 'null' );
 			},
-					 -text             => 'Link Check',
-					 -width            => 16
+			-text  => 'Link Check',
+			-width => 16
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
 		$f8->Button(
 			-activebackground => $activecolor,
@@ -18359,4 +18367,16 @@ sub text_convert_options {
 	saveset();
 }
 
-MainLoop;
+sub runtest {
+	# From the comment line run "guiguts.pl runtest"
+	use Test::More tests => 1;
+    ok(1==1);
+}
+
+if ( $lglobal{runtest} ) {
+	runtest();
+	_exit();
+} else {
+	MainLoop;
+}
+
