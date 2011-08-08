@@ -83,7 +83,7 @@ $SIG{INT} = sub { _exit() };
 
 ### Constants
 my $OS_WIN   = $^O =~ m{Win};
-my $VERSION  = '0.2.7';         #0.4.02';
+my $VERSION  = '0.2.11';         #0.4.02';
 my $APP_NAME = 'GuiGuts';
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
@@ -11333,11 +11333,11 @@ sub update_see_img_button {
 #
 sub update_img_lbl_values {
 	my $pnum        = shift;
-	my $pagenumbers = shift;
+	#my $pagenumbers = shift;
 
 	$lglobal{page_num_label}->configure( -text => "Img: $pnum" )
 	  if defined $lglobal{page_num_label};
-	my $label = $pagenumbers->{"Pg$pnum"}{label};
+	my $label = $pagenumbers{"Pg$pnum"}{label};
 	if ( defined $label && length $label ) {
 		$lglobal{page_label}->configure( -text => ("Lbl: $label ") );
 	} else {
