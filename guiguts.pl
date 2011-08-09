@@ -65,9 +65,35 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $VERSION  = '0.2.11';        #0.4.02';
+my $VERSION  = '0.2.11';    #0.4.02';
 my $APP_NAME = 'GuiGuts';
 our $window_title = $APP_NAME . '-' . $VERSION;
+
+our $icondata = '
+    R0lGODdhIAAgAPcAAAAAAAAAQAAAgAAA/wAgAAAgQAAggAAg/wBAAABAQABAgABA/wBgAABgQABg
+    gABg/wCAAACAQACAgACA/wCgAACgQACggACg/wDAAADAQADAgADA/wD/AAD/QAD/gAD//yAAACAA
+    QCAAgCAA/yAgACAgQCAggCAg/yBAACBAQCBAgCBA/yBgACBgQCBggCBg/yCAACCAQCCAgCCA/yCg
+    ACCgQCCggCCg/yDAACDAQCDAgCDA/yD/ACD/QCD/gCD//0AAAEAAQEAAgEAA/0AgAEAgQEAggEAg
+    /0BAAEBAQEBAgEBA/0BgAEBgQEBggEBg/0CAAECAQECAgECA/0CgAECgQECggECg/0DAAEDAQEDA
+    gEDA/0D/AED/QED/gED//2AAAGAAQGAAgGAA/2AgAGAgQGAggGAg/2BAAGBAQGBAgGBA/2BgAGBg
+    QGBggGBg/2CAAGCAQGCAgGCA/2CgAGCgQGCggGCg/2DAAGDAQGDAgGDA/2D/AGD/QGD/gGD//4AA
+    AIAAQIAAgIAA/4AgAIAgQIAggIAg/4BAAIBAQIBAgIBA/4BgAIBgQIBggIBg/4CAAICAQICAgICA
+    /4CgAICgQICggICg/4DAAIDAQIDAgIDA/4D/AID/QID/gID//6AAAKAAQKAAgKAA/6AgAKAgQKAg
+    gKAg/6BAAKBAQKBAgKBA/6BgAKBgQKBggKBg/6CAAKCAQKCAgKCA/6CgAKCgQKCggKCg/6DAAKDA
+    QKDAgKDA/6D/AKD/QKD/gKD//8AAAMAAQMAAgMAA/8AgAMAgQMAggMAg/8BAAMBAQMBAgMBA/8Bg
+    AMBgQMBggMBg/8CAAMCAQMCAgMCA/8CgAMCgQMCggMCg/8DAAMDAQMDAgMDA/8D/AMD/QMD/gMD/
+    //8AAP8AQP8AgP8A//8gAP8gQP8ggP8g//9AAP9AQP9AgP9A//9gAP9gQP9ggP9g//+AAP+AQP+A
+    gP+A//+gAP+gQP+ggP+g///AAP/AQP/AgP/A////AP//QP//gP///yH5BAAAAAAALAAAAAAgACAA
+    AAj/AP8JHEiwoMGDCBMqXMiwIUNJJCJKnDixDQlJD5PYErito8ePHictMYERYRtb225NWsmypctJ
+    b04IaHMwyS2Vb5bo3Mmzp84TMpMUPHkrJ9CjSJMmNSAgAE2OSbZNQrpEqdKqR5sC2Cawzc2YJ56s
+    VPnE6ptJl1RW1fqUxDeRJ85q60e3n62kcybNrSvJQAAAJASSkLpE7N66/bIdPYu4bqS/AAQT1ks3
+    W5I2tRILOLFkUja6tS5/fgwg8r/BYyuXCGDCgJISmyfZAh1AQOskASBLXvm53+qrk1RvPuq39O5L
+    dCOZKPymecw3s/u1We48p+7TUveOtaUtm/danumO19XW3Xsb49jDZ7vVuC77ftqit/+7G3TvynWj
+    u2ncuxb99MkpEUkbJbgRXD+1vJeEG5EkUQJ0dOFmGmrJGXCCCXLRVYKCJnTIWGLXUdhPPs2ttNdj
+    b1T2Rl7IRRiiSvJ5V1c2sJ1w3339xJIbem0oMckTmTVWS41A4Zhcbn89tU0AT1TVRiy11BLJasMd
+    hVmUBNYGGVddmUCcAGBWuVSYFrJVUAlAMWVAh2y26WZrWgVmEGx+IWnnnXgCllAbSJbm55+A+vlU
+    QttYFOihgLXBpUOMNuqoQQEBADs=
+    ';
 splash();
 
 ### Custom Guigut modules
@@ -86,7 +112,7 @@ $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { _exit() };
 
 ### Constants
-my $OS_WIN   = $^O =~ m{Win};
+my $OS_WIN          = $^O =~ m{Win};
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
@@ -140,11 +166,11 @@ our $singleterm       = 1;
 our $spellindexbkmrk  = q{};
 our $stayontop        = 0;
 our $suspectindex;
-our $toolside     = 'bottom';
-our $utffontname  = 'Courier New';
-our $utffontsize  = 14;
-our $vislnnm      = 0;
-our $w3cremote    = 0;
+our $toolside    = 'bottom';
+our $utffontname = 'Courier New';
+our $utffontsize = 14;
+our $vislnnm     = 0;
+our $w3cremote   = 0;
 
 # These are set to the default Windows values in initialize()
 our $gutpath            = '';
@@ -227,36 +253,8 @@ $top->bind(
 	}
 );
 
-my $icon = $top->Photo(
-	-format => 'gif',
-	-data   => '
-    R0lGODdhIAAgAPcAAAAAAAAAQAAAgAAA/wAgAAAgQAAggAAg/wBAAABAQABAgABA/wBgAABgQABg
-    gABg/wCAAACAQACAgACA/wCgAACgQACggACg/wDAAADAQADAgADA/wD/AAD/QAD/gAD//yAAACAA
-    QCAAgCAA/yAgACAgQCAggCAg/yBAACBAQCBAgCBA/yBgACBgQCBggCBg/yCAACCAQCCAgCCA/yCg
-    ACCgQCCggCCg/yDAACDAQCDAgCDA/yD/ACD/QCD/gCD//0AAAEAAQEAAgEAA/0AgAEAgQEAggEAg
-    /0BAAEBAQEBAgEBA/0BgAEBgQEBggEBg/0CAAECAQECAgECA/0CgAECgQECggECg/0DAAEDAQEDA
-    gEDA/0D/AED/QED/gED//2AAAGAAQGAAgGAA/2AgAGAgQGAggGAg/2BAAGBAQGBAgGBA/2BgAGBg
-    QGBggGBg/2CAAGCAQGCAgGCA/2CgAGCgQGCggGCg/2DAAGDAQGDAgGDA/2D/AGD/QGD/gGD//4AA
-    AIAAQIAAgIAA/4AgAIAgQIAggIAg/4BAAIBAQIBAgIBA/4BgAIBgQIBggIBg/4CAAICAQICAgICA
-    /4CgAICgQICggICg/4DAAIDAQIDAgIDA/4D/AID/QID/gID//6AAAKAAQKAAgKAA/6AgAKAgQKAg
-    gKAg/6BAAKBAQKBAgKBA/6BgAKBgQKBggKBg/6CAAKCAQKCAgKCA/6CgAKCgQKCggKCg/6DAAKDA
-    QKDAgKDA/6D/AKD/QKD/gKD//8AAAMAAQMAAgMAA/8AgAMAgQMAggMAg/8BAAMBAQMBAgMBA/8Bg
-    AMBgQMBggMBg/8CAAMCAQMCAgMCA/8CgAMCgQMCggMCg/8DAAMDAQMDAgMDA/8D/AMD/QMD/gMD/
-    //8AAP8AQP8AgP8A//8gAP8gQP8ggP8g//9AAP9AQP9AgP9A//9gAP9gQP9ggP9g//+AAP+AQP+A
-    gP+A//+gAP+gQP+ggP+g///AAP/AQP/AgP/A////AP//QP//gP///yH5BAAAAAAALAAAAAAgACAA
-    AAj/AP8JHEiwoMGDCBMqXMiwIUNJJCJKnDixDQlJD5PYErito8ePHictMYERYRtb225NWsmypctJ
-    b04IaHMwyS2Vb5bo3Mmzp84TMpMUPHkrJ9CjSJMmNSAgAE2OSbZNQrpEqdKqR5sC2Cawzc2YJ56s
-    VPnE6ptJl1RW1fqUxDeRJ85q60e3n62kcybNrSvJQAAAJASSkLpE7N66/bIdPYu4bqS/AAQT1ks3
-    W5I2tRILOLFkUja6tS5/fgwg8r/BYyuXCGDCgJISmyfZAh1AQOskASBLXvm53+qrk1RvPuq39O5L
-    dCOZKPymecw3s/u1We48p+7TUveOtaUtm/danumO19XW3Xsb49jDZ7vVuC77ftqit/+7G3TvynWj
-    u2ncuxb99MkpEUkbJbgRXD+1vJeEG5EkUQJ0dOFmGmrJGXCCCXLRVYKCJnTIWGLXUdhPPs2ttNdj
-    b1T2Rl7IRRiiSvJ5V1c2sJ1w3339xJIbem0oMckTmTVWS41A4Zhcbn89tU0AT1TVRiy11BLJasMd
-    hVmUBNYGGVddmUCcAGBWuVSYFrJVUAlAMWVAh2y26WZrWgVmEGx+IWnnnXgCllAbSJbm55+A+vlU
-    QttYFOihgLXBpUOMNuqoQQEBADs=
-    '
-);
-
-	
+my $icon = $top->Photo( -format => 'gif',
+						-data   => $icondata );
 
 fontinit();    # Initialize the fonts for the two windows
 
@@ -358,21 +356,23 @@ $top->geometry($geometry) if $geometry;
 
 die "ERROR: too many files specified. \n" if ( @ARGV > 1 );
 
-if(($lglobal{global_filename} ) and ($lglobal{global_filename} eq 'runtests')) {
-	$lglobal{runtests}=1;
+if (     ( $lglobal{global_filename} )
+	 and ( $lglobal{global_filename} eq 'runtests' ) )
+{
+	$lglobal{runtests} = 1;
 }
 if (@ARGV) {
 	$lglobal{global_filename} = shift @ARGV;
-	
+
 	if ( -e $lglobal{global_filename} ) {
 		my $userfn = $lglobal{global_filename};
 		$top->update;
 		$lglobal{global_filename} = $userfn;
 		openfile( $lglobal{global_filename} );
 	}
-	 
+
 } else {
-	$lglobal{global_filename} = 'No File Loaded' ;
+	$lglobal{global_filename} = 'No File Loaded';
 }
 
 set_autosave() if $autosave;
@@ -809,7 +809,7 @@ sub openpng {
 		if ($OS_WIN) {
 			$dospath = dos_path($dospath);
 		}
-		runner( $dospath ,$imagefile );
+		runner( $dospath, $imagefile );
 	} else {
 		setpngspath();
 	}
@@ -11463,6 +11463,7 @@ sub update_indicators {
 			if ( $pnum != "$lglobal{pageimageviewed}" ) {
 				$lglobal{pageimageviewed} = $pnum;
 				auto_show_page_images('1');
+
 				#openpng();
 				#$textwindow->focusForce;
 			}
@@ -18373,28 +18374,45 @@ sub text_convert_options {
 }
 
 sub runtests {
+
 	# From the command line run "guiguts.pl runtests"
-	use Test::More ;
-    ok(1==1, "Dummy test 1==1");
-    done_testing();
+	use Test::More;
+	ok( 1 == 1, "Dummy test 1==1" );
+	done_testing();
 }
 
 sub splash {
-     my $splashtop = new MainWindow;
-     $splashtop -> Photo('imggif', -file => "resources\\logo.gif",-width => 360, -height => 68);
-     $splashtop->geometry("+300+200");
-     my $labelImage = $splashtop->Label('-image' => 'imggif')->pack();
-    $lglobal{splashpop}=$splashtop;
-	$lglobal{splashpop}->title($window_title." Post Processing Toolkit");
-	#$top->Icon( -image => $icon );
+	my $splashtop = new MainWindow;
+	$splashtop->Photo(
+					   'imggif',
+					   -file   => "resources\\logo.gif",
+					   -width  => 360,
+					   -height => 68
+	);
+	$splashtop->geometry("+300+200");
+	my $icon = $splashtop->Photo( -format => 'gif',
+								  -data   => $icondata );
+	$splashtop->Icon( -image => $icon );
+	my $labelImage = $splashtop->Label( '-image' => 'imggif' )->pack();
+	$lglobal{splashpop} = $splashtop;
+	$lglobal{splashpop}->title( $window_title . " Post Processing Toolkit" );
+
 	$lglobal{splashpop}->Frame->pack;
-	
-     my $splashtop2 = new MainWindow;
-     $splashtop2 -> Photo('imggif', -file => "resources\\PP.jpg",-width => 440, -height => 100);
-     $splashtop2->geometry("+260+400");
-     my $labelImage2 = $splashtop2->Label('-image' => 'imggif')->pack();
-    $lglobal{splashpop2}=$splashtop2;
-	$lglobal{splashpop2}->title($window_title." Post Processing Toolkit");
+
+	my $splashtop2 = new MainWindow;
+	$splashtop2->Photo(
+						'imggif',
+						-file   => "resources\\PP.jpg",
+						-width  => 440,
+						-height => 100
+	);
+	$splashtop2->geometry("+260+400");
+	my $icon2 = $splashtop2->Photo( -format => 'gif',
+									-data   => $icondata );
+	$splashtop2->Icon( -image => $icon2 );
+	my $labelImage2 = $splashtop2->Label( '-image' => 'imggif' )->pack();
+	$lglobal{splashpop2} = $splashtop2;
+	$lglobal{splashpop2}->title( $window_title . " Post Processing Toolkit" );
 	$lglobal{splashpop2}->Frame->pack;
 }
 
@@ -18408,4 +18426,3 @@ if ( $lglobal{runtests} ) {
 } else {
 	MainLoop;
 }
-
