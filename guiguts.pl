@@ -695,7 +695,6 @@ sub cmdinterp {
 
 ## Routine to spawn another perl process and use it to execute an
 # external program
-# FIXME: Can we get rid of spawn.pl
 sub runner {
 	my $args;
 	$args = join ' ', @_;
@@ -11459,6 +11458,8 @@ sub update_indicators {
 			if ( $pnum != "$lglobal{pageimageviewed}" ) {
 				$lglobal{pageimageviewed} = $pnum;
 				auto_show_page_images('1');
+				#openpng();
+				#$textwindow->focusForce;
 			}
 		}
 		$lglobal{pageimageviewed} = $pnum;
