@@ -65,6 +65,11 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
+my $VERSION  = '0.2.11';        #0.4.02';
+my $APP_NAME = 'GuiGuts';
+our $window_title = $APP_NAME . '-' . $VERSION;
+splash();
+
 ### Custom Guigut modules
 use Guiguts::LineNumberText;
 use Guiguts::TextUnicode;
@@ -82,8 +87,6 @@ $SIG{INT} = sub { _exit() };
 
 ### Constants
 my $OS_WIN   = $^O =~ m{Win};
-my $VERSION  = '0.2.11';        #0.4.02';
-my $APP_NAME = 'GuiGuts';
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
@@ -142,7 +145,6 @@ our $utffontname  = 'Courier New';
 our $utffontsize  = 14;
 our $vislnnm      = 0;
 our $w3cremote    = 0;
-our $window_title = $APP_NAME . '-' . $VERSION;
 
 # These are set to the default Windows values in initialize()
 our $gutpath            = '';
@@ -254,6 +256,8 @@ my $icon = $top->Photo(
     '
 );
 
+	
+
 fontinit();    # Initialize the fonts for the two windows
 
 utffontinit();
@@ -341,7 +345,8 @@ buildstatusbar();
 # Load the icon into the window bar. Needs to happen late in the process
 $top->Icon( -image => $icon );
 
-$textwindow->focus;
+$lglobal{splashpop}->focusForce;
+$lglobal{splashpop2}->focusForce;
 
 $lglobal{hasfocus} = $textwindow;
 
@@ -18368,12 +18373,35 @@ sub text_convert_options {
 }
 
 sub runtests {
-	# From the comment line run "guiguts.pl runtests"
+	# From the command line run "guiguts.pl runtests"
 	use Test::More ;
     ok(1==1, "Dummy test 1==1");
     done_testing();
 }
 
+sub splash {
+     my $splashtop = new MainWindow;
+     $splashtop -> Photo('imggif', -file => "resources\\logo.gif",-width => 360, -height => 68);
+     $splashtop->geometry("+300+200");
+     my $labelImage = $splashtop->Label('-image' => 'imggif')->pack();
+    $lglobal{splashpop}=$splashtop;
+	$lglobal{splashpop}->title($window_title." Post Processing Toolkit");
+	#$top->Icon( -image => $icon );
+	$lglobal{splashpop}->Frame->pack;
+	
+     my $splashtop2 = new MainWindow;
+     $splashtop2 -> Photo('imggif', -file => "resources\\PP.jpg",-width => 440, -height => 100);
+     $splashtop2->geometry("+260+400");
+     my $labelImage2 = $splashtop2->Label('-image' => 'imggif')->pack();
+    $lglobal{splashpop2}=$splashtop2;
+	$lglobal{splashpop2}->title($window_title." Post Processing Toolkit");
+	$lglobal{splashpop2}->Frame->pack;
+}
+
+sleep(2);
+$lglobal{splashpop}->destroy;
+$lglobal{splashpop2}->destroy;
+$textwindow->focus;
 if ( $lglobal{runtests} ) {
 	runtests();
 	_exit();
