@@ -19,6 +19,7 @@
 #Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #use criticism 'gentle';
+
 use strict;
 use warnings;
 use FindBin;
@@ -354,8 +355,8 @@ $top->geometry($geometry) if $geometry;
 
 die "ERROR: too many files specified. \n" if ( @ARGV > 1 );
 
-if($lglobal{global_filename} eq 'runtest') {
-	$lglobal{runtest}=1;
+if(($lglobal{global_filename} ) and ($lglobal{global_filename} eq 'runtests')) {
+	$lglobal{runtests}=1;
 }
 if (@ARGV) {
 	$lglobal{global_filename} = shift @ARGV;
@@ -368,7 +369,7 @@ if (@ARGV) {
 	}
 	 
 } else {
-	$lglobal{global_filename} = 'No File Loaded' unless ($lglobal{global_filename} eq 'runtest');
+	$lglobal{global_filename} = 'No File Loaded' ;
 }
 
 set_autosave() if $autosave;
@@ -18367,14 +18368,15 @@ sub text_convert_options {
 	saveset();
 }
 
-sub runtest {
-	# From the comment line run "guiguts.pl runtest"
-	use Test::More tests => 1;
-    ok(1==1);
+sub runtests {
+	# From the comment line run "guiguts.pl runtests"
+	use Test::More ;
+    ok(1==1, "Dummy test 1==1");
+    done_testing();
 }
 
-if ( $lglobal{runtest} ) {
-	runtest();
+if ( $lglobal{runtests} ) {
+	runtests();
 	_exit();
 } else {
 	MainLoop;
