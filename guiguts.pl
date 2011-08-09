@@ -42,8 +42,6 @@ use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
 
-#use Test::More;
-
 #use File::Path;
 #use HTML::Lint;
 
@@ -807,7 +805,7 @@ sub openpng {
 		if ($OS_WIN) {
 			$dospath = dos_path($dospath);
 		}
-		runner( $dospath, $imagefile );
+		runner( $dospath ,$imagefile );
 	} else {
 		setpngspath();
 	}
@@ -15909,7 +15907,7 @@ sub auto_show_page_images {
 		undef $lglobal{autoshowimagepop};
 	}
 	$lglobal{autoshowimagepop} = $top->Toplevel;
-	$lglobal{autoshowimagepop}->title('Auto Page Image');
+	$lglobal{autoshowimagepop}->title('Auto Show Page Image (Experimental)');
 	$lglobal{autoshowimagepop}->geometry($geometry2) if $geometry2;
 	$lglobal{autoshowimagepop}->protocol(
 		'WM_DELETE_WINDOW' => sub {
