@@ -8203,6 +8203,10 @@ sub confirmempty {
 			$lglobal{pagebutton}->destroy;
 			undef $lglobal{pagebutton};
 		}
+		if ( $lglobal{previmagebutton} ) {
+			$lglobal{previmagebutton}->destroy;
+			undef $lglobal{previmagebutton};
+		}
 		if ( $lglobal{proofbutton} ) {
 			$lglobal{proofbutton}->destroy;
 			undef $lglobal{proofbutton};
@@ -10498,6 +10502,24 @@ sub pgprevious {    #move focus to previous page marker
 	$textwindow->see($mark);
 }
 
+sub pgprevious2 {    #move focus to previous page marker
+	my $mark = $textwindow->index('current');
+	while ( $mark = $textwindow->markPrevious($mark) ) {
+		if ( $mark =~ /Pg(\d+)/ ) {
+			last;
+		}
+	}
+	$textwindow->markSet( 'insert', $mark || '1.0' );
+	my $num;
+	$num = $textwindow->index('insert') unless $num;
+	$mark = $num;
+	while ( $num = $textwindow->markPrevious($num) ) {
+		if ( $num =~ /Pg\S+/ ) { $mark = $num; last; }
+	}
+	$textwindow->yviewMoveto('1.0');
+	$textwindow->see($mark);
+}
+
 sub pgnext {    #move focus to next page marker
 	my $mark;
 	my $num = $lglobal{pagenumentry}->get;
@@ -10508,6 +10530,24 @@ sub pgnext {    #move focus to next page marker
 	}
 	$lglobal{pagenumentry}->delete( '0', 'end' );
 	$lglobal{pagenumentry}->insert( 'end', $mark );
+	$textwindow->yviewMoveto('1.0');
+	$textwindow->see($mark);
+}
+
+sub pgnext2 {    #move focus to next page marker
+	my $mark = $textwindow->index('current');
+	while ( $mark = $textwindow->markNext($mark) ) {
+		if ( $mark =~ /Pg(\d+)/ ) {
+			last;
+		}
+	}
+	$textwindow->markSet( 'insert', $mark || '1.0' );
+	my $num;
+	$num = $textwindow->index('insert') unless $num;
+	$mark = $num;
+	while ( $num = $textwindow->markNext($num) ) {
+		if ( $num =~ /Pg\S+/ ) { $mark = $num; last; }
+	}
 	$textwindow->yviewMoveto('1.0');
 	$textwindow->see($mark);
 }
@@ -11079,7 +11119,7 @@ sub buildstatusbar {
 							 -text       => ' No Selection ',
 							 -relief     => 'ridge',
 							 -background => 'gray',
-	  )->grid( -row => 1, -column => 7, -sticky => 'nw' );
+	  )->grid( -row => 1, -column => 9, -sticky => 'nw' );
 	$lglobal{selectionlabel}->bind(
 		'<1>',
 		sub {
@@ -11167,7 +11207,7 @@ sub buildstatusbar {
 							 -relief     => 'ridge',
 							 -background => 'gray',
 							 -width      => 2,
-	  )->grid( -row => 1, -column => 6, -sticky => 'nw' );
+	  )->grid( -row => 1, -column => 8, -sticky => 'nw' );
 	$lglobal{insert_overstrike_mode_label}->bind(
 		'<1>',
 		sub {
@@ -11186,7 +11226,7 @@ sub buildstatusbar {
 							 -relief     => 'ridge',
 							 -background => 'gray',
 							 -anchor     => 'w',
-	  )->grid( -row => 1, -column => 8 );
+	  )->grid( -row => 1, -column => 10 );
 
 	$lglobal{ordinallabel}->bind(
 		'<1>',
@@ -11220,7 +11260,7 @@ sub buildstatusbar {
 	);
 }
 
-# New subroutine "create_img_button" extracted - Mon Mar 21 21:56:01 2011.
+# New subroutine "update_img_button" extracted - Mon Mar 21 21:56:01 2011.
 #
 sub update_img_button {
 	my $pnum = shift;
@@ -11256,7 +11296,7 @@ sub update_img_button {
 	return ();
 }
 
-# New subroutine "update_see_image_button" extracted - Mon Mar 21 22:18:18 2011.
+# New subroutine "update_label_button" extracted - Mon Mar 21 22:18:18 2011.
 #
 sub update_label_button {
 	unless ( $lglobal{page_label} ) {
@@ -11265,7 +11305,7 @@ sub update_label_button {
 								 -text       => 'Lbl: None ',
 								 -background => 'gray',
 								 -relief     => 'ridge',
-		  )->grid( -row => 1, -column => 4 );
+		  )->grid( -row => 1, -column => 6 );
 		_butbind( $lglobal{page_label} );
 		$lglobal{page_label}->bind(
 			'<1>',
@@ -11313,6 +11353,34 @@ sub update_ordinal_button {
 	}
 }
 
+sub update_prev_img_button {
+	unless ( defined( $lglobal{previmagebutton} ) ) {
+		$lglobal{previmagebutton} =
+		  $counter_frame->Label(
+								 -text       => 'Previous Image',
+								 -width      => 13,
+								 -relief     => 'ridge',
+								 -background => 'gray',
+		  )->grid( -row => 1, -column => 3 );
+		$lglobal{previmagebutton}->bind(
+			'<1>',
+			sub {
+				$lglobal{previmagebutton}->configure( -relief => 'sunken' );
+				pgprevious2();
+				pgprevious2();
+				update_indicators();
+				openpng();
+			}
+		);
+		$lglobal{previmagebutton}->bind( '<3>', sub { setpngspath() } );
+		_butbind( $lglobal{previmagebutton} );
+		$lglobal{statushelp}->attach( $lglobal{previmagebutton},
+			 -balloonmsg =>
+			   "Move to previous page in text and open image corresponding to previous current page in an external viewer."
+		);
+	}
+}
+
 # New subroutine "update_see_img_button" extracted - Mon Mar 21 23:23:36 2011.
 #
 sub update_see_img_button {
@@ -11323,7 +11391,7 @@ sub update_see_img_button {
 								 -width      => 9,
 								 -relief     => 'ridge',
 								 -background => 'gray',
-		  )->grid( -row => 1, -column => 3 );
+		  )->grid( -row => 1, -column => 4 );
 		$lglobal{pagebutton}->bind(
 			'<1>',
 			sub {
@@ -11336,6 +11404,34 @@ sub update_see_img_button {
 		$lglobal{statushelp}->attach( $lglobal{pagebutton},
 			 -balloonmsg =>
 			   "Open Image corresponding to current page in an external viewer."
+		);
+	}
+}
+
+sub update_next_img_button {
+	unless ( defined( $lglobal{nextimagebutton} ) ) {
+		$lglobal{nextimagebutton} =
+		  $counter_frame->Label(
+								 -text       => 'Next Image',
+								 -width      => 13,
+								 -relief     => 'ridge',
+								 -background => 'gray',
+		  )->grid( -row => 1, -column => 5 );
+		$lglobal{nextimagebutton}->bind(
+			'<1>',
+			sub {
+				$lglobal{nextimagebutton}->configure( -relief => 'sunken' );
+				pgnext2();
+				pgnext2();
+				update_indicators();
+				openpng();
+			}
+		);
+		$lglobal{nextimagebutton}->bind( '<3>', sub { setpngspath() } );
+		_butbind( $lglobal{nextimagebutton} );
+		$lglobal{statushelp}->attach( $lglobal{nextimagebutton},
+			 -balloonmsg =>
+			   "Move to next page in text and open image corresponding to next current page in an external viewer."
 		);
 	}
 }
@@ -11368,7 +11464,7 @@ sub update_proofers_button {
 									 -width      => 11,
 									 -relief     => 'ridge',
 									 -background => 'gray',
-			  )->grid( -row => 1, -column => 5 );
+			  )->grid( -row => 1, -column => 7 );
 			$lglobal{proofbutton}->bind(
 				'<1>',
 				sub {
@@ -11470,7 +11566,9 @@ sub update_indicators {
 		}
 		$lglobal{pageimageviewed} = $pnum;
 		update_img_button($pnum);
+		update_prev_img_button();
 		update_see_img_button();
+		update_next_img_button();
 		update_label_button();
 		update_img_lbl_values($pnum);
 		update_proofers_button($pnum);
@@ -11976,6 +12074,10 @@ sub openfile {    # and open it
 	if ( $lglobal{pagebutton} ) {
 		$lglobal{pagebutton}->destroy;
 		undef $lglobal{pagebutton};
+	}
+	if ( $lglobal{previmagebutton} ) {
+		$lglobal{previmagebutton}->destroy;
+		undef $lglobal{previmagebutton};
 	}
 	if ( $lglobal{proofbutton} ) {
 		$lglobal{proofbutton}->destroy;
@@ -18416,7 +18518,7 @@ sub splash {
 	$lglobal{splashpop2}->Frame->pack;
 }
 
-sleep(2);
+sleep(1);
 $lglobal{splashpop}->destroy;
 $lglobal{splashpop2}->destroy;
 $textwindow->focus;
