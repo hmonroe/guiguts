@@ -6394,6 +6394,7 @@ sub errorcheckpop_up {
 		}
 	}
 	foreach my $thiserrorchecktype (@errorchecktypes) {
+		working($thiserrorchecktype);
 		errorcheckrun($thiserrorchecktype);
 		push @errorchecklines, "Beginning check: " . $thiserrorchecktype;
 		$lglobal{errorchecklistbox}
@@ -6516,6 +6517,7 @@ sub errorcheckpop_up {
 			push @errorchecklines, "Check is complete: " . $thiserrorchecktype;
 			push @errorchecklines, "";
 		}
+		working();
 	}
 	$lglobal{errorchecklistbox}->insert( 'end', @errorchecklines );
 	$lglobal{errorchecklistbox}->yview( 'scroll', 1, 'units' );
