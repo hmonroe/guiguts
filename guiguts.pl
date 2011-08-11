@@ -65,7 +65,7 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $VERSION  = '0.2.11';    #0.4.02';
+my $VERSION  = '0.2.09';    
 my $APP_NAME = 'GuiGuts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 
@@ -146,6 +146,7 @@ our $globalprojectdirectory = q{};
 our $highlightcolor         = '#a08dfc';
 our $history_size           = 20;
 our $italic_char            = "_";
+our $ignoreversions          = "revision"; #ignore revisions by default but not major or minor versions
 our $jeebiesmode            = 'p';
 our $lmargin                = 1;
 our $markupthreshold        = 4;
@@ -10712,7 +10713,7 @@ EOM
 			defaultindent fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
 			highlightcolor history_size jeebiesmode lmargin nobell nohighlights notoolbar rmargin
 			rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm w3cremote
-			intelligentWF italic_char bold_char/
+			intelligentWF italic_char bold_char ignoreversions/
 		  )
 		{
 			if ( eval '$' . $_ ) {
@@ -11362,8 +11363,8 @@ sub update_prev_img_button {
 	unless ( defined( $lglobal{previmagebutton} ) ) {
 		$lglobal{previmagebutton} =
 		  $counter_frame->Label(
-								 -text       => 'Previous Image',
-								 -width      => 13,
+								 -text       => '<',
+								 -width      => 3,
 								 -relief     => 'ridge',
 								 -background => 'gray',
 		  )->grid( -row => 1, -column => 3 );
@@ -11417,8 +11418,8 @@ sub update_next_img_button {
 	unless ( defined( $lglobal{nextimagebutton} ) ) {
 		$lglobal{nextimagebutton} =
 		  $counter_frame->Label(
-								 -text       => 'Next Image',
-								 -width      => 13,
+								 -text       => '>',
+								 -width      => 3,
 								 -relief     => 'ridge',
 								 -background => 'gray',
 		  )->grid( -row => 1, -column => 5 );
@@ -17104,45 +17105,85 @@ END
 	$dialog->Show;
 }
 
-# Check to see if this is the most recent version
-# FIXME: Doesn't work.
-sub checkver {
-	my ( $dbox, $answer );
+# Check what is the most recent version online
+sub checkonlineversion {
 	my $ua = LWP::UserAgent->new(
 								  env_proxy  => 1,
 								  keep_alive => 1,
 								  timeout    => 30,
 	);
-	my $response = $ua->get('http://guiguts.sourceforge.net/ggversion.txt');
+	my $response = $ua->get('http://sourceforge.net/projects/guiguts/');
 	unless ( $response->content ) {
-		$dbox = $top->Dialog(
-				  -text =>
-					'Could not check for updates, unable to connect to server.',
-				  -bitmap  => 'error',
-				  -title   => 'Could not connect.',
-				  -buttons => ['Ok']
-		);
-		$dbox->Show;
 		return;
 	}
-	if ( $response->content gt "\"$VERSION\"" ) {
-		print $response->content;
-		$dbox = $top->Dialog(
-			-text =>
-"A newer version is available.\nDo you want to go to the home page?",
-			-title   => 'Newer version available.',
-			-buttons => [ 'Ok', 'Cancel' ]
-		);
-	} else {
-		$dbox = $top->Dialog(
-							  -text    => 'This is the most current version.',
-							  -title   => 'Up to date.',
-							  -buttons => ['Cancel']
-		);
+	if ($response->content =~ /(\d+)\.(\d+)\.(\d+)\.zip/i) {
+		return "$1.$2.$3";
 	}
-	$answer = $dbox->Show;
-	if ( $answer =~ /ok/i ) {
-		runner("$globalbrowserstart http://sourceforge.net/projects/guiguts/");
+}
+
+# Check to see if this is the most recent version
+sub checkver {
+	print time();
+	my $monthlycheck = shift;
+	my $onlineversion = checkonlineversion();
+	my ( $dbox, $answer );
+	my $versionpopmessage;
+	my $versionbox = $top->Toplevel;
+	$versionbox->Icon( -image => $icon );
+	$versionbox->title('Check for updates');
+	my $dialog_frame = $versionbox->Frame()->pack(-side => "top",-pady => 10);
+	if ( $onlineversion) {
+		my ($onlinemajorversion,$onlineminorversion,$onlinerevision)=split(/\./,$onlineversion);
+		if ( $onlineversion gt "$VERSION" ) {
+		$dialog_frame->Label( -text => 
+		"A version $onlineversion is available which is newer than your version $VERSION.\nDo you want to go to the home page?"
+		 )->pack(-side => "top");
+		my $button_frame=$dialog_frame->Frame()->pack(-side => "top");
+		$button_frame->Button(
+			-text             => 'Update',
+			-command          => sub {runner("$globalbrowserstart http://sourceforge.net/projects/guiguts/");
+				$versionbox->destroy;
+				undef $versionbox; 
+			}
+		)->pack(-side => 'left',-pady => 8,-padx => 5 );
+		$button_frame->Button(
+			-text             => 'Ignore',
+			-command          => sub {
+				# need to record version to be ignored next time.
+			}
+		)->pack(-side => 'left',-pady => 8,-padx => 5 );
+		$button_frame->Button(
+			-text             => 'Remind Me',
+			-command          => sub {
+			}
+		)->pack(-side => 'left',-pady => 8,-padx => 5 );
+
+			#%dialogbuttons=("Update", "Cancel");				
+		} else {
+		$dialog_frame->Label( -text => 
+		"Your version $VERSION is the most current version."
+		 )->pack(-side => "top");
+			#%dialogbuttons=("OK");
+		}
+		$dialog_frame->Label( -text => $versionpopmessage )->pack(-side => "top");
+
+		
+		my $radio_frame = $versionbox->Frame()->pack(-side => "top",-pady => 10);
+		
+		$radio_frame->Radiobutton(-text => "Ignore All Updates", -value => "all",
+                                          -variable=> \&ignoreversions)->pack(-side => "left");
+		$radio_frame->Radiobutton(-text => "Ignore Major Versions", -value => "major",
+                                          -variable=> \&ignoreversions)->pack(-side => "left");
+		$radio_frame->Radiobutton(-text => "Ignore Minor Versions", -value => "minor",
+                                          -variable=> \&ignoreversions)->pack(-side => "left");
+		$radio_frame->Radiobutton(-text => "Ignore Revisions", -value => "revisions",
+                                          -variable=> \&ignoreversions)->pack(-side => "left");
+
+
+#		$answer = $dbox->Show;
+#	if ( $answer =~ /Update/i ) {
+#		
+#	}
 	}
 }
 
