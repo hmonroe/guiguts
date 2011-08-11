@@ -65,7 +65,7 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $VERSION  = '0.2.09';    
+my $VERSION  = '0.2.11';
 my $APP_NAME = 'GuiGuts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 
@@ -119,7 +119,7 @@ my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 ### Application Globals
 our $activecolor      = '#f2f818';
 our $auto_page_marks  = 1;
-our $auto_show_images  = 0;
+our $auto_show_images = 0;
 our $autobackup       = 0;
 our $autosave         = 0;
 our $autosaveinterval = 5;
@@ -146,14 +146,17 @@ our $globalprojectdirectory = q{};
 our $highlightcolor         = '#a08dfc';
 our $history_size           = 20;
 our $italic_char            = "_";
-our $ignoreversions          = "revision"; #ignore revisions by default but not major or minor versions
-our $jeebiesmode            = 'p';
-our $lmargin                = 1;
-our $markupthreshold        = 4;
-our $nobell                 = 0;
-our $nohighlights           = 0;
-our $notoolbar              = 0;
-our $intelligentWF          = 0;
+our $ignoreversions =
+  "revision";    #ignore revisions by default but not major or minor versions
+our $ignoreversionnumber = "";    #ignore a specific version
+our $jeebiesmode         = 'p';
+our $lastversioncheck    = 0;
+our $lmargin             = 1;
+our $markupthreshold     = 4;
+our $nobell              = 0;
+our $nohighlights        = 0;
+our $notoolbar           = 0;
+our $intelligentWF       = 0;
 our $operationinterrupt;
 our $pngspath         = q{};
 our $rmargin          = 72;
@@ -2279,7 +2282,10 @@ sub buildmenu {
 			],
 
 			# FIXME: Disable update check until it works
-			[ Button => 'Check For ~Updates',     -command => \&checkver ],
+			[
+			   Button   => 'Check For ~Updates',
+			   -command => sub { checkforupdates(0) }
+			],
 			[ Button => '~Hot keys',              -command => \&hotkeyshelp ],
 			[ Button => '~Function History',      -command => \&opspop_up ],
 			[ Button => '~Greek Transliteration', -command => \&greekpopup ],
@@ -10713,7 +10719,7 @@ EOM
 			defaultindent fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
 			highlightcolor history_size jeebiesmode lmargin nobell nohighlights notoolbar rmargin
 			rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm w3cremote
-			intelligentWF italic_char bold_char ignoreversions/
+			intelligentWF italic_char bold_char ignoreversions lastversioncheck ignoreversionnumber/
 		  )
 		{
 			if ( eval '$' . $_ ) {
@@ -11381,8 +11387,8 @@ sub update_prev_img_button {
 		$lglobal{previmagebutton}->bind( '<3>', sub { setpngspath() } );
 		_butbind( $lglobal{previmagebutton} );
 		$lglobal{statushelp}->attach( $lglobal{previmagebutton},
-			 -balloonmsg =>
-			   "Move to previous page in text and open image corresponding to previous current page in an external viewer."
+			-balloonmsg =>
+"Move to previous page in text and open image corresponding to previous current page in an external viewer."
 		);
 	}
 }
@@ -11436,8 +11442,8 @@ sub update_next_img_button {
 		$lglobal{nextimagebutton}->bind( '<3>', sub { setpngspath() } );
 		_butbind( $lglobal{nextimagebutton} );
 		$lglobal{statushelp}->attach( $lglobal{nextimagebutton},
-			 -balloonmsg =>
-			   "Move to next page in text and open image corresponding to next current page in an external viewer."
+			-balloonmsg =>
+"Move to next page in text and open image corresponding to next current page in an external viewer."
 		);
 	}
 }
@@ -11564,9 +11570,11 @@ sub update_indicators {
 		{
 			if ( $pnum != "$lglobal{pageimageviewed}" ) {
 				$lglobal{pageimageviewed} = $pnum;
+
 				#auto_show_page_images('1');
 
 				openpng();
+
 				#$textwindow->focusForce;
 			}
 		}
@@ -17116,74 +17124,124 @@ sub checkonlineversion {
 	unless ( $response->content ) {
 		return;
 	}
-	if ($response->content =~ /(\d+)\.(\d+)\.(\d+)\.zip/i) {
+	if ( $response->content =~ /(\d+)\.(\d+)\.(\d+)\.zip/i ) {
 		return "$1.$2.$3";
 	}
 }
 
 # Check to see if this is the most recent version
-sub checkver {
-	print time();
+sub checkforupdates {
 	my $monthlycheck = shift;
+	if ( $ignoreversions eq "major" ) {
+		return;
+	}
 	my $onlineversion = checkonlineversion();
-	my ( $dbox, $answer );
-	my $versionpopmessage;
-	my $versionbox = $top->Toplevel;
-	$versionbox->Icon( -image => $icon );
-	$versionbox->title('Check for updates');
-	my $dialog_frame = $versionbox->Frame()->pack(-side => "top",-pady => 10);
-	if ( $onlineversion) {
-		my ($onlinemajorversion,$onlineminorversion,$onlinerevision)=split(/\./,$onlineversion);
-		if ( $onlineversion gt "$VERSION" ) {
-		$dialog_frame->Label( -text => 
-		"A version $onlineversion is available which is newer than your version $VERSION.\nDo you want to go to the home page?"
-		 )->pack(-side => "top");
-		my $button_frame=$dialog_frame->Frame()->pack(-side => "top");
-		$button_frame->Button(
-			-text             => 'Update',
-			-command          => sub {runner("$globalbrowserstart http://sourceforge.net/projects/guiguts/");
-				$versionbox->destroy;
-				undef $versionbox; 
+	if ($onlineversion) {
+		if ( $monthlycheck eq "monthly" ) {
+			if (    ( $onlineversion eq "$VERSION" )
+				 or ( $onlineversion eq $ignoreversionnumber ) )
+			{
+				return;
 			}
-		)->pack(-side => 'left',-pady => 8,-padx => 5 );
-		$button_frame->Button(
-			-text             => 'Ignore',
-			-command          => sub {
-				# need to record version to be ignored next time.
+			my ( $onlinemajorversion, $onlineminorversion, $onlinerevision ) =
+			  split( /\./, $onlineversion );
+			my ( $currentmajorversion, $currentminorversion, $currentrevision )
+			  = split( /\./, $VERSION );
+			if (     ( $onlinemajorversion == $currentmajorversion )
+				 and ( $ignoreversions eq "minor" ) )
+			{
+				return;
 			}
-		)->pack(-side => 'left',-pady => 8,-padx => 5 );
-		$button_frame->Button(
-			-text             => 'Remind Me',
-			-command          => sub {
+			if (     ( $onlineminorversion == $currentminorversion )
+				 and ( $ignoreversions eq "revisions" ) )
+			{
+				return;
 			}
-		)->pack(-side => 'left',-pady => 8,-padx => 5 );
-
-			#%dialogbuttons=("Update", "Cancel");				
-		} else {
-		$dialog_frame->Label( -text => 
-		"Your version $VERSION is the most current version."
-		 )->pack(-side => "top");
-			#%dialogbuttons=("OK");
 		}
-		$dialog_frame->Label( -text => $versionpopmessage )->pack(-side => "top");
+		my ( $dbox, $answer );
+		my $versionpopmessage;
+		my $versionbox = $top->Toplevel;
+		$versionbox->Icon( -image => $icon );
+		$versionbox->title('Check for updates');
+		$versionbox->focusForce;
+		my $dialog_frame =
+		  $versionbox->Frame()->pack( -side => "top", -pady => 10 );
+		$dialog_frame->Label(
+			-text =>
+"The latest version available online is $onlineversion, and your version is $VERSION."
+		)->pack( -side => "top" );
+		my $button_frame = $dialog_frame->Frame()->pack( -side => "top" );
+		$button_frame->Button(
+			-text    => 'Update',
+			-command => sub {
+				runner(
+"$globalbrowserstart http://sourceforge.net/projects/guiguts/" );
+				$versionbox->destroy;
+				undef $versionbox;
+			}
+		)->pack( -side => 'left', -pady => 8, -padx => 5 );
+		$button_frame->Button(
+			-text    => 'Ignore This Version',
+			-command => sub {
+				print $ignoreversionnumber;
+				$ignoreversionnumber = $onlineversion;
+				saveset();
+				$versionbox->destroy;
+				undef $versionbox;
+			}
+		)->pack( -side => 'left', -pady => 8, -padx => 5 );
+		$button_frame->Button(
+			-text    => 'Remind Me',
+			-command => sub {
+				$versionbox->destroy;
+				undef $versionbox;
+				return;
+			}
+		)->pack( -side => 'left', -pady => 8, -padx => 5 );
+		$dialog_frame->Label( -text => $versionpopmessage )
+		  ->pack( -side => "top" );
 
-		
-		my $radio_frame = $versionbox->Frame()->pack(-side => "top",-pady => 10);
-		
-		$radio_frame->Radiobutton(-text => "Ignore All Updates", -value => "all",
-                                          -variable=> \&ignoreversions)->pack(-side => "left");
-		$radio_frame->Radiobutton(-text => "Ignore Major Versions", -value => "major",
-                                          -variable=> \&ignoreversions)->pack(-side => "left");
-		$radio_frame->Radiobutton(-text => "Ignore Minor Versions", -value => "minor",
-                                          -variable=> \&ignoreversions)->pack(-side => "left");
-		$radio_frame->Radiobutton(-text => "Ignore Revisions", -value => "revisions",
-                                          -variable=> \&ignoreversions)->pack(-side => "left");
+		my $radio_frame =
+		  $versionbox->Frame()->pack( -side => "top", -pady => 10 );
+		$radio_frame->Radiobutton(
+								   -text     => "Ignore Major Versions",
+								   -value    => "major",
+								   -variable => \$ignoreversions
+		)->pack( -side => "left" );
+		$radio_frame->Radiobutton(
+								   -text     => "Ignore Minor Versions",
+								   -value    => "minor",
+								   -variable => \$ignoreversions
+		)->pack( -side => "left" );
+		$radio_frame->Radiobutton(
+								   -text     => "Ignore Revisions",
+								   -value    => "revisions",
+								   -variable => \$ignoreversions
+		)->pack( -side => "left" );
+		$radio_frame->Radiobutton(
+								   -text     => "Check for Revisions",
+								   -value    => "none",
+								   -variable => \$ignoreversions
+		)->pack( -side => "left" );
+	} else {
+		$top->messageBox(
+					   -icon    => 'error',
+					   -message => 'Could not determine latest version online.',
+					   -title   => 'Checking for Updates',
+					   -type    => 'Ok',
+		);
+		return;
 
+	}
+}
 
-#		$answer = $dbox->Show;
-#	if ( $answer =~ /Update/i ) {
-#		
-#	}
+# On a monthly basis, check to see if this is the most recent version
+sub checkforupdatesmonthly {
+	if (     ( $ignoreversions ne "major" )
+		 and ( time() - $lastversioncheck > 2592000 ) )
+	{
+		$lastversioncheck = time();
+		checkforupdates("monthly");
 	}
 }
 
@@ -18564,10 +18622,12 @@ sub splash {
 	$lglobal{splashpop2}->Frame->pack;
 }
 
+# Ready to enter main loop
 sleep(1);
 $lglobal{splashpop}->destroy;
 $lglobal{splashpop2}->destroy;
 $textwindow->focus;
+checkforupdatesmonthly();
 if ( $lglobal{runtests} ) {
 	runtests();
 	_exit();
