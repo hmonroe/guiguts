@@ -860,9 +860,9 @@ sub html_convert_pageanchors {
 		my @marknames = sort $textwindow->markNames;
 		for my $mark (@marknames) {
 			if ( $mark =~ /Pg(\S+)/ ) {
-				my $num = $pagenumbers{$mark}{label};
+				my $num = $main::pagenumbers{$mark}{label};
 				$num =~ s/Pg // if defined $num;
-				$num = $1 unless $pagenumbers{$mark}{action};
+				$num = $1 unless $main::pagenumbers{$mark}{action};
 				next unless length $num;
 				$num =~ s/^0+(\d)/$1/;
 				$markindex = $textwindow->index($mark);
