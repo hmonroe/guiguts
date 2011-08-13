@@ -806,9 +806,12 @@ sub tglprfbar {
 
 # Routine to handle image viewer file requests
 sub openpng {
+	my $pagenum = shift;
+	$lglobal{pageimageviewed} = $pagenum;
+	#print "pagenum: $pagenum";
 	my $dospath;
 	my $dosfile;
-	my $imagefile = get_image_file();
+	my $imagefile = get_image_file($pagenum);
 	if ( $imagefile && $globalviewerpath ) {
 		$dospath = $globalviewerpath;
 		if ($OS_WIN) {
@@ -816,7 +819,7 @@ sub openpng {
 		}
 		runner( $dospath, $imagefile );
 	} else {
-		setpngspath();
+		setpngspath($pagenum);
 	}
 }
 
@@ -10514,22 +10517,22 @@ sub pgprevious {    #move focus to previous page marker
 	$textwindow->see($mark);
 }
 
-sub pgprevious2 {    #move focus to previous page marker
-	my $mark = $textwindow->index('current');
-	while ( $mark = $textwindow->markPrevious($mark) ) {
-		if ( $mark =~ /Pg(\d+)/ ) {
-			last;
-		}
+sub movetopage {    #move focus to previous/next page marker
+	my $offset = shift;
+	$lglobal{pageimageviewed}=get_page_number() unless $lglobal{pageimageviewed};
+	if (defined $textwindow->markPrevious("Pg".($lglobal{pageimageviewed}))) {
+	#print "num: $num\n";
+	my $mark = "Pg".($lglobal{pageimageviewed}+$offset);
+	
+	my $index = $textwindow->index($mark);
+	openpng($lglobal{pageimageviewed}+$offset);
+	$textwindow->markSet( 'insert', "$index+1c" );
+	$textwindow->see('insert');
+	$textwindow->focus;
+	update_indicators();
+	} else {
+		print "no previous page";
 	}
-	$textwindow->markSet( 'insert', $mark || '1.0' );
-	my $num;
-	$num = $textwindow->index('insert') unless $num;
-	$mark = $num;
-	while ( $num = $textwindow->markPrevious($num) ) {
-		if ( $num =~ /Pg\S+/ ) { $mark = $num; last; }
-	}
-	$textwindow->yviewMoveto('1.0');
-	$textwindow->see($mark);
 }
 
 sub pgnext {    #move focus to next page marker
@@ -11378,10 +11381,7 @@ sub update_prev_img_button {
 			'<1>',
 			sub {
 				$lglobal{previmagebutton}->configure( -relief => 'sunken' );
-				pgprevious2();
-				pgprevious2();
-				update_indicators();
-				openpng();
+				movetopage(-1);
 			}
 		);
 		$lglobal{previmagebutton}->bind( '<3>', sub { setpngspath() } );
@@ -11408,7 +11408,7 @@ sub update_see_img_button {
 			'<1>',
 			sub {
 				$lglobal{pagebutton}->configure( -relief => 'sunken' );
-				openpng();
+				openpng(get_page_number());
 			}
 		);
 		$lglobal{pagebutton}->bind( '<3>', sub { setpngspath() } );
@@ -11433,7 +11433,7 @@ sub update_next_img_button {
 			'<1>',
 			sub {
 				$lglobal{nextimagebutton}->configure( -relief => 'sunken' );
-				pgnext2();
+				#pgnext2();
 				pgnext2();
 				update_indicators();
 				openpng();
@@ -11570,15 +11570,9 @@ sub update_indicators {
 		{
 			if ( $pnum != "$lglobal{pageimageviewed}" ) {
 				$lglobal{pageimageviewed} = $pnum;
-
-				#auto_show_page_images('1');
-
-				openpng();
-
-				#$textwindow->focusForce;
+				openpng($pnum);
 			}
 		}
-		$lglobal{pageimageviewed} = $pnum;
 		update_img_button($pnum);
 		update_prev_img_button();
 		update_see_img_button();
@@ -16119,18 +16113,17 @@ sub get_page_number {
 }
 
 sub get_image_file {
+	my $pagenum=shift;
 	my $number;
-	my $pagenum;
 	my $imagefile;
-	$pagenum = get_page_number();
-	$lglobal{pageimageviewed} = $pagenum;
+	
 	unless ($pngspath) {
 		if ($OS_WIN) {
 			$pngspath = "${globallastpath}pngs\\";
 		} else {
 			$pngspath = "${globallastpath}pngs/";
 		}
-		setpngspath() unless ( -e "$pngspath$pagenum.png" );
+		setpngspath($pagenum) unless ( -e "$pngspath$pagenum.png" );
 	}
 	if ($pngspath) {
 		$imagefile = "$pngspath$pagenum.png";
@@ -16580,6 +16573,7 @@ sub viewerpath {    #Find your image viewer
 }
 
 sub setpngspath {
+	my $pagenum = shift;
 	my $path =
 	  $textwindow->chooseDirectory( -title => 'Choose the PNGs file directory.',
 									-initialdir => "$globallastpath" . "pngs",
@@ -16588,7 +16582,7 @@ sub setpngspath {
 	$path .= '/';
 	$path     = os_normal($path);
 	$pngspath = $path;
-	openpng();
+	openpng($pagenum);
 }
 
 sub toolbar_toggle {    # Set up / remove the tool bar
