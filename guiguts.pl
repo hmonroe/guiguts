@@ -1324,7 +1324,8 @@ sub file_menuitems {
 		  '~Guess Page Markers',
 		  -command => \&file_guess_page_marks
 	   ],
-	   [ 'command',   'Set Page ~Markers', file_mark_pages ],
+	   [ 'command',   'Set Page ~Markers', -command =>\&file_mark_pages ],
+	   [ 'command',   '~Adjust Page Markers', -command =>\&viewpagenums ],
 	   [ 'separator', '' ],
 	   [ 'command', 'E~xit', -command => \&_exit ],
 	]
@@ -10520,6 +10521,8 @@ sub pgprevious {    #move focus to previous page marker
 sub movetopage {    #move focus to previous/next page marker
 	my $offset = shift;
 	$lglobal{pageimageviewed}=get_page_number() unless $lglobal{pageimageviewed};
+	my $num = get_page_number();
+	print "num: $num";
 	if (defined $textwindow->markPrevious("Pg".($lglobal{pageimageviewed}))) {
 	#print "num: $num\n";
 	my $mark = "Pg".($lglobal{pageimageviewed}+$offset);
@@ -10531,7 +10534,7 @@ sub movetopage {    #move focus to previous/next page marker
 	$textwindow->focus;
 	update_indicators();
 	} else {
-		print "no previous page";
+		print "no previous page"
 	}
 }
 
