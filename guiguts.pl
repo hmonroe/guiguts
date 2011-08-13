@@ -8957,6 +8957,7 @@ sub initialize {
 	$lglobal{seepagenums}      = 0;
 	$lglobal{selectionsearch}  = 0;
 	$lglobal{showblocksize}    = 1;
+	$lglobal{showpageimages}   = 0;
 	$lglobal{spellencoding}    = "iso8859-1";
 	$lglobal{stepmaxwidth}     = 70;
 	$lglobal{suspects_only}    = 0;
@@ -10225,6 +10226,7 @@ sub pnumadjust {
 		$lglobal{pnumpop}->raise;
 		$lglobal{pagenumentry}->configure( -text => $mark );
 	} else {
+		$lglobal{showpageimages}=0;
 		$lglobal{pnumpop} = $top->Toplevel;
 		$lglobal{pnumpop}->title('Adjust Page Markers');
 		$lglobal{pnumpop}->geometry( $lglobal{pnpopgoem} )
@@ -10514,28 +10516,12 @@ sub pgprevious {    #move focus to previous page marker
 	}
 	$lglobal{pagenumentry}->delete( '0', 'end' );
 	$lglobal{pagenumentry}->insert( 'end', $mark );
-	$textwindow->yviewMoveto('1.0');
-	$textwindow->see($mark);
-}
-
-sub movetopage {    #move focus to previous/next page marker
-	my $offset = shift;
-	$lglobal{pageimageviewed}=get_page_number() unless $lglobal{pageimageviewed};
-	my $num = get_page_number();
-	print "num: $num";
-	if (defined $textwindow->markPrevious("Pg".($lglobal{pageimageviewed}))) {
-	#print "num: $num\n";
-	my $mark = "Pg".($lglobal{pageimageviewed}+$offset);
-	
-	my $index = $textwindow->index($mark);
-	openpng($lglobal{pageimageviewed}+$offset);
-	$textwindow->markSet( 'insert', "$index+1c" );
-	$textwindow->see('insert');
-	$textwindow->focus;
-	update_indicators();
-	} else {
-		print "no previous page"
+	$textwindow->yview($textwindow->index($mark));
+	if($lglobal{showpageimages} and ($mark =~ /Pg(\d+)/)) {
+		$textwindow->focus;
+		openpng($1);
 	}
+	update_indicators();
 }
 
 sub pgnext {    #move focus to next page marker
@@ -10548,26 +10534,12 @@ sub pgnext {    #move focus to next page marker
 	}
 	$lglobal{pagenumentry}->delete( '0', 'end' );
 	$lglobal{pagenumentry}->insert( 'end', $mark );
-	$textwindow->yviewMoveto('1.0');
-	$textwindow->see($mark);
-}
-
-sub pgnext2 {    #move focus to next page marker
-	my $mark = $textwindow->index('current');
-	while ( $mark = $textwindow->markNext($mark) ) {
-		if ( $mark =~ /Pg(\d+)/ ) {
-			last;
-		}
+	$textwindow->yview($textwindow->index($mark));
+	if($lglobal{showpageimages} and ($mark =~ /Pg(\d+)/)) {
+		$textwindow->focus;
+		openpng($1);
 	}
-	$textwindow->markSet( 'insert', $mark || '1.0' );
-	my $num;
-	$num = $textwindow->index('insert') unless $num;
-	$mark = $num;
-	while ( $num = $textwindow->markNext($num) ) {
-		if ( $num =~ /Pg\S+/ ) { $mark = $num; last; }
-	}
-	$textwindow->yviewMoveto('1.0');
-	$textwindow->see($mark);
+	update_indicators();
 }
 
 sub pmoveup {    # move the page marker up a line
@@ -11383,12 +11355,13 @@ sub update_prev_img_button {
 		$lglobal{previmagebutton}->bind(
 			'<1>',
 			sub {
-				$lglobal{previmagebutton}->configure( -relief => 'sunken' );
-				movetopage(-1);
+				$lglobal{showpageimages}=1;
+				viewpagenums() unless $lglobal{pnumpop};
+				$textwindow->focus;
+				pgprevious();
+				
 			}
 		);
-		$lglobal{previmagebutton}->bind( '<3>', sub { setpngspath() } );
-		_butbind( $lglobal{previmagebutton} );
 		$lglobal{statushelp}->attach( $lglobal{previmagebutton},
 			-balloonmsg =>
 "Move to previous page in text and open image corresponding to previous current page in an external viewer."
@@ -11436,10 +11409,10 @@ sub update_next_img_button {
 			'<1>',
 			sub {
 				$lglobal{nextimagebutton}->configure( -relief => 'sunken' );
-				#pgnext2();
-				pgnext2();
-				update_indicators();
-				openpng();
+				$lglobal{showpageimages}=1;
+				viewpagenums() unless $lglobal{pnumpop};
+				$textwindow->focus;
+				pgnext();
 			}
 		);
 		$lglobal{nextimagebutton}->bind( '<3>', sub { setpngspath() } );
