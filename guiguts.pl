@@ -808,7 +808,6 @@ sub tglprfbar {
 sub openpng {
 	my $pagenum = shift;
 	$lglobal{pageimageviewed} = $pagenum;
-	#print "pagenum: $pagenum";
 	my $dospath;
 	my $dosfile;
 	my $imagefile = get_image_file($pagenum);
@@ -10526,8 +10525,10 @@ sub pgprevious {    #move focus to previous page marker
 sub pgnext {    #move focus to next page marker
 	my $mark;
 	my $num = $lglobal{pagenumentry}->get;
+	print "num: $num\n";
 	$num = $textwindow->index('insert') unless $num;
 	$mark = $num;
+	print "num2: $num\n";
 	while ( $num = $textwindow->markNext($num) ) {
 		if ( $num =~ /Pg\S+/ ) { $mark = $num; last; }
 	}
@@ -11383,7 +11384,12 @@ sub update_see_img_button {
 			'<1>',
 			sub {
 				$lglobal{pagebutton}->configure( -relief => 'sunken' );
-				openpng(get_page_number());
+				my $pagenum = get_page_number();
+				if (defined $lglobal{pagenumentry}) {
+					$lglobal{pagenumentry}->delete( '0', 'end' );
+					$lglobal{pagenumentry}->insert( 'end', "Pg".$pagenum );
+				}
+				openpng($pagenum);
 			}
 		);
 		$lglobal{pagebutton}->bind( '<3>', sub { setpngspath() } );
