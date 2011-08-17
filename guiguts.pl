@@ -10226,7 +10226,6 @@ sub pnumadjust {
 		$lglobal{pnumpop}->raise;
 		$lglobal{pagenumentry}->configure( -text => $mark );
 	} else {
-		$lglobal{showpageimages}=0;
 		$lglobal{pnumpop} = $top->Toplevel;
 		$lglobal{pnumpop}->title('Adjust Page Markers');
 		$lglobal{pnumpop}->geometry( $lglobal{pnpopgoem} )
@@ -16558,7 +16557,7 @@ sub setpngspath {
 	$path .= '/';
 	$path     = os_normal($path);
 	$pngspath = $path;
-	openpng($pagenum);
+	openpng($pagenum) if defined $pagenum;
 }
 
 sub toolbar_toggle {    # Set up / remove the tool bar
