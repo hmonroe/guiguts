@@ -687,8 +687,8 @@ sub cmdinterp {
 		$command =~ s/\$e/$e/ if $e;
 	}
 	if ( $command =~ m/\$p/ ) {
-		return unless $lglobal{page_num_label};
-		$number = $lglobal{page_num_label}->cget( -text );
+		return unless $lglobal{img_num_label};
+		$number = $lglobal{img_num_label}->cget( -text );
 		$number =~ s/.+?(\d+).*/$1/;
 		$pagenum = $number;
 		return ' ' unless $pagenum;
@@ -763,7 +763,7 @@ sub tglprfbar {
 		$top->geometry("$geom[0]x$geom[1]+$geom[2]+$geom[3]");
 		$lglobal{proofbarvisible} = 0;
 	} else {
-		my $pnum = $lglobal{page_num_label}->cget( -text );
+		my $pnum = $lglobal{img_num_label}->cget( -text );
 		$pnum =~ s/\D+//g;
 		$proofer_frame->pack(
 							  -before => $counter_frame,
@@ -8210,9 +8210,9 @@ sub confirmdiscard {
 sub confirmempty {
 	my $answer = confirmdiscard();
 	if ( $answer =~ /no/i ) {
-		if ( $lglobal{page_num_label} ) {
-			$lglobal{page_num_label}->destroy;
-			undef $lglobal{page_num_label};
+		if ( $lglobal{img_num_label} ) {
+			$lglobal{img_num_label}->destroy;
+			undef $lglobal{img_num_label};
 		}
 		if ( $lglobal{pagebutton} ) {
 			$lglobal{pagebutton}->destroy;
@@ -11254,32 +11254,32 @@ sub buildstatusbar {
 #
 sub update_img_button {
 	my $pnum = shift;
-	unless ( defined( $lglobal{page_num_label} ) ) {
-		$lglobal{page_num_label} =
+	unless ( defined( $lglobal{img_num_label} ) ) {
+		$lglobal{img_num_label} =
 		  $counter_frame->Label(
 								 -text       => "Img: $pnum",
 								 -width      => 8,
 								 -background => 'gray',
 								 -relief     => 'ridge',
 		  )->grid( -row => 1, -column => 2, -sticky => 'nw' );
-		$lglobal{page_num_label}->bind(
+		$lglobal{img_num_label}->bind(
 			'<1>',
 			sub {
-				$lglobal{page_num_label}->configure( -relief => 'sunken' );
+				$lglobal{img_num_label}->configure( -relief => 'sunken' );
 				gotopage();
 				update_indicators();
 			}
 		);
-		$lglobal{page_num_label}->bind(
+		$lglobal{img_num_label}->bind(
 			'<3>',
 			sub {
-				$lglobal{page_num_label}->configure( -relief => 'sunken' );
+				$lglobal{img_num_label}->configure( -relief => 'sunken' );
 				viewpagenums();
 				update_indicators();
 			}
 		);
-		_butbind( $lglobal{page_num_label} );
-		$lglobal{statushelp}->attach( $lglobal{page_num_label},
+		_butbind( $lglobal{img_num_label} );
+		$lglobal{statushelp}->attach( $lglobal{img_num_label},
 						   -balloonmsg => "Image/Page name for current page." );
 	}
 
@@ -11434,8 +11434,8 @@ sub update_next_img_button {
 sub update_img_lbl_values {
 	my $pnum = shift;
 
-	$lglobal{page_num_label}->configure( -text => "Img: $pnum" )
-	  if defined $lglobal{page_num_label};
+	$lglobal{img_num_label}->configure( -text => "Img: $pnum" )
+	  if defined $lglobal{img_num_label};
 	my $label = $pagenumbers{"Pg$pnum"}{label};
 	if ( defined $label && length $label ) {
 		$lglobal{page_label}->configure( -text => ("Lbl: $label ") );
@@ -11540,8 +11540,8 @@ sub update_indicators {
 	$pnum = get_page_number();
 	my $markindex = $textwindow->index('insert');
 	if ( $filename ne 'No File Loaded' or defined $lglobal{prepfile} ) {
-		$lglobal{page_num_label}->configure( -text => 'Img: 001' )
-		  if defined $lglobal{page_num_label};
+		$lglobal{img_num_label}->configure( -text => 'Img: 001' )
+		  if defined $lglobal{img_num_label};
 		$lglobal{page_label}->configure( -text => ("Lbl: None ") )
 		  if defined $lglobal{page_label};
 
@@ -12052,9 +12052,9 @@ sub openfile {    # and open it
 		return;
 	}
 	clearvars();
-	if ( $lglobal{page_num_label} ) {
-		$lglobal{page_num_label}->destroy;
-		undef $lglobal{page_num_label};
+	if ( $lglobal{img_num_label} ) {
+		$lglobal{img_num_label}->destroy;
+		undef $lglobal{img_num_label};
 	}
 	if ( $lglobal{page_label} ) {
 		$lglobal{page_label}->destroy;
@@ -16044,6 +16044,7 @@ sub get_image_file {
 	}
 	return $imagefile;
 }
+
 
 ### External
 sub externalpopup {    # Set up the external commands menu
