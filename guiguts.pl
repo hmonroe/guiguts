@@ -11385,7 +11385,7 @@ sub update_see_img_button {
 			sub {
 				$lglobal{pagebutton}->configure( -relief => 'sunken' );
 				my $pagenum = get_page_number();
-				if (defined $lglobal{pagenumentry}) {
+				if (defined $lglobal{pnumpop}) {
 					$lglobal{pagenumentry}->delete( '0', 'end' );
 					$lglobal{pagenumentry}->insert( 'end', "Pg".$pagenum );
 				}
@@ -15995,82 +15995,7 @@ sub findandextractgreek {
 
 ### Text Processing
 
-#sub auto_show_page_images {
-#	my ($updatingindicators) = @_;
-#	my ( $pagenum, $number );
-#	my $imagefile;
-#	$globalimagepath = $globallastpath unless $globalimagepath;
-#	if ( defined( $lglobal{autoshowimagepop} ) ) {
-#		$lglobal{autoshowimagepop}->destroy;
-#		undef $lglobal{autoshowimagepop};
-#	}
-#	$lglobal{autoshowimagepop} = $top->Toplevel;
-#	$lglobal{autoshowimagepop}->title('Auto Show Page Image (Experimental)');
-#	$lglobal{autoshowimagepop}->geometry($geometry2) if $geometry2;
-#	$lglobal{autoshowimagepop}->protocol(
-#		'WM_DELETE_WINDOW' => sub {
-#			$lglobal{autoshowimagepop}->destroy;
-#			undef $lglobal{autoshowimagepop};
-#		}
-#	);
-#	$lglobal{autoshowimagepop}->bind(
-#		'<Configure>' => sub {
-#			$lglobal{autoshowimagepop}->XEvent;
-#			$geometry2 = $lglobal{autoshowimagepop}->geometry;
-#			$lglobal{geometryupdate} = 1;
-#		}
-#	);
-#
-#	my $f = $lglobal{autoshowimagepop}->Frame->pack;
-#	$lglobal{imagelbl} = $f->Label(
-#									-text       => 'Image',
-#									-justify    => 'center',
-#									-background => 'white',
-#	)->grid( -row => 1, -column => 1 );
-#	$imagefile = get_image_file();
-#	if ($imagefile) {
-#
-#		# show the page image
-#		my @geom = split /[x+]/, $top->geometry;
-#		$lglobal{pageimgorig} = $top->Photo;
-#		$lglobal{pageimgresized} =
-#		  $top->Photo( -width => $geom[0], -height => ( $geom[1] ) );
-#		$lglobal{pageimgorig}->blank;
-#		$lglobal{pageimgresized}->blank;
-#		my $name = $imagefile;
-#		my ( $fn, $ext );
-#		( $fn, $globalimagepath, $ext ) = fileparse( $name, '(?<=\.)[^\.]*$' );
-#		$ext =~ s/jpg/jpeg/;
-#
-#		if ( lc($ext) eq 'gif' ) {
-#			$lglobal{pageimgorig}->read( $name, -shrink );
-#		} else {
-#			$lglobal{pageimgorig}->read( $name, -format => $ext, -shrink );
-#		}
-#		my $pageorigwidth  = $lglobal{pageimgorig}->width;
-#		my $pageorigheight = $lglobal{pageimgorig}->height;
-#		my $sw             = ( $lglobal{pageimgorig}->width ) / $geom[0];
-#		my $sh             = ( $lglobal{pageimgorig}->height ) / $geom[1];
-#		if ( $sh > $sw ) {
-#			$sw = $sh;
-#		}
-#
-#		#if ( $sw < 2 ) { $sw += 1 }
-#		$sw += 1;
-#		$lglobal{pageimgresized}
-#		  ->copy( $lglobal{pageimgorig}, -subsample => ($sw) )
-#		  ;    # -width=>$geom[0],-height=>$geom[1],,  -shrink
-#		$lglobal{imagelbl}->configure(
-#									   -image   => $lglobal{pageimgresized},
-#									   -text    => 'Page Image',
-#									   -justify => 'center',
-#		);
-#	} else {
-#		unless ($updatingindicators) {
-#			setpngspath();
-#		}
-#	}
-#}
+
 
 sub get_page_number {
 	my $pnum      = '001';
