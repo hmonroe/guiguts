@@ -10722,7 +10722,7 @@ EOM
 		print $save_handle ");\n\n";
 
 		for (
-			qw/activecolor auto_page_marks autobackup autosave autosaveinterval blocklmargin blockrmargin
+			qw/activecolor auto_page_marks auto_show_images autobackup autosave autosaveinterval blocklmargin blockrmargin
 			defaultindent fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
 			highlightcolor history_size jeebiesmode lmargin nobell nohighlights notoolbar rmargin
 			rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm w3cremote
@@ -11573,12 +11573,12 @@ sub update_indicators {
 		  if defined $lglobal{img_num_label};
 		$lglobal{page_label}->configure( -text => ("Lbl: None ") )
 		  if defined $lglobal{page_label};
+		  
 
 		if (    $auto_show_images
-			 && $pnum
-			 && $lglobal{pageimageviewed} )
+			 && $pnum)
 		{
-			if ( $pnum != "$lglobal{pageimageviewed}" ) {
+			if ((not defined $lglobal{pageimageviewed} ) or ($pnum != "$lglobal{pageimageviewed}") ) {
 				$lglobal{pageimageviewed} = $pnum;
 				openpng($pnum);
 			}
@@ -12354,6 +12354,13 @@ sub searchpopup {
 							 -variable    => \$sopt[4],
 							 -selectcolor => $lglobal{checkcolor},
 							 -text        => 'Start at Beginning'
+		  )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
+
+		$lglobal{searchop5} =
+		  $sf2->Checkbutton(
+							 -variable    => \$auto_show_images,
+							 -selectcolor => $lglobal{checkcolor},
+							 -text        => 'Show Images'
 		  )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
 
 		my ( $sf13, $sf14, $sf5 );
