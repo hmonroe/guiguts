@@ -6289,22 +6289,27 @@ sub errorcheckpop_up {
 			   -padx   => 2,
 			   -anchor => 'n'
 	  );
-	  if (( $errorchecktype eq 'Check All' ) or
-	  ( $errorchecktype eq 'Link Check' ) or
-	  ( $errorchecktype eq 'W3C Validate CSS' ) or
-	  ( $errorchecktype eq 'PP HTML' ) 
-	  ) {
-	  	$ptopframe->Checkbutton(
-							 -variable    => \$lglobal{verbose},
-							 -selectcolor => $lglobal{checkcolor},
-							 -text        => 'Verbose'
-	  )->pack(
-			   -side   => 'left',
-			   -pady   => 10,
-			   -padx   => 2,
-			   -anchor => 'n'
-	  );
-	  }
+	  
+	# Add verbose checkbox only for certain error check types
+	if (
+		   ( $errorchecktype eq 'Check All' )
+		or ( $errorchecktype eq 'Link Check' )
+		or
+		( $errorchecktype eq 'W3C Validate CSS' )
+		or ( $errorchecktype eq 'PP HTML' )
+	  )
+	{
+		$ptopframe->Checkbutton(
+								 -variable    => \$lglobal{verbose},
+								 -selectcolor => $lglobal{checkcolor},
+								 -text        => 'Verbose'
+		  )->pack(
+				   -side   => 'left',
+				   -pady   => 10,
+				   -padx   => 2,
+				   -anchor => 'n'
+		  );
+	}
 	my $pframe =
 	  $lglobal{errorcheckpop}
 	  ->Frame->pack( -fill => 'both', -expand => 'both', );
