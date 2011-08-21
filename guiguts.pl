@@ -805,6 +805,7 @@ sub tglprfbar {
 }
 
 # Routine to handle image viewer file requests
+# TODO switch focus back to the text window after showing the PNG
 sub openpng {
 	my $pagenum = shift;
 	$lglobal{pageimageviewed} = $pagenum;
@@ -10129,11 +10130,16 @@ sub pageadjust {
 			my ($num) = $page =~ /Pg(\S+)/;
 			$updatetemp++;
 			$lglobal{padjpop}->update if ( $updatetemp == 20 );
-			$pagetrack{$num}[0] =
-			  $frame1->Label(
-							  -text       => "Image# $num  ",
-							  -background => 'white',
-			  )->grid( -row => $row, -column => 0, -padx => 2 );
+			$pagetrack{$num}[0] = $frame1->Button(
+				-text => "Image# $num"  ,
+				-width   => 12,
+				-command => [
+					sub {
+						openpng($num);
+					},
+				],
+			)->grid( -row => $row, -column => 0, -padx => 2 );
+			  
 			$pagetrack{$num}[1] =
 			  $frame1->Label(
 							  -text       => "Label -->",
