@@ -1323,10 +1323,10 @@ sub file_menuitems {
 		  '~Guess Page Markers',
 		  -command => \&file_guess_page_marks
 	   ],
-	   [ 'command',   'Set Page ~Markers', -command =>\&file_mark_pages ],
-	   [ 'command',   '~Adjust Page Markers', -command =>\&viewpagenums ],
+	   [ 'command',   'Set Page ~Markers',    -command => \&file_mark_pages ],
+	   [ 'command',   '~Adjust Page Markers', -command => \&viewpagenums ],
 	   [ 'separator', '' ],
-	   [ 'command', 'E~xit', -command => \&_exit ],
+	   [ 'command',   'E~xit',                -command => \&_exit ],
 	]
 
 }
@@ -6281,7 +6281,7 @@ sub errorcheckpop_up {
 			errorcheckpop_up($errorchecktype);
 			unlink 'null' if ( -e 'null' );
 		},
-		-text  => 'Get Errors',
+		-text  => 'Check Errors',
 		-width => 16
 	  )->pack(
 			   -side   => 'left',
@@ -6289,7 +6289,22 @@ sub errorcheckpop_up {
 			   -padx   => 2,
 			   -anchor => 'n'
 	  );
-
+	  if (( $errorchecktype eq 'Check All' ) or
+	  ( $errorchecktype eq 'Link Check' ) or
+	  ( $errorchecktype eq 'W3C Validate CSS' ) or
+	  ( $errorchecktype eq 'PP HTML' ) 
+	  ) {
+	  	$ptopframe->Checkbutton(
+							 -variable    => \$lglobal{verbose},
+							 -selectcolor => $lglobal{checkcolor},
+							 -text        => 'Verbose'
+	  )->pack(
+			   -side   => 'left',
+			   -pady   => 10,
+			   -padx   => 2,
+			   -anchor => 'n'
+	  );
+	  }
 	my $pframe =
 	  $lglobal{errorcheckpop}
 	  ->Frame->pack( -fill => 'both', -expand => 'both', );
@@ -6427,7 +6442,8 @@ sub errorcheckpop_up {
 
 			# Skip rest of CSS
 			if (
-				 ( $thiserrorchecktype eq 'W3C Validate CSS' )
+				     ( not $lglobal{verbose} )
+				 and ( $thiserrorchecktype eq 'W3C Validate CSS' )
 				 and (    ( $line =~ /^To show your readers/i )
 					   or ( $line =~ /^Valid CSS Information/i ) )
 			  )
@@ -6446,7 +6462,8 @@ sub errorcheckpop_up {
 			}
 
 			# Skip verbose informational warnngs in Link Check
-			if (     ( $thiserrorchecktype eq 'Link Check' )
+			if (     ( not $lglobal{verbose} )
+				 and ( $thiserrorchecktype eq 'Link Check' )
 				 and ( $line =~ /^Link statistics/i ) )
 			{
 				last;
@@ -6455,7 +6472,7 @@ sub errorcheckpop_up {
 				if ( $line =~ /^-/i ) {    # skip lines beginning with '-'
 					next;
 				}
-				if ( $line =~ /^Verbose checks/i )
+				if ( ( not $lglobal{verbose} ) and $line =~ /^Verbose checks/i )
 				{                          # stop with verbose specials check
 					last;
 				}
@@ -8965,6 +8982,7 @@ sub initialize {
 	$lglobal{ToolBar}          = 1;
 	$lglobal{uoutp}            = 'h';
 	$lglobal{utfrangesort}     = 0;
+	$lglobal{verbose}          = 0;
 	$lglobal{visibleline}      = '';
 	$lglobal{zoneindex}        = 0;
 	@{ $lglobal{ascii} } = qw/+ - + | | | + - +/;
@@ -10514,8 +10532,8 @@ sub pgprevious {    #move focus to previous page marker
 	}
 	$lglobal{pagenumentry}->delete( '0', 'end' );
 	$lglobal{pagenumentry}->insert( 'end', $mark );
-	$textwindow->yview($textwindow->index($mark));
-	if($lglobal{showpageimages} and ($mark =~ /Pg(\d+)/)) {
+	$textwindow->yview( $textwindow->index($mark) );
+	if ( $lglobal{showpageimages} and ( $mark =~ /Pg(\d+)/ ) ) {
 		$textwindow->focus;
 		openpng($1);
 	}
@@ -10534,8 +10552,8 @@ sub pgnext {    #move focus to next page marker
 	}
 	$lglobal{pagenumentry}->delete( '0', 'end' );
 	$lglobal{pagenumentry}->insert( 'end', $mark );
-	$textwindow->yview($textwindow->index($mark));
-	if($lglobal{showpageimages} and ($mark =~ /Pg(\d+)/)) {
+	$textwindow->yview( $textwindow->index($mark) );
+	if ( $lglobal{showpageimages} and ( $mark =~ /Pg(\d+)/ ) ) {
 		$textwindow->focus;
 		openpng($1);
 	}
@@ -11355,11 +11373,11 @@ sub update_prev_img_button {
 		$lglobal{previmagebutton}->bind(
 			'<1>',
 			sub {
-				$lglobal{showpageimages}=1;
+				$lglobal{showpageimages} = 1;
 				viewpagenums() unless $lglobal{pnumpop};
 				$textwindow->focus;
 				pgprevious();
-				
+
 			}
 		);
 		$lglobal{statushelp}->attach( $lglobal{previmagebutton},
@@ -11385,9 +11403,9 @@ sub update_see_img_button {
 			sub {
 				$lglobal{pagebutton}->configure( -relief => 'sunken' );
 				my $pagenum = get_page_number();
-				if (defined $lglobal{pnumpop}) {
+				if ( defined $lglobal{pnumpop} ) {
 					$lglobal{pagenumentry}->delete( '0', 'end' );
-					$lglobal{pagenumentry}->insert( 'end', "Pg".$pagenum );
+					$lglobal{pagenumentry}->insert( 'end', "Pg" . $pagenum );
 				}
 				openpng($pagenum);
 			}
@@ -11414,7 +11432,7 @@ sub update_next_img_button {
 			'<1>',
 			sub {
 				$lglobal{nextimagebutton}->configure( -relief => 'sunken' );
-				$lglobal{showpageimages}=1;
+				$lglobal{showpageimages} = 1;
 				viewpagenums() unless $lglobal{pnumpop};
 				$textwindow->focus;
 				pgnext();
@@ -15995,8 +16013,6 @@ sub findandextractgreek {
 
 ### Text Processing
 
-
-
 sub get_page_number {
 	my $pnum      = '001';
 	my $markindex = $textwindow->index('insert');
@@ -16019,10 +16035,10 @@ sub get_page_number {
 }
 
 sub get_image_file {
-	my $pagenum=shift;
+	my $pagenum = shift;
 	my $number;
 	my $imagefile;
-	
+
 	unless ($pngspath) {
 		if ($OS_WIN) {
 			$pngspath = "${globallastpath}pngs\\";
@@ -16044,7 +16060,6 @@ sub get_image_file {
 	}
 	return $imagefile;
 }
-
 
 ### External
 sub externalpopup {    # Set up the external commands menu
@@ -17067,8 +17082,7 @@ sub checkforupdates {
 		$versionbox->focusForce;
 		my $dialog_frame =
 		  $versionbox->Frame()->pack( -side => "top", -pady => 10 );
-		$dialog_frame->Label(
-			-text =>
+		$dialog_frame->Label( -text =>
 "The latest version available online is $onlineversion, and your version is $VERSION."
 		)->pack( -side => "top" );
 		my $button_frame = $dialog_frame->Frame()->pack( -side => "top" );
