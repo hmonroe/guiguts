@@ -1422,12 +1422,6 @@ sub search_menuitems {
 	   [ 'separator', '' ],
 	   [
 		  'command',
-		  'Find Proofer Comments',
-		  -command => \&find_proofer_comment
-	   ],
-	   [ 'command', 'Find Asterisks w/o slash', -command => \&find_asterisks ],
-	   [
-		  'command',
 		  'Find next /*..*/ block',
 		  -command => [ \&nextblock, 'default', 'forward' ]
 	   ],
@@ -1484,6 +1478,12 @@ sub search_menuitems {
 	   [ 'separator', '' ],
 	   [ 'command',   'Find ~Orphaned Brackets', -command => \&brackets ],
 	   [ 'command',   'Find Orphaned Markup',    -command => \&orphanedmarkup ],
+	   [
+		  'command',
+		  'Find Proofer Comments',
+		  -command => \&find_proofer_comment
+	   ],
+	   [ 'command', 'Find Asterisks w/o slash', -command => \&find_asterisks ],
 	   [ 'separator', '' ],
 	   [
 		  'command', 'Highlight double quotes in selection',
