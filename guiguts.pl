@@ -13302,6 +13302,10 @@ sub find_proofer_comment {
 }
 
 sub find_asterisks {
+	if ( defined( $lglobal{search} ) ) {
+		$lglobal{search}->destroy;
+		undef $lglobal{search}; 
+	}
 	searchpopup();
 	searchoptset(qw/0 x x 1/);
 	$lglobal{searchentry}->insert( 'end', "(?<!/)\\*(?!/)" );
@@ -13976,7 +13980,7 @@ sub wordcount {
 				savefile() unless ( $textwindow->numberChanges == 0 );
 				wordcount();
 			},
-			-text => 'Re Run ',
+			-text => 'Rerun '
 		  )->pack(
 				   -side   => 'left',
 				   -padx   => 2,
