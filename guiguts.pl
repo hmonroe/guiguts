@@ -1470,11 +1470,6 @@ sub search_menuitems {
 		  'Find previous indented block',
 		  -command => [ \&nextblock, 'indent', 'reverse' ]
 	   ],
-	   [
-		  'command',
-		  'Find transliterations',
-		  -command => \&find_transliterations
-	   ],
 	   [ 'separator', '' ],
 	   [ 'command',   'Find ~Orphaned Brackets', -command => \&brackets ],
 	   [ 'command',   'Find Orphaned Markup',    -command => \&orphanedmarkup ],
@@ -1484,6 +1479,11 @@ sub search_menuitems {
 		  -command => \&find_proofer_comment
 	   ],
 	   [ 'command', 'Find Asterisks w/o slash', -command => \&find_asterisks ],
+	   [
+		  'command',
+		  'Find Transliterations',
+		  -command => \&find_transliterations
+	   ],
 	   [ 'separator', '' ],
 	   [
 		  'command', 'Highlight double quotes in selection',
