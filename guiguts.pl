@@ -11110,8 +11110,8 @@ sub dos_path {
 sub buildstatusbar {
 	$lglobal{current_line_label} =
 	  $counter_frame->Label(
-							 -text       => 'Ln: 1 / 1  -  Col: 0',
-							 -width      => 26,
+							 -text       => 'Ln: 1/1 - Col: 0',
+							 -width      => 20,
 							 -relief     => 'ridge',
 							 -background => 'gray',
 	  )->grid( -row => 1, -column => 0, -sticky => 'nw' );
@@ -11138,7 +11138,7 @@ sub buildstatusbar {
 							 -text       => ' No Selection ',
 							 -relief     => 'ridge',
 							 -background => 'gray',
-	  )->grid( -row => 1, -column => 9, -sticky => 'nw' );
+	  )->grid( -row => 1, -column => 10, -sticky => 'nw' );
 	$lglobal{selectionlabel}->bind(
 		'<1>',
 		sub {
@@ -11226,7 +11226,7 @@ sub buildstatusbar {
 							 -relief     => 'ridge',
 							 -background => 'gray',
 							 -width      => 2,
-	  )->grid( -row => 1, -column => 8, -sticky => 'nw' );
+	  )->grid( -row => 1, -column => 9, -sticky => 'nw' );
 	$lglobal{insert_overstrike_mode_label}->bind(
 		'<1>',
 		sub {
@@ -11245,7 +11245,7 @@ sub buildstatusbar {
 							 -relief     => 'ridge',
 							 -background => 'gray',
 							 -anchor     => 'w',
-	  )->grid( -row => 1, -column => 10 );
+	  )->grid( -row => 1, -column => 11 );
 
 	$lglobal{ordinallabel}->bind(
 		'<1>',
@@ -11286,8 +11286,8 @@ sub update_img_button {
 	unless ( defined( $lglobal{img_num_label} ) ) {
 		$lglobal{img_num_label} =
 		  $counter_frame->Label(
-								 -text       => "Img: $pnum",
-								 -width      => 8,
+								 -text       => "Img:$pnum",
+								 -width      => 7,
 								 -background => 'gray',
 								 -relief     => 'ridge',
 		  )->grid( -row => 1, -column => 2, -sticky => 'nw' );
@@ -11324,7 +11324,7 @@ sub update_label_button {
 								 -text       => 'Lbl: None ',
 								 -background => 'gray',
 								 -relief     => 'ridge',
-		  )->grid( -row => 1, -column => 6 );
+		  )->grid( -row => 1, -column => 7 );
 		_butbind( $lglobal{page_label} );
 		$lglobal{page_label}->bind(
 			'<1>',
@@ -11404,8 +11404,8 @@ sub update_see_img_button {
 	unless ( defined( $lglobal{pagebutton} ) ) {
 		$lglobal{pagebutton} =
 		  $counter_frame->Label(
-								 -text       => 'See Image',
-								 -width      => 9,
+								 -text       => 'See Img',
+								 -width      => 7,
 								 -relief     => 'ridge',
 								 -background => 'gray',
 		  )->grid( -row => 1, -column => 4 );
@@ -11458,12 +11458,48 @@ sub update_next_img_button {
 	}
 }
 
+sub update_auto_img_button {
+	unless ( defined( $lglobal{autoimagebutton} ) ) {
+		$lglobal{autoimagebutton} =
+		  $counter_frame->Label(
+								 -text       => 'Auto Img',
+								 -width      => 9,
+								 -relief     => 'ridge',
+								 -background => 'gray',
+		  )->grid( -row => 1, -column => 6 );
+		if ($auto_show_images) {$lglobal{autoimagebutton}->configure( -text => 'No Img' );}
+		$lglobal{autoimagebutton}->bind(
+			'<1>',
+			sub {
+				$auto_show_images = 1-$auto_show_images;
+				if ($auto_show_images) {$lglobal{autoimagebutton}->configure( -text => 'No Img' ); 
+		$lglobal{statushelp}->attach( $lglobal{autoimagebutton},
+			-balloonmsg =>
+"Stop automatically showing the image for the current page."
+		);
+					
+				} else {
+					$lglobal{autoimagebutton}->configure( -text => 'Auto Img' );
+		$lglobal{statushelp}->attach( $lglobal{autoimagebutton},
+			-balloonmsg =>
+"Automatically show the image for the current page (focus shifts to image window)."
+		);
+				}
+			}
+		);
+		$lglobal{statushelp}->attach( $lglobal{autoimagebutton},
+			-balloonmsg =>
+"Automatically show the image for the current page (focus shifts to image window)."
+		);
+	}
+}
+
 # New subroutine "update_img_lbl_values" extracted - Tue Mar 22 00:08:26 2011.
 #
 sub update_img_lbl_values {
 	my $pnum = shift;
 
-	$lglobal{img_num_label}->configure( -text => "Img: $pnum" )
+	$lglobal{img_num_label}->configure( -text => "Img:$pnum" )
 	  if defined $lglobal{img_num_label};
 	my $label = $pagenumbers{"Pg$pnum"}{label};
 	if ( defined $label && length $label ) {
@@ -11486,7 +11522,7 @@ sub update_proofers_button {
 									 -width      => 11,
 									 -relief     => 'ridge',
 									 -background => 'gray',
-			  )->grid( -row => 1, -column => 7 );
+			  )->grid( -row => 1, -column => 8 );
 			$lglobal{proofbutton}->bind(
 				'<1>',
 				sub {
@@ -11527,7 +11563,7 @@ sub update_indicators {
 	my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
 	my ( $line,      $column )   = split( /\./, $textwindow->index('insert') );
 	$lglobal{current_line_label}->configure(
-			  -text => "Ln: $line/" . ( $last_line - 1 ) . "  -  Col: $column" )
+			  -text => "Ln:$line/" . ( $last_line - 1 ) . " Col:$column" )
 	  if ( $lglobal{current_line_label} );
 	my $mode             = $textwindow->OverstrikeMode;
 	my $overstrke_insert = ' I ';
@@ -11569,12 +11605,10 @@ sub update_indicators {
 	$pnum = get_page_number();
 	my $markindex = $textwindow->index('insert');
 	if ( $filename ne 'No File Loaded' or defined $lglobal{prepfile} ) {
-		$lglobal{img_num_label}->configure( -text => 'Img: 001' )
+		$lglobal{img_num_label}->configure( -text => 'Img:001' )
 		  if defined $lglobal{img_num_label};
 		$lglobal{page_label}->configure( -text => ("Lbl: None ") )
 		  if defined $lglobal{page_label};
-		  
-
 		if (    $auto_show_images
 			 && $pnum)
 		{
@@ -11587,6 +11621,7 @@ sub update_indicators {
 		update_prev_img_button();
 		update_see_img_button();
 		update_next_img_button();
+		update_auto_img_button();
 		update_label_button();
 		update_img_lbl_values($pnum);
 		update_proofers_button($pnum);
@@ -13427,7 +13462,7 @@ sub brackets {
 								-text        => '/$ $/',
 		  )->grid( -row => 1, -column => 3, -pady => 5 );
 		my $frame3 = $lglobal{brkpop}->Frame->pack;
-		my $psel =
+		my $parasel =
 		  $frame3->Radiobutton(
 								-variable    => \$lglobal{brsel},
 								-selectcolor => $lglobal{checkcolor},
