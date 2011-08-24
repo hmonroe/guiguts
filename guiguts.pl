@@ -14764,6 +14764,13 @@ sub separatorpopup {
 			-selectcolor => $lglobal{checkcolor},
 			-text        => 'Semi Auto',
 		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+		$lglobal{jsshowimagebutton} =
+		  $sf3->Checkbutton(
+							 -variable    => \$auto_show_images,
+							 -selectcolor => $lglobal{checkcolor},
+							 -text        => 'Show Images'
+		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+		
 		my $sf4 =
 		  $lglobal{pagepop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
@@ -14817,7 +14824,7 @@ sub separatorpopup {
 	$lglobal{pagepop}->Tk::bind( '<r>' => \&convertfilnum );
 	$lglobal{pagepop}->Tk::bind(
 		'<v>' => sub {
-			openpng();
+			openpng(get_page_number());
 			$lglobal{pagepop}->raise;
 		}
 	);
