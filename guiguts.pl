@@ -1780,6 +1780,16 @@ sub text_menuitems {
 			}
 	   ],
 	   [
+		  Button   => 'All of the above',
+		  -command => sub {
+		  	  text_convert_italic( $textwindow, $italic_char );
+		  	  text_convert_bold( $textwindow, $bold_char );
+			  $textwindow->addGlobStart;
+			  text_convert_tb($textwindow);
+			  $textwindow->addGlobEnd;
+		  }
+	   ],
+	   [
 		  Button   => 'Small caps to all caps',
 		  -command => \&text_convert_smallcaps
 	   ],
@@ -13648,6 +13658,7 @@ sub brackets {
 sub orphanedmarkup {
 	searchpopup();
 	searchoptset(qw/0 x x 1/);
+	$lglobal{searchentry}->delete( '1.0', 'end' );
 	$lglobal{searchentry}->insert( 'end', "\\<(\\w+)>\\n?[^<]+<(?!/\\1>)" );
 
 }
