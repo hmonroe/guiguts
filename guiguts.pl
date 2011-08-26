@@ -11651,9 +11651,6 @@ sub spellcheckfirst {
 	do "$lglobal{projectdictname}";    # this does not seem to do anything
 	$lglobal{lastmatchindex} = '1.0';
 
-	# Add good words to project dictionary
-	# addgoodwords();
-
 	# get list of mispelled words in selection (or file if nothing selected)
 	spellget_misspellings();
 	my $term = $lglobal{misspelledlist}[0];    # get first mispelled term
@@ -11898,7 +11895,7 @@ sub spellmyaddword {
 	}
 	print $dic ");";
 	close $dic;
-	print "$lglobal{projectdictname}";
+	#print "$lglobal{projectdictname}";
 }
 
 sub spellclearvars {
@@ -12064,19 +12061,17 @@ sub spelladdtexttags {
 	$textwindow->see( $lglobal{matchindex} );
 }
 
-#sub addgoodwords {
-#    spellmyaddword("Flinders");
-#    chdir $globallastpath;
-#    open(DAT, "good_w~1.txt") || die("Could not open file!");
-#    my @raw_data=<DAT>;
-#    close(DAT);
-#    my $word=q{};
-#    foreach my $word (@raw_data)
-#    {
-#        echo $word;
-#        spellmyaddword($word);
-#    }
-#}
+sub spelladdgoodwords {
+    chdir $globallastpath;
+    open(DAT, "good_words.txt") || die("Could not open good_words.txt!");
+    my @raw_data=<DAT>;
+    close(DAT);
+    my $word=q{};
+    foreach my $word (@raw_data)
+    {
+        spellmyaddword(substr($word, 0, -1));
+    }
+}
 
 ## End Spellcheck
 
@@ -13082,7 +13077,42 @@ sub spellchecker {                  # Set up spell check window
 		my $spf4 =
 		  $lglobal{spellpopup}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
-		my $dictaddbutton = $spf4->Button(
+		my $dictmybutton = $spf4->Button(
+			-activebackground => $activecolor,
+			-command          => sub {
+				spelladdgoodwords();
+			},
+			-text  => 'Add Goodwords To Proj. Dic.',
+			-width => 22,
+		  )->pack(
+				   -side   => 'left',
+				   -pady   => 2,
+				   -padx   => 3,
+				   -anchor => 'nw'
+		  );
+		my $showimagebutton;
+		$showimagebutton = $spf4->Button(
+			-activebackground => $activecolor,
+			-command          => sub {
+				$auto_show_images = 1-$auto_show_images;
+				if ($auto_show_images) {
+					$showimagebutton->configure(-text  => 'No Images');
+				} else {
+					$showimagebutton->configure(-text  => 'Show Images');
+				}
+			},
+			-text  => 'Show Images',
+			-width => 22,
+		  )->pack(
+				   -side   => 'left',
+				   -pady   => 2,
+				   -padx   => 3,
+				   -anchor => 'nw'
+		  );
+		my $spf5 =
+		  $lglobal{spellpopup}
+		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
+		my $dictaddbutton = $spf5->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
 				spelladdword();
@@ -13097,7 +13127,7 @@ sub spellchecker {                  # Set up spell check window
 				   -padx   => 3,
 				   -anchor => 'nw'
 		  );
-		my $dictmyaddbutton = $spf4->Button(
+		my $dictmyaddbutton = $spf5->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
 				spellmyaddword( $lglobal{misspelledentry}->get );
