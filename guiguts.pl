@@ -3221,7 +3221,7 @@ sub roman {
 	my @figure      = reverse sort keys %roman_digit;
 	grep( $roman_digit{$_} = [ split( //, $roman_digit{$_}, 2 ) ], @figure );
 	my $arg = shift;
-	return $arg;
+	return undef unless defined $arg; 
 	0 < $arg and $arg < 4000 or return;
 	my ( $x, $roman );
 	foreach (@figure) {
@@ -10089,8 +10089,6 @@ sub pageadjust {
 						$label = $index;
 						$label =~ s/^0+// if $label and length $label;
 					}
-					print "pglabel: $label\n";
-
 					if ( $pagetrack{$num}[4]->cget( -text ) eq 'No Count' ) {
 						$pagetrack{$num}[2]->configure( -text => '' );
 					} else {
@@ -10142,21 +10140,15 @@ sub pageadjust {
 			$updatetemp++;
 			$lglobal{padjpop}->update if ( $updatetemp == 20 );
 			
-			$pagetrack{$num}[0] =
-			  $frame1->Label(
-							  -text       => "Image# $num  ",
-							  -background => 'white',
-			  )->grid( -row => $row, -column => 0, -padx => 2 );
-			
-#			$pagetrack{$num}[0] = $frame1->Button(
-#				-text => "Image# $num"  ,
-#				-width   => 12,
-#				-command => [
-#					sub {
-#						openpng($num);
-#					},
-#				],
-#			)->grid( -row => $row, -column => 0, -padx => 2 );
+			$pagetrack{$num}[0] = $frame1->Button(
+				-text => "Image# $num"  ,
+				-width   => 12,
+				-command => [
+					sub {
+						openpng($num);
+					},
+				],
+			)->grid( -row => $row, -column => 0, -padx => 2 );
 			  
 			$pagetrack{$num}[1] =
 			  $frame1->Label(
@@ -18613,6 +18605,7 @@ sub runtests {
 	# From the command line run "guiguts.pl runtests"
 	use Test::More;
 	ok( 1 == 1, "Dummy test 1==1" );
+	ok( roman(22) eq 'XXII.', "Roman numeral test 22=xxii" );
 	done_testing();
 }
 
