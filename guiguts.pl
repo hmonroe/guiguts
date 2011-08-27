@@ -117,7 +117,7 @@ my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 ### Application Globals
-our $activecolor      = '#f2f818';
+our $activecolor      = '#198be6'; #'#f2f818'
 our $auto_page_marks  = 1;
 our $auto_show_images = 0;
 our $autobackup       = 0;
@@ -1816,13 +1816,6 @@ sub external_menuitems {
 	];
 }
 
-# sub unicode_menuitems { }
-# sub prefs_menuitems { }
-# sub prefs_paths_menuitems { }
-# sub prefs_toolbar_menuitems { }
-#sub help_menuitems { }
-
-# FIXME: Reorganize the menu code order
 sub buildmenu {
 	my $file = $menubar->cascade(
 								  -label     => '~File',
@@ -8601,6 +8594,13 @@ sub coladjust {
 		my $row = 0;
 		my $blankline;
 		for (@table) {
+			#print "Dollar:".$_."\n";
+			#print "colindex:".$colindex."\n";
+			my $temp = $col[ ( $colindex ) ] ;
+			#print "colcolindex:"."$temp"."\n";
+			$temp = $col[ ( $colindex-1 ) ] ;
+			#print "colcolindex-1:"."$temp"."\n";
+			 
 			my $cell = substr(
 							   $_,
 							   ( $col[ ( $colindex - 1 ) ] ),
@@ -10089,6 +10089,7 @@ sub pageadjust {
 						$label = $index;
 						$label =~ s/^0+// if $label and length $label;
 					}
+					print "pglabel: $label\n";
 
 					if ( $pagetrack{$num}[4]->cget( -text ) eq 'No Count' ) {
 						$pagetrack{$num}[2]->configure( -text => '' );
@@ -10140,15 +10141,22 @@ sub pageadjust {
 			my ($num) = $page =~ /Pg(\S+)/;
 			$updatetemp++;
 			$lglobal{padjpop}->update if ( $updatetemp == 20 );
-			$pagetrack{$num}[0] = $frame1->Button(
-				-text => "Image# $num"  ,
-				-width   => 12,
-				-command => [
-					sub {
-						openpng($num);
-					},
-				],
-			)->grid( -row => $row, -column => 0, -padx => 2 );
+			
+			$pagetrack{$num}[0] =
+			  $frame1->Label(
+							  -text       => "Image# $num  ",
+							  -background => 'white',
+			  )->grid( -row => $row, -column => 0, -padx => 2 );
+			
+#			$pagetrack{$num}[0] = $frame1->Button(
+#				-text => "Image# $num"  ,
+#				-width   => 12,
+#				-command => [
+#					sub {
+#						openpng($num);
+#					},
+#				],
+#			)->grid( -row => $row, -column => 0, -padx => 2 );
 			  
 			$pagetrack{$num}[1] =
 			  $frame1->Label(
@@ -17069,9 +17077,10 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+Guiguts 1.0 prepared by Hunter Monroe.
 Original guiguts written by Stephen Schulze.
 Partially based on the Gedi editor - Gregs editor.
-Copyright 1999, 2003 - Greg London
+Redistributable on the same terms as Perl.
 EOM
 
 	if ( defined( $lglobal{aboutpop} ) ) {
@@ -18622,9 +18631,16 @@ sub splash {
 	my $labelImage = $splashtop->Label( '-image' => 'imggif' )->pack();
 	$lglobal{splashpop} = $splashtop;
 	$lglobal{splashpop}->title( $window_title . " Post Processing Toolkit" );
-
 	$lglobal{splashpop}->Frame->pack;
-
+		my $sf1 =
+		  $lglobal{splashpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $sf1->Label( -text => 'Guiguts 1.0 prepared by Hunter Monroe.', )
+		  ->pack( -side => 'top', -anchor => 'n', -padx => 2 );
+		  $sf1->Label( -text => 'Original guiguts written by Stephen Schulze.', )
+		  ->pack( -side => 'top', -anchor => 'n', -padx => 2 );
+		  $sf1->Label( -text => 'Partially based on the Gedi editor - Gregs editor.', )
+		  ->pack( -side => 'top', -anchor => 'n', -padx => 2 );
+	$lglobal{splashpop}->Frame->pack;
 	my $splashtop2 = new MainWindow;
 	$splashtop2->Photo(
 						'imggif',
@@ -18639,7 +18655,6 @@ sub splash {
 	my $labelImage2 = $splashtop2->Label( '-image' => 'imggif' )->pack();
 	$lglobal{splashpop2} = $splashtop2;
 	$lglobal{splashpop2}->title( $window_title . " Post Processing Toolkit" );
-	$lglobal{splashpop2}->Frame->pack;
 }
 
 # Ready to enter main loop
