@@ -1,5 +1,3 @@
-# $Id: guiguts.pl 552 2011-08-27 20:10:52Z hmonroe $
-
 package Guiguts::HTMLConvert;
 
 BEGIN {
