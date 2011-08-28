@@ -865,10 +865,7 @@ sub html_convert_pageanchors {
 		while ($mark = $textwindow->markNext($mark)) {
 			
 			if ( not $mark =~ m{Pg(\S+)} ) {
-				print "not: $mark\n";
 			} else {
-				print "do: $mark\n";
-
 				my $num = $main::pagenumbers{$mark}{label};
 				$num =~ s/Pg // if defined $num;
 				$num = $1 unless $main::pagenumbers{$mark}{action};
@@ -901,22 +898,22 @@ sub html_convert_pageanchors {
 				}
 
 				if ( $markindex == $marknextindex ) {
-						print "thismark:$mark index:$markindex $num\n";
-						print "marknext:$marknext index: $marknextindex\n";
+						#print "thismark:$mark index:$markindex $num\n";
+						#print "marknext:$marknext index: $marknextindex\n";
 					$pagereference = "";
-					print "firstpage: $firstpage\n";
-					print "num:$num\n";
+					#print "firstpage: $firstpage\n";
+					#print "num:$num\n";
 					if ( $firstpage==0 and $num =~ /[0-9]+/ ) {
 						$firstpage = $num;
 						$lastpage  = $num;
-						print "firstlast: $firstpage $lastpage\n";
+						#print "firstlast: $firstpage $lastpage\n";
 					} else {
 						$firstpage = min( $firstpage, $num );
 						$lastpage = max( $lastpage, $num );
-						print "firstlast2: $firstpage $lastpage\n";
+						#print "firstlast2: $firstpage $lastpage\n";
 					}
 				} else {
-					print "End of sequence\n";
+					#print "End of sequence\n";
 					$firstpage = min( $firstpage, $num );
 					$lastpage = max( $lastpage, $num );
 					if ($firstpage) {
