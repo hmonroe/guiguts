@@ -2,26 +2,30 @@ package Guiguts::HTMLConvert;
 
 BEGIN {
 	use Exporter();
-	@ISA=qw(Exporter);
-	@EXPORT=qw(&html_convert_tb  &html_convert_subscripts &html_convert_superscripts
-	&html_convert_ampersands &html_convert_emdashes &html_convert_latin1 &html_convert_codepage &html_convert_utf
-	&html_cleanup_markers &html_convert_footnotes &html_convert_body &html_convert_underscoresmallcaps 
-	&html_convert_sidenotes &html_convert_pageanchors &html_parse_header &html_wrapup &htmlbackup)
+	use List::Util qw[min max];
+	@ISA = qw(Exporter);
+	@EXPORT =
+	  qw(&html_convert_tb  &html_convert_subscripts &html_convert_superscripts
+	  &html_convert_ampersands &html_convert_emdashes &html_convert_latin1 &html_convert_codepage &html_convert_utf
+	  &html_cleanup_markers &html_convert_footnotes &html_convert_body &html_convert_underscoresmallcaps
+	  &html_convert_sidenotes &html_convert_pageanchors &html_parse_header &html_wrapup &htmlbackup);
 }
 
 sub html_convert_tb {
 	no warnings;    # FIXME: Warning-- Exiting subroutine via next
-	my ($textwindow, $selection, $step ) = @_;
+	my ( $textwindow, $selection, $step ) = @_;
 
-	if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr class="tb" \/>/ ) { 
-	#if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ ){ 
+	if ( $selection =~ s/\s{7}(\*\s{7}){4}\*/<hr class="tb" \/>/ ) {
+
+		#if ($selection =~ s/\s{7}(\*\s{7}){4}\*/<hr style="width: 45%;" \/>/ ){
 		$textwindow->ntdelete( "$step.0", "$step.end" );
 		$textwindow->ntinsert( "$step.0", $selection );
 		next;
 	}
 
-	if ($selection =~ s/<tb>/<hr class="tb" \/>/ ) {
- 	#if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {		
+	if ( $selection =~ s/<tb>/<hr class="tb" \/>/ ) {
+
+		#if ( $selection =~ s/<tb>/<hr style="width: 45%;" \/>/ ) {
 		$textwindow->ntdelete( "$step.0", "$step.end" );
 		$textwindow->ntinsert( "$step.0", $selection );
 		next;
@@ -30,7 +34,7 @@ sub html_convert_tb {
 }
 
 sub html_convert_subscripts {
-	my ($textwindow, $selection, $step ) = @_;
+	my ( $textwindow, $selection, $step ) = @_;
 
 	if ( $selection =~ s/_\{([^}]+?)\}/<sub>$1<\/sub>/g ) {
 		$textwindow->ntdelete( "$step.0", "$step.end" );
@@ -40,7 +44,7 @@ sub html_convert_subscripts {
 
 # FIXME: Doesn't convert Gen^rl; workaround Gen^{rl}
 sub html_convert_superscripts {
-	my ($textwindow, $selection, $step ) = @_;
+	my ( $textwindow, $selection, $step ) = @_;
 
 	if ( $selection =~ s/\^\{([^}]+?)\}/<sup>$1<\/sup>/g ) {
 		$textwindow->ntdelete( "$step.0", "$step.end" );
@@ -83,9 +87,9 @@ sub html_convert_codepage {
 }
 
 sub html_convert_utf {
-	my ($textwindow,$leave_utf,$keep_latin1) = @_;
+	my ( $textwindow, $leave_utf, $keep_latin1 ) = @_;
 	my $blockstart;
-	if ( $leave_utf ) {
+	if ($leave_utf) {
 		$blockstart =
 		  $textwindow->search(
 							   '-exact',             '--',
@@ -97,7 +101,7 @@ sub html_convert_utf {
 			$textwindow->ntinsert( $blockstart, 'charset=UTF-8' );
 		}
 	}
-	unless ( $leave_utf ) {
+	unless ($leave_utf) {
 		&main::working("Converting UTF-8...");
 		while (
 				$blockstart =
@@ -120,7 +124,6 @@ sub html_convert_utf {
 
 	if ( !$keep_latin1 ) { html_convert_latin1(); }
 
-
 }
 
 sub html_cleanup_markers {
@@ -128,7 +131,7 @@ sub html_cleanup_markers {
 	my $thisblockend;
 	my $thisblockstart = '1.0';
 	my $thisend        = q{};
-	my ( $ler, $lec);   
+	my ( $ler, $lec );
 
 	&main::working("Cleaning up\nblock Markers");
 
@@ -155,12 +158,10 @@ sub html_cleanup_markers {
 }
 
 sub html_convert_footnotes {
-	my ($textwindow,$fnarray) = @_;
-	my $thisblank  = q{};
-	my $step = 0;
-	
-	
-	
+	my ( $textwindow, $fnarray ) = @_;
+	my $thisblank = q{};
+	my $step      = 0;
+
 	&main::working('Converting Footnotes');
 	&main::footnotefixup();
 	&main::getlz();
@@ -177,26 +178,19 @@ sub html_convert_footnotes {
 		$textwindow->ntdelete( 'fne' . "$step" . '-1c', 'fne' . "$step" );
 		$textwindow->ntinsert( 'fne' . "$step", '</p></div>' );
 		$textwindow->ntinsert(
-							 (
-							   'fns' . "$step" . '+'
-								 . (
-									length( $fnarray->[$step][4] ) + 11
-								 )
-								 . "c"
-							 ),
-							 ']</span></a>'
+							   (
+								      'fns' . "$step" . '+'
+									. ( length( $fnarray->[$step][4] ) + 11 )
+									. "c"
+							   ),
+							   ']</span></a>'
 		);
 		$textwindow->ntdelete(
 							   'fns' . "$step" . '+'
-								 . (
-									length( $fnarray->[$step][4] ) + 10
-								 )
+								 . ( length( $fnarray->[$step][4] ) + 10 )
 								 . 'c',
 							   "fns" . "$step" . '+'
-								 . (
-									length( $fnarray->[$step][4] ) + 11
-								 )
-								 . 'c'
+								 . ( length( $fnarray->[$step][4] ) + 11 ) . 'c'
 		);
 		$textwindow->ntinsert(
 							   'fns' . "$step" . '+10c',
@@ -240,17 +234,20 @@ sub html_convert_footnotes {
 			$textwindow->ntinsert( $thisblank, '</p><p>' );
 		}
 	}
-	
+
 }
 
 sub html_convert_body {
-	my ($textwindow, $headertext, $cssblockmarkup,$poetrynumbers,$classhash, @contents) = @_;
+	my ( $textwindow, $headertext, $cssblockmarkup, $poetrynumbers, $classhash,
+		 @contents )
+	  = @_;
 	&main::working('Converting Body');
 	my $aname = q{};
 	my $author;
 	my $blkquot = 0;
 	my $cflag   = 0;
 	my $front;
+
 	#my $headertext;
 	my $inblock    = 0;
 	my $incontents = '1.0';
@@ -266,21 +263,20 @@ sub html_convert_body {
 	my $thisblockend;
 	my $thisblockstart = '1.0';
 	my $thisend        = q{};
-	my @last5        = [ '1', '1', '1', '1', '1', '1' ];
-	my $step         = 1;
+	my @last5          = [ '1', '1', '1', '1', '1', '1' ];
+	my $step           = 1;
 	my ( $ler, $lec );
-	
+
 	$thisblockend = $textwindow->index('end');
-	my ( $blkopen, $blkclose);
-	if ( $cssblockmarkup ) {
+	my ( $blkopen, $blkclose );
+	if ($cssblockmarkup) {
 		$blkopen  = '<div class="blockquot"><p>';
 		$blkclose = '</p></div>';
 	} else {
 		$blkopen  = '<blockquote><p>';
 		$blkclose = '</p></blockquote>';
 	}
-	
-	
+
 	( $ler, $lec ) = split /\./, $thisblockend;
 	while ( $step <= $ler ) {
 		unless ( $step % 500 ) {
@@ -294,15 +290,15 @@ sub html_convert_body {
 			   && ( $incontents eq '1.0' ) );
 
 		# Subscripts
-		html_convert_subscripts($textwindow, $selection, $step );
+		html_convert_subscripts( $textwindow, $selection, $step );
 
 		# Superscripts
-		html_convert_superscripts($textwindow, $selection, $step );
+		html_convert_superscripts( $textwindow, $selection, $step );
 
 		# Thought break conversion
-		html_convert_tb( $textwindow,$selection, $step );
+		html_convert_tb( $textwindow, $selection, $step );
 
-	 # /x|/X gets <pre>
+		# /x|/X gets <pre>
 		if ( $selection =~ m"^/x"i ) {
 			$skip = 1;
 			$textwindow->ntdelete( "$step.0", "$step.end" );
@@ -750,9 +746,7 @@ sub html_convert_body {
 sub html_convert_underscoresmallcaps {
 	my ($textwindow) = @_;
 	my $thisblockstart = '1.0';
-	
-	
-	
+
 	&main::working("Converting underscore and small caps markup");
 	while ( $thisblockstart =
 			$textwindow->search( '-exact', '--', '<u>', '1.0', 'end' ) )
@@ -806,7 +800,6 @@ sub html_convert_underscoresmallcaps {
 		}
 	}
 
-	
 }
 
 sub html_convert_sidenotes {
@@ -815,7 +808,7 @@ sub html_convert_sidenotes {
 	my $thisnoteend;
 	my $length;
 	my $thisblockstart = '1.0';
-	
+
 	while (
 			$thisblockstart =
 			$textwindow->search(
@@ -844,12 +837,11 @@ sub html_convert_sidenotes {
 	{
 		$textwindow->ntdelete( "$thisblockstart+12c", "$thisblockstart+16c" );
 	}
-	
-	
+
 }
 
 sub html_convert_pageanchors {
-	my ($textwindow,$pageanch,$pagecmt, @contents) = @_;
+	my ( $textwindow, $pageanch, $pagecmt, @contents ) = @_;
 	my $incontents = '1.0';
 
 	if ( $pageanch || $pagecmt ) {
@@ -857,9 +849,23 @@ sub html_convert_pageanchors {
 		&main::working("Inserting Page Markup");
 		$|++;
 		my $markindex;
-		my @marknames = sort $textwindow->markNames;
-		for my $mark (@marknames) {
-			if ( $mark =~ /Pg(\S+)/ ) {
+		my $firstpage,
+		  $lastpage;  # keep track of multiple page markers at the same position
+		              #my @marknames = sort $textwindow->markNames;
+		my $tempcounter;
+
+		my $mark = '1.0';
+		while ( $textwindow->markPrevious($mark) ) {
+			$mark = $textwindow->markPrevious($mark);
+		}
+		print "start: $mark\n";
+		while ($mark = $textwindow->markNext($mark)) {
+			
+			if ( not $mark =~ m{Pg(\S+)} ) {
+				print "not: $mark\n";
+			} else {
+				print "do: $mark\n";
+
 				my $num = $main::pagenumbers{$mark}{label};
 				$num =~ s/Pg // if defined $num;
 				$num = $1 unless $main::pagenumbers{$mark}{action};
@@ -869,13 +875,60 @@ sub html_convert_pageanchors {
 				my $check =
 				  $textwindow->get( $markindex . 'linestart',
 									$markindex . 'linestart +4c' );
+
 				if ( $check =~ /<h[12]>/ ) {
 					$markindex = $textwindow->index("$mark-1l lineend")
 					  ;    # FIXME: HTML page number hangs here
 				}
+				my $pagereference;
+
+				my $marknext = $textwindow->markNext($mark);
+				my $marknextindex ;
+				while ($marknext) {
+					if ( not $marknext =~ m{Pg(\S+)} ) {
+						$marknext = $textwindow->markNext($marknext);
+					} else {
+						last;
+					}
+				}
+				if ($marknext) {
+					$marknextindex = $textwindow->index($marknext); 
+				} else {
+					$marknextindex = 0; 
+				}
+
+				if ( $markindex == $marknextindex ) {
+						print "thismark:$mark index:$markindex $num\n";
+						print "marknext:$marknext index: $marknextindex\n";
+					$pagereference = "";
+					print "firstpage: $firstpage\n";
+					print "num:$num\n";
+					if ( $firstpage==0 and $num =~ /[0-9]+/ ) {
+						$firstpage = $num;
+						$lastpage  = $num;
+						print "firstlast: $firstpage $lastpage\n";
+					} else {
+						$firstpage = min( $firstpage, $num );
+						$lastpage = max( $lastpage, $num );
+						print "firstlast2: $firstpage $lastpage\n";
+					}
+				} else {
+					print "End of sequence\n";
+					$firstpage = min( $firstpage, $num );
+					$lastpage = max( $lastpage, $num );
+					if ($firstpage) {
+						$pagereference = "[Pg $firstpage-$lastpage]";
+						$firstpage     = 0;
+						$lastpage      = 0;
+					} else {
+						$pagereference = "[Pg $num]";
+					}
+				}
+
+				#$pagereference="[Pg $num]";
 				$textwindow->ntinsert(
 					$markindex,
-"<span class=\"pagenum\"><a name=\"Page_$num\" id=\"Page_$num\">[Pg $num]</a></span>"
+"<span class=\"pagenum\"><a name=\"Page_$num\" id=\"Page_$num\">$pagereference</a></span>"
 				) if $pageanch;
 
 #$textwindow->ntinsert($markindex,"<span class="pagenum" id=\"Page_".$num."\">[Pg $num]</span>") if $pageanch;
@@ -904,9 +957,9 @@ sub html_convert_pageanchors {
 					  unless ( $textwindow->compare( $send, '<', $sstart ) );
 				}
 				my $anchorend =
-				  $textwindow->search( '-exact', '--', ']</a></span>',
+				  $textwindow->search( '-exact', '--', '</a></span>',
 									   $markindex, 'end' );
-				$anchorend = $textwindow->index("$anchorend+12c");
+				$anchorend = $textwindow->index("$anchorend+11c");
 				$pstart =
 				  $textwindow->search( '-exact', '--', '<p>', $anchorend,
 									   'end' )
@@ -940,11 +993,147 @@ sub html_convert_pageanchors {
 		) if @contents;
 	}
 
-	
+}
+
+sub html_convert_pageanchorsold {
+	my ( $textwindow, $pageanch, $pagecmt, @contents ) = @_;
+	my $incontents = '1.0';
+
+	if ( $pageanch || $pagecmt ) {
+
+		&main::working("Inserting Page Markup");
+		$|++;
+		my $markindex;
+		my $firstpage,
+		  $lastpage;  # keep track of multiple page markers at the same position
+		my @marknames = sort $textwindow->markNames;
+		print $textwindow->markNames;
+		my $tempcounter;
+		for my $mark (@marknames) {
+
+			if ( $mark =~ /Pg(\S+)/ ) {
+				my $num = $main::pagenumbers{$mark}{label};
+				$num =~ s/Pg // if defined $num;
+				$num = $1 unless $main::pagenumbers{$mark}{action};
+				next unless length $num;
+				$num =~ s/^0+(\d)/$1/;
+				$markindex = $textwindow->index($mark);
+				my $check =
+				  $textwindow->get( $markindex . 'linestart',
+									$markindex . 'linestart +4c' );
+				if ( $check =~ /<h[12]>/ ) {
+					$markindex = $textwindow->index("$mark-1l lineend")
+					  ;    # FIXME: HTML page number hangs here
+				}
+
+				#				my $marknext = $textwindow->markNext($mark);;
+				my $pagereference;
+
+				#
+				#	while ($marknext) {
+				#		if ( not $marknext =~ m{Pg(\S+)} ) {
+				#			$marknext = $textwindow->markNext($marknext);
+				#		}
+				#	}
+				#				my $marknextindex = $textwindow->index($marknext);
+				#
+				#
+				#				if ($markindex==$marknextindex) {
+				#					if ($tempcounter++<13) {
+				#						print "thismark:$mark index:$markindex $num\n";
+				#						print "marknext:$marknext index: $marknextindex\n";
+				#					}
+				#					$pagereference="";
+				#					if (not $firstpage and $num =~ /[0-9]+/) {
+				#						$firstpage = $num;
+				#						$lastpage = $num;
+				#						print "firstlast: $firstpage $lastpage\n";
+				#					} else {
+				#						$firstpage = min($firstpage,$num);
+				#						$lastpage = max($lastpage,$num);
+				#						print "firstlast2: $firstpage $lastpage\n";
+				#					}
+				#				} else {
+				#					if ($firstpage) {
+				#						$pagereference="[Pg $firstpage-$lastpage]";
+				#						$firstpage=0;
+				#						$lastpage=0;
+				#					} else {
+				#						$pagereference="[Pg $num]";
+				#					}
+				#				}
+				$pagereference = "[Pg $num]";
+				$textwindow->ntinsert(
+					$markindex,
+"<span class=\"pagenum\"><a name=\"Page_$num\" id=\"Page_$num\">$pagereference</a></span>"
+				) if $pageanch;
+
+#$textwindow->ntinsert($markindex,"<span class="pagenum" id=\"Page_".$num."\">[Pg $num]</span>") if $pageanch;
+# FIXME: this is hanging up somewhere.
+				$textwindow->ntinsert( $markindex,
+									   '<!-- Page ' . $num . ' -->' )
+				  if ( $pagecmt and $num );
+				my $pstart =
+				  $textwindow->search( '-backwards', '-exact', '--', '<p>',
+									   $markindex, '1.0' )
+				  || '1.0';
+				my $pend =
+				  $textwindow->search( '-backwards', '-exact', '--', '</p>',
+									   $markindex, '1.0' )
+				  || '1.0';
+				my $sstart =
+				  $textwindow->search( '-backwards', '-exact', '--', '<div ',
+									   $markindex, '1.0' )
+				  || '1.0';
+				my $send =
+				  $textwindow->search( '-backwards', '-exact', '--', '</div>',
+									   $markindex, $pend )
+				  || $pend;
+				if ( $textwindow->compare( $pend, '>=', $pstart ) ) {
+					$textwindow->ntinsert( $markindex, '<p>' )
+					  unless ( $textwindow->compare( $send, '<', $sstart ) );
+				}
+				my $anchorend =
+				  $textwindow->search( '-exact', '--', '</a></span>',
+									   $markindex, 'end' );
+				$anchorend = $textwindow->index("$anchorend+11c");
+				$pstart =
+				  $textwindow->search( '-exact', '--', '<p>', $anchorend,
+									   'end' )
+				  || 'end';
+				$pend =
+				  $textwindow->search( '-exact', '--', '</p>', $anchorend,
+									   'end' )
+				  || 'end';
+				$sstart =
+				  $textwindow->search( '-exact', '--', '<div ', $anchorend,
+									   'end' )
+				  || 'end';
+				$send =
+				  $textwindow->search(
+									   '-exact', '--',
+									   '</div>', $anchorend,
+									   $sstart
+				  ) || $sstart;
+				if ( $textwindow->compare( $pend, '>=', $pstart ) ) {
+					$textwindow->ntinsert( $anchorend, '</p>' )
+					  unless ( $textwindow->compare( $send, '<', $sstart ) );
+				}
+			}
+		}
+	}
+	{
+		local $" = '';
+		$textwindow->insert(
+			$incontents,
+"\n\n<!-- Autogenerated TOC. Modify or delete as required. -->\n@contents\n<!-- End Autogenerated TOC. -->\n\n"
+		) if @contents;
+	}
+
 }
 
 sub html_parse_header {
-	my ($textwindow, $headertext) = @_;
+	my ( $textwindow, $headertext ) = @_;
 	my $selection;
 	my $step;
 	my $title;
@@ -1031,17 +1220,17 @@ sub html_parse_header {
 		$headertext =~ s/AUTHOR/$author/;
 	}
 	return $headertext;
-	
+
 }
 
 sub html_wrapup {
 
-	my ($textwindow,$headertext,$leave_utf,$autofraction,$classhash) = @_;
+	my ( $textwindow, $headertext, $leave_utf, $autofraction, $classhash ) = @_;
 	my $thisblockstart;
 
-	&main::fracconv( $textwindow,'1.0', 'end' ) if $autofraction;
+	&main::fracconv( $textwindow, '1.0', 'end' ) if $autofraction;
 	$textwindow->ntinsert( '1.0', $headertext );
-	if ( $leave_utf ) {
+	if ($leave_utf) {
 		$thisblockstart =
 		  $textwindow->search(
 							   '-exact',             '--',
@@ -1058,18 +1247,16 @@ sub html_wrapup {
 	$thisblockstart = '75.0' unless $thisblockstart;
 	$thisblockstart =
 	  $textwindow->search( -backwards, '--', '}', $thisblockstart, '10.0' );
-	for ( reverse( sort( values( %{ $classhash } ) ) ) ) {
+	for ( reverse( sort( values( %{$classhash} ) ) ) ) {
 		$textwindow->ntinsert( $thisblockstart . ' +1l linestart', $_ )
-		  if keys %{ $classhash };
+		  if keys %{$classhash};
 	}
-	%{ $classhash } = ();
+	%{$classhash} = ();
 	&main::working();
 	$textwindow->Unbusy;
 	$textwindow->see('1.0');
-	
+
 }
 
-
 1;
-
 
