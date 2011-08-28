@@ -5470,7 +5470,6 @@ sub makeanchor {
 sub htmlautoconvert {
 	viewpagenums() if ( $lglobal{seepagenums} );
 	my $headertext;
-	my @contents = ("<p>\n");
 	my @last5 = [ 1, 1, 1, 1, 1 ];
 
 	return if ( $lglobal{global_filename} =~ /No File Loaded/ );
@@ -5500,8 +5499,7 @@ sub htmlautoconvert {
 	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
 
 	html_convert_body( $textwindow, $headertext, $lglobal{cssblockmarkup},
-					   $lglobal{poetrynumbers}, $lglobal{classhash},
-					   @contents );
+					   $lglobal{poetrynumbers}, $lglobal{classhash});
 
 	html_cleanup_markers($textwindow);
 
@@ -5510,7 +5508,7 @@ sub htmlautoconvert {
 	html_convert_sidenotes($textwindow);
 
 	html_convert_pageanchors( $textwindow, $lglobal{pageanch},
-							  $lglobal{pagecmt}, @contents );
+							  $lglobal{pagecmt});
 
 	html_convert_utf( $textwindow, $lglobal{leave_utf}, $lglobal{keep_latin1} );
 
