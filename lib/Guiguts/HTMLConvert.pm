@@ -861,7 +861,6 @@ sub html_convert_pageanchors {
 		while ( $textwindow->markPrevious($mark) ) {
 			$mark = $textwindow->markPrevious($mark);
 		}
-		print "start: $mark\n";
 		while ($mark = $textwindow->markNext($mark)) {
 			
 			if ( not $mark =~ m{Pg(\S+)} ) {

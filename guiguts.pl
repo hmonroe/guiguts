@@ -5470,7 +5470,6 @@ sub makeanchor {
 sub htmlautoconvert {
 	viewpagenums() if ( $lglobal{seepagenums} );
 	my $headertext;
-	my @last5 = [ 1, 1, 1, 1, 1 ];
 
 	return if ( $lglobal{global_filename} =~ /No File Loaded/ );
 

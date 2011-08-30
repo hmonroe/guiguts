@@ -76,14 +76,14 @@ sub runProgram {
 			$count++;
 			if ( $line =~ /<title>/ ) {
 				$printing = 1;
-				next;
+				printf LOGFILE ( "%d:1 Confirm title:\n", $count, trim($line) );
+				#next;
+			}
+			if ($printing) {
+				printf LOGFILE ( "%d:1 %s\n", $count, trim($line) );
 			}
 			if ( $line =~ /<\/title>/ ) {
 				$printing = 0;
-			}
-			if ($printing) {
-				printf LOGFILE ( "%d:1 Confirm title:\n", $count, trim($line) );
-				printf LOGFILE ( "%d:1 %s\n", $count, trim($line) );
 			}
 		}
 	}
