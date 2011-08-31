@@ -66,7 +66,7 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $VERSION  = '0.9.1';
+my $VERSION  = '0.3.0';
 my $APP_NAME = 'GuiGuts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 
