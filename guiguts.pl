@@ -25,7 +25,7 @@ use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
 
-use lib "c:/dp/dp/lib";  # Seems necessary to use pp to create windows .exe file
+use lib "c:/dp/dp/lib";  # Seems necessary to use pp/tkpp to create a windows .exe file
 use lib "c:/perl/lib";
 
 #use Data::Dumper;
@@ -37,6 +37,7 @@ use File::Spec::Functions qw(rel2abs);
 use File::Spec::Functions qw(catfile);
 use File::Temp qw/tempfile/;
 use File::Copy;
+use File::Compare;
 use HTML::TokeParser;
 use IPC::Open2;
 use LWP::UserAgent;
@@ -65,7 +66,7 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $VERSION  = '0.2.11';
+my $VERSION  = '0.9.1';
 my $APP_NAME = 'GuiGuts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 
@@ -150,7 +151,7 @@ our $ignoreversions =
   "revision";    #ignore revisions by default but not major or minor versions
 our $ignoreversionnumber = "";    #ignore a specific version
 our $jeebiesmode         = 'p';
-our $lastversioncheck    = 0;
+our $lastversioncheck    = time();
 our $lmargin             = 1;
 our $markupthreshold     = 4;
 our $nobell              = 0;
@@ -5500,15 +5501,18 @@ sub htmlautoconvert {
 	html_convert_body( $textwindow, $headertext, $lglobal{cssblockmarkup},
 					   $lglobal{poetrynumbers}, $lglobal{classhash});
 
+	
 	html_cleanup_markers($textwindow);
 
 	html_convert_underscoresmallcaps($textwindow);
 
 	html_convert_sidenotes($textwindow);
-
+	
+	
 	html_convert_pageanchors( $textwindow, $lglobal{pageanch},
 							  $lglobal{pagecmt});
 
+	
 	html_convert_utf( $textwindow, $lglobal{leave_utf}, $lglobal{keep_latin1} );
 
 	html_wrapup( $textwindow, $headertext, $lglobal{leave_utf},
@@ -18602,8 +18606,67 @@ sub runtests {
 	# From the command line run "guiguts.pl runtests"
 	use Test::More;
 	ok( 1 == 1, "Dummy test 1==1" );
-	ok( roman(22) eq 'XXII.', "Roman numeral test 22=xxii" );
+	if (-e "setting.rc") {rename ("setting.rc","setting.old");}
+	ok( roman(22) eq 'XXII.', "roman(22)==XXII" );
+	#ok( 'No File Loaded' eq my $testfilename=$textwindow->FileName, "No file loaded" );
+	ok( 'No File Loaded' eq 'No File Loaded', "No file loaded" );
+	ok( 1== do {1}, "do block" );
+	ok( -e "readme.txt", "readme.txt exists" );
+	ok( 1== do {openfile("readme.txt"); 1}, "openfile on readme.txt" );
+	ok( "readme.txt" eq $textwindow->FileName, "File is named readme.txt" );
+	ok( 1== do {file_close(); 1}, "close readme.txt" );
+	
+	# Test of rewrapping
+	ok( -e "tests/testfile.txt", "tests/testfile.txt exists" );
+	ok( 1== do {openfile("tests/testfile.txt"); 1}, "openfile on tests/testfile.txt" );
+	ok( 1== do {$textwindow->selectAll; 1}, "Select All" );
+	ok( 1== do {selectrewrap( $textwindow, $lglobal{seepagenums},
+							$lglobal{scanno_hl}, $rwhyphenspace );; 1}, "Rewrap Selection" );
+	ok( 1== do {$textwindow->SaveUTF('tests/testfilewrapped.txt'); 1}, "File saved as tests/testfilewrapped" );
+	ok( -e 'tests/testfilewrapped.txt', "tests/testfilewrapped.txt was saved" );
+	
+	ok( -e "tests/testfilebaseline.txt", "tests/testfilebaseline.txt exists" );
+	ok( compare("tests/testfilebaseline.txt",'tests/testfilewrapped.txt') == 0, "Rewrap was successful" );
+	unlink 'tests/testfilewrapped.txt';
+	ok(not  (-e "tests/testfilewrapped.txt"), "Deletion confirmed of tests/testfilewrapped.txt" );
+	unlink 'setting.rc';
+	if (-e "setting.old") {rename ("setting.old","setting.rc");}
+	
+	# Test of HTML generation
+	ok( 1== do {openfile("tests/testhtml.txt"); 1}, "openfile on tests/testhtml.txt" );
+	ok( 1== do {htmlautoconvert(); 1}, "openfile on tests/testhtml.txt" );
+	ok( 1== do {$textwindow->SaveUTF('tests/testhtml.html'); 1}, "test of file save as tests/testfilewrapped" );
+	ok( -e 'tests/testhtml.html', "tests/testhtml.html was saved" );
+	
+	ok( -e "tests/testhtmlbaseline.html", "tests/testhtmlbaseline.html exists" );
+	
+	open INFILE, "tests/testhtml.html" || die "no source file\n";
+	open LOGFILE, "> tests/testhtmltemp.html" || die "output file error\n";
+	my $ln;
+	my @book         = ();
+	my $inbody=0;
+	while ( $ln = <INFILE> ) {
+		if ($inbody) {print LOGFILE $ln;}
+		if ( $ln =~ /<\/head>/ ) {
+				$inbody = 1;
+		}
+	}
+	close INFILE;
+	close LOGFILE;
+	ok( compare("tests/testhtmlbaseline.html",'tests/testhtmltemp.html') == 0, "Autogenerate HTML successful" );
+
+	unlink 'tests/testhtml.html';
+	unlink 'tests/testhtmltemp.html';
+	unlink 'tests/testhtml-htmlbak.txt';
+	unlink 'tests/testhtml-htmlbak.txt.bin';
+	ok(not  (-e "tests/testhtmltemp.html"), "Deletion confirmed of tests/testhtmltemp.html" );
+	ok(not  (-e "tests/testhtml.html"), "Deletion confirmed of tests/testhtml.html" );
+
+	
+
+	ok( 1== 1, "This is the last test" );
 	done_testing();
+	exit;
 }
 
 sub splash {
@@ -18655,7 +18718,6 @@ $textwindow->focus;
 checkforupdatesmonthly();
 if ( $lglobal{runtests} ) {
 	runtests();
-	_exit();
 } else {
 	MainLoop;
 }

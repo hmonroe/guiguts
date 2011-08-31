@@ -5,91 +5,24 @@ Tool to help in removing hyphens (for instance, how often does a given word appe
 
 Convert [oe] to ligature and other character replacements
 
-Automatically use goodwords in spelling check--see code already under development
-
-Remove unused CSS
-
-Automatic dehyphenator
-
-Automatic PNG resizer illustration allocator
-
-Index/contents/illustration list recognizer--Help converting page numbers to hyperlinks
-
-Bug on hr vs. page numbers; 
-
-One click: find orphaned markup of any kind
+Index/contents/illustration list recognizer--
 
 Return to top of file after fixup function.
-
-Add a clear recent files function.
-
-Get GG icon date from source and make a new gg.ico.
-
-Center text between /F F/ markup as an option. 
-
-Label various operations as ### GutCheck ... ### End GutCheck.
-
-Fix option database.
-
-settings.rc and project.bin files in ".ini" format. Config::INI module.
 
 Fix spell check popup. Acts weird with unicode.
 
 Find '--command sub {} and rewrite as standalones.
 
-Label unobvious sub's, e.g., wordcount = Word Frequency
-
-Go through WF code; see how the bindings work and apply to GC and Jeebies
-popups.
-
-Make sure toolbar functions have menu bar equivs; e.g., view image. and
-keyboard shortcuts
-
-Write a short "How to Test GG" tutorial.
-
-Add a readonly switch for viewing/previewing.
-
-Add a rewrap/unwrap switch.
-
-real endash/emdash
+Real endash/emdash
 
 Convert ellipsis to real ellip or &#8230;
 
 Normalize spell check encoding vis-a-vis 0.50/0.60: iso8859 for 50;
 iso-8859 for 60 aspell
 
-sub find_exe for aspell, viewer, jeebies, etc.
-
-Fix text processing, <i>, <b> etc. to work in Find box instead of just
-arbitrarily replace.  option; replace all or view finder.
-
-sub text_add_tb() add <tb> tag.
-
 Clean up FIXME:'s
 
 Rename sub's to something more logical and/or obvious, e.g., sub
 text_convert_sc.
 
-Add POD to each relevant sub.
-
-Fix update_unicore.pl; currently borked.
-
 Fix all file open routines to "use FileHandle".
-
-spelling: chekfil.txt writes to GG dir; needs to go in project directory.
-
-Move CER/NER lists to separate module ala lib/Guiguts/Greekgifs.pm
-
-Make the find dialog a toolbar built into the GG main window ala emacs.
-
-Rewrite menu code to newer implementation.
-
-use File::Spec for filenames, dir paths.
-
-separatorpopup: full/semi-auto should be radio buttons.
-
-README: Document various files, Changelog, Release, Thanks etc.
-
-Make TAGS file.
-
-add sub view_menuitems. toolbar, status bar, image, etc.

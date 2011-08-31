@@ -1,7 +1,5 @@
-$Id$
+#$Id$
 
-This directory contains the base files for GuiGuts.
-
-First time users should read the INSTALL.txt file.
-
-Vet's should read the UPGRADING.txt file.
+This file describes how to run selftests for Guiguts. The number of tests is very short
+but it is hoped will grow over time. To run unit tests, from the command line enter 
+"perl guiguts.pl runtests".

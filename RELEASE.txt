@@ -1,6 +1,14 @@
-GuiGuts-0.2.10 (Some Stupid Code Name Here).
+This is a major release. New features include running all checks on HTML document in one click (W3C
+validation, CSS validation, link checking, unused CSS, image checking). There is an 
+an option for side by side viewing of text and images (without having to click on "See Image" for each page).  
+
+There is now a feature to page through a file viewing text and image side by side, using the 
+user's preferred image viewer. 
+
+There are now buttons to status bar for "Previous Image" and "Next Image" which moves the view of the text  
+to the previous (next) page and shows the image for that page using the external image viewer. 
+This works best if the window for the viewer is sized to match the image 
+(in XnView, choose View, Auto Image Size, Fit Image to Window) and only one instance of the viewer 
+is allowed to avoid one instance per page (in XnView, choose Tools, Options, General, Only One Instance). 
 
 
-This is a patch release. Mostly internal code reworking.
-
-Some highlights for past user visible changes:

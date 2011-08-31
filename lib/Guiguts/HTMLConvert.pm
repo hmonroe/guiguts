@@ -50,6 +50,11 @@ sub html_convert_superscripts {
 		$textwindow->ntdelete( "$step.0", "$step.end" );
 		$textwindow->ntinsert( "$step.0", $selection );
 	}
+	# Fixed a bug--did not handle the case without curly brackets, i.e., Philad^a.
+	if ( $selection =~ s/\^(.)/<sup>$1<\/sup>/g ) {
+		$textwindow->ntdelete( "$step.0", "$step.end" );
+		$textwindow->ntinsert( "$step.0", $selection );
+	}
 }
 
 sub html_convert_ampersands {
@@ -877,7 +882,7 @@ sub html_convert_pageanchors {
 
 				if ( $check =~ /<h[12]>/ ) {
 					$markindex = $textwindow->index("$mark-1l lineend")
-					  ;    # FIXME: HTML page number hangs here
+					  ;    
 				}
 				my $pagereference;
 
