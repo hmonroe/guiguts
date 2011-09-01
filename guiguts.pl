@@ -6031,7 +6031,7 @@ sub joinlines {
 	$pagesep = $textwindow->get( $searchstartindex, $searchendindex )
 	  if ( $searchstartindex && $searchendindex );
 	my $pagemark = $pagesep;
-	$pagesep =~ m/^-----*\s?File:\s?(\S+)\./;
+	$pagesep =~ m/^-----*\s?File:\s?([^\.]+)/; # m/^-----*\s?File:\s?(\S+)\./;
 	return unless $1;
 	$pagesep  = " <!--Pg$1-->";
 	$pagemark = 'Pg' . $1;
