@@ -43,9 +43,6 @@ use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
 
-#use File::Path;
-#use HTML::Lint;
-
 use Tk;
 use Tk::widgets qw{Balloon
   BrowseEntry
@@ -66,7 +63,7 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $VERSION  = '0.3.0';
+my $VERSION  = '0.3.1';
 my $APP_NAME = 'GuiGuts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 
@@ -18560,8 +18557,6 @@ sub text_remove_smallcaps_markup {
 	$lglobal{replaceentry}->insert( 'end', "\$1" );
 }
 
-# FIXME: sub text_delete_blank_page { }
-
 # Popup for choosing replacement characters, etc.
 sub text_convert_options {
 
@@ -18673,7 +18668,7 @@ sub splash {
 	my $splashtop = new MainWindow;
 	$splashtop->Photo(
 					   'imggif',
-					   -file   => "resources\\logo.gif",
+					   -file   => "resources/logo.gif",
 					   -width  => 360,
 					   -height => 68
 	);
@@ -18687,7 +18682,7 @@ sub splash {
 	$lglobal{splashpop}->Frame->pack;
 		my $sf1 =
 		  $lglobal{splashpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-		  $sf1->Label( -text => 'Guiguts 1.0 prepared by Hunter Monroe.', )
+		  $sf1->Label( -text => "Guiguts $VERSION prepared by Hunter Monroe.", )
 		  ->pack( -side => 'top', -anchor => 'n', -padx => 2 );
 		  $sf1->Label( -text => 'Original guiguts written by Stephen Schulze.', )
 		  ->pack( -side => 'top', -anchor => 'n', -padx => 2 );
@@ -18697,7 +18692,7 @@ sub splash {
 	my $splashtop2 = new MainWindow;
 	$splashtop2->Photo(
 						'imggif',
-						-file   => "resources\\PP.jpg",
+						-file   => "resources/PP.jpg",
 						-width  => 440,
 						-height => 100
 	);
@@ -18711,7 +18706,7 @@ sub splash {
 }
 
 # Ready to enter main loop
-sleep(1);
+sleep(2);
 $lglobal{splashpop}->destroy;
 $lglobal{splashpop2}->destroy;
 $textwindow->focus;

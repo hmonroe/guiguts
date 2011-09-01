@@ -1,38 +1,12 @@
-$Id$
+Upgrading requires a complete reinstall (save header.txt and setting.rc although in
+theory these should not be be overwritten).
 
-Install GuiGuts. 
+On Windows, unzip the the file Winguts-nn.nn.nn.zip into a directory and run 
+Winguts.exe. You will also need to install helper applications to view images 
+and to spell check. 
 
-1. Install Perl.
-   
-   Windows (use Winguts.exe to avoid step 1)
-        1. Download and install ActiveState Perl.
-        http://www.activestate.com/activeperl/downloads/
-
-        The page displays the latest version of Perl; x86 and x64.
-        Pick one appropriate for computer system. If not sure, download the
-        x86 version.
-
-        Find the downloaded file:
-        ActivePerl-5.10.1.1007-MSWin32-x86-291969.msi or similar.
-        Double-click the msi file and follow the instructions.
-        Accept all the defaults.
-
-        The install takes a few minutes.
-
-        2. Get GuiGuts.
-        Instructions for setting up Guiguts available here:
-        http://www.pgdp.net/wiki/PPTools/Guiguts/Install/Windows
-
-        Links to extra applications are available on this page: image
-        viewers, spellcheck etc.
-
-        Some extra Perl install information is also on this page.
-
-    Unixy-types: Linux, Mac OS X, BSD, etc.
-        This page has appropriate links in the first section for 
-        installation:
-        http://www.pgdp.net/wiki/PPTools/Guiguts/Install
-
+For other platforms, you will need to install Perl. 
+See: http://www.pgdp.net/wiki/PPTools/Guiguts/Install
 
 If you need help:
 Please direct any help requests to the GuiGuts DP forum thread:

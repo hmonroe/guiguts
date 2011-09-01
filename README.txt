@@ -1,5 +1,54 @@
-#$Id$
+This is a major version which will become 1.0 once the bugs are ironed 
+out (see this discussion http://www.pgdp.net/phpBB2/viewtopic.php?t=48584).
+Note: upgrading to this version requires a complete reinstall (save your
+header.txt and setting.rc files). 
 
-This file describes how to run selftests for Guiguts. The number of tests is very short
-but it is hoped will grow over time. To run unit tests, from the command line enter 
-"perl guiguts.pl runtests".
+Relative to version 0.2.10 there are several major new features. First,
+all the HTML checks can be run with a single click, and the output is
+clickable in most cases. Second, HTML and CSS validation can now be done
+on your own computer (and PGTEI as well) and there are checks for unused
+CSS and image issues (using rfrank's pphtml, ppimage, and pptxt
+scripts). Third, there is now an option to view text and images
+side-by-side without having to click on "See Image" for each page. For
+instance you move forward or back one page for both text and image with
+the "<" and ">" buttons on the status bar. Also, the Auto Show Images option
+let's you see the image for instance for the page you are spellchecking.
+(See tips on viewer configuration below.) Fourth, with Winguts there is
+no need to install Perl on Windows computers (for other platforms see
+below).
+
+Other new features are: a "View in Browser" and Hyperlink page numbers
+buttons on the HTML palette, tearoff of the Unicode menu, listing small
+caps in the Word Frequency popup, automatic checking for updates (which
+can be turned off), horizontal rules as css, if nothing is found the
+cursor returns to the starting point, better ability to find executables
+automatically, GutWrench scanno files are included, inclusion of
+rfrank's pphtml and pptxt scripts, a warning to use human readable
+filenames, option to include goodwords in spellcheck project dictionary,
+a text processing menu to ease conversion of bold/italics/small caps,
+the label Image #nnn in Configure Page Labels is clickable, added Find
+Transliterations and Find Orphaned Markup (before it only searched for
+unmatched brackets) to Search menu, Adjust Page Markers menu is
+accessible from the File menu. For developers, there are internal
+improvements, including refactoring of functionality into perl modules
+and a unit testing framework.
+
+Bug fixes already included: less mangling of HTML page numbers (for
+instance [Pg 42-44] instead of three overlapping page numbers),
+superscripts are converted to HTML correctly (Philad^a) without curly
+brackets, fixed regex editor for scannos, Ctrl-S saves the file.
+
+The side by side image viewing works best if the window for the viewer
+is sized to match the image (in XnView, choose View, Auto Image Size,
+Fit Image to Window) and only one instance of the viewer is allowed to
+avoid having one instance for every page viewed (in XnView, choose
+Tools, Options, General, Only One Instance). To page through images, use
+the "<" and ">" buttons on the status bar. To Auto Show Page Images, use the
+"Auto Img" button on the status bar, use the option on the Prefs menu,
+or checkboxes in the various search/spellcheck dialogs.
+
+I would be happy to release Mac and Unix executables which only requires
+someone to run tkpp following the instructions in COMPILING.txt. A Mac
+or Unix distribution should also include the OpenJade/OpenSP onsgmls
+executable for HTML/PGTEI validation.
+
