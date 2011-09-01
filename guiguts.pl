@@ -172,6 +172,7 @@ our $suspectindex;
 our $toolside    = 'bottom';
 our $utffontname = 'Courier New';
 our $utffontsize = 14;
+our $verboseerrorchecks = 0;
 our $vislnnm     = 0;
 our $w3cremote   = 0;
 
@@ -6302,7 +6303,7 @@ sub errorcheckpop_up {
 	  )
 	{
 		$ptopframe->Checkbutton(
-								 -variable    => \$lglobal{verbose},
+								 -variable    => \$verboseerrorchecks,
 								 -selectcolor => $lglobal{checkcolor},
 								 -text        => 'Verbose'
 		  )->pack(
@@ -6449,7 +6450,7 @@ sub errorcheckpop_up {
 
 			# Skip rest of CSS
 			if (
-				     ( not $lglobal{verbose} )
+				     ( not $verboseerrorchecks )
 				 and ( $thiserrorchecktype eq 'W3C Validate CSS' )
 				 and (    ( $line =~ /^To show your readers/i )
 					   or ( $line =~ /^Valid CSS Information/i ) )
@@ -6469,7 +6470,7 @@ sub errorcheckpop_up {
 			}
 
 			# Skip verbose informational warnngs in Link Check
-			if (     ( not $lglobal{verbose} )
+			if (     ( not $verboseerrorchecks )
 				 and ( $thiserrorchecktype eq 'Link Check' )
 				 and ( $line =~ /^Link statistics/i ) )
 			{
@@ -6479,7 +6480,7 @@ sub errorcheckpop_up {
 				if ( $line =~ /^-/i ) {    # skip lines beginning with '-'
 					next;
 				}
-				if ( ( not $lglobal{verbose} ) and $line =~ /^Verbose checks/i )
+				if ( ( not $verboseerrorchecks ) and $line =~ /^Verbose checks/i )
 				{                          # stop with verbose specials check
 					last;
 				}
@@ -8996,7 +8997,6 @@ sub initialize {
 	$lglobal{ToolBar}          = 1;
 	$lglobal{uoutp}            = 'h';
 	$lglobal{utfrangesort}     = 0;
-	$lglobal{verbose}          = 0;
 	$lglobal{visibleline}      = '';
 	$lglobal{zoneindex}        = 0;
 	@{ $lglobal{ascii} } = qw/+ - + | | | + - +/;
@@ -10734,7 +10734,8 @@ EOM
 			defaultindent fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
 			highlightcolor history_size jeebiesmode lmargin nobell nohighlights notoolbar rmargin
 			rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm w3cremote
-			intelligentWF italic_char bold_char ignoreversions lastversioncheck ignoreversionnumber/
+			intelligentWF italic_char bold_char ignoreversions lastversioncheck ignoreversionnumber
+			verboseerrorchecks/
 		  )
 		{
 			if ( eval '$' . $_ ) {
