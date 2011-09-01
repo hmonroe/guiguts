@@ -63,7 +63,7 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $VERSION  = '0.3.1';
+my $VERSION  = '0.3.2';
 my $APP_NAME = 'GuiGuts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 
@@ -15386,8 +15386,9 @@ sub markpopup {    # FIXME: Rename html_popup
 		my $f1 =
 		  $lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my ( $inc, $row, $col ) = ( 0, 0, 0 );
+		# Warning: if you add tags to the list below move nbsp and poetry buttons
 		for (
-			qw/i b u center h1 h2 h3 h4 h5 h6 p hr br big small ol ul li sup sub table tr td blockquote code/
+			qw/i b h1 h2 h3 h4 h5 h6 p hr br big small ol ul li sup sub table tr td blockquote code /
 		  )
 		{
 			$col = $inc % 5;
@@ -15411,13 +15412,13 @@ sub markpopup {    # FIXME: Rename html_popup
 					 -command          => sub { markup('&nbsp;') },
 					 -text             => 'nb space',
 					 -width            => 10
-		)->grid( -row => 8, -column => 3, -padx => 1, -pady => 2 );
+		)->grid( -row => 4, -column => 3, -padx => 1, -pady => 2 );
 		$f1->Button(
 					 -activebackground => $activecolor,
 					 -command          => \&poetryhtml,
 					 -text             => 'Poetry',
 					 -width            => 10
-		)->grid( -row => 8, -column => 4, -padx => 1, -pady => 2 );
+		)->grid( -row => 4, -column => 4, -padx => 1, -pady => 2 );
 
 		my $f2 =
 		  $lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
