@@ -683,9 +683,21 @@ sub html_convert_body {
 				 && ( !$last5[3] )
 				 && ($selection) )
 			{
+				#my $hmark = $textwindow->markPrevious(($step-1).'.0');
+				#my ($pagemarkline,$pagemarkcol)= split /\./, $textwindow->index($hmark);
+				# This inserts the horizontal rule at the page marker not just before
+				# the header. It will need to be moved.
+				#if ($step-5==$pagemarkline) {
+				#$textwindow->ntinsert( $textwindow->index($hmark),
+				#					   '<hr style="width: 65%;" />' )
+				#  unless ( $selection =~ /<[ph]/ );
+				#} else {
 				$textwindow->ntinsert( ( $step - 1 ) . '.0',
 									   '<hr style="width: 65%;" />' )
 				  unless ( $selection =~ /<[ph]/ );
+					
+				#}
+				
 				$aname =~ s/<\/?[hscalup].*?>//g;
 				$aname = &main::makeanchor( &main::deaccent($selection) );
 				$textwindow->ntinsert(
@@ -933,6 +945,7 @@ sub html_convert_pageanchors {
 					$markindex,
 "<span class=\"pagenum\"><a name=\"Page_$num\" id=\"Page_$num\">$pagereference</a></span>"
 				) if $pageanch;
+				#*****
 
 				$textwindow->ntinsert( $markindex,
 									   '<!-- Page ' . $num . ' -->' )
