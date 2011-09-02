@@ -10255,10 +10255,10 @@ sub pnumadjust {
 			last;
 		}
 	}
-	if (not defined $mark) {
+	if ( not defined $mark ) {
 		$mark = $textwindow->index('current');
 	}
-	if (not defined $mark) {
+	if ( not defined $mark ) {
 		$mark = "1.0";
 	}
 	if ( not $mark =~ /Pg(\d+)/ ) {
@@ -10597,33 +10597,36 @@ sub pmoveup {    # move the page marker up a line
 	my $num = $lglobal{pagenumentry}->get;
 	$num = $textwindow->index('insert') unless $num;
 	$mark = $num;
-	while ( $num = $textwindow->markPrevious($num) ) {
-		last
-		  if $num =~ /Pg\S+/;
+	if ( not $num =~ /Pg\S+/ ) {
+		while ( $num = $textwindow->markPrevious($num) ) {
+			last
+			  if $num =~ /Pg\S+/;
+		}
 	}
 	$num = '1.0' unless $num;
 	my $pagenum = " $mark ";
-	my $index   = $textwindow->index("$mark-1l");
-
+	my $markindex = $textwindow->index("$mark");
+	my $index = $textwindow->index("$markindex-1 lines");
 	if ( $num eq '1.0' ) {
 		return if $textwindow->compare( $index, '<', '1.0' );
 	} else {
-		return
-		  if $textwindow->compare(
-								   $index, '<',
-								   (
-									  $textwindow->index(
-											 $num . '+' . length($pagenum) . 'c'
-									  )
-								   )
-		  );
+
+		#		return
+		#		  if $textwindow->compare(
+		#								   $index, '<',
+		#								   (
+		#									  $textwindow->index(
+		#											 $num . '+' . length($pagenum) . 'c'
+		#									  )
+		#								   )
+		#		  );
 	}
-	$textwindow->ntdelete( $mark, $mark . ' +' . length($pagenum) . 'c' );
+	$textwindow->ntdelete( $mark, $mark . ' +' . length($pagenum) . 'chars' );
 	$textwindow->markSet( $mark, $index );
-	$textwindow->markGravity( $mark, 'right' );
+	$textwindow->markGravity( $mark, 'left' );
 	$textwindow->ntinsert( $mark, $pagenum );
 	$textwindow->tagAdd( 'pagenum', $mark,
-						 $mark . ' +' . length($pagenum) . 'c' );
+						 $mark . ' +' . length($pagenum) . ' chars' );
 	$textwindow->see($mark);
 }
 
