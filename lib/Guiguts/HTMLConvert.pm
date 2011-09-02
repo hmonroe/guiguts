@@ -870,8 +870,7 @@ sub html_convert_pageanchors {
 		&main::working("Inserting Page Number Markup");
 		$|++;
 		my $markindex;
-		my $firstpage,
-		  $lastpage;  # keep track of first/last page markers at the same position
+		my @pagerefs; # keep track of first/last page markers at the same position
 		my $tempcounter;
 
 		my $mark = '1.0';
@@ -897,7 +896,6 @@ sub html_convert_pageanchors {
 					  ;    
 				}
 				my $pagereference;
-
 				my $marknext = $textwindow->markNext($mark);
 				my $marknextindex ;
 				while ($marknext) {
@@ -914,38 +912,26 @@ sub html_convert_pageanchors {
 				}
 
 				if ( $markindex == $marknextindex ) {
-						#print "thismark:$mark index:$markindex $num\n";
-						#print "marknext:$marknext index: $marknextindex\n";
 					$pagereference = "";
-					#print "firstpage: $firstpage\n";
-					#print "num:$num\n";
-					if ( $firstpage==0 and $num =~ /[0-9]+/ ) {
-						$firstpage = $num;
-						$lastpage  = $num;
-						#print "firstlast: $firstpage $lastpage\n";
-					} else {
-						$firstpage = min( $firstpage, $num );
-						$lastpage = max( $lastpage, $num );
-						#print "firstlast2: $firstpage $lastpage\n";
-					}
+					push @pagerefs, $num;
+					#for (@pagerefs) {print "pagerefs".$1."\n";}
 				} else {
-					#print "End of sequence\n";
-					$firstpage = min( $firstpage, $num );
-					$lastpage = max( $lastpage, $num );
-					if ($firstpage) {
-						$pagereference = "[Pg $firstpage-$lastpage]";
-						$firstpage     = 0;
-						$lastpage      = 0;
+					push @pagerefs, $num;
+					if (@pagerefs) {
+						$pagereference="";
+						for (sort @pagerefs) {
+						$pagereference .= "<br />[Pg $_]";}
+						@pagerefs=();
 					} else {
 						$pagereference = "[Pg $num]";
 					}
+
 				}
 
 				$textwindow->ntinsert(
 					$markindex,
 "<span class=\"pagenum\"><a name=\"Page_$num\" id=\"Page_$num\">$pagereference</a></span>"
 				) if $pageanch;
-				#*****
 
 				$textwindow->ntinsert( $markindex,
 									   '<!-- Page ' . $num . ' -->' )

@@ -25,8 +25,10 @@ use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
 
-use lib "c:/dp/dp/lib";  # Seems necessary to use pp/tkpp to create a windows .exe file
-use lib "c:/perl/lib";
+use lib
+  "c:/dp/dp/lib"; # Seems necessary to use pp/tkpp to create a windows .exe file
+
+#use lib "c:/perl/lib";
 
 #use Data::Dumper;
 use Cwd;
@@ -63,7 +65,7 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $VERSION  = '0.3.2';
+my $VERSION  = '0.3.4';
 my $APP_NAME = 'GuiGuts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 
@@ -92,7 +94,6 @@ our $icondata = '
     hVmUBNYGGVddmUCcAGBWuVSYFrJVUAlAMWVAh2y26WZrWgVmEGx+IWnnnXgCllAbSJbm55+A+vlU
     QttYFOihgLXBpUOMNuqoQQEBADs=
     ';
-splash();
 
 ### Custom Guigut modules
 use Guiguts::LineNumberText;
@@ -115,7 +116,7 @@ my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 ### Application Globals
-our $activecolor      = '#198be6'; #'#f2f818'
+our $activecolor      = '#198be6';    #'#f2f818'
 our $auto_page_marks  = 1;
 our $auto_show_images = 0;
 our $autobackup       = 0;
@@ -146,7 +147,7 @@ our $history_size           = 20;
 our $italic_char            = "_";
 our $ignoreversions =
   "revision";    #ignore revisions by default but not major or minor versions
-our $ignoreversionnumber = "";    #ignore a specific version
+our $ignoreversionnumber = "";       #ignore a specific version
 our $jeebiesmode         = 'p';
 our $lastversioncheck    = time();
 our $lmargin             = 1;
@@ -169,12 +170,12 @@ our $singleterm       = 1;
 our $spellindexbkmrk  = q{};
 our $stayontop        = 0;
 our $suspectindex;
-our $toolside    = 'bottom';
-our $utffontname = 'Courier New';
-our $utffontsize = 14;
+our $toolside           = 'bottom';
+our $utffontname        = 'Courier New';
+our $utffontsize        = 14;
 our $verboseerrorchecks = 0;
-our $vislnnm     = 0;
-our $w3cremote   = 0;
+our $vislnnm            = 0;
+our $w3cremote          = 0;
 
 # These are set to the default Windows values in initialize()
 our $gutpath            = '';
@@ -346,9 +347,6 @@ buildstatusbar();
 
 # Load the icon into the window bar. Needs to happen late in the process
 $top->Icon( -image => $icon );
-
-$lglobal{splashpop}->focusForce;
-$lglobal{splashpop2}->focusForce;
 
 $lglobal{hasfocus} = $textwindow;
 
@@ -810,6 +808,9 @@ sub openpng {
 	$lglobal{pageimageviewed} = $pagenum;
 	my $dospath;
 	my $dosfile;
+	if (not $globalviewerpath) {
+		viewerpath();
+	}
 	my $imagefile = get_image_file($pagenum);
 	if ( $imagefile && $globalviewerpath ) {
 		$dospath = $globalviewerpath;
@@ -1470,8 +1471,8 @@ sub search_menuitems {
 		  -command => [ \&nextblock, 'indent', 'reverse' ]
 	   ],
 	   [ 'separator', '' ],
-	   [ 'command',   'Find ~Orphaned Brackets', -command => \&brackets ],
-	   [ 'command',   'Find Orphaned Markup',    -command => \&orphanedmarkup ],
+	   [ 'command', 'Find ~Orphaned Brackets', -command => \&brackets ],
+	   [ 'command', 'Find Orphaned Markup',    -command => \&orphanedmarkup ],
 	   [
 		  'command',
 		  'Find Proofer Comments',
@@ -1781,12 +1782,12 @@ sub text_menuitems {
 	   [
 		  Button   => 'All of the above',
 		  -command => sub {
-		  	  text_convert_italic( $textwindow, $italic_char );
-		  	  text_convert_bold( $textwindow, $bold_char );
+			  text_convert_italic( $textwindow, $italic_char );
+			  text_convert_bold( $textwindow, $bold_char );
 			  $textwindow->addGlobStart;
 			  text_convert_tb($textwindow);
 			  $textwindow->addGlobEnd;
-		  }
+			}
 	   ],
 	   [
 		  Button   => 'Small caps to all caps',
@@ -3220,7 +3221,7 @@ sub roman {
 	my @figure      = reverse sort keys %roman_digit;
 	grep( $roman_digit{$_} = [ split( //, $roman_digit{$_}, 2 ) ], @figure );
 	my $arg = shift;
-	return undef unless defined $arg; 
+	return undef unless defined $arg;
 	0 < $arg and $arg < 4000 or return;
 	my ( $x, $roman );
 	foreach (@figure) {
@@ -5497,20 +5498,17 @@ sub htmlautoconvert {
 	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
 
 	html_convert_body( $textwindow, $headertext, $lglobal{cssblockmarkup},
-					   $lglobal{poetrynumbers}, $lglobal{classhash});
+					   $lglobal{poetrynumbers}, $lglobal{classhash} );
 
-	
 	html_cleanup_markers($textwindow);
 
 	html_convert_underscoresmallcaps($textwindow);
 
 	html_convert_sidenotes($textwindow);
-	
-	
-	html_convert_pageanchors( $textwindow, $lglobal{pageanch},
-							  $lglobal{pagecmt});
 
-	
+	html_convert_pageanchors( $textwindow, $lglobal{pageanch},
+							  $lglobal{pagecmt} );
+
 	html_convert_utf( $textwindow, $lglobal{leave_utf}, $lglobal{keep_latin1} );
 
 	html_wrapup( $textwindow, $headertext, $lglobal{leave_utf},
@@ -6031,7 +6029,7 @@ sub joinlines {
 	$pagesep = $textwindow->get( $searchstartindex, $searchendindex )
 	  if ( $searchstartindex && $searchendindex );
 	my $pagemark = $pagesep;
-	$pagesep =~ m/^-----*\s?File:\s?([^\.]+)/; # m/^-----*\s?File:\s?(\S+)\./;
+	$pagesep =~ m/^-----*\s?File:\s?([^\.]+)/;   # m/^-----*\s?File:\s?(\S+)\./;
 	return unless $1;
 	$pagesep  = " <!--Pg$1-->";
 	$pagemark = 'Pg' . $1;
@@ -6292,15 +6290,12 @@ sub errorcheckpop_up {
 			   -padx   => 2,
 			   -anchor => 'n'
 	  );
-	  
+
 	# Add verbose checkbox only for certain error check types
-	if (
-		   ( $errorchecktype eq 'Check All' )
-		or ( $errorchecktype eq 'Link Check' )
-		or
-		( $errorchecktype eq 'W3C Validate CSS' )
-		or ( $errorchecktype eq 'PP HTML' )
-	  )
+	if (    ( $errorchecktype eq 'Check All' )
+		 or ( $errorchecktype eq 'Link Check' )
+		 or ( $errorchecktype eq 'W3C Validate CSS' )
+		 or ( $errorchecktype eq 'PP HTML' ) )
 	{
 		$ptopframe->Checkbutton(
 								 -variable    => \$verboseerrorchecks,
@@ -6480,7 +6475,8 @@ sub errorcheckpop_up {
 				if ( $line =~ /^-/i ) {    # skip lines beginning with '-'
 					next;
 				}
-				if ( ( not $verboseerrorchecks ) and $line =~ /^Verbose checks/i )
+				if ( ( not $verboseerrorchecks )
+					 and $line =~ /^Verbose checks/i )
 				{                          # stop with verbose specials check
 					last;
 				}
@@ -8593,13 +8589,16 @@ sub coladjust {
 		my $row = 0;
 		my $blankline;
 		for (@table) {
+
 			#print "Dollar:".$_."\n";
 			#print "colindex:".$colindex."\n";
-			my $temp = $col[ ( $colindex ) ] ;
+			my $temp = $col[ ($colindex) ];
+
 			#print "colcolindex:"."$temp"."\n";
-			$temp = $col[ ( $colindex-1 ) ] ;
+			$temp = $col[ ( $colindex - 1 ) ];
+
 			#print "colcolindex-1:"."$temp"."\n";
-			 
+
 			my $cell = substr(
 							   $_,
 							   ( $col[ ( $colindex - 1 ) ] ),
@@ -10137,9 +10136,9 @@ sub pageadjust {
 			my ($num) = $page =~ /Pg(\S+)/;
 			$updatetemp++;
 			$lglobal{padjpop}->update if ( $updatetemp == 20 );
-			
+
 			$pagetrack{$num}[0] = $frame1->Button(
-				-text => "Image# $num"  ,
+				-text    => "Image# $num",
 				-width   => 12,
 				-command => [
 					sub {
@@ -10147,7 +10146,7 @@ sub pageadjust {
 					},
 				],
 			)->grid( -row => $row, -column => 0, -padx => 2 );
-			  
+
 			$pagetrack{$num}[1] =
 			  $frame1->Label(
 							  -text       => "Label -->",
@@ -10542,7 +10541,7 @@ sub pgrenum {    # Re sequence page markers
 }
 
 sub pgprevious {    #move focus to previous page marker
-	$auto_show_images = 0; # turn off so no interference
+	$auto_show_images = 0;    # turn off so no interference
 	my $mark;
 	my $num = $lglobal{pagenumentry}->get;
 	$num = $textwindow->index('insert') unless $num;
@@ -10563,8 +10562,8 @@ sub pgprevious {    #move focus to previous page marker
 sub pgnext {    #move focus to next page marker
 	my $mark;
 	my $num = $lglobal{pagenumentry}->get;
-	$auto_show_images = 0; # turn off so no interference
-	$num = $textwindow->index('insert') unless $num;
+	$auto_show_images = 0;    # turn off so no interference
+	$num  = $textwindow->index('insert') unless $num;
 	$mark = $num;
 	while ( $num = $textwindow->markNext($num) ) {
 		if ( $num =~ /Pg\S+/ ) { $mark = $num; last; }
@@ -11476,23 +11475,26 @@ sub update_auto_img_button {
 								 -relief     => 'ridge',
 								 -background => 'gray',
 		  )->grid( -row => 1, -column => 6 );
-		if ($auto_show_images) {$lglobal{autoimagebutton}->configure( -text => 'No Img' );}
+		if ($auto_show_images) {
+			$lglobal{autoimagebutton}->configure( -text => 'No Img' );
+		}
 		$lglobal{autoimagebutton}->bind(
 			'<1>',
 			sub {
-				$auto_show_images = 1-$auto_show_images;
-				if ($auto_show_images) {$lglobal{autoimagebutton}->configure( -text => 'No Img' ); 
-		$lglobal{statushelp}->attach( $lglobal{autoimagebutton},
-			-balloonmsg =>
+				$auto_show_images = 1 - $auto_show_images;
+				if ($auto_show_images) {
+					$lglobal{autoimagebutton}->configure( -text => 'No Img' );
+					$lglobal{statushelp}->attach( $lglobal{autoimagebutton},
+						-balloonmsg =>
 "Stop automatically showing the image for the current page."
-		);
-					
+					);
+
 				} else {
 					$lglobal{autoimagebutton}->configure( -text => 'Auto Img' );
-		$lglobal{statushelp}->attach( $lglobal{autoimagebutton},
-			-balloonmsg =>
+					$lglobal{statushelp}->attach( $lglobal{autoimagebutton},
+						-balloonmsg =>
 "Automatically show the image for the current page (focus shifts to image window)."
-		);
+					);
 				}
 			}
 		);
@@ -11571,8 +11573,8 @@ sub update_indicators {
 	#
 	my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
 	my ( $line,      $column )   = split( /\./, $textwindow->index('insert') );
-	$lglobal{current_line_label}->configure(
-			  -text => "Ln:$line/" . ( $last_line - 1 ) . " Col:$column" )
+	$lglobal{current_line_label}
+	  ->configure( -text => "Ln:$line/" . ( $last_line - 1 ) . " Col:$column" )
 	  if ( $lglobal{current_line_label} );
 	my $mode             = $textwindow->OverstrikeMode;
 	my $overstrke_insert = ' I ';
@@ -11619,9 +11621,11 @@ sub update_indicators {
 		$lglobal{page_label}->configure( -text => ("Lbl: None ") )
 		  if defined $lglobal{page_label};
 		if (    $auto_show_images
-			 && $pnum)
+			 && $pnum )
 		{
-			if ((not defined $lglobal{pageimageviewed} ) or ($pnum != "$lglobal{pageimageviewed}") ) {
+			if (    ( not defined $lglobal{pageimageviewed} )
+				 or ( $pnum != "$lglobal{pageimageviewed}" ) )
+			{
 				$lglobal{pageimageviewed} = $pnum;
 				openpng($pnum);
 			}
@@ -11904,6 +11908,7 @@ sub spellmyaddword {
 	}
 	print $dic ");";
 	close $dic;
+
 	#print "$lglobal{projectdictname}";
 }
 
@@ -12071,15 +12076,14 @@ sub spelladdtexttags {
 }
 
 sub spelladdgoodwords {
-    chdir $globallastpath;
-    open(DAT, "good_words.txt") || die("Could not open good_words.txt!");
-    my @raw_data=<DAT>;
-    close(DAT);
-    my $word=q{};
-    foreach my $word (@raw_data)
-    {
-        spellmyaddword(substr($word, 0, -1));
-    }
+	chdir $globallastpath;
+	open( DAT, "good_words.txt" ) || die("Could not open good_words.txt!");
+	my @raw_data = <DAT>;
+	close(DAT);
+	my $word = q{};
+	foreach my $word (@raw_data) {
+		spellmyaddword( substr( $word, 0, -1 ) );
+	}
 }
 
 ## End Spellcheck
@@ -13103,11 +13107,11 @@ sub spellchecker {                  # Set up spell check window
 		$showimagebutton = $spf4->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				$auto_show_images = 1-$auto_show_images;
+				$auto_show_images = 1 - $auto_show_images;
 				if ($auto_show_images) {
-					$showimagebutton->configure(-text  => 'No Images');
+					$showimagebutton->configure( -text => 'No Images' );
 				} else {
-					$showimagebutton->configure(-text  => 'Show Images');
+					$showimagebutton->configure( -text => 'Show Images' );
 				}
 			},
 			-text  => 'Show Images',
@@ -13343,7 +13347,7 @@ sub find_proofer_comment {
 sub find_asterisks {
 	if ( defined( $lglobal{search} ) ) {
 		$lglobal{search}->destroy;
-		undef $lglobal{search}; 
+		undef $lglobal{search};
 	}
 	searchpopup();
 	searchoptset(qw/0 x x 1/);
@@ -14809,8 +14813,8 @@ sub separatorpopup {
 							 -variable    => \$auto_show_images,
 							 -selectcolor => $lglobal{checkcolor},
 							 -text        => 'Show Images'
-		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-		
+		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+
 		my $sf4 =
 		  $lglobal{pagepop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
@@ -14864,7 +14868,7 @@ sub separatorpopup {
 	$lglobal{pagepop}->Tk::bind( '<r>' => \&convertfilnum );
 	$lglobal{pagepop}->Tk::bind(
 		'<v>' => sub {
-			openpng(get_page_number());
+			openpng( get_page_number() );
 			$lglobal{pagepop}->raise;
 		}
 	);
@@ -15386,7 +15390,8 @@ sub markpopup {    # FIXME: Rename html_popup
 		my $f1 =
 		  $lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my ( $inc, $row, $col ) = ( 0, 0, 0 );
-		# Warning: if you add tags to the list below move nbsp and poetry buttons
+
+	   # Warning: if you add tags to the list below move nbsp and poetry buttons
 		for (
 			qw/i b h1 h2 h3 h4 h5 h6 p hr br big small ol ul li sup sub table tr td blockquote code /
 		  )
@@ -17069,7 +17074,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-Guiguts 1.0 prepared by Hunter Monroe.
+Guiguts $VERSION prepared by Hunter Monroe.
 Original guiguts written by Stephen Schulze.
 Partially based on the Gedi editor - Gregs editor.
 Redistributable on the same terms as Perl.
@@ -17137,12 +17142,16 @@ END
 
 # Check what is the most recent version online
 sub checkonlineversion {
+
+	#working("Checking for update online (timeout 20 seconds)");
 	my $ua = LWP::UserAgent->new(
 								  env_proxy  => 1,
 								  keep_alive => 1,
-								  timeout    => 30,
+								  timeout    => 20,
 	);
 	my $response = $ua->get('http://sourceforge.net/projects/guiguts/');
+
+	#working();
 	unless ( $response->content ) {
 		return;
 	}
@@ -17154,10 +17163,12 @@ sub checkonlineversion {
 # Check to see if this is the most recent version
 sub checkforupdates {
 	my $monthlycheck = shift;
-	if ( $ignoreversions eq "major" ) {
+	if ( ( $monthlycheck eq "monthly" ) and ( $ignoreversions eq "major" )) {
 		return;
 	}
-	my $onlineversion = checkonlineversion();
+	my $onlineversion;
+
+	$onlineversion = checkonlineversion();
 	if ($onlineversion) {
 		if ( $monthlycheck eq "monthly" ) {
 			if (    ( $onlineversion eq "$VERSION" )
@@ -17180,70 +17191,72 @@ sub checkforupdates {
 				return;
 			}
 		}
-		my ( $dbox, $answer );
-		my $versionpopmessage;
-		my $versionbox = $top->Toplevel;
-		$versionbox->Icon( -image => $icon );
-		$versionbox->title('Check for updates');
-		$versionbox->focusForce;
-		my $dialog_frame =
-		  $versionbox->Frame()->pack( -side => "top", -pady => 10 );
-		$dialog_frame->Label( -text =>
-"The latest version available online is $onlineversion, and your version is $VERSION."
-		)->pack( -side => "top" );
-		my $button_frame = $dialog_frame->Frame()->pack( -side => "top" );
-		$button_frame->Button(
-			-text    => 'Update',
-			-command => sub {
-				runner(
-"$globalbrowserstart http://sourceforge.net/projects/guiguts/" );
-				$versionbox->destroy;
-				undef $versionbox;
-			}
-		)->pack( -side => 'left', -pady => 8, -padx => 5 );
-		$button_frame->Button(
-			-text    => 'Ignore This Version',
-			-command => sub {
-				print $ignoreversionnumber;
-				$ignoreversionnumber = $onlineversion;
-				saveset();
-				$versionbox->destroy;
-				undef $versionbox;
-			}
-		)->pack( -side => 'left', -pady => 8, -padx => 5 );
-		$button_frame->Button(
-			-text    => 'Remind Me',
-			-command => sub {
-				$versionbox->destroy;
-				undef $versionbox;
-				return;
-			}
-		)->pack( -side => 'left', -pady => 8, -padx => 5 );
-		$dialog_frame->Label( -text => $versionpopmessage )
-		  ->pack( -side => "top" );
 
-		my $radio_frame =
-		  $versionbox->Frame()->pack( -side => "top", -pady => 10 );
-		$radio_frame->Radiobutton(
-								   -text     => "Ignore Major Versions",
-								   -value    => "major",
-								   -variable => \$ignoreversions
-		)->pack( -side => "left" );
-		$radio_frame->Radiobutton(
-								   -text     => "Ignore Minor Versions",
-								   -value    => "minor",
-								   -variable => \$ignoreversions
-		)->pack( -side => "left" );
-		$radio_frame->Radiobutton(
-								   -text     => "Ignore Revisions",
-								   -value    => "revisions",
-								   -variable => \$ignoreversions
-		)->pack( -side => "left" );
-		$radio_frame->Radiobutton(
-								   -text     => "Check for Revisions",
-								   -value    => "none",
-								   -variable => \$ignoreversions
-		)->pack( -side => "left" );
+
+	my ( $dbox, $answer );
+	my $versionpopmessage;
+	my $versionbox = $top->Toplevel;
+	$versionbox->Icon( -image => $icon );
+	$versionbox->title('Check for updates');
+	$versionbox->focusForce;
+	my $dialog_frame =
+	  $versionbox->Frame()->pack( -side => "top", -pady => 10 );
+	$dialog_frame->Label( -text => 
+"The latest version available online is $onlineversion, and your version is $VERSION."
+	)->pack( -side => "top" );
+	my $button_frame = $dialog_frame->Frame()->pack( -side => "top" );
+	$button_frame->Button(
+		-text    => 'Update',
+		-command => sub {
+			runner(
+				"$globalbrowserstart http://sourceforge.net/projects/guiguts/");
+			$versionbox->destroy;
+			undef $versionbox;
+		}
+	)->pack( -side => 'left', -pady => 8, -padx => 5 );
+	$button_frame->Button(
+		-text    => 'Ignore This Version',
+		-command => sub {
+
+			#print $ignoreversionnumber;
+			$ignoreversionnumber = $onlineversion;
+			saveset();
+			$versionbox->destroy;
+			undef $versionbox;
+		}
+	)->pack( -side => 'left', -pady => 8, -padx => 5 );
+	$button_frame->Button(
+		-text    => 'Remind Me',
+		-command => sub {
+			$versionbox->destroy;
+			undef $versionbox;
+			return;
+		}
+	)->pack( -side => 'left', -pady => 8, -padx => 5 );
+	$dialog_frame->Label( -text => $versionpopmessage )->pack( -side => "top" );
+
+	my $radio_frame = $versionbox->Frame()->pack( -side => "top", -pady => 10 );
+	$radio_frame->Radiobutton(
+							   -text     => "Do Not Check Again",
+							   -value    => "major",
+							   -variable => \$ignoreversions
+	)->pack( -side => "left" );
+	$radio_frame->Radiobutton(
+							   -text     => "Ignore Minor Versions",
+							   -value    => "minor",
+							   -variable => \$ignoreversions
+	)->pack( -side => "left" );
+	$radio_frame->Radiobutton(
+							   -text     => "Ignore Revisions",
+							   -value    => "revisions",
+							   -variable => \$ignoreversions
+	)->pack( -side => "left" );
+	$radio_frame->Radiobutton(
+							   -text     => "Check for Revisions",
+							   -value    => "none",
+							   -variable => \$ignoreversions
+	)->pack( -side => "left" );
+
 	} else {
 		$top->messageBox(
 					   -icon    => 'error',
@@ -17262,7 +17275,26 @@ sub checkforupdatesmonthly {
 		 and ( time() - $lastversioncheck > 2592000 ) )
 	{
 		$lastversioncheck = time();
-		checkforupdates("monthly");
+
+		my $updateanswer = $top->Dialog(
+							  -title => 'Check for Updates',
+						 -font        => $lglobal{font},
+							  
+							  -text  => 'Would you like to check for updates?',
+							  -buttons => [ 'Ok', 'Later', 'Don\'t Ask' ],
+							  -default_button => 'Ok'
+		)->Show();
+		if ( $updateanswer eq 'Ok' ) {
+			checkforupdates("monthly");
+			return;
+		}
+		if ( $updateanswer eq 'Later' ) {
+			return;
+		}
+		if ( $updateanswer eq 'Do Not Ask Again' ) {
+			$ignoreversions = "major";
+			return;
+		}
 	}
 }
 
@@ -18603,115 +18635,91 @@ sub runtests {
 	# From the command line run "guiguts.pl runtests"
 	use Test::More;
 	ok( 1 == 1, "Dummy test 1==1" );
-	if (-e "setting.rc") {rename ("setting.rc","setting.old");}
+	if ( -e "setting.rc" ) { rename( "setting.rc", "setting.old" ); }
 	ok( roman(22) eq 'XXII.', "roman(22)==XXII" );
-	#ok( 'No File Loaded' eq my $testfilename=$textwindow->FileName, "No file loaded" );
+
+#ok( 'No File Loaded' eq my $testfilename=$textwindow->FileName, "No file loaded" );
 	ok( 'No File Loaded' eq 'No File Loaded', "No file loaded" );
-	ok( 1== do {1}, "do block" );
+	ok( 1 == do { 1 }, "do block" );
 	ok( -e "readme.txt", "readme.txt exists" );
-	ok( 1== do {openfile("readme.txt"); 1}, "openfile on readme.txt" );
+	ok( 1 == do { openfile("readme.txt"); 1 }, "openfile on readme.txt" );
 	ok( "readme.txt" eq $textwindow->FileName, "File is named readme.txt" );
-	ok( 1== do {file_close(); 1}, "close readme.txt" );
-	
+	ok( 1 == do { file_close(); 1 }, "close readme.txt" );
+
 	# Test of rewrapping
 	ok( -e "tests/testfile.txt", "tests/testfile.txt exists" );
-	ok( 1== do {openfile("tests/testfile.txt"); 1}, "openfile on tests/testfile.txt" );
-	ok( 1== do {$textwindow->selectAll; 1}, "Select All" );
-	ok( 1== do {selectrewrap( $textwindow, $lglobal{seepagenums},
-							$lglobal{scanno_hl}, $rwhyphenspace );; 1}, "Rewrap Selection" );
-	ok( 1== do {$textwindow->SaveUTF('tests/testfilewrapped.txt'); 1}, "File saved as tests/testfilewrapped" );
+	ok( 1 == do { openfile("tests/testfile.txt"); 1 },
+		"openfile on tests/testfile.txt" );
+	ok( 1 == do { $textwindow->selectAll; 1 }, "Select All" );
+	ok(
+		1 == do {
+			selectrewrap( $textwindow, $lglobal{seepagenums},
+						  $lglobal{scanno_hl}, $rwhyphenspace );
+			1;
+		},
+		"Rewrap Selection"
+	);
+	ok( 1 == do { $textwindow->SaveUTF('tests/testfilewrapped.txt'); 1 },
+		"File saved as tests/testfilewrapped" );
 	ok( -e 'tests/testfilewrapped.txt', "tests/testfilewrapped.txt was saved" );
-	
+
 	ok( -e "tests/testfilebaseline.txt", "tests/testfilebaseline.txt exists" );
-	ok( compare("tests/testfilebaseline.txt",'tests/testfilewrapped.txt') == 0, "Rewrap was successful" );
+	ok(
+		compare( "tests/testfilebaseline.txt", 'tests/testfilewrapped.txt' ) ==
+		  0,
+		"Rewrap was successful"
+	);
 	unlink 'tests/testfilewrapped.txt';
-	ok(not  (-e "tests/testfilewrapped.txt"), "Deletion confirmed of tests/testfilewrapped.txt" );
+	ok( not( -e "tests/testfilewrapped.txt" ),
+		"Deletion confirmed of tests/testfilewrapped.txt" );
 	unlink 'setting.rc';
-	if (-e "setting.old") {rename ("setting.old","setting.rc");}
-	
+	if ( -e "setting.old" ) { rename( "setting.old", "setting.rc" ); }
+
 	# Test of HTML generation
-	ok( 1== do {openfile("tests/testhtml.txt"); 1}, "openfile on tests/testhtml.txt" );
-	ok( 1== do {htmlautoconvert(); 1}, "openfile on tests/testhtml.txt" );
-	ok( 1== do {$textwindow->SaveUTF('tests/testhtml.html'); 1}, "test of file save as tests/testfilewrapped" );
+	ok( 1 == do { openfile("tests/testhtml.txt"); 1 },
+		"openfile on tests/testhtml.txt" );
+	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml.txt" );
+	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml.html'); 1 },
+		"test of file save as tests/testfilewrapped" );
 	ok( -e 'tests/testhtml.html', "tests/testhtml.html was saved" );
-	
-	ok( -e "tests/testhtmlbaseline.html", "tests/testhtmlbaseline.html exists" );
-	
-	open INFILE, "tests/testhtml.html" || die "no source file\n";
+
+	ok( -e "tests/testhtmlbaseline.html",
+		"tests/testhtmlbaseline.html exists" );
+
+	open INFILE,  "tests/testhtml.html"       || die "no source file\n";
 	open LOGFILE, "> tests/testhtmltemp.html" || die "output file error\n";
 	my $ln;
-	my @book         = ();
-	my $inbody=0;
+	my @book   = ();
+	my $inbody = 0;
 	while ( $ln = <INFILE> ) {
-		if ($inbody) {print LOGFILE $ln;}
+		if ($inbody) { print LOGFILE $ln; }
 		if ( $ln =~ /<\/head>/ ) {
-				$inbody = 1;
+			$inbody = 1;
 		}
 	}
 	close INFILE;
 	close LOGFILE;
-	ok( compare("tests/testhtmlbaseline.html",'tests/testhtmltemp.html') == 0, "Autogenerate HTML successful" );
+	ok(
+		compare( "tests/testhtmlbaseline.html", 'tests/testhtmltemp.html' ) ==
+		  0,
+		"Autogenerate HTML successful"
+	);
 
 	unlink 'tests/testhtml.html';
 	unlink 'tests/testhtmltemp.html';
 	unlink 'tests/testhtml-htmlbak.txt';
 	unlink 'tests/testhtml-htmlbak.txt.bin';
-	ok(not  (-e "tests/testhtmltemp.html"), "Deletion confirmed of tests/testhtmltemp.html" );
-	ok(not  (-e "tests/testhtml.html"), "Deletion confirmed of tests/testhtml.html" );
+	ok( not( -e "tests/testhtmltemp.html" ),
+		"Deletion confirmed of tests/testhtmltemp.html" );
+	ok( not( -e "tests/testhtml.html" ),
+		"Deletion confirmed of tests/testhtml.html" );
 
-	
-
-	ok( 1== 1, "This is the last test" );
+	ok( 1 == 1, "This is the last test" );
 	done_testing();
 	exit;
 }
 
-sub splash {
-	my $splashtop = new MainWindow;
-	$splashtop->Photo(
-					   'imggif',
-					   -file   => "resources/logo.gif",
-					   -width  => 360,
-					   -height => 68
-	);
-	$splashtop->geometry("+300+200");
-	my $icon = $splashtop->Photo( -format => 'gif',
-								  -data   => $icondata );
-	$splashtop->Icon( -image => $icon );
-	my $labelImage = $splashtop->Label( '-image' => 'imggif' )->pack();
-	$lglobal{splashpop} = $splashtop;
-	$lglobal{splashpop}->title( $window_title . " Post Processing Toolkit" );
-	$lglobal{splashpop}->Frame->pack;
-		my $sf1 =
-		  $lglobal{splashpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-		  $sf1->Label( -text => "Guiguts $VERSION prepared by Hunter Monroe.", )
-		  ->pack( -side => 'top', -anchor => 'n', -padx => 2 );
-		  $sf1->Label( -text => 'Original guiguts written by Stephen Schulze.', )
-		  ->pack( -side => 'top', -anchor => 'n', -padx => 2 );
-		  $sf1->Label( -text => 'Partially based on the Gedi editor - Gregs editor.', )
-		  ->pack( -side => 'top', -anchor => 'n', -padx => 2 );
-	$lglobal{splashpop}->Frame->pack;
-	my $splashtop2 = new MainWindow;
-	$splashtop2->Photo(
-						'imggif',
-						-file   => "resources/PP.jpg",
-						-width  => 440,
-						-height => 100
-	);
-	$splashtop2->geometry("+260+400");
-	my $icon2 = $splashtop2->Photo( -format => 'gif',
-									-data   => $icondata );
-	$splashtop2->Icon( -image => $icon2 );
-	my $labelImage2 = $splashtop2->Label( '-image' => 'imggif' )->pack();
-	$lglobal{splashpop2} = $splashtop2;
-	$lglobal{splashpop2}->title( $window_title . " Post Processing Toolkit" );
-}
-
 # Ready to enter main loop
-sleep(2);
-$lglobal{splashpop}->destroy;
-$lglobal{splashpop2}->destroy;
-$textwindow->focus;
 checkforupdatesmonthly();
 if ( $lglobal{runtests} ) {
 	runtests();

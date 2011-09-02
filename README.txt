@@ -52,3 +52,10 @@ someone to run tkpp following the instructions in COMPILING.txt. A Mac
 or Unix distribution should also include the OpenJade/OpenSP onsgmls
 executable for HTML/PGTEI validation.
 
+Detailed release notes:
+
+Version 0.3.4 Removed splash screen.
+
+Version 0.3.3 Fixed problem in WinGuts.exe with conflicting Tk library.
+
+Version 0.3.2 Fixed pathname problem for non-Windows system for splash screen. 

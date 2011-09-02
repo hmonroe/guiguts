@@ -20,5 +20,5 @@ To create a Windows .exe file
    https://sourceforge.net/project/showfiles.php?group_id=2435&package_id=240780
 
 5. Run "tkpp" with source "guiguts.pl", output WinGuts-1.0.0.exe (keep that format), 
-   choose "execute + static" and "GUI", with icon gg.ico. 
+   choose "execute + static" and "GUI", with icon gg.ico (enter the full path manually). 
    Rename setting.rc temporarily so your settings are not included in the distribution.
