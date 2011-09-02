@@ -54,7 +54,10 @@ executable for HTML/PGTEI validation.
 
 Detailed release notes:
 
-Version 0.3.4 Removed splash screen.
+Version 0.3.4 Removed splash screen. Fixed monthly update check to give user the option.
+Fixed multiple page markers at a single location so they do not overlap but stack vertically like 
+[Pg 32]<br />[Pg 33]. Fixed openpng so if the image viewer is not set the user
+is prompted to set it.
 
 Version 0.3.3 Fixed problem in WinGuts.exe with conflicting Tk library.
 

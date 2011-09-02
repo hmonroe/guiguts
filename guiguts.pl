@@ -65,7 +65,7 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $VERSION  = '0.3.4';
+my $VERSION  = '0.3.5';
 my $APP_NAME = 'GuiGuts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 
@@ -808,7 +808,7 @@ sub openpng {
 	$lglobal{pageimageviewed} = $pagenum;
 	my $dospath;
 	my $dosfile;
-	if (not $globalviewerpath) {
+	if ( not $globalviewerpath ) {
 		viewerpath();
 	}
 	my $imagefile = get_image_file($pagenum);
@@ -10255,6 +10255,20 @@ sub pnumadjust {
 			last;
 		}
 	}
+	if (not defined $mark) {
+		$mark = $textwindow->index('current');
+	}
+	if (not defined $mark) {
+		$mark = "1.0";
+	}
+	if ( not $mark =~ /Pg(\d+)/ ) {
+		while ( $mark = $textwindow->markNext($mark) ) {
+			if ( $mark =~ /Pg(\d+)/ ) {
+				last;
+			}
+		}
+
+	}
 	$textwindow->markSet( 'insert', $mark || '1.0' );
 	if ( $lglobal{pnumpop} ) {
 		$lglobal{pnumpop}->deiconify;
@@ -10616,15 +10630,21 @@ sub pmoveup {    # move the page marker up a line
 sub pmoveleft {    # move the page marker left a character
 	my $mark;
 	my $num = $lglobal{pagenumentry}->get;
+	print "num:$num\n";
 	$num = $textwindow->index('insert') unless $num;
+	print "num2:$num\n";
 	$mark = $num;
 	while ( $num = $textwindow->markPrevious($num) ) {
 		last
 		  if $num =~ /Pg\S+/;
 	}
+	print "num3:$num\n";
 	$num = '1.0' unless $num;
+	print "num4:$num\n";
 	my $pagenum = " $mark ";
-	my $index   = $textwindow->index("$mark-1c");
+	print "mark:$mark\n";
+	print "pagenum:$pagenum\n";
+	my $index = $textwindow->index("$mark-1c");
 
 	if ( $num eq '1.0' ) {
 		return if $textwindow->compare( $index, '<', '1.0' );
@@ -17163,7 +17183,7 @@ sub checkonlineversion {
 # Check to see if this is the most recent version
 sub checkforupdates {
 	my $monthlycheck = shift;
-	if ( ( $monthlycheck eq "monthly" ) and ( $ignoreversions eq "major" )) {
+	if ( ( $monthlycheck eq "monthly" ) and ( $ignoreversions eq "major" ) ) {
 		return;
 	}
 	my $onlineversion;
@@ -17192,70 +17212,71 @@ sub checkforupdates {
 			}
 		}
 
-
-	my ( $dbox, $answer );
-	my $versionpopmessage;
-	my $versionbox = $top->Toplevel;
-	$versionbox->Icon( -image => $icon );
-	$versionbox->title('Check for updates');
-	$versionbox->focusForce;
-	my $dialog_frame =
-	  $versionbox->Frame()->pack( -side => "top", -pady => 10 );
-	$dialog_frame->Label( -text => 
+		my ( $dbox, $answer );
+		my $versionpopmessage;
+		my $versionbox = $top->Toplevel;
+		$versionbox->Icon( -image => $icon );
+		$versionbox->title('Check for updates');
+		$versionbox->focusForce;
+		my $dialog_frame =
+		  $versionbox->Frame()->pack( -side => "top", -pady => 10 );
+		$dialog_frame->Label( -text =>
 "The latest version available online is $onlineversion, and your version is $VERSION."
-	)->pack( -side => "top" );
-	my $button_frame = $dialog_frame->Frame()->pack( -side => "top" );
-	$button_frame->Button(
-		-text    => 'Update',
-		-command => sub {
-			runner(
-				"$globalbrowserstart http://sourceforge.net/projects/guiguts/");
-			$versionbox->destroy;
-			undef $versionbox;
-		}
-	)->pack( -side => 'left', -pady => 8, -padx => 5 );
-	$button_frame->Button(
-		-text    => 'Ignore This Version',
-		-command => sub {
+		)->pack( -side => "top" );
+		my $button_frame = $dialog_frame->Frame()->pack( -side => "top" );
+		$button_frame->Button(
+			-text    => 'Update',
+			-command => sub {
+				runner(
+"$globalbrowserstart http://sourceforge.net/projects/guiguts/" );
+				$versionbox->destroy;
+				undef $versionbox;
+			}
+		)->pack( -side => 'left', -pady => 8, -padx => 5 );
+		$button_frame->Button(
+			-text    => 'Ignore This Version',
+			-command => sub {
 
-			#print $ignoreversionnumber;
-			$ignoreversionnumber = $onlineversion;
-			saveset();
-			$versionbox->destroy;
-			undef $versionbox;
-		}
-	)->pack( -side => 'left', -pady => 8, -padx => 5 );
-	$button_frame->Button(
-		-text    => 'Remind Me',
-		-command => sub {
-			$versionbox->destroy;
-			undef $versionbox;
-			return;
-		}
-	)->pack( -side => 'left', -pady => 8, -padx => 5 );
-	$dialog_frame->Label( -text => $versionpopmessage )->pack( -side => "top" );
+				#print $ignoreversionnumber;
+				$ignoreversionnumber = $onlineversion;
+				saveset();
+				$versionbox->destroy;
+				undef $versionbox;
+			}
+		)->pack( -side => 'left', -pady => 8, -padx => 5 );
+		$button_frame->Button(
+			-text    => 'Remind Me',
+			-command => sub {
+				$versionbox->destroy;
+				undef $versionbox;
+				return;
+			}
+		)->pack( -side => 'left', -pady => 8, -padx => 5 );
+		$dialog_frame->Label( -text => $versionpopmessage )
+		  ->pack( -side => "top" );
 
-	my $radio_frame = $versionbox->Frame()->pack( -side => "top", -pady => 10 );
-	$radio_frame->Radiobutton(
-							   -text     => "Do Not Check Again",
-							   -value    => "major",
-							   -variable => \$ignoreversions
-	)->pack( -side => "left" );
-	$radio_frame->Radiobutton(
-							   -text     => "Ignore Minor Versions",
-							   -value    => "minor",
-							   -variable => \$ignoreversions
-	)->pack( -side => "left" );
-	$radio_frame->Radiobutton(
-							   -text     => "Ignore Revisions",
-							   -value    => "revisions",
-							   -variable => \$ignoreversions
-	)->pack( -side => "left" );
-	$radio_frame->Radiobutton(
-							   -text     => "Check for Revisions",
-							   -value    => "none",
-							   -variable => \$ignoreversions
-	)->pack( -side => "left" );
+		my $radio_frame =
+		  $versionbox->Frame()->pack( -side => "top", -pady => 10 );
+		$radio_frame->Radiobutton(
+								   -text     => "Do Not Check Again",
+								   -value    => "major",
+								   -variable => \$ignoreversions
+		)->pack( -side => "left" );
+		$radio_frame->Radiobutton(
+								   -text     => "Ignore Minor Versions",
+								   -value    => "minor",
+								   -variable => \$ignoreversions
+		)->pack( -side => "left" );
+		$radio_frame->Radiobutton(
+								   -text     => "Ignore Revisions",
+								   -value    => "revisions",
+								   -variable => \$ignoreversions
+		)->pack( -side => "left" );
+		$radio_frame->Radiobutton(
+								   -text     => "Check for Revisions",
+								   -value    => "none",
+								   -variable => \$ignoreversions
+		)->pack( -side => "left" );
 
 	} else {
 		$top->messageBox(
@@ -17277,12 +17298,12 @@ sub checkforupdatesmonthly {
 		$lastversioncheck = time();
 
 		my $updateanswer = $top->Dialog(
-							  -title => 'Check for Updates',
-						 -font        => $lglobal{font},
-							  
-							  -text  => 'Would you like to check for updates?',
-							  -buttons => [ 'Ok', 'Later', 'Don\'t Ask' ],
-							  -default_button => 'Ok'
+			-title => 'Check for Updates',
+			-font  => $lglobal{font},
+
+			-text           => 'Would you like to check for updates?',
+			-buttons        => [ 'Ok', 'Later', 'Don\'t Ask' ],
+			-default_button => 'Ok'
 		)->Show();
 		if ( $updateanswer eq 'Ok' ) {
 			checkforupdates("monthly");
