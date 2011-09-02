@@ -54,11 +54,11 @@ executable for HTML/PGTEI validation.
 
 Detailed release notes:
 
-Version 0.3.5 Removed splash screen. Fixed monthly update check to give user the option.
+Version 0.3.5 
 Fixed multiple page markers at a single location so they do not overlap but stack vertically like 
-[Pg 32]<br />[Pg 33]. Fixed openpng so if the image viewer is not set the user
-is prompted to set it. Fixed problem with moving mark left in Adjust page numbers dialog 
-(entry for initial page number was blank).
+[Pg 32]<br />[Pg 33]. Fixed problem with moving mark left (entry for initial page number 
+was blank) or up (code was garbled). Removed splash screen. Fixed monthly update check to give user the option.
+Fixed openpng so if the image viewer is not set the user is prompted to set it. 
 
 Version 0.3.3 Fixed problem in WinGuts.exe with conflicting Tk library.
 
