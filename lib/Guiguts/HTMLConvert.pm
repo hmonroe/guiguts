@@ -922,7 +922,8 @@ sub html_convert_pageanchors {
 					if (@pagerefs) {
 						my $br = "";
 						$pagereference = "";
-						for ( sort @pagerefs ) {
+						for ( sort { $a <=> $b } @pagerefs ) {
+							print $_."\n";
 							$pagereference .= "$br"
 							  . "<a name=\"Page_$_\" id=\"Page_$_\">[Pg $_]</a>";
 							$br = "<br />";
