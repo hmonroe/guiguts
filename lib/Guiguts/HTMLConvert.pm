@@ -685,21 +685,20 @@ sub html_convert_body {
 				 && ($selection) )
 			{
 
-	   #my $hmark = $textwindow->markPrevious(($step-1).'.0');
-	   #my ($pagemarkline,$pagemarkcol)= split /\./, $textwindow->index($hmark);
-	   # This inserts the horizontal rule at the page marker not just before
-	   # the header. It will need to be moved.
-	   #if ($step-5==$pagemarkline) {
-	   #$textwindow->ntinsert( $textwindow->index($hmark),
-	   #					   '<hr style="width: 65%;" />' )
-	   #  unless ( $selection =~ /<[ph]/ );
-	   #} else {
-				$textwindow->ntinsert( ( $step - 1 ) . '.0',
-									   '<hr style="width: 65%;" />' )
-				  unless ( $selection =~ /<[ph]/ );
+				my $hmark = $textwindow->markPrevious( ( $step - 1 ) . '.0' );
+				my $hmarkindex = $textwindow->index($hmark);
+				my ( $pagemarkline, $pagemarkcol ) = split /\./, $hmarkindex;
 
-				#}
-
+	# This set a mark for the horizontal rule at the page marker not just before
+	# the header.
+				if ( $step - 5 <= $pagemarkline ) {
+					$textwindow->markSet( "HRULE$pagemarkline", $hmarkindex );
+					#print "hmark:".$hmarkindex. "\n";
+				} else {
+					$textwindow->ntinsert( ( $step - 1 ) . '.0',
+										   '<hr style="width: 65%;" />' )
+					  unless ( $selection =~ /<[ph]/ );
+				}
 				$aname =~ s/<\/?[hscalup].*?>//g;
 				$aname = &main::makeanchor( &main::deaccent($selection) );
 				$textwindow->ntinsert(
@@ -881,9 +880,9 @@ sub html_convert_pageanchors {
 			$mark = $textwindow->markPrevious($mark);
 		}
 		while ( $mark = $textwindow->markNext($mark) ) {
+			#print "mark:$mark\n";
 
-			if ( not $mark =~ m{Pg(\S+)} ) {
-			} else {
+			if ( $mark =~ m{Pg(\S+)} ) {
 				my $num = $main::pagenumbers{$mark}{label};
 				$num =~ s/Pg // if defined $num;
 				$num = $1 unless $main::pagenumbers{$mark}{action};
@@ -970,7 +969,8 @@ sub html_convert_pageanchors {
 					my $anchorend =
 					  $textwindow->search( '-exact', '--', '</a></span>',
 										   $markindex, 'end' );
-			        # 11 characters in </a></span>
+
+					# 11 characters in </a></span>
 					$anchorend = $textwindow->index("$anchorend+11c");
 					$pstart =
 					  $textwindow->search( '-exact', '--', '<p>', $anchorend,
@@ -993,6 +993,16 @@ sub html_convert_pageanchors {
 						  unless (
 								  $textwindow->compare( $send, '<', $sstart ) );
 					}
+				}
+			} else {
+				if ( $mark =~ m{HRULE} ) {
+					my $hrulemarkindex = $textwindow->index($mark);
+					my $pgstart =
+					  $textwindow->search( '-backwards', '-exact', '--',
+										   '<span', $hrulemarkindex, '1.0' )
+					  || '1.0';
+					$textwindow->ntinsert( $pgstart,
+										   '<hr style="width: 65%;" />' );
 				}
 			}
 		}
