@@ -923,7 +923,6 @@ sub html_convert_pageanchors {
 						my $br = "";
 						$pagereference = "";
 						for ( sort { $a <=> $b } @pagerefs ) {
-							print $_."\n";
 							$pagereference .= "$br"
 							  . "<a name=\"Page_$_\" id=\"Page_$_\">[Pg $_]</a>";
 							$br = "<br />";
@@ -989,6 +988,7 @@ sub html_convert_pageanchors {
 					  $textwindow->search( '-exact', '--', '</div>', $anchorend,
 										   $sstart )
 					  || $sstart;
+					  print "$pstart:$pend:$sstart:$send\n";
 					if ( $textwindow->compare( $pend, '>=', $pstart ) ) {
 						$textwindow->ntinsert( $anchorend, '</p>' )
 						  unless (
@@ -996,7 +996,7 @@ sub html_convert_pageanchors {
 					}
 				}
 			} else {
-				if ( $mark =~ m{HRULE} ) {
+				if ( $mark =~ m{HRULE} ) { #place the <hr> for a chapter before the page number 
 					my $hrulemarkindex = $textwindow->index($mark);
 					my $pgstart =
 					  $textwindow->search( '-backwards', '-exact', '--',
