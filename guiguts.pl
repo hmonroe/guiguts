@@ -5495,7 +5495,7 @@ sub htmlautoconvert {
 
 	$lglobal{fnsecondpass}  = 0;
 	$lglobal{fnsearchlimit} = 1;
-	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
+#	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
 
 	html_convert_body( $textwindow, $headertext, $lglobal{cssblockmarkup},
 					   $lglobal{poetrynumbers}, $lglobal{classhash} );
@@ -18699,19 +18699,18 @@ sub runtests {
 	unlink 'setting.rc';
 	if ( -e "setting.old" ) { rename( "setting.old", "setting.rc" ); }
 
-	# Test of HTML generation
-	ok( 1 == do { openfile("tests/testhtml.txt"); 1 },
-		"openfile on tests/testhtml.txt" );
-	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml.txt" );
-	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml.html'); 1 },
+	# Test 1 of HTML generation
+	ok( 1 == do { openfile("tests/testhtml1.txt"); 1 },
+		"openfile on tests/testhtml1.txt" );
+	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml1.txt" );
+	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml1.html'); 1 },
 		"test of file save as tests/testfilewrapped" );
-	ok( -e 'tests/testhtml.html', "tests/testhtml.html was saved" );
+	ok( -e 'tests/testhtml1.html', "tests/testhtml1.html was saved" );
 
-	ok( -e "tests/testhtmlbaseline.html",
-		"tests/testhtmlbaseline.html exists" );
-
-	open INFILE,  "tests/testhtml.html"       || die "no source file\n";
-	open LOGFILE, "> tests/testhtmltemp.html" || die "output file error\n";
+	ok( -e "tests/testhtml1baseline.html",
+		"tests/testhtml1baseline.html exists" );
+	open INFILE,  "tests/testhtml1.html"       || die "no source file\n";
+	open LOGFILE, "> tests/testhtml1temp.html" || die "output file error\n";
 	my $ln;
 	my @book   = ();
 	my $inbody = 0;
@@ -18724,19 +18723,59 @@ sub runtests {
 	close INFILE;
 	close LOGFILE;
 	ok(
-		compare( "tests/testhtmlbaseline.html", 'tests/testhtmltemp.html' ) ==
+		compare( "tests/testhtml1baseline.html", 'tests/testhtml1temp.html' ) ==
 		  0,
 		"Autogenerate HTML successful"
 	);
 
-	unlink 'tests/testhtml.html';
-	unlink 'tests/testhtmltemp.html';
-	unlink 'tests/testhtml-htmlbak.txt';
-	unlink 'tests/testhtml-htmlbak.txt.bin';
-	ok( not( -e "tests/testhtmltemp.html" ),
-		"Deletion confirmed of tests/testhtmltemp.html" );
-	ok( not( -e "tests/testhtml.html" ),
-		"Deletion confirmed of tests/testhtml.html" );
+	unlink 'tests/testhtml1.html';
+	unlink 'tests/testhtml1temp.html';
+	unlink 'tests/testhtml1-htmlbak.txt';
+	unlink 'tests/testhtml1-htmlbak.txt.bin';
+	ok( not( -e "tests/testhtml1temp.html" ),
+		"Deletion confirmed of tests/testhtml1temp.html" );
+	ok( not( -e "tests/testhtml1.html" ),
+		"Deletion confirmed of tests/testhtml1.html" );
+
+	# Test 2 of HTML generation
+	ok( 1 == do { openfile("tests/testhtml2.txt"); 1 },
+		"openfile on tests/testhtml2.txt" );
+	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml2.txt" );
+	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml2.html'); 1 },
+		"test of file save as tests/testfilewrapped" );
+	ok( -e 'tests/testhtml2.html', "tests/testhtml2.html was saved" );
+
+	ok( -e "tests/testhtml2baseline.html",
+		"tests/testhtml2baseline.html exists" );
+	open INFILE,  "tests/testhtml2.html"       || die "no source file\n";
+	open LOGFILE, "> tests/testhtml2temp.html" || die "output file error\n";
+	@book   = ();
+	$inbody = 0;
+	while ( $ln = <INFILE> ) {
+		if ($inbody) { print LOGFILE $ln; }
+		if ( $ln =~ /<\/head>/ ) {
+			$inbody = 1;
+		}
+	}
+	close INFILE;
+	close LOGFILE;
+	ok(
+		compare( "tests/testhtml2baseline.html", 'tests/testhtml2temp.html' ) ==
+		  0,
+		"Autogenerate HTML successful"
+	);
+
+	unlink 'tests/testhtml2.html';
+	unlink 'tests/testhtml2temp.html';
+	unlink 'tests/testhtml2-htmlbak.txt';
+	unlink 'tests/testhtml2-htmlbak.txt.bin';
+	ok( not( -e "tests/testhtml2temp.html" ),
+		"Deletion confirmed of tests/testhtml2temp.html" );
+	ok( not( -e "tests/testhtml2.html" ),
+		"Deletion confirmed of tests/testhtml2.html" );
+
+
+
 
 	ok( 1 == 1, "This is the last test" );
 	done_testing();

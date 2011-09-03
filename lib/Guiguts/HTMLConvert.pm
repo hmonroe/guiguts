@@ -693,6 +693,7 @@ sub html_convert_body {
 	# the header.
 				if ( $step - 5 <= $pagemarkline ) {
 					$textwindow->markSet( "HRULE$pagemarkline", $hmarkindex );
+
 					#print "hmark:".$hmarkindex. "\n";
 				} else {
 					$textwindow->ntinsert( ( $step - 1 ) . '.0',
@@ -880,6 +881,7 @@ sub html_convert_pageanchors {
 			$mark = $textwindow->markPrevious($mark);
 		}
 		while ( $mark = $textwindow->markNext($mark) ) {
+
 			#print "mark:$mark\n";
 
 			if ( $mark =~ m{Pg(\S+)} ) {
@@ -988,7 +990,7 @@ sub html_convert_pageanchors {
 					  $textwindow->search( '-exact', '--', '</div>', $anchorend,
 										   $sstart )
 					  || $sstart;
-					  print "$pstart:$pend:$sstart:$send\n";
+					print "$pstart:$pend:$sstart:$send\n";
 					if ( $textwindow->compare( $pend, '>=', $pstart ) ) {
 						$textwindow->ntinsert( $anchorend, '</p>' )
 						  unless (
@@ -996,7 +998,8 @@ sub html_convert_pageanchors {
 					}
 				}
 			} else {
-				if ( $mark =~ m{HRULE} ) { #place the <hr> for a chapter before the page number 
+				if ( $mark =~ m{HRULE} )
+				{    #place the <hr> for a chapter before the page number
 					my $hrulemarkindex = $textwindow->index($mark);
 					my $pgstart =
 					  $textwindow->search( '-backwards', '-exact', '--',
@@ -1046,24 +1049,42 @@ sub html_parse_header {
 	}
 
 	$step = 0;
+	my $completetitle = '';
+	my $intitle=0;
 	while (1) {
 		$step++;
 		last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
 		$selection = $textwindow->get( "$step.0", "$step.end" );
 		next if ( $selection =~ /^\[Illustr/i );    # Skip Illustrations
 		next if ( $selection =~ /^\/[\$f]/i );      # Skip /$|/F tags
+		if (($intitle) and (not length($selection))) {
+			$step--;
+			$textwindow->ntinsert( "$step.end", '</h1>' );
+			last;
+		} #done finding title
 		next unless length($selection);
 		$title = $selection;
-		$title =~ s/[,.]$//;
-		$title = lc($title);
+		$title =~ s/[,.]$//;                        #throw away trailing , or .
+		$title = lc($title);                        #lowercase title
 		$title =~ s/(^\W*\w)/\U$1\E/;
 		$title =~ s/([\s\n]+\W*\w)/\U$1\E/g;
-		last if $title;
+		$title =~ s/^\s+|\s+$//g;
+		if ($intitle==0) { 
+			$textwindow->ntinsert( "$step.0",   '<h1>' );
+			$completetitle = $title;
+			$intitle=1; 
+		} else {
+			if (($title =~ /^by/i) or ($title =~/\Wby\s/i)) {
+				$step--;
+				$textwindow->ntinsert( "$step.end", '</h1>' );
+				last;
+			}
+			
+			$completetitle .= ' '.$title;
+		}
 	}
-	if ($title) {
-		$headertext =~ s/TITLE/$title/ if $title;
-		$textwindow->ntinsert( "$step.0",   '<h1>' );
-		$textwindow->ntinsert( "$step.end", '</h1>' );
+	if ($completetitle) {
+		$headertext =~ s/TITLE/$completetitle/;
 	}
 	while (1) {
 		$step++;

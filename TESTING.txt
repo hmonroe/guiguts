@@ -1,4 +1,0 @@
-$Id: TESTING.txt 305 2010-03-20 17:54:55Z vlsimpson $
-
-This version contains a limited set of tests, for instance of rewrapping, that 
-does not cover all features of Guiguts.
