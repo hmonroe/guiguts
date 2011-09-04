@@ -39,7 +39,7 @@ hr {
 }
 
 hr.tb   {width: 45%;}
-hr.chap {width: 65%; page-break-before: always;}
+hr.chap {width: 65%}
 hr.full {width: 95%;}
 
 hr.r5  {width: 5%; margin-top: 1em; margin-bottom: 1em;}

@@ -5506,8 +5506,8 @@ sub htmlautoconvert {
 
 	html_convert_sidenotes($textwindow);
 
-	html_convert_pageanchors( $textwindow, $lglobal{pageanch},
-							  $lglobal{pagecmt} );
+#	html_convert_pageanchors( $textwindow, $lglobal{pageanch},
+#							  $lglobal{pagecmt} );
 
 	html_convert_utf( $textwindow, $lglobal{leave_utf}, $lglobal{keep_latin1} );
 
@@ -10604,9 +10604,9 @@ sub pmoveup {    # move the page marker up a line
 		}
 	}
 	$num = '1.0' unless $num;
-	my $pagenum = " $mark ";
+	my $pagenum   = " $mark ";
 	my $markindex = $textwindow->index("$mark");
-	my $index = $textwindow->index("$markindex-1 lines");
+	my $index     = $textwindow->index("$markindex-1 lines");
 	if ( $num eq '1.0' ) {
 		return if $textwindow->compare( $index, '<', '1.0' );
 	} else {
@@ -18773,9 +18773,6 @@ sub runtests {
 		"Deletion confirmed of tests/testhtml2temp.html" );
 	ok( not( -e "tests/testhtml2.html" ),
 		"Deletion confirmed of tests/testhtml2.html" );
-
-
-
 
 	ok( 1 == 1, "This is the last test" );
 	done_testing();
