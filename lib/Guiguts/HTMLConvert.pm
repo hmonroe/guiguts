@@ -617,7 +617,6 @@ sub html_convert_body {
 			next;
 		}
 		if ( ( $last5[2] ) && ( !$last5[3] ) && (not $intitle)) {
-			print "last:@last5\n";
 			# Leads to extraneous close para tag if only one line at beginning of document
 			$textwindow->ntinsert( ( $step - 2 ) . '.end', '</p>' )
 			  unless (
