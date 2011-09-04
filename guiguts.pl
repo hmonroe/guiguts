@@ -5495,7 +5495,7 @@ sub htmlautoconvert {
 
 	$lglobal{fnsecondpass}  = 0;
 	$lglobal{fnsearchlimit} = 1;
-#	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
+	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
 
 	html_convert_body( $textwindow, $headertext, $lglobal{cssblockmarkup},
 					   $lglobal{poetrynumbers}, $lglobal{classhash} );
@@ -5506,8 +5506,8 @@ sub htmlautoconvert {
 
 	html_convert_sidenotes($textwindow);
 
-#	html_convert_pageanchors( $textwindow, $lglobal{pageanch},
-#							  $lglobal{pagecmt} );
+	html_convert_pageanchors( $textwindow, $lglobal{pageanch},
+							  $lglobal{pagecmt} );
 
 	html_convert_utf( $textwindow, $lglobal{leave_utf}, $lglobal{keep_latin1} );
 
