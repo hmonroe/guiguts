@@ -18774,6 +18774,44 @@ sub runtests {
 	ok( not( -e "tests/testhtml2.html" ),
 		"Deletion confirmed of tests/testhtml2.html" );
 
+	# Test 3 of HTML generation
+	ok( 1 == do { openfile("tests/testhtml3.txt"); 1 },
+		"openfile on tests/testhtml3.txt" );
+	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml3.txt" );
+	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml3.html'); 1 },
+		"test of file save as tests/testfilewrapped" );
+	ok( -e 'tests/testhtml3.html', "tests/testhtml3.html was saved" );
+
+	ok( -e "tests/testhtml3baseline.html",
+		"tests/testhtml3baseline.html exists" );
+	open INFILE,  "tests/testhtml3.html"       || die "no source file\n";
+	open LOGFILE, "> tests/testhtml3temp.html" || die "output file error\n";
+	@book   = ();
+	$inbody = 0;
+	while ( $ln = <INFILE> ) {
+		if ($inbody) { print LOGFILE $ln; }
+		if ( $ln =~ /<\/head>/ ) {
+			$inbody = 1;
+		}
+	}
+	close INFILE;
+	close LOGFILE;
+	ok(
+		compare( "tests/testhtml3baseline.html", 'tests/testhtml3temp.html' ) ==
+		  0,
+		"Autogenerate HTML successful"
+	);
+
+	unlink 'tests/testhtml3.html';
+	unlink 'tests/testhtml3temp.html';
+	unlink 'tests/testhtml3-htmlbak.txt';
+	unlink 'tests/testhtml3-htmlbak.txt.bin';
+	ok( not( -e "tests/testhtml3temp.html" ),
+		"Deletion confirmed of tests/testhtml3temp.html" );
+	ok( not( -e "tests/testhtml3.html" ),
+		"Deletion confirmed of tests/testhtml3.html" );
+
+
 	ok( 1 == 1, "This is the last test" );
 	done_testing();
 	exit;
