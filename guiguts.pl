@@ -14182,7 +14182,7 @@ sub wordcount {
 					$sword =~ s/([^\w\s\\])/\\$1/g;
 					$sword .= '\b'
 					  if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
-					searchoptset(qw/0 x x 1/);
+					searchoptset(qw/0 1 x 1/);
 				}
 				if ( $intelligentWF && $sword =~ /^\\,(\s|\\n)/ ) {
 
