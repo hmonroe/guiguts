@@ -15,6 +15,10 @@ word, and prevent the cursor from moving past it when using Ctrl+arrow
 key. I haven't had a chance to identify all of them but I know that á
 causes this behavior and ó doesn't.
 
+Bookmarks do not work
+
+
+
 Unicode drop down menu could be made more functional. The bottom half of
 the list is below the bottom of my screen and I can't access it.
 
