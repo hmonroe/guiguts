@@ -79,15 +79,9 @@ MUSEUM OF HISTORY AND TECHNOLOGY
 SMITHSONIAN INSTITUTION
 
 WASHINGTON, 1964
-F/
 
-
-
-
-/F
 Contents
 F/
-
 
 /X
                                                       Page
@@ -389,6 +383,7 @@ sending their children thither, on the account of the reports newly reviv'd,
 because these dancing Phaenomena's were never seen nor heard of in School
 Hours.
 #/
+
 The advertisement was further amplified in its second appearance,
 in the issue of March 21-22, 1719:
 
@@ -5857,7 +5852,7 @@ and the possessions of his Catholic Majesty in America</i>. Philadelphia: Budd a
 
 <sc>Felt, Joseph B</sc>. <i>Annals of Salem</i>. Salem, Mass., 1827.
 
-<sc>Fitts, Rev</sc>. James Hill</sc>. <i>History of Newfields, New Hampshire, 1638-1911</i>. Concord: Rumford Press, 1912.
+<sc>Fitts, Rev. James Hill</sc>. <i>History of Newfields, New Hampshire, 1638-1911</i>. Concord: Rumford Press, 1912.
 
 <sc>Flint, Abel</sc>. <i>System of geometry and trigonometry, together with a treatise of surveying</i>. Hartford: Olive D. Cook, 1804.
 

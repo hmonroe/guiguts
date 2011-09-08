@@ -359,7 +359,7 @@ sub html_convert_body {
 			  if (  ( $last5[3] )
 				   && ( $last5[3] !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ ) );
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
-				print "here\n";
+				#print "here\n";
 				$textwindow->ntinsert( ( $step - 2 ) . ".end", '</p>' )
 				  unless (
 						   $textwindow->get( ( $step - 2 ) . '.0',

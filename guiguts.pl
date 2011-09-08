@@ -18659,11 +18659,16 @@ sub runtests {
 	# From the command line run "guiguts.pl runtests"
 	use Test::More;
 	ok( 1 == 1, "Dummy test 1==1" );
-	if ( -e "setting.rc" ) { rename( "setting.rc", "setting.old" ); }
+	#if ( -e "setting.rc" ) { rename( "setting.rc", "setting.old" ); }
 	ok( roman(22) eq 'XXII.', "roman(22)==XXII" );
+	my $ln;
+	my @book   = ();
+	my $inbody = 0;
+	$lglobal{pageanch}=1;
+    $lglobal{pagecmt}=0;
 
-#ok( 'No File Loaded' eq my $testfilename=$textwindow->FileName, "No file loaded" );
-	ok( 'No File Loaded' eq 'No File Loaded', "No file loaded" );
+
+
 	ok( 1 == do { 1 }, "do block" );
 	ok( -e "readme.txt", "readme.txt exists" );
 	ok( 1 == do { openfile("readme.txt"); 1 }, "openfile on readme.txt" );
@@ -18711,9 +18716,6 @@ sub runtests {
 		"tests/testhtml1baseline.html exists" );
 	open INFILE,  "tests/testhtml1.html"       || die "no source file\n";
 	open LOGFILE, "> tests/testhtml1temp.html" || die "output file error\n";
-	my $ln;
-	my @book   = ();
-	my $inbody = 0;
 	while ( $ln = <INFILE> ) {
 		if ($inbody) { print LOGFILE $ln; }
 		if ( $ln =~ /<\/head>/ ) {
