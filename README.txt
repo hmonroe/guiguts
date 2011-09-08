@@ -54,8 +54,13 @@ executable for HTML/PGTEI validation.
 
 Detailed release notes:
 
-Version 0.3.5 
-Fixed multiple page markers at a single location so they do not overlap but stack vertically like 
+Version 0.3.6 There is a much higher likelihood that this version generates
+valid HTML. Page anchors are no longer placed at the end of the previous paragraph
+or before the horizontal rule. The default for word search from the Word Frequency menu
+is now "Whole Word". Fixed Go To Bookmarks. There is only one file guiguts-0.3.6.zip
+which includes the WinGuts.exe.
+
+Version 0.3.5 Fixed multiple page markers at a single location so they do not overlap but stack vertically like 
 [Pg 32]<br />[Pg 33]. Fixed problem with moving mark left (entry for initial page number 
 was blank) or up (code was garbled). Removed splash screen. Fixed monthly update check to give user the option.
 Fixed openpng so if the image viewer is not set the user is prompted to set it. 
