@@ -1157,8 +1157,10 @@ sub html_convert_pageanchors {
 					  $textwindow->search( '--', '<p><span',
 										   $hrulemarkindex . '-5c', 'end' )
 					  || 'end';
-
-					$textwindow->ntinsert( $pgstart, '<hr class="chap" />' );
+					if($textwindow->compare($hrulemarkindex.'+100c','>',$pgstart)) {
+						$textwindow->ntinsert( $pgstart, '<hr class="chap" />' );
+						#print "hrule:$hrulemarkindex:pgstart:$pgstart\n"; #***
+					}
 				}
 			}
 		}

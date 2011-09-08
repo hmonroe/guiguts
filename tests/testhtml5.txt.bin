@@ -399,7 +399,7 @@
  'Pg398' => {'offset' => '13367.42', 'label' => '', 'style' => '', 'action' => '', 'base' => ''},
 );
 
-$bookmarks[0] = '108.0';
+$bookmarks[0] = '109.9';
 
 $pngspath = 'C:\dp\mississippi\pngs\\';
 
@@ -2685,6 +2685,13 @@ $proofers{'398'}[5] = 'tunelera';
 'Wed Sep  7 22:47:01 2011 - Open C:\dp\dp\tests\testhtml5.txt',
 'Wed Sep  7 22:47:03 2011 - Search & Replace',
 'Wed Sep  7 22:47:50 2011 - File Saved',
+'Wed Sep  7 22:58:44 2011 - Open C:\dp\dp\tests\testhtml5.txt',
+'Wed Sep  7 22:58:46 2011 - Word Frequency',
+'Wed Sep  7 22:59:58 2011 - Word Frequency',
+'Wed Sep  7 23:00:13 2011 - Search & Replace',
+'Wed Sep  7 23:00:28 2011 - Search & Replace',
+'Wed Sep  7 23:01:26 2011 - Word Frequency',
+'Wed Sep  7 23:01:27 2011 - File Saved',
 );
 
 $spellindexbkmrk = '';

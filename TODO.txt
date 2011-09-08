@@ -3,13 +3,7 @@ discuss these
 [url=http://www.pgdp.net/phpBB2/viewtopic.php?t=48584]here[/url]
 regarding what should be fixed to call a version 1.0):
 
-Generate only valid HTML. Fix bug so page numbers at
-beginning of a chapter comes after the horizontal rule. 
-Stop mangling page numbers. Adjust page
-markers without messing up the file.  
-
-Clicking on Word Frequency and scanno checks should start at beginning
-and should only get whole words. Some accented Latin-1 characters
+In Word Frequency Some accented Latin-1 characters
 prevent GG from selecting a whole word when you double-click on the
 word, and prevent the cursor from moving past it when using Ctrl+arrow
 key. I haven't had a chance to identify all of them but I know that á
