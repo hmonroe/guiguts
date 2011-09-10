@@ -75,6 +75,7 @@ sub html_convert_emdashes {
 	&main::named( '(?<=[^<])!--(?=[^>])', '!&mdash;' );
 	&main::named( '(?<=[^-])--$',         '&mdash;' );
 	&main::named( '^--(?=[^-])',          '&mdash;' );
+	&main::named( '^--$',          '&mdash;' );
 	&main::named( "\x{A0}",               '&nbsp;' );
 }
 
