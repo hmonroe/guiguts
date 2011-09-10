@@ -54,6 +54,8 @@ executable for HTML/PGTEI validation.
 
 Detailed release notes:
 
+Version 0.3.7 
+
 Version 0.3.6 There is a much higher likelihood that this version generates
 valid HTML. Page anchors are no longer placed at the end of the previous paragraph
 or before the horizontal rule. The default for word search from the Word Frequency menu

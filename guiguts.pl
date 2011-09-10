@@ -1810,7 +1810,6 @@ sub buildmenu {
 								   -menuitems => fixup_menuitems,
 	);
 
-	# FIXME: Add accelarators and hot keys.
 	my $text = $menubar->cascade(
 								  -label     => 'Text Processing',
 								  -tearoff   => 1,
@@ -1822,6 +1821,12 @@ sub buildmenu {
 									  -tearoff   => 0,
 									  -menuitems => external_menuitems,
 	);
+
+#	my $unicdoe2 = $menubar->cascade(
+#									  -label     => 'Unicode2',
+#									  -tearoff   => 0,
+#									  -menuitems => external_menuitems,
+#	);
 
 	#    my $batch = $menubar->cascade(
 	#        -label     => 'Batc~h',
@@ -5455,7 +5460,7 @@ sub htmlautoconvert {
 	$lglobal{fnsearchlimit} = 1;
 	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
 
-	html_convert_body( $textwindow, $headertext, $lglobal{cssblockmarkup},
+	html_convert_body2( $textwindow, $headertext, $lglobal{cssblockmarkup},
 					   $lglobal{poetrynumbers}, $lglobal{classhash} );
 
 	html_cleanup_markers($textwindow);
@@ -18719,6 +18724,9 @@ sub runtests {
 		  0,
 		"Autogenerate HTML successful"
 	);
+	print "begin diff\n";
+	system "diff tests/testhtml1baseline.html tests/testhtml1temp.html";
+	print "end diff\n";
 
 	unlink 'tests/testhtml1.html';
 	unlink 'tests/testhtml1temp.html';
@@ -18756,6 +18764,9 @@ sub runtests {
 		  0,
 		"Autogenerate HTML successful"
 	);
+	print "begin diff\n";
+	system "diff tests/testhtml2baseline.html tests/testhtml2temp.html";
+	print "end diff\n";
 
 	unlink 'tests/testhtml2.html';
 	unlink 'tests/testhtml2temp.html';
@@ -18793,6 +18804,9 @@ sub runtests {
 		  0,
 		"Autogenerate HTML successful"
 	);
+	print "begin diff\n";
+	system "diff tests/testhtml3baseline.html tests/testhtml3temp.html";
+	print "end diff\n";
 
 	unlink 'tests/testhtml3.html';
 	unlink 'tests/testhtml3temp.html';
