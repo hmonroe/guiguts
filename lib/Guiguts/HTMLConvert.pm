@@ -359,13 +359,10 @@ sub html_convert_body2 {
 			  if (  ( $last5[3] )
 				   && ( $last5[3] !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ ) );
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
-				#$textwindow->ntinsert( ( $step - 2 ) . ".end", '</p>' )
 				insert_paragraph_close($textwindow, ( $step - 2 ) . ".end")
-				
 				  unless (
 						   $textwindow->get( ( $step - 2 ) . '.0',
-											 ( $step - 2 ) . '.end' ) =~ /<\/p>/
-				  );
+											 ( $step - 2 ) . '.end' ) =~ /<\/p>/);
 			}
 			$step++;
 			next;    #done with this row
@@ -449,7 +446,7 @@ sub html_convert_body2 {
 			}
 
 # close para end of the last line before if the previous line does not already close
-			$textwindow->ntinsert( ( $step - 1 ) . '.end', '</p>' )
+            insert_paragraph_close($textwindow,( $step - 1 ) . '.end')			
 			  if (   !( length($selection) )
 				   && ( $last5[3] )
 				   && ( $last5[3] !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ ) );
@@ -564,7 +561,7 @@ sub html_convert_body2 {
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
 
 				# close para
-				$textwindow->ntinsert( ( $step - 2 ) . ".end", '</p>' )
+				insert_paragraph_close($textwindow, ( $step - 2 ) . ".end")
 				  unless (
 						   $textwindow->get( ( $step - 2 ) . '.0',
 											 ( $step - 2 ) . '.end' ) =~ /<\/p>/
@@ -592,7 +589,7 @@ sub html_convert_body2 {
 
 			# close para
 			if ( ( $last5[1] ) && ( !$last5[2] ) ) {
-				$textwindow->ntinsert( ( $step - 3 ) . ".end", '</p>' )
+				insert_paragraph_close($textwindow, ( $step - 3 ) . ".end")
 				  unless (
 						   $textwindow->get( ( $step - 3 ) . '.0',
 											 ( $step - 2 ) . '.end' ) =~
@@ -617,7 +614,7 @@ sub html_convert_body2 {
 		if ( $selection =~ /^\x7f*\/[Ll]/ ) {
 			$listmark = 1;
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
-				$textwindow->ntinsert( ( $step - 2 ) . ".end", '</p>' )
+				insert_paragraph_close($textwindow, ( $step - 2 ) . ".end")
 				  unless (
 						   $textwindow->get( ( $step - 2 ) . '.0',
 											 ( $step - 2 ) . '.end' ) =~ /<\/p>/
@@ -715,7 +712,7 @@ sub html_convert_body2 {
 		if ( $selection =~ /^\x7f*\/[\$\*]/ ) {
 			$inblock = 1;
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
-				$textwindow->ntinsert( ( $step - 2 ) . '.end', '</p>' )
+				insert_paragraph_close($textwindow, ( $step - 2 ) . '.end')
 				  unless (
 						   (
 							 $textwindow->get( ( $step - 2 ) . '.0',
@@ -797,7 +794,7 @@ sub html_convert_body2 {
 				$textwindow->ntinsert( "$step.0", $selection );
 			}
 			if ( ( $last5[2] ) && ( !$last5[3] ) && ( $selection =~ /\/\*/ ) ) {
-				$textwindow->ntinsert( ( $step - 2 ) . ".end", '</p>' )
+				insert_paragraph_close($textwindow, ( $step - 2 ) . ".end")
 				  unless (
 						   $textwindow->get( ( $step - 2 ) . '.0',
 										( $step - 2 ) . '.end' ) =~ /<\/[hd]\d?/
@@ -1041,7 +1038,6 @@ sub html_convert_body {
 			  if (  ( $last5[3] )
 				   && ( $last5[3] !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ ) );
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
-				#$textwindow->ntinsert( ( $step - 2 ) . ".end", '</p>' )
 				insert_paragraph_close($textwindow, ( $step - 2 ) . ".end")
 				
 				  unless (

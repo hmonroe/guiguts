@@ -18693,6 +18693,9 @@ sub runtests {
 		  0,
 		"Rewrap was successful"
 	);
+	print "begin diff\n";
+	system "diff tests/testfilebaseline.html tests/testfilewrapped.html";
+	print "end diff\n";
 	unlink 'tests/testfilewrapped.txt';
 	ok( not( -e "tests/testfilewrapped.txt" ),
 		"Deletion confirmed of tests/testfilewrapped.txt" );
