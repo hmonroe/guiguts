@@ -1281,10 +1281,13 @@ sub file_mark_pages {
 		#  non-greedily ignore everything up to the
 		#  string of dashes, ignore the dashes, then capture
 		#  everything until the dashes begin again (proofer string)
-		if ( $line =~ /-+File:.*?-+([^-]+)-+/ ) {
+#		if ( $line =~ /-+File:.*?-+([^-]+)-+/ ) {
+		if ( $line =~ /^-----*\s?File:\s?\S+\.(png|jpg)---(.*)$/ ) {
+			my $prftrim = $2;
+			$prftrim =~ s/-*$//g;
 
 			# split the proofer string into parts
-			@{ $proofers{$page} } = split( "\Q\\\E", $1 );
+			@{ $proofers{$page} } = split( "\Q\\\E", $prftrim );
 		}
 
 		$pagemark = 'Pg' . $page;
