@@ -12698,6 +12698,19 @@ sub searchpopup {
 					   -padx   => 2,
 					   -anchor => 'w'
 			  );
+			my $nextoccurrencebutton = $sf5->Button(
+				-activebackground => $activecolor,
+				-command          => sub {
+					searchtext('');
+				},
+				-text  => 'Next Occurrence',
+				-width => 15
+			  )->pack(
+					   -side   => 'left',
+					   -pady   => 5,
+					   -padx   => 2,
+					   -anchor => 'w'
+			  );
 			my $lastbutton = $sf5->Button(
 				-activebackground => $activecolor,
 				-command          => sub {
