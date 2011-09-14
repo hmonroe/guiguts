@@ -3,6 +3,8 @@ discuss these
 [url=http://www.pgdp.net/phpBB2/viewtopic.php?t=48584]here[/url]
 regarding what should be fixed to call a version 1.0):
 
+Replace all sometimes doesn't replace all, which is pretty annoying. 
+
 In Word Frequency Some accented Latin-1 characters
 prevent GG from selecting a whole word when you double-click on the
 word, and prevent the cursor from moving past it when using Ctrl+arrow
@@ -35,6 +37,5 @@ list recognizer. Real endash/emdash. Convert ellipsis to real ellip or
 
 There are bugs I could not reproduce or do not understand: Whenever I
 open GG, the window pops up in almost the same place as where I last
-left it when I closed GG, but not quite. Replace all sometimes doesn't
-replace all, which is pretty annoying. When the cursor is somewhere in
+left it when I closed GG, but not quite. When the cursor is somewhere in
 the middle of the file, only up to that point all is replaced.

@@ -3654,11 +3654,15 @@ sub searchtext {
 	}
 	my $searchterm = shift;
 	$searchterm = '' unless defined $searchterm;
+	#print "start:$start\n";
 	if ($start) {
 		$sopt[2]
 		  ? ( $searchstartindex = $start )
-		  : ( $searchendindex = "$start+1c" );
+		  : ( $searchendindex = "$start+1c" ); 
+		  #why should forward search begin +1c?
+		  # otherwise, the next search will find the same match
 	}
+	#print "start:$start\n";
 	{
 
 		# Turn off warnings temporarily since $searchterm is undefined on first
@@ -3734,7 +3738,6 @@ sub searchtext {
 			}
 		}
 
-		#print "$searchstartindex\n";
 		$searchstartindex = 0 unless $mark;
 		$lglobal{lastsearchterm} = 'reset' unless $mark;
 	} else {
@@ -3750,7 +3753,7 @@ sub searchtext {
 		else              { $direction = '-forwards' }
 		if   ( $sopt[0] or $sopt[3] ) { $mode = '-regexp' }
 		else                          { $mode = '-exact' }
-
+		#print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";
 		if ( $sopt[1] ) {
 			$searchstartindex =
 			  $textwindow->search(
@@ -4107,6 +4110,13 @@ sub killstoppop {
 	;    #destroy interrupt popup
 }
 
+#sub replaceall {
+#	my $replacement = shift;
+#	$replacement = '' unless $replacement;
+#	#$textwindow->FindAndReplaceAll('-exact','-nocase','aaa','ccc');
+#	print $textwindow->search('-exact','aaa','2.0');
+#}
+
 sub replaceall {
 	my $replacement = shift;
 	$replacement = '' unless $replacement;
@@ -4118,7 +4128,9 @@ sub replaceall {
 		$searchendindex   = pop @ranges;
 	} else {
 		$lglobal{lastsearchterm} = '';
+		#$textwindow->FindAndReplaceAll('-exact','-nocase','aaa','ccc');
 	}
+	#print "repl:$replacement:ranges:@ranges:\n";
 	$textwindow->focus;
 	opstop();
 	while ( searchtext() )
@@ -4131,7 +4143,6 @@ sub replaceall {
 	$lglobal{stoppop}->destroy;
 	undef $lglobal{stoppop};
 }
-
 sub orphans {
 	viewpagenums() if ( $lglobal{seepagenums} );
 	my $br = shift;
@@ -12457,6 +12468,7 @@ sub searchpopup {
 		$sf12->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
+				my $temp = $lglobal{replaceentry}->get( '1.0', '1.end' ) ;
 				replaceall( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
 			},
 			-text  => 'Rpl All',
@@ -18788,7 +18800,7 @@ sub runtests {
 		"openfile on tests/testhtml3.txt" );
 	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml3.txt" );
 	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml3.html'); 1 },
-		"test of file save as tests/testfilewrapped" );
+		"test of file save as tests/testhtml3.html" );
 	ok( -e 'tests/testhtml3.html', "tests/testhtml3.html was saved" );
 
 	ok( -e "tests/testhtml3baseline.html",
