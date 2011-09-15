@@ -3629,9 +3629,11 @@ sub searchtext {
 	$searchstartindex = $textwindow->index('insert') unless $searchstartindex;
 	my $searchstartingpoint = $textwindow->index('insert');
 
+	# this is a search within a selection
 	if ( $range_total == 0 && $lglobal{selectionsearch} ) {
 		$start = $textwindow->index('insert');
 		$end   = $lglobal{selectionsearch};
+	# this is a search through the end of the document
 	} elsif ( $range_total == 0 && !$lglobal{selectionsearch} ) {
 		$start = $textwindow->index('insert');
 		$end   = 'end';
@@ -3643,9 +3645,11 @@ sub searchtext {
 	}
 	if ( $sopt[4] ) {
 		if ( $sopt[2] ) {
+			# search backwards and Start From Beginning so start from the end 
 			$start = 'end';
 			$end   = '1.0';
 		} else {
+			# search forwards and Start From Beginning so start from the end 
 			$start = '1.0';
 			$end   = 'end';
 		}
@@ -3655,12 +3659,12 @@ sub searchtext {
 	my $searchterm = shift;
 	$searchterm = '' unless defined $searchterm;
 	#print "start:$start\n";
-	if ($start) {
+	if ($start) { # but start is alwaying defined?
 		$sopt[2]
 		  ? ( $searchstartindex = $start )
 		  : ( $searchendindex = "$start+1c" ); 
-		  #why should forward search begin +1c?
-		  # otherwise, the next search will find the same match
+		  # why should forward search begin +1c?
+		  # answer: otherwise, the next search will find the same match
 	}
 	#print "start:$start\n";
 	{
@@ -3754,6 +3758,7 @@ sub searchtext {
 		if   ( $sopt[0] or $sopt[3] ) { $mode = '-regexp' }
 		else                          { $mode = '-exact' }
 		#print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";
+		#finally we actually do some searching
 		if ( $sopt[1] ) {
 			$searchstartindex =
 			  $textwindow->search(
@@ -3843,6 +3848,8 @@ sub updatesearchlabels {
 	}
 }
 
+# calls the replacewith command after calling replaceeval
+# to allow arbitrary perl code to be included in the replace entry
 sub replace {
 	viewpagenums() if ( $lglobal{seepagenums} );
 	my $replaceterm = shift;
@@ -3857,6 +3864,8 @@ sub replace {
 	return 1;
 }
 
+# allow the replacment term to contain arbitrary perl code
+# called only from replace()
 sub replaceeval {
 	my ( $searchterm, $replaceterm ) = @_;
 	my @replarray = ();
@@ -4120,6 +4129,7 @@ sub killstoppop {
 sub replaceall {
 	my $replacement = shift;
 	$replacement = '' unless $replacement;
+	# Check if replaceall applies only to a selection
 	my @ranges = $textwindow->tagRanges('sel');
 	if (@ranges) {
 		$lglobal{lastsearchterm} =
@@ -4128,7 +4138,9 @@ sub replaceall {
 		$searchendindex   = pop @ranges;
 	} else {
 		$lglobal{lastsearchterm} = '';
-		#$textwindow->FindAndReplaceAll('-exact','-nocase','aaa','ccc');
+		# the following comment is much faster but does not 
+		# do whole word search without some additional work
+		#$textwindow->FindAndReplaceAll('-exact','-nocase','c','a');
 	}
 	#print "repl:$replacement:ranges:@ranges:\n";
 	$textwindow->focus;
