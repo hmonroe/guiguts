@@ -3669,9 +3669,9 @@ sub searchtext {
 
 	#print "start:$start\n";
 	if ($start) {    # but start is always defined?
-		$sopt[2] # if backwards
+		$sopt[2]     # if backwards
 		  ? ( $searchstartindex = $start )
-		  : ( $searchendindex = "$start+1c" ); #forwards
+		  : ( $searchendindex = "$start+1c" );    #forwards
 
 		# why should forward search begin +1c?
 		# answer: otherwise, the next search will find the same match
@@ -3715,6 +3715,7 @@ sub searchtext {
 		unless ( $searchterm eq $lglobal{lastsearchterm} ) {
 			{
 				$top->Busy;
+
 				# have to search on the whole file
 				my $wholefile = $textwindow->get( '1.0', $end );
 				while ( $wholefile =~ m/$searchterm/smg ) {
@@ -3775,6 +3776,7 @@ sub searchtext {
 		else                          { $mode = '-exact' }
 
 		#print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";
+
 		#finally we actually do some searching
 		if ( $sopt[1] ) {
 			$searchstartindex =
@@ -4136,13 +4138,6 @@ sub killstoppop {
 	;    #destroy interrupt popup
 }
 
-#sub replaceall {
-#	my $replacement = shift;
-#	$replacement = '' unless $replacement;
-#	#$textwindow->FindAndReplaceAll('-exact','-nocase','aaa','ccc');
-#	print $textwindow->search('-exact','aaa','2.0');
-#}
-
 sub replaceall {
 	my $replacement = shift;
 	$replacement = '' unless $replacement;
@@ -4155,18 +4150,38 @@ sub replaceall {
 		$searchstartindex = pop @ranges;
 		$searchendindex   = pop @ranges;
 	} else {
+		my $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
 		$lglobal{lastsearchterm} = '';
-
-		# the following comment is much faster but does not
-		# do whole word search without some additional work
-		#$textwindow->FindAndReplaceAll('-exact','-nocase','c','a');
+		# if not a search across line boundary 
+		# and not a search within a selection do a speedy FindAndReplaceAll
+		unless ( ( $searchterm =~ m/\\n/ ) && ( $sopt[3] )) {
+			my $exactsearch = $searchterm;
+		    # escape metacharacters for whole word matching			
+			$exactsearch =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;
+			# this is a whole word search
+			$searchterm = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
+			  if $sopt[0];
+			my ( $searchstart, $mode );
+			if   ( $sopt[0] or $sopt[3] ) { $mode = '-regexp' }
+			else                          { $mode = '-exact' }
+			working("Replace All");
+			if ( $sopt[1] ) {
+				$textwindow->FindAndReplaceAll( $mode, '-nocase', $searchterm,
+												$replacement );
+			} else {
+				$textwindow->FindAndReplaceAll( $mode, '-case', $searchterm,
+												$replacement );
+			}
+			working();
+			return;
+		}
 	}
 
 	#print "repl:$replacement:ranges:@ranges:\n";
 	$textwindow->focus;
 	opstop();
 	while ( searchtext() )
-	{    # keep calling search() and replace() until you return undef
+	{            # keep calling search() and replace() until you return undef
 		last unless replace($replacement);
 		last if $operationinterrupt;
 		$textwindow->update;
