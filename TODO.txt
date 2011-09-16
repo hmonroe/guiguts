@@ -3,13 +3,13 @@ discuss these
 [url=http://www.pgdp.net/phpBB2/viewtopic.php?t=48584]here[/url]
 regarding what should be fixed to call a version 1.0):
 
-Replace all sometimes doesn't replace all, which is pretty annoying. Find cannot
-find the first characters in a file. After Find, Replace and Search, Replace All,
-the first occurrence is not replaced (that is the same bug). Search for regex
-"." with replaced term "a" replaces only every other characters (again the same
-bug).
+Replace all sometimes doesn't replace all, which is pretty annoying. Replace all
+is extraordinarily slow. Find cannot find the first characters in a file. After 
+Find, Replace and Search, Replace All, the first occurrence is not replaced 
+(that is the same bug). Search for regex "." with replaced term "a" replaces 
+only every other characters (again the same bug).
 
-Eliminate discourage movement of page markers.
+Eliminate or discourage movement of page markers.
 
 In Word Frequency Some accented Latin-1 characters
 prevent GG from selecting a whole word when you double-click on the

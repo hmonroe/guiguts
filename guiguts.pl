@@ -101,6 +101,7 @@ use Guiguts::TextUnicode;
 use Guiguts::Greekgifs;
 use Guiguts::SearchReplaceMenu;
 use Guiguts::SelectionMenu;
+
 #use Guiguts::BookmarksMenu;
 use Guiguts::TextProcessingMenu;
 use Guiguts::HTMLConvert;
@@ -1281,7 +1282,7 @@ sub file_mark_pages {
 		#  non-greedily ignore everything up to the
 		#  string of dashes, ignore the dashes, then capture
 		#  everything until the dashes begin again (proofer string)
-#		if ( $line =~ /-+File:.*?-+([^-]+)-+/ ) {
+		#		if ( $line =~ /-+File:.*?-+([^-]+)-+/ ) {
 		if ( $line =~ /^-----*\s?File:\s?\S+\.(png|jpg)---(.*)$/ ) {
 			my $prftrim = $2;
 			$prftrim =~ s/-*$//g;
@@ -1516,18 +1517,21 @@ sub search_menuitems {
 }
 
 sub bookmarks_menuitems {
-    [   map ( [ Button       => "Set Bookmark $_",
-                -command     => [ \&setbookmark, $_ ],
-                -accelerator => "Ctrl+Shift+$_"
-            ],
-            ( 1 .. 5 ) ),
-        [ 'separator', '' ],
-        map ( [ Button       => "Go To Bookmark $_",
-                -command     => [ \&gotobookmark, $_ ],
-                -accelerator => "Ctrl+$_"
-            ],
-            ( 1 .. 5 ) ),
-    ];
+	[
+	   map ( [
+				Button       => "Set Bookmark $_",
+				-command     => [ \&setbookmark, $_ ],
+				-accelerator => "Ctrl+Shift+$_"
+			 ],
+			 ( 1 .. 5 ) ),
+	   [ 'separator', '' ],
+	   map ( [
+				Button       => "Go To Bookmark $_",
+				-command     => [ \&gotobookmark, $_ ],
+				-accelerator => "Ctrl+$_"
+			 ],
+			 ( 1 .. 5 ) ),
+	];
 }
 
 sub selection_menuitems {
@@ -1825,11 +1829,11 @@ sub buildmenu {
 									  -menuitems => external_menuitems,
 	);
 
-#	my $unicdoe2 = $menubar->cascade(
-#									  -label     => 'Unicode2',
-#									  -tearoff   => 0,
-#									  -menuitems => external_menuitems,
-#	);
+	#	my $unicdoe2 = $menubar->cascade(
+	#									  -label     => 'Unicode2',
+	#									  -tearoff   => 0,
+	#									  -menuitems => external_menuitems,
+	#	);
 
 	#    my $batch = $menubar->cascade(
 	#        -label     => 'Batc~h',
@@ -3619,6 +3623,9 @@ sub searchtext {
 # $sopt[2] --> 0 = search forwards                      1 = search backwards
 # $sopt[3] --> 0 = normal search term           1 = regex search term - 3 and 0 are mutually exclusive
 # $sopt[4] --> 0 = search from last index       1 = Start from beginning
+	my $searchterm = shift;
+	$searchterm = '' unless defined $searchterm;
+
 	$lglobal{lastsearchterm} = 'stupid variable needs to be initialized'
 	  unless length( $lglobal{lastsearchterm} );
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' ) if $searchstartindex;
@@ -3633,7 +3640,8 @@ sub searchtext {
 	if ( $range_total == 0 && $lglobal{selectionsearch} ) {
 		$start = $textwindow->index('insert');
 		$end   = $lglobal{selectionsearch};
-	# this is a search through the end of the document
+
+		# this is a search through the end of the document
 	} elsif ( $range_total == 0 && !$lglobal{selectionsearch} ) {
 		$start = $textwindow->index('insert');
 		$end   = 'end';
@@ -3645,27 +3653,30 @@ sub searchtext {
 	}
 	if ( $sopt[4] ) {
 		if ( $sopt[2] ) {
-			# search backwards and Start From Beginning so start from the end 
+
+			# search backwards and Start From Beginning so start from the end
 			$start = 'end';
 			$end   = '1.0';
 		} else {
-			# search forwards and Start From Beginning so start from the end 
+
+			# search forwards and Start From Beginning so start from the end
 			$start = '1.0';
 			$end   = 'end';
 		}
 		$lglobal{searchop4}->deselect if ( defined $lglobal{search} );
 		$lglobal{lastsearchterm} = "resetresetreset";
 	}
-	my $searchterm = shift;
-	$searchterm = '' unless defined $searchterm;
+
 	#print "start:$start\n";
-	if ($start) { # but start is alwaying defined?
-		$sopt[2]
+	if ($start) {    # but start is always defined?
+		$sopt[2] # if backwards
 		  ? ( $searchstartindex = $start )
-		  : ( $searchendindex = "$start+1c" ); 
-		  # why should forward search begin +1c?
-		  # answer: otherwise, the next search will find the same match
+		  : ( $searchendindex = "$start+1c" ); #forwards
+
+		# why should forward search begin +1c?
+		# answer: otherwise, the next search will find the same match
 	}
+
 	#print "start:$start\n";
 	{
 
@@ -3683,6 +3694,8 @@ sub searchtext {
 			return;
 		}
 	}
+
+	# if this is a new searchterm
 	unless ( $searchterm eq $lglobal{lastsearchterm} ) {
 		if ( $sopt[2] ) {
 			( $range_total == 0 )
@@ -3696,10 +3709,13 @@ sub searchtext {
 	$textwindow->tagRemove( 'sel', '1.0', 'end' );
 	my $length = '0';
 	my ($tempindex);
+
+	# Search across line boundaries with regexp "this\nand"
 	if ( ( $searchterm =~ m/\\n/ ) && ( $sopt[3] ) ) {
 		unless ( $searchterm eq $lglobal{lastsearchterm} ) {
 			{
 				$top->Busy;
+				# have to search on the whole file
 				my $wholefile = $textwindow->get( '1.0', $end );
 				while ( $wholefile =~ m/$searchterm/smg ) {
 					push @{ $lglobal{nlmatches} }, [ $-[0], ( $+[0] - $-[0] ) ];
@@ -3744,10 +3760,10 @@ sub searchtext {
 
 		$searchstartindex = 0 unless $mark;
 		$lglobal{lastsearchterm} = 'reset' unless $mark;
-	} else {
+	} else {    # not a search across line boundaries
 		my $exactsearch = $searchterm;
 		$exactsearch =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g
-		  ;    # escape metacharacters for whole word matching
+		  ;     # escape metacharacters for whole word matching
 		$searchterm = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
 		  if $sopt[0];
 		my ( $direction, $searchstart, $mode );
@@ -3757,6 +3773,7 @@ sub searchtext {
 		else              { $direction = '-forwards' }
 		if   ( $sopt[0] or $sopt[3] ) { $mode = '-regexp' }
 		else                          { $mode = '-exact' }
+
 		#print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";
 		#finally we actually do some searching
 		if ( $sopt[1] ) {
@@ -4129,6 +4146,7 @@ sub killstoppop {
 sub replaceall {
 	my $replacement = shift;
 	$replacement = '' unless $replacement;
+
 	# Check if replaceall applies only to a selection
 	my @ranges = $textwindow->tagRanges('sel');
 	if (@ranges) {
@@ -4138,10 +4156,12 @@ sub replaceall {
 		$searchendindex   = pop @ranges;
 	} else {
 		$lglobal{lastsearchterm} = '';
-		# the following comment is much faster but does not 
+
+		# the following comment is much faster but does not
 		# do whole word search without some additional work
 		#$textwindow->FindAndReplaceAll('-exact','-nocase','c','a');
 	}
+
 	#print "repl:$replacement:ranges:@ranges:\n";
 	$textwindow->focus;
 	opstop();
@@ -4155,6 +4175,7 @@ sub replaceall {
 	$lglobal{stoppop}->destroy;
 	undef $lglobal{stoppop};
 }
+
 sub orphans {
 	viewpagenums() if ( $lglobal{seepagenums} );
 	my $br = shift;
@@ -5487,7 +5508,7 @@ sub htmlautoconvert {
 	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
 
 	html_convert_body2( $textwindow, $headertext, $lglobal{cssblockmarkup},
-					   $lglobal{poetrynumbers}, $lglobal{classhash} );
+						$lglobal{poetrynumbers}, $lglobal{classhash} );
 
 	html_cleanup_markers($textwindow);
 
@@ -12480,7 +12501,7 @@ sub searchpopup {
 		$sf12->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				my $temp = $lglobal{replaceentry}->get( '1.0', '1.end' ) ;
+				my $temp = $lglobal{replaceentry}->get( '1.0', '1.end' );
 				replaceall( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
 			},
 			-text  => 'Rpl All',
@@ -13815,34 +13836,33 @@ sub hilitepopup {
 ### Bookmarks
 
 sub setbookmark {
-    my $index    = '';
-    my $indexb   = '';
-    my $bookmark = shift;
-    if ( $bookmarks[$bookmark] ) {
-        $indexb = $textwindow->index("bkmk$bookmark");
-    }
-    $index = $textwindow->index('insert');
-    if ( $bookmarks[$bookmark] ) {
-        $textwindow->tagRemove( 'bkmk', $indexb, "$indexb+1c" );
-    }
-    if ( $index ne $indexb ) {
-        $textwindow->markSet( "bkmk$bookmark", $index );
-    }
-    $bookmarks[$bookmark] = $index;
-    $textwindow->tagAdd( 'bkmk', $index, "$index+1c" );
+	my $index    = '';
+	my $indexb   = '';
+	my $bookmark = shift;
+	if ( $bookmarks[$bookmark] ) {
+		$indexb = $textwindow->index("bkmk$bookmark");
+	}
+	$index = $textwindow->index('insert');
+	if ( $bookmarks[$bookmark] ) {
+		$textwindow->tagRemove( 'bkmk', $indexb, "$indexb+1c" );
+	}
+	if ( $index ne $indexb ) {
+		$textwindow->markSet( "bkmk$bookmark", $index );
+	}
+	$bookmarks[$bookmark] = $index;
+	$textwindow->tagAdd( 'bkmk', $index, "$index+1c" );
 }
 
 sub gotobookmark {
-    my $bookmark = shift;
-    $textwindow->bell unless ( $bookmarks[$bookmark] || $nobell );
-    $textwindow->see("bkmk$bookmark") if $bookmarks[$bookmark];
-    $textwindow->markSet( 'insert', "bkmk$bookmark" )
-        if $bookmarks[$bookmark];
-    update_indicators();
-    $textwindow->tagAdd( 'bkmk', "bkmk$bookmark", "bkmk$bookmark+1c" )
-        if $bookmarks[$bookmark];
+	my $bookmark = shift;
+	$textwindow->bell unless ( $bookmarks[$bookmark] || $nobell );
+	$textwindow->see("bkmk$bookmark") if $bookmarks[$bookmark];
+	$textwindow->markSet( 'insert', "bkmk$bookmark" )
+	  if $bookmarks[$bookmark];
+	update_indicators();
+	$textwindow->tagAdd( 'bkmk', "bkmk$bookmark", "bkmk$bookmark+1c" )
+	  if $bookmarks[$bookmark];
 }
-
 
 ### Selection
 
@@ -18694,15 +18714,14 @@ sub runtests {
 	# From the command line run "guiguts.pl runtests"
 	use Test::More;
 	ok( 1 == 1, "Dummy test 1==1" );
+
 	#if ( -e "setting.rc" ) { rename( "setting.rc", "setting.old" ); }
 	ok( roman(22) eq 'XXII.', "roman(22)==XXII" );
 	my $ln;
 	my @book   = ();
 	my $inbody = 0;
-	$lglobal{pageanch}=1;
-    $lglobal{pagecmt}=0;
-
-
+	$lglobal{pageanch} = 1;
+	$lglobal{pagecmt}  = 0;
 
 	ok( 1 == do { 1 }, "do block" );
 	ok( -e "readme.txt", "readme.txt exists" );
@@ -18859,7 +18878,6 @@ sub runtests {
 		"Deletion confirmed of tests/testhtml3temp.html" );
 	ok( not( -e "tests/testhtml3.html" ),
 		"Deletion confirmed of tests/testhtml3.html" );
-
 
 	ok( 1 == 1, "This is the last test" );
 	done_testing();
