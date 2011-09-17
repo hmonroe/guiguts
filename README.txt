@@ -57,6 +57,8 @@ Detailed release notes:
 Version 0.3.7 Fixed problem with <blockquote><p><p> and more broadly only
 inserts a </p> if there is an open <p> and only inserts a <p> if there is not
 an open <p>. Dash in proofer's name no longer messes up display of proofers.
+Replace All now replaces all. "--" on a line by itself gets converted to an emdash.
+
 
 Version 0.3.6 There is a much higher likelihood that this version generates
 valid HTML. Page anchors are no longer placed at the end of the previous paragraph

@@ -14215,6 +14215,7 @@ sub wordcount {
 											   )
 										 )
 				);
+				# right click means popup a search box
 				my ($sword) =
 				  $lglobal{wclistbox}->get( $lglobal{wclistbox}->curselection );
 				searchpopup();
@@ -14251,6 +14252,7 @@ sub wordcount {
 				  $lglobal{wclistbox}->get( $lglobal{wclistbox}->curselection );
 				return unless length $sword;
 				@savesets = @sopt;
+				searchoptset(qw/1 x x 0/); #default is whole word search
 				$sword =~ s/(\d+)\s+(\S)/$2/;
 				my $snum = $1;
 				$sword =~ s/\s+\*\*\*\*$//;
