@@ -1,0 +1,13 @@
+Upgrading requires a complete reinstall (save header.txt and setting.rc although in
+theory these should not be be overwritten).
+
+On Windows, unzip the the file Winguts-nn.nn.nn.zip into a directory and run 
+Winguts.exe. You will also need to install helper applications to view images 
+and to spell check. 
+
+For other platforms, you will need to install Perl. 
+See: http://www.pgdp.net/wiki/PPTools/Guiguts/Install
+
+If you need help:
+Please direct any help requests to the GuiGuts DP forum thread:
+http://www.pgdp.net/phpBB2/viewtopic.php?t=3075

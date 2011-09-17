@@ -1,0 +1,44 @@
+The following bugs/feature requests have not yet been addressed (please
+discuss these
+[url=http://www.pgdp.net/phpBB2/viewtopic.php?t=48584]here[/url]
+regarding what should be fixed to call a version 1.0):
+
+Replace all sometimes doesn't replace all, which is pretty annoying. Replace all
+is extraordinarily slow. Find cannot find the first characters in a file. After 
+Find, Replace and Search, Replace All, the first occurrence is not replaced 
+(that is the same bug). Search for regex "." with replaced term "a" replaces 
+only every other characters (again the same bug).
+
+Eliminate or discourage movement of page markers.
+
+In Word Frequency Some accented Latin-1 characters
+prevent GG from selecting a whole word when you double-click on the
+word, and prevent the cursor from moving past it when using Ctrl+arrow
+key. I haven't had a chance to identify all of them but I know that á
+causes this behavior and ó doesn't.
+
+Unicode drop down menu could be made more functional. The bottom half of
+the list is below the bottom of my screen and I can't access it.
+
+If AE ligature followed by an acute accent followed by any lower case
+letter, after the file has been saved, closed, and then reopened, all of
+the ligature plus accent instances have converted to a Latin small
+letter y with hook (Dec 436, Hex 01B4, in the Latin Extended-B unicode
+set).
+
+The "Orphaned Markup" check should quit complaining about nested spans
+
+Fix spell check popup. Acts weird with unicode.
+
+New feature requests: Selective html generation. Enhanced scannos files
+to convert [oe] to ligature, [=a] to &#257. Add feature for drop caps
+(would need new CSS and changes to the insert image dialog). Tool to
+faciliate <ins> method to delineate the typo corrections in your HTML
+versions. Adjust the pptxt check to confirm that all returns are CRLF
+and not just LF. Allow highlight and copy from error check windows. New
+tool to help in removing hyphens (for instance, how often does a given
+word appear with or without hyphens). Better Index/contents/illustration
+list recognizer. Real endash/emdash. Convert ellipsis to real ellip or
+&#8230;.
+
+Break up code into smaller modules with clear functionality
