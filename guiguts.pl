@@ -1829,7 +1829,7 @@ sub buildmenu {
 									  -menuitems => external_menuitems,
 	);
 
-	#	my $unicdoe2 = $menubar->cascade(
+	#	my $unicode2 = $menubar->cascade(
 	#									  -label     => 'Unicode2',
 	#									  -tearoff   => 0,
 	#									  -menuitems => external_menuitems,
