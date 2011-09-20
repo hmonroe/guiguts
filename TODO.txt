@@ -37,6 +37,8 @@ and not just LF. Allow highlight and copy from error check windows. New
 tool to help in removing hyphens (for instance, how often does a given
 word appear with or without hyphens). Better Index/contents/illustration
 list recognizer. Convert ellipsis to real ellip or
-&#8230;.
+&#8230;. File export and import that maintains information in the .bin
+file.
 
-Break up code into smaller modules with clear functionality
+Under the hood changes: Break up code into smaller modules with clear 
+functionality. 

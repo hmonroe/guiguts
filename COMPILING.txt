@@ -33,5 +33,5 @@ Third, login to source forge using a user ID with project Admin privileges. Choo
 (whatever the numbers for your version), and upload guiguts-1.0.0.zip and README.TXT (after
 updating release notes in README.TXT). Click on the "i" on the line for 
 guiguts-1.0.0.zip and specify for which operating systems it is the default. This will
-be "Select All" or if someone has package a Mac executable version macguts-1.0.0.zip,
+be "Select All" or if someone has packaged a Mac executable version macguts-1.0.0.zip,
 then choose OSX for that one.

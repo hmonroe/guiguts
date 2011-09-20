@@ -28,8 +28,6 @@ use lib $FindBin::Bin . "/lib";
 use lib
   "c:/dp/dp/lib"; # Seems necessary to use pp/tkpp to create a windows .exe file
 
-#use lib "c:/perl/lib";
-
 #use Data::Dumper;
 use Cwd;
 use Encode;
@@ -65,7 +63,7 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $VERSION  = '0.3.7';
+my $VERSION  = '0.3.8';
 my $APP_NAME = 'GuiGuts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 
@@ -117,7 +115,7 @@ my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 ### Application Globals
-our $activecolor      = '#198be6';    #'#f2f818'
+our $activecolor      = '#f2f818';
 our $auto_page_marks  = 1;
 our $auto_show_images = 0;
 our $autobackup       = 0;
@@ -154,7 +152,7 @@ our $lastversioncheck    = time();
 our $lmargin             = 1;
 our $markupthreshold     = 4;
 our $nobell              = 0;
-our $nohighlights        = 0;
+our $nohighlights        = 1;
 our $notoolbar           = 0;
 our $intelligentWF       = 0;
 our $operationinterrupt;
@@ -4152,12 +4150,15 @@ sub replaceall {
 	} else {
 		my $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
 		$lglobal{lastsearchterm} = '';
-		# if not a search across line boundary 
+
+		# if not a search across line boundary
 		# and not a search within a selection do a speedy FindAndReplaceAll
-		unless ( ( $searchterm =~ m/\\n/ ) && ( $sopt[3] )) {
+		unless ( ( $searchterm =~ m/\\n/ ) && ( $sopt[3] ) ) {
 			my $exactsearch = $searchterm;
-		    # escape metacharacters for whole word matching			
+
+			# escape metacharacters for whole word matching
 			$exactsearch =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;
+
 			# this is a whole word search
 			$searchterm = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
 			  if $sopt[0];
@@ -4181,7 +4182,7 @@ sub replaceall {
 	$textwindow->focus;
 	opstop();
 	while ( searchtext() )
-	{            # keep calling search() and replace() until you return undef
+	{    # keep calling search() and replace() until you return undef
 		last unless replace($replacement);
 		last if $operationinterrupt;
 		$textwindow->update;
@@ -5701,7 +5702,6 @@ sub named {
 	}
 }
 
-# FIXME: Page separator removal help. Rename.
 sub pageseparatorhelppopup {
 	my $help_text = <<'EOM';
     Join Lines - join lines removing any spaces, asterisks and hyphens as necessary. - Hotkey j
@@ -8353,9 +8353,9 @@ sub handleDND {
 }
 
 sub pututf {
-	my $utfpop = shift;
-	my @xy     = $utfpop->pointerxy;
-	my $widget = $utfpop->containing(@xy);
+	$lglobal{utfpop} = shift;
+	my @xy     = $lglobal{utfpop}->pointerxy;
+	my $widget = $lglobal{utfpop}->containing(@xy);
 	my $letter = $widget->cget( -text );
 	return unless $letter;
 	my $ord = ord($letter);
@@ -14215,6 +14215,7 @@ sub wordcount {
 											   )
 										 )
 				);
+
 				# right click means popup a search box
 				my ($sword) =
 				  $lglobal{wclistbox}->get( $lglobal{wclistbox}->curselection );
@@ -14252,7 +14253,7 @@ sub wordcount {
 				  $lglobal{wclistbox}->get( $lglobal{wclistbox}->curselection );
 				return unless length $sword;
 				@savesets = @sopt;
-				searchoptset(qw/1 x x 0/); #default is whole word search
+				searchoptset(qw/1 x x 0/);    #default is whole word search
 				$sword =~ s/(\d+)\s+(\S)/$2/;
 				my $snum = $1;
 				$sword =~ s/\s+\*\*\*\*$//;
@@ -16348,13 +16349,17 @@ sub xtops {    # run an external program through the external commands menu
 sub utfpopup {
 	$top->Busy( -recurse => 1 );
 	my ( $block, $start, $end ) = @_;
-	my $utfpop = $top->Toplevel;
-	$utfpop->geometry('600x300+10+10');
-	my $blln = $utfpop->Balloon( -initwait => 750 );
+	my $blln;
 	my ( $frame, $pframe, $sizelabel, @buttons );
 	my $rows = ( ( hex $end ) - ( hex $start ) + 1 ) / 16 - 1;
-	$utfpop->title( $block . ': ' . $start . ' - ' . $end );
-	my $cframe = $utfpop->Frame->pack;
+	if ( defined $lglobal{utfpop} ) {
+		$lglobal{utfpop}->destroy;
+	}
+	$lglobal{utfpop} = $top->Toplevel;
+	$lglobal{utfpop}->geometry('680x300+10+10');
+	$blln = $lglobal{utfpop}->Balloon( -initwait => 750 );
+	$lglobal{utfpop}->title( $block . ': ' . $start . ' - ' . $end );
+	my $cframe = $lglobal{utfpop}->Frame->pack;
 	my $fontlist = $cframe->BrowseEntry(
 		-label     => 'Font',
 		-browsecmd => sub {
@@ -16365,6 +16370,7 @@ sub utfpopup {
 		},
 		-variable => \$utffontname,
 	)->grid( -row => 1, -column => 1, -padx => 8, -pady => 2 );
+	$fontlist->insert( 'end', sort( $textwindow->fontFamilies ) );
 	my $bigger = $cframe->Button(
 		-activebackground => $activecolor,
 		-text             => 'Bigger',
@@ -16404,18 +16410,33 @@ sub utfpopup {
 						  -value       => 'h',
 						  -text        => 'HTML code',
 	)->grid( -row => 1, -column => 6 );
+	my $unicodelist = $cframe->BrowseEntry(
+		-label     => 'UTF Block',
+		-browsecmd => sub {
+
+			#utfpopup( $block, $start, $end );
+			utfpopup( $block,
+					  $lglobal{utfblocks}{$block}[0],
+					  $lglobal{utfblocks}{$block}[1] );
+		},
+		-variable => \$block,
+	)->grid( -row => 1, -column => 7, -padx => 8, -pady => 2 );
+	$unicodelist->insert( 'end', sort( keys %{ $lglobal{utfblocks} } ) );
+
+	#my @utfsorthash =  keys %{ $lglobal{utfblocks}};
+
 	$usel->select;
-	$fontlist->insert( 'end', sort( $textwindow->fontFamilies ) );
 	$pframe =
-	  $utfpop->Frame( -background => 'white' )
+	  $lglobal{utfpop}->Frame( -background => 'white' )
 	  ->pack( -expand => 'y', -fill => 'both' );
-	$frame = $pframe->Scrolled(
-								'Pane',
-								-background => 'white',
-								-scrollbars => 'se',
-								-sticky     => 'nswe'
-	)->pack( -expand => 'y', -fill => 'both' );
-	drag($frame);
+	$lglobal{utfframe} =
+	  $pframe->Scrolled(
+						 'Pane',
+						 -background => 'white',
+						 -scrollbars => 'se',
+						 -sticky     => 'nswe'
+	  )->pack( -expand => 'y', -fill => 'both' );
+	drag( $lglobal{utfframe} );
 	for my $y ( 0 .. $rows ) {
 
 		for my $x ( 0 .. 15 ) {
@@ -16427,7 +16448,7 @@ sub utfpopup {
 			$name = 0 unless $cname;
 
 			# FIXME: See Todo
-			$buttons[ ( $y * 16 ) + $x ] = $frame->Button(
+			$buttons[ ( $y * 16 ) + $x ] = $lglobal{utfframe}->Button(
 
 				#    $buttons( ( $y * 16 ) + $x ) = $frame->Button(
 				-activebackground   => $activecolor,
@@ -16436,7 +16457,7 @@ sub utfpopup {
 				-relief             => 'flat',
 				-borderwidth        => 0,
 				-background         => 'white',
-				-command            => [ \&pututf, $utfpop ],
+				-command            => [ \&pututf, $lglobal{utfpop} ],
 				-highlightthickness => 0,
 			)->grid( -row => $y, -column => $x );
 			$buttons[ ( $y * 16 ) + $x ]->bind(
@@ -16448,12 +16469,16 @@ sub utfpopup {
 				}
 			);
 			$blln->attach( $buttons[ ( $y * 16 ) + $x ], -balloonmsg => $msg, );
-			$utfpop->update;
+			$lglobal{utfpop}->update;
 		}
 	}
-	$utfpop->protocol(
-			  'WM_DELETE_WINDOW' => sub { $blln->destroy; $utfpop->destroy; } );
-	$utfpop->Icon( -image => $icon );
+	$lglobal{utfpop}->protocol(
+		'WM_DELETE_WINDOW' => sub {
+			$blln->destroy;
+			$lglobal{utfpop}->destroy;
+		}
+	);
+	$lglobal{utfpop}->Icon( -image => $icon );
 	$top->Unbusy( -recurse => 1 );
 }
 
