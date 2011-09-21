@@ -35,6 +35,8 @@ updating release notes in README.TXT). Click on the "i" on the line for
 guiguts-1.0.0.zip and specify for which operating systems it is the default. This will
 be "Select All" or if someone has packaged a Mac executable version macguts-1.0.0.zip,
 then choose OSX for that one.
+
+Once you have released a version, then tag it with that release number.
 ----------------
 Macintosh/OSX packaging instructions (courtesy of Frau Sma):
 
