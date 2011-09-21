@@ -12092,7 +12092,7 @@ sub spellcheckrange {
 }
 
 sub spellget_misspellings {    # get list of misspelled words
-	spellcheckrange();         # get chunck of text to process
+	spellcheckrange();         # get chunk of text to process
 	return if ( $lglobal{spellindexstart} eq $lglobal{spellindexend} );
 	my ( $word, @templist );
 	$top->Busy( -recurse => 1 );    # let user know something is going on
