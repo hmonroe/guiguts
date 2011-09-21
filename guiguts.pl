@@ -1854,6 +1854,11 @@ sub buildmenu {
 					   -command    => \&rebuildmenu,
 					   -value      => 0,
 					 ],
+					[
+					   Cascade  => 'More',
+					   -tearoff => 0,
+					   -menuitems =>
+						 [ # FIXME: sub this and generalize for all occurences in menu code.
 					 map ( [
 							Button   => "$utfsorthash{$_}",
 							-command => [
@@ -1866,31 +1871,68 @@ sub buildmenu {
 							  $lglobal{utfblocks}{ $utfsorthash{$_} }[0] . ' - '
 							  . $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
 						 ],
-						 ( sort ( keys %utfsorthash ) ) ),
+						 ( sort ( keys %utfsorthash ) )[ 34 .. 67 ] ),
+						 ]
+					],
+					 map ( [
+							Button   => "$utfsorthash{$_}",
+							-command => [
+									 \&utfpopup,
+									 $utfsorthash{$_},
+									 $lglobal{utfblocks}{ $utfsorthash{$_} }[0],
+									 $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
+							],
+							-accelerator =>
+							  $lglobal{utfblocks}{ $utfsorthash{$_} }[0] . ' - '
+							  . $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
+						 ],
+						 ( sort ( keys %utfsorthash ) )[ 1 .. 33 ] ),
 				 ],
 			);
 		} else {
 			$menubar->Cascade(
-				   qw/-label ~Unicode -tearoff 1 -menuitems/ => [
-					   [
-						 Radiobutton => 'Sort by Range',
-						 -variable   => \$lglobal{utfrangesort},
-						 -command    => \&rebuildmenu,
-						 -value      => 1,
-					   ],
-					   map ( [
-							  Button   => "$_",
-							  -command => [
-											\&utfpopup,
-											$_,
-											$lglobal{utfblocks}{$_}[0],
-											$lglobal{utfblocks}{$_}[1]
-							  ],
-							  -accelerator => $lglobal{utfblocks}{$_}[0] . ' - '
-								. $lglobal{utfblocks}{$_}[1]
-						   ],
-						   ( sort ( keys %{ $lglobal{utfblocks} } ) ) ),
-				   ],
+				qw/-label ~Unicode -tearoff 1 -menuitems/ => [
+					[
+					   Radiobutton => 'Sort by Range',
+					   -variable   => \$lglobal{utfrangesort},
+					   -command    => \&rebuildmenu,
+					   -value      => 1,
+					],
+					[
+					   Cascade  => 'More',
+					   -tearoff => 0,
+					   -menuitems =>
+						 [ # FIXME: sub this and generalize for all occurences in menu code.
+						   map ( [
+								   Button   => "$_",
+								   -command => [
+												 \&utfpopup,
+												 $_,
+												 $lglobal{utfblocks}{$_}[0],
+												 $lglobal{utfblocks}{$_}[1]
+								   ],
+								   -accelerator => $lglobal{utfblocks}{$_}[0]
+									 . ' - '
+									 . $lglobal{utfblocks}{$_}[1]
+								 ],
+								 ( sort ( keys %{ $lglobal{utfblocks} } ) )
+								   [ 34 .. 67 ] ),
+						 ]
+					],
+					map ( [
+							 Button   => "$_",
+							 -command => [
+										   \&utfpopup,
+										   $_,
+										   $lglobal{utfblocks}{$_}[0],
+										   $lglobal{utfblocks}{$_}[1]
+							 ],
+							 -accelerator => $lglobal{utfblocks}{$_}[0] . ' - '
+							   . $lglobal{utfblocks}{$_}[1]
+						  ],
+						  ( sort ( keys %{ $lglobal{utfblocks} } ) )[ 1 .. 33 ]
+					),
+				],
 			);
 		}
 	}
