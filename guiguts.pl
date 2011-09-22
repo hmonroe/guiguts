@@ -16397,7 +16397,7 @@ sub utfpopup {
 	$lglobal{utfpop}->destroy if $lglobal{utfpop};
 	undef $lglobal{utfpop};		
 	$lglobal{utfpop} = $top->Toplevel;
-	$lglobal{utfpop}->geometry('680x400+10+10');
+	$lglobal{utfpop}->geometry('720x320+10+10');
 	$blln = $lglobal{utfpop}->Balloon( -initwait => 750 );
 	$lglobal{utfpop}->title( $block . ': ' . $start . ' - ' . $end );
 	my $cframe = $lglobal{utfpop}->Frame->pack;
@@ -16454,10 +16454,48 @@ sub utfpopup {
 	my $unicodelist = $cframe->BrowseEntry(
 		-label     => 'UTF Block',
 		-browsecmd => sub {
-#			utfpopup( $block,
-#					  $lglobal{utfblocks}{$block}[0],
-#					  $lglobal{utfblocks}{$block}[1] );
-			$rows = ( ( hex $end ) - ( hex $start ) + 1 ) / 16 - 1;
+			doutfbuttons($lglobal{utfblocks}{$block}[0],$lglobal{utfblocks}{$block}[1]);
+
+		},
+		-variable => \$block,
+	)->grid( -row => 1, -column => 7, -padx => 8, -pady => 2 );
+	$unicodelist->insert( 'end', sort( keys %{ $lglobal{utfblocks} } ) );
+
+
+	$usel->select;
+	$lglobal{pframe} =
+	  $lglobal{utfpop}->Frame( -background => 'white' )
+	  ->pack( -expand => 'y', -fill => 'both' );
+	$lglobal{utfframe} =
+	  $lglobal{pframe}->Scrolled(
+						 'Pane',
+						 -background => 'white',
+						 -scrollbars => 'se',
+						 -sticky     => 'nswe'
+	  )->pack( -expand => 'y', -fill => 'both' );
+	drag( $lglobal{utfframe} );
+	doutfbuttons($start,$end);
+	
+	$lglobal{utfpop}->protocol(
+		'WM_DELETE_WINDOW' => sub {
+			$blln->destroy;
+			undef $blln;
+			$lglobal{utfpop}->destroy;
+			undef $lglobal{utfpop};
+			}
+		);
+	$lglobal{utfpop}->Icon( -image => $icon );
+	$top->Unbusy( -recurse => 1 );
+}
+
+
+sub doutfbuttons {
+	my ($start,$end) = @_;
+	my $rows = ( ( hex $end ) - ( hex $start ) + 1 ) / 16 - 1;
+	my (@buttons,$blln);
+	$blln = $lglobal{utfpop}->Balloon( -initwait => 750 );
+	
+	
 			$lglobal{pframe}->destroy if $lglobal{pframe};
 			undef $lglobal{pframe};
 
@@ -16508,70 +16546,7 @@ sub utfpopup {
 		}
 	}
 
-
-		},
-		-variable => \$block,
-	)->grid( -row => 1, -column => 7, -padx => 8, -pady => 2 );
-	$unicodelist->insert( 'end', sort( keys %{ $lglobal{utfblocks} } ) );
-
-
-	$usel->select;
-	$lglobal{pframe} =
-	  $lglobal{utfpop}->Frame( -background => 'white' )
-	  ->pack( -expand => 'y', -fill => 'both' );
-	$lglobal{utfframe} =
-	  $lglobal{pframe}->Scrolled(
-						 'Pane',
-						 -background => 'white',
-						 -scrollbars => 'se',
-						 -sticky     => 'nswe'
-	  )->pack( -expand => 'y', -fill => 'both' );
-	drag( $lglobal{utfframe} );
-	for my $y ( 0 .. $rows ) {
-
-		for my $x ( 0 .. 15 ) {
-			my $name = hex($start) + ( $y * 16 ) + $x;
-			my $hex   = sprintf "%04X", $name;
-			my $msg   = "Dec. $name, Hex. $hex";
-			my $cname = charnames::viacode($name);
-			$msg .= ", $cname" if $cname;
-			$name = 0 unless $cname;
-
-			# FIXME: See Todo
-			$buttons[ ( $y * 16 ) + $x ] = $lglobal{utfframe}->Button(
-
-				#    $buttons( ( $y * 16 ) + $x ) = $frame->Button(
-				-activebackground   => $activecolor,
-				-text               => chr($name),
-				-font               => $lglobal{utffont},
-				-relief             => 'flat',
-				-borderwidth        => 0,
-				-background         => 'white',
-				-command            => [ \&pututf, $lglobal{utfpop} ],
-				-highlightthickness => 0,
-			)->grid( -row => $y, -column => $x );
-			$buttons[ ( $y * 16 ) + $x ]->bind(
-				'<ButtonPress-3>',
-				sub {
-					$textwindow->clipboardClear;
-					$textwindow->clipboardAppend(
-								  $buttons[ ( $y * 16 ) + $x ]->cget('-text') );
-				}
-			);
-			$blln->attach( $buttons[ ( $y * 16 ) + $x ], -balloonmsg => $msg, );
-			$lglobal{utfpop}->update;
-		}
-	}
-	$lglobal{utfpop}->protocol(
-		'WM_DELETE_WINDOW' => sub {
-			$blln->destroy;
-			undef $blln;
-			$lglobal{utfpop}->destroy;
-			undef $lglobal{utfpop};
-			}
-		);
-	$lglobal{utfpop}->Icon( -image => $icon );
-	$top->Unbusy( -recurse => 1 );
+	
 }
 
 ### Prefs
