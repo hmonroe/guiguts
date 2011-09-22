@@ -67,8 +67,7 @@ Detailed release notes:
 
 Version 0.3.8 Unicode menu is now broken into two pieces so it does not 
 run off the screen where Mac users cannot see it. Also, the Unicode popup
-has a pulldown list to change UTF blocks. No more DOS Windows for
-WinGuts.exe.
+has a pulldown list to change UTF blocks. 
 
 Version 0.3.7 Fixed problem with <blockquote><p><p> and more broadly only
 inserts a </p> if there is an open <p> and only inserts a <p> if there is not

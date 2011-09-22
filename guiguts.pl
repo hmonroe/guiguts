@@ -16394,11 +16394,10 @@ sub utfpopup {
 	my $blln;
 	my ( $frame, $pframe, $sizelabel, @buttons );
 	my $rows = ( ( hex $end ) - ( hex $start ) + 1 ) / 16 - 1;
-	if ( defined $lglobal{utfpop} ) {
-		$lglobal{utfpop}->destroy;
-	}
+	$lglobal{utfpop}->destroy if $lglobal{utfpop};
+	undef $lglobal{utfpop};		
 	$lglobal{utfpop} = $top->Toplevel;
-	$lglobal{utfpop}->geometry('680x300+10+10');
+	$lglobal{utfpop}->geometry('680x400+10+10');
 	$blln = $lglobal{utfpop}->Balloon( -initwait => 750 );
 	$lglobal{utfpop}->title( $block . ': ' . $start . ' - ' . $end );
 	my $cframe = $lglobal{utfpop}->Frame->pack;
@@ -16455,8 +16454,6 @@ sub utfpopup {
 	my $unicodelist = $cframe->BrowseEntry(
 		-label     => 'UTF Block',
 		-browsecmd => sub {
-
-			#utfpopup( $block, $start, $end );
 			utfpopup( $block,
 					  $lglobal{utfblocks}{$block}[0],
 					  $lglobal{utfblocks}{$block}[1] );
@@ -16465,7 +16462,6 @@ sub utfpopup {
 	)->grid( -row => 1, -column => 7, -padx => 8, -pady => 2 );
 	$unicodelist->insert( 'end', sort( keys %{ $lglobal{utfblocks} } ) );
 
-	#my @utfsorthash =  keys %{ $lglobal{utfblocks}};
 
 	$usel->select;
 	$pframe =
@@ -16517,9 +16513,11 @@ sub utfpopup {
 	$lglobal{utfpop}->protocol(
 		'WM_DELETE_WINDOW' => sub {
 			$blln->destroy;
+			undef $blln;
 			$lglobal{utfpop}->destroy;
-		}
-	);
+			undef $lglobal{utfpop};
+			}
+		);
 	$lglobal{utfpop}->Icon( -image => $icon );
 	$top->Unbusy( -recurse => 1 );
 }
