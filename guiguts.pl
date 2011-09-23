@@ -264,6 +264,17 @@ fontinit();    # Initialize the fonts for the two windows
 
 utffontinit();
 
+# Set up Main window size
+unless ($geometry) {
+	#$top->FullScreen(1);
+	#$top->geometry(($top->maxsize())[0] .'x'.($top->maxsize())[1]);
+	
+	
+	my $height = $top->screenheight() - 90;
+	my $width  = $top->screenwidth() - 20;
+	$geometry = $width . "x" . $height . "+0+0";
+	$geometry=$top->geometry($geometry); 
+}
 $top->geometry($geometry) if $geometry;
 
 # Set up Main window layout
@@ -1847,34 +1858,36 @@ sub buildmenu {
 		}
 		if ( $lglobal{utfrangesort} ) {
 			$menubar->Cascade(
-				 qw/-label ~Unicode -tearoff 1 -menuitems/ => [
-					 [
+				qw/-label ~Unicode -tearoff 1 -menuitems/ => [
+					[
 					   Radiobutton => 'Sort by Name',
 					   -variable   => \$lglobal{utfrangesort},
 					   -command    => \&rebuildmenu,
 					   -value      => 0,
-					 ],
+					],
 					[
 					   Cascade  => 'More',
 					   -tearoff => 0,
 					   -menuitems =>
 						 [ # FIXME: sub this and generalize for all occurences in menu code.
-					 map ( [
-							Button   => "$utfsorthash{$_}",
-							-command => [
-									 \&utfpopup,
-									 $utfsorthash{$_},
-									 $lglobal{utfblocks}{ $utfsorthash{$_} }[0],
-									 $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
-							],
-							-accelerator =>
-							  $lglobal{utfblocks}{ $utfsorthash{$_} }[0] . ' - '
-							  . $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
-						 ],
-						 ( sort ( keys %utfsorthash ) )[ 34 .. 67 ] ),
+						   map ( [
+								  Button   => "$utfsorthash{$_}",
+								  -command => [
+									  \&utfpopup,
+									  $utfsorthash{$_},
+									  $lglobal{utfblocks}{ $utfsorthash{$_} }
+										[0],
+									  $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
+								  ],
+								  -accelerator =>
+									$lglobal{utfblocks}{ $utfsorthash{$_} }[0]
+									. ' - '
+									. $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
+							   ],
+							   ( sort ( keys %utfsorthash ) )[ 34 .. 67 ] ),
 						 ]
 					],
-					 map ( [
+					map ( [
 							Button   => "$utfsorthash{$_}",
 							-command => [
 									 \&utfpopup,
@@ -1887,7 +1900,7 @@ sub buildmenu {
 							  . $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
 						 ],
 						 ( sort ( keys %utfsorthash ) )[ 1 .. 33 ] ),
-				 ],
+				],
 			);
 		} else {
 			$menubar->Cascade(
@@ -16395,7 +16408,7 @@ sub utfpopup {
 	my ( $frame, $sizelabel, @buttons );
 	my $rows = ( ( hex $end ) - ( hex $start ) + 1 ) / 16 - 1;
 	$lglobal{utfpop}->destroy if $lglobal{utfpop};
-	undef $lglobal{utfpop};		
+	undef $lglobal{utfpop};
 	$lglobal{utfpop} = $top->Toplevel;
 	$lglobal{utfpop}->geometry('800x320+10+10');
 	$blln = $lglobal{utfpop}->Balloon( -initwait => 750 );
@@ -16453,15 +16466,15 @@ sub utfpopup {
 	)->grid( -row => 1, -column => 6 );
 	my $unicodelist = $cframe->BrowseEntry(
 		-label     => 'UTF Block',
-		-width => 30,
+		-width     => 30,
 		-browsecmd => sub {
-			doutfbuttons($lglobal{utfblocks}{$block}[0],$lglobal{utfblocks}{$block}[1]);
+			doutfbuttons( $lglobal{utfblocks}{$block}[0],
+						  $lglobal{utfblocks}{$block}[1] );
 
 		},
 		-variable => \$block,
 	)->grid( -row => 1, -column => 7, -padx => 8, -pady => 2 );
 	$unicodelist->insert( 'end', sort( keys %{ $lglobal{utfblocks} } ) );
-
 
 	$usel->select;
 	$lglobal{pframe} =
@@ -16469,48 +16482,47 @@ sub utfpopup {
 	  ->pack( -expand => 'y', -fill => 'both' );
 	$lglobal{utfframe} =
 	  $lglobal{pframe}->Scrolled(
-						 'Pane',
-						 -background => 'white',
-						 -scrollbars => 'se',
-						 -sticky     => 'nswe'
+								  'Pane',
+								  -background => 'white',
+								  -scrollbars => 'se',
+								  -sticky     => 'nswe'
 	  )->pack( -expand => 'y', -fill => 'both' );
 	drag( $lglobal{utfframe} );
-	doutfbuttons($start,$end);
-	
+	doutfbuttons( $start, $end );
+
 	$lglobal{utfpop}->protocol(
 		'WM_DELETE_WINDOW' => sub {
 			$blln->destroy;
 			undef $blln;
 			$lglobal{utfpop}->destroy;
 			undef $lglobal{utfpop};
-			}
-		);
+		}
+	);
 	$lglobal{utfpop}->Icon( -image => $icon );
 	$top->Unbusy( -recurse => 1 );
 }
 
-
 sub doutfbuttons {
-	my ($start,$end) = @_;
+	my ( $start, $end ) = @_;
 	my $rows = ( ( hex $end ) - ( hex $start ) + 1 ) / 16 - 1;
-	my (@buttons,$blln);
+	my ( @buttons, $blln );
 	$blln = $lglobal{utfpop}->Balloon( -initwait => 750 );
-	
-	
-			$lglobal{pframe}->destroy if $lglobal{pframe};
-			undef $lglobal{pframe};
+
+	$lglobal{pframe}->destroy if $lglobal{pframe};
+	undef $lglobal{pframe};
 
 	$lglobal{pframe} =
 	  $lglobal{utfpop}->Frame( -background => 'white' )
 	  ->pack( -expand => 'y', -fill => 'both' );
 	$lglobal{utfframe} =
 	  $lglobal{pframe}->Scrolled(
-						 'Pane',
-						 -background => 'white',
-						 -scrollbars => 'se',
-						 -sticky     => 'nswe'
+								  'Pane',
+								  -background => 'white',
+								  -scrollbars => 'se',
+								  -sticky     => 'nswe'
 	  )->pack( -expand => 'y', -fill => 'both' );
 	drag( $lglobal{utfframe} );
+
 	for my $y ( 0 .. $rows ) {
 
 		for my $x ( 0 .. 15 ) {
@@ -16547,7 +16559,6 @@ sub doutfbuttons {
 		}
 	}
 
-	
 }
 
 ### Prefs
