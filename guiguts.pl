@@ -63,7 +63,7 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $VERSION  = '0.3.8';
+my $VERSION  = '0.3.9';
 my $APP_NAME = 'GuiGuts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 
@@ -190,6 +190,8 @@ our %projectdict;
 our %proofers;
 our %reghints = ();
 our %scannoslist;
+our %geometryhash;    #Geometry of windows in one hash.
+$geometryhash{wfpop} = q{};
 
 our @bookmarks = ( 0, 0, 0, 0, 0, 0 );
 our @gcopt = ( 0, 0, 0, 0, 0, 0, 1, 0, 1 );
@@ -266,14 +268,14 @@ utffontinit();
 
 # Set up Main window size
 unless ($geometry) {
+
 	#$top->FullScreen(1);
 	#$top->geometry(($top->maxsize())[0] .'x'.($top->maxsize())[1]);
-	
-	
+
 	my $height = $top->screenheight() - 90;
 	my $width  = $top->screenwidth() - 20;
 	$geometry = $width . "x" . $height . "+0+0";
-	$geometry=$top->geometry($geometry); 
+	$geometry = $top->geometry($geometry);
 }
 $top->geometry($geometry) if $geometry;
 
@@ -1661,7 +1663,7 @@ sub selection_menuitems {
 
 sub fixup_menuitems {
 	[
-	   [ Button => 'Run ~Word Frequency Routine', -command => \&wordcount ],
+	   [ Button => 'Run ~Word Frequency Routine', -command => \&wordfrequency ],
 	   [ 'separator', '' ],
 	   [ Button => 'Run ~Gutcheck',    -command => \&gutcheck ],
 	   [ Button => 'Gutcheck options', -command => \&gutopts ],
@@ -2340,7 +2342,7 @@ sub viewpagenums {
 		}
 		$textwindow->tagRemove( 'pagenum', '1.0', 'end' );
 		if ( $lglobal{pnumpop} ) {
-			$lglobal{pnpopgoem} = $lglobal{pnumpop}->geometry;
+			$geometryhash{pnumpop} = $lglobal{pnumpop}->geometry;
 			$lglobal{pnumpop}->destroy;
 			undef $lglobal{pnumpop};
 		}
@@ -9087,17 +9089,15 @@ sub initialize {
 		chdir $dir if length $dir;
 	}
 
-	unless ( my $return = do 'setting.rc' ) {
-		if ( -e 'setting.rc' ) {
-			open my $file, "<", "setting.rc"
-			  or warn "Could not open setting file\n";
-			my @file = <$file>;
-			close $file;
-			open $file, ">", "setting.err";
-			print $file @file;
-			close $file;
+	readsettings();
+
+	# For backward compatibility, carry over old geometry settings
+	unless ( $geometryhash{wfpop} ) {
+		if ($geometry2) {
+			$geometryhash{wfpop} = $geometry2;
 		}
 	}
+
 	if ($OS_WIN) {
 		$lglobal{guigutsdirectory} = dirname( rel2abs($0) )
 		  unless defined $lglobal{guigutsdirectory};
@@ -9471,6 +9471,23 @@ sub initialize {
 	$lglobal{scrollgif} =
 	  $top->Photo( -data   => $scroll_gif,
 				   -format => 'gif', );
+}
+
+#
+# New subroutine "readsettings" extracted - Fri Sep 23 12:07:27 2011.
+#
+sub readsettings {
+	unless ( my $return = do 'setting.rc' ) {
+		if ( -e 'setting.rc' ) {
+			open my $file, "<", "setting.rc"
+			  or warn "Could not open setting file\n";
+			my @file = <$file>;
+			close $file;
+			open $file, ">", "setting.err";
+			print $file @file;
+			close $file;
+		}
+	}
 }
 
 sub textbindings {
@@ -10357,8 +10374,8 @@ sub pnumadjust {
 	} else {
 		$lglobal{pnumpop} = $top->Toplevel;
 		$lglobal{pnumpop}->title('Adjust Page Markers');
-		$lglobal{pnumpop}->geometry( $lglobal{pnpopgoem} )
-		  if $lglobal{pnpopgoem};
+		$lglobal{pnumpop}->geometry( $geometryhash{pnumpop} )
+		  if $geometryhash{pnumpop};
 		my $frame2 = $lglobal{pnumpop}->Frame->pack( -pady => 5 );
 		my $upbutton =
 		  $frame2->Button(
@@ -10488,12 +10505,14 @@ sub pnumadjust {
 		  ->bind( $lglobal{pnumpop}, '<Delete>' => \&pageremove );
 		$lglobal{pnumpop}->protocol(
 			'WM_DELETE_WINDOW' => sub {
-				$lglobal{pnpopgoem} = $lglobal{pnumpop}->geometry;
+
+				#$geometryhash{pnumpop} = $lglobal{pnumpop}->geometry;
 				$lglobal{pnumpop}->destroy;
 				undef $lglobal{pnumpop};
 				viewpagenums() if ( $lglobal{seepagenums} );
 			}
 		);
+		geometrybind('pnumpop');
 		$lglobal{pnumpop}->Icon( -image => $icon );
 		if ($OS_WIN) {
 			$lglobal{pagerenumoffset}->bind(
@@ -10509,6 +10528,17 @@ sub pnumadjust {
 			);
 		}
 	}
+}
+
+sub geometrybind {
+	my $popupname = shift;
+	$lglobal{"$popupname"}->bind(
+		'<Configure>' => sub {
+			$geometryhash{"$popupname"} = $lglobal{"$popupname"}->geometry;
+			$lglobal{geometryupdate} = 1;
+		}
+	);
+
 }
 
 sub pageremove {    # Delete a page marker
@@ -10837,7 +10867,7 @@ EOM
 			highlightcolor history_size jeebiesmode lmargin nobell nohighlights notoolbar rmargin
 			rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm w3cremote
 			intelligentWF italic_char bold_char ignoreversions lastversioncheck ignoreversionnumber
-			verboseerrorchecks/
+			verboseerrorchecks geometrypnumpop/
 		  )
 		{
 			if ( eval '$' . $_ ) {
@@ -10872,6 +10902,12 @@ EOM
 			  "\t{'label' => '$label', 'command' => '$command'},\n";
 		}
 		print $save_handle ");\n\n";
+
+		#print $save_handle ("\%geometryhash = (\n");
+		for ( keys %geometryhash ) {
+			print $save_handle "\$geometryhash{$_} = '$geometryhash{$_}';\n";
+		}
+		print $save_handle "\n";
 
 		print $save_handle '@mygcview = (';
 		for (@mygcview) { print $save_handle "$_," }
@@ -14085,7 +14121,7 @@ sub alignpopup {
 ### Fixup
 
 ## Word Frequency
-sub wordcount {
+sub wordfrequency {
 	push @operations, ( localtime() . ' - Word Frequency' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	oppopupdate()  if $lglobal{oppop};
@@ -14096,17 +14132,18 @@ sub wordcount {
 	my $wc    = 0;
 	my $end   = $textwindow->index('end');
 
-	if ( $lglobal{popup} ) {
-		$lglobal{popup}->deiconify;
-		$lglobal{popup}->raise;
+	if ( $lglobal{wfpop} ) {
+		$lglobal{wfpop}->deiconify;
+		$lglobal{wfpop}->raise;
 		$lglobal{wclistbox}->delete( '0', 'end' );
 	} else {
-		$lglobal{popup} = $top->Toplevel;
-		$lglobal{popup}
+		$lglobal{wfpop} = $top->Toplevel;
+		$lglobal{wfpop}
 		  ->title('Word frequency - Ctrl+s to save, Ctrl+x to export');
-		$lglobal{popup}->geometry($geometry2) if $geometry2;
+		$lglobal{wfpop}->geometry( $geometryhash{wfpop} )
+		  if $geometryhash{wfpop};
 		my $wcseframe =
-		  $lglobal{popup}->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $wcopt3 =
 		  $wcseframe->Checkbutton(
 								   -variable    => \$lglobal{suspects_only},
@@ -14170,7 +14207,7 @@ sub wordcount {
 			-command          => sub {
 				return if $lglobal{global_filename} =~ /No File Loaded/;
 				savefile() unless ( $textwindow->numberChanges == 0 );
-				wordcount();
+				wordfrequency();
 			},
 			-text => 'Rerun '
 		  )->pack(
@@ -14180,7 +14217,7 @@ sub wordcount {
 				   -anchor => 'nw'
 		  );
 		my $wcseframe1 =
-		  $lglobal{popup}->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my @wfbuttons = (
 			[ 'Emdashes'  => \&dashcheck ],
 			[ 'Hyphens'   => \&hyphencheck ],
@@ -14225,7 +14262,7 @@ sub wordcount {
 		}
 
 		my $wcframe =
-		  $lglobal{popup}->Frame->pack( -fill => 'both', -expand => 'both', );
+		  $lglobal{wfpop}->Frame->pack( -fill => 'both', -expand => 'both', );
 		$lglobal{wclistbox} =
 		  $wcframe->Scrolled(
 							  'Listbox',
@@ -14242,14 +14279,14 @@ sub wordcount {
 				   -pady   => 2
 		  );
 		drag( $lglobal{wclistbox} );
-		$lglobal{popup}->protocol(
+		$lglobal{wfpop}->protocol(
 			'WM_DELETE_WINDOW' => sub {
-				$lglobal{popup}->destroy;
-				undef $lglobal{popup};
+				$lglobal{wfpop}->destroy;
+				undef $lglobal{wfpop};
 				undef $lglobal{wclistbox};
 			}
 		);
-		$lglobal{popup}->Icon( -image => $icon );
+		$lglobal{wfpop}->Icon( -image => $icon );
 		BindMouseWheel( $lglobal{wclistbox} );
 		$lglobal{wclistbox}->eventAdd( '<<search>>' => '<ButtonRelease-3>' );
 		$lglobal{wclistbox}->bind(
@@ -14374,15 +14411,9 @@ sub wordcount {
 				sortwords( \%{ $lglobal{spellsort} } );
 			}
 		);
-		$lglobal{popup}->bind(
-			'<Configure>' => sub {
-				$lglobal{popup}->XEvent;
-				$geometry2 = $lglobal{popup}->geometry;
-				$lglobal{geometryupdate} = 1;
-			}
-		);
+		geometrybind('wfpop');
 		add_navigation_events( $lglobal{wclistbox} );
-		$lglobal{popup}->bind(
+		$lglobal{wfpop}->bind(
 			'<Control-s>' => sub {
 				my ($name);
 				$name =
@@ -14398,7 +14429,7 @@ sub wordcount {
 				}
 			}
 		);
-		$lglobal{popup}->bind(
+		$lglobal{wfpop}->bind(
 			'<Control-x>' => sub {
 				my ($name);
 				$name =
@@ -16410,7 +16441,14 @@ sub utfpopup {
 	$lglobal{utfpop}->destroy if $lglobal{utfpop};
 	undef $lglobal{utfpop};
 	$lglobal{utfpop} = $top->Toplevel;
-	$lglobal{utfpop}->geometry('800x320+10+10');
+
+	if ( $geometryhash{utfpop} ) {
+		$lglobal{utfpop}->geometry( $geometryhash{utfpop} );
+
+	} else {
+		$lglobal{utfpop}->geometry('800x320+10+10');
+	}
+
 	$blln = $lglobal{utfpop}->Balloon( -initwait => 750 );
 	$lglobal{utfpop}->title( $block . ': ' . $start . ' - ' . $end );
 	my $cframe = $lglobal{utfpop}->Frame->pack;
@@ -16489,7 +16527,7 @@ sub utfpopup {
 	  )->pack( -expand => 'y', -fill => 'both' );
 	drag( $lglobal{utfframe} );
 	doutfbuttons( $start, $end );
-
+	geometrybind('utfpop');
 	$lglobal{utfpop}->protocol(
 		'WM_DELETE_WINDOW' => sub {
 			$blln->destroy;
@@ -16889,7 +16927,7 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 		$lglobal{toptool}->ToolButton(
 									   -text    => 'WF²',
 									   -font    => $lglobal{toolfont},
-									   -command => [ \&wordcount ],
+									   -command => [ \&wordfrequency ],
 									   -tip     => 'Word Frequency'
 		);
 		$lglobal{toptool}->ToolButton(

@@ -65,6 +65,9 @@ executable for HTML/PGTEI validation.
 
 Detailed release notes:
 
+Version 0.3.9 Unless the user has previously set the size of the main
+screen, it is maximized (nearly) on the first run. 
+
 Version 0.3.8 Unicode menu is now broken into two pieces so it does not 
 run off the screen where Mac users cannot see it. Also, the Unicode popup
 has a pulldown list to change UTF blocks. 
