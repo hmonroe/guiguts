@@ -28,4 +28,4 @@ list recognizer. Convert ellipsis to real ellip or
 file.
 
 Under the hood changes: Break up code into smaller modules with clear 
-functionality. Get winguts.exe to run all tests.
+functionality and unit tests. Get winguts.exe to run all tests.

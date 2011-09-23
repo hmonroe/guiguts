@@ -16397,7 +16397,7 @@ sub utfpopup {
 	$lglobal{utfpop}->destroy if $lglobal{utfpop};
 	undef $lglobal{utfpop};		
 	$lglobal{utfpop} = $top->Toplevel;
-	$lglobal{utfpop}->geometry('720x320+10+10');
+	$lglobal{utfpop}->geometry('800x320+10+10');
 	$blln = $lglobal{utfpop}->Balloon( -initwait => 750 );
 	$lglobal{utfpop}->title( $block . ': ' . $start . ' - ' . $end );
 	my $cframe = $lglobal{utfpop}->Frame->pack;
@@ -16453,6 +16453,7 @@ sub utfpopup {
 	)->grid( -row => 1, -column => 6 );
 	my $unicodelist = $cframe->BrowseEntry(
 		-label     => 'UTF Block',
+		-width => 30,
 		-browsecmd => sub {
 			doutfbuttons($lglobal{utfblocks}{$block}[0],$lglobal{utfblocks}{$block}[1]);
 
