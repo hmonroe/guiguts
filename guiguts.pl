@@ -94,6 +94,7 @@ our $icondata = '
     ';
 
 ### Custom Guigut modules
+use Guiguts::FileMenu;
 use Guiguts::LineNumberText;
 use Guiguts::TextUnicode;
 use Guiguts::Greekgifs;
@@ -602,6 +603,8 @@ sub selection {
 	} else {
 		$lglobal{selectionpop} = $top->Toplevel;
 		$lglobal{selectionpop}->title('Select Line.Col');
+		initialize_popup_without_deletebinding('selectionpop');
+		
 		$lglobal{selectionpop}->resizable( 'no', 'no' );
 		my $frame =
 		  $lglobal{selectionpop}
@@ -665,7 +668,6 @@ sub selection {
 				undef $lglobal{seleentry};
 			}
 		);
-		$lglobal{selectionpop}->Icon( -image => $icon );
 	}
 	my @ranges = $textwindow->tagRanges('sel');
 	if (@ranges) {
@@ -1032,6 +1034,7 @@ sub file_close {
 }
 
 sub file_include {    # FIXME: Should include even if no file loaded.
+	tester();
 	my ($name);
 	my $types = [
 				  [
@@ -5843,6 +5846,7 @@ sub showproofers {
 	} else {
 		$lglobal{prooferpop} = $top->Toplevel;
 		$lglobal{prooferpop}->title('Proofers For This File');
+		initialize_popup_with_deletebinding('prooferpop');
 		my $bframe = $lglobal{prooferpop}->Frame->pack;
 
 		$bframe->Button(
@@ -5913,13 +5917,6 @@ sub showproofers {
 		delete $proofers{''};
 		drag( $lglobal{prfrrotextbox} );
 		prfrbypage();
-		$lglobal{prooferpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{prooferpop}->destroy;
-				undef $lglobal{prooferpop};
-			}
-		);
-		$lglobal{prooferpop}->Icon( -image => $icon );
 	}
 }
 
@@ -6323,7 +6320,7 @@ sub errorcheckpop_up {
 	}
 	$lglobal{errorcheckpop} = $top->Toplevel;
 	$lglobal{errorcheckpop}->title($errorchecktype);
-	initialize_popup_without_deletebinding('errorcheckpop');
+	initialize_popup_with_deletebinding('errorcheckpop');
 	
 	$lglobal{errorcheckpop}->transient($top)      if $stayontop;
 	my $ptopframe = $lglobal{errorcheckpop}->Frame->pack;
@@ -6378,14 +6375,6 @@ sub errorcheckpop_up {
 			   -pady   => 2
 	  );
 	drag( $lglobal{errorchecklistbox} );
-	$lglobal{errorcheckpop}->protocol(
-		'WM_DELETE_WINDOW' => sub {
-			$lglobal{errorcheckpop}->destroy;
-			undef $lglobal{errorcheckpop};
-			%errors          = ();
-			@errorchecklines = ();
-		}
-	);
 	BindMouseWheel( $lglobal{errorchecklistbox} );
 	$lglobal{errorchecklistbox}
 	  ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
@@ -7217,6 +7206,7 @@ sub gcviewops {
 	} else {
 		$lglobal{viewpop} = $top->Toplevel;
 		$lglobal{viewpop}->title('Gutcheck view options');
+		initialize_popup_with_deletebinding('viewpop');
 		my $pframe = $lglobal{viewpop}->Frame->pack;
 		$pframe->Label( -text => 'Select option to hide that error.', )->pack;
 		my $pframe1 = $lglobal{viewpop}->Frame->pack;
@@ -7317,15 +7307,7 @@ sub gcviewops {
 				   -padx   => 2,
 				   -anchor => 'n'
 		  );
-		$lglobal{viewpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{viewpop}->destroy;
-				@{ $lglobal{gcarray} } = ();
-				undef $lglobal{viewpop};
-			}
-		);
 		$lglobal{viewpop}->resizable( 'no', 'no' );
-		$lglobal{viewpop}->Icon( -image => $icon );
 	}
 }
 
@@ -7369,6 +7351,7 @@ sub fixpopup {
 	} else {
 		$lglobal{fixpop} = $top->Toplevel;
 		$lglobal{fixpop}->title('Fixup Options');
+		initialize_popup_with_deletebinding('fixpop');
 		my $tframe = $lglobal{fixpop}->Frame->pack;
 		$tframe->Button(
 			-activebackground => $activecolor,
@@ -7426,13 +7409,6 @@ sub fixpopup {
 							-value       => 0,
 							-text => 'German style angle quotes »guillemots«',
 		)->grid( -row => $row, -column => 1 );
-		$lglobal{fixpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{fixpop}->destroy;
-				undef $lglobal{fixpop};
-			}
-		);
-		$lglobal{fixpop}->Icon( -image => $icon );
 	}
 }
 
@@ -7464,9 +7440,6 @@ sub ital_adjust {
 		-text  => 'OK',
 		-width => 8
 	)->grid( -row => 2, -column => 1, -padx => 2, -pady => 4 );
-	$markuppop->protocol(
-		 'WM_DELETE_WINDOW' => sub { $markuppop->destroy; undef $markuppop; } );
-	$markuppop->Icon( -image => $icon );
 }
 
 # Reset search from start of doc if new search term
@@ -10082,16 +10055,8 @@ sub pageadjust {
 
 		$lglobal{padjpop} = $top->Toplevel;
 		$lglobal{padjpop}->title('Configure Page Labels');
-		$lglobal{padjpopgeom} = ('375x500') unless $lglobal{padjpopgeom};
-		$lglobal{padjpop}->geometry( $lglobal{padjpopgeom} );
-		$lglobal{padjpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{padjpopgoem} = $lglobal{padjpop}->geometry;
-				$lglobal{padjpop}->destroy;
-				undef $lglobal{padjpop};
-			}
-		);
-		$lglobal{padjpop}->Icon( -image => $icon );
+		$geometryhash{padjpop} = ('375x500') unless $geometryhash{padjpop};
+		initialize_popup_with_deletebinding('padjpop');
 		my $frame0 =
 		  $lglobal{padjpop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -pady => 4 );
@@ -13311,7 +13276,6 @@ sub spellchecker {                  # Set up spell check window
 				spellreplace();
 			}
 		);
-		$lglobal{spellpopup}->Icon( -image => $icon );
 		$lglobal{spellpopup}->transient($top) if $stayontop;
 		$lglobal{replacementlist}
 		  ->bind( '<Double-Button-1>', \&spellmisspelled_replace );
@@ -13561,6 +13525,8 @@ sub brackets {
 	} else {
 		$lglobal{brkpop} = $top->Toplevel;
 		$lglobal{brkpop}->title('Find orphan brackets');
+		initialize_popup_without_deletebinding('brkpop');
+		
 		$lglobal{brkpop}->Label( -text => 'Bracket or Markup Style' )->pack;
 		my $frame = $lglobal{brkpop}->Frame->pack;
 		$psel = $frame->Radiobutton(
@@ -13667,7 +13633,6 @@ sub brackets {
 			$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 		}
 	);
-	$lglobal{brkpop}->Icon( -image => $icon );
 	$lglobal{brkpop}->transient($top) if $stayontop;
 	$psel->select;
 
@@ -13812,6 +13777,7 @@ sub hilitepopup {
 	} else {
 		$lglobal{hilitepop} = $top->Toplevel;
 		$lglobal{hilitepop}->title('Character Highlight');
+		initialize_popup_with_deletebinding('hilitepop');
 		$lglobal{hilitemode} = 'exact';
 		my $f =
 		  $lglobal{hilitepop}->Frame->pack( -side => 'top', -anchor => 'n' );
@@ -13878,13 +13844,6 @@ sub hilitepopup {
 			-width => 16,
 		)->grid( -row => 2, -column => 2, -padx => 2, -pady => 2 );
 
-		$lglobal{hilitepop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{hilitepop}->destroy;
-				undef $lglobal{hilitepop};
-			}
-		);
-		$lglobal{hilitepop}->Icon( -image => $icon );
 	}
 }
 
@@ -15994,6 +15953,8 @@ sub tablefx {
 		$lglobal{columnspaces} = '';
 		$lglobal{tblfxpop}     = $top->Toplevel;
 		$lglobal{tblfxpop}->title('ASCII Table Special Effects');
+		initialize_popup_without_deletebinding('tblfxpop');
+		
 		my $f0 =
 		  $lglobal{tblfxpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my %tb_buttons = (
@@ -16187,8 +16148,6 @@ sub tablefx {
 			undef $lglobal{tblfxpop};
 		}
 	);
-	$lglobal{tblfxpop}->Icon( -image => $icon );
-
 }
 
 ## Clean Up Rewrap
@@ -16628,6 +16587,7 @@ sub fontsize {
 	} else {
 		$lglobal{fspop} = $top->Toplevel;
 		$lglobal{fspop}->title('Font');
+		initialize_popup_with_deletebinding('fspop');
 		my $tframe = $lglobal{fspop}->Frame->pack;
 		my $fontlist = $tframe->BrowseEntry(
 			-label     => 'Font',
@@ -16685,13 +16645,8 @@ sub fontsize {
 			}
 		)->grid( -row => 3, -column => 2, -pady => 5 );
 		$lglobal{fspop}->resizable( 'no', 'no' );
-		$lglobal{fspop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{fspop}->destroy;
-				undef $lglobal{fspop};
-			}
-		);
-		$lglobal{fspop}->Icon( -image => $icon );
+		$lglobal{fspop}->raise;
+		$lglobal{fspop}->focus;
 	}
 }
 
@@ -17066,6 +17021,7 @@ sub saveinterval {
 	} else {
 		$lglobal{intervalpop} = $top->Toplevel;
 		$lglobal{intervalpop}->title('Autosave Interval');
+		initialize_popup_with_deletebinding('intervalpop');
 		$lglobal{intervalpop}->resizable( 'no', 'no' );
 		my $frame =
 		  $lglobal{intervalpop}
@@ -17104,7 +17060,6 @@ sub saveinterval {
 				undef $lglobal{intervalpop};
 			}
 		);
-		$lglobal{intervalpop}->Icon( -image => $icon );
 		$entry->selectionRange( 0, 'end' );
 	}
 }
@@ -17155,6 +17110,7 @@ sub searchsize {  # Pop up a window where you can adjust the search history size
 	} else {
 		$lglobal{hssizepop} = $top->Toplevel;
 		$lglobal{hssizepop}->title('History Size');
+		initialize_popup_with_deletebinding('hssizepop');
 		$lglobal{hssizepop}->resizable( 'no', 'no' );
 		my $frame =
 		  $lglobal{hssizepop}
@@ -17186,13 +17142,8 @@ sub searchsize {  # Pop up a window where you can adjust the search history size
 				undef $lglobal{hssizepop};
 			}
 		)->pack;
-		$lglobal{hssizepop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{hssizepop}->destroy;
-				undef $lglobal{hssizepop};
-			}
-		);
-		$lglobal{hssizepop}->Icon( -image => $icon );
+		$lglobal{hssizepop}->raise;
+		$lglobal{hssizepop}->focus;
 	}
 }
 
@@ -17449,6 +17400,8 @@ sub hotkeyshelp {
 	} else {
 		$lglobal{hotpop} = $top->Toplevel;
 		$lglobal{hotpop}->title('Hot key combinations');
+		initialize_popup_with_deletebinding('hotpop');
+		
 		my $frame =
 		  $lglobal{hotpop}->Frame->pack(
 										 -anchor => 'nw',
@@ -17610,13 +17563,6 @@ sub hotkeyshelp {
 				undef $lglobal{hotpop};
 			}
 		)->pack( -pady => 8 );
-		$lglobal{hotpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{hotpop}->destroy;
-				undef $lglobal{hotpop};
-			}
-		);
-		$lglobal{hotpop}->Icon( -image => $icon );
 	}
 }
 
@@ -18268,6 +18214,8 @@ sub latinpopup {
 		my @lbuttons;
 		$lglobal{latinpop} = $top->Toplevel;
 		$lglobal{latinpop}->title('Latin-1 ISO 8859-1');
+		initialize_popup_with_deletebinding('latinpop');
+		
 		my $b = $lglobal{latinpop}->Balloon( -initwait => 750 );
 		my $tframe = $lglobal{latinpop}->Frame->pack;
 		my $default =
@@ -18332,13 +18280,6 @@ sub latinpopup {
 			$letter = entity( '\x' . $hex ) if ( $lglobal{latoutp} eq 'h' );
 			insertit($letter);
 		}
-		$lglobal{latinpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{latinpop}->destroy;
-				undef $lglobal{latinpop};
-			}
-		);
-		$lglobal{latinpop}->Icon( -image => $icon );
 		$lglobal{latinpop}->resizable( 'no', 'no' );
 		$lglobal{latinpop}->raise;
 		$lglobal{latinpop}->focus;
@@ -18353,6 +18294,7 @@ sub regexref {
 	} else {
 		$lglobal{regexrefpop} = $top->Toplevel;
 		$lglobal{regexrefpop}->title('Regex Quick Reference');
+		initialize_popup_with_deletebinding('regexrefpop');
 		my $button_ok = $lglobal{regexrefpop}->Button(
 			-activebackground => $activecolor,
 			-text             => 'Close',
@@ -18369,13 +18311,6 @@ sub regexref {
 										   -font       => $lglobal{font},
 		  )->pack( -anchor => 'n', -expand => 'y', -fill => 'both' );
 		drag($regtext);
-		$lglobal{regexrefpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{regexrefpop}->destroy;
-				undef $lglobal{regexrefpop};
-			}
-		);
-		$lglobal{regexrefpop}->Icon( -image => $icon );
 		if ( -e 'regref.txt' ) {
 			if ( open my $ref, '<', 'regref.txt' ) {
 				while (<$ref>) {
@@ -18405,6 +18340,8 @@ sub utford {
 	} else {
 		$lglobal{ordpop} = $top->Toplevel;
 		$lglobal{ordpop}->title('Ordinal to Char');
+		initialize_popup_with_deletebinding('ordpop');
+		
 		$lglobal{ordpop}->resizable( 'yes', 'no' );
 		my $frame =
 		  $lglobal{ordpop}->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
@@ -18481,13 +18418,6 @@ sub utford {
 				undef $lglobal{ordpop};
 			},
 		)->grid( -row => 1, -column => 2 );
-		$lglobal{ordpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{ordpop}->destroy;
-				undef $lglobal{ordpop};
-			}
-		);
-		$lglobal{ordpop}->Icon( -image => $icon );
 	}
 }
 
@@ -18507,14 +18437,9 @@ sub uchar {
 		}
 		$lglobal{ucharpop} = $top->Toplevel;
 		$lglobal{ucharpop}->title('Unicode Character Search');
+		initialize_popup_with_deletebinding('ucharpop');
+		
 		$lglobal{ucharpop}->geometry('550x450');
-		$lglobal{ucharpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{ucharpop}->destroy;
-				undef $lglobal{ucharpop};
-			}
-		);
-		$lglobal{ucharpop}->Icon( -image => $icon );
 		my $cframe = $lglobal{ucharpop}->Frame->pack;
 		my $frame0 =
 		  $lglobal{ucharpop}
