@@ -125,6 +125,7 @@ our $autosaveinterval = 5;
 our $bkmkhl           = 0;
 our $blocklmargin     = 5;
 our $blockrmargin     = 72;
+our $poetrylmargin     = 5;
 our $blockwrap;
 our $bold_char     = "=";
 our $defaultindent = 0;
@@ -395,14 +396,6 @@ set_autosave() if $autosave;
 $textwindow->CallNextGUICallback;
 
 $top->repeat( 200, \&_updatesel );
-
-## Global Exit
-sub _exit {
-	if ( confirmdiscard() =~ m{no}i ) {
-		aspellstop() if $lglobal{spellpid};
-		exit;
-	}
-}
 
 ## Update Last Selection readout in status bar
 sub _updatesel {
@@ -16500,6 +16493,21 @@ sub setmargins {
 									 -relief       => 'sunken',
 									 -textvariable => \$blockrmargin,
 	)->pack( -side => 'left' );
+
+#
+	my $plmframe =
+	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $plmlabel = $plmframe->Label(
+									 -width => 25,
+									 -text  => 'Poetry Rewrap Left Margin',
+	)->pack( -side => 'left' );
+	my $plmentry = $plmframe->Entry(
+									 -width        => 6,
+									 -background   => 'white',
+									 -relief       => 'sunken',
+									 -textvariable => \$poetrylmargin,
+	)->pack( -side => 'left' );
+#
 	my $didntframe =
 	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
 	my $didntlabel =

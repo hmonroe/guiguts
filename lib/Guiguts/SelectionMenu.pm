@@ -219,7 +219,7 @@ sub selectrewrap {
 				$inblock      = 1;
 				$enableindent = 1;
 				$poem         = 1;
-				$indent       = 4;
+				$indent       = $main::poetrylmargin;
 			}
 			if ( $selection =~ /^\x7f*\/[Xx\$]/ ) { $inblock = 1 }
 			if ( $selection =~ /^\x7f*\/[fF]/ ) {
