@@ -229,7 +229,7 @@ our @extops = (
 );
 
 #All local global variables contained in one hash.
-my %lglobal;
+our %lglobal;
 
 if ( eval { require Text::LevenshteinXS } ) {
 	$lglobal{LevenshteinXS} = 1;
@@ -1033,28 +1033,6 @@ sub file_close {
 	update_indicators();
 }
 
-sub file_include {    # FIXME: Should include even if no file loaded.
-	tester();
-	my ($name);
-	my $types = [
-				  [
-					 'Text Files',
-					 [ '.txt', '.text', '.ggp', '.htm', '.html', '.rst' ]
-				  ],
-				  [ 'All Files', ['*'] ],
-	];
-	return if $lglobal{global_filename} =~ m{No File Loaded};
-	$name = $textwindow->getOpenFile(
-									  -filetypes  => $types,
-									  -title      => 'File Include',
-									  -initialdir => $globallastpath
-	);
-	$textwindow->IncludeFile($name)
-	  if defined($name)
-		  and length($name);
-	update_indicators();
-}
-
 sub file_import {
 	return if ( confirmempty() =~ /cancel/i );
 	my $directory = $top->chooseDirectory( -title =>
@@ -1325,7 +1303,7 @@ sub file_menuitems {
 		  -command     => \&savefile
 	   ],
 	   [ 'command',   'Save ~As',                  -command => \&file_saveas ],
-	   [ 'command',   '~Include File',             -command => \&file_include ],
+	   [ 'command',   '~Include File',             -command => sub {file_include($textwindow) }],
 	   [ 'command',   '~Close',                    -command => \&file_close ],
 	   [ 'separator', '' ],
 	   [ 'command',   'Import Prep Text Files',    -command => \&file_import ],
