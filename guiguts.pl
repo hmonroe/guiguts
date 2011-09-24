@@ -100,10 +100,11 @@ use Guiguts::TextUnicode;
 use Guiguts::Greekgifs;
 use Guiguts::SearchReplaceMenu;
 use Guiguts::SelectionMenu;
-
 #use Guiguts::BookmarksMenu;
 use Guiguts::TextProcessingMenu;
 use Guiguts::HTMLConvert;
+use Guiguts::StatusBar;
+
 
 # Ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
@@ -395,40 +396,7 @@ set_autosave() if $autosave;
 
 $textwindow->CallNextGUICallback;
 
-$top->repeat( 200, \&_updatesel );
-
-## Update Last Selection readout in status bar
-sub _updatesel {
-	my @ranges = $textwindow->tagRanges('sel');
-	my $msg;
-	if (@ranges) {
-		if ( $lglobal{showblocksize} && ( @ranges > 2 ) ) {
-			my ( $srow, $scol ) = split /\./, $ranges[0];
-			my ( $erow, $ecol ) = split /\./, $ranges[-1];
-			$msg = ' R:'
-			  . abs( $erow - $srow + 1 ) . ' C:'
-			  . abs( $ecol - $scol ) . ' ';
-		} else {
-			$msg = " $ranges[0]--$ranges[-1] ";
-			if ( $lglobal{selectionpop} ) {
-				$lglobal{selsentry}->delete( '0', 'end' );
-				$lglobal{selsentry}->insert( 'end', $ranges[0] );
-				$lglobal{seleentry}->delete( '0', 'end' );
-				$lglobal{seleentry}->insert( 'end', $ranges[-1] );
-			}
-		}
-	} else {
-		$msg = ' No Selection ';
-	}
-	my $msgln = length($msg);
-
-	no warnings 'uninitialized';
-	$lglobal{selmaxlength} = $msgln if ( $msgln > $lglobal{selmaxlength} );
-	$lglobal{selectionlabel}
-	  ->configure( -text => $msg, -width => $lglobal{selmaxlength} );
-	update_indicators();
-	$textwindow->_lineupdate;
-}
+$top->repeat( 200, sub{_updatesel($textwindow) });
 
 sub _flash_save {
 	$lglobal{saveflashingid} = $top->repeat(
