@@ -676,6 +676,7 @@ sub surround {
 	} else {
 		$surpop = $top->Toplevel;
 		$surpop->title('Surround text with:');
+		
 		my $f = $surpop->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f->Label( -text =>
 "Surround the selection with?\n\\n will be replaced with a newline.",

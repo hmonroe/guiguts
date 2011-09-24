@@ -1137,6 +1137,7 @@ sub file_guess_page_marks {
 	} else {
 		$lglobal{pgpop} = $top->Toplevel;
 		$lglobal{pgpop}->title('Guess Page Numbers');
+		initialize_popup_with_deletebinding('pgpop');
 		my $f0 = $lglobal{pgpop}->Frame->pack;
 		$f0->Label( -text =>
 'This function should only be used if you have the page images but no page markers in the text.',
@@ -1253,13 +1254,6 @@ sub file_guess_page_marks {
 			-text  => 'Guess Page #s',
 			-width => 18
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-		$lglobal{pgpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{pgpop}->destroy;
-				undef $lglobal{pgpop};
-			}
-		);
-		$lglobal{pgpop}->Icon( -image => $icon );
 	}
 }
 
@@ -2438,6 +2432,7 @@ sub fnview {
 		$lglobal{footviewpop}->focus;
 	} else {
 		$lglobal{footviewpop} = $top->Toplevel( -background => 'white' );
+		initialize_popup_with_deletebinding('footviewpop');
 		$lglobal{footviewpop}->title('Footnotes');
 		my $frame1 =
 		  $lglobal{footviewpop}->Frame( -background => 'white' )
@@ -2486,13 +2481,6 @@ sub fnview {
 		$ftext->tagConfigure( 'dup',    background => 'yellow' );
 		$ftext->tagConfigure( 'noanch', background => 'pink' );
 		$ftext->tagConfigure( 'long',   background => 'tan' );
-		$lglobal{footviewpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{footviewpop}->destroy;
-				undef $lglobal{footviewpop};
-			}
-		);
-		$lglobal{footviewpop}->Icon( -image => $icon );
 		for my $findex ( 1 .. $lglobal{fntotal} ) {
 			$ftext->insert(
 							'end',
@@ -3507,7 +3495,8 @@ sub reghint {
 		$lglobal{hintmessage}->delete( '1.0', 'end' );
 		$lglobal{hintmessage}->insert( 'end', $message );
 	} else {
-		$lglobal{hintpop} = $lglobal{search}->Toplevel;
+		$lglobal{hintpop} = $lglobal{searchpop}->Toplevel;
+		initialize_popup_with_deletebinding('hintpop');
 		$lglobal{hintpop}->title('Search Term Hint');
 		my $frame =
 		  $lglobal{hintpop}->Frame->pack(
@@ -3530,13 +3519,6 @@ sub reghint {
 		  );
 		$lglobal{hintmessage}->insert( 'end', $message );
 	}
-	$lglobal{hintpop}->protocol(
-		'WM_DELETE_WINDOW' => sub {
-			$lglobal{hintpop}->destroy;
-			undef $lglobal{hintpop};
-		}
-	);
-	$lglobal{hintpop}->Icon( -image => $icon );
 }
 
 sub loadscannos {
@@ -3718,7 +3700,7 @@ sub searchtext {
 			$start = '1.0';
 			$end   = 'end';
 		}
-		$lglobal{searchop4}->deselect if ( defined $lglobal{search} );
+		$lglobal{searchop4}->deselect if ( defined $lglobal{searchpop} );
 		$lglobal{lastsearchterm} = "resetresetreset";
 	}
 
@@ -3884,8 +3866,8 @@ sub searchtext {
 		$lglobal{selectionsearch} = 0;
 		unless ( $lglobal{regaa} ) {
 			$textwindow->bell unless $nobell;
-			$lglobal{searchbutton}->flash if defined $lglobal{search};
-			$lglobal{searchbutton}->flash if defined $lglobal{search};
+			$lglobal{searchbutton}->flash if defined $lglobal{searchpop};
+			$lglobal{searchbutton}->flash if defined $lglobal{searchpop};
 
 			# If nothing found, return cursor to starting point
 			$searchendindex = $searchstartingpoint;
@@ -3908,7 +3890,7 @@ sub getmark {
 }
 
 sub updatesearchlabels {
-	if ( $lglobal{seen} && $lglobal{search} ) {
+	if ( $lglobal{seen} && $lglobal{searchpop} ) {
 		my $replaceterm = $lglobal{replaceentry}->get( '1.0', '1.end' );
 		my $searchterm1 = $lglobal{searchentry}->get( '1.0', '1.end' );
 		if ( ( $lglobal{seen}->{$searchterm1} ) && ( $sopt[0] ) ) {
@@ -4168,6 +4150,8 @@ sub opstop {
 	} else {
 		$lglobal{stoppop} = $top->Toplevel;
 		$lglobal{stoppop}->title('Interrupt');
+		initialize_popup_with_deletebinding('stoppop');
+		
 		my $frame = $lglobal{stoppop}->Frame->pack;
 		my $stopbutton = $frame->Button(
 									-activebackground => $activecolor,
@@ -4175,13 +4159,6 @@ sub opstop {
 									-text    => 'Interrupt Operation',
 									-width   => 16
 		)->grid( -row => 1, -column => 1, -padx => 10, -pady => 10 );
-		$lglobal{stoppop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{stoppop}->destroy;
-				undef $lglobal{stoppop};
-			}
-		);
-		$lglobal{stoppop}->Icon( -image => $icon );
 	}
 }
 
@@ -5054,8 +5031,7 @@ sub htmlimage {
 	} else {
 		$lglobal{htmlimpop} = $top->Toplevel;
 		$lglobal{htmlimpop}->title('Image');
-		$lglobal{htmlimpop}->geometry( $lglobal{htmlgeom} )
-		  if $lglobal{htmlgeom};
+		initialize_popup_without_deletebinding('htmlimpop');
 		my $f1 =
 		  $lglobal{htmlimpop}->LabFrame( -label => 'File Name' )
 		  ->pack( -side => 'top', -anchor => 'n', -padx => 2 );
@@ -5200,7 +5176,6 @@ sub htmlimage {
 						);
 					}
 					$textwindow->addGlobEnd;
-					$lglobal{htmlgeom} = $lglobal{htmlimpop}->geometry;
 					$lglobal{htmlthumb}->delete  if $lglobal{htmlthumb};
 					$lglobal{htmlthumb}->destroy if $lglobal{htmlthumb};
 					$lglobal{htmlorig}->delete   if $lglobal{htmlorig};
@@ -5246,7 +5221,6 @@ sub htmlimage {
 			}
 		);
 		$lglobal{htmlimpop}->transient($top);
-		$lglobal{htmlimpop}->Icon( -image => $icon );
 	}
 	$lglobal{alttext}->delete( 0, 'end' ) if $lglobal{alttext};
 	$lglobal{titltext}->delete( 0, 'end' ) if $lglobal{titltext};
@@ -5580,7 +5554,7 @@ sub htmlautoconvert {
 	$lglobal{fnsearchlimit} = 1;
 	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
 
-	html_convert_body2( $textwindow, $headertext, $lglobal{cssblockmarkup},
+	html_convert_body( $textwindow, $headertext, $lglobal{cssblockmarkup},
 						$lglobal{poetrynumbers}, $lglobal{classhash} );
 
 	html_cleanup_markers($textwindow);
@@ -5782,6 +5756,7 @@ EOM
 	} else {
 		$lglobal{phelppop} = $top->Toplevel;
 		$lglobal{phelppop}->title('Functions and Hotkeys');
+		initialize_popup_with_deletebinding('phelppop');
 		$lglobal{phelppop}->Label(
 								   -justify => "left",
 								   -text    => $help_text
@@ -5795,13 +5770,6 @@ EOM
 			}
 		)->pack;
 		$lglobal{phelppop}->resizable( 'no', 'no' );
-		$lglobal{phelppop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{phelppop}->destroy;
-				undef $lglobal{phelppop};
-			}
-		);
-		$lglobal{phelppop}->Icon( -image => $icon );
 	}
 }
 
@@ -6355,7 +6323,8 @@ sub errorcheckpop_up {
 	}
 	$lglobal{errorcheckpop} = $top->Toplevel;
 	$lglobal{errorcheckpop}->title($errorchecktype);
-	$lglobal{errorcheckpop}->geometry($geometry2) if $geometry2;
+	initialize_popup_without_deletebinding('errorcheckpop');
+	
 	$lglobal{errorcheckpop}->transient($top)      if $stayontop;
 	my $ptopframe = $lglobal{errorcheckpop}->Frame->pack;
 	my $opsbutton = $ptopframe->Button(
@@ -6417,7 +6386,6 @@ sub errorcheckpop_up {
 			@errorchecklines = ();
 		}
 	);
-	$lglobal{errorcheckpop}->Icon( -image => $icon );
 	BindMouseWheel( $lglobal{errorchecklistbox} );
 	$lglobal{errorchecklistbox}
 	  ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
@@ -6442,14 +6410,6 @@ sub errorcheckpop_up {
 			}
 			$textwindow->focus;
 			$lglobal{errorcheckpop}->raise;
-			$geometry2 = $lglobal{errorcheckpop}->geometry;
-		}
-	);
-	$lglobal{errorcheckpop}->bind(
-		'<Configure>' => sub {
-			$lglobal{errorcheckpop}->XEvent;
-			$geometry2 = $lglobal{errorcheckpop}->geometry;
-			$lglobal{geometryupdate} = 1;
 		}
 	);
 	$lglobal{errorchecklistbox}->eventAdd( '<<remove>>' => '<ButtonRelease-2>',
@@ -6889,7 +6849,7 @@ sub gcheckpop_up {
 	} else {
 		$lglobal{gcpop} = $top->Toplevel;
 		$lglobal{gcpop}->title('Gutcheck');
-		$lglobal{gcpop}->geometry($geometry2) if $geometry2;
+		initialize_popup_without_deletebinding('gcpop');
 		$lglobal{gcpop}->transient($top)      if $stayontop;
 		my $ptopframe = $lglobal{gcpop}->Frame->pack;
 		my $opsbutton =
@@ -6954,20 +6914,12 @@ sub gcheckpop_up {
 				$textwindow->markUnset($_) for values %gc;
 			}
 		);
-		$lglobal{gcpop}->Icon( -image => $icon );
 		BindMouseWheel( $lglobal{gclistbox} );
 		$lglobal{gclistbox}->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
 		$lglobal{gclistbox}->bind( '<<view>>', sub { gcview() } );
 
 		add_navigation_events( $lglobal{gclistbox} );
 
-		$lglobal{gcpop}->bind(
-			'<Configure>' => sub {
-				$lglobal{gcpop}->XEvent;
-				$geometry2 = $lglobal{gcpop}->geometry;
-				$lglobal{geometryupdate} = 1;
-			}
-		);
 		$lglobal{gclistbox}->eventAdd( '<<remove>>' => '<ButtonRelease-2>',
 									   '<ButtonRelease-3>' );
 		$lglobal{gclistbox}->bind(
@@ -7535,7 +7487,7 @@ sub searchoptset {
 # $sopt[3] --> 0 = normal search term   1 = regex search term - 3 and 0 are mutually exclusive
 # $sopt[4] --> 1 = start search at beginning
 	for ( 0 .. $opt_count - 1 ) {
-		if ( defined( $lglobal{search} ) ) {
+		if ( defined( $lglobal{searchpop} ) ) {
 			if ( $opt[$_] !~ /[a-zA-Z]/ ) {
 				$opt[$_]
 				  ? $lglobal{"searchop$_"}->select
@@ -7557,7 +7509,7 @@ sub harmonicspop {
 	} else {
 		$lglobal{hpopup} = $top->Toplevel;
 		$lglobal{hpopup}->title('Word harmonics');
-		$lglobal{hpopup}->geometry($geometry3) if $geometry3;
+		initialize_popup_with_deletebinding('hpopup');
 		my $frame =
 		  $lglobal{hpopup}->Frame->pack( -fill => 'both', -expand => 'both', );
 		$lglobal{hlistbox} =
@@ -7578,18 +7530,9 @@ sub harmonicspop {
 		drag( $lglobal{hlistbox} );
 		$lglobal{hpopup}->protocol(
 			'WM_DELETE_WINDOW' => sub {
-				$geometry3 = $lglobal{hpopup}->geometry;
 				$lglobal{hpopup}->destroy;
 				undef $lglobal{hpopup};
 				undef $lglobal{hlistbox};
-			}
-		);
-		$lglobal{hpopup}->Icon( -image => $icon );
-		$lglobal{hpopup}->bind(
-			'<Configure>' => sub {
-				$lglobal{hpopup}->XEvent;
-				$geometry3 = $lglobal{hpopup}->geometry;
-				$lglobal{geometryupdate} = 1;
 			}
 		);
 		BindMouseWheel( $lglobal{hlistbox} );
@@ -7620,7 +7563,6 @@ sub harmonicspop {
 				$lglobal{searchentry}->delete( '1.0', 'end' );
 				$lglobal{searchentry}->insert( 'end', $sword );
 				updatesearchlabels();
-				$geometry3 = $lglobal{hpopup}->geometry;
 				$lglobal{searchentry}->after( $lglobal{delay} );
 			}
 		);
@@ -7644,7 +7586,6 @@ sub harmonicspop {
 				searchfromstartifnew($sword);
 				searchtext($sword);
 				searchoptset(@savesets);
-				$geometry3 = $lglobal{hpopup}->geometry;
 				$top->Unbusy( -recurse => 1 );
 			}
 		);
@@ -7659,7 +7600,6 @@ sub harmonicspop {
 				$lglobal{wclistbox}->see('active');
 				harmonics( $lglobal{wclistbox}->get('active') );
 				harmonicspop();
-				$geometry3 = $lglobal{hpopup}->geometry;
 				$lglobal{hpopup}->break;
 			}
 		);
@@ -7674,7 +7614,6 @@ sub harmonicspop {
 				$lglobal{wclistbox}->see('active');
 				harmonics( $lglobal{wclistbox}->get('active') );
 				harmonicspop();
-				$geometry3 = $lglobal{hpopup}->geometry;
 				$lglobal{hpopup}->break;
 			}
 		);
@@ -7685,7 +7624,6 @@ sub harmonicspop {
 				return unless ( $lglobal{hlistbox}->curselection );
 				harmonics( $lglobal{hlistbox}->get('active') );
 				harmonicspop();
-				$geometry3 = $lglobal{hpopup}->geometry;
 			}
 		);
 	}
@@ -9095,6 +9033,10 @@ sub initialize {
 	unless ( $geometryhash{wfpop} ) {
 		if ($geometry2) {
 			$geometryhash{wfpop} = $geometry2;
+			$geometryhash{gcpop} = $geometry2;
+			$geometryhash{jeepop} = $geometry2;
+			$geometryhash{errorcheckpop} = $geometry2;
+			$geometryhash{hpopup} = $geometry3;
 		}
 	}
 
@@ -9690,7 +9632,7 @@ sub textbindings {
 	$textwindow->bind(
 		'<<FindNext>>',
 		sub {
-			if ( $lglobal{search} ) {
+			if ( $lglobal{searchpop} ) {
 				my $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
 				searchtext($searchterm);
 			} else {
@@ -10373,9 +10315,8 @@ sub pnumadjust {
 		$lglobal{pagenumentry}->configure( -text => $mark );
 	} else {
 		$lglobal{pnumpop} = $top->Toplevel;
+		initialize_popup_without_deletebinding('pnumpop');
 		$lglobal{pnumpop}->title('Adjust Page Markers');
-		$lglobal{pnumpop}->geometry( $geometryhash{pnumpop} )
-		  if $geometryhash{pnumpop};
 		my $frame2 = $lglobal{pnumpop}->Frame->pack( -pady => 5 );
 		my $upbutton =
 		  $frame2->Button(
@@ -10512,8 +10453,6 @@ sub pnumadjust {
 				viewpagenums() if ( $lglobal{seepagenums} );
 			}
 		);
-		geometrybind('pnumpop');
-		$lglobal{pnumpop}->Icon( -image => $icon );
 		if ($OS_WIN) {
 			$lglobal{pagerenumoffset}->bind(
 				$lglobal{pagerenumoffset},
@@ -10530,15 +10469,27 @@ sub pnumadjust {
 	}
 }
 
-sub geometrybind {
+sub initialize_popup_with_deletebinding {
 	my $popupname = shift;
+	initialize_popup_without_deletebinding($popupname );
+		$lglobal{$popupname}->protocol(
+			'WM_DELETE_WINDOW' => sub {
+				$lglobal{$popupname}->destroy;
+				undef $lglobal{$popupname};
+			}
+		);
+}
+
+sub initialize_popup_without_deletebinding {
+	my $popupname = shift;
+	$lglobal{$popupname}->geometry( $geometryhash{$popupname} ) if $geometryhash{$popupname};
 	$lglobal{"$popupname"}->bind(
 		'<Configure>' => sub {
 			$geometryhash{"$popupname"} = $lglobal{"$popupname"}->geometry;
 			$lglobal{geometryupdate} = 1;
 		}
 	);
-
+		$lglobal{$popupname}->Icon( -image => $icon );
 }
 
 sub pageremove {    # Delete a page marker
@@ -11109,7 +11060,7 @@ sub jeebiesview {
 	}
 	$textwindow->focus;
 	$lglobal{jeepop}->raise;
-	$geometry2 = $lglobal{jeepop}->geometry;
+	$geometryhash{jeepop} = $lglobal{jeepop}->geometry;
 }
 
 sub blocks_check {
@@ -12426,17 +12377,17 @@ sub searchpopup {
 	my @ranges     = $textwindow->tagRanges('sel');
 	$searchterm = $textwindow->get( $ranges[0], $ranges[1] ) if @ranges;
 
-	if ( defined( $lglobal{search} ) ) {
-		$lglobal{search}->deiconify;
-		$lglobal{search}->raise;
-		$lglobal{search}->focus;
+	if ( defined( $lglobal{searchpop} ) ) {
+		$lglobal{searchpop}->deiconify;
+		$lglobal{searchpop}->raise;
+		$lglobal{searchpop}->focus;
 		$lglobal{searchentry}->focus;
 	} else {
-		$lglobal{search} = $top->Toplevel;
-		$lglobal{search}->title('Search & Replace');
-		$lglobal{search}->minsize( 460, 127 );
+		$lglobal{searchpop} = $top->Toplevel;
+		$lglobal{searchpop}->title('Search & Replace');
+		$lglobal{searchpop}->minsize( 460, 127 );
 		my $sf1 =
-		  $lglobal{search}->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $lglobal{searchpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $searchlabel =
 		  $sf1->Label( -text => 'Search Text', )
 		  ->pack( -side => 'left', -anchor => 'n', -padx => 80 );
@@ -12446,7 +12397,7 @@ sub searchpopup {
 					   -width => 20,
 		  )->pack( -side => 'right', -anchor => 'e', -padx => 1 );
 		my $sf11 =
-		  $lglobal{search}->Frame->pack(
+		  $lglobal{searchpop}->Frame->pack(
 										 -side   => 'top',
 										 -anchor => 'w',
 										 -padx   => 3,
@@ -12504,7 +12455,7 @@ sub searchpopup {
 		$lglobal{regrepeat} = $lglobal{searchentry}->repeat( 500, \&reg_check );
 
 		my $sf2 =
-		  $lglobal{search}->Frame->pack( -side => 'top', -anchor => 'w' );
+		  $lglobal{searchpop}->Frame->pack( -side => 'top', -anchor => 'w' );
 		$lglobal{searchop1} =
 		  $sf2->Checkbutton(
 							 -variable    => \$sopt[1],
@@ -12547,7 +12498,7 @@ sub searchpopup {
 
 		my ( $sf13, $sf14, $sf5 );
 		my $sf10 =
-		  $lglobal{search}->Frame->pack(
+		  $lglobal{searchpop}->Frame->pack(
 										 -side   => 'top',
 										 -anchor => 'n',
 										 -expand => '1',
@@ -12596,7 +12547,7 @@ sub searchpopup {
 			},
 		)->grid( -row => 1, -column => 4 );
 		my $sf12 =
-		  $lglobal{search}->Frame->pack(
+		  $lglobal{searchpop}->Frame->pack(
 										 -side   => 'top',
 										 -anchor => 'w',
 										 -padx   => 3,
@@ -12672,7 +12623,7 @@ sub searchpopup {
 			-width  => 9,
 			-height => 15,
 		)->pack( -side => 'right', -anchor => 'w' );
-		$sf13 = $lglobal{search}->Frame;
+		$sf13 = $lglobal{searchpop}->Frame;
 
 		$sf13->Button(
 			-activebackground => $activecolor,
@@ -12739,7 +12690,7 @@ sub searchpopup {
 			-width  => 9,
 			-height => 15,
 		)->pack( -side => 'right', -anchor => 'w' );
-		$sf14 = $lglobal{search}->Frame;
+		$sf14 = $lglobal{searchpop}->Frame;
 
 		$sf14->Button(
 			-activebackground => $activecolor,
@@ -12820,7 +12771,7 @@ sub searchpopup {
 		}
 		if ( $lglobal{doscannos} ) {
 			$sf5 =
-			  $lglobal{search}->Frame->pack( -side => 'top', -anchor => 'n' );
+			  $lglobal{searchpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 			my $nextbutton = $sf5->Button(
 				-activebackground => $activecolor,
 				-command          => sub {
@@ -12903,7 +12854,7 @@ sub searchpopup {
 					   -anchor => 'w'
 			  );
 			my $sf6 =
-			  $lglobal{search}->Frame->pack( -side => 'top', -anchor => 'n' );
+			  $lglobal{searchpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 			$lglobal{regtracker} = $sf6->Label( -width => 15 )->pack(
 																-side => 'left',
 																-pady => 5,
@@ -12921,21 +12872,21 @@ sub searchpopup {
 					   -anchor => 'w'
 			  );
 		}
-		$lglobal{search}->protocol(
+		$lglobal{searchpop}->protocol(
 			'WM_DELETE_WINDOW' => sub {
 				$lglobal{regrepeat}->cancel;
 				undef $lglobal{regrepeat};
-				$lglobal{search}->destroy;
-				undef $lglobal{search};
+				$lglobal{searchpop}->destroy;
+				undef $lglobal{searchpop};
 				$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 				undef $lglobal{hintpop} if $lglobal{hintpop};
 			}
 		);
-		$lglobal{search}->Icon( -image => $icon );
+		$lglobal{searchpop}->Icon( -image => $icon );
 		$lglobal{searchentry}->focus;
-		$lglobal{search}->resizable( 'yes', 'no' );
-		$lglobal{search}->transient($top) if $stayontop;
-		$lglobal{search}->Tk::bind(
+		$lglobal{searchpop}->resizable( 'yes', 'no' );
+		$lglobal{searchpop}->transient($top) if $stayontop;
+		$lglobal{searchpop}->Tk::bind(
 			'<Return>' => sub {
 				$lglobal{searchentry}->see('1.0');
 				$lglobal{searchentry}->delete('1.end');
@@ -12947,7 +12898,7 @@ sub searchpopup {
 				$top->raise;
 			}
 		);
-		$lglobal{search}->Tk::bind(
+		$lglobal{searchpop}->Tk::bind(
 			'<Control-f>' => sub {
 				$lglobal{searchentry}->see('1.0');
 				$lglobal{searchentry}->delete( '2.0', 'end' );
@@ -12957,7 +12908,7 @@ sub searchpopup {
 				$top->raise;
 			}
 		);
-		$lglobal{search}->Tk::bind(
+		$lglobal{searchpop}->Tk::bind(
 			'<Control-F>' => sub {
 				$lglobal{searchentry}->see('1.0');
 				$lglobal{searchentry}->delete( '2.0', 'end' );
@@ -12967,7 +12918,7 @@ sub searchpopup {
 				$top->raise;
 			}
 		);
-		$lglobal{search}->eventAdd( '<<FindNexte>>' => '<Control-Key-G>',
+		$lglobal{searchpop}->eventAdd( '<<FindNexte>>' => '<Control-Key-G>',
 									'<Control-Key-g>' );
 
 		$lglobal{searchentry}->bind(
@@ -13010,7 +12961,7 @@ sub searchpopup {
 			}
 		);
 
-		$lglobal{search}->Tk::bind(
+		$lglobal{searchpop}->Tk::bind(
 			'<Control-Return>' => sub {
 				$lglobal{searchentry}->see('1.0');
 				$lglobal{searchentry}->delete('1.end');
@@ -13023,7 +12974,7 @@ sub searchpopup {
 				$top->raise;
 			}
 		);
-		$lglobal{search}->Tk::bind(
+		$lglobal{searchpop}->Tk::bind(
 			'<Shift-Return>' => sub {
 				$lglobal{searchentry}->see('1.0');
 				$lglobal{searchentry}->delete('1.end');
@@ -13035,7 +12986,7 @@ sub searchpopup {
 				$top->raise;
 			}
 		);
-		$lglobal{search}->Tk::bind(
+		$lglobal{searchpop}->Tk::bind(
 			'<Control-Shift-Return>' => sub {
 				$lglobal{searchentry}->see('1.0');
 				$lglobal{searchentry}->delete('1.end');
@@ -13058,8 +13009,8 @@ sub searchpopup {
 
 sub stealthscanno {
 	$lglobal{doscannos} = 1;
-	$lglobal{search}->destroy if defined $lglobal{search};
-	undef $lglobal{search};
+	$lglobal{searchpop}->destroy if defined $lglobal{searchpop};
+	undef $lglobal{searchpop};
 	searchoptset(qw/x x x x 1/);    # force search to begin at start of doc
 	if ( loadscannos() ) {
 		saveset();
@@ -13498,9 +13449,9 @@ sub find_proofer_comment {
 }
 
 sub find_asterisks {
-	if ( defined( $lglobal{search} ) ) {
-		$lglobal{search}->destroy;
-		undef $lglobal{search};
+	if ( defined( $lglobal{searchpop} ) ) {
+		$lglobal{searchpop}->destroy;
+		undef $lglobal{searchpop};
 	}
 	searchpopup();
 	searchoptset(qw/0 x x 1/);
@@ -13987,6 +13938,7 @@ sub asciipopup {
 		$lglobal{asciipop}->focus;
 	} else {
 		$lglobal{asciipop} = $top->Toplevel;
+		initialize_popup_with_deletebinding('asciipop');
 		$lglobal{asciipop}->title('ASCII Boxes');
 		my $f =
 		  $lglobal{asciipop}->Frame->pack( -side => 'top', -anchor => 'n' );
@@ -14066,14 +14018,10 @@ sub asciipopup {
 			-text  => 'Draw Box',
 			-width => 16
 		)->grid( -row => 4, -column => 2, -padx => 1, -pady => 2 );
-		$lglobal{asciipop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{asciipop}->destroy;
-				undef $lglobal{asciipop};
-			}
-		);
-		$lglobal{asciipop}->Icon( -image => $icon );
 		$lglobal{asciipop}->resizable( 'no', 'no' );
+		#$lglobal{asciipop}->deiconify;
+		$lglobal{asciipop}->raise;
+		$lglobal{asciipop}->focus;
 	}
 }
 
@@ -14084,6 +14032,7 @@ sub alignpopup {
 		$lglobal{alignpop}->focus;
 	} else {
 		$lglobal{alignpop} = $top->Toplevel;
+		initialize_popup_with_deletebinding('alignpop');
 		$lglobal{alignpop}->title('Align text');
 		my $f =
 		  $lglobal{alignpop}->Frame->pack( -side => 'top', -anchor => 'n' );
@@ -14108,13 +14057,6 @@ sub alignpopup {
 			-text  => 'Align selected text',
 			-width => 16
 		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
-		$lglobal{alignpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{alignpop}->destroy;
-				undef $lglobal{alignpop};
-			}
-		);
-		$lglobal{alignpop}->Icon( -image => $icon );
 	}
 }
 
@@ -14140,8 +14082,7 @@ sub wordfrequency {
 		$lglobal{wfpop} = $top->Toplevel;
 		$lglobal{wfpop}
 		  ->title('Word frequency - Ctrl+s to save, Ctrl+x to export');
-		$lglobal{wfpop}->geometry( $geometryhash{wfpop} )
-		  if $geometryhash{wfpop};
+		initialize_popup_without_deletebinding('wfpop');
 		my $wcseframe =
 		  $lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $wcopt3 =
@@ -14286,7 +14227,6 @@ sub wordfrequency {
 				undef $lglobal{wclistbox};
 			}
 		);
-		$lglobal{wfpop}->Icon( -image => $icon );
 		BindMouseWheel( $lglobal{wclistbox} );
 		$lglobal{wclistbox}->eventAdd( '<<search>>' => '<ButtonRelease-3>' );
 		$lglobal{wclistbox}->bind(
@@ -14411,7 +14351,6 @@ sub wordfrequency {
 				sortwords( \%{ $lglobal{spellsort} } );
 			}
 		);
-		geometrybind('wfpop');
 		add_navigation_events( $lglobal{wclistbox} );
 		$lglobal{wfpop}->bind(
 			'<Control-s>' => sub {
@@ -14678,7 +14617,7 @@ sub jeebiespop_up {
 	} else {
 		$lglobal{jeepop} = $top->Toplevel;
 		$lglobal{jeepop}->title('Jeebies');
-		$lglobal{jeepop}->geometry($geometry2) if $geometry2;
+		initialize_popup_with_deletebinding('jeepop');
 		$lglobal{jeepop}->transient($top)      if $stayontop;
 		my $ptopframe = $lglobal{jeepop}->Frame->pack;
 		$ptopframe->Label( -text => 'Search mode:', )
@@ -14721,24 +14660,10 @@ sub jeebiespop_up {
 				   -pady   => 2
 		  );
 		drag( $lglobal{jelistbox} );
-		$lglobal{jeepop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{jeepop}->destroy;
-				undef $lglobal{jeepop};
-			}
-		);
-		$lglobal{jeepop}->Icon( -image => $icon );
 		BindMouseWheel( $lglobal{jelistbox} );
 		$lglobal{jelistbox}
 		  ->eventAdd( '<<jview>>' => '<Button-1>', '<Return>' );
 		$lglobal{jelistbox}->bind( '<<jview>>', sub { jeebiesview() } );
-		$lglobal{jeepop}->bind(
-			'<Configure>' => sub {
-				$lglobal{jeepop}->XEvent;
-				$geometry2 = $lglobal{jeepop}->geometry;
-				$lglobal{geometryupdate} = 1;
-			}
-		);
 		$lglobal{jelistbox}->eventAdd( '<<jremove>>' => '<ButtonRelease-2>',
 									   '<ButtonRelease-3>' );
 		$lglobal{jelistbox}->bind(
@@ -14923,6 +14848,7 @@ sub separatorpopup {
 		$lglobal{pagepop}->focus;
 	} else {
 		$lglobal{pagepop} = $top->Toplevel;
+		initialize_popup_without_deletebinding('pagepop');
 		$lglobal{pagepop}->title('Page separators');
 		my $sf1 =
 		  $lglobal{pagepop}->Frame->pack( -side => 'top', -anchor => 'n' );
@@ -15039,7 +14965,6 @@ sub separatorpopup {
 			$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 		}
 	);
-	$lglobal{pagepop}->Icon( -image => $icon );
 	$lglobal{pagepop}->Tk::bind( '<j>' => sub { joinlines('j') } );
 	$lglobal{pagepop}->Tk::bind( '<k>' => sub { joinlines('k') } );
 	$lglobal{pagepop}->Tk::bind( '<l>' => sub { joinlines('l') } );
@@ -15123,6 +15048,7 @@ sub footnotepop {
 		$lglobal{fnindex} = '0' unless $lglobal{fnindex};
 		$lglobal{fntotal} = '0' unless $lglobal{fntotal};
 		$lglobal{footpop} = $top->Toplevel;
+		initialize_popup_without_deletebinding('footpop');
 		my ( $checkn, $checka, $checkr );
 		$lglobal{footpop}->title('Footnote Fix Up');
 		my $frame2 =
@@ -15421,7 +15347,6 @@ sub footnotepop {
 				$textwindow->tagRemove( 'footnote', '1.0', 'end' );
 			}
 		);
-		$lglobal{footpop}->Icon( -image => $icon );
 		$fnrb2->select;
 		my ( $start, $end );
 		$start = '1.0';
@@ -16360,6 +16285,7 @@ sub externalpopup {    # Set up the external commands menu
 		$lglobal{xtpop}->deiconify;
 	} else {
 		$lglobal{xtpop} = $top->Toplevel( -title => 'External programs', );
+		initialize_popup_with_deletebinding('xtpop');
 		my $f0 = $lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f0->Label( -text =>
 "You can set up external programs to be called from within guiguts here. Each line of entry boxes represent\n"
@@ -16414,13 +16340,6 @@ sub externalpopup {    # Set up the external commands menu
 			-text  => 'OK',
 			-width => 8
 		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
-		$lglobal{xtpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{xtpop}->destroy;
-				undef $lglobal{xtpop};
-			}
-		);
-		$lglobal{xtpop}->Icon( -image => $icon );
 	}
 }
 
@@ -16441,14 +16360,8 @@ sub utfpopup {
 	$lglobal{utfpop}->destroy if $lglobal{utfpop};
 	undef $lglobal{utfpop};
 	$lglobal{utfpop} = $top->Toplevel;
-
-	if ( $geometryhash{utfpop} ) {
-		$lglobal{utfpop}->geometry( $geometryhash{utfpop} );
-
-	} else {
-		$lglobal{utfpop}->geometry('800x320+10+10');
-	}
-
+	initialize_popup_without_deletebinding('utfpop');
+	$lglobal{utfpop}->geometry('800x320+10+10') unless $lglobal{utfpop};
 	$blln = $lglobal{utfpop}->Balloon( -initwait => 750 );
 	$lglobal{utfpop}->title( $block . ': ' . $start . ' - ' . $end );
 	my $cframe = $lglobal{utfpop}->Frame->pack;
@@ -16527,7 +16440,6 @@ sub utfpopup {
 	  )->pack( -expand => 'y', -fill => 'both' );
 	drag( $lglobal{utfframe} );
 	doutfbuttons( $start, $end );
-	geometrybind('utfpop');
 	$lglobal{utfpop}->protocol(
 		'WM_DELETE_WINDOW' => sub {
 			$blln->destroy;
@@ -16536,7 +16448,6 @@ sub utfpopup {
 			undef $lglobal{utfpop};
 		}
 	);
-	$lglobal{utfpop}->Icon( -image => $icon );
 	$top->Unbusy( -recurse => 1 );
 }
 
@@ -17323,6 +17234,7 @@ EOM
 		$lglobal{aboutpop}->focus;
 	} else {
 		$lglobal{aboutpop} = $top->Toplevel;
+		initialize_popup_with_deletebinding('aboutpop');
 		$lglobal{aboutpop}->title('About');
 		$lglobal{aboutpop}->Label(
 								   -justify => "left",
@@ -17337,13 +17249,6 @@ EOM
 			}
 		)->pack( -pady => 6 );
 		$lglobal{aboutpop}->resizable( 'no', 'no' );
-		$lglobal{aboutpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{aboutpop}->destroy;
-				undef $lglobal{aboutpop};
-			}
-		);
-		$lglobal{aboutpop}->Icon( -image => $icon );
 	}
 }
 
@@ -17724,7 +17629,7 @@ sub opspop_up {
 	} else {
 		$lglobal{oppop} = $top->Toplevel;
 		$lglobal{oppop}->title('Function history');
-		$lglobal{oppop}->geometry($geometry2) if $geometry2;
+		initialize_popup_with_deletebinding('oppop');
 		my $frame =
 		  $lglobal{oppop}->Frame->pack(
 										-anchor => 'nw',
@@ -17748,22 +17653,8 @@ sub opspop_up {
 				   -pady   => 2
 		  );
 		drag( $lglobal{oplistbox} );
-		$lglobal{oppop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{oppop}->destroy;
-				undef $lglobal{oppop};
-			}
-		);
-		$lglobal{oppop}->Icon( -image => $icon );
 	}
 	oppopupdate();
-	$lglobal{oppop}->bind(
-		'<Configure>' => sub {
-			$lglobal{oppop}->XEvent;
-			$geometry2 = $lglobal{oppop}->geometry;
-			$lglobal{geometryupdate} = 1;
-		}
-	);
 }
 
 sub greekpopup {
@@ -17894,6 +17785,7 @@ sub greekpopup {
 						   -data   => $Guiguts::Greekgifs::grkgifs{$image}, );
 		}
 		$lglobal{grpop} = $top->Toplevel;
+		initialize_popup_without_deletebinding('grpop');
 		$lglobal{grpop}->title('Greek Transliteration');
 		my $tframe =
 		  $lglobal{grpop}
@@ -18362,7 +18254,6 @@ sub greekpopup {
 				undef $lglobal{grpop};
 			}
 		);
-		$lglobal{grpop}->Icon( -image => $icon );
 		$glatin->select;
 		$lglobal{grtext}->SetGUICallbacks( [] );
 	}
@@ -18449,6 +18340,8 @@ sub latinpopup {
 		);
 		$lglobal{latinpop}->Icon( -image => $icon );
 		$lglobal{latinpop}->resizable( 'no', 'no' );
+		$lglobal{latinpop}->raise;
+		$lglobal{latinpop}->focus;
 	}
 }
 
@@ -18887,6 +18780,8 @@ sub runtests {
 	ok( 1 == do { openfile("readme.txt"); 1 }, "openfile on readme.txt" );
 	ok( "readme.txt" eq $textwindow->FileName, "File is named readme.txt" );
 	ok( 1 == do { file_close(); 1 }, "close readme.txt" );
+	
+	
 
 	# Test of rewrapping
 	ok( -e "tests/testfile.txt", "tests/testfile.txt exists" );
@@ -18959,88 +18854,106 @@ sub runtests {
 		"Deletion confirmed of tests/testhtml1.html" );
 
 	# Test 2 of HTML generation
-	ok( 1 == do { openfile("tests/testhtml2.txt"); 1 },
-		"openfile on tests/testhtml2.txt" );
-	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml2.txt" );
-	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml2.html'); 1 },
-		"test of file save as tests/testfilewrapped" );
-	ok( -e 'tests/testhtml2.html', "tests/testhtml2.html was saved" );
-
-	ok( -e "tests/testhtml2baseline.html",
-		"tests/testhtml2baseline.html exists" );
-	open INFILE,  "tests/testhtml2.html"       || die "no source file\n";
-	open LOGFILE, "> tests/testhtml2temp.html" || die "output file error\n";
-	@book   = ();
-	$inbody = 0;
-	while ( $ln = <INFILE> ) {
-		if ($inbody) { print LOGFILE $ln; }
-		if ( $ln =~ /<\/head>/ ) {
-			$inbody = 1;
-		}
-	}
-	close INFILE;
-	close LOGFILE;
-	ok(
-		compare( "tests/testhtml2baseline.html", 'tests/testhtml2temp.html' ) ==
-		  0,
-		"Autogenerate HTML successful"
-	);
-	print "begin diff\n";
-	system "diff tests/testhtml2baseline.html tests/testhtml2temp.html";
-	print "end diff\n";
-
-	unlink 'tests/testhtml2.html';
-	unlink 'tests/testhtml2temp.html';
-	unlink 'tests/testhtml2-htmlbak.txt';
-	unlink 'tests/testhtml2-htmlbak.txt.bin';
-	ok( not( -e "tests/testhtml2temp.html" ),
-		"Deletion confirmed of tests/testhtml2temp.html" );
-	ok( not( -e "tests/testhtml2.html" ),
-		"Deletion confirmed of tests/testhtml2.html" );
-
-	# Test 3 of HTML generation
-	ok( 1 == do { openfile("tests/testhtml3.txt"); 1 },
-		"openfile on tests/testhtml3.txt" );
-	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml3.txt" );
-	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml3.html'); 1 },
-		"test of file save as tests/testhtml3.html" );
-	ok( -e 'tests/testhtml3.html', "tests/testhtml3.html was saved" );
-
-	ok( -e "tests/testhtml3baseline.html",
-		"tests/testhtml3baseline.html exists" );
-	open INFILE,  "tests/testhtml3.html"       || die "no source file\n";
-	open LOGFILE, "> tests/testhtml3temp.html" || die "output file error\n";
-	@book   = ();
-	$inbody = 0;
-	while ( $ln = <INFILE> ) {
-		if ($inbody) { print LOGFILE $ln; }
-		if ( $ln =~ /<\/head>/ ) {
-			$inbody = 1;
-		}
-	}
-	close INFILE;
-	close LOGFILE;
-	ok(
-		compare( "tests/testhtml3baseline.html", 'tests/testhtml3temp.html' ) ==
-		  0,
-		"Autogenerate HTML successful"
-	);
-	print "begin diff\n";
-	system "diff tests/testhtml3baseline.html tests/testhtml3temp.html";
-	print "end diff\n";
-
-	unlink 'tests/testhtml3.html';
-	unlink 'tests/testhtml3temp.html';
-	unlink 'tests/testhtml3-htmlbak.txt';
-	unlink 'tests/testhtml3-htmlbak.txt.bin';
-	ok( not( -e "tests/testhtml3temp.html" ),
-		"Deletion confirmed of tests/testhtml3temp.html" );
-	ok( not( -e "tests/testhtml3.html" ),
-		"Deletion confirmed of tests/testhtml3.html" );
-
+#	ok( 1 == do { openfile("tests/testhtml2.txt"); 1 },
+#		"openfile on tests/testhtml2.txt" );
+#	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml2.txt" );
+#	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml2.html'); 1 },
+#		"test of file save as tests/testfilewrapped" );
+#	ok( -e 'tests/testhtml2.html', "tests/testhtml2.html was saved" );
+#
+#	ok( -e "tests/testhtml2baseline.html",
+#		"tests/testhtml2baseline.html exists" );
+#	open INFILE,  "tests/testhtml2.html"       || die "no source file\n";
+#	open LOGFILE, "> tests/testhtml2temp.html" || die "output file error\n";
+#	@book   = ();
+#	$inbody = 0;
+#	while ( $ln = <INFILE> ) {
+#		if ($inbody) { print LOGFILE $ln; }
+#		if ( $ln =~ /<\/head>/ ) {
+#			$inbody = 1;
+#		}
+#	}
+#	close INFILE;
+#	close LOGFILE;
+#	ok(
+#		compare( "tests/testhtml2baseline.html", 'tests/testhtml2temp.html' ) ==
+#		  0,
+#		"Autogenerate HTML successful"
+#	);
+#	print "begin diff\n";
+#	system "diff tests/testhtml2baseline.html tests/testhtml2temp.html";
+#	print "end diff\n";
+#
+#	unlink 'tests/testhtml2.html';
+#	unlink 'tests/testhtml2temp.html';
+#	unlink 'tests/testhtml2-htmlbak.txt';
+#	unlink 'tests/testhtml2-htmlbak.txt.bin';
+#	ok( not( -e "tests/testhtml2temp.html" ),
+#		"Deletion confirmed of tests/testhtml2temp.html" );
+#	ok( not( -e "tests/testhtml2.html" ),
+#		"Deletion confirmed of tests/testhtml2.html" );
+#
+#	# Test 3 of HTML generation
+#	ok( 1 == do { openfile("tests/testhtml3.txt"); 1 },
+#		"openfile on tests/testhtml3.txt" );
+#	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml3.txt" );
+#	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml3.html'); 1 },
+#		"test of file save as tests/testhtml3.html" );
+#	ok( -e 'tests/testhtml3.html', "tests/testhtml3.html was saved" );
+#
+#	ok( -e "tests/testhtml3baseline.html",
+#		"tests/testhtml3baseline.html exists" );
+#	open INFILE,  "tests/testhtml3.html"       || die "no source file\n";
+#	open LOGFILE, "> tests/testhtml3temp.html" || die "output file error\n";
+#	@book   = ();
+#	$inbody = 0;
+#	while ( $ln = <INFILE> ) {
+#		if ($inbody) { print LOGFILE $ln; }
+#		if ( $ln =~ /<\/head>/ ) {
+#			$inbody = 1;
+#		}
+#	}
+#	close INFILE;
+#	close LOGFILE;
+#	ok(
+#		compare( "tests/testhtml3baseline.html", 'tests/testhtml3temp.html' ) ==
+#		  0,
+#		"Autogenerate HTML successful"
+#	);
+#	print "begin diff\n";
+#	system "diff tests/testhtml3baseline.html tests/testhtml3temp.html";
+#	print "end diff\n";
+#
+#	unlink 'tests/testhtml3.html';
+#	unlink 'tests/testhtml3temp.html';
+#	unlink 'tests/testhtml3-htmlbak.txt';
+#	unlink 'tests/testhtml3-htmlbak.txt.bin';
+#	ok( not( -e "tests/testhtml3temp.html" ),
+#		"Deletion confirmed of tests/testhtml3temp.html" );
+#	ok( not( -e "tests/testhtml3.html" ),
+#		"Deletion confirmed of tests/testhtml3.html" );
+#	fnview();
+#htmlimage();
+##errorcheckpop_up('test');
+#gcheckpop_up();
+#harmonicspop();
+#pnumadjust();
+#searchpopup();
+#asciipopup();
+#alignpopup();
+#wordfrequency();
+#jeebiespop_up();
+#separatorpopup();
+#footnotepop();
+#externalpopup();
+#utfpopup();
+#about_pop_up();
+#opspop_up();
+#greekpopup();
 	ok( 1 == 1, "This is the last test" );
 	done_testing();
-	exit;
+	MainLoop;
+	#exit;
 }
 
 # Ready to enter main loop
