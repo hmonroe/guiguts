@@ -1461,7 +1461,7 @@ sub search_menuitems {
 		  -command => [ \&nextblock, 'indent', 'reverse' ]
 	   ],
 	   [ 'separator', '' ],
-	   [ 'command', 'Find ~Orphaned Brackets', -command => \&brackets ],
+	   [ 'command', 'Find ~Orphaned Brackets', -command => \&orphanedbrackets ],
 	   [ 'command', 'Find Orphaned Markup',    -command => \&orphanedmarkup ],
 	   [
 		  'command',
@@ -13494,7 +13494,7 @@ sub nextblock {
 	update_indicators();
 }
 
-sub brackets {
+sub orphanedbrackets {
 	my $psel;
 	if ( defined( $lglobal{brkpop} ) ) {
 		$lglobal{brkpop}->deiconify;
