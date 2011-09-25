@@ -4935,7 +4935,7 @@ sub htmlimage {
 	$selection = '' unless $selection;
 	my $preservep = '';
 	$preservep = '<p>' if $selection !~ /<\/p>$/;
-	$selection =~ s/<\/?[bidhscalup].*?>//g;
+	#$selection =~ s/<\/?[bidhscalup].*?>//g;
 	$selection =~ s/^\[Illustration:?\s*(\.*)/$1/;
 	$selection =~ s/(\.*)\]$/$1/;
 	my ( $fname, $extension );
