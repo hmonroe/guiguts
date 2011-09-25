@@ -11386,6 +11386,7 @@ sub update_prev_img_button {
 		$lglobal{previmagebutton}->bind(
 			'<1>',
 			sub {
+				$lglobal{previmagebutton}->configure( -relief => 'sunken' );
 				$lglobal{showpageimages} = 1;
 				viewpagenums() unless $lglobal{pnumpop};
 				$textwindow->focus;
@@ -11393,6 +11394,7 @@ sub update_prev_img_button {
 
 			}
 		);
+		_butbind( $lglobal{previmagebutton} );
 		$lglobal{statushelp}->attach( $lglobal{previmagebutton},
 			-balloonmsg =>
 "Move to previous page in text and open image corresponding to previous current page in an external viewer."
@@ -11451,7 +11453,6 @@ sub update_next_img_button {
 				pgnext();
 			}
 		);
-		$lglobal{nextimagebutton}->bind( '<3>', sub { setpngspath() } );
 		_butbind( $lglobal{nextimagebutton} );
 		$lglobal{statushelp}->attach( $lglobal{nextimagebutton},
 			-balloonmsg =>
@@ -11477,6 +11478,7 @@ sub update_auto_img_button {
 			sub {
 				$auto_show_images = 1 - $auto_show_images;
 				if ($auto_show_images) {
+					$lglobal{autoimagebutton}->configure( -relief => 'sunken' );
 					$lglobal{autoimagebutton}->configure( -text => 'No Img' );
 					$lglobal{statushelp}->attach( $lglobal{autoimagebutton},
 						-balloonmsg =>
@@ -11484,6 +11486,7 @@ sub update_auto_img_button {
 					);
 
 				} else {
+					$lglobal{autoimagebutton}->configure( -relief => 'sunken' );
 					$lglobal{autoimagebutton}->configure( -text => 'Auto Img' );
 					$lglobal{statushelp}->attach( $lglobal{autoimagebutton},
 						-balloonmsg =>
@@ -11492,6 +11495,7 @@ sub update_auto_img_button {
 				}
 			}
 		);
+		_butbind( $lglobal{autoimagebutton} );
 		$lglobal{statushelp}->attach( $lglobal{autoimagebutton},
 			-balloonmsg =>
 "Automatically show the image for the current page (focus shifts to image window)."
