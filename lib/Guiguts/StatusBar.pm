@@ -3,8 +3,31 @@ package Guiguts::StatusBar;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&_updatesel )
+	@EXPORT=qw(&_updatesel &_butbind )
 }
+
+## Bindings to make label in status bar act like buttons
+sub _butbind {
+	my $widget = shift;
+	$widget->bind(
+		'<Enter>',
+		sub {
+			$widget->configure( -background => $main::activecolor );
+			$widget->configure( -relief     => 'raised' );
+		}
+	);
+	$widget->bind(
+		'<Leave>',
+		sub {
+			$widget->configure( -background => 'gray' );
+			$widget->configure( -relief     => 'ridge' );
+		}
+	);
+	$widget->bind( '<ButtonRelease-1>',
+				   sub { $widget->configure( -relief => 'raised' ) } );
+}
+
+
 
 ## Update Last Selection readout in status bar
 sub _updatesel {

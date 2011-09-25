@@ -230,7 +230,7 @@ our @extops = (
 		  { 'label' => q{}, 'command' => q{} },
 );
 
-#All local global variables contained in one hash.
+#All local global variables contained in one hash. # now global
 our %lglobal;
 
 if ( eval { require Text::LevenshteinXS } ) {
@@ -532,27 +532,6 @@ sub _recentupdate {    # FIXME: Seems to be choking.
 	# limit the list to 10 entries
 	pop @recentfile while ( $#recentfile > 10 );
 	rebuildmenu();
-}
-
-## Bindings to make label in status bar act like buttons
-sub _butbind {
-	my $widget = shift;
-	$widget->bind(
-		'<Enter>',
-		sub {
-			$widget->configure( -background => $activecolor );
-			$widget->configure( -relief     => 'raised' );
-		}
-	);
-	$widget->bind(
-		'<Leave>',
-		sub {
-			$widget->configure( -background => 'gray' );
-			$widget->configure( -relief     => 'ridge' );
-		}
-	);
-	$widget->bind( '<ButtonRelease-1>',
-				   sub { $widget->configure( -relief => 'raised' ) } );
 }
 
 # Pop up window allowing tracking and auto reselection of last selection
