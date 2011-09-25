@@ -16140,6 +16140,8 @@ sub get_image_file {
 	my $pagenum = shift;
 	my $number;
 	my $imagefile;
+	print $pngspath."here\n";
+	print $globallastpath."here\n";
 
 	unless ($pngspath) {
 		if ($OS_WIN) {
@@ -16147,6 +16149,7 @@ sub get_image_file {
 		} else {
 			$pngspath = "${globallastpath}pngs/";
 		}
+		print $pngspath."\n";
 		setpngspath($pagenum) unless ( -e "$pngspath$pagenum.png" );
 	}
 	if ($pngspath) {
@@ -16658,7 +16661,7 @@ sub setpngspath {
 	$path .= '/';
 	$path     = os_normal($path);
 	$pngspath = $path;
-	saveset();
+	_bin_save();
 	openpng($pagenum) if defined $pagenum;
 }
 
