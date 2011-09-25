@@ -4108,7 +4108,7 @@ sub replaceall {
 
 		# if not a search across line boundary
 		# and not a search within a selection do a speedy FindAndReplaceAll
-		unless ( ( $searchterm =~ m/\\n/ ) && ( $sopt[3] ) ) {
+		unless (  ( $sopt[3] ) ) { #( $searchterm =~ m/\\n/ ) &&
 			my $exactsearch = $searchterm;
 
 			# escape metacharacters for whole word matching
