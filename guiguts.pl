@@ -8898,7 +8898,7 @@ sub initialize {
 	$lglobal{seepagenums}      = 0;
 	$lglobal{selectionsearch}  = 0;
 	$lglobal{showblocksize}    = 1;
-	$lglobal{showpageimages}   = 0;
+	$lglobal{showthispageimage}   = 0;
 	$lglobal{spellencoding}    = "iso8859-1";
 	$lglobal{stepmaxwidth}     = 70;
 	$lglobal{suspects_only}    = 0;
@@ -10510,9 +10510,10 @@ sub pgprevious {    #move focus to previous page marker
 	$lglobal{pagenumentry}->delete( '0', 'end' );
 	$lglobal{pagenumentry}->insert( 'end', $mark );
 	$textwindow->yview( $textwindow->index($mark) );
-	if ( $lglobal{showpageimages} and ( $mark =~ /Pg(\d+)/ ) ) {
+	if ( $lglobal{showthispageimage} and ( $mark =~ /Pg(\d+)/ ) ) {
 		$textwindow->focus;
 		openpng($1);
+		$lglobal{showthispageimage}=0;
 	}
 	update_indicators();
 }
@@ -10529,9 +10530,11 @@ sub pgnext {    #move focus to next page marker
 	$lglobal{pagenumentry}->delete( '0', 'end' );
 	$lglobal{pagenumentry}->insert( 'end', $mark );
 	$textwindow->yview( $textwindow->index($mark) );
-	if ( $lglobal{showpageimages} and ( $mark =~ /Pg(\d+)/ ) ) {
+	if ( $lglobal{showthispageimage} and ( $mark =~ /Pg(\d+)/ ) ) {
 		$textwindow->focus;
 		openpng($1);
+		$lglobal{showthispageimage}=0;
+		
 	}
 	update_indicators();
 }
@@ -10678,6 +10681,7 @@ sub pmovedown {    # move the page marker down a line
 
 ## Save setting.rc file
 sub saveset {
+	#print time()."savesettings\n";
 	my $message = <<EOM;
 # This file contains your saved settings for guiguts.
 # It is automatically generated when you save your settings.
@@ -11366,7 +11370,7 @@ sub update_prev_img_button {
 			'<1>',
 			sub {
 				$lglobal{previmagebutton}->configure( -relief => 'sunken' );
-				$lglobal{showpageimages} = 1;
+				$lglobal{showthispageimage} = 1;
 				viewpagenums() unless $lglobal{pnumpop};
 				$textwindow->focus;
 				pgprevious();
@@ -11426,7 +11430,7 @@ sub update_next_img_button {
 			'<1>',
 			sub {
 				$lglobal{nextimagebutton}->configure( -relief => 'sunken' );
-				$lglobal{showpageimages} = 1;
+				$lglobal{showthispageimage} = 1;
 				viewpagenums() unless $lglobal{pnumpop};
 				$textwindow->focus;
 				pgnext();
@@ -16654,6 +16658,7 @@ sub setpngspath {
 	$path .= '/';
 	$path     = os_normal($path);
 	$pngspath = $path;
+	saveset();
 	openpng($pagenum) if defined $pagenum;
 }
 
@@ -18669,7 +18674,7 @@ sub runtests {
 		"Rewrap was successful"
 	);
 	print "begin diff\n";
-	system "diff tests/testfilebaseline.html tests/testfilewrapped.html";
+	system "diff tests/testfilebaseline.txt tests/testfilewrapped.txt";
 	print "end diff\n";
 	unlink 'tests/testfilewrapped.txt';
 	ok( not( -e "tests/testfilewrapped.txt" ),
@@ -18814,8 +18819,7 @@ sub runtests {
 #greekpopup();
 	ok( 1 == 1, "This is the last test" );
 	done_testing();
-	MainLoop;
-	#exit;
+	exit;
 }
 
 # Ready to enter main loop

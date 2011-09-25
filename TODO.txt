@@ -15,6 +15,8 @@ to pass eachother when moving down, but apparently moving up doesn't check in th
 same way). It can of course be fixed by moving Page 2 up, and then moving Page 3 down 
 first, but that's a bit clunky. 
 
+Remove DOS Window and send errors to an error log file.
+
 New feature requests: Selective html generation. Enhanced scannos files
 to convert [oe] to ligature, [=a] to &#257. Add feature for drop caps
 (would need new CSS and changes to the insert image dialog). Tool to
