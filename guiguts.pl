@@ -130,6 +130,7 @@ our $poetrylmargin     = 5;
 our $blockwrap;
 our $bold_char     = "=";
 our $defaultindent = 0;
+our $failedsearch     = 0;
 our $fontname      = 'Courier New';
 our $fontsize      = 10;
 our $fontweight    = q{};
@@ -2204,6 +2205,12 @@ sub buildmenu {
 				   saveset();
 				 }
 			],
+						[
+			   Checkbutton => 'Return After Failed Search',
+			   -variable   => \$failedsearch,
+			   -onvalue    => 1,
+			   -offvalue   => 0
+			]
 		]
 	);
 
@@ -3791,9 +3798,11 @@ sub searchtext {
 			$lglobal{searchbutton}->flash if defined $lglobal{searchpop};
 
 			# If nothing found, return cursor to starting point
+			if ($failedsearch) {
 			$searchendindex = $searchstartingpoint;
 			$textwindow->markSet( 'insert', $searchstartingpoint );
 			$textwindow->see($searchstartingpoint);
+			}
 		}
 	}
 	updatesearchlabels();
@@ -10701,7 +10710,7 @@ EOM
 
 		for (
 			qw/activecolor auto_page_marks auto_show_images autobackup autosave autosaveinterval blocklmargin blockrmargin
-			defaultindent fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
+			defaultindent failedsearch fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
 			highlightcolor history_size jeebiesmode lmargin nobell nohighlights notoolbar rmargin
 			rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm w3cremote
 			intelligentWF italic_char bold_char ignoreversions lastversioncheck ignoreversionnumber
