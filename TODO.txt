@@ -5,6 +5,8 @@ regarding what should be fixed to call a version 1.0):
 
 The "Orphaned Markup" check should quit complaining about nested spans
 
+Cannot search for asterisks. Pages in HTML skipped. 
+
 There is no check for a footnote anchor without a footnote
 
 Fix spell check popup. Acts weird with unicode.
