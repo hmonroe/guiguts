@@ -24,4 +24,6 @@ list recognizer. Convert ellipsis to real ellip or
 file. Remove DOS Window and send errors to an error log file.
 
 Under the hood changes: Break up code into smaller modules with clear 
-functionality and unit tests. Get winguts.exe to run all tests.
+functionality and unit tests. Get winguts.exe to run all tests. Get
+debugger to make it through a file open (double delegation to subsubwidget
+is a problem).
