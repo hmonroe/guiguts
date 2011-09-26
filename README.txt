@@ -68,7 +68,7 @@ Detailed release notes:
 Version 0.3.9 All popups now remember if they have been moved or resized. 
 Unless the user has previously set the size of the main
 screen, it is maximized (nearly) on the first run. This version restores default 
-behavior that failed searches sends cursor to beginning rather than where it was
+behavior that failed searches send cursor to beginning rather than where it was
 but added an option for the latter. Fixed bugs with 
 small caps conversion; overriding setting.rc; replace all with regex and
 $1 backreferences, stripping markup from captions in HTML.  
