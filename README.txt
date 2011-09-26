@@ -72,7 +72,8 @@ behavior that failed searches send cursor to beginning rather than where it was
 but added an option for the latter. Fixed bugs with 
 small caps conversion; overriding setting.rc; replace all with regex and
 $1 backreferences, stripping markup from captions in HTML. Changing
-the pngs path saves the .bin file immediately. 
+the pngs path saves the .bin file immediately. This version excludes
+winguts.exe which is not reading in the setting.rc file. 
 
 Version 0.3.8 Unicode menu is now broken into two pieces so it does not 
 run off the screen where Mac users cannot see it. Also, the Unicode popup

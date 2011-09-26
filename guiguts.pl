@@ -16149,9 +16149,6 @@ sub get_image_file {
 	my $pagenum = shift;
 	my $number;
 	my $imagefile;
-	print $pngspath."here\n";
-	print $globallastpath."here\n";
-
 	unless ($pngspath) {
 		if ($OS_WIN) {
 			$pngspath = "${globallastpath}pngs\\";
