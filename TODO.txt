@@ -3,21 +3,13 @@ discuss these
 [url=http://www.pgdp.net/phpBB2/viewtopic.php?t=48584]here[/url]
 regarding what should be fixed to call a version 1.0):
 
-The "Orphaned Markup" check should quit complaining about nested spans
+Errors not yet reproduced: Cannot search for asterisks. Pages in HTML skipped. 
 
-Cannot search for asterisks. Pages in HTML skipped. 
-
-There is no check for a footnote anchor without a footnote
-
+The "Orphaned Markup" check should quit complaining about nested spans. 
+There is no check for a footnote anchor without a footnote. 
 Fix spell check popup. Acts weird with unicode.
-
-I was moving around page markers. Using Move up I could move Page 3 up before 
-Page 2, but then I couldn't move it back down (I think page markers aren't allowed 
-to pass eachother when moving down, but apparently moving up doesn't check in the 
-same way). It can of course be fixed by moving Page 2 up, and then moving Page 3 down 
-first, but that's a bit clunky. 
-
-Remove DOS Window and send errors to an error log file.
+Using Move up I could move Page 3 up before 
+Page 2, but then I couldn't move it back down. 
 
 New feature requests: Selective html generation. Enhanced scannos files
 to convert [oe] to ligature, [=a] to &#257. Add feature for drop caps
@@ -29,7 +21,7 @@ tool to help in removing hyphens (for instance, how often does a given
 word appear with or without hyphens). Better Index/contents/illustration
 list recognizer. Convert ellipsis to real ellip or
 &#8230;. File export and import that maintains information in the .bin
-file.
+file. Remove DOS Window and send errors to an error log file.
 
 Under the hood changes: Break up code into smaller modules with clear 
 functionality and unit tests. Get winguts.exe to run all tests.
