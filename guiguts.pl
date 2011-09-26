@@ -18590,18 +18590,18 @@ sub addpagelinks {
 sub text_convert_smallcaps {
 	searchpopup();
 	searchoptset(qw/0 x x 1/);
-	$lglobal{searchentry}->delete( '0', 'end' );
+	$lglobal{searchentry}->delete( '1.0', 'end' );
 	$lglobal{searchentry}->insert( 'end', "<sc>(\\n?[^<]+)</sc>" );
-	$lglobal{replaceentry}->delete( '0', 'end' );
+	$lglobal{replaceentry}->delete( '1.0', 'end' );
 	$lglobal{replaceentry}->insert( 'end', "\\U\$1\\E" );
 }
 
 sub text_remove_smallcaps_markup {
 	searchpopup();
 	searchoptset(qw/0 x x 1/);
-	$lglobal{searchentry}->delete( '0', 'end' );
+	$lglobal{searchentry}->delete( '1.0', 'end' );
 	$lglobal{searchentry}->insert( 'end', "<sc>(\\n?[^<]+)</sc>" );
-	$lglobal{replaceentry}->delete( '0', 'end' );
+	$lglobal{replaceentry}->delete( '1.0', 'end' );
 	$lglobal{replaceentry}->insert( 'end', "\$1" );
 }
 
