@@ -21,7 +21,8 @@ tool to help in removing hyphens (for instance, how often does a given
 word appear with or without hyphens). Better Index/contents/illustration
 list recognizer. Convert ellipsis to real ellip or
 &#8230;. File export and import that maintains information in the .bin
-file. Remove DOS Window and send errors to an error log file.
+file. Remove DOS Window and send errors to an error log file. Do
+not show multiple page numbers at a single location (or give options).
 
 Under the hood changes: Break up code into smaller modules with clear 
 functionality and unit tests. Get winguts.exe to run all tests. Get
