@@ -100,11 +100,11 @@ use Guiguts::TextUnicode;
 use Guiguts::Greekgifs;
 use Guiguts::SearchReplaceMenu;
 use Guiguts::SelectionMenu;
+
 #use Guiguts::BookmarksMenu;
 use Guiguts::TextProcessingMenu;
 use Guiguts::HTMLConvert;
 use Guiguts::StatusBar;
-
 
 # Ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
@@ -126,11 +126,11 @@ our $autosaveinterval = 5;
 our $bkmkhl           = 0;
 our $blocklmargin     = 5;
 our $blockrmargin     = 72;
-our $poetrylmargin     = 5;
+our $poetrylmargin    = 5;
 our $blockwrap;
 our $bold_char     = "=";
 our $defaultindent = 0;
-our $failedsearch     = 0;
+our $failedsearch  = 0;
 our $fontname      = 'Courier New';
 our $fontsize      = 10;
 our $fontweight    = q{};
@@ -233,6 +233,12 @@ our @extops = (
 
 #All local global variables contained in one hash. # now global
 our %lglobal;
+
+open (FH, ">errors.log"); # Zero-out log file
+close (FH);
+open (STDERR, ">>errors.log");
+open (STDOUT, ">>errors.log");
+
 
 if ( eval { require Text::LevenshteinXS } ) {
 	$lglobal{LevenshteinXS} = 1;
@@ -397,7 +403,7 @@ set_autosave() if $autosave;
 
 $textwindow->CallNextGUICallback;
 
-$top->repeat( 200, sub{_updatesel($textwindow) });
+$top->repeat( 200, sub { _updatesel($textwindow) } );
 
 sub _flash_save {
 	$lglobal{saveflashingid} = $top->repeat(
@@ -545,7 +551,7 @@ sub selection {
 		$lglobal{selectionpop} = $top->Toplevel;
 		$lglobal{selectionpop}->title('Select Line.Col');
 		initialize_popup_without_deletebinding('selectionpop');
-		
+
 		$lglobal{selectionpop}->resizable( 'no', 'no' );
 		my $frame =
 		  $lglobal{selectionpop}
@@ -1243,8 +1249,12 @@ sub file_menuitems {
 		  -accelerator => 'Ctrl+s',
 		  -command     => \&savefile
 	   ],
-	   [ 'command',   'Save ~As',                  -command => \&file_saveas ],
-	   [ 'command',   '~Include File',             -command => sub {file_include($textwindow) }],
+	   [ 'command', 'Save ~As', -command => \&file_saveas ],
+	   [
+		  'command',
+		  '~Include File',
+		  -command => sub { file_include($textwindow) }
+	   ],
 	   [ 'command',   '~Close',                    -command => \&file_close ],
 	   [ 'separator', '' ],
 	   [ 'command',   'Import Prep Text Files',    -command => \&file_import ],
@@ -2205,7 +2215,7 @@ sub buildmenu {
 				   saveset();
 				 }
 			],
-						[
+			[
 			   Checkbutton => 'Return After Failed Search',
 			   -variable   => \$failedsearch,
 			   -onvalue    => 1,
@@ -2409,6 +2419,7 @@ sub fnview {
 		$ftext->tagConfigure( 'dup',    background => 'yellow' );
 		$ftext->tagConfigure( 'noanch', background => 'pink' );
 		$ftext->tagConfigure( 'long',   background => 'tan' );
+
 		for my $findex ( 1 .. $lglobal{fntotal} ) {
 			$ftext->insert(
 							'end',
@@ -3799,9 +3810,9 @@ sub searchtext {
 
 			# If nothing found, return cursor to starting point
 			if ($failedsearch) {
-			$searchendindex = $searchstartingpoint;
-			$textwindow->markSet( 'insert', $searchstartingpoint );
-			$textwindow->see($searchstartingpoint);
+				$searchendindex = $searchstartingpoint;
+				$textwindow->markSet( 'insert', $searchstartingpoint );
+				$textwindow->see($searchstartingpoint);
 			}
 		}
 	}
@@ -4081,7 +4092,7 @@ sub opstop {
 		$lglobal{stoppop} = $top->Toplevel;
 		$lglobal{stoppop}->title('Interrupt');
 		initialize_popup_with_deletebinding('stoppop');
-		
+
 		my $frame = $lglobal{stoppop}->Frame->pack;
 		my $stopbutton = $frame->Button(
 									-activebackground => $activecolor,
@@ -4117,7 +4128,7 @@ sub replaceall {
 
 		# if not a search across line boundary
 		# and not a search within a selection do a speedy FindAndReplaceAll
-		unless (  ( $sopt[3] ) ) { #( $searchterm =~ m/\\n/ ) &&
+		unless ( ( $sopt[3] ) ) {    #( $searchterm =~ m/\\n/ ) &&
 			my $exactsearch = $searchterm;
 
 			# escape metacharacters for whole word matching
@@ -4944,6 +4955,7 @@ sub htmlimage {
 	$selection = '' unless $selection;
 	my $preservep = '';
 	$preservep = '<p>' if $selection !~ /<\/p>$/;
+
 	#$selection =~ s/<\/?[bidhscalup].*?>//g;
 	$selection =~ s/^\[Illustration:?\s*(\.*)/$1/;
 	$selection =~ s/(\.*)\]$/$1/;
@@ -5485,7 +5497,7 @@ sub htmlautoconvert {
 	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
 
 	html_convert_body( $textwindow, $headertext, $lglobal{cssblockmarkup},
-						$lglobal{poetrynumbers}, $lglobal{classhash} );
+					   $lglobal{poetrynumbers}, $lglobal{classhash} );
 
 	html_cleanup_markers($textwindow);
 
@@ -6248,8 +6260,8 @@ sub errorcheckpop_up {
 	$lglobal{errorcheckpop} = $top->Toplevel;
 	$lglobal{errorcheckpop}->title($errorchecktype);
 	initialize_popup_with_deletebinding('errorcheckpop');
-	
-	$lglobal{errorcheckpop}->transient($top)      if $stayontop;
+
+	$lglobal{errorcheckpop}->transient($top) if $stayontop;
 	my $ptopframe = $lglobal{errorcheckpop}->Frame->pack;
 	my $opsbutton = $ptopframe->Button(
 		-activebackground => $activecolor,
@@ -6766,7 +6778,7 @@ sub gcheckpop_up {
 		$lglobal{gcpop} = $top->Toplevel;
 		$lglobal{gcpop}->title('Gutcheck');
 		initialize_popup_without_deletebinding('gcpop');
-		$lglobal{gcpop}->transient($top)      if $stayontop;
+		$lglobal{gcpop}->transient($top) if $stayontop;
 		my $ptopframe = $lglobal{gcpop}->Frame->pack;
 		my $opsbutton =
 		  $ptopframe->Button(
@@ -8885,39 +8897,39 @@ sub initialize {
   # Initialize a whole bunch of global values that used to be discrete variables
   # spread willy-nilly through the code. Refactored them into a global
   # hash and gathered them together in a single subroutine.
-	$lglobal{alignstring}      = '.';
-	$lglobal{alpha_sort}       = 'f';
-	$lglobal{asciijustify}     = 'center';
-	$lglobal{asciiwidth}       = 64;
-	$lglobal{codewarn}         = 1;
-	$lglobal{cssblockmarkup}   = 0;
-	$lglobal{delay}            = 50;
-	$lglobal{footstyle}        = 'end';
-	$lglobal{ftnoteindexstart} = '1.0';
-	$lglobal{groutp}           = 'l';
-	$lglobal{htmlimgar}        = 1;             #html image aspect ratio
-	$lglobal{ignore_case}      = 0;
-	$lglobal{keep_latin1}      = 1;
-	$lglobal{lastmatchindex}   = '1.0';
-	$lglobal{lastsearchterm}   = '';
-	$lglobal{longordlabel}     = 0;
-	$lglobal{proofbarvisible}  = 0;
-	$lglobal{regaa}            = 0;
-	$lglobal{runtests}         = 0;
-	$lglobal{seepagenums}      = 0;
-	$lglobal{selectionsearch}  = 0;
-	$lglobal{showblocksize}    = 1;
-	$lglobal{showthispageimage}   = 0;
-	$lglobal{spellencoding}    = "iso8859-1";
-	$lglobal{stepmaxwidth}     = 70;
-	$lglobal{suspects_only}    = 0;
-	$lglobal{tblcoljustify}    = 'l';
-	$lglobal{tblrwcol}         = 1;
-	$lglobal{ToolBar}          = 1;
-	$lglobal{uoutp}            = 'h';
-	$lglobal{utfrangesort}     = 0;
-	$lglobal{visibleline}      = '';
-	$lglobal{zoneindex}        = 0;
+	$lglobal{alignstring}       = '.';
+	$lglobal{alpha_sort}        = 'f';
+	$lglobal{asciijustify}      = 'center';
+	$lglobal{asciiwidth}        = 64;
+	$lglobal{codewarn}          = 1;
+	$lglobal{cssblockmarkup}    = 0;
+	$lglobal{delay}             = 50;
+	$lglobal{footstyle}         = 'end';
+	$lglobal{ftnoteindexstart}  = '1.0';
+	$lglobal{groutp}            = 'l';
+	$lglobal{htmlimgar}         = 1;             #html image aspect ratio
+	$lglobal{ignore_case}       = 0;
+	$lglobal{keep_latin1}       = 1;
+	$lglobal{lastmatchindex}    = '1.0';
+	$lglobal{lastsearchterm}    = '';
+	$lglobal{longordlabel}      = 0;
+	$lglobal{proofbarvisible}   = 0;
+	$lglobal{regaa}             = 0;
+	$lglobal{runtests}          = 0;
+	$lglobal{seepagenums}       = 0;
+	$lglobal{selectionsearch}   = 0;
+	$lglobal{showblocksize}     = 1;
+	$lglobal{showthispageimage} = 0;
+	$lglobal{spellencoding}     = "iso8859-1";
+	$lglobal{stepmaxwidth}      = 70;
+	$lglobal{suspects_only}     = 0;
+	$lglobal{tblcoljustify}     = 'l';
+	$lglobal{tblrwcol}          = 1;
+	$lglobal{ToolBar}           = 1;
+	$lglobal{uoutp}             = 'h';
+	$lglobal{utfrangesort}      = 0;
+	$lglobal{visibleline}       = '';
+	$lglobal{zoneindex}         = 0;
 	@{ $lglobal{ascii} } = qw/+ - + | | | + - +/;
 	@{ $lglobal{fixopt} } = ( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 );
 
@@ -8932,11 +8944,11 @@ sub initialize {
 	# For backward compatibility, carry over old geometry settings
 	unless ( $geometryhash{wfpop} ) {
 		if ($geometry2) {
-			$geometryhash{wfpop} = $geometry2;
-			$geometryhash{gcpop} = $geometry2;
-			$geometryhash{jeepop} = $geometry2;
+			$geometryhash{wfpop}         = $geometry2;
+			$geometryhash{gcpop}         = $geometry2;
+			$geometryhash{jeepop}        = $geometry2;
 			$geometryhash{errorcheckpop} = $geometry2;
-			$geometryhash{hpopup} = $geometry3;
+			$geometryhash{hpopup}        = $geometry3;
 		}
 	}
 
@@ -9319,15 +9331,29 @@ sub initialize {
 # New subroutine "readsettings" extracted - Fri Sep 23 12:07:27 2011.
 #
 sub readsettings {
-	unless ( my $return = do 'setting.rc' ) {
-		if ( -e 'setting.rc' ) {
+	if ( -e 'setting.rc' ) {
+		unless ( my $return = do 'setting.rc' ) {
+			# For some reason this works for winguts.exe
 			open my $file, "<", "setting.rc"
 			  or warn "Could not open setting file\n";
 			my @file = <$file>;
 			close $file;
-			open $file, ">", "setting.err";
-			print $file @file;
-			close $file;
+			my $settings = '';
+			for (@file) {
+				$settings .= $_;
+			}
+			unless ( my $return = eval($settings) ) {
+				if ( -e 'setting.rc' ) {
+					open my $file, "<", "setting.rc"
+					  or warn "Could not open setting file\n";
+					my @file = <$file>;
+					close $file;
+					open $file, ">", "setting.err";
+					print $file @file;
+					close $file;
+					print length($file);
+				}
+			}
 		}
 	}
 }
@@ -10363,25 +10389,26 @@ sub pnumadjust {
 
 sub initialize_popup_with_deletebinding {
 	my $popupname = shift;
-	initialize_popup_without_deletebinding($popupname );
-		$lglobal{$popupname}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{$popupname}->destroy;
-				undef $lglobal{$popupname};
-			}
-		);
+	initialize_popup_without_deletebinding($popupname);
+	$lglobal{$popupname}->protocol(
+		'WM_DELETE_WINDOW' => sub {
+			$lglobal{$popupname}->destroy;
+			undef $lglobal{$popupname};
+		}
+	);
 }
 
 sub initialize_popup_without_deletebinding {
 	my $popupname = shift;
-	$lglobal{$popupname}->geometry( $geometryhash{$popupname} ) if $geometryhash{$popupname};
+	$lglobal{$popupname}->geometry( $geometryhash{$popupname} )
+	  if $geometryhash{$popupname};
 	$lglobal{"$popupname"}->bind(
 		'<Configure>' => sub {
 			$geometryhash{"$popupname"} = $lglobal{"$popupname"}->geometry;
 			$lglobal{geometryupdate} = 1;
 		}
 	);
-		$lglobal{$popupname}->Icon( -image => $icon );
+	$lglobal{$popupname}->Icon( -image => $icon );
 }
 
 sub pageremove {    # Delete a page marker
@@ -10522,7 +10549,7 @@ sub pgprevious {    #move focus to previous page marker
 	if ( $lglobal{showthispageimage} and ( $mark =~ /Pg(\d+)/ ) ) {
 		$textwindow->focus;
 		openpng($1);
-		$lglobal{showthispageimage}=0;
+		$lglobal{showthispageimage} = 0;
 	}
 	update_indicators();
 }
@@ -10542,8 +10569,8 @@ sub pgnext {    #move focus to next page marker
 	if ( $lglobal{showthispageimage} and ( $mark =~ /Pg(\d+)/ ) ) {
 		$textwindow->focus;
 		openpng($1);
-		$lglobal{showthispageimage}=0;
-		
+		$lglobal{showthispageimage} = 0;
+
 	}
 	update_indicators();
 }
@@ -10690,6 +10717,7 @@ sub pmovedown {    # move the page marker down a line
 
 ## Save setting.rc file
 sub saveset {
+
 	#print time()."savesettings\n";
 	my $message = <<EOM;
 # This file contains your saved settings for guiguts.
@@ -11471,7 +11499,7 @@ sub update_auto_img_button {
 				$auto_show_images = 1 - $auto_show_images;
 				if ($auto_show_images) {
 					$lglobal{autoimagebutton}->configure( -relief => 'sunken' );
-					$lglobal{autoimagebutton}->configure( -text => 'No Img' );
+					$lglobal{autoimagebutton}->configure( -text   => 'No Img' );
 					$lglobal{statushelp}->attach( $lglobal{autoimagebutton},
 						-balloonmsg =>
 "Stop automatically showing the image for the current page."
@@ -12298,11 +12326,11 @@ sub searchpopup {
 		  )->pack( -side => 'right', -anchor => 'e', -padx => 1 );
 		my $sf11 =
 		  $lglobal{searchpop}->Frame->pack(
-										 -side   => 'top',
-										 -anchor => 'w',
-										 -padx   => 3,
-										 -expand => 'y',
-										 -fill   => 'x'
+											-side   => 'top',
+											-anchor => 'w',
+											-padx   => 3,
+											-expand => 'y',
+											-fill   => 'x'
 		  );
 
 		$sf11->Button(
@@ -12399,10 +12427,10 @@ sub searchpopup {
 		my ( $sf13, $sf14, $sf5 );
 		my $sf10 =
 		  $lglobal{searchpop}->Frame->pack(
-										 -side   => 'top',
-										 -anchor => 'n',
-										 -expand => '1',
-										 -fill   => 'x'
+											-side   => 'top',
+											-anchor => 'n',
+											-expand => '1',
+											-fill   => 'x'
 		  );
 		my $replacelabel =
 		  $sf10->Label( -text => "Replacement Text\t\t", )
@@ -12448,11 +12476,11 @@ sub searchpopup {
 		)->grid( -row => 1, -column => 4 );
 		my $sf12 =
 		  $lglobal{searchpop}->Frame->pack(
-										 -side   => 'top',
-										 -anchor => 'w',
-										 -padx   => 3,
-										 -expand => 'y',
-										 -fill   => 'x'
+											-side   => 'top',
+											-anchor => 'w',
+											-padx   => 3,
+											-expand => 'y',
+											-fill   => 'x'
 		  );
 
 		$sf12->Button(
@@ -12671,7 +12699,8 @@ sub searchpopup {
 		}
 		if ( $lglobal{doscannos} ) {
 			$sf5 =
-			  $lglobal{searchpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+			  $lglobal{searchpop}
+			  ->Frame->pack( -side => 'top', -anchor => 'n' );
 			my $nextbutton = $sf5->Button(
 				-activebackground => $activecolor,
 				-command          => sub {
@@ -12754,7 +12783,8 @@ sub searchpopup {
 					   -anchor => 'w'
 			  );
 			my $sf6 =
-			  $lglobal{searchpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+			  $lglobal{searchpop}
+			  ->Frame->pack( -side => 'top', -anchor => 'n' );
 			$lglobal{regtracker} = $sf6->Label( -width => 15 )->pack(
 																-side => 'left',
 																-pady => 5,
@@ -12819,7 +12849,7 @@ sub searchpopup {
 			}
 		);
 		$lglobal{searchpop}->eventAdd( '<<FindNexte>>' => '<Control-Key-G>',
-									'<Control-Key-g>' );
+									   '<Control-Key-g>' );
 
 		$lglobal{searchentry}->bind(
 			'<<FindNexte>>',
@@ -13461,7 +13491,7 @@ sub orphanedbrackets {
 		$lglobal{brkpop} = $top->Toplevel;
 		$lglobal{brkpop}->title('Find orphan brackets');
 		initialize_popup_without_deletebinding('brkpop');
-		
+
 		$lglobal{brkpop}->Label( -text => 'Bracket or Markup Style' )->pack;
 		my $frame = $lglobal{brkpop}->Frame->pack;
 		$psel = $frame->Radiobutton(
@@ -13913,6 +13943,7 @@ sub asciipopup {
 			-width => 16
 		)->grid( -row => 4, -column => 2, -padx => 1, -pady => 2 );
 		$lglobal{asciipop}->resizable( 'no', 'no' );
+
 		#$lglobal{asciipop}->deiconify;
 		$lglobal{asciipop}->raise;
 		$lglobal{asciipop}->focus;
@@ -14512,7 +14543,7 @@ sub jeebiespop_up {
 		$lglobal{jeepop} = $top->Toplevel;
 		$lglobal{jeepop}->title('Jeebies');
 		initialize_popup_with_deletebinding('jeepop');
-		$lglobal{jeepop}->transient($top)      if $stayontop;
+		$lglobal{jeepop}->transient($top) if $stayontop;
 		my $ptopframe = $lglobal{jeepop}->Frame->pack;
 		$ptopframe->Label( -text => 'Search mode:', )
 		  ->pack( -side => 'left', -padx => 2 );
@@ -15889,7 +15920,7 @@ sub tablefx {
 		$lglobal{tblfxpop}     = $top->Toplevel;
 		$lglobal{tblfxpop}->title('ASCII Table Special Effects');
 		initialize_popup_without_deletebinding('tblfxpop');
-		
+
 		my $f0 =
 		  $lglobal{tblfxpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my %tb_buttons = (
@@ -16155,7 +16186,7 @@ sub get_image_file {
 		} else {
 			$pngspath = "${globallastpath}pngs/";
 		}
-		print $pngspath."\n";
+		print $pngspath. "\n";
 		setpngspath($pagenum) unless ( -e "$pngspath$pagenum.png" );
 	}
 	if ($pngspath) {
@@ -16458,7 +16489,7 @@ sub setmargins {
 									 -textvariable => \$blockrmargin,
 	)->pack( -side => 'left' );
 
-#
+	#
 	my $plmframe =
 	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
 	my $plmlabel = $plmframe->Label(
@@ -16471,7 +16502,8 @@ sub setmargins {
 									 -relief       => 'sunken',
 									 -textvariable => \$poetrylmargin,
 	)->pack( -side => 'left' );
-#
+
+	#
 	my $didntframe =
 	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
 	my $didntlabel =
@@ -17352,7 +17384,7 @@ sub hotkeyshelp {
 		$lglobal{hotpop} = $top->Toplevel;
 		$lglobal{hotpop}->title('Hot key combinations');
 		initialize_popup_with_deletebinding('hotpop');
-		
+
 		my $frame =
 		  $lglobal{hotpop}->Frame->pack(
 										 -anchor => 'nw',
@@ -17706,6 +17738,7 @@ sub greekpopup {
 							  -value       => 'h',
 							  -text        => 'HTML code',
 		)->grid( -row => 1, -column => 3 );
+
 		if ( $Tk::version ge 8.4 ) {
 			$tframe->Radiobutton(
 								  -variable    => \$lglobal{groutp},
@@ -18166,7 +18199,7 @@ sub latinpopup {
 		$lglobal{latinpop} = $top->Toplevel;
 		$lglobal{latinpop}->title('Latin-1 ISO 8859-1');
 		initialize_popup_with_deletebinding('latinpop');
-		
+
 		my $b = $lglobal{latinpop}->Balloon( -initwait => 750 );
 		my $tframe = $lglobal{latinpop}->Frame->pack;
 		my $default =
@@ -18292,7 +18325,7 @@ sub utford {
 		$lglobal{ordpop} = $top->Toplevel;
 		$lglobal{ordpop}->title('Ordinal to Char');
 		initialize_popup_with_deletebinding('ordpop');
-		
+
 		$lglobal{ordpop}->resizable( 'yes', 'no' );
 		my $frame =
 		  $lglobal{ordpop}->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
@@ -18389,7 +18422,7 @@ sub uchar {
 		$lglobal{ucharpop} = $top->Toplevel;
 		$lglobal{ucharpop}->title('Unicode Character Search');
 		initialize_popup_with_deletebinding('ucharpop');
-		
+
 		$lglobal{ucharpop}->geometry('550x450');
 		my $cframe = $lglobal{ucharpop}->Frame->pack;
 		my $frame0 =
@@ -18660,8 +18693,6 @@ sub runtests {
 	ok( 1 == do { openfile("readme.txt"); 1 }, "openfile on readme.txt" );
 	ok( "readme.txt" eq $textwindow->FileName, "File is named readme.txt" );
 	ok( 1 == do { file_close(); 1 }, "close readme.txt" );
-	
-	
 
 	# Test of rewrapping
 	ok( -e "tests/testfile.txt", "tests/testfile.txt exists" );
@@ -18734,102 +18765,102 @@ sub runtests {
 		"Deletion confirmed of tests/testhtml1.html" );
 
 	# Test 2 of HTML generation
-#	ok( 1 == do { openfile("tests/testhtml2.txt"); 1 },
-#		"openfile on tests/testhtml2.txt" );
-#	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml2.txt" );
-#	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml2.html'); 1 },
-#		"test of file save as tests/testfilewrapped" );
-#	ok( -e 'tests/testhtml2.html', "tests/testhtml2.html was saved" );
-#
-#	ok( -e "tests/testhtml2baseline.html",
-#		"tests/testhtml2baseline.html exists" );
-#	open INFILE,  "tests/testhtml2.html"       || die "no source file\n";
-#	open LOGFILE, "> tests/testhtml2temp.html" || die "output file error\n";
-#	@book   = ();
-#	$inbody = 0;
-#	while ( $ln = <INFILE> ) {
-#		if ($inbody) { print LOGFILE $ln; }
-#		if ( $ln =~ /<\/head>/ ) {
-#			$inbody = 1;
-#		}
-#	}
-#	close INFILE;
-#	close LOGFILE;
-#	ok(
-#		compare( "tests/testhtml2baseline.html", 'tests/testhtml2temp.html' ) ==
-#		  0,
-#		"Autogenerate HTML successful"
-#	);
-#	print "begin diff\n";
-#	system "diff tests/testhtml2baseline.html tests/testhtml2temp.html";
-#	print "end diff\n";
-#
-#	unlink 'tests/testhtml2.html';
-#	unlink 'tests/testhtml2temp.html';
-#	unlink 'tests/testhtml2-htmlbak.txt';
-#	unlink 'tests/testhtml2-htmlbak.txt.bin';
-#	ok( not( -e "tests/testhtml2temp.html" ),
-#		"Deletion confirmed of tests/testhtml2temp.html" );
-#	ok( not( -e "tests/testhtml2.html" ),
-#		"Deletion confirmed of tests/testhtml2.html" );
-#
-#	# Test 3 of HTML generation
-#	ok( 1 == do { openfile("tests/testhtml3.txt"); 1 },
-#		"openfile on tests/testhtml3.txt" );
-#	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml3.txt" );
-#	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml3.html'); 1 },
-#		"test of file save as tests/testhtml3.html" );
-#	ok( -e 'tests/testhtml3.html', "tests/testhtml3.html was saved" );
-#
-#	ok( -e "tests/testhtml3baseline.html",
-#		"tests/testhtml3baseline.html exists" );
-#	open INFILE,  "tests/testhtml3.html"       || die "no source file\n";
-#	open LOGFILE, "> tests/testhtml3temp.html" || die "output file error\n";
-#	@book   = ();
-#	$inbody = 0;
-#	while ( $ln = <INFILE> ) {
-#		if ($inbody) { print LOGFILE $ln; }
-#		if ( $ln =~ /<\/head>/ ) {
-#			$inbody = 1;
-#		}
-#	}
-#	close INFILE;
-#	close LOGFILE;
-#	ok(
-#		compare( "tests/testhtml3baseline.html", 'tests/testhtml3temp.html' ) ==
-#		  0,
-#		"Autogenerate HTML successful"
-#	);
-#	print "begin diff\n";
-#	system "diff tests/testhtml3baseline.html tests/testhtml3temp.html";
-#	print "end diff\n";
-#
-#	unlink 'tests/testhtml3.html';
-#	unlink 'tests/testhtml3temp.html';
-#	unlink 'tests/testhtml3-htmlbak.txt';
-#	unlink 'tests/testhtml3-htmlbak.txt.bin';
-#	ok( not( -e "tests/testhtml3temp.html" ),
-#		"Deletion confirmed of tests/testhtml3temp.html" );
-#	ok( not( -e "tests/testhtml3.html" ),
-#		"Deletion confirmed of tests/testhtml3.html" );
-#	fnview();
-#htmlimage();
+	#	ok( 1 == do { openfile("tests/testhtml2.txt"); 1 },
+	#		"openfile on tests/testhtml2.txt" );
+	#	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml2.txt" );
+	#	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml2.html'); 1 },
+	#		"test of file save as tests/testfilewrapped" );
+	#	ok( -e 'tests/testhtml2.html', "tests/testhtml2.html was saved" );
+	#
+	#	ok( -e "tests/testhtml2baseline.html",
+	#		"tests/testhtml2baseline.html exists" );
+	#	open INFILE,  "tests/testhtml2.html"       || die "no source file\n";
+	#	open LOGFILE, "> tests/testhtml2temp.html" || die "output file error\n";
+	#	@book   = ();
+	#	$inbody = 0;
+	#	while ( $ln = <INFILE> ) {
+	#		if ($inbody) { print LOGFILE $ln; }
+	#		if ( $ln =~ /<\/head>/ ) {
+	#			$inbody = 1;
+	#		}
+	#	}
+	#	close INFILE;
+	#	close LOGFILE;
+	#	ok(
+	#		compare( "tests/testhtml2baseline.html", 'tests/testhtml2temp.html' ) ==
+	#		  0,
+	#		"Autogenerate HTML successful"
+	#	);
+	#	print "begin diff\n";
+	#	system "diff tests/testhtml2baseline.html tests/testhtml2temp.html";
+	#	print "end diff\n";
+	#
+	#	unlink 'tests/testhtml2.html';
+	#	unlink 'tests/testhtml2temp.html';
+	#	unlink 'tests/testhtml2-htmlbak.txt';
+	#	unlink 'tests/testhtml2-htmlbak.txt.bin';
+	#	ok( not( -e "tests/testhtml2temp.html" ),
+	#		"Deletion confirmed of tests/testhtml2temp.html" );
+	#	ok( not( -e "tests/testhtml2.html" ),
+	#		"Deletion confirmed of tests/testhtml2.html" );
+	#
+	#	# Test 3 of HTML generation
+	#	ok( 1 == do { openfile("tests/testhtml3.txt"); 1 },
+	#		"openfile on tests/testhtml3.txt" );
+	#	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml3.txt" );
+	#	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml3.html'); 1 },
+	#		"test of file save as tests/testhtml3.html" );
+	#	ok( -e 'tests/testhtml3.html', "tests/testhtml3.html was saved" );
+	#
+	#	ok( -e "tests/testhtml3baseline.html",
+	#		"tests/testhtml3baseline.html exists" );
+	#	open INFILE,  "tests/testhtml3.html"       || die "no source file\n";
+	#	open LOGFILE, "> tests/testhtml3temp.html" || die "output file error\n";
+	#	@book   = ();
+	#	$inbody = 0;
+	#	while ( $ln = <INFILE> ) {
+	#		if ($inbody) { print LOGFILE $ln; }
+	#		if ( $ln =~ /<\/head>/ ) {
+	#			$inbody = 1;
+	#		}
+	#	}
+	#	close INFILE;
+	#	close LOGFILE;
+	#	ok(
+	#		compare( "tests/testhtml3baseline.html", 'tests/testhtml3temp.html' ) ==
+	#		  0,
+	#		"Autogenerate HTML successful"
+	#	);
+	#	print "begin diff\n";
+	#	system "diff tests/testhtml3baseline.html tests/testhtml3temp.html";
+	#	print "end diff\n";
+	#
+	#	unlink 'tests/testhtml3.html';
+	#	unlink 'tests/testhtml3temp.html';
+	#	unlink 'tests/testhtml3-htmlbak.txt';
+	#	unlink 'tests/testhtml3-htmlbak.txt.bin';
+	#	ok( not( -e "tests/testhtml3temp.html" ),
+	#		"Deletion confirmed of tests/testhtml3temp.html" );
+	#	ok( not( -e "tests/testhtml3.html" ),
+	#		"Deletion confirmed of tests/testhtml3.html" );
+	#	fnview();
+	#htmlimage();
 ##errorcheckpop_up('test');
-#gcheckpop_up();
-#harmonicspop();
-#pnumadjust();
-#searchpopup();
-#asciipopup();
-#alignpopup();
-#wordfrequency();
-#jeebiespop_up();
-#separatorpopup();
-#footnotepop();
-#externalpopup();
-#utfpopup();
-#about_pop_up();
-#opspop_up();
-#greekpopup();
+	#gcheckpop_up();
+	#harmonicspop();
+	#pnumadjust();
+	#searchpopup();
+	#asciipopup();
+	#alignpopup();
+	#wordfrequency();
+	#jeebiespop_up();
+	#separatorpopup();
+	#footnotepop();
+	#externalpopup();
+	#utfpopup();
+	#about_pop_up();
+	#opspop_up();
+	#greekpopup();
 	ok( 1 == 1, "This is the last test" );
 	done_testing();
 	exit;
