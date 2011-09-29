@@ -156,7 +156,7 @@ our $lastversioncheck    = time();
 our $lmargin             = 1;
 our $markupthreshold     = 4;
 our $nobell              = 0;
-our $nohighlights        = 1;
+our $nohighlights        = 0;
 our $notoolbar           = 0;
 our $intelligentWF       = 0;
 our $operationinterrupt;
@@ -350,7 +350,7 @@ $textwindow->SetGUICallbacks(
 	[
 	   \&update_indicators,
 	   sub {
-		   return if $nohighlights;
+		   return unless $nohighlights;
 		   $textwindow->HighlightAllPairsBracketingCursor;
 	   },
 	   sub {
@@ -2056,8 +2056,8 @@ sub buildmenu {
 			[
 			   Checkbutton => 'Enable Quotes Highlighting',
 			   -variable   => \$nohighlights,
-			   -onvalue    => 0,
-			   -offvalue   => 1
+			   -onvalue    => 1,
+			   -offvalue   => 0
 			],
 			[
 			   Checkbutton => 'Keep Pop-ups On Top',
@@ -10747,7 +10747,9 @@ EOM
 			verboseerrorchecks geometrypnumpop/
 		  )
 		{
+			print $_."\n";
 			if ( eval '$' . $_ ) {
+				print $_."\n";
 				print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
 				  eval '$' . $_, "';\n";
 			}

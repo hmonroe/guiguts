@@ -67,6 +67,9 @@ executable for HTML/PGTEI validation.
 
 Detailed release notes:
 
+Version 0.3.10 Removed extraneous files from .zip. Added make file.
+Alerted user if CSS Validate failed to run.
+
 Version 0.3.9 All popups now remember if they have been moved or resized. 
 Unless the user has previously set the size of the main
 screen, it is maximized (nearly) on the first run. This version restores default 
