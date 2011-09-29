@@ -63,7 +63,7 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $VERSION  = '0.3.9';
+my $VERSION  = '0.3.10';
 my $APP_NAME = 'GuiGuts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 
@@ -117,7 +117,7 @@ my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 ### Application Globals
-our $activecolor      = '#f2f818';
+our $activecolor      = '#24baec'; #'#f2f818';
 our $auto_page_marks  = 1;
 our $auto_show_images = 0;
 our $autobackup       = 0;
@@ -2160,7 +2160,6 @@ sub buildmenu {
 			   -command => sub {
 				   my $thiscolor = setcolor($activecolor);
 				   $activecolor = $thiscolor if $thiscolor;
-				   print $activecolor;
 				   $OS_WIN
 					 ? $lglobal{checkcolor} = 'white'
 					 : $lglobal{checkcolor} = $activecolor;
@@ -6511,7 +6510,7 @@ sub errorcheckpop_up {
 		$fh->close;
 		unlink 'errors.err';
 		my $size = @errorchecklines;
-		if ( ( $thiserrorchecktype eq "W3C Validate CSS" ) and ( $size == 0 ) )
+		if ( ( $thiserrorchecktype eq "W3C Validate CSS" ) and ( $size <= 1 ) )
 		{    # handle errors.err file with zero lines
 			push @errorchecklines,
 "Could not perform validation: install java or use W3C CSS Validation web site.";
