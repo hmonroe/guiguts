@@ -1,7 +1,4 @@
-The following bugs/feature requests have not yet been addressed (please
-discuss these
-[url=http://www.pgdp.net/phpBB2/viewtopic.php?t=48584]here[/url]
-regarding what should be fixed to call a version 1.0):
+The following bugs/feature requests have not yet been addressed:
 
 Errors not yet reproduced: Cannot search for asterisks. Pages in HTML skipped. 
 
@@ -13,9 +10,8 @@ Page 2, but then I couldn't move it back down.
 
 New feature requests: Selective html generation. Enhanced scannos files
 to convert [oe] to ligature, [=a] to &#257. Add feature for drop caps
-(would need new CSS and changes to the insert image dialog). Tool to
-faciliate <ins> method to delineate the typo corrections in your HTML
-versions. Adjust the pptxt check to confirm that all returns are CRLF
+(would need new CSS and changes to the insert image dialog). Adjust the 
+pptxt check to confirm that all returns are CRLF
 and not just LF. Allow highlight and copy from error check windows. New
 tool to help in removing hyphens (for instance, how often does a given
 word appear with or without hyphens). Better Index/contents/illustration

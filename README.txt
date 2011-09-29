@@ -22,17 +22,18 @@ lets you see the image for instance for the page you are spellchecking.
 Other new features are: a "View in Browser" and Hyperlink page numbers
 buttons on the HTML palette, tearoff of the Unicode menu, listing small
 caps in the Word Frequency popup, automatic checking for updates (which
-can be turned off), horizontal rules as css, if nothing is found the
-cursor returns to the starting point, better ability to find executables
-automatically, GutWrench scanno files are included, inclusion of
-rfrank's pphtml and pptxt scripts, a warning to use human readable
-filenames, option to include goodwords in spellcheck project dictionary,
+can be turned off), horizontal rules as css, an option if nothing is found to 
+return to the starting point, better ability to find executables
+automatically, GutWrench scanno files are included, , a warning to use human 
+readable filenames, option to include goodwords in spellcheck project dictionary,
 a text processing menu to ease conversion of bold/italics/small caps,
 the label Image #nnn in Configure Page Labels is clickable, added Find
 Transliterations and Find Orphaned Markup (before it only searched for
 unmatched brackets) to Search menu, Adjust Page Markers menu is
-accessible from the File menu. For developers, there are internal
-improvements, including partial refactoring of functionality into perl 
+accessible from the File menu. Most popups now remember if they have been moved 
+or resized. Unless the user has previously set the size of the main
+screen, it is maximized (nearly) on the first run. For developers, there 
+are internal improvements, including partial refactoring of functionality into perl 
 modules and a unit testing framework.
 
 Bug fixes include: Dash or periods in the proofer's name no longer 
@@ -41,7 +42,8 @@ moving of page markers. The default for word search from the Word
 Frequency menu is now "Whole Word". Unicode menu is now broken into two 
 pieces so it does not run off the screen where Mac users cannot see it. 
 Also, the Unicode popup has a pulldown list to change UTF blocks. Replace 
-All now replaces all. Double click in Word Frequency does whole word search 
+All now replaces all and is a factor of 10 faster (but not for regexes). 
+Double click in Word Frequency does whole word search 
 by default. "--" on a line by itself gets converted to an emdash. Fixed regex 
 editor for scannos, Ctrl-S saves the file. There is a much higher likelihood 
 that this version generates valid HTML. Page anchors are no longer placed at 

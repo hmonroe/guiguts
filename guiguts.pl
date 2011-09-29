@@ -234,10 +234,10 @@ our @extops = (
 #All local global variables contained in one hash. # now global
 our %lglobal;
 
-open (FH, ">errors.log"); # Zero-out log file
-close (FH);
-open (STDERR, ">>errors.log");
-open (STDOUT, ">>errors.log");
+#open (FH, ">errors.log"); # Zero-out log file
+#close (FH);
+#open (STDERR, ">>errors.log");
+#open (STDOUT, ">>errors.log");
 
 
 if ( eval { require Text::LevenshteinXS } ) {
@@ -2160,6 +2160,7 @@ sub buildmenu {
 			   -command => sub {
 				   my $thiscolor = setcolor($activecolor);
 				   $activecolor = $thiscolor if $thiscolor;
+				   print $activecolor;
 				   $OS_WIN
 					 ? $lglobal{checkcolor} = 'white'
 					 : $lglobal{checkcolor} = $activecolor;
@@ -8943,13 +8944,15 @@ sub initialize {
 
 	# For backward compatibility, carry over old geometry settings
 	unless ( $geometryhash{wfpop} ) {
-		if ($geometry2) {
+		unless ($geometry2)
+		{ 
+			$geometry2='462x583+684+72';
+		}
 			$geometryhash{wfpop}         = $geometry2;
 			$geometryhash{gcpop}         = $geometry2;
 			$geometryhash{jeepop}        = $geometry2;
 			$geometryhash{errorcheckpop} = $geometry2;
 			$geometryhash{hpopup}        = $geometry3;
-		}
 	}
 
 	if ($OS_WIN) {
@@ -15326,7 +15329,8 @@ sub markpopup {    # FIXME: Rename html_popup
 		)->grid( -row => 1, -column => 3, -padx => 1, -pady => 1 );
 		$f0->Button(    #hkm added
 			  -activebackground => $activecolor,
-			  -command          => sub { runner( cmdinterp('start $d$f$e') ); },
+			  -command          => sub {
+			  	runner( cmdinterp("$extops[3]{command}") ); }, #'start $d$f$e'
 			  -text             => 'View in Browser',
 			  -width            => 16,
 		)->grid( -row => 1, -column => 4, -padx => 1, -pady => 1 );
