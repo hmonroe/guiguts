@@ -10747,9 +10747,7 @@ EOM
 			verboseerrorchecks geometrypnumpop/
 		  )
 		{
-			print $_."\n";
 			if ( eval '$' . $_ ) {
-				print $_."\n";
 				print $save_handle "\$$_", ' ' x ( 20 - length $_ ), "= '",
 				  eval '$' . $_, "';\n";
 			}
