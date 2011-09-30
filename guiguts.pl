@@ -6393,12 +6393,13 @@ sub errorcheckpop_up {
 	}
 	foreach my $thiserrorchecktype (@errorchecktypes) {
 		working($thiserrorchecktype);
-		errorcheckrun($thiserrorchecktype);
 		push @errorchecklines, "Beginning check: " . $thiserrorchecktype;
-		$lglobal{errorchecklistbox}
-		  ->focus;    # FIXME: Again for gutcheck, jeebies.
+		if (errorcheckrun($thiserrorchecktype)) {
+			#working(); XXXXX
+			push @errorchecklines, "Failed to run: " . $thiserrorchecktype;
+		};
 		my $fh = FileHandle->new("< errors.err");
-		unless ( defined($fh) ) {
+		if (not defined($fh) ) {
 			my $dialog = $top->Dialog(
 									   -text => 'Could not find '
 										 . $thiserrorchecktype
@@ -6408,7 +6409,7 @@ sub errorcheckpop_up {
 									   -buttons => [qw/OK/],
 			);
 			$dialog->Show;
-		}
+		} else {
 		while ( $line = <$fh> ) {
 			$line =~ s/^\s//g;
 			chomp $line;
@@ -6506,8 +6507,8 @@ sub errorcheckpop_up {
 					}
 				}
 			}
-		}
-		$fh->close;
+		}}
+		$fh->close if $fh;
 		unlink 'errors.err';
 		my $size = @errorchecklines;
 		if ( ( $thiserrorchecktype eq "W3C Validate CSS" ) and ( $size <= 1 ) )
@@ -6524,6 +6525,7 @@ sub errorcheckpop_up {
 	$lglobal{errorchecklistbox}->yview( 'scroll', 1, 'units' );
 	$lglobal{errorchecklistbox}->update;
 	$lglobal{errorchecklistbox}->yview( 'scroll', -1, 'units' );
+	$lglobal{errorchecklistbox}->focus;    
 }
 
 sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
@@ -6557,7 +6559,7 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 					-title => "Where is the " . $errorchecktype . " executable?"
 			  );
 		}
-		return unless $tidycommand;
+		return 1 unless $tidycommand;
 		$tidycommand = os_normal($tidycommand);
 		$tidycommand = dos_path($tidycommand) if $OS_WIN;
 	} else {
