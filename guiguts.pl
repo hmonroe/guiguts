@@ -6571,7 +6571,7 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 					 -title => 'Where is the W3C Validate (onsgmls) executable?'
 				  );
 			}
-			return unless $validatecommand;
+			return 1 unless $validatecommand;
 			$validatecommand = os_normal($validatecommand);
 			$validatecommand = dos_path($validatecommand) if $OS_WIN;
 		} else {
@@ -6584,7 +6584,7 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 'Where is the W3C Validate CSS (css-validate.jar) executable?'
 					  );
 				}
-				return unless $validatecsscommand;
+				return 1 unless $validatecsscommand;
 				$validatecsscommand = os_normal($validatecsscommand);
 				$validatecsscommand = dos_path($validatecsscommand)
 				  if $OS_WIN;
