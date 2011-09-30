@@ -67,11 +67,13 @@ executable for HTML/PGTEI validation.
 
 Detailed release notes:
 
-Version 0.3.10 Removed extraneous files from .zip. Added make file.
+Version 0.3.10 Removed extraneous files from .zip by adding "make" file.
 Alerted user if CSS Validate failed to run. Fixed poetry rewrap
 margin. Fixed default gutcheck window size. Button highlight color is
 now remembered. Default file handler from the External Operations 
 menu is now used by the "View in Browser" button on the HTML palette.
+Fixed behavior if user cancels without specifying tidy.exe or
+other executables for checking HTML.
 
 Version 0.3.9 All popups now remember if they have been moved or resized. 
 Unless the user has previously set the size of the main
