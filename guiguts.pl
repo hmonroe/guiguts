@@ -18877,5 +18877,8 @@ checkforupdatesmonthly();
 if ( $lglobal{runtests} ) {
 	runtests();
 } else {
+	# If we are building winguts.exe, then exit
+	if (glob '*.par') {
+	_exit();}
 	MainLoop;
 }

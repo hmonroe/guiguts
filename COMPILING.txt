@@ -20,20 +20,18 @@ of your guiguts source;
 4. Install MinGW compiler if not already installed for instance from here: 
    https://sourceforge.net/project/showfiles.php?group_id=2435&package_id=240780
 
-5. Run "tkpp" with source "guiguts.pl", output WinGuts.exe (keep that format), 
-   choose "execute + static" and "GUI", with icon gg.ico (enter the full path manually). 
-   Rename setting.rc temporarily so your settings are not included in the distribution.
+5. Run "make.bat" to create WinGuts.exe. Run "makezip.bat" to create the zip files.
    
-Second, to create the zip file, be certain to use the format guiguts-1.0.0.zip (numbers may vary)
+Be certain to use the format guiguts-1.0.0.zip (numbers may vary)
 in order for the update mechanism to work correctly. Do not include settings.rc or header.txt
 as these may have been modified by the user and will be created if they do not exist.
 
 Third, login to source forge using a user ID with project Admin privileges. Choose
-'Project Admin', 'Features', 'Manage' on the File Manager line, add folder guiguts-1.0.0
-(whatever the numbers for your version), and upload guiguts-1.0.0.zip and README.TXT (after
+'Files, add folder guiguts-1.0.0
+(whatever the numbers for your version), and upload WinGuts-1.0.0.zip, guiguts-1.0.0.zip and README.TXT (after
 updating release notes in README.TXT). Click on the "i" on the line for 
-guiguts-1.0.0.zip and specify for which operating systems it is the default. This will
-be "Select All" or if someone has packaged a Mac executable version macguts-1.0.0.zip,
+WinGuts-1.0.0.zip and specify that is for Windows. For guiguts-1.0.0.zip select
+the remainder except for OSX if someone has packaged a Mac executable version macguts-1.0.0.zip,
 then choose OSX for that one.
 
 Once you have released a version, then tag it with that release number.
