@@ -6700,6 +6700,7 @@ qq/perl lib\/ppvchecks\/pptxt.pl -i $name -o errors.err/ );
 	}
 	$top->Unbusy;
 	unlink $name;
+	return;
 }
 
 sub validatecssremote {    # this does not work--does not  load the file

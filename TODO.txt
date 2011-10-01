@@ -1,7 +1,7 @@
 The following bugs/feature requests have not yet been addressed:
 
-Errors not yet reproduced: Cannot search for asterisks. Pages in HTML skipped. 
 
+Backslashes in Word count.
 The "Orphaned Markup" check should quit complaining about nested spans. 
 There is no check for a footnote anchor without a footnote. 
 Fix spell check popup. Acts weird with unicode.
