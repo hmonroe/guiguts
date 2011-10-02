@@ -1457,14 +1457,14 @@ sub bookmarks_menuitems {
 	[
 	   map ( [
 				Button       => "Set Bookmark $_",
-				-command     => [ \&setbookmark, $_ ],
+				-command     => [ \&setbookmark, "$_" ],
 				-accelerator => "Ctrl+Shift+$_"
 			 ],
 			 ( 1 .. 5 ) ),
 	   [ 'separator', '' ],
 	   map ( [
 				Button       => "Go To Bookmark $_",
-				-command     => [ \&gotobookmark, $_ ],
+				-command     => [ \&gotobookmark, "$_" ],
 				-accelerator => "Ctrl+$_"
 			 ],
 			 ( 1 .. 5 ) ),
@@ -9489,26 +9489,26 @@ sub textbindings {
 		}
 	);
 	$textwindow->bind( 'TextUnicode',
-		  '<Control-Shift-exclam>' => sub { setbookmark( $textwindow, '1' ) } );
+		  '<Control-Shift-exclam>' => sub { setbookmark(  '1' ) } );
 	$textwindow->bind( 'TextUnicode',
-			  '<Control-Shift-at>' => sub { setbookmark( $textwindow, '2' ) } );
+			  '<Control-Shift-at>' => sub { setbookmark(  '2' ) } );
 	$textwindow->bind( 'TextUnicode',
-		 '<Control-Shift-numbersign>' => sub { setbookmark( $textwindow, '3' ) }
+		 '<Control-Shift-numbersign>' => sub { setbookmark(  '3' ) }
 	);
 	$textwindow->bind( 'TextUnicode',
-		  '<Control-Shift-dollar>' => sub { setbookmark( $textwindow, '4' ) } );
+		  '<Control-Shift-dollar>' => sub { setbookmark(  '4' ) } );
 	$textwindow->bind( 'TextUnicode',
-		 '<Control-Shift-percent>' => sub { setbookmark( $textwindow, '5' ) } );
+		 '<Control-Shift-percent>' => sub { setbookmark(  '5' ) } );
 	$textwindow->bind( 'TextUnicode',
-		   '<Control-KeyPress-1>' => sub { gotobookmark( $textwindow, '1' ) } );
+		   '<Control-KeyPress-1>' => sub { gotobookmark( '1' ) } );
 	$textwindow->bind( 'TextUnicode',
-		   '<Control-KeyPress-2>' => sub { gotobookmark( $textwindow, '2' ) } );
+		   '<Control-KeyPress-2>' => sub { gotobookmark( '2' ) } );
 	$textwindow->bind( 'TextUnicode',
-		   '<Control-KeyPress-3>' => sub { gotobookmark( $textwindow, '3' ) } );
+		   '<Control-KeyPress-3>' => sub { gotobookmark( '3' ) } );
 	$textwindow->bind( 'TextUnicode',
-		   '<Control-KeyPress-4>' => sub { gotobookmark( $textwindow, '4' ) } );
+		   '<Control-KeyPress-4>' => sub { gotobookmark( '4' ) } );
 	$textwindow->bind( 'TextUnicode',
-		   '<Control-KeyPress-5>' => sub { gotobookmark( $textwindow, '5' ) } );
+		   '<Control-KeyPress-5>' => sub { gotobookmark( '5' ) } );
 	$textwindow->bind(
 		'TextUnicode',
 		'<Alt-Left>' => sub {
@@ -12193,7 +12193,7 @@ sub openfile {    # and open it
 			if ( $bookmarks[$_] ) {
 				$textwindow->markSet( 'insert', $bookmarks[$_] );
 				$textwindow->markSet( "bkmk$_", $bookmarks[$_] );
-				setbookmark( $textwindow, $_ );
+				setbookmark(  $_ );
 			}
 		}
 		$bookmarks[0] ||= '1.0';
@@ -13707,6 +13707,7 @@ sub orphanedmarkup {
 
 sub hilite {
 	my $mark = shift;
+	$lglobal{hilitemode}= 'exact' unless $lglobal{hilitemode};
 	$mark = quotemeta($mark)
 	  if $lglobal{hilitemode} eq 'exact';    # FIXME: uninitialized 'hilitemode'
 	my @ranges      = $textwindow->tagRanges('sel');
@@ -13819,35 +13820,36 @@ sub hilitepopup {
 
 ### Bookmarks
 
-### Bookmarks
-
 sub setbookmark {
-	my $index    = '';
-	my $indexb   = '';
-	my $bookmark = shift;
-	if ( $bookmarks[$bookmark] ) {
-		$indexb = $textwindow->index("bkmk$bookmark");
-	}
-	$index = $textwindow->index('insert');
-	if ( $bookmarks[$bookmark] ) {
-		$textwindow->tagRemove( 'bkmk', $indexb, "$indexb+1c" );
-	}
-	if ( $index ne $indexb ) {
-		$textwindow->markSet( "bkmk$bookmark", $index );
-	}
-	$bookmarks[$bookmark] = $index;
-	$textwindow->tagAdd( 'bkmk', $index, "$index+1c" );
+    my $index    = '';
+    my $indexb   = '';
+    my $bookmark = shift;
+    print "set $bookmark";
+    if ( $bookmarks[$bookmark] ) {
+        $indexb = $textwindow->index("bkmk$bookmark");
+    }
+    $index = $textwindow->index('insert');
+    if ( $bookmarks[$bookmark] ) {
+        $textwindow->tagRemove( 'bkmk', $indexb, "$indexb+1c" );
+    }
+    if ( $index ne $indexb ) {
+        $textwindow->markSet( "bkmk$bookmark", $index );
+    }
+    $bookmarks[$bookmark] = $index;
+    $textwindow->tagAdd( 'bkmk', $index, "$index+1c" );
 }
 
 sub gotobookmark {
-	my $bookmark = shift;
-	$textwindow->bell unless ( $bookmarks[$bookmark] || $nobell );
-	$textwindow->see("bkmk$bookmark") if $bookmarks[$bookmark];
-	$textwindow->markSet( 'insert', "bkmk$bookmark" )
-	  if $bookmarks[$bookmark];
-	update_indicators();
-	$textwindow->tagAdd( 'bkmk', "bkmk$bookmark", "bkmk$bookmark+1c" )
-	  if $bookmarks[$bookmark];
+    my $bookmark = shift;
+    print "goto $bookmark";
+    
+    $textwindow->bell unless ( $bookmarks[$bookmark] || $nobell );
+    $textwindow->see("bkmk$bookmark") if $bookmarks[$bookmark];
+    $textwindow->markSet( 'insert', "bkmk$bookmark" )
+        if $bookmarks[$bookmark];
+    update_indicators();
+    $textwindow->tagAdd( 'bkmk', "bkmk$bookmark", "bkmk$bookmark+1c" )
+        if $bookmarks[$bookmark];
 }
 
 ### Selection
