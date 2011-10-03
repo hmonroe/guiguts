@@ -67,6 +67,8 @@ executable for HTML/PGTEI validation.
 
 Detailed release notes:
 
+Version 0.3.11 Fixed accelerators for bookmarks.
+
 Version 0.3.10 Removed extraneous files from .zip by adding "make" file.
 Alerted user if CSS Validate failed to run. Fixed poetry rewrap
 margin. Fixed default gutcheck window size. Button highlight color is

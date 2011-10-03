@@ -13824,7 +13824,6 @@ sub setbookmark {
     my $index    = '';
     my $indexb   = '';
     my $bookmark = shift;
-    print "set $bookmark";
     if ( $bookmarks[$bookmark] ) {
         $indexb = $textwindow->index("bkmk$bookmark");
     }
@@ -13841,8 +13840,6 @@ sub setbookmark {
 
 sub gotobookmark {
     my $bookmark = shift;
-    print "goto $bookmark";
-    
     $textwindow->bell unless ( $bookmarks[$bookmark] || $nobell );
     $textwindow->see("bkmk$bookmark") if $bookmarks[$bookmark];
     $textwindow->markSet( 'insert', "bkmk$bookmark" )
