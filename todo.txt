@@ -1,15 +1,5 @@
 The following bugs/feature requests have not yet been addressed:
 
-
-Keyboard shortcuts for setting bookmarks: ctrl+shift+2 and ctrl+shift+4 don't work for me; 1, 3, and 5 do. 
-With 2 or 4 it simply prints the character that I usually get with shift (" and €, Danish keyboard), 
-so it seems to be ignoring the ctrl in these two cases. 
-
-Go to bookmark: I can see the cursor disappear from its previous position when I Go to a bookmark, but the "screen view" doesn't update until I press some other key, then the screen jumps to where the cursor is (i.e. the actual location of the bookmark). (Ctrl-z and ctrl-y sometimes have the same problem, they'll do what they should, but the action happens off screen, and doesn't jump to the right position.) 
-
-Go to page number/Go to page label: after typing a page number in the dialog, pressing enter on the numeric section of the keyboard doesn't take me anywhere, only the "regular" enter button works. 
-
-
 Deleting letters of page markers permitted. Handle page numbers
 other than 001.png such as f001.png (front pages), p (text pages),
 and q (other pages).
@@ -19,6 +9,10 @@ There is no check for a footnote anchor without a footnote.
 Fix spell check popup. Acts weird with unicode.
 Using Move up I could move Page 3 up before 
 Page 2, but then I couldn't move it back down. 
+
+Go to page number/Go to page label: after typing a page number in the dialog, 
+pressing enter on the numeric section of the keyboard doesn't take me anywhere, 
+only the "regular" enter button works. 
 
 New feature requests: Selective html generation. Enhanced scannos files
 to convert [oe] to ligature, [=a] to &#257. Add feature for drop caps

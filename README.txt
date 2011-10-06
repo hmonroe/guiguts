@@ -60,14 +60,11 @@ the "<" and ">" buttons on the status bar. To Auto Show Page Images, use the
 "Auto Img" button on the status bar, use the option on the Prefs menu,
 or checkboxes in the various search/spellcheck dialogs.
 
-I would be happy to release a Unix executable which only requires
-someone to run tkpp following the instructions in COMPILING.txt. A Unix 
-distribution should also include the OpenJade/OpenSP onsgmls
-executable for HTML/PGTEI validation.
-
 Detailed release notes:
 
-Version 0.3.11 Fixed accelerators for bookmarks.
+Version 0.3.11 Fixed WinGuts which could not run external programs such 
+as an image viewer unless perl was installed. Fixed accelerators for 
+bookmarks (Shift+Ctrl+1).
 
 Version 0.3.10 Removed extraneous files from .zip by adding "make" file.
 Alerted user if CSS Validate failed to run. Fixed poetry rewrap
