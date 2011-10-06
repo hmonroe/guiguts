@@ -20,6 +20,7 @@
 
 #use criticism 'gentle';
 
+my $VERSION  = '0.3.11';
 use strict;
 use warnings;
 use FindBin;
@@ -63,7 +64,6 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $VERSION  = '0.3.10';
 my $APP_NAME = 'GuiGuts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 
@@ -242,10 +242,11 @@ our %lglobal;
 
 if ( eval { require Text::LevenshteinXS } ) {
 	$lglobal{LevenshteinXS} = 1;
-} else {
-	print
-"Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
-}
+} 
+#else {
+#	print
+#"Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
+#}
 
 # load Image::Size if it is installed
 if ( eval { require Image::Size; 1; } ) {
@@ -4955,8 +4956,6 @@ sub htmlimage {
 	$selection = '' unless $selection;
 	my $preservep = '';
 	$preservep = '<p>' if $selection !~ /<\/p>$/;
-
-	#$selection =~ s/<\/?[bidhscalup].*?>//g;
 	$selection =~ s/^\[Illustration:?\s*(\.*)/$1/;
 	$selection =~ s/(\.*)\]$/$1/;
 	my ( $fname, $extension );
@@ -4989,6 +4988,11 @@ sub htmlimage {
 		  ->pack( -side => 'top', -anchor => 'n' );
 		$lglobal{titltext} =
 		  $f4->Entry( -width => 45, )->pack( -side => 'left' );
+		my $f4a =
+		  $lglobal{htmlimpop}->LabFrame( -label => 'Caption text' )
+		  ->pack( -side => 'top', -anchor => 'n' );
+		$lglobal{captiontext} =
+		  $f4a->Entry( -width => 45, )->pack( -side => 'left' );
 		my $f5 =
 		  $lglobal{htmlimpop}->LabFrame( -label => 'Geometry' )
 		  ->pack( -side => 'top', -anchor => 'n' );
@@ -5082,11 +5086,12 @@ sub htmlimage {
 					$name     =~ s/$tempname//;
 					$name     =~ s/;/\//g;
 					$alignment = 'center' unless $alignment;
-					$selection = $lglobal{alttext}->get;
+					$selection = $lglobal{captiontext}->get;
 					$selection ||= '';
 					$selection =~ s/"/&quot;/g;
 					$selection =~ s/'/&#39;/g;
-					my $alt = $selection;
+					my $alt = $lglobal{alttext}->get;
+					$alt = "alt=\"$alt\"" if $alt;
 					$selection = "<span class=\"caption\">$selection</span>\n"
 					  if $selection;
 					$preservep = '' unless $selection;
@@ -5100,7 +5105,7 @@ sub htmlimage {
 						$textwindow->insert( 'thisblockstart',
 							    "<div class=\"figcenter\" style=\"width: " 
 							  . $width
-							  . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
+							  . "px;\">\n<img src=\"$name\" $sizexy $alt title=\"$title\" />\n$selection</div>$preservep"
 						);
 					} elsif ( $alignment eq 'left' ) {
 						$textwindow->delete( 'thisblockstart', 'thisblockend' );
@@ -5166,7 +5171,7 @@ sub htmlimage {
 	}
 	$lglobal{alttext}->delete( 0, 'end' ) if $lglobal{alttext};
 	$lglobal{titltext}->delete( 0, 'end' ) if $lglobal{titltext};
-	$lglobal{alttext}->insert( 'end', $selection );
+	$lglobal{captiontext}->insert( 'end', $selection );
 	tnbrowse();
 }
 

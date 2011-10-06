@@ -8,7 +8,8 @@ BEGIN {
 	  qw(&html_convert_tb  &html_convert_subscripts &html_convert_superscripts
 	  &html_convert_ampersands &html_convert_emdashes &html_convert_latin1 &html_convert_codepage &html_convert_utf
 	  &html_cleanup_markers &html_convert_footnotes &html_convert_body &html_convert_body2 &html_convert_underscoresmallcaps
-	  &html_convert_sidenotes &html_convert_pageanchors &html_parse_header &html_wrapup &htmlbackup);
+	  &html_convert_sidenotes &html_convert_pageanchors &html_parse_header &html_wrapup &htmlbackup
+	  &insert_paragraph_close &insert_paragraph_open );
 }
 
 sub html_convert_tb {
