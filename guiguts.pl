@@ -12206,6 +12206,7 @@ sub openfile {    # and open it
 		$textwindow->markSet( 'spellbkmk', $spellindexbkmrk )
 		  if $spellindexbkmrk;
 		$textwindow->see( $bookmarks[0] );
+		$textwindow->focus;
 	}
 	_recentupdate($name);
 	update_indicators();
