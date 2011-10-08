@@ -64,7 +64,7 @@ Detailed release notes:
 
 Version 0.3.12 Fixed page numbers when pngs begin with a letter such 
 as "a001.png". When reopening a document, the cursor is returned to where
-it was with focus.
+it was with focus. Leave out alt and title tags from <img if blank.
 
 Version 0.3.11 Fixed WinGuts which could not run external programs such 
 as an image viewer unless perl was installed. Fixed accelerators for 

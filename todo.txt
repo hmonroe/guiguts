@@ -8,10 +8,6 @@ Fix spell check popup. Acts weird with unicode.
 Using Move up I could move Page 3 up before 
 Page 2, but then I couldn't move it back down. 
 
-Go to page number/Go to page label: after typing a page number in the dialog, 
-pressing enter on the numeric section of the keyboard doesn't take me anywhere, 
-only the "regular" enter button works. 
-
 New feature requests: Selective html generation. Enhanced scannos files
 to convert [oe] to ligature, [=a] to &#257. Add feature for drop caps
 (would need new CSS and changes to the insert image dialog). Adjust the 
