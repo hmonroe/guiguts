@@ -451,6 +451,7 @@ sub _bin_save {
 	} else {
 		$spellindexbkmrk = q{};
 	}
+	#print $spellindexbkmrk."\n";
 	my $bak = "$binname.bak";
 	if ( -e $bak ) {
 		my $perms = ( stat($bak) )[2] & 7777;
@@ -471,10 +472,12 @@ sub _bin_save {
 	}
 	my $fh = FileHandle->new("> $binname");
 	if ( defined $fh ) {
-		print $fh "\%pagenumbers = (\n";
+        print $fh "\%pagenumbers = (\n";
 		for my $page ( sort { $a cmp $b } keys %pagenumbers ) {
-
 			no warnings 'uninitialized';
+			if ($page eq "Pg" ) {
+				next;
+			}
 			print $fh " '$page' => {";
 			print $fh "'offset' => '$pagenumbers{$page}{offset}', ";
 			print $fh "'label' => '$pagenumbers{$page}{label}', ";
@@ -767,6 +770,9 @@ sub tglprfbar {
 # TODO switch focus back to the text window after showing the PNG
 sub openpng {
 	my $pagenum = shift;
+	if ($pagenum eq 'Pg') {
+		return;
+	}
 	$lglobal{pageimageviewed} = $pagenum;
 	my $dospath;
 	my $dosfile;
@@ -10218,7 +10224,7 @@ sub pageadjust {
 sub pnumadjust {
 	my $mark = $textwindow->index('current');
 	while ( $mark = $textwindow->markPrevious($mark) ) {
-		if ( $mark =~ /Pg(\d+)/ ) {
+		if ( $mark =~ /Pg(\S+)/ ) {
 			last;
 		}
 	}
@@ -10228,9 +10234,9 @@ sub pnumadjust {
 	if ( not defined $mark ) {
 		$mark = "1.0";
 	}
-	if ( not $mark =~ /Pg(\d+)/ ) {
+	if ( not $mark =~ /Pg(\S+)/ ) {
 		while ( $mark = $textwindow->markNext($mark) ) {
-			if ( $mark =~ /Pg(\d+)/ ) {
+			if ( $mark =~ /Pg(\S+)/ ) {
 				last;
 			}
 		}
@@ -10353,7 +10359,7 @@ sub pnumadjust {
 				$textwindow->addGlobStart;
 				my @marks = $textwindow->markNames;
 				for ( sort @marks ) {
-					if ( $_ =~ /Pg(\d+)/ ) {
+					if ( $_ =~ /Pg(\S+)/ ) {
 						my $pagenum = '[Pg ' . $1 . ']';
 						$textwindow->insert( $_, $pagenum );
 					}
@@ -10483,11 +10489,11 @@ sub pgrenum {    # Re sequence page markers
 	if ( $offset < 0 ) {
 		@marks = ( sort( keys(%pagenumbers) ) );
 		$num = $start = $lglobal{pagenumentry}->get;
-		$start =~ s/Pg(\d+)/$1/;
+		$start =~ s/Pg(\S+)/$1/;
 		while ( $num = $textwindow->markPrevious($num) ) {
 			if ( $num =~ /Pg\d+/ ) {
 				$mark = $num;
-				$mark =~ s/Pg(\d+)/$1/;
+				$mark =~ s/Pg(\S+)/$1/;
 				if ( ( $mark - $start ) le $offset ) {
 					$offset = ( $mark - $start + 1 );
 				}
@@ -10523,7 +10529,7 @@ sub pgrenum {    # Re sequence page markers
 	while (1) {
 		$start = shift @marks;
 		last unless $start;
-		$start =~ /Pg(\d+)/;
+		$start =~ /Pg(\S+)/;
 		$mark   = $1;
 		$length = length($1);
 		$mark   = sprintf( "%0" . $length . 'd', $mark + $offset );
@@ -10556,7 +10562,7 @@ sub pgprevious {    #move focus to previous page marker
 	$lglobal{pagenumentry}->delete( '0', 'end' );
 	$lglobal{pagenumentry}->insert( 'end', $mark );
 	$textwindow->yview( $textwindow->index($mark) );
-	if ( $lglobal{showthispageimage} and ( $mark =~ /Pg(\d+)/ ) ) {
+	if ( $lglobal{showthispageimage} and ( $mark =~ /Pg(\S+)/ ) ) {
 		$textwindow->focus;
 		openpng($1);
 		$lglobal{showthispageimage} = 0;
@@ -10576,7 +10582,7 @@ sub pgnext {    #move focus to next page marker
 	$lglobal{pagenumentry}->delete( '0', 'end' );
 	$lglobal{pagenumentry}->insert( 'end', $mark );
 	$textwindow->yview( $textwindow->index($mark) );
-	if ( $lglobal{showthispageimage} and ( $mark =~ /Pg(\d+)/ ) ) {
+	if ( $lglobal{showthispageimage} and ( $mark =~ /Pg(\S+)/ ) ) {
 		$textwindow->focus;
 		openpng($1);
 		$lglobal{showthispageimage} = 0;
@@ -10626,20 +10632,14 @@ sub pmoveup {    # move the page marker up a line
 sub pmoveleft {    # move the page marker left a character
 	my $mark;
 	my $num = $lglobal{pagenumentry}->get;
-	print "num:$num\n";
 	$num = $textwindow->index('insert') unless $num;
-	print "num2:$num\n";
 	$mark = $num;
 	while ( $num = $textwindow->markPrevious($num) ) {
 		last
 		  if $num =~ /Pg\S+/;
 	}
-	print "num3:$num\n";
 	$num = '1.0' unless $num;
-	print "num4:$num\n";
 	my $pagenum = " $mark ";
-	print "mark:$mark\n";
-	print "pagenum:$pagenum\n";
 	my $index = $textwindow->index("$mark-1c");
 
 	if ( $num eq '1.0' ) {
@@ -16167,22 +16167,38 @@ sub findandextractgreek {
 ### Text Processing
 
 sub get_page_number {
-	my $pnum      = '001';
+	#my $pnum      = '010';
+	my $pnum;
 	my $markindex = $textwindow->index('insert');
 	my $mark      = $textwindow->markPrevious($markindex);
 	while ($mark) {
 		if ( $mark =~ /Pg(\S+)/ ) {
 			$pnum = $1;
 			last;
-		} else {
-			if ( $textwindow->index('insert') >
-				 ( $textwindow->index($mark) + 400 ) )
-			{
-				last;
-			}
+		} 
+		else {
+#			if ( $textwindow->index('insert') >
+#				 ( $textwindow->index($mark) + 400 ) )
+#			{
+#				last;
+#			}
 			$mark = $textwindow->markPrevious($mark) if $mark;
-			next;
+#			next;
 		}
+	}
+	unless ($pnum) {
+#		my $markindex = $textwindow->index('insert');
+#		my $mark      = $textwindow->markNext($markindex);
+#		while ($mark) {
+#			print "$mark\n";
+#			if ( $mark =~ /Pg(\S+)/ ) {
+#				$pnum = $1;
+#				last;
+#			} else {
+#				my $mark = $textwindow->markNext($mark);
+#			}
+#		}
+		$pnum='';
 	}
 	return $pnum;
 }
@@ -16197,7 +16213,6 @@ sub get_image_file {
 		} else {
 			$pngspath = "${globallastpath}pngs/";
 		}
-		print $pngspath. "\n";
 		setpngspath($pagenum) unless ( -e "$pngspath$pagenum.png" );
 	}
 	if ($pngspath) {
@@ -16702,6 +16717,7 @@ sub viewerpath {    #Find your image viewer
 
 sub setpngspath {
 	my $pagenum = shift;
+	#print $pagenum.'';
 	my $path =
 	  $textwindow->chooseDirectory( -title => 'Choose the PNGs file directory.',
 									-initialdir => "$globallastpath" . "pngs",

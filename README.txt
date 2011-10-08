@@ -62,6 +62,9 @@ or checkboxes in the various search/spellcheck dialogs.
 
 Detailed release notes:
 
+Version 0.3.12 When reopening a document, the cursor is returned to where
+it was with focus.
+
 Version 0.3.11 Fixed WinGuts which could not run external programs such 
 as an image viewer unless perl was installed. Fixed accelerators for 
 bookmarks (Shift+Ctrl+1).
