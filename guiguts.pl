@@ -5098,13 +5098,14 @@ sub htmlimage {
 					$selection =~ s/"/&quot;/g;
 					$selection =~ s/'/&#39;/g;
 					my $alt = $lglobal{alttext}->get;
-					$alt = "alt=\"$alt\"" if $alt;
+					$alt = " alt=\"$alt\"" if $alt;
 					$selection = "<span class=\"caption\">$selection</span>\n"
 					  if $selection;
 					$preservep = '' unless $selection;
 					my $title = $lglobal{titltext}->get || '';
 					$title =~ s/"/&quot;/g;
 					$title =~ s/'/&#39;/g;
+					$title = " title=\"$title\"" if $title;
 					$textwindow->addGlobStart;
 
 					if ( $alignment eq 'center' ) {
@@ -5112,7 +5113,7 @@ sub htmlimage {
 						$textwindow->insert( 'thisblockstart',
 							    "<div class=\"figcenter\" style=\"width: " 
 							  . $width
-							  . "px;\">\n<img src=\"$name\" $sizexy $alt title=\"$title\" />\n$selection</div>$preservep"
+							  . "px;\">\n<img src=\"$name\" $sizexy$alt$title/>\n$selection</div>$preservep"
 						);
 					} elsif ( $alignment eq 'left' ) {
 						$textwindow->delete( 'thisblockstart', 'thisblockend' );
