@@ -20,7 +20,7 @@
 
 #use criticism 'gentle';
 
-my $VERSION = '0.3.11';
+my $VERSION = '0.3.12';
 use strict;
 use warnings;
 use FindBin;
@@ -11541,9 +11541,10 @@ sub update_auto_img_button {
 #
 sub update_img_lbl_values {
 	my $pnum = shift;
-
-	$lglobal{img_num_label}->configure( -text => "Img:$pnum" )
-	  if defined $lglobal{img_num_label};
+	if (defined $lglobal{img_num_label}) {
+		$lglobal{img_num_label}->configure( -text => "Img:$pnum" );  	
+		$lglobal{img_num_label}->configure( -width => (length($pnum)+5) );  	
+	};
 	my $label = $pagenumbers{"Pg$pnum"}{label};
 	if ( defined $label && length $label ) {
 		$lglobal{page_label}->configure( -text => ("Lbl: $label ") );
@@ -13129,7 +13130,6 @@ sub spellchecker {                  # Set up spell check window
 		$spf3->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				print $spellindexbkmrk. ":spl\n";
 				return unless $spellindexbkmrk;
 				$textwindow->tagRemove( 'sel',       '1.0', 'end' );
 				$textwindow->tagRemove( 'highlight', '1.0', 'end' );

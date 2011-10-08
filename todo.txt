@@ -8,7 +8,8 @@ Fix spell check popup. Acts weird with unicode.
 Using Move up I could move Page 3 up before 
 Page 2, but then I couldn't move it back down. 
 
-New feature requests: Selective html generation. Enhanced scannos files
+New feature requests: Export to text with page markers.
+Selective html generation. Enhanced scannos files
 to convert [oe] to ligature, [=a] to &#257. Add feature for drop caps
 (would need new CSS and changes to the insert image dialog). Adjust the 
 pptxt check to confirm that all returns are CRLF
