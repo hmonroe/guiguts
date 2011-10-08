@@ -62,7 +62,8 @@ or checkboxes in the various search/spellcheck dialogs.
 
 Detailed release notes:
 
-Version 0.3.12 When reopening a document, the cursor is returned to where
+Version 0.3.12 Fixed page numbers when pngs begin with a letter such 
+as "a001.png". When reopening a document, the cursor is returned to where
 it was with focus.
 
 Version 0.3.11 Fixed WinGuts which could not run external programs such 

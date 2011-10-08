@@ -20,7 +20,7 @@
 
 #use criticism 'gentle';
 
-my $VERSION  = '0.3.11';
+my $VERSION = '0.3.11';
 use strict;
 use warnings;
 use FindBin;
@@ -117,7 +117,7 @@ my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 ### Application Globals
-our $activecolor      = '#24baec'; #'#f2f818';
+our $activecolor      = '#24baec';    #'#f2f818';
 our $auto_page_marks  = 1;
 our $auto_show_images = 0;
 our $autobackup       = 0;
@@ -239,10 +239,10 @@ our %lglobal;
 #open (STDERR, ">>errors.log");
 #open (STDOUT, ">>errors.log");
 
-
 if ( eval { require Text::LevenshteinXS } ) {
 	$lglobal{LevenshteinXS} = 1;
-} 
+}
+
 #else {
 #	print
 #"Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
@@ -448,9 +448,10 @@ sub _bin_save {
 	my $binname = "$lglobal{global_filename}.bin";
 	if ( $textwindow->markExists('spellbkmk') ) {
 		$spellindexbkmrk = $textwindow->index('spellbkmk');
-	} else {
-		$spellindexbkmrk = q{};
-	}
+	}    #else {
+
+	#		$spellindexbkmrk = q{};
+	#	}
 	#print $spellindexbkmrk."\n";
 	my $bak = "$binname.bak";
 	if ( -e $bak ) {
@@ -472,10 +473,10 @@ sub _bin_save {
 	}
 	my $fh = FileHandle->new("> $binname");
 	if ( defined $fh ) {
-        print $fh "\%pagenumbers = (\n";
+		print $fh "\%pagenumbers = (\n";
 		for my $page ( sort { $a cmp $b } keys %pagenumbers ) {
 			no warnings 'uninitialized';
-			if ($page eq "Pg" ) {
+			if ( $page eq "Pg" ) {
 				next;
 			}
 			print $fh " '$page' => {";
@@ -770,7 +771,7 @@ sub tglprfbar {
 # TODO switch focus back to the text window after showing the PNG
 sub openpng {
 	my $pagenum = shift;
-	if ($pagenum eq 'Pg') {
+	if ( $pagenum eq 'Pg' ) {
 		return;
 	}
 	$lglobal{pageimageviewed} = $pagenum;
@@ -6405,12 +6406,13 @@ sub errorcheckpop_up {
 	foreach my $thiserrorchecktype (@errorchecktypes) {
 		working($thiserrorchecktype);
 		push @errorchecklines, "Beginning check: " . $thiserrorchecktype;
-		if (errorcheckrun($thiserrorchecktype)) {
+		if ( errorcheckrun($thiserrorchecktype) ) {
+
 			#working(); XXXXX
 			push @errorchecklines, "Failed to run: " . $thiserrorchecktype;
-		};
+		}
 		my $fh = FileHandle->new("< errors.err");
-		if (not defined($fh) ) {
+		if ( not defined($fh) ) {
 			my $dialog = $top->Dialog(
 									   -text => 'Could not find '
 										 . $thiserrorchecktype
@@ -6421,104 +6423,106 @@ sub errorcheckpop_up {
 			);
 			$dialog->Show;
 		} else {
-		while ( $line = <$fh> ) {
-			$line =~ s/^\s//g;
-			chomp $line;
+			while ( $line = <$fh> ) {
+				$line =~ s/^\s//g;
+				chomp $line;
 
-			# Skip rest of CSS
-			if (
-				     ( not $verboseerrorchecks )
-				 and ( $thiserrorchecktype eq 'W3C Validate CSS' )
-				 and (    ( $line =~ /^To show your readers/i )
-					   or ( $line =~ /^Valid CSS Information/i ) )
-			  )
-			{
-				last;
-			}
-			if (
-				( $line =~ /^\s*$/i
-				)    # skip some unnecessary lines from W3C Validate CSS
-				or ( $line =~ /^{output/i )
-				or ( $line =~ /^W3C/i )
-				or ( $line =~ /^URI/i )
-			  )
-			{
-				next;
-			}
-
-			# Skip verbose informational warnngs in Link Check
-			if (     ( not $verboseerrorchecks )
-				 and ( $thiserrorchecktype eq 'Link Check' )
-				 and ( $line =~ /^Link statistics/i ) )
-			{
-				last;
-			}
-			if ( $thiserrorchecktype eq 'PP HTML' ) {
-				if ( $line =~ /^-/i ) {    # skip lines beginning with '-'
-					next;
-				}
-				if ( ( not $verboseerrorchecks )
-					 and $line =~ /^Verbose checks/i )
-				{                          # stop with verbose specials check
+				# Skip rest of CSS
+				if (
+					     ( not $verboseerrorchecks )
+					 and ( $thiserrorchecktype eq 'W3C Validate CSS' )
+					 and (    ( $line =~ /^To show your readers/i )
+						   or ( $line =~ /^Valid CSS Information/i ) )
+				  )
+				{
 					last;
 				}
-			}
-			no warnings 'uninitialized';
-			if ( $thiserrorchecktype eq 'HTML Tidy' ) {
-				if (     ( $line =~ /^[lI\d]/ )
-					 and ( $line ne $errorchecklines[-1] ) )
+				if (
+					( $line =~ /^\s*$/i
+					)    # skip some unnecessary lines from W3C Validate CSS
+					or ( $line =~ /^{output/i )
+					or ( $line =~ /^W3C/i )
+					or ( $line =~ /^URI/i )
+				  )
 				{
-					push @errorchecklines, $line;
-					$errors{$line} = '';
-					$lincol = '';
-					if ( $line =~ /^line (\d+) column (\d+)/i ) {
-						$lincol = "$1.$2";
-						$mark++;
-						$textwindow->markSet( "t$mark", $lincol );
-						$errors{$line} = "t$mark";
+					next;
+				}
+
+				# Skip verbose informational warnngs in Link Check
+				if (     ( not $verboseerrorchecks )
+					 and ( $thiserrorchecktype eq 'Link Check' )
+					 and ( $line =~ /^Link statistics/i ) )
+				{
+					last;
+				}
+				if ( $thiserrorchecktype eq 'PP HTML' ) {
+					if ( $line =~ /^-/i ) {    # skip lines beginning with '-'
+						next;
+					}
+					if ( ( not $verboseerrorchecks )
+						 and $line =~ /^Verbose checks/i )
+					{    # stop with verbose specials check
+						last;
 					}
 				}
-			} else {
-				if (    ( $thiserrorchecktype eq "W3C Validate" )
-					 or ( $thiserrorchecktype eq "W3C Validate Remote" )
-					 or ( $thiserrorchecktype eq "PP HTML" )
-					 or ( $thiserrorchecktype eq "Image Check" ) )
-				{
-					$line =~ s/^.*:(\d+:\d+)/line $1/;
-					$line =~ s/^(\d+:\d+)/line $1/;
-					$errors{$line} = '';
-					$lincol = '';
-					if ( $line =~ /line (\d+):(\d+)/ ) {
-						push @errorchecklines, $line;
-						$lincol = "$1.$2";
-						$lincol =~ s/\.0/\.1/;  # change column zero to column 1
-						$mark++;
-						$textwindow->markSet( "t$mark", $lincol );
-						$errors{$line} = "t$mark";
-					}
-					if ( $line =~ /^\+/ ) {
-						push @errorchecklines, $line;
-					}
-				} else {
-					if (    ( $thiserrorchecktype eq "W3C Validate CSS" )
-						 or ( $thiserrorchecktype eq "Link Check" )
-						 or ( $thiserrorchecktype eq "PPV Text" ) )
+				no warnings 'uninitialized';
+				if ( $thiserrorchecktype eq 'HTML Tidy' ) {
+					if (     ( $line =~ /^[lI\d]/ )
+						 and ( $line ne $errorchecklines[-1] ) )
 					{
-						$line =~ s/Line : (\d+)/line $1:1/;
 						push @errorchecklines, $line;
 						$errors{$line} = '';
 						$lincol = '';
-						if ( $line =~ /line (\d+):(\d+)/ ) {
-							my $plusone = $1 + 1;
-							$lincol = "$plusone.$2";
+						if ( $line =~ /^line (\d+) column (\d+)/i ) {
+							$lincol = "$1.$2";
 							$mark++;
 							$textwindow->markSet( "t$mark", $lincol );
 							$errors{$line} = "t$mark";
 						}
 					}
+				} else {
+					if (    ( $thiserrorchecktype eq "W3C Validate" )
+						 or ( $thiserrorchecktype eq "W3C Validate Remote" )
+						 or ( $thiserrorchecktype eq "PP HTML" )
+						 or ( $thiserrorchecktype eq "Image Check" ) )
+					{
+						$line =~ s/^.*:(\d+:\d+)/line $1/;
+						$line =~ s/^(\d+:\d+)/line $1/;
+						$errors{$line} = '';
+						$lincol = '';
+						if ( $line =~ /line (\d+):(\d+)/ ) {
+							push @errorchecklines, $line;
+							$lincol = "$1.$2";
+							$lincol =~
+							  s/\.0/\.1/;    # change column zero to column 1
+							$mark++;
+							$textwindow->markSet( "t$mark", $lincol );
+							$errors{$line} = "t$mark";
+						}
+						if ( $line =~ /^\+/ ) {
+							push @errorchecklines, $line;
+						}
+					} else {
+						if (    ( $thiserrorchecktype eq "W3C Validate CSS" )
+							 or ( $thiserrorchecktype eq "Link Check" )
+							 or ( $thiserrorchecktype eq "PPV Text" ) )
+						{
+							$line =~ s/Line : (\d+)/line $1:1/;
+							push @errorchecklines, $line;
+							$errors{$line} = '';
+							$lincol = '';
+							if ( $line =~ /line (\d+):(\d+)/ ) {
+								my $plusone = $1 + 1;
+								$lincol = "$plusone.$2";
+								$mark++;
+								$textwindow->markSet( "t$mark", $lincol );
+								$errors{$line} = "t$mark";
+							}
+						}
+					}
 				}
 			}
-		}}
+		}
 		$fh->close if $fh;
 		unlink 'errors.err';
 		my $size = @errorchecklines;
@@ -6536,7 +6540,7 @@ sub errorcheckpop_up {
 	$lglobal{errorchecklistbox}->yview( 'scroll', 1, 'units' );
 	$lglobal{errorchecklistbox}->update;
 	$lglobal{errorchecklistbox}->yview( 'scroll', -1, 'units' );
-	$lglobal{errorchecklistbox}->focus;    
+	$lglobal{errorchecklistbox}->focus;
 }
 
 sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
@@ -8957,15 +8961,14 @@ sub initialize {
 
 	# For backward compatibility, carry over old geometry settings
 	unless ( $geometryhash{wfpop} ) {
-		unless ($geometry2)
-		{ 
-			$geometry2='462x583+684+72';
+		unless ($geometry2) {
+			$geometry2 = '462x583+684+72';
 		}
-			$geometryhash{wfpop}         = $geometry2;
-			$geometryhash{gcpop}         = $geometry2;
-			$geometryhash{jeepop}        = $geometry2;
-			$geometryhash{errorcheckpop} = $geometry2;
-			$geometryhash{hpopup}        = $geometry3;
+		$geometryhash{wfpop}         = $geometry2;
+		$geometryhash{gcpop}         = $geometry2;
+		$geometryhash{jeepop}        = $geometry2;
+		$geometryhash{errorcheckpop} = $geometry2;
+		$geometryhash{hpopup}        = $geometry3;
 	}
 
 	if ($OS_WIN) {
@@ -9349,6 +9352,7 @@ sub initialize {
 sub readsettings {
 	if ( -e 'setting.rc' ) {
 		unless ( my $return = do 'setting.rc' ) {
+
 			# For some reason this works for winguts.exe
 			open my $file, "<", "setting.rc"
 			  or warn "Could not open setting file\n";
@@ -9500,26 +9504,25 @@ sub textbindings {
 		}
 	);
 	$textwindow->bind( 'TextUnicode',
-		  '<Control-Shift-exclam>' => sub { setbookmark(  '1' ) } );
+					   '<Control-Shift-exclam>' => sub { setbookmark('1') } );
 	$textwindow->bind( 'TextUnicode',
-			  '<Control-Shift-at>' => sub { setbookmark(  '2' ) } );
+					   '<Control-Shift-at>' => sub { setbookmark('2') } );
 	$textwindow->bind( 'TextUnicode',
-		 '<Control-Shift-numbersign>' => sub { setbookmark(  '3' ) }
-	);
+					 '<Control-Shift-numbersign>' => sub { setbookmark('3') } );
 	$textwindow->bind( 'TextUnicode',
-		  '<Control-Shift-dollar>' => sub { setbookmark(  '4' ) } );
+					   '<Control-Shift-dollar>' => sub { setbookmark('4') } );
 	$textwindow->bind( 'TextUnicode',
-		 '<Control-Shift-percent>' => sub { setbookmark(  '5' ) } );
+					   '<Control-Shift-percent>' => sub { setbookmark('5') } );
 	$textwindow->bind( 'TextUnicode',
-		   '<Control-KeyPress-1>' => sub { gotobookmark( '1' ) } );
+					   '<Control-KeyPress-1>' => sub { gotobookmark('1') } );
 	$textwindow->bind( 'TextUnicode',
-		   '<Control-KeyPress-2>' => sub { gotobookmark( '2' ) } );
+					   '<Control-KeyPress-2>' => sub { gotobookmark('2') } );
 	$textwindow->bind( 'TextUnicode',
-		   '<Control-KeyPress-3>' => sub { gotobookmark( '3' ) } );
+					   '<Control-KeyPress-3>' => sub { gotobookmark('3') } );
 	$textwindow->bind( 'TextUnicode',
-		   '<Control-KeyPress-4>' => sub { gotobookmark( '4' ) } );
+					   '<Control-KeyPress-4>' => sub { gotobookmark('4') } );
 	$textwindow->bind( 'TextUnicode',
-		   '<Control-KeyPress-5>' => sub { gotobookmark( '5' ) } );
+					   '<Control-KeyPress-5>' => sub { gotobookmark('5') } );
 	$textwindow->bind(
 		'TextUnicode',
 		'<Alt-Left>' => sub {
@@ -10640,7 +10643,7 @@ sub pmoveleft {    # move the page marker left a character
 	}
 	$num = '1.0' unless $num;
 	my $pagenum = " $mark ";
-	my $index = $textwindow->index("$mark-1c");
+	my $index   = $textwindow->index("$mark-1c");
 
 	if ( $num eq '1.0' ) {
 		return if $textwindow->compare( $index, '<', '1.0' );
@@ -11689,7 +11692,8 @@ sub spellcheckfirst {
 	@{ $lglobal{misspelledlist} } = ();
 	viewpagenums() if ( $lglobal{seepagenums} );
 	getprojectdic();
-	do "$lglobal{projectdictname}";    # this does not seem to do anything
+	do "$lglobal{projectdictname}"
+	  if $lglobal{projectdictname};    # this does not seem to do anything
 	$lglobal{lastmatchindex} = '1.0';
 
 	# get list of mispelled words in selection (or file if nothing selected)
@@ -11732,6 +11736,7 @@ sub spellcheckfirst {
 }
 
 sub getprojectdic {
+	return unless $lglobal{global_filename};
 	$lglobal{projectdictname} = $lglobal{global_filename};
 	$lglobal{projectdictname} =~ s/\.[^\.]*?$/\.dic/;
 	if ( $lglobal{projectdictname} eq $lglobal{global_filename} ) {
@@ -12191,6 +12196,10 @@ sub openfile {    # and open it
 		do $binname;
 		foreach my $mark ( keys %pagenumbers ) {
 			$markindex = $pagenumbers{$mark}{offset};
+			if ( $markindex eq '' ) {
+				delete $pagenumbers{$mark};
+				next;
+			}
 			$textwindow->markSet( $mark, $markindex );
 			$textwindow->markGravity( $mark, 'left' );
 		}
@@ -12198,7 +12207,7 @@ sub openfile {    # and open it
 			if ( $bookmarks[$_] ) {
 				$textwindow->markSet( 'insert', $bookmarks[$_] );
 				$textwindow->markSet( "bkmk$_", $bookmarks[$_] );
-				setbookmark(  $_ );
+				setbookmark($_);
 			}
 		}
 		$bookmarks[0] ||= '1.0';
@@ -12979,6 +12988,7 @@ sub spellchecker {                  # Set up spell check window
 		$lglobal{spellpopup}
 		  ->title(    'Current Dictionary - ' . $globalspelldictopt
 				   || 'No dictionary!' );
+		$lglobal{spellpopup}->Icon( -image => $icon );
 		my $spf1 =
 		  $lglobal{spellpopup}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
@@ -13118,10 +13128,13 @@ sub spellchecker {                  # Set up spell check window
 		$spf3->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
+				print $spellindexbkmrk. ":spl\n";
 				return unless $spellindexbkmrk;
 				$textwindow->tagRemove( 'sel',       '1.0', 'end' );
 				$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 				$textwindow->tagAdd( 'sel', 'spellbkmk', 'end' );
+
+				#print $textwindow->index('spellbkmk')."\n";
 				spellcheckfirst();
 			},
 			-text  => 'Resume @ Bkmrk',
@@ -13713,7 +13726,7 @@ sub orphanedmarkup {
 
 sub hilite {
 	my $mark = shift;
-	$lglobal{hilitemode}= 'exact' unless $lglobal{hilitemode};
+	$lglobal{hilitemode} = 'exact' unless $lglobal{hilitemode};
 	$mark = quotemeta($mark)
 	  if $lglobal{hilitemode} eq 'exact';    # FIXME: uninitialized 'hilitemode'
 	my @ranges      = $textwindow->tagRanges('sel');
@@ -13827,32 +13840,32 @@ sub hilitepopup {
 ### Bookmarks
 
 sub setbookmark {
-    my $index    = '';
-    my $indexb   = '';
-    my $bookmark = shift;
-    if ( $bookmarks[$bookmark] ) {
-        $indexb = $textwindow->index("bkmk$bookmark");
-    }
-    $index = $textwindow->index('insert');
-    if ( $bookmarks[$bookmark] ) {
-        $textwindow->tagRemove( 'bkmk', $indexb, "$indexb+1c" );
-    }
-    if ( $index ne $indexb ) {
-        $textwindow->markSet( "bkmk$bookmark", $index );
-    }
-    $bookmarks[$bookmark] = $index;
-    $textwindow->tagAdd( 'bkmk', $index, "$index+1c" );
+	my $index    = '';
+	my $indexb   = '';
+	my $bookmark = shift;
+	if ( $bookmarks[$bookmark] ) {
+		$indexb = $textwindow->index("bkmk$bookmark");
+	}
+	$index = $textwindow->index('insert');
+	if ( $bookmarks[$bookmark] ) {
+		$textwindow->tagRemove( 'bkmk', $indexb, "$indexb+1c" );
+	}
+	if ( $index ne $indexb ) {
+		$textwindow->markSet( "bkmk$bookmark", $index );
+	}
+	$bookmarks[$bookmark] = $index;
+	$textwindow->tagAdd( 'bkmk', $index, "$index+1c" );
 }
 
 sub gotobookmark {
-    my $bookmark = shift;
-    $textwindow->bell unless ( $bookmarks[$bookmark] || $nobell );
-    $textwindow->see("bkmk$bookmark") if $bookmarks[$bookmark];
-    $textwindow->markSet( 'insert', "bkmk$bookmark" )
-        if $bookmarks[$bookmark];
-    update_indicators();
-    $textwindow->tagAdd( 'bkmk', "bkmk$bookmark", "bkmk$bookmark+1c" )
-        if $bookmarks[$bookmark];
+	my $bookmark = shift;
+	$textwindow->bell unless ( $bookmarks[$bookmark] || $nobell );
+	$textwindow->see("bkmk$bookmark") if $bookmarks[$bookmark];
+	$textwindow->markSet( 'insert', "bkmk$bookmark" )
+	  if $bookmarks[$bookmark];
+	update_indicators();
+	$textwindow->tagAdd( 'bkmk', "bkmk$bookmark", "bkmk$bookmark+1c" )
+	  if $bookmarks[$bookmark];
 }
 
 ### Selection
@@ -15335,11 +15348,12 @@ sub markpopup {    # FIXME: Rename html_popup
 					 -width            => 16,
 		)->grid( -row => 1, -column => 3, -padx => 1, -pady => 1 );
 		$f0->Button(    #hkm added
-			  -activebackground => $activecolor,
-			  -command          => sub {
-			  	runner( cmdinterp("$extops[3]{command}") ); }, #'start $d$f$e'
-			  -text             => 'View in Browser',
-			  -width            => 16,
+			-activebackground => $activecolor,
+			-command          => sub {
+				runner( cmdinterp("$extops[3]{command}") );
+			},          #'start $d$f$e'
+			-text  => 'View in Browser',
+			-width => 16,
 		)->grid( -row => 1, -column => 4, -padx => 1, -pady => 1 );
 		my $pagecomments =
 		  $f0->Checkbutton(
@@ -16167,6 +16181,7 @@ sub findandextractgreek {
 ### Text Processing
 
 sub get_page_number {
+
 	#my $pnum      = '010';
 	my $pnum;
 	my $markindex = $textwindow->index('insert');
@@ -16175,30 +16190,32 @@ sub get_page_number {
 		if ( $mark =~ /Pg(\S+)/ ) {
 			$pnum = $1;
 			last;
-		} 
-		else {
-#			if ( $textwindow->index('insert') >
-#				 ( $textwindow->index($mark) + 400 ) )
-#			{
-#				last;
-#			}
+		} else {
+
+			#			if ( $textwindow->index('insert') >
+			#				 ( $textwindow->index($mark) + 400 ) )
+			#			{
+			#				last;
+			#			}
 			$mark = $textwindow->markPrevious($mark) if $mark;
-#			next;
+
+			#			next;
 		}
 	}
 	unless ($pnum) {
-#		my $markindex = $textwindow->index('insert');
-#		my $mark      = $textwindow->markNext($markindex);
-#		while ($mark) {
-#			print "$mark\n";
-#			if ( $mark =~ /Pg(\S+)/ ) {
-#				$pnum = $1;
-#				last;
-#			} else {
-#				my $mark = $textwindow->markNext($mark);
-#			}
-#		}
-		$pnum='';
+
+		#		my $markindex = $textwindow->index('insert');
+		#		my $mark      = $textwindow->markNext($markindex);
+		#		while ($mark) {
+		#			print "$mark\n";
+		#			if ( $mark =~ /Pg(\S+)/ ) {
+		#				$pnum = $1;
+		#				last;
+		#			} else {
+		#				my $mark = $textwindow->markNext($mark);
+		#			}
+		#		}
+		$pnum = '';
 	}
 	return $pnum;
 }
@@ -16717,6 +16734,7 @@ sub viewerpath {    #Find your image viewer
 
 sub setpngspath {
 	my $pagenum = shift;
+
 	#print $pagenum.'';
 	my $path =
 	  $textwindow->chooseDirectory( -title => 'Choose the PNGs file directory.',
@@ -18898,8 +18916,10 @@ checkforupdatesmonthly();
 if ( $lglobal{runtests} ) {
 	runtests();
 } else {
+
 	# If we are building winguts.exe, then exit
-	if (glob '*.par') {
-	_exit();}
+	if ( glob '*.par' ) {
+		_exit();
+	}
 	MainLoop;
 }

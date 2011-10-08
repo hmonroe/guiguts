@@ -1,8 +1,6 @@
 The following bugs/feature requests have not yet been addressed:
 
-Deleting letters of page markers permitted. Handle page numbers
-other than 001.png such as f001.png (front pages), p (text pages),
-and q (other pages).
+Deleting letters of page markers permitted. 
 Backslashes in Word count cannot be searched.
 The "Orphaned Markup" check should quit complaining about nested spans. 
 There is no check for a footnote anchor without a footnote. 
