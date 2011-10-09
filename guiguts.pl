@@ -161,6 +161,7 @@ our $notoolbar           = 0;
 our $intelligentWF       = 0;
 our $operationinterrupt;
 our $pngspath         = q{};
+our $regexpentry = q();
 our $rmargin          = 72;
 our $rwhyphenspace    = 0;
 our $scannoslist      = q{};
@@ -1674,14 +1675,6 @@ sub text_menuitems {
 		  -command => sub { text_convert_bold( $textwindow, $bold_char ) }
 	   ],
 	   [
-		  Button   => '~Add a Thought Break',
-		  -command => sub {
-			  $textwindow->addGlobStart;
-			  text_thought_break($textwindow);
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [
 		  Button   => 'Convert <tb> to asterisk break',
 		  -command => sub {
 			  $textwindow->addGlobStart;
@@ -1696,6 +1689,14 @@ sub text_menuitems {
 			  text_convert_bold( $textwindow, $bold_char );
 			  $textwindow->addGlobStart;
 			  text_convert_tb($textwindow);
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [
+		  Button   => '~Add a Thought Break',
+		  -command => sub {
+			  $textwindow->addGlobStart;
+			  text_thought_break($textwindow);
 			  $textwindow->addGlobEnd;
 			}
 	   ],
@@ -7891,23 +7892,6 @@ sub dashcheck {
 	$top->Unbusy;
 }
 
-sub unicheck {
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
-	$lglobal{wclistbox}->update;
-	my %display;
-	my $wordw = 0;
-	foreach ( sort ( keys %{ $lglobal{seen} } ) ) {
-		if ( $_ =~ /[\x{100}-\x{FFEF}]/ ) {
-			$display{$_} = $lglobal{seen}->{$_};
-			$wordw++;
-		}
-	}
-	$lglobal{saveheader} = "$wordw words with unicode chars > FF.";
-	sortwords( \%display );
-	$top->Unbusy;
-}
-
 sub wfspellcheck {
 	spelloptions() unless $globalspellpath;
 	return unless $globalspellpath;
@@ -8069,8 +8053,9 @@ sub mixedcasecheck {
 
 # Refactor various word frequency checks into one
 sub anythingwfcheck {
+
 	# "initial caps", "^\p{Upper}\P{Upper}+$"
-	my ($checktype, $checkregexp)=@_;
+	my ( $checktype, $checkregexp ) = @_;
 	$top->Busy( -recurse => 1 );
 	$lglobal{wclistbox}->delete( '0', 'end' );
 	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
@@ -8082,13 +8067,11 @@ sub anythingwfcheck {
 		$wordw++;
 		$display{$_} = $lglobal{seen}->{$_};
 	}
-	$lglobal{saveheader} = "$wordw distinct $checktype words.";
+	$lglobal{saveheader} = "$wordw distinct $checktype.";
 	sortwords( \%display );
 	searchoptset(qw/1 x x 0/);
 	$top->Unbusy;
 }
-
-
 
 sub charsortcheck {
 	$top->Busy( -recurse => 1 );
@@ -11546,10 +11529,10 @@ sub update_auto_img_button {
 #
 sub update_img_lbl_values {
 	my $pnum = shift;
-	if (defined $lglobal{img_num_label}) {
-		$lglobal{img_num_label}->configure( -text => "Img:$pnum" );  	
-		$lglobal{img_num_label}->configure( -width => (length($pnum)+5) );  	
-	};
+	if ( defined $lglobal{img_num_label} ) {
+		$lglobal{img_num_label}->configure( -text  => "Img:$pnum" );
+		$lglobal{img_num_label}->configure( -width => ( length($pnum) + 5 ) );
+	}
 	my $label = $pagenumbers{"Pg$pnum"}{label};
 	if ( defined $label && length $label ) {
 		$lglobal{page_label}->configure( -text => ("Lbl: $label ") );
@@ -13288,7 +13271,7 @@ sub gotoline {
 	unless ( defined( $lglobal{gotolinepop} ) ) {
 		$lglobal{gotolinepop} = $top->DialogBox(
 			-buttons => [qw[Ok Cancel]],
-			-title   => 'Goto Line Number',
+			-title   => 'Go To Line Number',
 			-popover => $top,
 			-command => sub {
 
@@ -13315,6 +13298,7 @@ sub gotoline {
 				}
 			}
 		);
+		$lglobal{gotolinepop}->Icon( -image => $icon );
 		$lglobal{gotolinepop}->resizable( 'no', 'no' );
 		my $frame = $lglobal{gotolinepop}->Frame->pack( -fill => 'x' );
 		$frame->Label( -text => 'Enter Line number: ' )
@@ -13382,6 +13366,7 @@ sub gotopage {
 			}
 		);
 		$lglobal{gotopagpop}->resizable( 'no', 'no' );
+		$lglobal{gotopagpop}->Icon( -image => $icon );
 		my $frame = $lglobal{gotopagpop}->Frame->pack( -fill => 'x' );
 		$frame->Label( -text => 'Enter image number: ' )
 		  ->pack( -side => 'left' );
@@ -14125,35 +14110,79 @@ sub wordfrequency {
 				 }
 			],
 			[ 'Check Spelling', \&wfspellcheck ],
-			[ 'Ital/Bold/SC',   \&itwords, \&ital_adjust ],
-			[ 'ALL CAPS',       \&capscheck ],
-			[ 'MiXeD CasE',     \&mixedcasecheck ],
-			[ 'Initial Caps',   [\&anythingwfcheck, 'initial caps', '^\p{Upper}\P{Upper}+$'] ],
+			[ 'Ital/Bold/SC', \&itwords, \&ital_adjust ],
+			[ 'ALL CAPS',     \&capscheck ],
+			[ 'MiXeD CasE',   \&mixedcasecheck ],
+			[
+			   'Initial Caps',
+			   [
+				  \&anythingwfcheck, 'words with initial caps',
+				  '^\p{Upper}\P{Upper}+$'
+			   ]
+			],
 			[ 'Character Cnts', \&charsortcheck ],
 			[ 'Check , Upper',  \&commark ],
 			[ 'Check . Lower',  \&bangmark ],
 			[ 'Check Accents',  \&accentcheck ],
-			[ 'Unicode > FF',   \&unicheck ],
+			[
+			   'Unicode > FF',
+			   [
+				  \&anythingwfcheck, 'words with unicode chars > FF',
+				  '[\x{100}-\x{FFEF}]'
+			   ]
+			],
+
 			[ 'Stealtho Check', \&stealthcheck ],
+			[
+			   'Ligatures',
+			   [
+				  \&anythingwfcheck, 'words with possible ligatures',
+				  '(oe|ae|æ|Æ|œ|Œ)'
+			   ]
+			],
+			[
+			   'RegExpEntry',
+			   [
+				  \&anythingwfcheck, 'dummy entry',
+				  'dummy'
+			   ]
+			],
+			[
+			   '<--RegExp',
+			   [
+				 sub {
+				 	 anythingwfcheck( 'words matching regular expression',
+				   $regexpentry)}
+			   ]
+			],
+
 		);
 		my ( $row, $col, $inc ) = ( 0, 0, 0 );
 		for (@wfbuttons) {
 			$row = int( $inc / 5 );
 			$col = $inc % 5;
-			my $button =
-			  $wcseframe1->Button(
-								   -activebackground => $activecolor,
-								   -command          => $_->[1],
-								   -text             => $_->[0],
-								   -width            => 13
-			  )->grid(
-					   -row    => $row,
-					   -column => $col,
-					   -padx   => 1,
-					   -pady   => 1
-			  );
 			++$inc;
-			$button->bind( '<3>' => $_->[2] ) if $_->[2];
+			if ( not( $_->[0] eq 'RegExpEntry' ) ) {
+				my $button =
+				  $wcseframe1->Button(
+									   -activebackground => $activecolor,
+									   -command          => $_->[1],
+									   -text             => $_->[0],
+									   -width            => 13
+				  )->grid(
+						   -row    => $row,
+						   -column => $col,
+						   -padx   => 1,
+						   -pady   => 1
+				  );
+				$button->bind( '<3>' => $_->[2] ) if $_->[2];
+			} else {
+				$lglobal{regexpentry} = $wcseframe1->Entry(
+									  -background   => 'white',
+									-textvariable => \$regexpentry,
+									  -width        => 13,
+				  )->grid( -row => $row, -column => $col );
+			}
 		}
 
 		my $wcframe =
