@@ -8067,7 +8067,10 @@ sub mixedcasecheck {
 	$top->Unbusy;
 }
 
-sub initcapcheck {
+# Refactor various word frequency checks into one
+sub anythingwfcheck {
+	# "initial caps", "^\p{Upper}\P{Upper}+$"
+	my ($checktype, $checkregexp)=@_;
 	$top->Busy( -recurse => 1 );
 	$lglobal{wclistbox}->delete( '0', 'end' );
 	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
@@ -8075,15 +8078,17 @@ sub initcapcheck {
 	my %display = ();
 	my $wordw   = 0;
 	foreach ( sort ( keys %{ $lglobal{seen} } ) ) {
-		next unless ( $_ =~ /^\p{Upper}\P{Upper}+$/ );
+		next unless ( $_ =~ /$checkregexp/ );
 		$wordw++;
 		$display{$_} = $lglobal{seen}->{$_};
 	}
-	$lglobal{saveheader} = "$wordw distinct initial caps words.";
+	$lglobal{saveheader} = "$wordw distinct $checktype words.";
 	sortwords( \%display );
 	searchoptset(qw/1 x x 0/);
 	$top->Unbusy;
 }
+
+
 
 sub charsortcheck {
 	$top->Busy( -recurse => 1 );
@@ -14123,7 +14128,7 @@ sub wordfrequency {
 			[ 'Ital/Bold/SC',   \&itwords, \&ital_adjust ],
 			[ 'ALL CAPS',       \&capscheck ],
 			[ 'MiXeD CasE',     \&mixedcasecheck ],
-			[ 'Initial Caps',   \&initcapcheck ],
+			[ 'Initial Caps',   [\&anythingwfcheck, 'initial caps', '^\p{Upper}\P{Upper}+$'] ],
 			[ 'Character Cnts', \&charsortcheck ],
 			[ 'Check , Upper',  \&commark ],
 			[ 'Check . Lower',  \&bangmark ],
