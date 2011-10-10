@@ -1731,13 +1731,13 @@ sub external_menuitems {
 sub buildmenu {
 	my $file = $menubar->cascade(
 								  -label     => '~File',
-								  -tearoff   => 0,
+								  -tearoff   => 1,
 								  -menuitems => file_menuitems,
 	);
 
 	my $edit = $menubar->cascade(
 								  -label     => '~Edit',
-								  -tearoff   => 0,
+								  -tearoff   => 1,
 								  -menuitems => edit_menuitems,
 	);
 	my $search = $menubar->cascade(
@@ -1772,21 +1772,9 @@ sub buildmenu {
 
 	my $external = $menubar->cascade(
 									  -label     => 'External',
-									  -tearoff   => 0,
+									  -tearoff   => 1,
 									  -menuitems => external_menuitems,
 	);
-
-	#	my $unicode2 = $menubar->cascade(
-	#									  -label     => 'Unicode2',
-	#									  -tearoff   => 0,
-	#									  -menuitems => external_menuitems,
-	#	);
-
-	#    my $batch = $menubar->cascade(
-	#        -label     => 'Batc~h',
-	#        -tearoff   => 1,
-	#       -menuitems => batch_menuitems,
-	#    );
 
 	# FIXME: We'll leave this alone for now.
 	if ( $Tk::VERSION =~ m{804} ) {
@@ -1890,7 +1878,7 @@ sub buildmenu {
 
 	$menubar->Cascade(
 		-label     => '~Prefs',
-		-tearoff   => 0,
+		-tearoff   => 1,
 		-menuitems => [
 			[ Button => 'Set Rewrap ~margins',   -command => \&setmargins ],
 			[ Button => '~Font',                 -command => \&fontsize ],
@@ -2234,15 +2222,9 @@ sub buildmenu {
 		]
 	);
 
-	# my $menubar->cascade(
-	#                      -label => '~Help',
-	#                      -tearoff => 0,
-	#                      -menuitems => help_menuitems,
-	#                     );
-
 	$menubar->Cascade(
 		-label     => '~Help',
-		-tearoff   => 0,
+		-tearoff   => 1,
 		-menuitems => [
 			[ Button => '~About',    -command => \&about_pop_up ],
 			[ Button => '~Versions', -command => [ \&showversion, $top ] ],
@@ -10744,10 +10726,12 @@ EOM
 		print $save_handle ");\n\n";
 
 		for (
-			qw/alpha_sort activecolor auto_page_marks auto_show_images autobackup autosave autosaveinterval blocklmargin blockrmargin
-			bold_char defaultindent failedsearch fontname fontsize fontweight geometry geometry2 geometry3 geometrypnumpop globalaspellmode
-			highlightcolor history_size ignoreversionnumber intelligentWF ignoreversions italic_char jeebiesmode lastversioncheck lmargin nobell nohighlights notoolbar poetrylmargin rmargin
-			rwhyphenspace singleterm stayontop toolside utffontname utffontsize verboseerrorchecks vislnnm w3cremote/
+			qw/alpha_sort activecolor auto_page_marks auto_show_images autobackup autosave autosaveinterval 
+			blocklmargin blockrmargin bold_char defaultindent failedsearch fontname fontsize fontweight geometry 
+			geometry2 geometry3 geometrypnumpop globalaspellmode highlightcolor history_size ignoreversionnumber 
+			intelligentWF ignoreversions italic_char jeebiesmode lastversioncheck lmargin nobell nohighlights 
+			notoolbar poetrylmargin rmargin rwhyphenspace singleterm stayontop toolside utffontname utffontsize 
+			verboseerrorchecks vislnnm w3cremote/
 		  )
 		{
 			if ( eval '$' . $_ ) {
