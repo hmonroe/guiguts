@@ -118,6 +118,7 @@ my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 ### Application Globals
 our $activecolor      = '#24baec';    #'#f2f818';
+our $alpha_sort = 'f';
 our $auto_page_marks  = 1;
 our $auto_show_images = 0;
 our $autobackup       = 0;
@@ -7625,17 +7626,17 @@ sub sortwords {
 	$lglobal{wclistbox}->delete( '0', 'end' );
 	$lglobal{wclistbox}->insert( 'end', 'Please wait, sorting list....' );
 	$lglobal{wclistbox}->update;
-	if ( $lglobal{alpha_sort} eq 'f' ) {    # Sorted by word frequency
+	if ( $alpha_sort eq 'f' ) {    # Sorted by word frequency
 		for ( natural_sort_freq($href) ) {
 			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
 			$lglobal{wclistbox}->insert( 'end', $line );
 		}
-	} elsif ( $lglobal{alpha_sort} eq 'a' ) {    # Sorted alphabetically
+	} elsif ( $alpha_sort eq 'a' ) {    # Sorted alphabetically
 		for ( natural_sort_alpha( keys %$href ) ) {
 			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
 			$lglobal{wclistbox}->insert( 'end', $line );
 		}
-	} elsif ( $lglobal{alpha_sort} eq 'l' ) {    # Sorted by word length
+	} elsif ( $alpha_sort eq 'l' ) {    # Sorted by word length
 		for ( natural_sort_length( keys %$href ) ) {
 			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
 			$lglobal{wclistbox}->insert( 'end', $line );
@@ -8910,7 +8911,6 @@ sub initialize {
   # spread willy-nilly through the code. Refactored them into a global
   # hash and gathered them together in a single subroutine.
 	$lglobal{alignstring}       = '.';
-	$lglobal{alpha_sort}        = 'f';
 	$lglobal{asciijustify}      = 'center';
 	$lglobal{asciiwidth}        = 64;
 	$lglobal{codewarn}          = 1;
@@ -10744,7 +10744,7 @@ EOM
 		print $save_handle ");\n\n";
 
 		for (
-			qw/activecolor auto_page_marks auto_show_images autobackup autosave autosaveinterval blocklmargin blockrmargin
+			qw/alpha_sort activecolor auto_page_marks auto_show_images autobackup autosave autosaveinterval blocklmargin blockrmargin
 			defaultindent failedsearch fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
 			highlightcolor history_size jeebiesmode lmargin nobell nohighlights notoolbar rmargin
 			rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm w3cremote
@@ -14042,19 +14042,19 @@ sub wordfrequency {
 								   -text        => 'No case',
 		  )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		$wcseframe->Radiobutton(
-								 -variable    => \$lglobal{alpha_sort},
+								 -variable    => \$alpha_sort,
 								 -selectcolor => $lglobal{checkcolor},
 								 -value       => 'a',
 								 -text        => 'Alph',
 		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		$wcseframe->Radiobutton(
-								 -variable    => \$lglobal{alpha_sort},
+								 -variable    => \$alpha_sort,
 								 -selectcolor => $lglobal{checkcolor},
 								 -value       => 'f',
 								 -text        => 'Frq',
 		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		$wcseframe->Radiobutton(
-								 -variable    => \$lglobal{alpha_sort},
+								 -variable    => \$alpha_sort,
 								 -selectcolor => $lglobal{checkcolor},
 								 -value       => 'l',
 								 -text        => 'Len',
