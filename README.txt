@@ -65,6 +65,8 @@ Detailed release notes:
 Version 0.3.13 Added to Word Frequency buttons to check for ligatures 
 and for an arbitrary regular expression. Allow search from Word Frequency
 popup for expressions with regex metacharacters such as "\". 
+Made default sort order for the word frequency list sticky.
+Made choice of poetry left margin sticky. 
 
 Version 0.3.12 Fixed page numbers when pngs begin with a letter such 
 as "a001.png". When reopening a document, the cursor is returned to where

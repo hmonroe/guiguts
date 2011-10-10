@@ -118,7 +118,7 @@ my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 ### Application Globals
 our $activecolor      = '#24baec';    #'#f2f818';
-our $alpha_sort = 'f';
+our $alpha_sort       = 'f';
 our $auto_page_marks  = 1;
 our $auto_show_images = 0;
 our $autobackup       = 0;
@@ -162,7 +162,7 @@ our $notoolbar           = 0;
 our $intelligentWF       = 0;
 our $operationinterrupt;
 our $pngspath         = q{};
-our $regexpentry = q();
+our $regexpentry      = q();
 our $rmargin          = 72;
 our $rwhyphenspace    = 0;
 our $scannoslist      = q{};
@@ -3750,8 +3750,8 @@ sub searchtext {
 		$lglobal{lastsearchterm} = 'reset' unless $mark;
 	} else {    # not a search across line boundaries
 		my $exactsearch = $searchterm;
-		$exactsearch = escape_regexmetacharacters ($exactsearch);		
-		$searchterm = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
+		$exactsearch = escape_regexmetacharacters($exactsearch);
+		$searchterm  = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
 		  if $sopt[0];
 		my ( $direction, $searchstart, $mode );
 		if   ( $sopt[2] ) { $searchstart = $searchstartindex }
@@ -4127,7 +4127,6 @@ sub escape_regexmetacharacters {
 	return $inputstring;
 }
 
-
 sub replaceall {
 	my $replacement = shift;
 	$replacement = '' unless $replacement;
@@ -4149,7 +4148,8 @@ sub replaceall {
 			my $exactsearch = $searchterm;
 
 			# escape metacharacters for whole word matching
-			$exactsearch = escape_regexmetacharacters ($exactsearch); 			# this is a whole word search
+			$exactsearch = escape_regexmetacharacters($exactsearch)
+			  ;                      # this is a whole word search
 			$searchterm = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
 			  if $sopt[0];
 			my ( $searchstart, $mode );
@@ -10745,11 +10745,9 @@ EOM
 
 		for (
 			qw/alpha_sort activecolor auto_page_marks auto_show_images autobackup autosave autosaveinterval blocklmargin blockrmargin
-			defaultindent failedsearch fontname fontsize fontweight geometry geometry2 geometry3 globalaspellmode
-			highlightcolor history_size jeebiesmode lmargin nobell nohighlights notoolbar rmargin
-			rwhyphenspace singleterm stayontop toolside utffontname utffontsize vislnnm w3cremote
-			intelligentWF italic_char bold_char ignoreversions lastversioncheck ignoreversionnumber
-			verboseerrorchecks geometrypnumpop/
+			bold_char defaultindent failedsearch fontname fontsize fontweight geometry geometry2 geometry3 geometrypnumpop globalaspellmode
+			highlightcolor history_size ignoreversionnumber intelligentWF ignoreversions italic_char jeebiesmode lastversioncheck lmargin nobell nohighlights notoolbar poetrylmargin rmargin
+			rwhyphenspace singleterm stayontop toolside utffontname utffontsize verboseerrorchecks vislnnm w3cremote/
 		  )
 		{
 			if ( eval '$' . $_ ) {
@@ -14145,19 +14143,14 @@ sub wordfrequency {
 				  '(oe|ae|æ|Æ|œ|Œ)'
 			   ]
 			],
-			[
-			   'RegExpEntry',
-			   [
-				  \&anythingwfcheck, 'dummy entry',
-				  'dummy'
-			   ]
-			],
+			[ 'RegExpEntry', [ \&anythingwfcheck, 'dummy entry', 'dummy' ] ],
 			[
 			   '<--RegExp',
 			   [
-				 sub {
-				 	 anythingwfcheck( 'words matching regular expression',
-				   $regexpentry)}
+				  sub {
+					  anythingwfcheck( 'words matching regular expression',
+									   $regexpentry );
+					}
 			   ]
 			],
 
@@ -14182,9 +14175,10 @@ sub wordfrequency {
 				  );
 				$button->bind( '<3>' => $_->[2] ) if $_->[2];
 			} else {
-				$lglobal{regexpentry} = $wcseframe1->Entry(
+				$lglobal{regexpentry} =
+				  $wcseframe1->Entry(
 									  -background   => 'white',
-									-textvariable => \$regexpentry,
+									  -textvariable => \$regexpentry,
 									  -width        => 13,
 				  )->grid( -row => $row, -column => $col );
 			}
@@ -14283,7 +14277,7 @@ sub wordfrequency {
 					$sword =~ s/\*newline\*/\n/;
 					$sword =~ s/\*space\*/ /;
 					$sword =~ s/([^\w\s\\])/\\$1/g;
-					$sword= escape_regexmetacharacters($sword);
+					$sword = escape_regexmetacharacters($sword);
 					$sword .= '\b'
 					  if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
 					searchoptset(qw/0 1 x 1/);
