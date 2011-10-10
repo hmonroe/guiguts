@@ -18735,7 +18735,7 @@ sub text_convert_options {
 sub runtests {
 
 	# From the command line run "guiguts.pl runtests"
-	use Test::More;
+	use Test::More; #tests => 25;
 	ok( 1 == 1, "Dummy test 1==1" );
 
 	#if ( -e "setting.rc" ) { rename( "setting.rc", "setting.old" ); }
@@ -18934,6 +18934,7 @@ if ( $lglobal{runtests} ) {
 	if ( glob '*.par' ) {
 		_exit();
 	}
+	print "If you have any problems, please report any error messages that appear here.\n";
 	MainLoop;
 }
 

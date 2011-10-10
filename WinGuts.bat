@@ -1,3 +1,3 @@
 echo off
 PATH=%PATH%;perl;perl\lib
-perl guiguts.pl
+perl guiguts.pl %1
