@@ -3583,6 +3583,7 @@ sub badreg {
 		-bitmap  => 'warning',
 		-buttons => ['Ok'],
 	);
+	$warning->Icon( -image => $icon );
 	$warning->Show;
 }
 
@@ -3748,8 +3749,7 @@ sub searchtext {
 		$lglobal{lastsearchterm} = 'reset' unless $mark;
 	} else {    # not a search across line boundaries
 		my $exactsearch = $searchterm;
-		$exactsearch =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g
-		  ;     # escape metacharacters for whole word matching
+		$exactsearch = escape_regexmetacharacters ($exactsearch);		
 		$searchterm = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
 		  if $sopt[0];
 		my ( $direction, $searchstart, $mode );
@@ -4120,6 +4120,13 @@ sub killstoppop {
 	;    #destroy interrupt popup
 }
 
+sub escape_regexmetacharacters {
+	my $inputstring = shift;
+	$inputstring =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;
+	return $inputstring;
+}
+
+
 sub replaceall {
 	my $replacement = shift;
 	$replacement = '' unless $replacement;
@@ -4141,9 +4148,7 @@ sub replaceall {
 			my $exactsearch = $searchterm;
 
 			# escape metacharacters for whole word matching
-			$exactsearch =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;
-
-			# this is a whole word search
+			$exactsearch = escape_regexmetacharacters ($exactsearch); 			# this is a whole word search
 			$searchterm = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
 			  if $sopt[0];
 			my ( $searchstart, $mode );
@@ -14278,6 +14283,7 @@ sub wordfrequency {
 					$sword =~ s/\*newline\*/\n/;
 					$sword =~ s/\*space\*/ /;
 					$sword =~ s/([^\w\s\\])/\\$1/g;
+					$sword= escape_regexmetacharacters($sword);
 					$sword .= '\b'
 					  if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
 					searchoptset(qw/0 1 x 1/);
@@ -18958,3 +18964,4 @@ if ( $lglobal{runtests} ) {
 	}
 	MainLoop;
 }
+
