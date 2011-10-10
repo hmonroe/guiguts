@@ -11632,7 +11632,7 @@ sub update_indicators {
 			 && $pnum )
 		{
 			if (    ( not defined $lglobal{pageimageviewed} )
-				 or ( $pnum != "$lglobal{pageimageviewed}" ) )
+				 or ( $pnum ne "$lglobal{pageimageviewed}" ) )
 			{
 				$lglobal{pageimageviewed} = $pnum;
 				openpng($pnum);
@@ -11655,6 +11655,7 @@ sub update_indicators {
 }
 
 ## Spell Check
+
 
 # Initialize spellchecker
 sub spellcheckfirst {
@@ -16200,8 +16201,6 @@ sub findandextractgreek {
 ### Text Processing
 
 sub get_page_number {
-
-	#my $pnum      = '010';
 	my $pnum;
 	my $markindex = $textwindow->index('insert');
 	my $mark      = $textwindow->markPrevious($markindex);
@@ -16210,32 +16209,27 @@ sub get_page_number {
 			$pnum = $1;
 			last;
 		} else {
-
-			#			if ( $textwindow->index('insert') >
-			#				 ( $textwindow->index($mark) + 400 ) )
-			#			{
-			#				last;
-			#			}
 			$mark = $textwindow->markPrevious($mark) if $mark;
-
-			#			next;
 		}
 	}
-	unless ($pnum) {
-
-		#		my $markindex = $textwindow->index('insert');
-		#		my $mark      = $textwindow->markNext($markindex);
-		#		while ($mark) {
-		#			print "$mark\n";
-		#			if ( $mark =~ /Pg(\S+)/ ) {
-		#				$pnum = $1;
-		#				last;
-		#			} else {
-		#				my $mark = $textwindow->markNext($mark);
-		#			}
-		#		}
-		$pnum = '';
+		unless ($pnum) {
+				$mark      = $textwindow->markNext($markindex);
+				while ($mark) {
+					if ( $mark =~ /Pg(\S+)/ ) {
+						$pnum = $1;
+						last;
+					} else {
+						#print "$mark:1\n";
+						#print $textwindow->markNext($mark).":2\n";
+						if ((not defined $textwindow->markNext($mark)) || ($mark eq $textwindow->markNext($mark))) {
+							last;
+						}
+						$mark = $textwindow->markNext($mark);
+						last unless $mark;
+					}
+				}
 	}
+	$pnum = '' unless $pnum;
 	return $pnum;
 }
 
