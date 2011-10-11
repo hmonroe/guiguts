@@ -5087,7 +5087,7 @@ sub htmlimage {
 					$selection =~ s/"/&quot;/g;
 					$selection =~ s/'/&#39;/g;
 					my $alt = $lglobal{alttext}->get;
-					$alt = " alt=\"$alt\"" if $alt;
+					$alt = " alt=\"$alt\"";
 					$selection = "<span class=\"caption\">$selection</span>\n"
 					  if $selection;
 					$preservep = '' unless $selection;
