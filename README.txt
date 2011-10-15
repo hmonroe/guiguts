@@ -55,7 +55,10 @@ The side by side image viewing works best if the window for the viewer
 is sized to match the image (in XnView, choose View, Auto Image Size,
 Fit Image to Window) and only one instance of the viewer is allowed to
 avoid having one instance for every page viewed (in XnView, choose
-Tools, Options, General, Only One Instance). To page through images, use
+Tools, Options, General, Only One Instance; in Irfanview
+Options -> Properties/Setting -> Start/Exit Options, or 
+Options -> Properties/Setting -> Misc.1 Check "Only 1 instance of 
+IrfanView is active). To page through images, use
 the "<" and ">" buttons on the status bar. To Auto Show Page Images, use the
 "Auto Img" button on the status bar, use the option on the Prefs menu,
 or checkboxes in the various search/spellcheck dialogs.

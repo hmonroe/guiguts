@@ -4,6 +4,7 @@ OVERRIDE	YES
 PUBLIC  "-//W3C//DTD XHTML 1.0 Strict//EN"        "xhtml1-strict.dtd"
 PUBLIC  "-//W3C//DTD XHTML 1.0 Transitional//EN"  "xhtml1-transitional.dtd"
 PUBLIC  "-//W3C//DTD XHTML 1.0 Frameset//EN"      "xhtml1-frameset.dtd"
+PUBLIC "-//W3C//DTD XHTML 1.1//EN"                "xhtml11.dtd"
 
         -- ISO latin 1 entity set for Extensible HTML (XML 1.0 format) --
 

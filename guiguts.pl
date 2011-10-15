@@ -20,7 +20,7 @@
 
 #use criticism 'gentle';
 
-my $VERSION = '0.3.13';
+my $VERSION = '0.3.14';
 use strict;
 use warnings;
 use FindBin;
@@ -4952,7 +4952,9 @@ sub htmlimage {
 	$selection = '' unless $selection;
 	my $preservep = '';
 	$preservep = '<p>' if $selection !~ /<\/p>$/;
-	$selection =~ s/^\[Illustration:?\s*(\.*)/$1/;
+	$selection =~ s/<p>\[Illustration:/[Illustration:/;
+	$selection =~ s/\[Illustration:?\s*(\.*)/$1/;
+	$selection =~ s/\]<\/p>$/]/;
 	$selection =~ s/(\.*)\]$/$1/;
 	my ( $fname, $extension );
 	my $xpad = 0;
@@ -13399,6 +13401,10 @@ sub find_transliterations {
 sub nextblock {
 	my ( $mark, $direction ) = @_;
 	unless ($searchstartindex) { $searchstartindex = '1.0' }
+	
+ #use Text::Balanced qw (			extract_delimited			extract_bracketed			extract_quotelike			extract_codeblock			extract_variable			extract_tagged			extract_multiple			gen_delimited_pat			gen_extract_tagged		       );
+ #print extract_bracketed( "((I)(like(pie))!)", '()' );	
+ #return;
 	if ( $mark eq 'default' ) {
 		if ( $direction eq 'forward' ) {
 			$searchstartindex =

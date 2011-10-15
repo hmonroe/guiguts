@@ -6,6 +6,7 @@ There is no check for a footnote anchor without a footnote.
 Fix spell check popup. Acts weird with unicode.
 Using Move up I could move Page 3 up before 
 Page 2, but then I couldn't move it back down. 
+Report of CSS not used is inaccurate (Mother Meg).
 
 New feature requests: Export to text with page markers.
 Selective html generation. Enhanced scannos files
@@ -22,4 +23,7 @@ Single source formats: RST, PGTEI, EPPG
 
 Under the hood changes: Break up code into smaller modules with clear 
 functionality and unit tests. Get debugger to make it through a file 
-open (double delegation to subsubwidget is a problem).
+open (double delegation to subsubwidget LineNumberText/TextUnicode
+seems to be the problem).
+
+ (?{ local $d=0 })(?:\((?{$d++})|\)(?{$d--})(?(?{$d<0})(?!))|(?> [^()]* ))*(?(?{$d!=0})(?!))
