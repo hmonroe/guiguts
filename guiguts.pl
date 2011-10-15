@@ -1503,10 +1503,53 @@ sub selection_menuitems {
 	   [
 		  Button   => 'Surround Selection With....',
 		  -command => sub {
-			  $lglobal{surpop} =
-				surround( $textwindow, $lglobal{surpop}, $top, $lglobal{font},
-						  $activecolor, $icon );
+	if ( defined( $lglobal{surpop} ) ) {
+		$lglobal{surpop}->deiconify;
+		$lglobal{surpop}->raise;
+		$lglobal{surpop}->focus;
+	} else {
+		$lglobal{surpop} = $top->Toplevel;
+		$lglobal{surpop}->title('Surround text with:');
+		
+		my $f = $lglobal{surpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f->Label( -text =>
+"Surround the selection with?\n\\n will be replaced with a newline.",
+		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
+		my $f1 =
+		  $lglobal{surpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		my $surstrt = $f1->Entry(
+								  -width      => 8,
+								  -background => 'white',
+								  -font       => $lglobal{font},
+								  -relief     => 'sunken',
+		)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'n' );
+		my $surend = $f1->Entry(
+								 -width      => 8,
+								 -background => 'white',
+								 -font       => $lglobal{font},
+								 -relief     => 'sunken',
+		)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'n' );
+		my $f2 =
+		  $lglobal{surpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		my $gobut = $f2->Button(
+			-activebackground => $activecolor,
+			-command          => sub {
+				surroundit( $surstrt->get, $surend->get ,$textwindow);
+			},
+			-text  => 'OK',
+			-width => 16
+		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
+		$lglobal{surpop}->protocol(
+			'WM_DELETE_WINDOW' => sub {
+				$lglobal{surpop}->destroy;
+				undef $lglobal{surpop};
 			}
+		);
+		$surstrt->insert( 'end', '_' ) unless ( $surstrt->get );
+		$surend->insert( 'end', '_' ) unless ( $surend->get );
+		$lglobal{surpop}->Icon( -image => $icon );
+	}
+		  }		
 	   ],
 	   [
 		  Button   => 'Flood Fill Selection With....',
@@ -7256,7 +7299,7 @@ sub gcviewops {
 				   -padx   => 2,
 				   -anchor => 'n'
 		  );
-		$lglobal{viewpop}->resizable( 'no', 'no' );
+		#$lglobal{viewpop}->resizable( 'no', 'no' );
 	}
 }
 
@@ -14523,63 +14566,64 @@ sub gutcheck {
 }
 
 sub gutopts {
-	my $gcdialog =
+	$lglobal{gcdialog} =
 	  $top->DialogBox( -title => 'Gutcheck Options', -buttons => ['OK'] );
-	my $gcopt6 = $gcdialog->add(
+	initialize_popup_without_deletebinding('gcdialog');	  
+	my $gcopt6 = $lglobal{gcdialog}->add(
 							   'Checkbutton',
 							   -variable    => \$gcopt[6],
 							   -selectcolor => $lglobal{checkcolor},
 							   -text => '-v Enable verbose mode (Recommended).',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt0 = $gcdialog->add(
+	my $gcopt0 = $lglobal{gcdialog}->add(
 								 'Checkbutton',
 								 -variable    => \$gcopt[0],
 								 -selectcolor => $lglobal{checkcolor},
 								 -text => '-t Disable check for common typos.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt1 = $gcdialog->add(
+	my $gcopt1 = $lglobal{gcdialog}->add(
 								 'Checkbutton',
 								 -variable    => \$gcopt[1],
 								 -selectcolor => $lglobal{checkcolor},
 								 -text        => '-x Disable paranoid mode.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt2 = $gcdialog->add(
+	my $gcopt2 = $lglobal{gcdialog}->add(
 							 'Checkbutton',
 							 -variable    => \$gcopt[2],
 							 -selectcolor => $lglobal{checkcolor},
 							 -text => '-p Report ALL unbalanced double quotes.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt3 = $gcdialog->add(
+	my $gcopt3 = $lglobal{gcdialog}->add(
 							 'Checkbutton',
 							 -variable    => \$gcopt[3],
 							 -selectcolor => $lglobal{checkcolor},
 							 -text => '-s Report ALL unbalanced single quotes.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt4 = $gcdialog->add(
+	my $gcopt4 = $lglobal{gcdialog}->add(
 								 'Checkbutton',
 								 -variable    => \$gcopt[4],
 								 -selectcolor => $lglobal{checkcolor},
 								 -text        => '-m Interpret HTML markup.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt5 = $gcdialog->add(
+	my $gcopt5 = $lglobal{gcdialog}->add(
 								 'Checkbutton',
 								 -variable    => \$gcopt[5],
 								 -selectcolor => $lglobal{checkcolor},
 								 -text => '-l Do not report non DOS newlines.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt7 = $gcdialog->add(
+	my $gcopt7 = $lglobal{gcdialog}->add(
 								 'Checkbutton',
 								 -variable    => \$gcopt[7],
 								 -selectcolor => $lglobal{checkcolor},
 								 -text => '-u Flag words from the .typ file.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt8 = $gcdialog->add(
+	my $gcopt8 = $lglobal{gcdialog}->add(
 								 'Checkbutton',
 								 -variable    => \$gcopt[8],
 								 -selectcolor => $lglobal{checkcolor},
 								 -text => '-d Ignore DP style page separators.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	$gcdialog->Show;
+	$lglobal{gcdialog}->Show;
 	saveset();
 }
 

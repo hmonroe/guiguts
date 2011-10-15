@@ -7,6 +7,7 @@ Fix spell check popup. Acts weird with unicode.
 Using Move up I could move Page 3 up before 
 Page 2, but then I couldn't move it back down. 
 Report of CSS not used is inaccurate (Mother Meg).
+Add files to W3C to allow use of HTML11 DTD.
 
 New feature requests: Export to text with page markers.
 Selective html generation. Enhanced scannos files
