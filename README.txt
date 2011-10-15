@@ -65,6 +65,8 @@ or checkboxes in the various search/spellcheck dialogs.
 
 Detailed release notes:
 
+Version 0.3.14 
+
 Version 0.3.13 Added to Word Frequency buttons to check for ligatures 
 and for an arbitrary regular expression. Allow search from Word Frequency
 popup for expressions with regex metacharacters such as "\". 
