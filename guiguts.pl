@@ -5538,10 +5538,12 @@ sub htmlautoconvert {
 	html_convert_ampersands();
 
 	html_convert_emdashes();
-
-	$lglobal{fnsecondpass}  = 0;
-	$lglobal{fnsearchlimit} = 1;
-	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
+	
+	if ($lglobal{convert_footnotes}) {
+		$lglobal{fnsecondpass}  = 0;
+		$lglobal{fnsearchlimit} = 1;
+		html_convert_footnotes( $textwindow, $lglobal{fnarray} );
+	}
 
 	html_convert_body( $textwindow, $headertext, $lglobal{cssblockmarkup},
 					   $lglobal{poetrynumbers}, $lglobal{classhash} );
@@ -5550,10 +5552,13 @@ sub htmlautoconvert {
 
 	html_convert_underscoresmallcaps($textwindow);
 
-	html_convert_sidenotes($textwindow);
+	if ($lglobal{convert_sidenotes}) {
+		html_convert_sidenotes($textwindow);
+	}
 
-	html_convert_pageanchors( $textwindow, $lglobal{pageanch},
-							  $lglobal{pagecmt} );
+	if ($lglobal{pageanch}||$lglobal{pagecmt}) {
+		html_convert_pageanchors( $textwindow);
+	}
 
 	html_convert_utf( $textwindow, $lglobal{leave_utf}, $lglobal{keep_latin1} );
 
@@ -13618,6 +13623,13 @@ sub orphanedbrackets {
 								-value       => '»|«',
 								-text        => 'German Angle quotes » «',
 		  )->grid( -row => 3, -column => 2 );
+		my $allqsel =
+		  $frame3->Radiobutton(
+								-variable    => \$lglobal{brsel},
+								-selectcolor => $lglobal{checkcolor},
+								-value       => 'all',
+								-text        => 'All brackets ( )',
+		  )->grid( -row => 3, -column => 2 );
 
 		my $frame2 = $lglobal{brkpop}->Frame->pack;
 		my $brsearchbt =
@@ -13633,8 +13645,8 @@ sub orphanedbrackets {
 			-command          => sub {
 				shift @{ $lglobal{brbrackets} }
 				  if @{ $lglobal{brbrackets} };
-				shift @{ $lglobal{brindicies} }
-				  if @{ $lglobal{brindicies} };
+				shift @{ $lglobal{brindices} }
+				  if @{ $lglobal{brindices} };
 				$textwindow->bell
 				  unless ( $lglobal{brbrackets}[1] || $nobell );
 				return unless $lglobal{brbrackets}[1];
@@ -13656,7 +13668,7 @@ sub orphanedbrackets {
 	sub brsearch {
 		viewpagenums() if ( $lglobal{seepagenums} );
 		@{ $lglobal{brbrackets} } = ();
-		@{ $lglobal{brindicies} } = ();
+		@{ $lglobal{brindices} } = ();
 		$lglobal{brindex} = '1.0';
 		my $brcount = 0;
 		my $brlength;
@@ -13671,7 +13683,7 @@ sub orphanedbrackets {
 			$lglobal{brbrackets}[$brcount] =
 			  $textwindow->get( $lglobal{brindex},
 								$lglobal{brindex} . '+' . $brlength . 'c' );
-			$lglobal{brindicies}[$brcount] = $lglobal{brindex};
+			$lglobal{brindices}[$brcount] = $lglobal{brindex};
 			$brcount++;
 			$lglobal{brindex} .= '+1c';
 		}
@@ -13701,8 +13713,8 @@ sub orphanedbrackets {
 			  );
 			shift @{ $lglobal{brbrackets} };
 			shift @{ $lglobal{brbrackets} };
-			shift @{ $lglobal{brindicies} };
-			shift @{ $lglobal{brindicies} };
+			shift @{ $lglobal{brindices} };
+			shift @{ $lglobal{brindices} };
 			$lglobal{brbrackets}[0] = $lglobal{brbrackets}[0] || '';
 			$lglobal{brbrackets}[1] = $lglobal{brbrackets}[1] || '';
 			last unless @{ $lglobal{brbrackets} };
@@ -13713,32 +13725,32 @@ sub orphanedbrackets {
 			{
 				shift @{ $lglobal{brbrackets} };
 				shift @{ $lglobal{brbrackets} };
-				shift @{ $lglobal{brindicies} };
-				shift @{ $lglobal{brindicies} };
+				shift @{ $lglobal{brindices} };
+				shift @{ $lglobal{brindices} };
 				shift @{ $lglobal{brbrackets} };
 				shift @{ $lglobal{brbrackets} };
-				shift @{ $lglobal{brindicies} };
-				shift @{ $lglobal{brindicies} };
+				shift @{ $lglobal{brindices} };
+				shift @{ $lglobal{brindices} };
 				brnext();
 			}
 		}
 		if ( @{ $lglobal{brbrackets} } ) {
-			$textwindow->markSet( 'insert', $lglobal{brindicies}[0] )
-			  if $lglobal{brindicies}[0];
-			$textwindow->see( $lglobal{brindicies}[0] )
-			  if $lglobal{brindicies}[0];
+			$textwindow->markSet( 'insert', $lglobal{brindices}[0] )
+			  if $lglobal{brindices}[0];
+			$textwindow->see( $lglobal{brindices}[0] )
+			  if $lglobal{brindices}[0];
 			$textwindow->tagAdd(
 								 'highlight',
-								 $lglobal{brindicies}[0],
-								 $lglobal{brindicies}[0] . '+'
+								 $lglobal{brindices}[0],
+								 $lglobal{brindices}[0] . '+'
 								   . ( length( $lglobal{brbrackets}[0] ) ) . 'c'
-			) if $lglobal{brindicies}[0];
+			) if $lglobal{brindices}[0];
 			$textwindow->tagAdd(
 								 'highlight',
-								 $lglobal{brindicies}[1],
-								 $lglobal{brindicies}[1] . '+'
+								 $lglobal{brindices}[1],
+								 $lglobal{brindices}[1] . '+'
 								   . ( length( $lglobal{brbrackets}[1] ) ) . 'c'
-			) if $lglobal{brindicies}[1];
+			) if $lglobal{brindices}[1];
 			$textwindow->focus;
 		}
 	}
@@ -15514,6 +15526,35 @@ sub markpopup {    # FIXME: Rename html_popup
 				   -pady   => 2,
 				   -sticky => 'w'
 		  );
+		my $sidenote_convert =
+		  $f0->Checkbutton(
+							-variable    => \$lglobal{convert_sidenotes},
+							-selectcolor => $lglobal{checkcolor},
+							-text        => 'Convert Sidenotes',
+							-anchor      => 'w',
+		  )->grid(
+				   -row    => 4,
+				   -column => 1,
+				   -padx   => 1,
+				   -pady   => 2,
+				   -sticky => 'w'
+		  );
+		$sidenote_convert->select;
+		my $footnote_convert =
+		  $f0->Checkbutton(
+							-variable    => \$lglobal{convert_footnotes},
+							-selectcolor => $lglobal{checkcolor},
+							-text        => 'Convert Footnotes',
+							-anchor      => 'w',
+		  )->grid(
+				   -row    => 4,
+				   -column => 2,
+				   -padx   => 1,
+				   -pady   => 2,
+				   -sticky => 'w'
+		  );
+		$footnote_convert->select;
+
 		my $f1 =
 		  $lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my ( $inc, $row, $col ) = ( 0, 0, 0 );

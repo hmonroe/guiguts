@@ -108,6 +108,8 @@ table {
 
 .center   {text-align: center;}
 
+.right   {text-align: right;}
+
 .smcap    {font-variant: small-caps;}
 
 .u        {text-decoration: underline;}

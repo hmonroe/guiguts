@@ -6,19 +6,16 @@ There is no check for a footnote anchor without a footnote.
 Fix spell check popup. Acts weird with unicode.
 Using Move up I could move Page 3 up before 
 Page 2, but then I couldn't move it back down. 
-Report of CSS not used is inaccurate (Mother Meg).
-Add files to W3C to allow use of HTML11 DTD.
 
 New feature requests: Export to text with page markers.
-Selective html generation. Enhanced scannos files
-to convert [oe] to ligature, [=a] to &#257. Add feature for drop caps
-(would need new CSS and changes to the insert image dialog). Adjust the 
-pptxt check to confirm that all returns are CRLF
-and not just LF. Allow highlight and copy from error check windows. New
-tool to help in removing hyphens (for instance, how often does a given
+Enhanced scannos filesto convert [oe] to ligature, [=a] to &#257. 
+Add feature for drop caps (would need new CSS and changes to the
+insert image dialog). Adjust the pptxt check to confirm that all returns
+are CRLF and not just LF. Allow highlight and copy from error check windows. 
+New tool to help in removing hyphens (for instance, how often does a given
 word appear with or without hyphens). Better Index/contents/illustration
 list recognizer. Convert ellipsis to real ellip or
-&#8230;. Do not show multiple page numbers at a single location (or give options).
+&#8230;. Add files to W3C to allow use of HTML11 DTD.
 
 Single source formats: RST, PGTEI, EPPG
 
@@ -26,5 +23,3 @@ Under the hood changes: Break up code into smaller modules with clear
 functionality and unit tests. Get debugger to make it through a file 
 open (double delegation to subsubwidget LineNumberText/TextUnicode
 seems to be the problem).
-
- (?{ local $d=0 })(?:\((?{$d++})|\)(?{$d--})(?(?{$d<0})(?!))|(?> [^()]* ))*(?(?{$d!=0})(?!))

@@ -65,7 +65,13 @@ or checkboxes in the various search/spellcheck dialogs.
 
 Detailed release notes:
 
-Version 0.3.14 
+Version 0.3.15 Fixed inaccurate results for unused CSS in PPHTML.
+Made conversion of sidenotes and footnotes to HTML optional.
+
+Version 0.3.14 Fixed problem with Auto Illus that did not strip <p>
+and [Illustration: markup. Make gutcheck options menus resizable.
+Fixed problem so Surround Selection popup would open the second
+time.
 
 Version 0.3.13 Added to Word Frequency buttons to check for ligatures 
 and for an arbitrary regular expression. Allow search from Word Frequency

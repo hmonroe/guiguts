@@ -217,7 +217,7 @@ sub runProgram {
 		print LOGFILE ("----- classes used -----\n");
 		my $intextbody = 0;
 		foreach $_ (@book) {
-			if ( not $intextbody and not /<body>/ ) {
+			if ( not $intextbody and not /<body/ ) {
 				next;
 			}
 			$intextbody = 1;
@@ -350,7 +350,7 @@ sub runProgram {
 				$cssdef =~ s/^.*?\.?([^\. ]+)$/$1/;
 
 				#        $cssdef =~ s/^.*?\.(.*)$/$1/;
-				if ( $cssdef =~ /\b(p|body)\b/ ) {
+				if ( $cssdef =~ /\b(p)\b/ ) { #/\b(p|body)\b/ ) {
 					next;
 				}
 				if ( $cssused eq $cssdef ) {

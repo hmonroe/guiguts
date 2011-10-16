@@ -76,7 +76,7 @@ sub html_convert_emdashes {
 	&main::named( '(?<=[^<])!--(?=[^>])', '!&mdash;' );
 	&main::named( '(?<=[^-])--$',         '&mdash;' );
 	&main::named( '^--(?=[^-])',          '&mdash;' );
-	&main::named( '^--$',          '&mdash;' );
+	&main::named( '^--$',                 '&mdash;' );
 	&main::named( "\x{A0}",               '&nbsp;' );
 }
 
@@ -356,15 +356,17 @@ sub html_convert_body {
 
 			#insert <pre> instead
 			$textwindow->insert( "$step.0", '<pre>' );
+
 			# added this--was not getting close para before <pre>
-			insert_paragraph_close($textwindow, ( $step - 1 ) . '.end')
-			  if (  ( $last5[3] )
+			insert_paragraph_close( $textwindow, ( $step - 1 ) . '.end' )
+			  if (    ( $last5[3] )
 				   && ( $last5[3] !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ ) );
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
-				insert_paragraph_close($textwindow, ( $step - 2 ) . ".end")
+				insert_paragraph_close( $textwindow, ( $step - 2 ) . ".end" )
 				  unless (
 						   $textwindow->get( ( $step - 2 ) . '.0',
-											 ( $step - 2 ) . '.end' ) =~ /<\/p>/);
+											 ( $step - 2 ) . '.end' ) =~ /<\/p>/
+				  );
 			}
 			$step++;
 			next;    #done with this row
@@ -391,7 +393,7 @@ sub html_convert_body {
 			$front = 1;
 			$textwindow->ntdelete( "$step.0", "$step.end +1c" );
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
-				insert_paragraph_close($textwindow, ( $step - 2 ) . ".end")
+				insert_paragraph_close( $textwindow, ( $step - 2 ) . ".end" )
 				  unless (
 						   $textwindow->get( ( $step - 2 ) . '.0',
 											 ( $step - 2 ) . '.end' ) =~ /<\/p>/
@@ -404,8 +406,9 @@ sub html_convert_body {
 			# delete close front tag F/, replace with close para if needed
 			if ( $selection =~ m"^f/"i ) {
 				$front = 0;
-				$textwindow->ntdelete( "$step.0", "$step.end" ); #"$step.end +1c"
-				insert_paragraph_close($textwindow,$step.'.end');
+				$textwindow->ntdelete( "$step.0", "$step.end" )
+				  ;    #"$step.end +1c"
+				insert_paragraph_close( $textwindow, $step . '.end' );
 				$step++;
 				next;
 			}
@@ -436,19 +439,23 @@ sub html_convert_body {
 				next;
 			}
 
-   # <p class="center"> if selection does not have /h, /d, <br>, </p>, or </div> (or last line closed markup)
+# <p class="center"> if selection does not have /h, /d, <br>, </p>, or </div> (or last line closed markup)
 #   print "int:$intitle:las:$last5[3]:sel:$selection\n";
-			if (    (length($selection)
-				 && (( !$last5[3] ) or ($last5[3]=~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/))
-				 && ( $selection !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ )
-				 && ( not $intitle ))
-				  )
+			if (
+				 (
+				   length($selection)
+				   && (    ( !$last5[3] )
+						or ( $last5[3] =~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ ) )
+				   && ( $selection !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ )
+				   && ( not $intitle )
+				 )
+			  )
 			{
 				$textwindow->ntinsert( "$step.0", '<p class="center">' );
 			}
 
 # close para end of the last line before if the previous line does not already close
-            insert_paragraph_close($textwindow,( $step - 1 ) . '.end')			
+			insert_paragraph_close( $textwindow, ( $step - 1 ) . '.end' )
 			  if (   !( length($selection) )
 				   && ( $last5[3] )
 				   && ( $last5[3] !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ ) );
@@ -563,7 +570,7 @@ sub html_convert_body {
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
 
 				# close para
-				insert_paragraph_close($textwindow, ( $step - 2 ) . ".end")
+				insert_paragraph_close( $textwindow, ( $step - 2 ) . ".end" )
 				  unless (
 						   $textwindow->get( ( $step - 2 ) . '.0',
 											 ( $step - 2 ) . '.end' ) =~ /<\/p>/
@@ -591,7 +598,7 @@ sub html_convert_body {
 
 			# close para
 			if ( ( $last5[1] ) && ( !$last5[2] ) ) {
-				insert_paragraph_close($textwindow, ( $step - 3 ) . ".end")
+				insert_paragraph_close( $textwindow, ( $step - 3 ) . ".end" )
 				  unless (
 						   $textwindow->get( ( $step - 3 ) . '.0',
 											 ( $step - 2 ) . '.end' ) =~
@@ -616,7 +623,7 @@ sub html_convert_body {
 		if ( $selection =~ /^\x7f*\/[Ll]/ ) {
 			$listmark = 1;
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
-				insert_paragraph_close($textwindow, ( $step - 2 ) . ".end")
+				insert_paragraph_close( $textwindow, ( $step - 2 ) . ".end" )
 				  unless (
 						   $textwindow->get( ( $step - 2 ) . '.0',
 											 ( $step - 2 ) . '.end' ) =~ /<\/p>/
@@ -714,7 +721,7 @@ sub html_convert_body {
 		if ( $selection =~ /^\x7f*\/[\$\*]/ ) {
 			$inblock = 1;
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
-				insert_paragraph_close($textwindow, ( $step - 2 ) . '.end')
+				insert_paragraph_close( $textwindow, ( $step - 2 ) . '.end' )
 				  unless (
 						   (
 							 $textwindow->get( ( $step - 2 ) . '.0',
@@ -723,9 +730,10 @@ sub html_convert_body {
 						   )
 				  );
 			}
-#			$textwindow->replacewith( "$step.0", "$step.end", '<p>' );
-			$textwindow->delete( "$step.0", "$step.end");
-			insert_paragraph_open($textwindow,"$step.0");
+
+			#			$textwindow->replacewith( "$step.0", "$step.end", '<p>' );
+			$textwindow->delete( "$step.0", "$step.end" );
+			insert_paragraph_open( $textwindow, "$step.0" );
 			$step++;
 			next;
 		}
@@ -796,7 +804,7 @@ sub html_convert_body {
 				$textwindow->ntinsert( "$step.0", $selection );
 			}
 			if ( ( $last5[2] ) && ( !$last5[3] ) && ( $selection =~ /\/\*/ ) ) {
-				insert_paragraph_close($textwindow, ( $step - 2 ) . ".end")
+				insert_paragraph_close( $textwindow, ( $step - 2 ) . ".end" )
 				  unless (
 						   $textwindow->get( ( $step - 2 ) . '.0',
 										( $step - 2 ) . '.end' ) =~ /<\/[hd]\d?/
@@ -848,7 +856,7 @@ sub html_convert_body {
 				$restofheader =~ s/^\s+|\s+$//g;
 				if ( length($restofheader) ) {
 					$textwindow->ntinsert( "$step.end", '</h2>' );
-					$completeheader.= ' '.$restofheader;
+					$completeheader .= ' ' . $restofheader;
 				} else {
 					$step--;
 					$textwindow->ntinsert( "$step.end", '</h2>' );
@@ -856,12 +864,15 @@ sub html_convert_body {
 			}
 
 			# bold face insertion into autogenerated TOC
-			unless ( ($selection =~ /<p/) or ($selection =~ /<h1/) ) {
+			unless ( ( $selection =~ /<p/ ) or ( $selection =~ /<h1/ ) ) {
 				$selection =~ s/<sup>.*?<\/sup>//g;
 				$selection =~ s/<[^>]+>//g;
 				$selection = "<b>$selection</b>";
 				push @contents,
-				  "<a href=\"#" . $aname . "\">" . $completeheader . "</a><br />\n";
+				    "<a href=\"#" 
+				  . $aname . "\">"
+				  . $completeheader
+				  . "</a><br />\n";
 			}
 			$selection .= '<h2>';
 			$textwindow->see("$step.0");
@@ -913,13 +924,13 @@ sub html_convert_body {
 	# close the autogenerated TOC and insert at line called contents
 	#push @contents, '</p>';
 	local $" = '';
-	my $contentstext = 
+	my $contentstext =
 "\n\n<!-- Autogenerated TOC. Modify or delete as required. -->\n@contents\n<!-- End Autogenerated TOC. -->\n\n";
 
-	
-	$contentstext="<p>".$contentstext."</p>" unless is_paragraph_open( $textwindow, $incontents);
+	$contentstext = "<p>" . $contentstext . "</p>"
+	  unless is_paragraph_open( $textwindow, $incontents );
 	$textwindow->insert(
-		$incontents,$contentstext
+		$incontents, $contentstext
 
 	) if @contents;
 }
@@ -1022,146 +1033,146 @@ sub html_convert_sidenotes {
 }
 
 sub html_convert_pageanchors {
-	my ( $textwindow, $pageanch, $pagecmt ) = @_;
+	my ($textwindow) = @_;
 
-	if ( $pageanch || $pagecmt ) {
-		&main::working("Inserting Page Number Markup");
-		$|++;
-		my $markindex;
-		my @pagerefs
-		  ;    # keep track of first/last page markers at the same position
-		my $tempcounter;
+	&main::working("Inserting Page Number Markup");
+	$|++;
+	my $markindex;
+	my @pagerefs;   # keep track of first/last page markers at the same position
+	my $tempcounter;
 
-		my $mark = '1.0';
-		while ( $textwindow->markPrevious($mark) ) {
-			$mark = $textwindow->markPrevious($mark);
-		}
-		while ( $mark = $textwindow->markNext($mark) ) {
+	my $mark = '1.0';
+	while ( $textwindow->markPrevious($mark) ) {
+		$mark = $textwindow->markPrevious($mark);
+	}
+	while ( $mark = $textwindow->markNext($mark) ) {
 
-			#print "mark:$mark\n";
+		#print "mark:$mark\n";
 
-			if ( $mark =~ m{Pg(\S+)} ) {
-				my $num = $main::pagenumbers{$mark}{label};
-				$num =~ s/Pg // if defined $num;
-				$num = $1 unless $main::pagenumbers{$mark}{action};
-				next unless length $num;
-				$num =~ s/^0+(\d)/$1/;
-				$markindex = $textwindow->index($mark);
-				my $check =
-				  $textwindow->get( $markindex . 'linestart',
-									$markindex . 'linestart +4c' );
+		if ( $mark =~ m{Pg(\S+)} ) {
+			my $num = $main::pagenumbers{$mark}{label};
+			$num =~ s/Pg // if defined $num;
+			$num = $1 unless $main::pagenumbers{$mark}{action};
+			next unless length $num;
+			$num =~ s/^0+(\d)/$1/;
+			$markindex = $textwindow->index($mark);
+			my $check =
+			  $textwindow->get( $markindex . 'linestart',
+								$markindex . 'linestart +4c' );
 
-				if ( $check =~ /<h[12]>/ ) {
-					$markindex = $textwindow->index("$mark-1l lineend");
-				}
-				my $pagereference;
-				my $marknext = $textwindow->markNext($mark);
-				my $marknextindex;
-				while ($marknext) {
-					if ( not $marknext =~ m{Pg(\S+)} ) {
-						$marknext = $textwindow->markNext($marknext);
-					} else {
-						last;
-					}
-				}
-				if ($marknext) {
-					$marknextindex = $textwindow->index($marknext);
+			if ( $check =~ /<h[12]>/ ) {
+				$markindex = $textwindow->index("$mark-1l lineend");
+			}
+			my $pagereference;
+			my $marknext = $textwindow->markNext($mark);
+			my $marknextindex;
+			while ($marknext) {
+				if ( not $marknext =~ m{Pg(\S+)} ) {
+					$marknext = $textwindow->markNext($marknext);
 				} else {
-					$marknextindex = 0;
+					last;
 				}
-
-				if ( $markindex == $marknextindex ) {
-					$pagereference = "";
-					push @pagerefs, $num;
-				} else {
-
-					#multiple page reference in one spot
-					push @pagerefs, $num;
-					if (@pagerefs) {
-						my $br = "";
-						$pagereference = "";
-						for ( sort { $a <=> $b } @pagerefs ) {
-							$pagereference .= "$br"
-							  . "<a name=\"Page_$_\" id=\"Page_$_\">[Pg $_]</a>";
-							$br = "<br />";
-						}
-						@pagerefs = ();
-					} else {
-
-						# just one page reference
-						$pagereference =
-"<a name=\"Page_$num\" id=\"Page_$num\">[Pg $num]</a>";
-					}
-				}
-
-				# comment only
-				$textwindow->ntinsert( $markindex,
-									   '<!-- Page ' . $num . ' -->' )
-				  if ( $pagecmt and $num );
-				if ($pagereference) {
-					my $insertpoint = $markindex;
-					my $inserted    = 0;
-
-					# logic move page ref if at end of paragraph
-					# TODO: move out of header, other markup
-					my $nextpstart =
-					  $textwindow->search( '--', '<p', $markindex, 'end' )
-					  || 'end';
-					my $nextpend =
-					  $textwindow->search( '--', '</p>', $markindex, 'end' )
-					  || 'end';
-					my $inserttext =
-					  "<span class=\"pagenum\">$pagereference</span>";
-					if (
-						 $textwindow->compare(
-											 $nextpend, '<=', $markindex . '+1c'
-						 )
-					  )
-					{
-
-						#move page anchor from end of paragraph
-						$insertpoint = $nextpend . '+4c';
-						$inserttext  = '<p>' . $inserttext . '</p>';
-					}
-					my $pstart =
-					  $textwindow->search( '-backwards', '-exact', '--', '<p',
-										   $markindex, '1.0' )
-					  || '1.0';
-					my $pend =
-					  $textwindow->search( '-backwards', '-exact', '--', '</p>',
-										   $markindex, '1.0' )
-					  || '1.0';
-					my $sstart =
-					  $textwindow->search( '-backwards', '-exact', '--',
-										   '<div ', $markindex, '1.0' )
-					  || '1.0';
-					my $send =
-					  $textwindow->search( '-backwards', '-exact', '--',
-										   '</div>', $markindex, '1.0' )  #$pend
-					  || '1.0';                                           #$pend
-					 # if the previous <p> or <div>is not closed, then wrap in <p>
-					if (
-						not( $textwindow->compare( $pend, '<', $pstart )
-							or ( $textwindow->compare( $send, '<', $sstart ) ) )
-					  )
-					{
-						$inserttext = '<p>' . $inserttext . '</p>';
-					}
-					$textwindow->ntinsert( $insertpoint, $inserttext )
-					  if $pageanch;
-				}
+			}
+			if ($marknext) {
+				$marknextindex = $textwindow->index($marknext);
 			} else {
-				if ( $mark =~ m{HRULE} )
-				{    #place the <hr> for a chapter before the page number
-					my $hrulemarkindex = $textwindow->index($mark);
-					my $pgstart =
-					  $textwindow->search( '--', '<p><span',
-										   $hrulemarkindex . '-5c', 'end' )
-					  || 'end';
-					if($textwindow->compare($hrulemarkindex.'+100c','>',$pgstart)) {
-						$textwindow->ntinsert( $pgstart, '<hr class="chap" />' );
-						#print "hrule:$hrulemarkindex:pgstart:$pgstart\n"; #***
+				$marknextindex = 0;
+			}
+
+			if ( $markindex == $marknextindex ) {
+				$pagereference = "";
+				push @pagerefs, $num;
+			} else {
+
+				#multiple page reference in one spot
+				push @pagerefs, $num;
+				if (@pagerefs) {
+					my $br = "";
+					$pagereference = "";
+					for ( sort { $a <=> $b } @pagerefs ) {
+						$pagereference .= "$br"
+						  . "<a name=\"Page_$_\" id=\"Page_$_\">[Pg $_]</a>";
+						$br = "<br />";
 					}
+					@pagerefs = ();
+				} else {
+
+					# just one page reference
+					$pagereference =
+					  "<a name=\"Page_$num\" id=\"Page_$num\">[Pg $num]</a>";
+				}
+			}
+
+			# comment only
+			$textwindow->ntinsert( $markindex, '<!-- Page ' . $num . ' -->' )
+			  if ( $pagecmt and $num );
+			if ($pagereference) {
+				my $insertpoint = $markindex;
+				my $inserted    = 0;
+
+				# logic move page ref if at end of paragraph
+				# TODO: move out of header, other markup
+				my $nextpstart =
+				  $textwindow->search( '--', '<p', $markindex, 'end' )
+				  || 'end';
+				my $nextpend =
+				  $textwindow->search( '--', '</p>', $markindex, 'end' )
+				  || 'end';
+				my $inserttext =
+				  "<span class=\"pagenum\">$pagereference</span>";
+				if ( $textwindow->compare( $nextpend, '<=', $markindex . '+1c' )
+				  )
+				{
+
+					#move page anchor from end of paragraph
+					$insertpoint = $nextpend . '+4c';
+					$inserttext  = '<p>' . $inserttext . '</p>';
+				}
+				my $pstart =
+				  $textwindow->search( '-backwards', '-exact', '--', '<p',
+									   $markindex, '1.0' )
+				  || '1.0';
+				my $pend =
+				  $textwindow->search( '-backwards', '-exact', '--', '</p>',
+									   $markindex, '1.0' )
+				  || '1.0';
+				my $sstart =
+				  $textwindow->search( '-backwards', '-exact', '--', '<div ',
+									   $markindex, '1.0' )
+				  || '1.0';
+				my $send =
+				  $textwindow->search( '-backwards', '-exact', '--', '</div>',
+									   $markindex, '1.0' )    #$pend
+				  || '1.0';                                   #$pend
+				   # if the previous <p> or <div>is not closed, then wrap in <p>
+				if (
+					 not( $textwindow->compare( $pend, '<', $pstart )
+						  or ( $textwindow->compare( $send, '<', $sstart ) ) )
+				  )
+				{
+					$inserttext = '<p>' . $inserttext . '</p>';
+				}
+				$textwindow->ntinsert( $insertpoint, $inserttext )
+				  if $pageanch;
+			}
+		} else {
+			if ( $mark =~ m{HRULE} )
+			{    #place the <hr> for a chapter before the page number
+				my $hrulemarkindex = $textwindow->index($mark);
+				my $pgstart =
+				  $textwindow->search( '--', '<p><span',
+									   $hrulemarkindex . '-5c', 'end' )
+				  || 'end';
+				if (
+					 $textwindow->compare(
+										   $hrulemarkindex . '+100c',
+										   '>', $pgstart
+					 )
+				  )
+				{
+					$textwindow->ntinsert( $pgstart, '<hr class="chap" />' );
+
+					#print "hrule:$hrulemarkindex:pgstart:$pgstart\n"; #***
 				}
 			}
 		}
@@ -1211,7 +1222,7 @@ sub html_parse_header {
 		last if ( $textwindow->compare( "$step.0", '>', 'end' ) );
 		$selection = $textwindow->get( "$step.0", "$step.end" );
 		next if ( $selection =~ /^\[Illustr/i );    # Skip Illustrations
-		next if ( $selection =~ /^\/[\$fx]/i );      # Skip /$|/F tags
+		next if ( $selection =~ /^\/[\$fx]/i );     # Skip /$|/F tags
 		if (     ($intitle)
 			 and ( ( not length($selection) or ( $selection =~ /^f\//i ) ) ) )
 		{
@@ -1219,7 +1230,7 @@ sub html_parse_header {
 			$textwindow->ntinsert( "$step.end", '</h1>' );
 			last;
 		}                                           #done finding title
-		next if ( $selection =~ /^\/[\$fx]/i );      # Skip /$|/F tags
+		next if ( $selection =~ /^\/[\$fx]/i );     # Skip /$|/F tags
 		next unless length($selection);
 		$title = $selection;
 		$title =~ s/[,.]$//;                        #throw away trailing , or .
@@ -1267,10 +1278,11 @@ sub html_parse_header {
 				$author =~ s/\s$//i;
 			}
 		}
-#		Dropped this--not an accurate way to find the author		
-#		$selection = '<h2>' . $selection . '</h2>' if $author;
-#		$textwindow->ntdelete( "$step.0", "$step.end" );
-#		$textwindow->ntinsert( "$step.0", $selection );
+
+		#		Dropped this--not an accurate way to find the author
+		#		$selection = '<h2>' . $selection . '</h2>' if $author;
+		#		$textwindow->ntdelete( "$step.0", "$step.end" );
+		#		$textwindow->ntinsert( "$step.0", $selection );
 		last if $author || ( $step > 100 );
 	}
 	if ($author) {
@@ -1318,7 +1330,7 @@ sub html_wrapup {
 # insert </p> only if there is an open <p> tag
 sub insert_paragraph_close {
 	my ( $textwindow, $index ) = @_;
-	if (is_paragraph_open($textwindow, $index)) {
+	if ( is_paragraph_open( $textwindow, $index ) ) {
 		$textwindow->ntinsert( $index, '</p>' );
 		return 1;
 	}
@@ -1327,7 +1339,9 @@ sub insert_paragraph_close {
 
 sub is_paragraph_open {
 	my ( $textwindow, $index ) = @_;
-	my $pstart = $textwindow->search( '-backwards','-regexp', '--', '<p(>| )', $index, '1.0' )
+	my $pstart =
+	  $textwindow->search( '-backwards', '-regexp', '--', '<p(>| )', $index,
+						   '1.0' )
 	  || '1.0';
 	my $pend = $textwindow->search( '-backwards', '--', '</p>', $index, '1.0' )
 	  || '1.0';
@@ -1340,7 +1354,7 @@ sub is_paragraph_open {
 # insert <p> only if there is not an open <p> tag
 sub insert_paragraph_open {
 	my ( $textwindow, $index ) = @_;
-	if (not is_paragraph_open($textwindow, $index)) {
+	if ( not is_paragraph_open( $textwindow, $index ) ) {
 		$textwindow->ntinsert( $index, '<p>' );
 		return 1;
 	}
