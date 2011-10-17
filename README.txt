@@ -66,7 +66,8 @@ or checkboxes in the various search/spellcheck dialogs.
 Detailed release notes:
 
 Version 0.3.15 Fixed inaccurate results for unused CSS in PPHTML.
-Made conversion of sidenotes and footnotes to HTML optional.
+Made conversion of sidenotes and footnotes to HTML optional. Added
+validation of PGTEI.
 
 Version 0.3.14 Fixed problem with Auto Illus that did not strip <p>
 and [Illustration: markup. Make gutcheck options menus resizable.
