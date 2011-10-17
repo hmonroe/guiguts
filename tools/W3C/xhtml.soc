@@ -5,6 +5,9 @@ PUBLIC  "-//W3C//DTD XHTML 1.0 Strict//EN"        "xhtml1-strict.dtd"
 PUBLIC  "-//W3C//DTD XHTML 1.0 Transitional//EN"  "xhtml1-transitional.dtd"
 PUBLIC  "-//W3C//DTD XHTML 1.0 Frameset//EN"      "xhtml1-frameset.dtd"
 PUBLIC "-//W3C//DTD XHTML 1.1//EN"                "xhtml11.dtd"
+PUBLIC "-//W3C//ENTITIES XHTML 1.1 Document Model 1.0//EN"        "xhtml11-model-1.mod"
+
+
 
 public "http://www.gutenberg.org/tei/marcello/0.4/dtd/pgtei.dtd" "pgtei.dtd"
 public "http://www.tei-c.org/P4X/DTD/tei2.dtd" "tei2/tei2.dtd"

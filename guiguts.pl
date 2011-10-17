@@ -20,7 +20,7 @@
 
 #use criticism 'gentle';
 
-my $VERSION = '0.3.14';
+my $VERSION = '0.3.15';
 use strict;
 use warnings;
 use FindBin;
@@ -4149,6 +4149,7 @@ sub killstoppop {
 sub escape_regexmetacharacters {
 	my $inputstring = shift;
 	$inputstring =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;
+	$inputstring =~ s/\\\\'/\\'/g;
 	return $inputstring;
 }
 
@@ -6692,8 +6693,6 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		if ( $errorchecktype eq 'W3C Validate' ) {
 			if ( $w3cremote == 0 ) {
 				my $validatepath = dirname($validatecommand);
-				print 
-qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ ;
 				system(
 qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 			}

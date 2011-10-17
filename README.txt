@@ -67,7 +67,8 @@ Detailed release notes:
 
 Version 0.3.15 Fixed inaccurate results for unused CSS in PPHTML.
 Made conversion of sidenotes and footnotes to HTML optional. Added
-validation of PGTEI.
+validation of PGTEI. Word search from Word Frequency popup works
+if the word contains an apostrophe.
 
 Version 0.3.14 Fixed problem with Auto Illus that did not strip <p>
 and [Illustration: markup. Make gutcheck options menus resizable.
