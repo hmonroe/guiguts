@@ -14333,6 +14333,9 @@ sub wordfrequency {
 					  if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
 					searchoptset(qw/0 1 x 1/);
 				}
+				if (length($sword)==1) { # not whole word search for characters
+					searchoptset(qw/0 x x 0/);
+				}
 				if ( $intelligentWF && $sword =~ /^\\,(\s|\\n)/ ) {
 
 		# during comma-Upper ck, ignore if name followed by period, !, or ?

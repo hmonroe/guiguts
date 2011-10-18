@@ -65,6 +65,9 @@ or checkboxes in the various search/spellcheck dialogs.
 
 Detailed release notes:
 
+Version 0.3.16 Fixed double click search from Character Cnts on Word
+Frequency popup.
+
 Version 0.3.15 Fixed inaccurate results for unused CSS in PPHTML.
 Made conversion of sidenotes and footnotes to HTML optional. Added
 validation of PGTEI. Word search from Word Frequency popup works
