@@ -1503,53 +1503,80 @@ sub selection_menuitems {
 	   [
 		  Button   => 'Surround Selection With....',
 		  -command => sub {
-	if ( defined( $lglobal{surpop} ) ) {
-		$lglobal{surpop}->deiconify;
-		$lglobal{surpop}->raise;
-		$lglobal{surpop}->focus;
-	} else {
-		$lglobal{surpop} = $top->Toplevel;
-		$lglobal{surpop}->title('Surround text with:');
-		
-		my $f = $lglobal{surpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-		$f->Label( -text =>
+			  if ( defined( $lglobal{surpop} ) ) {
+				  $lglobal{surpop}->deiconify;
+				  $lglobal{surpop}->raise;
+				  $lglobal{surpop}->focus;
+			  } else {
+				  $lglobal{surpop} = $top->Toplevel;
+				  $lglobal{surpop}->title('Surround text with:');
+
+				  my $f =
+					$lglobal{surpop}
+					->Frame->pack( -side => 'top', -anchor => 'n' );
+				  $f->Label( -text =>
 "Surround the selection with?\n\\n will be replaced with a newline.",
-		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
-		my $f1 =
-		  $lglobal{surpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-		my $surstrt = $f1->Entry(
-								  -width      => 8,
-								  -background => 'white',
-								  -font       => $lglobal{font},
-								  -relief     => 'sunken',
-		)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'n' );
-		my $surend = $f1->Entry(
-								 -width      => 8,
-								 -background => 'white',
-								 -font       => $lglobal{font},
-								 -relief     => 'sunken',
-		)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'n' );
-		my $f2 =
-		  $lglobal{surpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-		my $gobut = $f2->Button(
-			-activebackground => $activecolor,
-			-command          => sub {
-				surroundit( $surstrt->get, $surend->get ,$textwindow);
-			},
-			-text  => 'OK',
-			-width => 16
-		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
-		$lglobal{surpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{surpop}->destroy;
-				undef $lglobal{surpop};
+					)->pack(
+							 -side   => 'top',
+							 -pady   => 5,
+							 -padx   => 2,
+							 -anchor => 'n'
+					);
+				  my $f1 =
+					$lglobal{surpop}
+					->Frame->pack( -side => 'top', -anchor => 'n' );
+				  my $surstrt =
+					$f1->Entry(
+								-width      => 8,
+								-background => 'white',
+								-font       => $lglobal{font},
+								-relief     => 'sunken',
+					)->pack(
+							 -side   => 'left',
+							 -pady   => 5,
+							 -padx   => 2,
+							 -anchor => 'n'
+					);
+				  my $surend =
+					$f1->Entry(
+								-width      => 8,
+								-background => 'white',
+								-font       => $lglobal{font},
+								-relief     => 'sunken',
+					)->pack(
+							 -side   => 'left',
+							 -pady   => 5,
+							 -padx   => 2,
+							 -anchor => 'n'
+					);
+				  my $f2 =
+					$lglobal{surpop}
+					->Frame->pack( -side => 'top', -anchor => 'n' );
+				  my $gobut = $f2->Button(
+					  -activebackground => $activecolor,
+					  -command          => sub {
+						  surroundit( $surstrt->get, $surend->get,
+									  $textwindow );
+					  },
+					  -text  => 'OK',
+					  -width => 16
+					)->pack(
+							 -side   => 'top',
+							 -pady   => 5,
+							 -padx   => 2,
+							 -anchor => 'n'
+					);
+				  $lglobal{surpop}->protocol(
+					  'WM_DELETE_WINDOW' => sub {
+						  $lglobal{surpop}->destroy;
+						  undef $lglobal{surpop};
+					  }
+				  );
+				  $surstrt->insert( 'end', '_' ) unless ( $surstrt->get );
+				  $surend->insert( 'end', '_' ) unless ( $surend->get );
+				  $lglobal{surpop}->Icon( -image => $icon );
+			  }
 			}
-		);
-		$surstrt->insert( 'end', '_' ) unless ( $surstrt->get );
-		$surend->insert( 'end', '_' ) unless ( $surend->get );
-		$lglobal{surpop}->Icon( -image => $icon );
-	}
-		  }		
 	   ],
 	   [
 		  Button   => 'Flood Fill Selection With....',
@@ -4175,7 +4202,7 @@ sub replaceall {
 
 			# escape metacharacters for whole word matching
 			$exactsearch = escape_regexmetacharacters($exactsearch)
-			  ; # this is a whole word search
+			  ;                      # this is a whole word search
 			$searchterm = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
 			  if $sopt[0];
 			my ( $searchstart, $mode );
@@ -5133,7 +5160,7 @@ sub htmlimage {
 					$selection =~ s/"/&quot;/g;
 					$selection =~ s/'/&#39;/g;
 					my $alt = $lglobal{alttext}->get;
-					$alt = " alt=\"$alt\"";
+					$alt       = " alt=\"$alt\"";
 					$selection = "<span class=\"caption\">$selection</span>\n"
 					  if $selection;
 					$preservep = '' unless $selection;
@@ -5539,8 +5566,8 @@ sub htmlautoconvert {
 	html_convert_ampersands();
 
 	html_convert_emdashes();
-	
-	if ($lglobal{convert_footnotes}) {
+
+	if ( $lglobal{convert_footnotes} ) {
 		$lglobal{fnsecondpass}  = 0;
 		$lglobal{fnsearchlimit} = 1;
 		html_convert_footnotes( $textwindow, $lglobal{fnarray} );
@@ -5553,12 +5580,12 @@ sub htmlautoconvert {
 
 	html_convert_underscoresmallcaps($textwindow);
 
-	if ($lglobal{convert_sidenotes}) {
+	if ( $lglobal{convert_sidenotes} ) {
 		html_convert_sidenotes($textwindow);
 	}
 
-	if ($lglobal{pageanch}||$lglobal{pagecmt}) {
-		html_convert_pageanchors( $textwindow);
+	if ( $lglobal{pageanch} || $lglobal{pagecmt} ) {
+		html_convert_pageanchors($textwindow);
 	}
 
 	html_convert_utf( $textwindow, $lglobal{leave_utf}, $lglobal{keep_latin1} );
@@ -6488,8 +6515,9 @@ sub errorcheckpop_up {
 				{
 					next;
 				}
+
 				# skip some unnecessary lines from W3C Validate for PGTEI
-				if ( $line =~ /^In entity TEI/) {
+				if ( $line =~ /^In entity TEI/ ) {
 					next;
 				}
 
@@ -7309,6 +7337,7 @@ sub gcviewops {
 				   -padx   => 2,
 				   -anchor => 'n'
 		  );
+
 		#$lglobal{viewpop}->resizable( 'no', 'no' );
 	}
 }
@@ -8991,10 +9020,10 @@ sub initialize {
 	readsettings();
 
 	# For backward compatibility, carry over old geometry settings
+	unless ($geometry2) {
+		$geometry2 = '462x583+684+72';
+	}
 	unless ( $geometryhash{wfpop} ) {
-		unless ($geometry2) {
-			$geometry2 = '462x583+684+72';
-		}
 		$geometryhash{wfpop}         = $geometry2;
 		$geometryhash{gcpop}         = $geometry2;
 		$geometryhash{jeepop}        = $geometry2;
@@ -10781,11 +10810,11 @@ EOM
 		print $save_handle ");\n\n";
 
 		for (
-			qw/alpha_sort activecolor auto_page_marks auto_show_images autobackup autosave autosaveinterval 
-			blocklmargin blockrmargin bold_char defaultindent failedsearch fontname fontsize fontweight geometry 
-			geometry2 geometry3 geometrypnumpop globalaspellmode highlightcolor history_size ignoreversionnumber 
-			intelligentWF ignoreversions italic_char jeebiesmode lastversioncheck lmargin nobell nohighlights 
-			notoolbar poetrylmargin rmargin rwhyphenspace singleterm stayontop toolside utffontname utffontsize 
+			qw/alpha_sort activecolor auto_page_marks auto_show_images autobackup autosave autosaveinterval
+			blocklmargin blockrmargin bold_char defaultindent failedsearch fontname fontsize fontweight geometry
+			geometry2 geometry3 geometrypnumpop globalaspellmode highlightcolor history_size ignoreversionnumber
+			intelligentWF ignoreversions italic_char jeebiesmode lastversioncheck lmargin nobell nohighlights
+			notoolbar poetrylmargin rmargin rwhyphenspace singleterm stayontop toolside utffontname utffontsize
 			verboseerrorchecks vislnnm w3cremote/
 		  )
 		{
@@ -11710,7 +11739,6 @@ sub update_indicators {
 }
 
 ## Spell Check
-
 
 # Initialize spellchecker
 sub spellcheckfirst {
@@ -13454,10 +13482,10 @@ sub find_transliterations {
 sub nextblock {
 	my ( $mark, $direction ) = @_;
 	unless ($searchstartindex) { $searchstartindex = '1.0' }
-	
- #use Text::Balanced qw (			extract_delimited			extract_bracketed			extract_quotelike			extract_codeblock			extract_variable			extract_tagged			extract_multiple			gen_delimited_pat			gen_extract_tagged		       );
- #print extract_bracketed( "((I)(like(pie))!)", '()' );	
- #return;
+
+#use Text::Balanced qw (			extract_delimited			extract_bracketed			extract_quotelike			extract_codeblock			extract_variable			extract_tagged			extract_multiple			gen_delimited_pat			gen_extract_tagged		       );
+#print extract_bracketed( "((I)(like(pie))!)", '()' );
+#return;
 	if ( $mark eq 'default' ) {
 		if ( $direction eq 'forward' ) {
 			$searchstartindex =
@@ -13673,7 +13701,7 @@ sub orphanedbrackets {
 	sub brsearch {
 		viewpagenums() if ( $lglobal{seepagenums} );
 		@{ $lglobal{brbrackets} } = ();
-		@{ $lglobal{brindices} } = ();
+		@{ $lglobal{brindices} }  = ();
 		$lglobal{brindex} = '1.0';
 		my $brcount = 0;
 		my $brlength;
@@ -14328,13 +14356,17 @@ sub wordfrequency {
 					$sword =~ s/\*newline\*/\n/;
 					$sword =~ s/\*space\*/ /;
 					$sword =~ s/([^\w\s\\])/\\$1/g;
+
 					#$sword = escape_regexmetacharacters($sword);
 					$sword .= '\b'
 					  if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
 					searchoptset(qw/0 1 x 1/);
 				}
-				# not whole word search from character cnts popup 
-				if ((length($sword)==1) and ($lglobal{saveheader} =~ /characters in the file./)) { 
+
+				# not whole word search from character cnts popup
+				if (     ( length($sword) == 1 )
+					 and ( $lglobal{saveheader} =~ /characters in the file./ ) )
+				{
 					searchoptset(qw/0 x x 0/);
 				}
 				if ( $intelligentWF && $sword =~ /^\\,(\s|\\n)/ ) {
@@ -14589,7 +14621,7 @@ sub gutcheck {
 sub gutopts {
 	$lglobal{gcdialog} =
 	  $top->DialogBox( -title => 'Gutcheck Options', -buttons => ['OK'] );
-	initialize_popup_without_deletebinding('gcdialog');	  
+	initialize_popup_without_deletebinding('gcdialog');
 	my $gcopt6 = $lglobal{gcdialog}->add(
 							   'Checkbutton',
 							   -variable    => \$gcopt[6],
@@ -14597,16 +14629,16 @@ sub gutopts {
 							   -text => '-v Enable verbose mode (Recommended).',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
 	my $gcopt0 = $lglobal{gcdialog}->add(
-								 'Checkbutton',
-								 -variable    => \$gcopt[0],
-								 -selectcolor => $lglobal{checkcolor},
-								 -text => '-t Disable check for common typos.',
+								  'Checkbutton',
+								  -variable    => \$gcopt[0],
+								  -selectcolor => $lglobal{checkcolor},
+								  -text => '-t Disable check for common typos.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
 	my $gcopt1 = $lglobal{gcdialog}->add(
-								 'Checkbutton',
-								 -variable    => \$gcopt[1],
-								 -selectcolor => $lglobal{checkcolor},
-								 -text        => '-x Disable paranoid mode.',
+										  'Checkbutton',
+										  -variable    => \$gcopt[1],
+										  -selectcolor => $lglobal{checkcolor},
+										  -text => '-x Disable paranoid mode.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
 	my $gcopt2 = $lglobal{gcdialog}->add(
 							 'Checkbutton',
@@ -14621,22 +14653,22 @@ sub gutopts {
 							 -text => '-s Report ALL unbalanced single quotes.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
 	my $gcopt4 = $lglobal{gcdialog}->add(
-								 'Checkbutton',
-								 -variable    => \$gcopt[4],
-								 -selectcolor => $lglobal{checkcolor},
-								 -text        => '-m Interpret HTML markup.',
+										  'Checkbutton',
+										  -variable    => \$gcopt[4],
+										  -selectcolor => $lglobal{checkcolor},
+										  -text => '-m Interpret HTML markup.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
 	my $gcopt5 = $lglobal{gcdialog}->add(
-								 'Checkbutton',
-								 -variable    => \$gcopt[5],
-								 -selectcolor => $lglobal{checkcolor},
-								 -text => '-l Do not report non DOS newlines.',
+								  'Checkbutton',
+								  -variable    => \$gcopt[5],
+								  -selectcolor => $lglobal{checkcolor},
+								  -text => '-l Do not report non DOS newlines.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
 	my $gcopt7 = $lglobal{gcdialog}->add(
-								 'Checkbutton',
-								 -variable    => \$gcopt[7],
-								 -selectcolor => $lglobal{checkcolor},
-								 -text => '-u Flag words from the .typ file.',
+								   'Checkbutton',
+								   -variable    => \$gcopt[7],
+								   -selectcolor => $lglobal{checkcolor},
+								   -text => '-u Flag words from the .typ file.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
 	my $gcopt8 = $lglobal{gcdialog}->add(
 								 'Checkbutton',
@@ -16312,22 +16344,25 @@ sub get_page_number {
 			$mark = $textwindow->markPrevious($mark) if $mark;
 		}
 	}
-		unless ($pnum) {
-				$mark      = $textwindow->markNext($markindex);
-				while ($mark) {
-					if ( $mark =~ /Pg(\S+)/ ) {
-						$pnum = $1;
-						last;
-					} else {
-						#print "$mark:1\n";
-						#print $textwindow->markNext($mark).":2\n";
-						if ((not defined $textwindow->markNext($mark)) || ($mark eq $textwindow->markNext($mark))) {
-							last;
-						}
-						$mark = $textwindow->markNext($mark);
-						last unless $mark;
-					}
+	unless ($pnum) {
+		$mark = $textwindow->markNext($markindex);
+		while ($mark) {
+			if ( $mark =~ /Pg(\S+)/ ) {
+				$pnum = $1;
+				last;
+			} else {
+
+				#print "$mark:1\n";
+				#print $textwindow->markNext($mark).":2\n";
+				if (    ( not defined $textwindow->markNext($mark) )
+					 || ( $mark eq $textwindow->markNext($mark) ) )
+				{
+					last;
 				}
+				$mark = $textwindow->markNext($mark);
+				last unless $mark;
+			}
+		}
 	}
 	$pnum = '' unless $pnum;
 	return $pnum;
@@ -18835,7 +18870,7 @@ sub text_convert_options {
 sub runtests {
 
 	# From the command line run "guiguts.pl runtests"
-	use Test::More; #tests => 25;
+	use Test::More;    #tests => 25;
 	ok( 1 == 1, "Dummy test 1==1" );
 
 	#if ( -e "setting.rc" ) { rename( "setting.rc", "setting.old" ); }
@@ -19034,7 +19069,8 @@ if ( $lglobal{runtests} ) {
 	if ( glob '*.par' ) {
 		_exit();
 	}
-	print "If you have any problems, please report any error messages that appear here.\n";
+	print
+"If you have any problems, please report any error messages that appear here.\n";
 	MainLoop;
 }
 
