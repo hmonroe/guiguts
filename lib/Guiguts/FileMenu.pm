@@ -12,7 +12,7 @@ sub file_include {    # FIXME: Should include even if no file loaded.
 	my $types = [
 				  [
 					 'Text Files',
-					 [ '.txt', '.text', '.ggp', '.htm', '.html', '.rst' ]
+					 [ '.txt', '.text', '.ggp', '.htm', '.html', '.rst','.tei','.xml' ]
 				  ],
 				  [ 'All Files', ['*'] ],
 	];

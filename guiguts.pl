@@ -5567,11 +5567,9 @@ sub htmlautoconvert {
 
 	html_convert_emdashes();
 
-	if ( $lglobal{convert_footnotes} ) {
-		$lglobal{fnsecondpass}  = 0;
-		$lglobal{fnsearchlimit} = 1;
-		html_convert_footnotes( $textwindow, $lglobal{fnarray} );
-	}
+	$lglobal{fnsecondpass}  = 0;
+	$lglobal{fnsearchlimit} = 1;
+	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
 
 	html_convert_body( $textwindow, $headertext, $lglobal{cssblockmarkup},
 					   $lglobal{poetrynumbers}, $lglobal{classhash} );
@@ -5580,13 +5578,10 @@ sub htmlautoconvert {
 
 	html_convert_underscoresmallcaps($textwindow);
 
-	if ( $lglobal{convert_sidenotes} ) {
-		html_convert_sidenotes($textwindow);
-	}
+	html_convert_sidenotes($textwindow);
 
-	if ( $lglobal{pageanch} || $lglobal{pagecmt} ) {
-		html_convert_pageanchors($textwindow);
-	}
+	html_convert_pageanchors( $textwindow, $lglobal{pageanch},
+							  $lglobal{pagecmt} );
 
 	html_convert_utf( $textwindow, $lglobal{leave_utf}, $lglobal{keep_latin1} );
 
@@ -12189,7 +12184,7 @@ sub file_open {    # Find a text file to open
 	my $types = [
 				  [
 					 'Text Files',
-					 [qw/.txt .text .ggp .htm .html .rst .bk1 .bk2/]
+					 [qw/.txt .text .ggp .htm .html .rst .bk1 .bk2 .xml .tei/]
 				  ],
 				  [ 'All Files', ['*'] ],
 	];
@@ -15567,35 +15562,6 @@ sub markpopup {    # FIXME: Rename html_popup
 				   -pady   => 2,
 				   -sticky => 'w'
 		  );
-		my $sidenote_convert =
-		  $f0->Checkbutton(
-							-variable    => \$lglobal{convert_sidenotes},
-							-selectcolor => $lglobal{checkcolor},
-							-text        => 'Convert Sidenotes',
-							-anchor      => 'w',
-		  )->grid(
-				   -row    => 4,
-				   -column => 1,
-				   -padx   => 1,
-				   -pady   => 2,
-				   -sticky => 'w'
-		  );
-		$sidenote_convert->select;
-		my $footnote_convert =
-		  $f0->Checkbutton(
-							-variable    => \$lglobal{convert_footnotes},
-							-selectcolor => $lglobal{checkcolor},
-							-text        => 'Convert Footnotes',
-							-anchor      => 'w',
-		  )->grid(
-				   -row    => 4,
-				   -column => 2,
-				   -padx   => 1,
-				   -pady   => 2,
-				   -sticky => 'w'
-		  );
-		$footnote_convert->select;
-
 		my $f1 =
 		  $lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my ( $inc, $row, $col ) = ( 0, 0, 0 );
@@ -18958,44 +18924,44 @@ sub runtests {
 		"Deletion confirmed of tests/testhtml1.html" );
 
 	# Test 2 of HTML generation
-	#	ok( 1 == do { openfile("tests/testhtml2.txt"); 1 },
-	#		"openfile on tests/testhtml2.txt" );
-	#	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml2.txt" );
-	#	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml2.html'); 1 },
-	#		"test of file save as tests/testfilewrapped" );
-	#	ok( -e 'tests/testhtml2.html', "tests/testhtml2.html was saved" );
-	#
-	#	ok( -e "tests/testhtml2baseline.html",
-	#		"tests/testhtml2baseline.html exists" );
-	#	open INFILE,  "tests/testhtml2.html"       || die "no source file\n";
-	#	open LOGFILE, "> tests/testhtml2temp.html" || die "output file error\n";
-	#	@book   = ();
-	#	$inbody = 0;
-	#	while ( $ln = <INFILE> ) {
-	#		if ($inbody) { print LOGFILE $ln; }
-	#		if ( $ln =~ /<\/head>/ ) {
-	#			$inbody = 1;
-	#		}
-	#	}
-	#	close INFILE;
-	#	close LOGFILE;
-	#	ok(
-	#		compare( "tests/testhtml2baseline.html", 'tests/testhtml2temp.html' ) ==
-	#		  0,
-	#		"Autogenerate HTML successful"
-	#	);
-	#	print "begin diff\n";
-	#	system "diff tests/testhtml2baseline.html tests/testhtml2temp.html";
-	#	print "end diff\n";
-	#
-	#	unlink 'tests/testhtml2.html';
-	#	unlink 'tests/testhtml2temp.html';
-	#	unlink 'tests/testhtml2-htmlbak.txt';
-	#	unlink 'tests/testhtml2-htmlbak.txt.bin';
-	#	ok( not( -e "tests/testhtml2temp.html" ),
-	#		"Deletion confirmed of tests/testhtml2temp.html" );
-	#	ok( not( -e "tests/testhtml2.html" ),
-	#		"Deletion confirmed of tests/testhtml2.html" );
+		ok( 1 == do { openfile("tests/testhtml2.txt"); 1 },
+			"openfile on tests/testhtml2.txt" );
+		ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml2.txt" );
+		ok( 1 == do { $textwindow->SaveUTF('tests/testhtml2.html'); 1 },
+			"test of file save as tests/testfilewrapped" );
+		ok( -e 'tests/testhtml2.html', "tests/testhtml2.html was saved" );
+	
+		ok( -e "tests/testhtml2baseline.html",
+			"tests/testhtml2baseline.html exists" );
+		open INFILE,  "tests/testhtml2.html"       || die "no source file\n";
+		open LOGFILE, "> tests/testhtml2temp.html" || die "output file error\n";
+		@book   = ();
+		$inbody = 0;
+		while ( $ln = <INFILE> ) {
+			if ($inbody) { print LOGFILE $ln; }
+			if ( $ln =~ /<\/head>/ ) {
+				$inbody = 1;
+			}
+		}
+		close INFILE;
+		close LOGFILE;
+		ok(
+			compare( "tests/testhtml2baseline.html", 'tests/testhtml2temp.html' ) ==
+			  0,
+			"Autogenerate HTML successful"
+		);
+		print "begin diff\n";
+		system "diff tests/testhtml2baseline.html tests/testhtml2temp.html";
+		print "end diff\n";
+	
+		unlink 'tests/testhtml2.html';
+		unlink 'tests/testhtml2temp.html';
+		unlink 'tests/testhtml2-htmlbak.txt';
+		unlink 'tests/testhtml2-htmlbak.txt.bin';
+		ok( not( -e "tests/testhtml2temp.html" ),
+			"Deletion confirmed of tests/testhtml2temp.html" );
+		ok( not( -e "tests/testhtml2.html" ),
+			"Deletion confirmed of tests/testhtml2.html" );
 	#
 	#	# Test 3 of HTML generation
 	#	ok( 1 == do { openfile("tests/testhtml3.txt"); 1 },

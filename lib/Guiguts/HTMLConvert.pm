@@ -1106,6 +1106,7 @@ sub html_convert_pageanchors {
 			# comment only
 			$textwindow->ntinsert( $markindex, '<!-- Page ' . $num . ' -->' )
 			  if ( $pagecmt and $num );
+			 #print $pagereference."3\n";
 			if ($pagereference) {
 				my $insertpoint = $markindex;
 				my $inserted    = 0;
@@ -1153,7 +1154,7 @@ sub html_convert_pageanchors {
 					$inserttext = '<p>' . $inserttext . '</p>';
 				}
 				$textwindow->ntinsert( $insertpoint, $inserttext )
-				  if $pageanch;
+				  if $main::lglobal{pageanch};
 			}
 		} else {
 			if ( $mark =~ m{HRULE} )
