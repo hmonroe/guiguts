@@ -1704,6 +1704,20 @@ sub fixup_menuitems {
 	   [ 'separator', '' ],
 	   [ Button => '~Footnote Fixup', -command => \&footnotepop ],
 	   [ Button => '~HTML Fixup',     -command => \&markpopup ],
+	   [ Button => 'PGT~EI Fixup',   
+			   -command => sub {        # FIXME: sub this out.
+				   runner(
+"$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online"
+				   );
+				 }
+	   ],
+	   [ Button => '~RST Fixup',   
+			   -command => sub {        # FIXME: sub this out.
+				   runner(
+"$globalbrowserstart http://epubmaker.pglaf.org/"
+				   );
+				 }
+	   ],
 	   [ Button => '~Sidenote Fixup', -command => \&sidenotes ],
 	   [
 		  Button   => 'Reformat Poetry ~Line Numbers',

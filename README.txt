@@ -65,6 +65,9 @@ or checkboxes in the various search/spellcheck dialogs.
 
 Detailed release notes:
 
+Version 0.3.17 Fixed problem with HTML generation of page numbers 
+rolling back to 0.3.14. Made .TEI and .XML valid extensions.
+
 Version 0.3.16 Fixed double click search on Word Frequency popup
 to work for strings with nonalphanumeric characters (',-,--) while
 searching from Character Cnts does not do a whole word search. 
