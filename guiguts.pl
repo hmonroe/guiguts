@@ -17369,6 +17369,7 @@ sub showversion {
 		$winver = qx{ver};
 		$winver =~ s{\n}{}smg;
 	}
+        else {$winver="";}   # stops "uninitialised value" message on non windows systems 
 	my $message = <<"END";
 Currently Running :
 $APP_NAME, Version : $VERSION
