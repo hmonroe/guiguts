@@ -20,7 +20,7 @@
 
 #use criticism 'gentle';
 
-my $VERSION = '0.3.17';
+my $VERSION = '0.3.18';
 use strict;
 use warnings;
 use FindBin;
@@ -1704,20 +1704,35 @@ sub fixup_menuitems {
 	   [ 'separator', '' ],
 	   [ Button => '~Footnote Fixup', -command => \&footnotepop ],
 	   [ Button => '~HTML Fixup',     -command => \&markpopup ],
-	   [ Button => 'PGT~EI Fixup',   
-			   -command => sub {        # FIXME: sub this out.
+	   [ Button => 'PGT~EI Tools',   
+			   -command => sub {
 				   runner(
 "$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online"
 				   );
 				 }
 	   ],
-	   [ Button => '~RST Fixup',   
-			   -command => sub {        # FIXME: sub this out.
+			[
+			   Cascade  => 'RST Tools',
+			   -tearoff => 0,
+			   -menuitems =>
+				 [ 
+	   [ Button => 'ePubMaker Online',   
+			   -command => sub {       
 				   runner(
 "$globalbrowserstart http://epubmaker.pglaf.org/"
 				   );
 				 }
 	   ],
+	   [ Button => 'DP2RST Conversion',   
+			   -command => sub {       
+				   runner(
+"$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst"
+				   );
+				 }
+	   ],
+				 ]
+			],
+	   
 	   [ Button => '~Sidenote Fixup', -command => \&sidenotes ],
 	   [
 		  Button   => 'Reformat Poetry ~Line Numbers',
@@ -4824,7 +4839,7 @@ sub markup {
 				$lglobal{linkpop} = $top->Toplevel;
 				$lglobal{linkpop}->title('Internal Links');
 				$lglobal{linkpop}->geometry($geometry2) if $geometry2;
-				$lglobal{linkpop}->transient($top)      if $stayontop;
+				$lglobal{linkpop}->transient($top) if $stayontop;
 				$lglobal{fnlinks} = 1;
 				my $tframe = $lglobal{linkpop}->Frame->pack;
 				$tframe->Checkbutton(
@@ -7951,12 +7966,13 @@ sub dashcheck {
 	my %display = ();
 	foreach my $word ( keys %{ $lglobal{seenm} } ) {
 		next if ( $lglobal{seenm}->{$word} < 1 );
-		if ( $word =~ /-/ ) {
+		if ( ($word =~ /-/)or ($word =~ /—/) ) {
 			$wordw++;
 			my $wordtemp = $word;
 			$display{$word} = $lglobal{seenm}->{$word}
 			  unless $lglobal{suspects_only};
 			$word =~ s/--/-/g;
+			$word =~ s/—/-/g; # dp2rst creates real em-dashes
 			if ( $lglobal{seen}->{$word} ) {
 				my $aword = $word . ' ****';
 				$display{$wordtemp} = $lglobal{seenm}->{$wordtemp}
@@ -10497,6 +10513,7 @@ sub initialize_popup_without_deletebinding {
 		}
 	);
 	$lglobal{$popupname}->Icon( -image => $icon );
+	$lglobal{$popupname}->transient($top) if $stayontop;
 }
 
 sub pageremove {    # Delete a page marker
@@ -13479,12 +13496,14 @@ sub find_asterisks {
 	}
 	searchpopup();
 	searchoptset(qw/0 x x 1/);
+	$lglobal{searchentry}->delete( '1.0', 'end' );
 	$lglobal{searchentry}->insert( 'end', "(?<!/)\\*(?!/)" );
 }
 
 sub find_transliterations {
 	searchpopup();
 	searchoptset(qw/0 x x 1/);
+	$lglobal{searchentry}->delete( '1.0', 'end' );
 	$lglobal{searchentry}->insert( 'end', "\\[[^FIS\\d]" );
 }
 
@@ -13665,13 +13684,13 @@ sub orphanedbrackets {
 								-value       => '»|«',
 								-text        => 'German Angle quotes » «',
 		  )->grid( -row => 3, -column => 2 );
-		my $allqsel =
-		  $frame3->Radiobutton(
-								-variable    => \$lglobal{brsel},
-								-selectcolor => $lglobal{checkcolor},
-								-value       => 'all',
-								-text        => 'All brackets ( )',
-		  )->grid( -row => 3, -column => 2 );
+#		my $allqsel =
+#		  $frame3->Radiobutton(
+#								-variable    => \$lglobal{brsel},
+#								-selectcolor => $lglobal{checkcolor},
+#								-value       => 'all',
+#								-text        => 'All brackets ( )',
+#		  )->grid( -row => 3, -column => 2 );
 
 		my $frame2 = $lglobal{brkpop}->Frame->pack;
 		my $brsearchbt =
@@ -14197,7 +14216,8 @@ sub wordfrequency {
 			   'All Words' => sub {
 				   $lglobal{saveheader} = "$wc total words. " .
 					 keys( %{ $lglobal{seen} } ) . " distinct words in file.";
-				   sortwords( $lglobal{seen} );
+					sortwords( $lglobal{seen} );
+					searchoptset(qw/1 1 x 0/);    #default is whole word search
 				 }
 			],
 			[ 'Check Spelling', \&wfspellcheck ],
@@ -14355,7 +14375,6 @@ sub wordfrequency {
 				  $lglobal{wclistbox}->get( $lglobal{wclistbox}->curselection );
 				return unless length $sword;
 				@savesets = @sopt;
-				searchoptset(qw/1 x x 0/);    #default is whole word search
 				$sword =~ s/(\d+)\s+(\S)/$2/;
 				my $snum = $1;
 				$sword =~ s/\s+\*\*\*\*$//;
@@ -14376,6 +14395,9 @@ sub wordfrequency {
 				if (     ( length($sword) == 1 )
 					 and ( $lglobal{saveheader} =~ /characters in the file./ ) )
 				{
+					searchoptset(qw/0 x x 0/);
+				}
+				if ($lglobal{saveheader} =~ /lower case after period/ ) {
 					searchoptset(qw/0 x x 0/);
 				}
 				if ( $intelligentWF && $sword =~ /^\\,(\s|\\n)/ ) {
@@ -14511,6 +14533,7 @@ sub wordfrequency {
 		}
 		$line =~ s/[^'\.,\p{Alnum}-]/ /g;
 		$line =~ s/--/ /g;
+		$line =~ s/—/ /g; # trying to catch words with real em-dashes, from dp2rst
 		$line =~ s/(\D),/$1 /g;
 		$line =~ s/,(\D)/ $1/g;
 		@words = split( /\s+/, $line );

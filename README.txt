@@ -67,6 +67,10 @@ Detailed release notes:
 
 Version 0.3.17 Fixed problem with HTML generation of page numbers 
 rolling back to 0.3.14. Made .TEI and .XML valid extensions.
+Added PGTEI fixup and RST fixup menu items which link to the 
+pages for these filetypes at PGLAF. Fixed case sensitivity
+of searches from Word Frequency Popup. Made "Stay on Top" 
+preference apply to most popups.
 
 Version 0.3.16 Fixed double click search on Word Frequency popup
 to work for strings with nonalphanumeric characters (',-,--) while
