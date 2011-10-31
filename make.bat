@@ -1,5 +1,5 @@
 erase *.zip
-7z a -x!.* -x!setting.rc -x!header.txt -x!*.bat -x!gg.ico -x!perl -x!Win*.* -r guiguts-0.3.18.zip *.* lib\Tk\Toolbar\tkIcons
-7z a -x!.* -x!setting.rc -x!header.txt -x!make.bat -x!gg.ico -x!*.zip -r guiguts-win-0.3.18.zip *.* lib\Tk\Toolbar\tkIcons
+7z a -x!.* -x!setting.rc -x!header.txt -x!*.bat -x!gg.ico -x!perl -x!Win*.* -r guiguts-0.3.17.zip *.* lib\Tk\Toolbar\tkIcons
+7z a -x!.* -x!setting.rc -x!header.txt -x!make.bat -x!gg.ico -x!*.zip -r guiguts-win-0.3.17.zip *.* lib\Tk\Toolbar\tkIcons
 
  
