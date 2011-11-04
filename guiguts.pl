@@ -207,7 +207,7 @@ our @pageindex;
 our @recentfile;
 our @replace_history;
 our @search_history;
-our @sopt = ( 1, 0, 0, 0, 0 );
+our @sopt = ( 0, 0, 0, 0, 0 ); # default is not whole word search
 our @extops = (
 		  {
 			'label'   => 'W3C Markup Validation Service',

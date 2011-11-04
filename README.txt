@@ -5,7 +5,7 @@ header.txt and setting.rc files).
 
 Relative to version 0.2.10, the main changes are (1) one click installation
 of binaries on Windows and Macintosh/OSX computers with no need to install 
-perl (see winguts and macguts zip files); (2) several major new features, 
+perl (see guiguts-win and guiguts-mac zip files); (2) several major new features, 
 and (3) fixes to many long-standing bugs.  
 
 Major new features include: First, all the HTML checks can be run with a 
