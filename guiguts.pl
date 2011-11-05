@@ -20,7 +20,7 @@
 
 #use criticism 'gentle';
 
-my $VERSION = '0.3.17';
+my $VERSION = '0.3.18';
 use strict;
 use warnings;
 use FindBin;
@@ -12195,6 +12195,16 @@ sub spelladdtexttags {
 }
 
 sub spelladdgoodwords {
+		my $ans = $top->messageBox(
+				 -icon    => 'warning',
+				 -type    => 'YesNo',
+				 -default => 'yes',
+				 -message =>
+				   'Warning: Before adding good_words.txt first check whether they do not contain misspellings, multiple spellings, etc. Continue?'
+		);
+		if ( $ans =~ /no/i ) {
+			return;
+		}
 	chdir $globallastpath;
 	open( DAT, "good_words.txt" ) || die("Could not open good_words.txt!");
 	my @raw_data = <DAT>;

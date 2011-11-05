@@ -5,7 +5,9 @@ The "Orphaned Markup" check should quit complaining about nested spans.
 There is no check for a footnote anchor without a footnote. 
 Fix spell check popup. Acts weird with unicode.
 Using Move up I could move Page 3 up before 
-Page 2, but then I couldn't move it back down. 
+Page 2, but then I couldn't move it back down.
+Ligature check does not find œ. 
+Fix search history
 
 New feature requests: Export to text with page markers.
 Enhanced scannos filesto convert [oe] to ligature, [=a] to &#257. 
