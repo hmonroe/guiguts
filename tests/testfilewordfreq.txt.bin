@@ -1,0 +1,50 @@
+%pagenumbers = (
+);
+
+$bookmarks[0] = '7.14';
+
+
+@operations = (
+'Fri Nov  4 23:12:03 2011 - Open C:\guiguts\giuguts\tests\testfilewordfreq.txt',
+'Fri Nov  4 23:12:22 2011 - File Saved',
+'Fri Nov  4 23:12:24 2011 - Word Frequency',
+'Fri Nov  4 23:14:29 2011 - File Saved',
+'Fri Nov  4 23:14:49 2011 - File Saved',
+'Fri Nov  4 23:18:22 2011 - Open C:\guiguts\giuguts\tests\testfilewordfreq.txt',
+'Fri Nov  4 23:18:26 2011 - Word Frequency',
+'Fri Nov  4 23:19:25 2011 - File Saved',
+'Fri Nov  4 23:19:28 2011 - Word Frequency',
+'Fri Nov  4 23:22:10 2011 - File Saved',
+'Fri Nov  4 23:22:58 2011 - Open C:\guiguts\giuguts\tests\testfilewordfreq.txt',
+'Fri Nov  4 23:23:01 2011 - Word Frequency',
+'Fri Nov  4 23:23:23 2011 - File Saved',
+'Fri Nov  4 23:23:36 2011 - Word Frequency',
+'Fri Nov  4 23:23:55 2011 - Search & Replace',
+'Fri Nov  4 23:30:11 2011 - File Saved',
+'Fri Nov  4 23:36:42 2011 - Open C:\guiguts\giuguts\tests\testfilewordfreq.txt',
+'Fri Nov  4 23:36:45 2011 - Word Frequency',
+'Fri Nov  4 23:36:48 2011 - Word Frequency',
+'Fri Nov  4 23:38:26 2011 - File Saved',
+'Fri Nov  4 23:38:26 2011 - Word Frequency',
+'Fri Nov  4 23:38:58 2011 - File Saved',
+'Fri Nov  4 23:38:58 2011 - Word Frequency',
+'Fri Nov  4 23:40:13 2011 - File Saved',
+'Fri Nov  4 23:47:24 2011 - Open C:\guiguts\giuguts\tests\testfilewordfreq.txt',
+'Fri Nov  4 23:47:25 2011 - Search & Replace',
+'Fri Nov  4 23:47:35 2011 - Search & Replace',
+'Fri Nov  4 23:47:56 2011 - Search & Replace',
+'Fri Nov  4 23:48:03 2011 - Search & Replace',
+'Fri Nov  4 23:48:27 2011 - Search & Replace',
+'Fri Nov  4 23:50:27 2011 - Search & Replace',
+'Fri Nov  4 23:52:24 2011 - Search & Replace',
+'Fri Nov  4 23:52:55 2011 - Search & Replace',
+'Fri Nov  4 23:56:22 2011 - Search & Replace',
+'Sat Nov  5 00:03:54 2011 - Word Frequency',
+'Sat Nov  5 00:03:55 2011 - File Saved',
+);
+
+$spellindexbkmrk = '';
+
+$scannoslistpath = '';
+
+1;

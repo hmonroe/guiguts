@@ -1,0 +1,37 @@
+﻿composing comp-osing comp--osing
+
+
+high-life high--life highlife
+
+
+^([a-zA-Z])$1$
+asdf9
+
+ALL CAPS
+
+all caps
+
+all caps
+
+MiXeD CasE
+
+mixed case
+
+Initial Caps
+
+initial caps
+
+œœ
+[ae]
+[oe]
+oeae
+
+(oe|ae|æ|Æ|œ|Œ)
+
+Check, Upper
+
+test Check. lower test
+
+composing com-posing comp--osing
+
+ààááâÕõ

@@ -3693,6 +3693,7 @@ sub searchtext {
 # $sopt[4] --> 0 = search from last index       1 = Start from beginning
 	my $searchterm = shift;
 	$searchterm = '' unless defined $searchterm;
+	print $searchterm."::\n";
 
 	$lglobal{lastsearchterm} = 'stupid variable needs to be initialized'
 	  unless length( $lglobal{lastsearchterm} );
@@ -7966,13 +7967,13 @@ sub dashcheck {
 	my %display = ();
 	foreach my $word ( keys %{ $lglobal{seenm} } ) {
 		next if ( $lglobal{seenm}->{$word} < 1 );
-		if ( ($word =~ /-/)or ($word =~ /—/) ) {
+		if ( $word =~ /-/) {
 			$wordw++;
 			my $wordtemp = $word;
 			$display{$word} = $lglobal{seenm}->{$word}
 			  unless $lglobal{suspects_only};
 			$word =~ s/--/-/g;
-			$word =~ s/—/-/g; # dp2rst creates real em-dashes
+			#$word =~ s/—/-/g; # dp2rst creates real em-dashes
 			if ( $lglobal{seen}->{$word} ) {
 				my $aword = $word . ' ****';
 				$display{$wordtemp} = $lglobal{seenm}->{$wordtemp}
@@ -8150,8 +8151,6 @@ sub mixedcasecheck {
 
 # Refactor various word frequency checks into one
 sub anythingwfcheck {
-
-	# "initial caps", "^\p{Upper}\P{Upper}+$"
 	my ( $checktype, $checkregexp ) = @_;
 	$top->Busy( -recurse => 1 );
 	$lglobal{wclistbox}->delete( '0', 'end' );
@@ -13724,7 +13723,7 @@ sub orphanedbrackets {
 		}
 	);
 	$lglobal{brkpop}->transient($top) if $stayontop;
-	$psel->select;
+	if ($psel) {$psel->select;}
 
 	sub brsearch {
 		viewpagenums() if ( $lglobal{seepagenums} );
@@ -14384,7 +14383,6 @@ sub wordfrequency {
 					$sword =~ s/\*newline\*/\n/;
 					$sword =~ s/\*space\*/ /;
 					$sword =~ s/([^\w\s\\])/\\$1/g;
-
 					#$sword = escape_regexmetacharacters($sword);
 					$sword .= '\b'
 					  if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
@@ -14395,9 +14393,6 @@ sub wordfrequency {
 				if (     ( length($sword) == 1 )
 					 and ( $lglobal{saveheader} =~ /characters in the file./ ) )
 				{
-					searchoptset(qw/0 x x 0/);
-				}
-				if ($lglobal{saveheader} =~ /lower case after period/ ) {
 					searchoptset(qw/0 x x 0/);
 				}
 				if ( $intelligentWF && $sword =~ /^\\,(\s|\\n)/ ) {
