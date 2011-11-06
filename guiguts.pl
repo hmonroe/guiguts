@@ -3693,7 +3693,6 @@ sub searchtext {
 # $sopt[4] --> 0 = search from last index       1 = Start from beginning
 	my $searchterm = shift;
 	$searchterm = '' unless defined $searchterm;
-	print $searchterm."::\n";
 
 	$lglobal{lastsearchterm} = 'stupid variable needs to be initialized'
 	  unless length( $lglobal{lastsearchterm} );

@@ -8,6 +8,8 @@ Using Move up I could move Page 3 up before
 Page 2, but then I couldn't move it back down.
 Ligature check does not find œ. 
 Fix search history
+Prep text export has page separators
+Allow validation of HTML 1.1 strict
 
 New feature requests: Export to text with page markers.
 Enhanced scannos filesto convert [oe] to ligature, [=a] to &#257. 
