@@ -67,7 +67,8 @@ Detailed release notes:
 
 Version 0.3.18 Fixed problem in 0.3.17--did not detect emdash suspects. 
 Before adding good_words.txt first check whether they do not contain 
-misspellings, multiple spellings, etc.
+misspellings, multiple spellings, etc. Added samples subdirectory
+with PGTEI samples.
 
 Version 0.3.17 Fixed problem with HTML generation of page numbers 
 rolling back to 0.3.14. Made .TEI and .XML valid extensions.
