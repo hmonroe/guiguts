@@ -3,7 +3,7 @@ package Guiguts::SelectionMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&case &surround &flood &indent &asciibox &aligntext &tonamed &fromnamed &fracconv
+	@EXPORT=qw(&case &surround &surroundit &flood &indent &asciibox &aligntext &tonamed &fromnamed &fracconv
 	&selectrewrap &wrapper)
 }
 
