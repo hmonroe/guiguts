@@ -1,7 +1,7 @@
 Upgrading requires a complete reinstall (save header.txt and setting.rc although in
 theory these should not be be overwritten).
 
-On Windows, unzip the the file Winguts-nn.nn.nn.zip into a directory and run 
+On Windows, unzip the the file guiguts-win-nn.nn.nn.zip into a directory and run 
 Winguts.bat. You will also need to install helper applications to view images 
 and to spell check. If you already have another version of Perl installed, see below. 
 
@@ -13,10 +13,10 @@ Please direct any help requests to the GuiGuts DP forum thread:
 http://www.pgdp.net/phpBB2/viewtopic.php?t=3075
 
 The easiest way to get guiguts up and running on a Windows system is to
-download WinGuts-n.n.n.zip and run WinGuts.bat. This calls an old
+download guiguts-win-n.n.n.zip and run WinGuts.bat. This calls an old
 version of perl with Tk.pm, 5.8, in a subdirectory by adding that
 subdirectory to your path. This will not work if you have
-other versons of perl without Tk.pm earlier on your path. Type "perl-v"
+other versons of perl without Tk.pm earlier on your path. Type "perl -v"
 to find out which version you are using. If you want to use an existing
 version of Perl, you can use Strawberry perl 5.12 or earlier or
 ActiveState perl 5.10 or earlier, if you install Tk.pm from cpan. No one

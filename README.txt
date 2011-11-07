@@ -73,7 +73,7 @@ samples. Search history keeps track of searches more reliably (but still
 does not include scanno searches). Tk TextEdit's FindAndReplaceAll native 
 function goes into an endless loop if the search term in the replacement 
 term (replace "C" with "CC". In such cases, guiguts now reverts to the 
-old very slow method.
+old very slow method. Fixed "Surround Selection".
 
 Version 0.3.17 Fixed problem with HTML generation of page numbers 
 rolling back to 0.3.14. Made .TEI and .XML valid extensions.
@@ -106,7 +106,7 @@ page markers.
 
 Version 0.3.12 Fixed page numbers when pngs begin with a letter such 
 as "a001.png". When reopening a document, the cursor is returned to where
-it was with focus. Leave out alt and title tags from <img if blank.
+it was with focus. Leave out alt and title tags from <img ...> if blank.
 
 Version 0.3.11 Fixed WinGuts which could not run external programs such 
 as an image viewer unless perl was installed. Fixed accelerators for 
