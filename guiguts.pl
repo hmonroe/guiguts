@@ -1925,7 +1925,7 @@ sub buildmenu {
 							  $lglobal{utfblocks}{ $utfsorthash{$_} }[0] . ' - '
 							  . $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
 						 ],
-						 ( sort ( keys %utfsorthash ) )[ 1 .. 33 ] ),
+						 ( sort ( keys %utfsorthash ) )[ 0 .. 33 ] ),
 				],
 			);
 		} else {
