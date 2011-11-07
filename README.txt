@@ -66,9 +66,10 @@ or checkboxes in the various search/spellcheck dialogs.
 Detailed release notes:
 
 Version 0.3.18 Fixed problem in 0.3.17--did not detect emdash suspects. 
-Before adding good_words.txt first check whether they do not contain 
-misspellings, multiple spellings, etc. Added samples subdirectory
-with PGTEI samples.
+Before adding good_words.txt, added warning popup to first check whether 
+they do not contain misspellings, multiple spellings, etc. Added samples 
+subdirectory with PGTEI and RST samples. Search history keeps track of 
+searches more reliably (but still does not include scanno searches).
 
 Version 0.3.17 Fixed problem with HTML generation of page numbers 
 rolling back to 0.3.14. Made .TEI and .XML valid extensions.

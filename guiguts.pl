@@ -26,8 +26,8 @@ use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
 
-use lib
-  "c:/dp/dp/lib"; # Seems necessary to use pp/tkpp to create a windows .exe file
+#use lib
+#  "c:/dp/dp/lib"; # Seems necessary to use pp/tkpp to create a windows .exe file
 
 #use Data::Dumper;
 use Cwd;
@@ -168,6 +168,7 @@ our $rwhyphenspace    = 0;
 our $scannoslist      = q{};
 our $scannoslistpath  = q{};
 our $scannospath      = q{};
+our $scannosearch     = 0;
 our $scrollupdatespd  = 40;
 our $searchendindex   = 'end';
 our $searchstartindex = '1.0';
@@ -3604,6 +3605,8 @@ sub loadscannos {
 }
 
 sub getnextscanno {
+	$scannosearch = 1;
+	
 	findascanno();
 	unless ( searchtext() ) {
 		if ( $lglobal{regaa} ) {
@@ -3693,7 +3696,9 @@ sub searchtext {
 # $sopt[4] --> 0 = search from last index       1 = Start from beginning
 	my $searchterm = shift;
 	$searchterm = '' unless defined $searchterm;
-
+	if (length($searchterm) ) { #and not ($searchterm =~ /\W/)
+		add_search_history($searchterm, \@search_history,$history_size );
+	}
 	$lglobal{lastsearchterm} = 'stupid variable needs to be initialized'
 	  unless length( $lglobal{lastsearchterm} );
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' ) if $searchstartindex;
@@ -3753,6 +3758,7 @@ sub searchtext {
 		no warnings;
 		unless ( length($searchterm) ) {
 			$searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
+			add_search_history($searchterm, \@search_history,$history_size );
 		}
 	}
 	return ('') unless length($searchterm);
@@ -12460,7 +12466,7 @@ sub searchpopup {
 		$lglobal{searchbutton} = $sf11->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				add_search_history( $lglobal{searchentry}, \@search_history,
+				add_search_history( $lglobal{searchentry}->get( '1.0', '1.end' ), \@search_history,
 									$history_size );
 				searchtext('');
 			},
@@ -12617,7 +12623,7 @@ sub searchpopup {
 			-activebackground => $activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
-				add_search_history( $lglobal{searchentry}, \@search_history,
+				add_search_history( $lglobal{searchentry}->get( '1.0', '1.end' ), \@search_history,
 									$history_size );
 				searchtext('');
 			},
@@ -12633,7 +12639,7 @@ sub searchpopup {
 			-activebackground => $activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
-				add_search_history( $lglobal{replaceentry}, \@replace_history,
+				add_search_history( $lglobal{replaceentry}->get( '1.0', '1.end' ), \@replace_history,
 									$history_size );
 			},
 			-text  => 'Replace',
@@ -12700,7 +12706,7 @@ sub searchpopup {
 			-activebackground => $activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry1}->get( '1.0', '1.end' ) );
-				add_search_history( $lglobal{replaceentry1},
+				add_search_history( $lglobal{replaceentry1}->get( '1.0', '1.end' ),
 									\@replace_history );
 			},
 			-text  => 'Replace',
@@ -12767,7 +12773,7 @@ sub searchpopup {
 			-activebackground => $activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry2}->get( '1.0', '1.end' ) );
-				add_search_history( $lglobal{replaceentry2},
+				add_search_history( $lglobal{replaceentry2}->get( '1.0', '1.end' ),
 									\@replace_history );
 			},
 			-text  => 'Replace',
@@ -12925,6 +12931,7 @@ sub searchpopup {
 				undef $lglobal{searchpop};
 				$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 				undef $lglobal{hintpop} if $lglobal{hintpop};
+				$scannosearch =0; #no longer in a scanno search
 			}
 		);
 		$lglobal{searchpop}->Icon( -image => $icon );
@@ -13056,7 +13063,7 @@ sub stealthscanno {
 	$lglobal{doscannos} = 1;
 	$lglobal{searchpop}->destroy if defined $lglobal{searchpop};
 	undef $lglobal{searchpop};
-	searchoptset(qw/x x x x 1/);    # force search to begin at start of doc
+	searchoptset(qw/1 x x 0 1/);    # force search to begin at start of doc, whole word
 	if ( loadscannos() ) {
 		saveset();
 		searchpopup();

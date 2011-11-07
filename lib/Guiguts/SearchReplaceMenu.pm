@@ -7,10 +7,12 @@ BEGIN {
 }
 
 sub add_search_history {
-	my ( $widget, $history_array_ref,$history_size ) = @_;
+	if ($main::scannosearch) {
+		return; # do not add to search history during a scannos check		
+	} 
+	my ( $term, $history_array_ref,$history_size ) = @_;
 	my @temparray = @$history_array_ref;
 	@$history_array_ref = ();
-	my $term = $widget->get( '1.0', '1.end' );
 	push @$history_array_ref, $term;
 	for (@temparray) {
 		next if $_ eq $term;
