@@ -1,46 +1,5 @@
 The following bugs/feature requests have not yet been addressed:
 
-Deleting letters of page markers permitted. 
-The "Orphaned Markup" check should quit complaining about nested spans. 
-There is no check for a footnote anchor without a footnote. 
-Fix spell check popup. Acts weird with unicode.
-Using Move up I could move Page 3 up before 
-Page 2, but then I couldn't move it back down.
-Ligature check does not find œ. 
-Prep text export has page separators
-Allow validation of HTML 1.1 strict
-I'd like the regex functionality to be the same in "Search & Replace" 
-and in "Highlight" (and maybe there are more places I'm not aware of), 
-and of course I'd like to be able to highlight text that extends across
-multiple lines.
-When executing Gutcheck and then selecting GC View Options, you cannot 
-close the Gutcheck window without first closing the View Options.
-The "Check All" window can not be scrolled unless clicking on the title 
-bar.  Clicking within the window does nothing, and the main GuiGuts window 
-is scrolled (scroll bar works OK). I am talking about using the mouse roller 
-or up/down arrow keys to scroll.
+Bugs: https://sourceforge.net/tracker/?limit=25&func=&group_id=209389&atid=1009518&status=1
 
-Default path to Gutcheck not set (Mac). Space character in path to Gutcheck breaks it.
-Gutcheck View Options window too small when first invoke. Use of uninitialized value $start in subtraction 
-Gutcheck view options not intuitive. Design of checkboxes not intuitive 
- 
-Double check page markers go at top of paragraph at the start of a page not bottom of previous paragraph
-
-No empty HTML anchors
-
-New feature requests: Export to text with page markers.
-Enhanced scannos filesto convert [oe] to ligature, [=a] to &#257. 
-Add feature for drop caps (would need new CSS and changes to the
-insert image dialog). Adjust the pptxt check to confirm that all returns
-are CRLF and not just LF. Allow highlight and copy from error check windows. 
-New tool to help in removing hyphens (for instance, how often does a given
-word appear with or without hyphens). Better Index/contents/illustration
-list recognizer. Convert ellipsis to real ellip or
-&#8230;. Add files to W3C to allow use of HTML11 DTD.
-
-Single source formats: RST, PGTEI, EPPG
-
-Under the hood changes: Break up code into smaller modules with clear 
-functionality and unit tests. Get debugger to make it through a file 
-open (double delegation to subsubwidget LineNumberText/TextUnicode
-seems to be the problem).
+Features: https://sourceforge.net/tracker/?group_id=209389&atid=1009521&status=1
