@@ -158,14 +158,13 @@ sub runProgram {
 		# need to use "--" in alt strings of images
 		$count = 0;
 		foreach my $line (@book) {
+			$count += 1;
 			if ( $line =~ /--/
 				and ( $line !~ /<!--/ and $line !~ /-->/ and $line !~ /alt=/ ) )
 			{
 				printf LOGFILE ( "  %s\n", $line );
-				$count += 1;
 			}
 			if ( $lastline =~ /^$/ and $line =~ /^$/ ) {
-				#count += 1;
 				printf LOGFILE ( "%d:1 Double-blank\n", $count );
 			}
 			$lastline = $line;

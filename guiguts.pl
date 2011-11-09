@@ -208,7 +208,7 @@ our @pageindex;
 our @recentfile;
 our @replace_history;
 our @search_history;
-our @sopt = ( 0, 0, 0, 0, 0 ); # default is not whole word search
+our @sopt = ( 0, 0, 0, 0, 0 );    # default is not whole word search
 our @extops = (
 		  {
 			'label'   => 'W3C Markup Validation Service',
@@ -1057,7 +1057,7 @@ sub file_export {
 			$next = 'end';
 		}
 		my $file = $textwindow->get( $page, $next );
-		$file =~ s/-{5,}File:.+?-{5}\n//;
+		$file =~ s/-*\s?File:\s?(\S+)\.(png|jpg)---[^\n]*\n//; 
 		$file =~ s/\n+$//;
 		open my $fh, '>', "$directory/$filename";
 		if ($unicode) {
@@ -1705,35 +1705,35 @@ sub fixup_menuitems {
 	   [ 'separator', '' ],
 	   [ Button => '~Footnote Fixup', -command => \&footnotepop ],
 	   [ Button => '~HTML Fixup',     -command => \&markpopup ],
-	   [ Button => 'PGT~EI Tools',   
-			   -command => sub {
-				   runner(
-"$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online"
-				   );
-				 }
+	   [
+		  Button   => 'PGT~EI Tools',
+		  -command => sub {
+			  runner(
+"$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
+			}
 	   ],
-			[
-			   Cascade  => 'RST Tools',
-			   -tearoff => 0,
-			   -menuitems =>
-				 [ 
-	   [ Button => 'ePubMaker Online',   
-			   -command => sub {       
-				   runner(
-"$globalbrowserstart http://epubmaker.pglaf.org/"
-				   );
-				 }
+	   [
+		  Cascade    => 'RST Tools',
+		  -tearoff   => 0,
+		  -menuitems => [
+			  [
+				 Button   => 'ePubMaker Online',
+				 -command => sub {
+					 runner(
+							"$globalbrowserstart http://epubmaker.pglaf.org/" );
+				   }
+			  ],
+			  [
+				 Button   => 'DP2RST Conversion',
+				 -command => sub {
+					 runner(
+						   "$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst"
+					 );
+				   }
+			  ],
+		  ]
 	   ],
-	   [ Button => 'DP2RST Conversion',   
-			   -command => sub {       
-				   runner(
-"$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst"
-				   );
-				 }
-	   ],
-				 ]
-			],
-	   
+
 	   [ Button => '~Sidenote Fixup', -command => \&sidenotes ],
 	   [
 		  Button   => 'Reformat Poetry ~Line Numbers',
@@ -3606,7 +3606,7 @@ sub loadscannos {
 
 sub getnextscanno {
 	$scannosearch = 1;
-	
+
 	findascanno();
 	unless ( searchtext() ) {
 		if ( $lglobal{regaa} ) {
@@ -3696,8 +3696,8 @@ sub searchtext {
 # $sopt[4] --> 0 = search from last index       1 = Start from beginning
 	my $searchterm = shift;
 	$searchterm = '' unless defined $searchterm;
-	if (length($searchterm) ) { #and not ($searchterm =~ /\W/)
-		add_search_history($searchterm, \@search_history,$history_size );
+	if ( length($searchterm) ) {    #and not ($searchterm =~ /\W/)
+		add_search_history( $searchterm, \@search_history, $history_size );
 	}
 	$lglobal{lastsearchterm} = 'stupid variable needs to be initialized'
 	  unless length( $lglobal{lastsearchterm} );
@@ -3758,7 +3758,7 @@ sub searchtext {
 		no warnings;
 		unless ( length($searchterm) ) {
 			$searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
-			add_search_history($searchterm, \@search_history,$history_size );
+			add_search_history( $searchterm, \@search_history, $history_size );
 		}
 	}
 	return ('') unless length($searchterm);
@@ -4232,12 +4232,13 @@ sub replaceall {
 
 		# if not a search across line boundary
 		# and not a search within a selection do a speedy FindAndReplaceAll
-		unless ( ( $sopt[3] ) or ($replacement =~ $searchterm)) {    #( $searchterm =~ m/\\n/ ) &&
+		unless ( ( $sopt[3] ) or ( $replacement =~ $searchterm ) )
+		{    #( $searchterm =~ m/\\n/ ) &&
 			my $exactsearch = $searchterm;
 
 			# escape metacharacters for whole word matching
 			$exactsearch = escape_regexmetacharacters($exactsearch)
-			  ;                      # this is a whole word search
+			  ;    # this is a whole word search
 			$searchterm = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
 			  if $sopt[0];
 			my ( $searchstart, $mode );
@@ -4845,7 +4846,7 @@ sub markup {
 				$lglobal{linkpop} = $top->Toplevel;
 				$lglobal{linkpop}->title('Internal Links');
 				$lglobal{linkpop}->geometry($geometry2) if $geometry2;
-				$lglobal{linkpop}->transient($top) if $stayontop;
+				$lglobal{linkpop}->transient($top)      if $stayontop;
 				$lglobal{fnlinks} = 1;
 				my $tframe = $lglobal{linkpop}->Frame->pack;
 				$tframe->Checkbutton(
@@ -5210,7 +5211,7 @@ sub htmlimage {
 						$textwindow->insert( 'thisblockstart',
 							    "<div class=\"figcenter\" style=\"width: " 
 							  . $width
-							  . "px;\">\n<img src=\"$name\" $sizexy$alt$title/>\n$selection</div>$preservep"
+							  . "px;\">\n<img src=\"$name\" $sizexy$alt$title />\n$selection</div>$preservep"
 						);
 					} elsif ( $alignment eq 'left' ) {
 						$textwindow->delete( 'thisblockstart', 'thisblockend' );
@@ -5579,8 +5580,15 @@ sub makeanchor {
 sub htmlautoconvert {
 	viewpagenums() if ( $lglobal{seepagenums} );
 	my $headertext;
-
-	return if ( $lglobal{global_filename} =~ /No File Loaded/ );
+	if ( $lglobal{global_filename} =~ /No File Loaded/ ) {
+		$top->messageBox(
+			-icon => 'warning',
+			-type => 'OK',
+			-message =>
+			  'Nothing to check'
+		);
+		return;
+	}
 
 	# Backup file
 	$textwindow->Busy;
@@ -7972,12 +7980,13 @@ sub dashcheck {
 	my %display = ();
 	foreach my $word ( keys %{ $lglobal{seenm} } ) {
 		next if ( $lglobal{seenm}->{$word} < 1 );
-		if ( $word =~ /-/) {
+		if ( $word =~ /-/ ) {
 			$wordw++;
 			my $wordtemp = $word;
 			$display{$word} = $lglobal{seenm}->{$word}
 			  unless $lglobal{suspects_only};
 			$word =~ s/--/-/g;
+
 			#$word =~ s/—/-/g; # dp2rst creates real em-dashes
 			if ( $lglobal{seen}->{$word} ) {
 				my $aword = $word . ' ****';
@@ -12200,16 +12209,16 @@ sub spelladdtexttags {
 }
 
 sub spelladdgoodwords {
-		my $ans = $top->messageBox(
-				 -icon    => 'warning',
-				 -type    => 'YesNo',
-				 -default => 'yes',
-				 -message =>
-				   'Warning: Before adding good_words.txt first check whether they do not contain misspellings, multiple spellings, etc. Continue?'
-		);
-		if ( $ans =~ /no/i ) {
-			return;
-		}
+	my $ans = $top->messageBox(
+		-icon    => 'warning',
+		-type    => 'YesNo',
+		-default => 'yes',
+		-message =>
+'Warning: Before adding good_words.txt first check whether they do not contain misspellings, multiple spellings, etc. Continue?'
+	);
+	if ( $ans =~ /no/i ) {
+		return;
+	}
 	chdir $globallastpath;
 	open( DAT, "good_words.txt" ) || die("Could not open good_words.txt!");
 	my @raw_data = <DAT>;
@@ -12228,8 +12237,8 @@ sub file_open {    # Find a text file to open
 	return if ( confirmempty() =~ /cancel/i );
 	my $types = [
 				  [
-					 'Text Files',
-					 [qw/.txt .text .ggp .htm .html .rst .bk1 .bk2 .xml .tei/]
+					'Text Files',
+					[qw/.txt .text .ggp .htm .html .rst .bk1 .bk2 .xml .tei/]
 				  ],
 				  [ 'All Files', ['*'] ],
 	];
@@ -12466,8 +12475,9 @@ sub searchpopup {
 		$lglobal{searchbutton} = $sf11->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				add_search_history( $lglobal{searchentry}->get( '1.0', '1.end' ), \@search_history,
-									$history_size );
+				add_search_history(
+								   $lglobal{searchentry}->get( '1.0', '1.end' ),
+								   \@search_history, $history_size );
 				searchtext('');
 			},
 			-text  => 'Search',
@@ -12623,8 +12633,9 @@ sub searchpopup {
 			-activebackground => $activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
-				add_search_history( $lglobal{searchentry}->get( '1.0', '1.end' ), \@search_history,
-									$history_size );
+				add_search_history(
+								   $lglobal{searchentry}->get( '1.0', '1.end' ),
+								   \@search_history, $history_size );
 				searchtext('');
 			},
 			-text  => 'R & S',
@@ -12639,8 +12650,9 @@ sub searchpopup {
 			-activebackground => $activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
-				add_search_history( $lglobal{replaceentry}->get( '1.0', '1.end' ), \@replace_history,
-									$history_size );
+				add_search_history(
+								  $lglobal{replaceentry}->get( '1.0', '1.end' ),
+								  \@replace_history, $history_size );
 			},
 			-text  => 'Replace',
 			-width => 6
@@ -12706,8 +12718,9 @@ sub searchpopup {
 			-activebackground => $activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry1}->get( '1.0', '1.end' ) );
-				add_search_history( $lglobal{replaceentry1}->get( '1.0', '1.end' ),
-									\@replace_history );
+				add_search_history(
+								 $lglobal{replaceentry1}->get( '1.0', '1.end' ),
+								 \@replace_history );
 			},
 			-text  => 'Replace',
 			-width => 6
@@ -12773,8 +12786,9 @@ sub searchpopup {
 			-activebackground => $activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry2}->get( '1.0', '1.end' ) );
-				add_search_history( $lglobal{replaceentry2}->get( '1.0', '1.end' ),
-									\@replace_history );
+				add_search_history(
+								 $lglobal{replaceentry2}->get( '1.0', '1.end' ),
+								 \@replace_history );
 			},
 			-text  => 'Replace',
 			-width => 6
@@ -12931,7 +12945,7 @@ sub searchpopup {
 				undef $lglobal{searchpop};
 				$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 				undef $lglobal{hintpop} if $lglobal{hintpop};
-				$scannosearch =0; #no longer in a scanno search
+				$scannosearch = 0;    #no longer in a scanno search
 			}
 		);
 		$lglobal{searchpop}->Icon( -image => $icon );
@@ -13063,7 +13077,8 @@ sub stealthscanno {
 	$lglobal{doscannos} = 1;
 	$lglobal{searchpop}->destroy if defined $lglobal{searchpop};
 	undef $lglobal{searchpop};
-	searchoptset(qw/1 x x 0 1/);    # force search to begin at start of doc, whole word
+	searchoptset(qw/1 x x 0 1/)
+	  ;    # force search to begin at start of doc, whole word
 	if ( loadscannos() ) {
 		saveset();
 		searchpopup();
@@ -13073,7 +13088,7 @@ sub stealthscanno {
 	$lglobal{doscannos} = 0;
 }
 
-sub spellchecker {                  # Set up spell check window
+sub spellchecker {    # Set up spell check window
 	push @operations, ( localtime() . ' - Spellcheck' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	oppopupdate()  if $lglobal{oppop};
@@ -13699,13 +13714,14 @@ sub orphanedbrackets {
 								-value       => '»|«',
 								-text        => 'German Angle quotes » «',
 		  )->grid( -row => 3, -column => 2 );
-#		my $allqsel =
-#		  $frame3->Radiobutton(
-#								-variable    => \$lglobal{brsel},
-#								-selectcolor => $lglobal{checkcolor},
-#								-value       => 'all',
-#								-text        => 'All brackets ( )',
-#		  )->grid( -row => 3, -column => 2 );
+
+		#		my $allqsel =
+		#		  $frame3->Radiobutton(
+		#								-variable    => \$lglobal{brsel},
+		#								-selectcolor => $lglobal{checkcolor},
+		#								-value       => 'all',
+		#								-text        => 'All brackets ( )',
+		#		  )->grid( -row => 3, -column => 2 );
 
 		my $frame2 = $lglobal{brkpop}->Frame->pack;
 		my $brsearchbt =
@@ -13739,7 +13755,7 @@ sub orphanedbrackets {
 		}
 	);
 	$lglobal{brkpop}->transient($top) if $stayontop;
-	if ($psel) {$psel->select;}
+	if ($psel) { $psel->select; }
 
 	sub brsearch {
 		viewpagenums() if ( $lglobal{seepagenums} );
@@ -14231,8 +14247,8 @@ sub wordfrequency {
 			   'All Words' => sub {
 				   $lglobal{saveheader} = "$wc total words. " .
 					 keys( %{ $lglobal{seen} } ) . " distinct words in file.";
-					sortwords( $lglobal{seen} );
-					searchoptset(qw/1 1 x 0/);    #default is whole word search
+				   sortwords( $lglobal{seen} );
+				   searchoptset(qw/1 1 x 0/);    #default is whole word search
 				 }
 			],
 			[ 'Check Spelling', \&wfspellcheck ],
@@ -14399,6 +14415,7 @@ sub wordfrequency {
 					$sword =~ s/\*newline\*/\n/;
 					$sword =~ s/\*space\*/ /;
 					$sword =~ s/([^\w\s\\])/\\$1/g;
+
 					#$sword = escape_regexmetacharacters($sword);
 					$sword .= '\b'
 					  if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
@@ -14544,7 +14561,8 @@ sub wordfrequency {
 		}
 		$line =~ s/[^'\.,\p{Alnum}-]/ /g;
 		$line =~ s/--/ /g;
-		$line =~ s/—/ /g; # trying to catch words with real em-dashes, from dp2rst
+		$line =~
+		  s/—/ /g;    # trying to catch words with real em-dashes, from dp2rst
 		$line =~ s/(\D),/$1 /g;
 		$line =~ s/,(\D)/ $1/g;
 		@words = split( /\s+/, $line );
@@ -14584,7 +14602,15 @@ sub gutcheck {
 	$textwindow->focus;
 	update_indicators();
 	my $title = $top->cget('title');
-	return if ( $title =~ /No File Loaded/ );
+	if ( $title =~ /No File Loaded/ ) {
+		$top->messageBox(
+			-icon => 'warning',
+			-type => 'OK',
+			-message =>
+			  'Nothing to check'
+		);
+		return;
+	}
 	$top->Busy( -recurse => 1 );
 
 	# FIXME: wide character in print warning next line with unicode
@@ -17402,8 +17428,9 @@ sub showversion {
 	if ($OS_WIN) {
 		$winver = qx{ver};
 		$winver =~ s{\n}{}smg;
-	}
-        else {$winver="";}   # stops "uninitialised value" message on non windows systems 
+	} else {
+		$winver = "";
+	}    # stops "uninitialised value" message on non windows systems
 	my $message = <<"END";
 Currently Running :
 $APP_NAME, Version : $VERSION
@@ -18973,44 +19000,45 @@ sub runtests {
 		"Deletion confirmed of tests/testhtml1.html" );
 
 	# Test 2 of HTML generation
-		ok( 1 == do { openfile("tests/testhtml2.txt"); 1 },
-			"openfile on tests/testhtml2.txt" );
-		ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml2.txt" );
-		ok( 1 == do { $textwindow->SaveUTF('tests/testhtml2.html'); 1 },
-			"test of file save as tests/testfilewrapped" );
-		ok( -e 'tests/testhtml2.html', "tests/testhtml2.html was saved" );
-	
-		ok( -e "tests/testhtml2baseline.html",
-			"tests/testhtml2baseline.html exists" );
-		open INFILE,  "tests/testhtml2.html"       || die "no source file\n";
-		open LOGFILE, "> tests/testhtml2temp.html" || die "output file error\n";
-		@book   = ();
-		$inbody = 0;
-		while ( $ln = <INFILE> ) {
-			if ($inbody) { print LOGFILE $ln; }
-			if ( $ln =~ /<\/head>/ ) {
-				$inbody = 1;
-			}
+	ok( 1 == do { openfile("tests/testhtml2.txt"); 1 },
+		"openfile on tests/testhtml2.txt" );
+	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml2.txt" );
+	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml2.html'); 1 },
+		"test of file save as tests/testfilewrapped" );
+	ok( -e 'tests/testhtml2.html', "tests/testhtml2.html was saved" );
+
+	ok( -e "tests/testhtml2baseline.html",
+		"tests/testhtml2baseline.html exists" );
+	open INFILE,  "tests/testhtml2.html"       || die "no source file\n";
+	open LOGFILE, "> tests/testhtml2temp.html" || die "output file error\n";
+	@book   = ();
+	$inbody = 0;
+	while ( $ln = <INFILE> ) {
+		if ($inbody) { print LOGFILE $ln; }
+		if ( $ln =~ /<\/head>/ ) {
+			$inbody = 1;
 		}
-		close INFILE;
-		close LOGFILE;
-		ok(
-			compare( "tests/testhtml2baseline.html", 'tests/testhtml2temp.html' ) ==
-			  0,
-			"Autogenerate HTML successful"
-		);
-		print "begin diff\n";
-		system "diff tests/testhtml2baseline.html tests/testhtml2temp.html";
-		print "end diff\n";
-	
-		unlink 'tests/testhtml2.html';
-		unlink 'tests/testhtml2temp.html';
-		unlink 'tests/testhtml2-htmlbak.txt';
-		unlink 'tests/testhtml2-htmlbak.txt.bin';
-		ok( not( -e "tests/testhtml2temp.html" ),
-			"Deletion confirmed of tests/testhtml2temp.html" );
-		ok( not( -e "tests/testhtml2.html" ),
-			"Deletion confirmed of tests/testhtml2.html" );
+	}
+	close INFILE;
+	close LOGFILE;
+	ok(
+		compare( "tests/testhtml2baseline.html", 'tests/testhtml2temp.html' ) ==
+		  0,
+		"Autogenerate HTML successful"
+	);
+	print "begin diff\n";
+	system "diff tests/testhtml2baseline.html tests/testhtml2temp.html";
+	print "end diff\n";
+
+	unlink 'tests/testhtml2.html';
+	unlink 'tests/testhtml2temp.html';
+	unlink 'tests/testhtml2-htmlbak.txt';
+	unlink 'tests/testhtml2-htmlbak.txt.bin';
+	ok( not( -e "tests/testhtml2temp.html" ),
+		"Deletion confirmed of tests/testhtml2temp.html" );
+	ok( not( -e "tests/testhtml2.html" ),
+		"Deletion confirmed of tests/testhtml2.html" );
+
 	#
 	#	# Test 3 of HTML generation
 	#	ok( 1 == do { openfile("tests/testhtml3.txt"); 1 },

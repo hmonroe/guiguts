@@ -73,7 +73,17 @@ samples. Search history keeps track of searches more reliably (but still
 does not include scanno searches). Tk TextEdit's FindAndReplaceAll native 
 function goes into an endless loop if the search term in the replacement 
 term (replace "C" with "CC". In such cases, guiguts now reverts to the 
-old very slow method. Fixed "Surround Selection".
+old very slow method. Fixed "Surround Selection". Fixed missing space
+before close of img tag. Gutcheck or HTML Autogenerate on empty window 
+produces a warning. Insert newline between </p><p> in footnotes with 
+multiple paragraphs. Fixed Export as Prep Text which left the page 
+headers if the header did not have enough -'s at the end. In PP HTML,
+fixed 0:1 report for double blanks.
+
+This version does not fix replacing/discarding invalid character code
+from HTML Tidy. It would not be straightforward in footnotes with 
+multiple paragraphs to move the </p><p> to the end and beginning of the
+previous and following paragraphs.
 
 Version 0.3.17 Fixed problem with HTML generation of page numbers 
 rolling back to 0.3.14. Made .TEI and .XML valid extensions.

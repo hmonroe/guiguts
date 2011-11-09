@@ -239,7 +239,7 @@ sub html_convert_footnotes {
 				)
 		  )
 		{
-			$textwindow->ntinsert( $thisblank, '</p><p>' );
+			$textwindow->ntinsert( $thisblank, "</p>\n<p>" );
 		}
 	}
 

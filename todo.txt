@@ -7,7 +7,6 @@ Fix spell check popup. Acts weird with unicode.
 Using Move up I could move Page 3 up before 
 Page 2, but then I couldn't move it back down.
 Ligature check does not find œ. 
-Fix search history
 Prep text export has page separators
 Allow validation of HTML 1.1 strict
 I'd like the regex functionality to be the same in "Search & Replace" 
@@ -20,36 +19,14 @@ The "Check All" window can not be scrolled unless clicking on the title
 bar.  Clicking within the window does nothing, and the main GuiGuts window 
 is scrolled (scroll bar works OK). I am talking about using the mouse roller 
 or up/down arrow keys to scroll.
-PP Html reports line number 0:1 for any double blank line in the text instead 
-of the correct line number
 
-Wide character in print at ..... gui-guts.pl line 6722 
-Using Guiguts - Fixup - Find Greek - ASCII->Greek - Transfer 
-Run HTML Tidy or W3C Validate from the HTML Fixup popup 
-Beginning check: HTML Tidy 
-Line.. column.. Warning: replacing/discarding invalid character code 134(get various codes 128,129,137,130,131,132 
-Get 2-3 errors on each Greek word or phrase, they display properly in a browser. 
- 
-Gutcheck on empty window is silent. HTML Fixup on empty window is silent
 Default path to Gutcheck not set (Mac). Space character in path to Gutcheck breaks it.
 Gutcheck View Options window too small when first invoke. Use of uninitialized value $start in subtraction 
 Gutcheck view options not intuitive. Design of checkboxes not intuitive 
-Last night, I tried splitting a CTF into separate files using the Export As Prep Text Files. Many, though not all, of the exported files included the file separator.
  
 Double check page markers go at top of paragraph at the start of a page not bottom of previous paragraph
 
 No empty HTML anchors
-
-Add good words: needs discussion
-
-If I have paragraphs within a footnote, I will see this (several occasions already): 
-
-Quote: 
-the mouth of the Trinity. 
-</p><p> 
-The French, who were not unobservant of these Spanish acts of occupation in a 
-
-
 
 New feature requests: Export to text with page markers.
 Enhanced scannos filesto convert [oe] to ligature, [=a] to &#257. 

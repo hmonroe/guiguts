@@ -5,6 +5,8 @@ On Windows, unzip the the file guiguts-win-nn.nn.nn.zip into a directory and run
 Winguts.bat. You will also need to install helper applications to view images 
 and to spell check. If you already have another version of Perl installed, see below. 
 
+On Mac, an executable is provided in guiguts-mac-nn.nn.nn.zip.
+
 For other platforms, you will need to install Perl. 
 See: http://www.pgdp.net/wiki/PPTools/Guiguts/Install
 
