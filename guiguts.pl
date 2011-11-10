@@ -1724,6 +1724,10 @@ sub fixup_menuitems {
 				   }
 			  ],
 			  [
+				 Button   => 'ePubMaker',
+				   -command => \&epubmaker 
+			  ],
+			  [
 				 Button   => 'DP2RST Conversion',
 				 -command => sub {
 					 runner(
@@ -2103,7 +2107,7 @@ sub buildmenu {
 							  -filetypes  => $types,
 							  -initialdir => dirname($validatecommand),
 							  -title =>
-'Where is the W3C Validate (onsgmls) executable?'
+'Where is the W3C Validate (onsgmls) executable (must be in tools\W3C)?'
 							);
 						  return unless $validatecommand;
 						  $validatecommand = os_normal($validatecommand);
@@ -15509,6 +15513,24 @@ sub footnotepop {
 	}
 }
 
+sub epubmaker {
+	if ($lglobal{global_filename} =~ /(\w+.rst)$/) {
+		
+	print "Beginning epubmaker\n";
+	my $rstfilename = $1;
+	my $pwd = getcwd();
+	chdir $globallastpath;
+	my $epubmakerpath = catfile( $lglobal{guigutsdirectory},
+								'python27', 'scripts', 'epubmaker-script.py' );
+	my $pythonpath = catfile( $lglobal{guigutsdirectory},
+								'python27', 'python.exe' );
+	runner("$pythonpath $epubmakerpath $rstfilename");
+	chdir $pwd;
+	} else {
+		print "Not an .rst file\n";
+	}
+	}
+
 sub markpopup {    # FIXME: Rename html_popup
 	push @operations, ( localtime() . ' - HTML Markup' );
 	viewpagenums() if ( $lglobal{seepagenums} );
@@ -15543,7 +15565,7 @@ sub markpopup {    # FIXME: Rename html_popup
 			-activebackground => $activecolor,
 			-command          => sub {
 				runner( cmdinterp("$extops[3]{command}") );
-			},          #'start $d$f$e'
+			},         
 			-text  => 'View in Browser',
 			-width => 16,
 		)->grid( -row => 1, -column => 4, -padx => 1, -pady => 1 );
