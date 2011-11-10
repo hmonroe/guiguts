@@ -11449,7 +11449,7 @@ sub update_img_button {
 	return ();
 }
 
-# New subroutine "update_label_button" extracted - Mon Mar 21 22:18:18 2011.
+# New subroutine "update_label_button" extracted - Mon Mar 21 22:18:18 2011. 
 #
 sub update_label_button {
 	unless ( $lglobal{page_label} ) {
