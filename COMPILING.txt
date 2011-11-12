@@ -1,40 +1,24 @@
-# $Id: COMPILING.txt 305 2010-03-20 17:54:55Z vlsimpson $
+#This provides instructions for releasing a new guiguts file on sourceforge
+including Macintosh OSX binary.
 
-This provides instructions for release a new guiguts file on sourceforge
-including creating the Windows .exe file or Macintosh OSX binary.
+For the perl only and Windows .zip files, :
 
-First, create a Windows .exe file (these instructions have been tested
-with Active State perl):
+1. Correct the version number in run "make.bat" and run it. This creates .zip
+files with perl scripts only and another with these+perl+Python+many other
+Windows executables. Be certain to use the format guiguts-1.0.0.zip (numbers may vary)
+in order for the update mechanism to work correctly. Do not include settings.rc or 
+header.txt as these may have been modified by the user and will be created if they do 
+not exist. The make file takes care of this. 
 
-1. If your perl is installed in c:\perl, rename the directory to say
-c:\perlxx to users with their own perl installation will not have an issue and change
-your environment variable for the PATH to match. Look for the line
-'use lib "c:/dp/dp/lib"' in guiguts.pl and make sure it matches the location
-of your guiguts source; 
-
-2. Put the three files from the following in c:\perlxx\bin: 
-   http://download.microsoft.com/download/vc15/patch/1.52/w95/en-us/nmake15.exe
-
-3. Run "cpanp" and then "i PAR::Packer"
-
-4. Install MinGW compiler if not already installed for instance from here: 
-   https://sourceforge.net/project/showfiles.php?group_id=2435&package_id=240780
-
-5. Run "make.bat" to create WinGuts.exe. Run "makezip.bat" to create the zip files.
-   
-Be certain to use the format guiguts-1.0.0.zip (numbers may vary)
-in order for the update mechanism to work correctly. Do not include settings.rc or header.txt
-as these may have been modified by the user and will be created if they do not exist.
-
-Third, login to source forge using a user ID with project Admin privileges. Choose
-'Files, add folder guiguts-1.0.0
-(whatever the numbers for your version), and upload WinGuts-1.0.0.zip, guiguts-1.0.0.zip and README.TXT (after
+2. Login to source forge using a user ID with project Admin privileges. Choose
+'Files, add folder guiguts-1.0.0 (whatever the numbers for your version), and upload 
+the files guiguts-win-1.0.0.zip, guiguts-1.0.0.zip and README.TXT (after
 updating release notes in README.TXT). Click on the "i" on the line for 
 WinGuts-1.0.0.zip and specify that is for Windows. For guiguts-1.0.0.zip select
-the remainder except for OSX if someone has packaged a Mac executable version macguts-1.0.0.zip,
+the remainder except for OSX if someone has packaged a Mac executable version guiguts-mac-1.0.0.zip,
 then choose OSX for that one.
 
-Once you have released a version, then tag it with that release number.
+3. Once you have released a version, then tag it in subversion with that release number.
 ----------------
 Macintosh/OSX packaging instructions (courtesy of Frau Sma):
 
@@ -62,4 +46,4 @@ manually add them to the list. I'm not sure whether all of them are really neede
 removing any to see whether it would break. I think Tk::CursorControl might not be necessary after all. But 
 again, it worked like that, so I left it like that.
 
-You probably need to include headerdefault.txt.
+You need to include headerdefault.txt.
