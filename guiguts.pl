@@ -1704,31 +1704,31 @@ sub fixup_menuitems {
 	   ],
 	   [ 'separator', '' ],
 	   [ Button => '~Footnote Fixup', -command => \&footnotepop ],
-	   [ Button => '~HTML Fixup',     -command => \&markpopup ],
+	   [ Button => '~HTML Fixup',     -command => \&htmlpopup ],
 	   [
-		  Button   => 'PGT~EI Tools',
+		  Button   => 'PGT~EI Fixup',
 		  -command => sub {
 			  runner(
 "$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
 			}
 	   ],
 	   [
-		  Cascade    => 'RST Tools',
+		  Cascade    => 'RST Fixup',
 		  -tearoff   => 0,
 		  -menuitems => [
 			  [
-				 Button   => 'ePubMaker Online',
+				 Button   => 'EpubMaker Online',
 				 -command => sub {
 					 runner(
 							"$globalbrowserstart http://epubmaker.pglaf.org/" );
 				   }
 			  ],
 			  [
-				 Button   => 'ePubMaker',
+				 Button   => 'EpubMaker',
 				   -command => \&epubmaker 
 			  ],
 			  [
-				 Button   => 'DP2RST Conversion',
+				 Button   => 'dp2rst Conversion',
 				 -command => sub {
 					 runner(
 						   "$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst"
@@ -15531,7 +15531,7 @@ sub epubmaker {
 	}
 	}
 
-sub markpopup {    # FIXME: Rename html_popup
+sub htmlpopup {
 	push @operations, ( localtime() . ' - HTML Markup' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	if ( defined( $lglobal{markpop} ) ) {
@@ -17063,7 +17063,7 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 		$lglobal{toptool}->ToolButton(
 									   -text    => 'HTML',
 									   -font    => $lglobal{toolfont},
-									   -command => [ \&markpopup ],
+									   -command => [ \&htmlpopup ],
 									   -tip     => 'HTML Fixup Popup'
 		);
 		$lglobal{toptool}->separator;
