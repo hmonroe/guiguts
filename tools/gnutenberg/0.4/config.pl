@@ -7,16 +7,16 @@
 
 $config = {
 # the directory the transform.pl executable is in
-    install_dir        => 'c:/dp/gnutenbergproj/gnutenberg/0.4/',
+    install_dir        => 'c:/guiguts/tools/gnutenberg/0.4/',
 
 # the xmlcatalog file
-    catalog_file       => 'c:/dp/gnutenbergproj/gnutenberg/0.4/xmlcatalog',
+    catalog_file       => 'c:/guiguts/tools/gnutenberg/0.4/xmlcatalog',
 
 #tei2html
-    tidy               => 'C:/guiguts/giuguts/tools/tidy/tidy.exe',
+    tidy               => 'C:/giuguts/tools/tidy/tidy.exe',
 
 # tei2txt
-    nroff              => 'C:/guiguts/giuguts/tools/groff/bin/groff.exe',
+    nroff              => 'C:/guiguts/tools/groff/bin/groff.exe',
 
 # tei2pdf
     pdflatex           => 'c:/texlive/2011/bin/win32/pdflatex',

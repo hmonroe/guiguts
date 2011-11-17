@@ -15,7 +15,7 @@
 <!-- change xml:base to the gnutenberg installation directory -->
 
 <catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog"
-         xml:base="file:///c:/dp/gnutenbergproj/gnutenberg/">
+         xml:base="file:///c:/guiguts/tools/gnutenberg/">
 
   <!-- if you have a local copy of the tei p4x dtd enter the path here -->
   <!-- the path is relative to xml:base above -->

@@ -165,8 +165,9 @@ usage ("No output directory specified!") if (@ARGV < 2);
 $infile = $ARGV[0];
 $outdir = $ARGV[1];
 $outdir =~ s!/$!!;
-$infile =~ m!^(.*)/!;
+$infile =~ m!^(.*)[\\/]!;
 $srcdir = $1;
+if (not defined $srcdir) {$srcdir='';}
 
 usage ("Cannot read input file $infile!")      if (!-r $infile);
 usage ("Output directory $outdir must exist!") if (!-d $outdir);
@@ -178,7 +179,6 @@ if ($format =~ m/(\w+)\.(\w+)/) {
 }
 
 my $formatfile = "$config->{'install_dir'}/$format/mod-$format.pl";
-print $formatfile."\n"; ## hkm
 usage ("Unknown format $format!") unless -r $formatfile;
 
 require $formatfile;
@@ -1280,7 +1280,10 @@ if ($debug) {
 # (the encoding may depend on what characters pgVar inserts)
 @nodes = $doc->findnodes ('//pgVar');
 foreach my $n (@nodes) {
-    $n->appendTextNode (pg_pgVar ($n->getAttribute ('name')));
+	my $pgattribute = pg_pgVar ($n->getAttribute ('name')); #hkm
+    if (defined $pgattribute) {
+    	$n->appendTextNode ($pgattribute); #hkm
+    }
 }
 @nodes = $doc->findnodes ('//pgIf');
 foreach my $n (@nodes) {

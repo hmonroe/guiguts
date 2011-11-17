@@ -1706,11 +1706,22 @@ sub fixup_menuitems {
 	   [ Button => '~Footnote Fixup', -command => \&footnotepop ],
 	   [ Button => '~HTML Fixup',     -command => \&htmlpopup ],
 	   [
-		  Button   => 'PGT~EI Fixup',
+		  Cascade    => 'PGTEI Tools',
+		  -tearoff   => 0,
+		  -menuitems => [
+		  [
+		  Button   => 'Gnutenberg Press Online',
 		  -command => sub {
 			  runner(
 "$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
 			}
+	   ],
+			  [
+				 Button   => 'Gnutenberg Press',
+				   -command => \&gnutenberg 
+			  ],
+	   
+	   ]
 	   ],
 	   [
 		  Cascade    => 'RST Fixup',
@@ -11796,6 +11807,7 @@ sub spellcheckfirst {
 	@{ $lglobal{misspelledlist} } = ();
 	viewpagenums() if ( $lglobal{seepagenums} );
 	getprojectdic();
+	
 	do "$lglobal{projectdictname}"
 	  if $lglobal{projectdictname};    # this does not seem to do anything
 	$lglobal{lastmatchindex} = '1.0';
@@ -11841,9 +11853,11 @@ sub spellcheckfirst {
 
 sub getprojectdic {
 	return unless $lglobal{global_filename};
-	$lglobal{projectdictname} = $lglobal{global_filename};
+	my $fname = $lglobal{global_filename};
+	$fname = Win32::GetLongPathName( $fname ) if $OS_WIN;
+	$lglobal{projectdictname} = $fname;
 	$lglobal{projectdictname} =~ s/\.[^\.]*?$/\.dic/;
-	if ( $lglobal{projectdictname} eq $lglobal{global_filename} ) {
+	if ( $lglobal{projectdictname} eq $fname ) {
 		$lglobal{projectdictname} .= '.dic';
 	}
 }
@@ -15529,6 +15543,23 @@ sub epubmaker {
 	} else {
 		print "Not an .rst file\n";
 	}
+	}
+
+sub gnutenberg {
+		
+	print "Beginning Gnutenberg Press\n";
+	my $pwd = getcwd();
+	chdir $globallastpath;
+unless(-d 'output'){
+    mkdir 'output' or die;
+}
+	my $gnutenbergpath = catfile( $lglobal{guigutsdirectory},
+								'tools', 'gnutenberg','0.4' );
+	my $gnutenbergoutput = catfile($globallastpath,'output');								
+	chdir $gnutenbergpath;
+	#print "perl transform.pl -f txt $lglobal{global_filename} $gnutenbergoutput\\ \n";
+	system("perl transform.pl -f html $lglobal{global_filename} $gnutenbergoutput\\");
+	chdir $pwd;
 	}
 
 sub htmlpopup {
