@@ -1312,6 +1312,7 @@ sub html_wrapup {
 			$textwindow->ntinsert( $thisblockstart, 'charset=utf-8' );
 		}
 	}
+	insert_paragraph_close( $textwindow, 'end' );
 	$textwindow->ntinsert( 'end', "\n<\/body>\n<\/html>" );
 	$thisblockstart = $textwindow->search( '--', '</style', '1.0', '250.0' );
 	$thisblockstart = '75.0' unless $thisblockstart;

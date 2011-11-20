@@ -65,11 +65,12 @@ or checkboxes in the various search/spellcheck dialogs.
 
 Detailed release notes:
 
-Version 0.3.18 Added EpubMaker and the Gnutenberg Press. Fixed problem 
-in 0.3.17--did not detect emdash suspects. Double click on ". Upper" 
-now works. Before adding good_words.txt, added warning popup to first 
-check whether they do not contain misspellings, multiple spellings, 
-etc. Added samples subdirectory with PGTEI and RST samples. 
+Version 0.3.18 Added EpubMaker and the Gnutenberg Press. The latter
+will only work on Windows if guiguts is installed in C:\guiguts. Fixed 
+problem in 0.3.17--did not detect emdash suspects. Double click on 
+". Upper" now works. Before adding good_words.txt, added warning popup 
+to first check whether they do not contain misspellings, multiple 
+spellings, etc. Added samples subdirectory with PGTEI and RST samples. 
 Search history keeps track of searches more reliably (but still 
 does not include scanno searches). Tk TextEdit's FindAndReplaceAll native 
 function goes into an endless loop if the search term in the replacement 
@@ -80,7 +81,10 @@ produces a warning. Insert newline between </p><p> in footnotes with
 multiple paragraphs. Fixed Export as Prep Text which left the page 
 headers if the header did not have enough -'s at the end. In PP HTML,
 fixed 0:1 report for double blanks. Project dictionary not ignored
-on restart even if longer than 8 characters. 
+on restart even if longer than 8 characters. Reversed order of 
+"Title" and "Caption" in HTML image popup. Word frequency count
+is run before any spell check. Toolbar font is no longer italic
+for readability. 
 
 This version does not fix replacing/discarding invalid character code
 from HTML Tidy. It would not be straightforward in footnotes with 

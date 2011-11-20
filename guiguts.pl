@@ -184,11 +184,12 @@ our $vislnnm            = 0;
 our $w3cremote          = 0;
 
 # These are set to the default Windows values in initialize()
-our $gutpath            = '';
-our $jeebiespath        = '';
+our $gutcommand            = '';
+our $jeebiescommand        = '';
 our $tidycommand        = '';
 our $validatecommand    = '';
 our $validatecsscommand = '';
+our $gnutenbergdirectory = '';
 
 our %gc;
 our %jeeb;
@@ -1061,7 +1062,7 @@ sub file_export {
 		$file =~ s/\n+$//;
 		open my $fh, '>', "$directory/$filename";
 		if ($unicode) {
-			$file = "\x{FEFF}" . $file;    # Add the BOM to beginning of file.
+			#$file = "\x{FEFF}" . $file;    # Add the BOM to beginning of file.
 			utf8::encode($file);
 		}
 		print $fh $file;
@@ -1717,8 +1718,12 @@ sub fixup_menuitems {
 			}
 	   ],
 			  [
-				 Button   => 'Gnutenberg Press',
-				   -command => \&gnutenberg 
+				 Button   => 'Gnutenberg Press HTML',
+				   -command => sub {gnutenberg('html')} 
+			  ],
+			  [
+				 Button   => 'Gnutenberg Press Text',
+				   -command => sub {gnutenberg('txt')} 
 			  ],
 	   
 	   ]
@@ -1735,8 +1740,12 @@ sub fixup_menuitems {
 				   }
 			  ],
 			  [
-				 Button   => 'EpubMaker',
-				   -command => \&epubmaker 
+				 Button   => 'EpubMaker (all formats)',
+				   -command => sub {epubmaker()} 
+			  ],
+			  [
+				 Button   => 'EpubMaker (HTML only)',
+				   -command => sub {epubmaker('html')} 
 			  ],
 			  [
 				 Button   => 'dp2rst Conversion',
@@ -2019,12 +2028,12 @@ sub buildmenu {
 							$textwindow->getOpenFile(
 								  -filetypes => $types,
 								  -title => 'Where is the Gutcheck executable?',
-								  -initialdir => dirname($gutpath)
+								  -initialdir => dirname($gutcommand)
 							);
-						  $gutpath = $lglobal{pathtemp}
+						  $gutcommand = $lglobal{pathtemp}
 							if $lglobal{pathtemp};
-						  return unless $gutpath;
-						  $gutpath = os_normal($gutpath);
+						  return unless $gutcommand;
+						  $gutcommand = os_normal($gutcommand);
 						  saveset();
 						}
 				   ],
@@ -2044,12 +2053,12 @@ sub buildmenu {
 							$textwindow->getOpenFile(
 								   -filetypes => $types,
 								   -title => 'Where is the Jeebies executable?',
-								   -initialdir => dirname($jeebiespath)
+								   -initialdir => dirname($jeebiescommand)
 							);
-						  $jeebiespath = $lglobal{pathtemp}
+						  $jeebiescommand = $lglobal{pathtemp}
 							if $lglobal{pathtemp};
-						  return unless $jeebiespath;
-						  $jeebiespath = os_normal($jeebiespath);
+						  return unless $jeebiescommand;
+						  $jeebiescommand = os_normal($jeebiescommand);
 						  saveset();
 						}
 				   ],
@@ -2153,6 +2162,28 @@ sub buildmenu {
 				   [
 					  Button   => 'Locate Image Viewer Executable',
 					  -command => \&viewerpath
+				   ],
+				   [
+					  Button =>
+'Locate Gnutenberg Press (if self-installed)',
+					  -command => sub {
+						  my $types;
+							  $types = [
+										 [ 'Perl file', [ '.pl', ] ],
+										 [ 'All Files',  ['*'] ],
+							  ];
+						  $gnutenbergdirectory =
+							$textwindow->getOpenFile(
+							  -filetypes  => $types,
+							  -initialdir => $gnutenbergdirectory,
+							  -title =>
+'Where is the Gnutenberg Press (transform.pl)?'
+							);
+						  return unless $gnutenbergdirectory;
+						  $gnutenbergdirectory = os_normal($gnutenbergdirectory);
+						  $gnutenbergdirectory = dirname($gnutenbergdirectory );
+						  saveset();
+						}
 				   ],
 				   [
 					  Button   => 'Set Images Directory',
@@ -5104,16 +5135,16 @@ sub htmlimage {
 		  ->pack( -side => 'top', -anchor => 'n' );
 		$lglobal{alttext} =
 		  $f3->Entry( -width => 45, )->pack( -side => 'left' );
-		my $f4 =
-		  $lglobal{htmlimpop}->LabFrame( -label => 'Title text' )
-		  ->pack( -side => 'top', -anchor => 'n' );
-		$lglobal{titltext} =
-		  $f4->Entry( -width => 45, )->pack( -side => 'left' );
 		my $f4a =
 		  $lglobal{htmlimpop}->LabFrame( -label => 'Caption text' )
 		  ->pack( -side => 'top', -anchor => 'n' );
 		$lglobal{captiontext} =
 		  $f4a->Entry( -width => 45, )->pack( -side => 'left' );
+		my $f4 =
+		  $lglobal{htmlimpop}->LabFrame( -label => 'Title text' )
+		  ->pack( -side => 'top', -anchor => 'n' );
+		$lglobal{titltext} =
+		  $f4->Entry( -width => 45, )->pack( -side => 'left' );
 		my $f5 =
 		  $lglobal{htmlimpop}->LabFrame( -label => 'Geometry' )
 		  ->pack( -side => 'top', -anchor => 'n' );
@@ -9095,12 +9126,12 @@ sub initialize {
 	if ($OS_WIN) {
 		$lglobal{guigutsdirectory} = dirname( rel2abs($0) )
 		  unless defined $lglobal{guigutsdirectory};
-		$gutpath = catfile( $lglobal{guigutsdirectory},
+		$gutcommand = catfile( $lglobal{guigutsdirectory},
 							'tools', 'gutcheck', 'gutcheck.exe' )
-		  unless $gutpath;
-		$jeebiespath = catfile( $lglobal{guigutsdirectory},
+		  unless $gutcommand;
+		$jeebiescommand = catfile( $lglobal{guigutsdirectory},
 								'tools', 'jeebies', 'jeebies.exe' )
-		  unless $jeebiespath;
+		  unless $jeebiescommand;
 		$tidycommand =
 		  catfile( $lglobal{guigutsdirectory}, 'tools', 'tidy', 'tidy.exe' )
 		  unless $tidycommand;
@@ -9111,6 +9142,9 @@ sub initialize {
 		  catfile( $lglobal{guigutsdirectory},
 				   'tools', 'W3C', 'css-validator.jar' )
 		  unless $validatecsscommand;
+		$gnutenbergdirectory =catfile( $lglobal{guigutsdirectory},
+								'tools', 'gnutenberg','0.4' )
+		  unless $gnutenbergdirectory;
 	}
 	%{ $lglobal{utfblocks} } = (
 		'Alphabetic Presentation Forms' => [ 'FB00', 'FB4F' ],
@@ -10889,7 +10923,7 @@ EOM
 
 		for (
 			qw/globallastpath globalspellpath globalspelldictopt globalviewerpath globalbrowserstart
-			gutpath jeebiespath scannospath tidycommand validatecommand validatecsscommand/
+			gutcommand jeebiescommand scannospath tidycommand validatecommand validatecsscommand gnutenbergdirectory/
 		  )
 		{
 			if ( eval '$' . $_ ) {
@@ -11066,16 +11100,16 @@ sub jeebiesrun {
 	my $title = os_normal( $lglobal{global_filename} );
 	$title = dos_path($title) if $OS_WIN;
 	my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
-	unless ($jeebiespath) {
-		$jeebiespath =
+	unless ($jeebiescommand) {
+		$jeebiescommand =
 		  $textwindow->getOpenFile( -filetypes => $types,
 									-title => 'Where is the Jeebies executable?'
 		  );
 	}
-	return unless $jeebiespath;
+	return unless $jeebiescommand;
 	my $jeebiesoptions = "-$jeebiesmode" . 'e';
-	$jeebiespath = os_normal($jeebiespath);
-	$jeebiespath = dos_path($jeebiespath) if $OS_WIN;
+	$jeebiescommand = os_normal($jeebiescommand);
+	$jeebiescommand = dos_path($jeebiescommand) if $OS_WIN;
 	%jeeb        = ();
 	my $mark = 0;
 	$top->Busy( -recurse => 1 );
@@ -11083,7 +11117,7 @@ sub jeebiesrun {
 				 '---------------- Please wait: Processing. ----------------' );
 	$listbox->update;
 
-	if ( open my $fh, '-|', "$jeebiespath $jeebiesoptions $title" ) {
+	if ( open my $fh, '-|', "$jeebiescommand $jeebiesoptions $title" ) {
 		while ( my $line = <$fh> ) {
 			$line =~ s/\n//;
 			$line =~ s/^\s+/  /;
@@ -12184,7 +12218,7 @@ sub spellget_misspellings {    # get list of misspelled words
 		push @{ $lglobal{misspelledlist} },
 		  $word;        # filter out project dictionary word list.
 	}
-	#wordfrequencybuildwordlist();
+	wordfrequencybuildwordlist();
 	#wordfrequencygetmisspelled();
 
 	if ( $#{ $lglobal{misspelledlist} } > 0 ) {
@@ -14689,13 +14723,13 @@ sub gutcheck {
 	$title = dos_path($title) if $OS_WIN;
 	( $name, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
 	my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
-	unless ($gutpath) {
-		$gutpath =
+	unless ($gutcommand) {
+		$gutcommand =
 		  $textwindow->getOpenFile(-filetypes => $types,
 								   -title => 'Where is the Gutcheck executable?'
 		  );
 	}
-	return unless $gutpath;
+	return unless $gutcommand;
 	my $gutcheckoptions = ' -ey'
 	  ;    # e - echo queried line. y - puts errors to stdout instead of stderr.
 	if ( $gcopt[0] ) { $gutcheckoptions .= 't' }
@@ -14717,14 +14751,14 @@ sub gutcheck {
 	if ( $gcopt[8] ) { $gutcheckoptions .= 'd' }
 	;      # Ignore DP style page separators
 	$gutcheckoptions .= ' ';
-	$gutpath = os_normal($gutpath);
-	$gutpath = dos_path($gutpath) if $OS_WIN;
+	$gutcommand = os_normal($gutcommand);
+	$gutcommand = dos_path($gutcommand) if $OS_WIN;
 	saveset();
 
 	if ( $lglobal{gcpop} ) {
 		$lglobal{gclistbox}->delete( '0', 'end' );
 	}
-	gutcheckrun( $gutpath, $gutcheckoptions, 'gutchk.tmp' );
+	gutcheckrun( $gutcommand, $gutcheckoptions, 'gutchk.tmp' );
 	$top->Unbusy;
 	unlink 'gutchk.tmp';
 	gcheckpop_up();
@@ -15553,6 +15587,7 @@ sub footnotepop {
 }
 
 sub epubmaker {
+	my $format = shift;
 	if ($lglobal{global_filename} =~ /(\w+.rst)$/) {
 		
 	print "Beginning epubmaker\n";
@@ -15563,7 +15598,11 @@ sub epubmaker {
 								'python27', 'scripts', 'epubmaker-script.py' );
 	my $pythonpath = catfile( $lglobal{guigutsdirectory},
 								'python27', 'python.exe' );
-	runner("$pythonpath $epubmakerpath $rstfilename");
+	if (defined $format and $format eq 'html') {
+		runner("$pythonpath $epubmakerpath --make html $rstfilename");
+	} else {
+		runner("$pythonpath $epubmakerpath $rstfilename");
+	}
 	chdir $pwd;
 	} else {
 		print "Not an .rst file\n";
@@ -15571,19 +15610,19 @@ sub epubmaker {
 	}
 
 sub gnutenberg {
+	my $format = shift;
 		
 	print "Beginning Gnutenberg Press\n";
+	print "Warning: This requires installing perl including LibXML, and \n";
+	print "guiguts must be installed in c:\\guiguts on Windows systems.\n";
 	my $pwd = getcwd();
 	chdir $globallastpath;
 unless(-d 'output'){
     mkdir 'output' or die;
 }
-	my $gnutenbergpath = catfile( $lglobal{guigutsdirectory},
-								'tools', 'gnutenberg','0.4' );
 	my $gnutenbergoutput = catfile($globallastpath,'output');								
-	chdir $gnutenbergpath;
-	#print "perl transform.pl -f txt $lglobal{global_filename} $gnutenbergoutput\\ \n";
-	system("perl transform.pl -f html $lglobal{global_filename} $gnutenbergoutput\\");
+	chdir $gnutenbergdirectory;
+	system("perl transform.pl -f $format $lglobal{global_filename} $gnutenbergoutput\\");
 	chdir $pwd;
 	}
 
@@ -17023,7 +17062,7 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 		$lglobal{toolfont} =
 		  $top->Font(
 					  -family => 'Times',
-					  -slant  => 'italic',
+					 # -slant  => 'italic',
 					  -weight => 'bold',
 					  -size   => 9
 		  );
