@@ -3703,9 +3703,10 @@ sub clearmarks {
 
 sub searchtext {
 	viewpagenums() if ( $lglobal{seepagenums} );
+	#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt\n";
 
 # $sopt[0] --> 0 = pattern search                       1 = whole word search
-# $sopt[1] --> 0 = case insensitive                     1 = case sensitive search
+# $sopt[1] --> 0 = case sensitive                     1 = case insensitive search
 # $sopt[2] --> 0 = search forwards                      1 = search backwards
 # $sopt[3] --> 0 = normal search term           1 = regex search term - 3 and 0 are mutually exclusive
 # $sopt[4] --> 0 = search from last index       1 = Start from beginning
@@ -7554,6 +7555,7 @@ sub searchoptset {
 			if ( $opt[$_] !~ /[a-zA-Z]/ ) { $sopt[$_] = $opt[$_] }
 		}
 	}
+	#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt set\n";
 }
 
 ## Word Frequency
@@ -7835,7 +7837,7 @@ s/([\.\?\!]['"]*[\n\s]['"]*\p{Upper}\p{Alnum}*),([\n\s]['"]*\p{Upper})/$1 $2/g;
 	  "$wordw words with uppercase following commas. " . '(\n means newline)';
 	sortwords( \%display );
 	$top->Unbusy;
-	searchoptset(qw/0 x x 1/);
+	searchoptset(qw/0 0 x 1/);
 }
 
 sub itwords {
@@ -8019,7 +8021,7 @@ sub dashcheck {
 	$top->Unbusy;
 }
 
-sub wfspellcheck {
+sub wordfrequencyspellcheck {
 	spelloptions() unless $globalspellpath;
 	return unless $globalspellpath;
 	$top->Busy( -recurse => 1 );
@@ -12162,6 +12164,7 @@ sub spellget_misspellings {    # get list of misspelled words
 	  ;                             # get selection
 	$section =~ s/^-----File:.*//g;
 	open my $save, '>:bytes', 'checkfil.txt';
+	#utf8::encode($section);
 	print $save $section;           # FIXME: probably encode before printing.
 	close $save;
 	my $spellopt =
@@ -14269,7 +14272,7 @@ sub wordfrequency {
 				   searchoptset(qw/1 1 x 0/);    #default is whole word search
 				 }
 			],
-			[ 'Check Spelling', \&wfspellcheck ],
+			[ 'Check Spelling', \&wordfrequencyspellcheck ],
 			[ 'Ital/Bold/SC', \&itwords, \&ital_adjust ],
 			[ 'ALL CAPS',     \&capscheck ],
 			[ 'MiXeD CasE',   \&mixedcasecheck ],
@@ -14437,14 +14440,14 @@ sub wordfrequency {
 					#$sword = escape_regexmetacharacters($sword);
 					$sword .= '\b'
 					  if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
-					searchoptset(qw/0 1 x 1/);
+					searchoptset(qw/0 0 x 1/); # Case sensitive
 				}
 
 				# not whole word search from character cnts popup
 				if (     ( length($sword) == 1 )
 					 and ( $lglobal{saveheader} =~ /characters in the file./ ) )
 				{
-					searchoptset(qw/0 x x 0/);
+					searchoptset(qw/0 0 x 0/);
 				}
 				if ( $intelligentWF && $sword =~ /^\\,(\s|\\n)/ ) {
 
@@ -14463,6 +14466,7 @@ sub wordfrequency {
 						$sword = "(?<=-)$sword|$sword(?=-)";
 					}
 				}
+				#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt\n";
 				searchfromstartifnew($sword);
 				searchtext($sword);
 				searchoptset(@savesets);
@@ -14539,6 +14543,32 @@ sub wordfrequency {
 			}
 		);
 	}
+	$top->Busy( -recurse => 1 );
+	$lglobal{wclistbox}->focus;
+	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$wc = wordfrequencybuildwordlist();
+	#print "$index  ";
+	$lglobal{saveheader} = "$wc total words. " .
+	  keys( %{ $lglobal{seen} } ) . " distinct words in file.";
+	$lglobal{wclistbox}->delete( '0', 'end' );
+	$lglobal{last_sort} = $lglobal{ignore_case};
+	#print $lglobal{ignore_case}.":ignore\n";
+	if ($lglobal{ignore_case}) {
+		searchoptset("x 1 x x");
+	} else {
+		searchoptset("x 0 x x");
+	}
+	$top->Unbusy( -recurse => 1 );
+	sortwords( \%{ $lglobal{seen} } );
+	update_indicators();
+}
+
+sub wordfrequencybuildwordlist {
+	my ( @words, $match, @savesets );
+	my $index = '1.0';
+	my $wc    = 0;
+	my $end   = $textwindow->index('end');
+	
 	my $filename = $textwindow->FileName;
 	unless ($filename) {
 		$filename = 'tempfile.tmp';
@@ -14551,9 +14581,6 @@ sub wordfrequency {
 			$index = $end;
 		}
 	}
-	$top->Busy( -recurse => 1 );
-	$lglobal{wclistbox}->focus;
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
 	savefile()
 	  if (    ( $textwindow->FileName )
 		   && ( $textwindow->numberChanges != 0 ) );
@@ -14599,15 +14626,7 @@ sub wordfrequency {
 	close $fh;
 	unlink 'tempfile.tmp' if ( -e 'tempfile.tmp' );
 
-	#print "$index  ";
-	$lglobal{saveheader} = "$wc total words. " .
-	  keys( %{ $lglobal{seen} } ) . " distinct words in file.";
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{last_sort} = $lglobal{ignore_case};
-	searchoptset(qw/x 1 x x/) if $lglobal{ignore_case};
-	$top->Unbusy( -recurse => 1 );
-	sortwords( \%{ $lglobal{seen} } );
-	update_indicators();
+	return $wc
 }
 
 ## Gutcheck
@@ -18965,7 +18984,7 @@ sub text_convert_options {
 sub runtests {
 
 	# From the command line run "guiguts.pl runtests"
-	use Test::More;    #tests => 25;
+	use Test::More;    #tests => 33;
 	ok( 1 == 1, "Dummy test 1==1" );
 
 	#if ( -e "setting.rc" ) { rename( "setting.rc", "setting.old" ); }

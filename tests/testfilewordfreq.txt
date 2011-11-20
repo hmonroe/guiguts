@@ -1,17 +1,20 @@
 ﻿composing comp-osing comp--osing
 
+cañon
 
 high-life high--life highlife
 
 
 ^([a-zA-Z])$1$
-asdf9
+asdf9 asdf
 
 ALL CAPS
 
 all caps
 
 all caps
+
+allcaps
 
 MiXeD CasE
 
@@ -30,7 +33,11 @@ oeae
 
 Check, Upper
 
+Check, upper
+
 test Check. lower test
+
+test Check. Lower test
 
 composing com-posing comp--osing
 

@@ -79,7 +79,8 @@ before close of img tag. Gutcheck or HTML Autogenerate on empty window
 produces a warning. Insert newline between </p><p> in footnotes with 
 multiple paragraphs. Fixed Export as Prep Text which left the page 
 headers if the header did not have enough -'s at the end. In PP HTML,
-fixed 0:1 report for double blanks. 
+fixed 0:1 report for double blanks. Project dictionary not ignored
+on restart even if longer than 8 characters. 
 
 This version does not fix replacing/discarding invalid character code
 from HTML Tidy. It would not be straightforward in footnotes with 
