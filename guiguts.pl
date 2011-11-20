@@ -8029,14 +8029,13 @@ sub wordfrequencyspellcheck {
 	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
 	$lglobal{wclistbox}->update;
 
-	my $wordw = wordfrequencygetmispelled();
+	my $wordw = wordfrequencygetmisspelled();
 	$lglobal{saveheader} = "$wordw words not recognised by the spellchecker.";
 	sortwords( \%{ $lglobal{spellsort} } );
 	$top->Unbusy;
-	unlink 'checkfil.txt';
 }
 
-sub wordfrequencygetmispelled {
+sub wordfrequencygetmisspelled {
 	%{ $lglobal{spellsort} } = ();
 	getprojectdic();
 	do "$lglobal{projectdictname}";
@@ -8047,6 +8046,7 @@ sub wordfrequencygetmispelled {
 	my ( $words, $uwords );
 	my $wordw = 0;
 	searchoptset(qw/1 x x 0/);    # FIXME: Test for whole word search setting
+
 	foreach ( sort ( keys %{ $lglobal{seen} } ) ) {
 		if ( $_ !~ /[\x{100}-\x{FFEF}]/ ) {
 			$words .= "$_\n";
@@ -8076,6 +8076,8 @@ sub wordfrequencygetmispelled {
 			$wordw++;
 		}
 	}
+	unlink 'checkfil.txt';
+	return $wordw;
 }
 
 sub alphanumcheck {
@@ -11818,21 +11820,21 @@ sub spellcheckfirst {
 	  if $lglobal{projectdictname};    # this does not seem to do anything
 	$lglobal{lastmatchindex} = '1.0';
 
-	# get list of mispelled words in selection (or file if nothing selected)
+	# get list of misspelled words in selection (or file if nothing selected)
 	spellget_misspellings();
-	my $term = $lglobal{misspelledlist}[0];    # get first mispelled term
+	my $term = $lglobal{misspelledlist}[0];    # get first misspelled term
 	$lglobal{misspelledentry}->delete( '0', 'end' );
 	$lglobal{misspelledentry}->insert( 'end', $term )
 	  ;    # put it in the appropriate text box
 	$lglobal{suggestionlabel}->configure( -text => 'Suggestions:' );
-	return unless $term;    # no mispellings found, bail
+	return unless $term;    # no misspellings found, bail
 	$lglobal{matchlength} = '0';
 	$lglobal{matchindex} =
 	  $textwindow->search(
 						   -forwards,
 						   -count => \$lglobal{matchlength},
 						   $term, $lglobal{spellindexstart}, 'end'
-	  );                    # search for the mispelled word in the text
+	  );                    # search for the misspelled word in the text
 	$lglobal{lastmatchindex} =
 	  spelladjust_index( $lglobal{matchindex}, $term )
 	  ;                     # find the index of the end of the match
@@ -11882,7 +11884,7 @@ sub spellchecknext {
 	$lglobal{suggestionlabel}->configure( -text => 'Suggestions:' );
 	return
 	  if $lglobal{nextmiss} >= ( scalar( @{ $lglobal{misspelledlist} } ) )
-	;      # no more mispelled words, bail
+	;      # no more misspelled words, bail
 	$lglobal{lastmatchindex} = $textwindow->index('spellindex');
 
 #print $lglobal{misspelledlist}[$lglobal{nextmiss}]." | $lglobal{lastmatchindex}\n";
@@ -12161,20 +12163,17 @@ sub spellcheckrange {
 sub spellget_misspellings {    # get list of misspelled words
 	spellcheckrange();         # get chunk of text to process
 	return if ( $lglobal{spellindexstart} eq $lglobal{spellindexend} );
-	my ( $word, @templist );
 	$top->Busy( -recurse => 1 );    # let user know something is going on
+	my ( $word, @templist );
 	my $section =
 	  $textwindow->get( $lglobal{spellindexstart}, $lglobal{spellindexend} )
 	  ;                             # get selection
 	$section =~ s/^-----File:.*//g;
 	open my $save, '>:bytes', 'checkfil.txt';
-	#utf8::encode($section);
+	utf8::decode($section);
 	print $save $section;           # FIXME: probably encode before printing.
 	close $save;
-	my $spellopt =
-	  get_spellchecker_version() lt "0.6"
-	  ? "list --encoding=$lglobal{spellencoding} "
-	  : "list --encoding=$lglobal{spellencoding} "; # FIXME: This not necessary.
+	my $spellopt = "list ";
 	$spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
 	@templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
 	  ;    # feed the text to aspell, get an array of misspelled words out
@@ -12185,6 +12184,9 @@ sub spellget_misspellings {    # get list of misspelled words
 		push @{ $lglobal{misspelledlist} },
 		  $word;        # filter out project dictionary word list.
 	}
+	#wordfrequencybuildwordlist();
+	#wordfrequencygetmisspelled();
+
 	if ( $#{ $lglobal{misspelledlist} } > 0 ) {
 		$lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
 						  . ( $globalspelldictopt || '<default>' )
@@ -12204,11 +12206,11 @@ sub spellignoreall {
 	my $word = $lglobal{misspelledentry}->get;    # get word you want to ignore
 	$textwindow->bell unless ( $word || $nobell );
 	return unless $word;
-	my @ignorelist = @{ $lglobal{misspelledlist} }; # copy the mispellings array
+	my @ignorelist = @{ $lglobal{misspelledlist} }; # copy the misspellings array
 	@{ $lglobal{misspelledlist} } = ();             # then clear it
 	foreach my $next (@ignorelist)
 	{    # then put all of the words you are NOT ignoring back into the
-		    # mispellings list
+		    # misspellings list
 		push @{ $lglobal{misspelledlist} }, $next
 		  if ( $next ne $word )
 		  ;    # inefficient but easy, and the overhead isn't THAT bad...
