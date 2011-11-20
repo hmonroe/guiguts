@@ -7571,7 +7571,7 @@ sub searchoptset {
 	my $opt_count = @opt;
 
 # $sopt[0] --> 0 = pattern search               1 = whole word search
-# $sopt[1] --> 0 = case insensitive             1 = case sensitive search
+# $sopt[1] --> 0 = case sensitive             1 = case insensitive search
 # $sopt[2] --> 0 = search forwards              1 = search backwards
 # $sopt[3] --> 0 = normal search term   1 = regex search term - 3 and 0 are mutually exclusive
 # $sopt[4] --> 1 = start search at beginning
@@ -14214,7 +14214,7 @@ sub wordfrequency {
 	my $index = '1.0';
 	my $wc    = 0;
 	my $end   = $textwindow->index('end');
-
+	searchoptset(qw/1 0 x 0/); # Default is whole word search
 	if ( $lglobal{wfpop} ) {
 		$lglobal{wfpop}->deiconify;
 		$lglobal{wfpop}->raise;
@@ -14309,7 +14309,7 @@ sub wordfrequency {
 				   $lglobal{saveheader} = "$wc total words. " .
 					 keys( %{ $lglobal{seen} } ) . " distinct words in file.";
 				   sortwords( $lglobal{seen} );
-				   searchoptset(qw/1 1 x 0/);    #default is whole word search
+				   searchoptset(qw/1 0 x 0/);    #default is whole word search
 				 }
 			],
 			[ 'Check Spelling', \&wordfrequencyspellcheck ],
