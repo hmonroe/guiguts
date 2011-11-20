@@ -8025,6 +8025,18 @@ sub wordfrequencyspellcheck {
 	spelloptions() unless $globalspellpath;
 	return unless $globalspellpath;
 	$top->Busy( -recurse => 1 );
+	$lglobal{wclistbox}->delete( '0', 'end' );
+	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$lglobal{wclistbox}->update;
+
+	my $wordw = wordfrequencygetmispelled();
+	$lglobal{saveheader} = "$wordw words not recognised by the spellchecker.";
+	sortwords( \%{ $lglobal{spellsort} } );
+	$top->Unbusy;
+	unlink 'checkfil.txt';
+}
+
+sub wordfrequencygetmispelled {
 	%{ $lglobal{spellsort} } = ();
 	getprojectdic();
 	do "$lglobal{projectdictname}";
@@ -8032,13 +8044,9 @@ sub wordfrequencyspellcheck {
 	  $OS_WIN
 	  ? dos_path($globalspellpath)
 	  : $globalspellpath;    # Make the exe path dos compliant
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
-	$lglobal{wclistbox}->update;
 	my ( $words, $uwords );
 	my $wordw = 0;
 	searchoptset(qw/1 x x 0/);    # FIXME: Test for whole word search setting
-
 	foreach ( sort ( keys %{ $lglobal{seen} } ) ) {
 		if ( $_ !~ /[\x{100}-\x{FFEF}]/ ) {
 			$words .= "$_\n";
@@ -8068,10 +8076,6 @@ sub wordfrequencyspellcheck {
 			$wordw++;
 		}
 	}
-	$lglobal{saveheader} = "$wordw words not recognised by the spellchecker.";
-	sortwords( \%{ $lglobal{spellsort} } );
-	$top->Unbusy;
-	unlink 'checkfil.txt';
 }
 
 sub alphanumcheck {
