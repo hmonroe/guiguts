@@ -127,7 +127,7 @@ our $autosaveinterval = 5;
 our $bkmkhl           = 0;
 our $blocklmargin     = 5;
 our $blockrmargin     = 72;
-our $poetrylmargin    = 5;
+our $poetrylmargin    = 4;
 our $blockwrap;
 our $bold_char     = "=";
 our $defaultindent = 0;
