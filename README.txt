@@ -73,7 +73,7 @@ to first check whether they do not contain misspellings, multiple
 spellings, etc. Added samples subdirectory with PGTEI and RST samples. 
 Search history keeps track of searches more reliably (but still 
 does not include scanno searches). Tk TextEdit's FindAndReplaceAll native 
-function goes into an endless loop if the search term in the replacement 
+function goes into an endless loop if the search term is in the replacement 
 term (replace "C" with "CC". In such cases, guiguts now reverts to the 
 old very slow method. Fixed "Surround Selection". Fixed missing space
 before close of img tag. Gutcheck or HTML Autogenerate on empty window 
@@ -84,7 +84,7 @@ fixed 0:1 report for double blanks. Project dictionary not ignored
 on restart even if longer than 8 characters. Reversed order of 
 "Title" and "Caption" in HTML image popup. Word frequency count
 is run before any spell check. Toolbar font is no longer italic
-for readability. 
+for readability. Default poetry left rewrap margin set to 4. 
 
 This version does not fix replacing/discarding invalid character code
 from HTML Tidy. It would not be straightforward in footnotes with 
