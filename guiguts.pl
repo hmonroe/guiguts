@@ -1729,7 +1729,7 @@ sub fixup_menuitems {
 	   ]
 	   ],
 	   [
-		  Cascade    => 'RST Fixup',
+		  Cascade    => 'RST Tools',
 		  -tearoff   => 0,
 		  -menuitems => [
 			  [
