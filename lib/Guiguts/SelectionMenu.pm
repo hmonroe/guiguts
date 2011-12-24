@@ -304,11 +304,11 @@ sub selectrewrap {
 					if ($main::blockwrap) {
 						$rewrapped =
 						  &main::wrapper( $leftmargin,  $firstmargin,
-								   $rightmargin, $selection, $rwhyphenspace );
+								   $rightmargin, $selection, $main::rwhyphenspace );
 					} else {    #rewrap the paragraph
 						$rewrapped =
 						  &main::wrapper( $main::lmargin, $main::lmargin, $main::rmargin, $selection,  
-						  $rwhyphenspace);
+						  $main::rwhyphenspace);
 					}
 					$rewrapped =~ s/\x8d/<i>/g;     #convert the characters back
 					$rewrapped =~ s/\x8e/<\/i>/g;

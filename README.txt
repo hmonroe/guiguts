@@ -66,7 +66,8 @@ or checkboxes in the various search/spellcheck dialogs.
 Detailed release notes:
 
 Version 0.3.19 Multi term searching is sticky even after guiguts is 
-closed and reopened.
+closed and reopened. Leave space after of end of line hyphen during 
+rewrap now works.
 
 Version 0.3.18 Added EpubMaker and the Gnutenberg Press. The latter
 will only work on Windows if guiguts is installed in C:\guiguts. Fixed 
