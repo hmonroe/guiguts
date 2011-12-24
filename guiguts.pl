@@ -182,6 +182,7 @@ our $utffontsize        = 14;
 our $verboseerrorchecks = 0;
 our $vislnnm            = 0;
 our $w3cremote          = 0;
+our $wfstayontop        = 0;
 
 # These are set to the default Windows values in initialize()
 our $gutcommand            = '';
@@ -2206,6 +2207,12 @@ sub buildmenu {
 			[
 			   Checkbutton => 'Keep Pop-ups On Top',
 			   -variable   => \$stayontop,
+			   -onvalue    => 1,
+			   -offvalue   => 0
+			],
+			[
+			   Checkbutton => 'Keep Word Frequency Pop-up On Top',
+			   -variable   => \$wfstayontop,
 			   -onvalue    => 1,
 			   -offvalue   => 0
 			],
@@ -6226,21 +6233,21 @@ sub joinlines {
 		# last _character_ on the previous page.
 		$line = $textwindow->get("$index-1c");
 		my $hyphens = 0;
-#		if ( $line =~ /\// ) {
-#			$textwindow->delete( $index, "$index+3c" );
-#			$lglobal{joinundo}++;
-#			$textwindow->delete( "$index-3c", $index );
-#			$lglobal{joinundo}++;
-#			$index = $textwindow->index('page');
-#			$line  = $textwindow->get("$index-1c");
-#			last if ( $textwindow->compare( $index, '>=', 'end' ) );
-#			while ( $line eq '*' ) {
-#				$textwindow->delete("$index-1c");
-#				$index = $textwindow->index('page');
-#				$line  = $textwindow->get("$index-1c");
-#			}
-#			$line = $textwindow->get("$index-1c");
-#		}
+		if ( $line =~ /\// ) {
+			$textwindow->delete( $index, "$index+3c" );
+			$lglobal{joinundo}++;
+			$textwindow->delete( "$index-3c", $index );
+			$lglobal{joinundo}++;
+			$index = $textwindow->index('page');
+			$line  = $textwindow->get("$index-1c");
+			last if ( $textwindow->compare( $index, '>=', 'end' ) );
+			while ( $line eq '*' ) {
+				$textwindow->delete("$index-1c");
+				$index = $textwindow->index('page');
+				$line  = $textwindow->get("$index-1c");
+			}
+			$line = $textwindow->get("$index-1c");
+		}
 
 		if ( $line =~ />/ ) {
 			my $markupl = $textwindow->get( "$index-4c", $index );
@@ -10583,7 +10590,12 @@ sub initialize_popup_without_deletebinding {
 		}
 	);
 	$lglobal{$popupname}->Icon( -image => $icon );
-	$lglobal{$popupname}->transient($top) if $stayontop;
+	if (($stayontop ) and (not $popupname eq "wfpop")) {
+		$lglobal{$popupname}->transient($top);
+	}
+	if (($wfstayontop ) and ($popupname eq "wfpop")) {
+		$lglobal{$popupname}->transient($top);
+	}
 }
 
 sub pageremove {    # Delete a page marker
@@ -10911,7 +10923,7 @@ EOM
 			geometry2 geometry3 geometrypnumpop globalaspellmode highlightcolor history_size ignoreversionnumber
 			intelligentWF ignoreversions italic_char jeebiesmode lastversioncheck lmargin nobell nohighlights
 			notoolbar poetrylmargin rmargin rwhyphenspace multiterm stayontop toolside utffontname utffontsize
-			verboseerrorchecks vislnnm w3cremote/
+			verboseerrorchecks vislnnm w3cremote wfstayontop/
 		  )
 		{
 			if ( eval '$' . $_ ) {

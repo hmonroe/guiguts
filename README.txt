@@ -65,6 +65,10 @@ or checkboxes in the various search/spellcheck dialogs.
 
 Detailed release notes:
 
+Version 0.3.20 Restored behavior such that Join Lines cuts out
+*/ and /* pairs. Added separate option to keep Word Frequency
+popup on top. 
+
 Version 0.3.19 Multi term searching is sticky even after guiguts is 
 closed and reopened. Leave space after of end of line hyphen during 
 rewrap option now works and is the default. Added PGTEI sample
