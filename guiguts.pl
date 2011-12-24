@@ -20,7 +20,7 @@
 
 #use criticism 'gentle';
 
-my $VERSION = '0.3.18';
+my $VERSION = '0.3.19';
 use strict;
 use warnings;
 use FindBin;
@@ -6226,21 +6226,21 @@ sub joinlines {
 		# last _character_ on the previous page.
 		$line = $textwindow->get("$index-1c");
 		my $hyphens = 0;
-		if ( $line =~ /\// ) {
-			$textwindow->delete( $index, "$index+3c" );
-			$lglobal{joinundo}++;
-			$textwindow->delete( "$index-3c", $index );
-			$lglobal{joinundo}++;
-			$index = $textwindow->index('page');
-			$line  = $textwindow->get("$index-1c");
-			last if ( $textwindow->compare( $index, '>=', 'end' ) );
-			while ( $line eq '*' ) {
-				$textwindow->delete("$index-1c");
-				$index = $textwindow->index('page');
-				$line  = $textwindow->get("$index-1c");
-			}
-			$line = $textwindow->get("$index-1c");
-		}
+#		if ( $line =~ /\// ) {
+#			$textwindow->delete( $index, "$index+3c" );
+#			$lglobal{joinundo}++;
+#			$textwindow->delete( "$index-3c", $index );
+#			$lglobal{joinundo}++;
+#			$index = $textwindow->index('page');
+#			$line  = $textwindow->get("$index-1c");
+#			last if ( $textwindow->compare( $index, '>=', 'end' ) );
+#			while ( $line eq '*' ) {
+#				$textwindow->delete("$index-1c");
+#				$index = $textwindow->index('page');
+#				$line  = $textwindow->get("$index-1c");
+#			}
+#			$line = $textwindow->get("$index-1c");
+#		}
 
 		if ( $line =~ />/ ) {
 			my $markupl = $textwindow->get( "$index-4c", $index );

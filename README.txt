@@ -67,7 +67,8 @@ Detailed release notes:
 
 Version 0.3.19 Multi term searching is sticky even after guiguts is 
 closed and reopened. Leave space after of end of line hyphen during 
-rewrap option now works and is the default.
+rewrap option now works and is the default. Added PGTEI sample
+for the Iliad. 
 
 Version 0.3.18 Added EpubMaker and the Gnutenberg Press. The latter
 will only work on Windows if guiguts is installed in C:\guiguts. Fixed 
