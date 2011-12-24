@@ -172,7 +172,7 @@ our $scannosearch     = 0;
 our $scrollupdatespd  = 40;
 our $searchendindex   = 'end';
 our $searchstartindex = '1.0';
-our $singleterm       = 1;
+our $multiterm       = 0;
 our $spellindexbkmrk  = q{};
 our $stayontop        = 0;
 our $suspectindex;
@@ -1718,11 +1718,11 @@ sub fixup_menuitems {
 			}
 	   ],
 			  [
-				 Button   => 'Gnutenberg Press HTML',
+				 Button   => 'Gnutenberg Press (HTML only)',
 				   -command => sub {gnutenberg('html')} 
 			  ],
 			  [
-				 Button   => 'Gnutenberg Press Text',
+				 Button   => 'Gnutenberg Press (Text only)',
 				   -command => sub {gnutenberg('txt')} 
 			  ],
 	   
@@ -10910,7 +10910,7 @@ EOM
 			blocklmargin blockrmargin bold_char defaultindent failedsearch fontname fontsize fontweight geometry
 			geometry2 geometry3 geometrypnumpop globalaspellmode highlightcolor history_size ignoreversionnumber
 			intelligentWF ignoreversions italic_char jeebiesmode lastversioncheck lmargin nobell nohighlights
-			notoolbar poetrylmargin rmargin rwhyphenspace singleterm stayontop toolside utffontname utffontsize
+			notoolbar poetrylmargin rmargin rwhyphenspace multiterm stayontop toolside utffontname utffontsize
 			verboseerrorchecks vislnnm w3cremote/
 		  )
 		{
@@ -12631,8 +12631,8 @@ sub searchpopup {
 		$sf10->Label( -text => 'Terms - ' )->grid( -row => 1, -column => 2 );
 		$sf10->Radiobutton(
 			-text     => 'single',
-			-variable => \$singleterm,
-			-value    => 1,
+			-variable => \$multiterm,
+			-value    => 0,
 			-command  => sub {
 				for ( $sf13, $sf14 ) {
 					$_->packForget;
@@ -12641,10 +12641,11 @@ sub searchpopup {
 		)->grid( -row => 1, -column => 3 );
 		$sf10->Radiobutton(
 			-text     => 'multi',
-			-variable => \$singleterm,
-			-value    => 0,
+			-variable => \$multiterm,
+			-value    => 1,
 			-command  => sub {
 				for ( $sf13, $sf14 ) {
+					print "$multiterm:single\n";
 					if ( defined $sf5 ) {
 						$_->pack(
 								  -before => $sf5,
@@ -12882,7 +12883,7 @@ sub searchpopup {
 			-height => 15,
 		)->pack( -side => 'right', -anchor => 'w' );
 
-		unless ($singleterm) {
+		if ($multiterm) {
 			for ( $sf13, $sf14 ) {
 				$_->pack(
 						  -side   => 'top',
@@ -14340,7 +14341,7 @@ sub wordfrequency {
 			   'Ligatures',
 			   [
 				  \&anythingwfcheck, 'words with possible ligatures',
-				  '(oe|ae|æ|Æ|œ|Œ)'
+				  '(oe|ae|æ|Æ|\x{0153}|\x{0152})'
 			   ]
 			],
 			[ 'RegExpEntry', [ \&anythingwfcheck, 'dummy entry', 'dummy' ] ],
@@ -15590,7 +15591,9 @@ sub epubmaker {
 	my $format = shift;
 	if ($lglobal{global_filename} =~ /(\w+.rst)$/) {
 		
-	print "Beginning epubmaker\n";
+	print "\nBeginning epubmaker\n";
+	print "Files will appear in the directory $globallastpath.\n";
+	print "Running in background with no messages that processing is complete.\n";
 	my $rstfilename = $1;
 	my $pwd = getcwd();
 	chdir $globallastpath;
@@ -15612,7 +15615,7 @@ sub epubmaker {
 sub gnutenberg {
 	my $format = shift;
 		
-	print "Beginning Gnutenberg Press\n";
+	print "\nBeginning Gnutenberg Press\n";
 	print "Warning: This requires installing perl including LibXML, and \n";
 	print "guiguts must be installed in c:\\guiguts on Windows systems.\n";
 	my $pwd = getcwd();
@@ -15622,7 +15625,7 @@ unless(-d 'output'){
 }
 	my $gnutenbergoutput = catfile($globallastpath,'output');								
 	chdir $gnutenbergdirectory;
-	system("perl transform.pl -f $format $lglobal{global_filename} $gnutenbergoutput\\");
+	runner("perl transform.pl -f $format $lglobal{global_filename} $gnutenbergoutput\\");
 	chdir $pwd;
 	}
 

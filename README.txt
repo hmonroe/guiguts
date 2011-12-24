@@ -65,6 +65,9 @@ or checkboxes in the various search/spellcheck dialogs.
 
 Detailed release notes:
 
+Version 0.3.19 Multi term searching is sticky even after guiguts is 
+closed and reopened.
+
 Version 0.3.18 Added EpubMaker and the Gnutenberg Press. The latter
 will only work on Windows if guiguts is installed in C:\guiguts. Fixed 
 problem in 0.3.17--did not detect emdash suspects. Double click on 
