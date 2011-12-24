@@ -164,7 +164,7 @@ our $operationinterrupt;
 our $pngspath         = q{};
 our $regexpentry      = q();
 our $rmargin          = 72;
-our $rwhyphenspace    = 0;
+our $rwhyphenspace    = 1;
 our $scannoslist      = q{};
 our $scannoslistpath  = q{};
 our $scannospath      = q{};
