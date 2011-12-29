@@ -20,7 +20,7 @@
 
 #use criticism 'gentle';
 
-my $VERSION = '0.3.19';
+my $VERSION = '1.0.0';
 use strict;
 use warnings;
 use FindBin;
