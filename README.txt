@@ -1,3 +1,11 @@
 See http://www.pgdp.net/wiki/Guiguts_new_features_and_bug_fixes for a
 description of new features and bug fixes in Version 1.0.0. Detailed
-release notes for subsequent version will be added below.
+release notes for subsequent versions will be added below.
+
+guiguts-win-epub-1.0.0.zip is the best download for Windows users. It includes
+guiguts.pl and supporting files and helper applications including those
+for working with RST and PGTEI files. It should work out of the box by running
+guiguts.bat (it includes copies of perl and Python languages). guiguts-win-1.0.0.zip 
+does not include support for RST and PGTEI or Python. guiguts-1.0.0.zip
+is a stripped down version for those who have all the helper applications or
+are upgrading or who use operating systems other than Windows.
