@@ -685,13 +685,13 @@ sub surround {
 		  $surpop->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $surstrt = $f1->Entry(
 								  -width      => 8,
-								  -background => 'white',
+								  -background => $main::bkgcolor,
 								  -font       => $font,
 								  -relief     => 'sunken',
 		)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'n' );
 		my $surend = $f1->Entry(
 								 -width      => 8,
-								 -background => 'white',
+								 -background => $main::bkgcolor,
 								 -font       => $font,
 								 -relief     => 'sunken',
 		)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'n' );
@@ -760,7 +760,7 @@ sub flood {
 										   -fill   => 'x'
 		  );
 		my $floodch = $f1->Entry(
-								  -background   => 'white',
+								  -background   => $main::bkgcolor,
 								  -font         => $font,
 								  -relief       => 'sunken',
 								  -textvariable => \$ffchar,

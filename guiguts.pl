@@ -124,6 +124,7 @@ our $auto_show_images = 0;
 our $autobackup       = 0;
 our $autosave         = 0;
 our $autosaveinterval = 5;
+our $bkgcolor        = '#ffffff'; 
 our $bkmkhl           = 0;
 our $blocklmargin     = 5;
 our $blockrmargin     = 72;
@@ -325,7 +326,7 @@ our $text_font = $top->fontCreate(
 my $textwindow = $text_frame->LineNumberText(
 	-widget          => 'TextUnicode',
 	-exportselection => 'true',        # 'sel' tag is associated with selections
-	-background      => 'white',
+	-background      => $bkgcolor,
 	-relief          => 'sunken',
 	-font            => $lglobal{font},
 	-wrap            => 'none',
@@ -569,7 +570,7 @@ sub selection {
 		$frame->Label( -text => 'Start Line.Col' )
 		  ->grid( -row => 1, -column => 1 );
 		$lglobal{selsentry} = $frame->Entry(
-			-background   => 'white',
+			-background   => $bkgcolor,
 			-width        => 15,
 			-textvariable => \$start,
 			-validate     => 'focusout',
@@ -581,7 +582,7 @@ sub selection {
 		$frame->Label( -text => 'End Line.Col' )
 		  ->grid( -row => 2, -column => 1 );
 		$lglobal{seleentry} = $frame->Entry(
-			-background   => 'white',
+			-background   => $bkgcolor,
 			-width        => 15,
 			-textvariable => \$end,
 			-validate     => 'focusout',
@@ -1087,13 +1088,13 @@ sub file_guess_page_marks {
 		$f1->Label( -text => 'How many pages are there total?', )
 		  ->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
 		my $tpages = $f1->Entry(
-								 -background => 'white',
+								 -background => $bkgcolor,
 								 -width      => 8,
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
 		$f1->Label( -text => 'What line # does page 25 start with?', )
 		  ->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
 		my $page25 = $f1->Entry(
-								 -background => 'white',
+								 -background => $bkgcolor,
 								 -width      => 8,
 		)->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
 		my $f3 = $lglobal{pgpop}->Frame->pack;
@@ -1106,11 +1107,11 @@ sub file_guess_page_marks {
 		$f4->Label( -text => 'Line #?.', )
 		  ->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
 		my $pagexe = $f4->Entry(
-								 -background => 'white',
+								 -background => $bkgcolor,
 								 -width      => 8,
 		)->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
 		my $linexe = $f4->Entry(
-								 -background => 'white',
+								 -background => $bkgcolor,
 								 -width      => 8,
 		)->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
 		my $f2 = $lglobal{pgpop}->Frame->pack;
@@ -1531,7 +1532,7 @@ sub selection_menuitems {
 				  my $surstrt =
 					$f1->Entry(
 								-width      => 8,
-								-background => 'white',
+								-background => $bkgcolor,
 								-font       => $lglobal{font},
 								-relief     => 'sunken',
 					)->pack(
@@ -1543,7 +1544,7 @@ sub selection_menuitems {
 				  my $surend =
 					$f1->Entry(
 								-width      => 8,
-								-background => 'white',
+								-background => $bkgcolor,
 								-font       => $lglobal{font},
 								-relief     => 'sunken',
 					)->pack(
@@ -2314,6 +2315,15 @@ sub buildmenu {
 				   $OS_WIN
 					 ? $lglobal{checkcolor} = 'white'
 					 : $lglobal{checkcolor} = $activecolor;
+				   saveset();
+				 }
+			],
+			[
+			   Button   => 'Set Background Color',
+			   -command => sub {
+				   my $thiscolor = setcolor($bkgcolor);
+				   $bkgcolor = $thiscolor if $thiscolor;
+				   saveset();
 				 }
 			],
 			[
@@ -2485,7 +2495,7 @@ sub gotolabel {
 		$frame->Label( -text => 'Enter Label: ' )->pack( -side => 'left' );
 		$lglobal{lastlabel} = 'Pg ' unless $lglobal{lastlabel};
 		my $entry = $frame->Entry(
-								   -background   => 'white',
+								   -background   => $bkgcolor,
 								   -width        => 25,
 								   -textvariable => \$lglobal{lastlabel}
 		)->pack( -side => 'left', -fill => 'x' );
@@ -2514,11 +2524,11 @@ sub fnview {
 		$lglobal{footviewpop}->raise;
 		$lglobal{footviewpop}->focus;
 	} else {
-		$lglobal{footviewpop} = $top->Toplevel( -background => 'white' );
+		$lglobal{footviewpop} = $top->Toplevel( -background => $bkgcolor );
 		initialize_popup_with_deletebinding('footviewpop');
 		$lglobal{footviewpop}->title('Footnotes');
 		my $frame1 =
-		  $lglobal{footviewpop}->Frame( -background => 'white' )
+		  $lglobal{footviewpop}->Frame( -background => $bkgcolor )
 		  ->pack( -side => 'top', -anchor => 'n' );
 		$frame1->Label(
 			  -text =>
@@ -2550,7 +2560,7 @@ sub fnview {
 		$ftext = $frame2->Scrolled(
 									'ROText',
 									-scrollbars => 'se',
-									-background => 'white',
+									-background => $bkgcolor,
 									-font       => $lglobal{font},
 		  )->pack(
 				   -anchor => 'nw',
@@ -3401,7 +3411,7 @@ sub regedit {
 	my $regsearchlabel = $editor->add( 'Label', -text => 'Search Term' )->pack;
 	$lglobal{regsearch} = $editor->add(
 										'Text',
-										-background => 'white',
+										-background => $bkgcolor,
 										-width      => 40,
 										-height     => 1,
 	)->pack;
@@ -3409,14 +3419,14 @@ sub regedit {
 	  $editor->add( 'Label', -text => 'Replacement Term' )->pack;
 	$lglobal{regreplace} = $editor->add(
 										 'Text',
-										 -background => 'white',
+										 -background => $bkgcolor,
 										 -width      => 40,
 										 -height     => 1,
 	)->pack;
 	my $reghintlabel = $editor->add( 'Label', -text => 'Hint Text' )->pack;
 	$lglobal{reghinted} = $editor->add(
 										'Text',
-										-background => 'white',
+										-background => $bkgcolor,
 										-width      => 40,
 										-height     => 8,
 										-wrap       => 'word',
@@ -3592,7 +3602,7 @@ sub reghint {
 		  $frame->ROText(
 						  -width      => 40,
 						  -height     => 6,
-						  -background => 'white',
+						  -background => $bkgcolor,
 						  -wrap       => 'word',
 		  )->pack(
 				   -anchor => 'nw',
@@ -4793,7 +4803,7 @@ sub markup {
 				  ->Frame->pack( -side => 'top', -anchor => 'n' );
 				my $linklabel = $linkf1->Label( -text => 'Link name' )->pack;
 				$lglobal{linkentry} =
-				  $linkf1->Entry( -width => 60, -background => 'white' )->pack;
+				  $linkf1->Entry( -width => 60, -background => $bkgcolor )->pack;
 				my $linkf2 =
 				  $lglobal{elinkpop}
 				  ->Frame->pack( -side => 'top', -anchor => 'n' );
@@ -4952,7 +4962,7 @@ sub markup {
 				  $pframe->Scrolled(
 									 'Listbox',
 									 -scrollbars  => 'se',
-									 -background  => 'white',
+									 -background  => $bkgcolor,
 									 -selectmode  => 'single',
 									 -activestyle => 'none',
 				  )->pack(
@@ -5305,7 +5315,7 @@ sub htmlimage {
 		$lglobal{imagelbl} = $f->Label(
 										-text       => 'Thumbnail',
 										-justify    => 'center',
-										-background => 'white',
+										-background => $bkgcolor,
 		)->grid( -row => 1, -column => 1 );
 		$lglobal{imagelbl}->bind( $lglobal{imagelbl}, '<1>', \&tnbrowse );
 		$lglobal{htmlimpop}->protocol(
@@ -6019,7 +6029,7 @@ sub showproofers {
 		  $frame->Scrolled(
 							'ROText',
 							-scrollbars => 'se',
-							-background => 'white',
+							-background => $bkgcolor,
 							-font       => '{Courier} 10',
 							-width      => 80,
 							-height     => 40,
@@ -6474,7 +6484,7 @@ sub errorcheckpop_up {
 	  $pframe->Scrolled(
 						 'Listbox',
 						 -scrollbars  => 'se',
-						 -background  => 'white',
+						 -background  => $bkgcolor,
 						 -font        => $lglobal{font},
 						 -selectmode  => 'single',
 						 -activestyle => 'none',
@@ -7005,7 +7015,7 @@ sub gcheckpop_up {
 		  $pframe->Scrolled(
 							 'Listbox',
 							 -scrollbars  => 'se',
-							 -background  => 'white',
+							 -background  => $bkgcolor,
 							 -font        => $lglobal{font},
 							 -selectmode  => 'single',
 							 -activestyle => 'none',
@@ -7544,7 +7554,7 @@ sub ital_adjust {
 	my $f1 = $markuppop->Frame->pack( -side => 'top', -anchor => 'n' );
 	$f1->Entry(
 		-width        => 10,
-		-background   => 'white',
+		-background   => $bkgcolor,
 		-relief       => 'sunken',
 		-textvariable => \$markupthreshold,
 		-validate     => 'key',
@@ -7613,7 +7623,7 @@ sub harmonicspop {
 		  $frame->Scrolled(
 							'Listbox',
 							-scrollbars  => 'se',
-							-background  => 'white',
+							-background  => $bkgcolor,
 							-font        => $lglobal{font},
 							-selectmode  => 'single',
 							-activestyle => 'none',
@@ -10197,7 +10207,7 @@ sub pageadjust {
 		unless (@pages) {
 			$frame0->Label(
 							-text       => 'No Page Markers Found',
-							-background => 'white',
+							-background => $bkgcolor,
 			)->pack;
 			return;
 		}
@@ -10258,7 +10268,7 @@ sub pageadjust {
 		  $lglobal{padjpop}->Scrolled(
 									   'Pane',
 									   -scrollbars => 'se',
-									   -background => 'white',
+									   -background => $bkgcolor,
 		  )->pack(
 				   -expand => 1,
 				   -fill   => 'both',
@@ -10288,7 +10298,7 @@ sub pageadjust {
 			$pagetrack{$num}[1] =
 			  $frame1->Label(
 							  -text       => "Label -->",
-							  -background => 'white',
+							  -background => $bkgcolor,
 			  )->grid( -row => $row, -column => 1 );
 
 			my $temp = $num;
@@ -10918,7 +10928,7 @@ EOM
 		print $save_handle ");\n\n";
 
 		for (
-			qw/alpha_sort activecolor auto_page_marks auto_show_images autobackup autosave autosaveinterval
+			qw/alpha_sort activecolor auto_page_marks auto_show_images autobackup autosave autosaveinterval bkgcolor
 			blocklmargin blockrmargin bold_char defaultindent failedsearch fontname fontsize fontweight geometry
 			geometry2 geometry3 geometrypnumpop globalaspellmode highlightcolor history_size ignoreversionnumber
 			intelligentWF ignoreversions italic_char jeebiesmode lastversioncheck lmargin nobell nohighlights
@@ -11010,7 +11020,7 @@ sub utflabel_bind {
 		}
 	);
 	$widget->bind( '<Leave>',
-				   sub { $widget->configure( -background => 'white' ); } );
+				   sub { $widget->configure( -background => $bkgcolor ); } );
 	$widget->bind(
 		'<ButtonPress-1>',
 		sub {
@@ -11028,7 +11038,7 @@ sub utfchar_bind {
 		}
 	);
 	$widget->bind( '<Leave>',
-				   sub { $widget->configure( -background => 'white' ) } );
+				   sub { $widget->configure( -background => $bkgcolor ) } );
 	$widget->bind(
 		'<ButtonPress-3>',
 		sub {
@@ -12564,7 +12574,7 @@ sub searchpopup {
 
 		$lglobal{searchentry} =
 		  $sf11->Text(
-					   -background => 'white',
+					   -background => $bkgcolor,
 					   -width      => 60,
 					   -height     => 1,
 		  )->pack(
@@ -12739,7 +12749,7 @@ sub searchpopup {
 
 		$lglobal{replaceentry} =
 		  $sf12->Text(
-					   -background => 'white',
+					   -background => $bkgcolor,
 					   -width      => 60,
 					   -height     => 1,
 		  )->pack(
@@ -12807,7 +12817,7 @@ sub searchpopup {
 
 		$lglobal{replaceentry1} =
 		  $sf13->Text(
-					   -background => 'white',
+					   -background => $bkgcolor,
 					   -width      => 60,
 					   -height     => 1,
 		  )->pack(
@@ -12875,7 +12885,7 @@ sub searchpopup {
 
 		$lglobal{replaceentry2} =
 		  $sf14->Text(
-					   -background => 'white',
+					   -background => $bkgcolor,
 					   -width      => 60,
 					   -height     => 1,
 		  )->pack(
@@ -13188,7 +13198,7 @@ sub spellchecker {    # Set up spell check window
 		  ->pack( -side => 'top', -anchor => 'n', -pady => 5 );
 		$lglobal{misspelledentry} =
 		  $spf1->Entry(
-						-background => 'white',
+						-background => $bkgcolor,
 						-width      => 42,
 						-font       => $lglobal{font},
 		  )->pack( -side => 'top', -anchor => 'n', -pady => 1 );
@@ -13197,7 +13207,7 @@ sub spellchecker {    # Set up spell check window
 		  ->pack( -side => 'top', -anchor => 'n', -padx => 6 );
 		$lglobal{spreplaceentry} =
 		  $spf1->Entry(
-						-background => 'white',
+						-background => $bkgcolor,
 						-width      => 42,
 						-font       => $lglobal{font},
 		  )->pack( -side => 'top', -anchor => 'n', -padx => 1 );
@@ -13206,7 +13216,7 @@ sub spellchecker {    # Set up spell check window
 		  ->pack( -side => 'top', -anchor => 'n', -pady => 5 );
 		$lglobal{replacementlist} =
 		  $spf1->ScrlListbox(
-							  -background => 'white',
+							  -background => $bkgcolor,
 							  -scrollbars => 'osoe',
 							  -font       => $lglobal{font},
 							  -width      => 40,
@@ -13505,7 +13515,7 @@ sub gotoline {
 		$frame->Label( -text => 'Enter Line number: ' )
 		  ->pack( -side => 'left' );
 		my $entry = $frame->Entry(
-								   -background   => 'white',
+								   -background   => $bkgcolor,
 								   -width        => 25,
 								   -textvariable => \$lglobal{line_number},
 		)->pack( -side => 'left', -fill => 'x' );
@@ -13572,7 +13582,7 @@ sub gotopage {
 		$frame->Label( -text => 'Enter image number: ' )
 		  ->pack( -side => 'left' );
 		my $entry = $frame->Entry(
-								   -background   => 'white',
+								   -background   => $bkgcolor,
 								   -width        => 25,
 								   -textvariable => \$lglobal{lastpage}
 		)->pack( -side => 'left', -fill => 'x' );
@@ -13981,7 +13991,7 @@ sub hilitepopup {
 		  ->pack( -side => 'top', -pady => 2, -padx => 2, -anchor => 'n' );
 		my $entry = $f->Entry(
 							   -width      => 40,
-							   -background => 'white',
+							   -background => $bkgcolor,
 							   -font       => $lglobal{font},
 							   -relief     => 'sunken',
 		  )->pack(
@@ -14106,7 +14116,7 @@ sub asciipopup {
 			$col = $_ % 3;
 			$f5->Entry(
 						-width        => 1,
-						-background   => 'white',
+						-background   => $bkgcolor,
 						-font         => $lglobal{font},
 						-relief       => 'sunken',
 						-textvariable => \${ $lglobal{ascii} }[$_],
@@ -14126,7 +14136,7 @@ sub asciipopup {
 		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'n' );
 		my $wmentry = $f0->Entry(
 								  -width        => 6,
-								  -background   => 'white',
+								  -background   => $bkgcolor,
 								  -relief       => 'sunken',
 								  -textvariable => \$lglobal{asciiwidth},
 		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'n' );
@@ -14196,7 +14206,7 @@ sub alignpopup {
 		  $lglobal{alignpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f1->Entry(
 					-width        => 8,
-					-background   => 'white',
+					-background   => $bkgcolor,
 					-font         => $lglobal{font},
 					-relief       => 'sunken',
 					-textvariable => \$lglobal{alignstring},
@@ -14390,7 +14400,7 @@ sub wordfrequency {
 			} else {
 				$lglobal{regexpentry} =
 				  $wcseframe1->Entry(
-									  -background   => 'white',
+									  -background   => $bkgcolor,
 									  -textvariable => \$regexpentry,
 									  -width        => 13,
 				  )->grid( -row => $row, -column => $col );
@@ -14403,7 +14413,7 @@ sub wordfrequency {
 		  $wcframe->Scrolled(
 							  'Listbox',
 							  -scrollbars  => 'se',
-							  -background  => 'white',
+							  -background  => $bkgcolor,
 							  -font        => $lglobal{font},
 							  -selectmode  => 'single',
 							  -activestyle => 'none',
@@ -14878,7 +14888,7 @@ sub jeebiespop_up {
 		  $pframe->Scrolled(
 							 'Listbox',
 							 -scrollbars  => 'se',
-							 -background  => 'white',
+							 -background  => $bkgcolor,
 							 -font        => $lglobal{font},
 							 -selectmode  => 'single',
 							 -activestyle => 'none',
@@ -15336,7 +15346,7 @@ sub footnotepop {
 		)->grid( -row => 2, -column => 3 );
 		$lglobal{footnotenumber} =
 		  $frame2->Label(
-						  -background => 'white',
+						  -background => $bkgcolor,
 						  -relief     => 'sunken',
 						  -justify    => 'center',
 						  -font       => '{Times} 10',
@@ -15344,7 +15354,7 @@ sub footnotepop {
 		  )->grid( -row => 3, -column => 1, -padx => 2, -pady => 4 );
 		$lglobal{footnoteletter} =
 		  $frame2->Label(
-						  -background => 'white',
+						  -background => $bkgcolor,
 						  -relief     => 'sunken',
 						  -justify    => 'center',
 						  -font       => '{Times} 10',
@@ -15352,7 +15362,7 @@ sub footnotepop {
 		  )->grid( -row => 3, -column => 2, -padx => 2, -pady => 4 );
 		$lglobal{footnoteroman} =
 		  $frame2->Label(
-						  -background => 'white',
+						  -background => $bkgcolor,
 						  -relief     => 'sunken',
 						  -justify    => 'center',
 						  -font       => '{Times} 10',
@@ -15925,14 +15935,14 @@ sub htmlpopup {
 		  $lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$tableformat = $f5->Entry(
 								   -width      => 40,
-								   -background => 'white',
+								   -background => $bkgcolor,
 								   -relief     => 'sunken',
 		)->grid( -row => 0, -column => 1, -pady => 2 );
 		$f5->Label( -text => 'Column Fmt', )
 		  ->grid( -row => 0, -column => 2, -padx => 2, -pady => 2 );
 		my $diventry = $f5->Entry(
 								   -width      => 40,
-								   -background => 'white',
+								   -background => $bkgcolor,
 								   -relief     => 'sunken',
 		)->grid( -row => 1, -column => 1, -pady => 2 );
 		$f5->Button(
@@ -15948,7 +15958,7 @@ sub htmlpopup {
 		  $lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $spanentry = $f6->Entry(
 									-width      => 40,
-									-background => 'white',
+									-background => $bkgcolor,
 									-relief     => 'sunken',
 		)->grid( -row => 1, -column => 1, -pady => 2 );
 		$f6->Button(
@@ -16408,7 +16418,7 @@ sub tablefx {
 		  ->grid( -row => 1, -column => 0, -padx => 1, -pady => 2 );
 		$f3->Entry(
 					-width        => 6,
-					-background   => 'white',
+					-background   => $bkgcolor,
 					-textvariable => \$lglobal{stepmaxwidth},
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
 		$f3->Button(
@@ -16595,7 +16605,7 @@ sub externalpopup {    # Set up the external commands menu
 		for my $menutempvar ( 0 .. 9 ) {
 			$f1->Entry(
 						-width        => 50,
-						-background   => 'white',
+						-background   => $bkgcolor,
 						-relief       => 'sunken',
 						-textvariable => \$extops[$menutempvar]{label},
 			  )->grid(
@@ -16606,7 +16616,7 @@ sub externalpopup {    # Set up the external commands menu
 			  );
 			$f1->Entry(
 						-width        => 80,
-						-background   => 'white',
+						-background   => $bkgcolor,
 						-relief       => 'sunken',
 						-textvariable => \$extops[$menutempvar]{command},
 			  )->grid(
@@ -16717,12 +16727,12 @@ sub utfpopup {
 
 	$usel->select;
 	$lglobal{pframe} =
-	  $lglobal{utfpop}->Frame( -background => 'white' )
+	  $lglobal{utfpop}->Frame( -background => $bkgcolor )
 	  ->pack( -expand => 'y', -fill => 'both' );
 	$lglobal{utfframe} =
 	  $lglobal{pframe}->Scrolled(
 								  'Pane',
-								  -background => 'white',
+								  -background => $bkgcolor,
 								  -scrollbars => 'se',
 								  -sticky     => 'nswe'
 	  )->pack( -expand => 'y', -fill => 'both' );
@@ -16749,12 +16759,12 @@ sub doutfbuttons {
 	undef $lglobal{pframe};
 
 	$lglobal{pframe} =
-	  $lglobal{utfpop}->Frame( -background => 'white' )
+	  $lglobal{utfpop}->Frame( -background => $bkgcolor )
 	  ->pack( -expand => 'y', -fill => 'both' );
 	$lglobal{utfframe} =
 	  $lglobal{pframe}->Scrolled(
 								  'Pane',
-								  -background => 'white',
+								  -background => $bkgcolor,
 								  -scrollbars => 'se',
 								  -sticky     => 'nswe'
 	  )->pack( -expand => 'y', -fill => 'both' );
@@ -16779,7 +16789,7 @@ sub doutfbuttons {
 				-font               => $lglobal{utffont},
 				-relief             => 'flat',
 				-borderwidth        => 0,
-				-background         => 'white',
+				-background         => $bkgcolor,
 				-command            => [ \&pututf, $lglobal{utfpop} ],
 				-highlightthickness => 0,
 			)->grid( -row => $y, -column => $x );
@@ -16811,7 +16821,7 @@ sub setmargins {
 	)->pack( -side => 'left' );
 	my $lmentry = $lmframe->Entry(
 								   -width        => 6,
-								   -background   => 'white',
+								   -background   => $bkgcolor,
 								   -relief       => 'sunken',
 								   -textvariable => \$lmargin,
 	)->pack( -side => 'left' );
@@ -16823,7 +16833,7 @@ sub setmargins {
 	)->pack( -side => 'left' );
 	my $rmentry = $rmframe->Entry(
 								   -width        => 6,
-								   -background   => 'white',
+								   -background   => $bkgcolor,
 								   -relief       => 'sunken',
 								   -textvariable => \$rmargin,
 	)->pack( -side => 'left' );
@@ -16835,7 +16845,7 @@ sub setmargins {
 	)->pack( -side => 'left' );
 	my $blmentry = $blmframe->Entry(
 									 -width        => 6,
-									 -background   => 'white',
+									 -background   => $bkgcolor,
 									 -relief       => 'sunken',
 									 -textvariable => \$blocklmargin,
 	)->pack( -side => 'left' );
@@ -16847,7 +16857,7 @@ sub setmargins {
 	)->pack( -side => 'left' );
 	my $brmentry = $brmframe->Entry(
 									 -width        => 6,
-									 -background   => 'white',
+									 -background   => $bkgcolor,
 									 -relief       => 'sunken',
 									 -textvariable => \$blockrmargin,
 	)->pack( -side => 'left' );
@@ -16861,7 +16871,7 @@ sub setmargins {
 	)->pack( -side => 'left' );
 	my $plmentry = $plmframe->Entry(
 									 -width        => 6,
-									 -background   => 'white',
+									 -background   => $bkgcolor,
 									 -relief       => 'sunken',
 									 -textvariable => \$poetrylmargin,
 	)->pack( -side => 'left' );
@@ -16877,7 +16887,7 @@ sub setmargins {
 	my $didntmentry =
 	  $didntframe->Entry(
 						  -width        => 6,
-						  -background   => 'white',
+						  -background   => $bkgcolor,
 						  -relief       => 'sunken',
 						  -textvariable => \$defaultindent,
 	  )->pack( -side => 'left' );
@@ -17006,7 +17016,7 @@ sub setbrowser {
 	my $browserentry =
 	  $browsepop->Entry(
 						 -width        => 60,
-						 -background   => 'white',
+						 -background   => $bkgcolor,
 						 -textvariable => $globalbrowserstart,
 	  )->grid( -row => 1, -column => 1, -columnspan => 2, -pady => 3 );
 	my $button_ok = $browsepop->Button(
@@ -17218,7 +17228,7 @@ sub spelloptions {
 	my $spellpathlabel =
 	  $spellop->add( 'Label', -text => 'Aspell executable file?' )->pack;
 	my $spellpathentry =
-	  $spellop->add( 'Entry', -width => 60, -background => 'white' )->pack;
+	  $spellop->add( 'Entry', -width => 60, -background => $bkgcolor )->pack;
 	my $spellpathbrowse = $spellop->add(
 		'Button',
 		-text    => 'Browse',
@@ -17266,7 +17276,7 @@ sub spelloptions {
 							   'ScrlListbox',
 							   -scrollbars => 'oe',
 							   -selectmode => 'browse',
-							   -background => 'white',
+							   -background => $bkgcolor,
 							   -height     => 10,
 							   -width      => 40,
 	)->pack( -pady => 4 );
@@ -17276,7 +17286,7 @@ sub spelloptions {
 									 'ROText',
 									 -width      => 40,
 									 -height     => 1,
-									 -background => 'white'
+									 -background => $bkgcolor
 	)->pack;
 	$spelldictxt->delete( '1.0', 'end' );
 	$spelldictxt->insert( '1.0', $globalspelldictopt );
@@ -17377,7 +17387,7 @@ sub saveinterval {
 		$frame->Label( -text => 'Minutes between Autosave' )
 		  ->pack( -side => 'left' );
 		my $entry = $frame->Entry(
-			-background   => 'white',
+			-background   => $bkgcolor,
 			-width        => 5,
 			-textvariable => \$autosaveinterval,
 			-validate     => 'key',
@@ -17466,7 +17476,7 @@ sub searchsize {  # Pop up a window where you can adjust the search history size
 		$frame->Label( -text => 'History Size: # of terms to save - ' )
 		  ->pack( -side => 'left' );
 		my $entry = $frame->Entry(
-			-background   => 'white',
+			-background   => $bkgcolor,
 			-width        => 5,
 			-textvariable => \$history_size,
 			-validate     => 'key',
@@ -17762,7 +17772,7 @@ sub hotkeyshelp {
 		  $frame->Scrolled(
 							'ROText',
 							-scrollbars => 'se',
-							-background => 'white',
+							-background => $bkgcolor,
 							-font       => '{Helvetica} 10',
 							-width      => 80,
 							-height     => 25,
@@ -17938,7 +17948,7 @@ sub opspop_up {
 		  $frame->Scrolled(
 							'Listbox',
 							-scrollbars  => 'se',
-							-background  => 'white',
+							-background  => $bkgcolor,
 							-selectmode  => 'single',
 							-activestyle => 'none',
 		  )->pack(
@@ -18227,7 +18237,7 @@ sub greekpopup {
 			)->grid( -row => 1, -column => 4, -padx => 2 );
 		}
 		my $frame =
-		  $lglobal{grpop}->Frame( -background => 'white' )
+		  $lglobal{grpop}->Frame( -background => $bkgcolor )
 		  ->pack( -expand => 'no', -fill => 'none', -anchor => 'n' );
 		my $index = 0;
 		for my $column (@greek) {
@@ -18236,7 +18246,7 @@ sub greekpopup {
 			$frame->Label(
 						   -text       => ${$column}[0],
 						   -font       => $grfont,
-						   -background => 'white',
+						   -background => $bkgcolor,
 			)->grid( -row => $row, -column => $index, -padx => 2 );
 			$row++;
 			$lglobal{buttons}->{ ${$column}[1] } =
@@ -18288,7 +18298,7 @@ sub greekpopup {
 		$frame->Label(
 					   -text       => 'ou',
 					   -font       => $grfont,
-					   -background => 'white',
+					   -background => $bkgcolor,
 		)->grid( -row => 4, -column => 16, -padx => 2 );
 		$lglobal{buttons}->{'oulig'} =
 		  $frame->Button(
@@ -18311,7 +18321,7 @@ sub greekpopup {
 							 -height     => 8,
 							 -width      => 50,
 							 -wrap       => 'word',
-							 -background => 'white',
+							 -background => $bkgcolor,
 							 -font       => $lglobal{utffont},
 							 -wrap       => 'none',
 							 -setgrid    => 'true',
@@ -18342,13 +18352,13 @@ sub greekpopup {
 							   -text       => '',
 							   -width      => 5,
 							   -font       => $lglobal{utffont},
-							   -background => 'white',
+							   -background => $bkgcolor,
 							   -relief     => 'ridge'
 			  )->pack( -side => 'left', -padx => 2 );
 			$lglobal{buildentry} = $bframe2->Entry(
 				-width      => 5,
 				-font       => $lglobal{utffont},
-				-background => 'white',
+				-background => $bkgcolor,
 				-relief     => 'ridge',
 				-validate   => 'all',
 				-vcmd       => sub {
@@ -18582,7 +18592,7 @@ sub latinpopup {
 							  -value       => 'h',
 							  -text        => 'HTML Named Entity',
 		)->grid( -row => 1, -column => 2 );
-		my $frame = $lglobal{latinpop}->Frame( -background => 'white' )->pack;
+		my $frame = $lglobal{latinpop}->Frame( -background => $bkgcolor )->pack;
 		my @latinchars = (
 						 [ 'À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ',     'Ç' ],
 						 [ 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ',     'ç' ],
@@ -18607,7 +18617,7 @@ sub latinpopup {
 								  -font               => '{Times} 18',
 								  -relief             => 'flat',
 								  -borderwidth        => 0,
-								  -background         => 'white',
+								  -background         => $bkgcolor,
 								  -command            => \&putlatin,
 								  -highlightthickness => 0,
 				  )->grid( -row => $y, -column => $x, -padx => 2 );
@@ -18658,7 +18668,7 @@ sub regexref {
 		  $lglobal{regexrefpop}->Scrolled(
 										   'ROText',
 										   -scrollbars => 'se',
-										   -background => 'white',
+										   -background => $bkgcolor,
 										   -font       => $lglobal{font},
 		  )->pack( -anchor => 'n', -expand => 'y', -fill => 'both' );
 		drag($regtext);
@@ -18715,7 +18725,7 @@ sub utford {
 							 -command  => sub { $inentry->validate }
 		)->grid( -row => 0, -column => 2 );
 		$inentry = $frame->Entry(
-			-background   => 'white',
+			-background   => $bkgcolor,
 			-width        => 6,
 			-font         => '{sanserif} 14',
 			-textvariable => \$ord,
@@ -18745,7 +18755,7 @@ sub utford {
 			},
 		)->grid( -row => 1, -column => 2 );
 		$outentry = $frame->ROText(
-									-background => 'white',
+									-background => $bkgcolor,
 									-relief     => 'sunken',
 									-font       => '{sanserif} 14',
 									-width      => 6,
@@ -18800,7 +18810,7 @@ sub uchar {
 		my $pane =
 		  $lglobal{ucharpop}->Scrolled(
 										'Pane',
-										-background => 'white',
+										-background => $bkgcolor,
 										-scrollbars => 'se',
 										-sticky     => 'wne',
 		  )->pack( -expand => 'y', -fill => 'both', -anchor => 'nw' );
@@ -18850,7 +18860,7 @@ sub uchar {
 		my $characteristics =
 		  $frame0->Entry(
 						  -width      => 40,
-						  -background => 'white'
+						  -background => $bkgcolor
 		  )->grid( -row => 1, -column => 2 );
 		my $doit = $frame0->Button(
 			-text    => 'Search',
@@ -18886,7 +18896,7 @@ sub uchar {
 							  $pane->Label(
 											-text       => chr( hex $ord ),
 											-font       => $lglobal{utffont},
-											-background => 'white',
+											-background => $bkgcolor,
 							  )->grid(
 									   -row    => $row,
 									   -column => 0,
@@ -18897,7 +18907,7 @@ sub uchar {
 							$textlabels[$row] =
 							  $pane->Label(
 								   -text => "$name  -  Ordinal $ord  -  $block",
-								   -background => 'white',
+								   -background => $bkgcolor,
 							  )->grid(
 									   -row    => $row,
 									   -column => 1,
@@ -19018,7 +19028,7 @@ sub text_convert_options {
 	my $italic_entry =
 	  $italic_frame->Entry(
 							-width        => 6,
-							-background   => 'white',
+							-background   => $bkgcolor,
 							-relief       => 'sunken',
 							-textvariable => \$italic_char,
 	  )->pack( -side => 'left' );
@@ -19033,7 +19043,7 @@ sub text_convert_options {
 	my $bold_entry =
 	  $bold_frame->Entry(
 						  -width        => 6,
-						  -background   => 'white',
+						  -background   => $bkgcolor,
 						  -relief       => 'sunken',
 						  -textvariable => \$bold_char,
 	  )->pack( -side => 'left' );
