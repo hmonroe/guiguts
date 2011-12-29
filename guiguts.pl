@@ -64,7 +64,7 @@ use Tk::widgets qw{Balloon
   ToolBar
 };
 
-my $APP_NAME = 'GuiGuts';
+my $APP_NAME = 'Guiguts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 
 our $icondata = '
@@ -93,7 +93,7 @@ our $icondata = '
     QttYFOihgLXBpUOMNuqoQQEBADs=
     ';
 
-### Custom Guigut modules
+### Custom Guiguts modules
 use Guiguts::FileMenu;
 use Guiguts::LineNumberText;
 use Guiguts::TextUnicode;
@@ -1712,6 +1712,10 @@ sub fixup_menuitems {
 		  Cascade    => 'PGTEI Tools',
 		  -tearoff   => 0,
 		  -menuitems => [
+			  [
+				 Button   => 'W3C Validate PGTEI',
+				   -command => sub {errorcheckpop_up('W3C Validate')} 
+			  ],
 		  [
 		  Button   => 'Gnutenberg Press Online',
 		  -command => sub {
