@@ -139,9 +139,9 @@ our $fontweight    = q{};
 our $geometry2     = q{};
 our $geometry3     = q{};
 our $geometry;
-our $globalaspellmode       = 'normal';
-our $globalbrowserstart     = 'start';
-if ( ! $OS_WIN ) { $globalbrowserstart = 'open'; }
+our $globalaspellmode   = 'normal';
+our $globalbrowserstart = 'start';
+if ( !$OS_WIN ) { $globalbrowserstart = 'open'; }
 our $globalimagepath        = q{};
 our $globallastpath         = q{};
 our $globalspelldictopt     = q{};
@@ -212,42 +212,43 @@ our @pageindex;
 our @recentfile;
 
 @recentfile = (
-	'README.txt',
-	'ggmanual.html',
-	'tests\testfile.txt',
-	'tests\testhtml3.txt',
-	'tests\testhtml4.txt',
-	'tests\testhtml5.txt',
-	'samples\rst\canyon\37466.rst',
-	'samples\pgtei\alice\alice.tei'
+				'README.txt',
+				'ggmanual.html',
+				'tests\testfile.txt',
+				'tests\testhtml3.txt',
+				'tests\testhtml4.txt',
+				'tests\testhtml5.txt',
+				'samples\rst\canyon\37466.rst',
+				'samples\pgtei\alice\alice.tei'
 );
 
 our @replace_history;
 our @search_history;
 our @sopt = ( 0, 0, 0, 0, 0 );    # default is not whole word search
 our @extops = (
-		  {
-			'label'   => 'W3C Markup Validation Service',
-			'command' => "$globalbrowserstart http://validator.w3.org/" 
-		  },
-		  {
-			'label'   => 'W3C CSS Validation Service',
-			'command' => 'start http://jigsaw.w3.org/css-validator/'
-		  },
-		  {
-			'label'   => 'NPL Dictionary Search',
-			'command' => 'start http://www.puzzlers.org/wordlists/grepdict.php'
-		  },
-		  {
-			'label'   => 'Pass open file to default handler',
-			'command' => 'start $d$f$e'
-		  },
-		  { 'label' => q{}, 'command' => q{} },
-		  { 'label' => q{}, 'command' => q{} },
-		  { 'label' => q{}, 'command' => q{} },
-		  { 'label' => q{}, 'command' => q{} },
-		  { 'label' => q{}, 'command' => q{} },
-		  { 'label' => q{}, 'command' => q{} },
+	   {
+		 'label'   => 'W3C Markup Validation Service',
+		 'command' => "$globalbrowserstart http://validator.w3.org/"
+	   },
+	   {
+		 'label'   => 'W3C CSS Validation Service',
+		 'command' => "$globalbrowserstart http://jigsaw.w3.org/css-validator/"
+	   },
+	   {
+		 'label' => 'Dictionary Search',
+		 'command' =>
+		   "$globalbrowserstart ". 'http://www.specialist-online-dictionary.com/websters/headword_search.cgi?query=$t'
+	   },
+	   {
+		 'label'   => 'Pass open file to default handler',
+		 'command' => 'start $d$f$e'
+	   },
+	   { 'label' => q{}, 'command' => q{} },
+	   { 'label' => q{}, 'command' => q{} },
+	   { 'label' => q{}, 'command' => q{} },
+	   { 'label' => q{}, 'command' => q{} },
+	   { 'label' => q{}, 'command' => q{} },
+	   { 'label' => q{}, 'command' => q{} },
 );
 
 #All local global variables contained in one hash. # now global
@@ -659,7 +660,19 @@ sub selection {
 sub cmdinterp {
 	my $command = shift;
 	my ( $fname, $pagenum, $number, $pname );
+		my ( $selection, $ranges );
+		if ( $command =~ m/\$t/ ) {
+			my @ranges = $textwindow->tagRanges('sel');
+			return ' ' unless @ranges;
+			my $end   = pop(@ranges);
+			my $start = pop(@ranges);
+			$selection = $textwindow->get( $start, $end );
+			$selection =~ s/ /%20/;
+			$command   =~ s/\$t/$selection/;
+			$command = encode( "utf-8", $command );
+		}
 	if ( $command =~ m/\$f|\$d|\$e/ ) {
+		# Pass selection to file handler
 		return ' ' if ( $lglobal{global_filename} =~ m/No File Loaded/ );
 		$fname = $lglobal{global_filename};
 		$fname = dos_path( $lglobal{global_filename} ) if $OS_WIN;
@@ -9161,8 +9174,8 @@ sub initialize {
 		$geometryhash{ucharpop}      = '550x450+53+87';
 		$geometryhash{utfpop}        = '791x422+46+46';
 		$geometryhash{regexrefpop}   = '663x442+106+72';
-		$geometryhash{pagepop} = '346x130+334+176';
-		$geometryhash{fixpop} = '441x440+34+22'; 
+		$geometryhash{pagepop}       = '346x130+334+176';
+		$geometryhash{fixpop}        = '441x440+34+22';
 		$geometryhash{wfpop}         = '462x583+565+63';
 		$geometryhash{pnumpop}       = '210x253+502+97';
 		$geometryhash{hotpop}        = '583x462+144+119';
@@ -13979,8 +13992,10 @@ sub orphanedmarkup {
 	searchpopup();
 	searchoptset(qw/0 x x 1/);
 	$lglobal{searchentry}->delete( '1.0', 'end' );
-#	$lglobal{searchentry}->insert( 'end', "\\<(\\w+)>\\n?[^<]+<(?!/\\1>)" );
-	$lglobal{searchentry}->insert( 'end', "<(?!tb)(\\w+)>(\\n|[^<])+<(?!/\\1>)|<(?!/?(tb|sc|[bfgi])>)" );
+
+	#	$lglobal{searchentry}->insert( 'end', "\\<(\\w+)>\\n?[^<]+<(?!/\\1>)" );
+	$lglobal{searchentry}->insert( 'end',
+				 "<(?!tb)(\\w+)>(\\n|[^<])+<(?!/\\1>)|<(?!/?(tb|sc|[bfgi])>)" );
 }
 
 sub hilite {
@@ -15222,14 +15237,15 @@ sub separatorpopup {
 						-underline        => 0,
 						-width            => 8
 		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-#		my $undobutton =
-#		  $sf4->Button(
-#						-activebackground => $activecolor,
-#						-command          => sub { undojoin() },
-#						-text             => 'Undo',
-#						-underline        => 0,
-#						-width            => 8
-#		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+
+		#		my $undobutton =
+		#		  $sf4->Button(
+		#						-activebackground => $activecolor,
+		#						-command          => sub { undojoin() },
+		#						-text             => 'Undo',
+		#						-underline        => 0,
+		#						-width            => 8
+		#		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
 		my $delbutton = $sf4->Button(
 									  -activebackground => $activecolor,
 									  -command   => sub { joinlines('d') },
