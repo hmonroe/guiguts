@@ -226,29 +226,29 @@ our @replace_history;
 our @search_history;
 our @sopt = ( 0, 0, 0, 0, 0 );    # default is not whole word search
 our @extops = (
-	   {
-		 'label'   => 'W3C Markup Validation Service',
-		 'command' => "$globalbrowserstart http://validator.w3.org/"
-	   },
-	   {
-		 'label'   => 'W3C CSS Validation Service',
-		 'command' => "$globalbrowserstart http://jigsaw.w3.org/css-validator/"
-	   },
-	   {
-		 'label' => 'Dictionary Search',
-		 'command' =>
-		   "$globalbrowserstart ". 'http://www.specialist-online-dictionary.com/websters/headword_search.cgi?query=$t'
-	   },
-	   {
-		 'label'   => 'Pass open file to default handler',
-		 'command' => 'start $d$f$e'
-	   },
-	   { 'label' => q{}, 'command' => q{} },
-	   { 'label' => q{}, 'command' => q{} },
-	   { 'label' => q{}, 'command' => q{} },
-	   { 'label' => q{}, 'command' => q{} },
-	   { 'label' => q{}, 'command' => q{} },
-	   { 'label' => q{}, 'command' => q{} },
+	{
+	   'label'   => 'W3C Markup Validation Service',
+	   'command' => "$globalbrowserstart http://validator.w3.org/"
+	},
+	{
+	   'label'   => 'W3C CSS Validation Service',
+	   'command' => "$globalbrowserstart http://jigsaw.w3.org/css-validator/"
+	},
+	{
+	   'label'   => 'Dictionary Search',
+	   'command' => "$globalbrowserstart "
+		 . 'http://www.specialist-online-dictionary.com/websters/headword_search.cgi?query=$t'
+	},
+	{
+	   'label'   => 'Pass open file to default handler',
+	   'command' => 'start $d$f$e'
+	},
+	{ 'label' => q{}, 'command' => q{} },
+	{ 'label' => q{}, 'command' => q{} },
+	{ 'label' => q{}, 'command' => q{} },
+	{ 'label' => q{}, 'command' => q{} },
+	{ 'label' => q{}, 'command' => q{} },
+	{ 'label' => q{}, 'command' => q{} },
 );
 
 #All local global variables contained in one hash. # now global
@@ -660,18 +660,19 @@ sub selection {
 sub cmdinterp {
 	my $command = shift;
 	my ( $fname, $pagenum, $number, $pname );
-		my ( $selection, $ranges );
-		if ( $command =~ m/\$t/ ) {
-			my @ranges = $textwindow->tagRanges('sel');
-			return ' ' unless @ranges;
-			my $end   = pop(@ranges);
-			my $start = pop(@ranges);
-			$selection = $textwindow->get( $start, $end );
-			$selection =~ s/ /%20/;
-			$command   =~ s/\$t/$selection/;
-			$command = encode( "utf-8", $command );
-		}
+	my ( $selection, $ranges );
+	if ( $command =~ m/\$t/ ) {
+		my @ranges = $textwindow->tagRanges('sel');
+		return ' ' unless @ranges;
+		my $end   = pop(@ranges);
+		my $start = pop(@ranges);
+		$selection = $textwindow->get( $start, $end );
+		$selection =~ s/ /%20/;
+		$command   =~ s/\$t/$selection/;
+		$command = encode( "utf-8", $command );
+	}
 	if ( $command =~ m/\$f|\$d|\$e/ ) {
+
 		# Pass selection to file handler
 		return ' ' if ( $lglobal{global_filename} =~ m/No File Loaded/ );
 		$fname = $lglobal{global_filename};
@@ -14239,7 +14240,7 @@ sub asciipopup {
 			-text  => 'Draw Box',
 			-width => 16
 		)->grid( -row => 4, -column => 2, -padx => 1, -pady => 2 );
-		$lglobal{asciipop}->resizable( 'no', 'no' );
+		#$lglobal{asciipop}->resizable( 'no', 'no' );
 
 		#$lglobal{asciipop}->deiconify;
 		$lglobal{asciipop}->raise;
