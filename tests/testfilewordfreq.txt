@@ -42,3 +42,7 @@ test Check. Lower test
 composing com-posing comp--osing
 
 ààááâÕõ
+<i>italics</i> <b>bold</b> <sc>bold</sc>
+<i>unmatched</b> <b>bold</i> <sc>bold</asc>
+<tb>  test
+

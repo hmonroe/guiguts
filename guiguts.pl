@@ -124,7 +124,7 @@ our $auto_show_images = 0;
 our $autobackup       = 0;
 our $autosave         = 0;
 our $autosaveinterval = 5;
-our $bkgcolor        = '#ffffff'; 
+our $bkgcolor         = '#ffffff';
 our $bkmkhl           = 0;
 our $blocklmargin     = 5;
 our $blockrmargin     = 72;
@@ -173,7 +173,7 @@ our $scannosearch     = 0;
 our $scrollupdatespd  = 40;
 our $searchendindex   = 'end';
 our $searchstartindex = '1.0';
-our $multiterm       = 0;
+our $multiterm        = 0;
 our $spellindexbkmrk  = q{};
 our $stayontop        = 0;
 our $suspectindex;
@@ -186,11 +186,11 @@ our $w3cremote          = 0;
 our $wfstayontop        = 0;
 
 # These are set to the default Windows values in initialize()
-our $gutcommand            = '';
-our $jeebiescommand        = '';
-our $tidycommand        = '';
-our $validatecommand    = '';
-our $validatecsscommand = '';
+our $gutcommand          = '';
+our $jeebiescommand      = '';
+our $tidycommand         = '';
+our $validatecommand     = '';
+our $validatecsscommand  = '';
 our $gnutenbergdirectory = '';
 
 our %gc;
@@ -209,6 +209,18 @@ our @mygcview;
 our @operations;
 our @pageindex;
 our @recentfile;
+
+@recentfile = (
+	'README.txt',
+	'ggmanual.html',
+	'tests\testfile.txt',
+	'tests\testhtml3.txt',
+	'tests\testhtml4.txt',
+	'tests\testhtml5.txt',
+	'samples\rst\canyon\37466.rst',
+	'samples\pgtei\alice\alice.tei'
+);
+
 our @replace_history;
 our @search_history;
 our @sopt = ( 0, 0, 0, 0, 0 );    # default is not whole word search
@@ -1060,10 +1072,11 @@ sub file_export {
 			$next = 'end';
 		}
 		my $file = $textwindow->get( $page, $next );
-		$file =~ s/-*\s?File:\s?(\S+)\.(png|jpg)---[^\n]*\n//; 
+		$file =~ s/-*\s?File:\s?(\S+)\.(png|jpg)---[^\n]*\n//;
 		$file =~ s/\n+$//;
 		open my $fh, '>', "$directory/$filename";
 		if ($unicode) {
+
 			#$file = "\x{FEFF}" . $file;    # Add the BOM to beginning of file.
 			utf8::encode($file);
 		}
@@ -1714,25 +1727,25 @@ sub fixup_menuitems {
 		  -menuitems => [
 			  [
 				 Button   => 'W3C Validate PGTEI',
-				   -command => sub {errorcheckpop_up('W3C Validate')} 
+				 -command => sub { errorcheckpop_up('W3C Validate') }
 			  ],
-		  [
-		  Button   => 'Gnutenberg Press Online',
-		  -command => sub {
-			  runner(
+			  [
+				 Button   => 'Gnutenberg Press Online',
+				 -command => sub {
+					 runner(
 "$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
-			}
-	   ],
+				   }
+			  ],
 			  [
 				 Button   => 'Gnutenberg Press (HTML only)',
-				   -command => sub {gnutenberg('html')} 
+				 -command => sub { gnutenberg('html') }
 			  ],
 			  [
 				 Button   => 'Gnutenberg Press (Text only)',
-				   -command => sub {gnutenberg('txt')} 
+				 -command => sub { gnutenberg('txt') }
 			  ],
-	   
-	   ]
+
+		  ]
 	   ],
 	   [
 		  Cascade    => 'RST Tools',
@@ -1741,17 +1754,16 @@ sub fixup_menuitems {
 			  [
 				 Button   => 'EpubMaker Online',
 				 -command => sub {
-					 runner(
-							"$globalbrowserstart http://epubmaker.pglaf.org/" );
+					 runner("$globalbrowserstart http://epubmaker.pglaf.org/");
 				   }
 			  ],
 			  [
 				 Button   => 'EpubMaker (all formats)',
-				   -command => sub {epubmaker()} 
+				 -command => sub { epubmaker() }
 			  ],
 			  [
 				 Button   => 'EpubMaker (HTML only)',
-				   -command => sub {epubmaker('html')} 
+				 -command => sub { epubmaker('html') }
 			  ],
 			  [
 				 Button   => 'dp2rst Conversion',
@@ -2170,24 +2182,24 @@ sub buildmenu {
 					  -command => \&viewerpath
 				   ],
 				   [
-					  Button =>
-'Locate Gnutenberg Press (if self-installed)',
+					  Button   => 'Locate Gnutenberg Press (if self-installed)',
 					  -command => sub {
 						  my $types;
-							  $types = [
-										 [ 'Perl file', [ '.pl', ] ],
-										 [ 'All Files',  ['*'] ],
-							  ];
+						  $types = [
+									 [ 'Perl file', [ '.pl', ] ],
+									 [ 'All Files', ['*'] ],
+						  ];
 						  $gnutenbergdirectory =
 							$textwindow->getOpenFile(
-							  -filetypes  => $types,
-							  -initialdir => $gnutenbergdirectory,
-							  -title =>
-'Where is the Gnutenberg Press (transform.pl)?'
+							   -filetypes  => $types,
+							   -initialdir => $gnutenbergdirectory,
+							   -title =>
+								 'Where is the Gnutenberg Press (transform.pl)?'
 							);
 						  return unless $gnutenbergdirectory;
-						  $gnutenbergdirectory = os_normal($gnutenbergdirectory);
-						  $gnutenbergdirectory = dirname($gnutenbergdirectory );
+						  $gnutenbergdirectory =
+							os_normal($gnutenbergdirectory);
+						  $gnutenbergdirectory = dirname($gnutenbergdirectory);
 						  saveset();
 						}
 				   ],
@@ -3755,6 +3767,7 @@ sub clearmarks {
 
 sub searchtext {
 	viewpagenums() if ( $lglobal{seepagenums} );
+
 	#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt\n";
 
 # $sopt[0] --> 0 = pattern search                       1 = whole word search
@@ -4807,7 +4820,8 @@ sub markup {
 				  ->Frame->pack( -side => 'top', -anchor => 'n' );
 				my $linklabel = $linkf1->Label( -text => 'Link name' )->pack;
 				$lglobal{linkentry} =
-				  $linkf1->Entry( -width => 60, -background => $bkgcolor )->pack;
+				  $linkf1->Entry( -width => 60, -background => $bkgcolor )
+				  ->pack;
 				my $linkf2 =
 				  $lglobal{elinkpop}
 				  ->Frame->pack( -side => 'top', -anchor => 'n' );
@@ -5650,10 +5664,9 @@ sub htmlautoconvert {
 	my $headertext;
 	if ( $lglobal{global_filename} =~ /No File Loaded/ ) {
 		$top->messageBox(
-			-icon => 'warning',
-			-type => 'OK',
-			-message =>
-			  'Nothing to check'
+						  -icon    => 'warning',
+						  -type    => 'OK',
+						  -message => 'Nothing to check'
 		);
 		return;
 	}
@@ -7607,6 +7620,7 @@ sub searchoptset {
 			if ( $opt[$_] !~ /[a-zA-Z]/ ) { $sopt[$_] = $opt[$_] }
 		}
 	}
+
 	#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt set\n";
 }
 
@@ -9142,16 +9156,36 @@ sub initialize {
 		$geometryhash{jeepop}        = $geometry2;
 		$geometryhash{errorcheckpop} = $geometry2;
 		$geometryhash{hpopup}        = $geometry3;
+		$geometryhash{ucharpop}      = '550x450+53+87';
+		$geometryhash{utfpop}        = '791x422+46+46';
+		$geometryhash{regexrefpop}   = '663x442+106+72';
+		$geometryhash{pagepop}       = '268x107+334+176';
+		$geometryhash{wfpop}         = '462x583+565+63';
+		$geometryhash{pnumpop}       = '210x253+502+97';
+		$geometryhash{hotpop}        = '583x462+144+119';
+		$geometryhash{hpopup}        = '187x197+884+211';
+		$geometryhash{footpop}       = '352x361+255+157';
+		$geometryhash{gcpop}         = '462x583+684+72';
+		$geometryhash{xtpop}         = '800x543+120+38';
+		$geometryhash{grpop}         = '50x8+144+153';
+		$geometryhash{errorcheckpop} = '508x609+684+72';
+		$geometryhash{alignpop}      = '168x94+338+83';
+		$geometryhash{brkpop}        = '201x203+482+131';
+		$geometryhash{aboutpop}      = '378x392+312+136';
+		$geometryhash{asciipop}      = '278x209+358+187';
+		$geometryhash{ordpop}        = '316x150+191+132';
+		$geometryhash{jeepop}        = '462x583+684+72';
+
 	}
 
 	if ($OS_WIN) {
 		$lglobal{guigutsdirectory} = dirname( rel2abs($0) )
 		  unless defined $lglobal{guigutsdirectory};
 		$gutcommand = catfile( $lglobal{guigutsdirectory},
-							'tools', 'gutcheck', 'gutcheck.exe' )
+							   'tools', 'gutcheck', 'gutcheck.exe' )
 		  unless $gutcommand;
 		$jeebiescommand = catfile( $lglobal{guigutsdirectory},
-								'tools', 'jeebies', 'jeebies.exe' )
+								   'tools', 'jeebies', 'jeebies.exe' )
 		  unless $jeebiescommand;
 		$tidycommand =
 		  catfile( $lglobal{guigutsdirectory}, 'tools', 'tidy', 'tidy.exe' )
@@ -9163,8 +9197,8 @@ sub initialize {
 		  catfile( $lglobal{guigutsdirectory},
 				   'tools', 'W3C', 'css-validator.jar' )
 		  unless $validatecsscommand;
-		$gnutenbergdirectory =catfile( $lglobal{guigutsdirectory},
-								'tools', 'gnutenberg','0.4' )
+		$gnutenbergdirectory =
+		  catfile( $lglobal{guigutsdirectory}, 'tools', 'gnutenberg', '0.4' )
 		  unless $gnutenbergdirectory;
 	}
 	%{ $lglobal{utfblocks} } = (
@@ -10604,10 +10638,10 @@ sub initialize_popup_without_deletebinding {
 		}
 	);
 	$lglobal{$popupname}->Icon( -image => $icon );
-	if (($stayontop ) and (not $popupname eq "wfpop")) {
+	if ( ($stayontop) and ( not $popupname eq "wfpop" ) ) {
 		$lglobal{$popupname}->transient($top);
 	}
-	if (($wfstayontop ) and ($popupname eq "wfpop")) {
+	if ( ($wfstayontop) and ( $popupname eq "wfpop" ) ) {
 		$lglobal{$popupname}->transient($top);
 	}
 }
@@ -11136,7 +11170,7 @@ sub jeebiesrun {
 	my $jeebiesoptions = "-$jeebiesmode" . 'e';
 	$jeebiescommand = os_normal($jeebiescommand);
 	$jeebiescommand = dos_path($jeebiescommand) if $OS_WIN;
-	%jeeb        = ();
+	%jeeb           = ();
 	my $mark = 0;
 	$top->Busy( -recurse => 1 );
 	$listbox->insert( 'end',
@@ -11532,7 +11566,7 @@ sub update_img_button {
 	return ();
 }
 
-# New subroutine "update_label_button" extracted - Mon Mar 21 22:18:18 2011. 
+# New subroutine "update_label_button" extracted - Mon Mar 21 22:18:18 2011.
 #
 sub update_label_button {
 	unless ( $lglobal{page_label} ) {
@@ -11875,7 +11909,7 @@ sub spellcheckfirst {
 	@{ $lglobal{misspelledlist} } = ();
 	viewpagenums() if ( $lglobal{seepagenums} );
 	getprojectdic();
-	
+
 	do "$lglobal{projectdictname}"
 	  if $lglobal{projectdictname};    # this does not seem to do anything
 	$lglobal{lastmatchindex} = '1.0';
@@ -11922,7 +11956,7 @@ sub spellcheckfirst {
 sub getprojectdic {
 	return unless $lglobal{global_filename};
 	my $fname = $lglobal{global_filename};
-	$fname = Win32::GetLongPathName( $fname ) if $OS_WIN;
+	$fname = Win32::GetLongPathName($fname) if $OS_WIN;
 	$lglobal{projectdictname} = $fname;
 	$lglobal{projectdictname} =~ s/\.[^\.]*?$/\.dic/;
 	if ( $lglobal{projectdictname} eq $fname ) {
@@ -12245,6 +12279,7 @@ sub spellget_misspellings {    # get list of misspelled words
 		  $word;        # filter out project dictionary word list.
 	}
 	wordfrequencybuildwordlist();
+
 	#wordfrequencygetmisspelled();
 
 	if ( $#{ $lglobal{misspelledlist} } > 0 ) {
@@ -12266,8 +12301,9 @@ sub spellignoreall {
 	my $word = $lglobal{misspelledentry}->get;    # get word you want to ignore
 	$textwindow->bell unless ( $word || $nobell );
 	return unless $word;
-	my @ignorelist = @{ $lglobal{misspelledlist} }; # copy the misspellings array
-	@{ $lglobal{misspelledlist} } = ();             # then clear it
+	my @ignorelist =
+	  @{ $lglobal{misspelledlist} };              # copy the misspellings array
+	@{ $lglobal{misspelledlist} } = ();           # then clear it
 	foreach my $next (@ignorelist)
 	{    # then put all of the words you are NOT ignoring back into the
 		    # misspellings list
@@ -13940,8 +13976,8 @@ sub orphanedmarkup {
 	searchpopup();
 	searchoptset(qw/0 x x 1/);
 	$lglobal{searchentry}->delete( '1.0', 'end' );
-	$lglobal{searchentry}->insert( 'end', "\\<(\\w+)>\\n?[^<]+<(?!/\\1>)" );
-
+#	$lglobal{searchentry}->insert( 'end', "\\<(\\w+)>\\n?[^<]+<(?!/\\1>)" );
+	$lglobal{searchentry}->insert( 'end', "<(?!tb)(\\w+)>(\\n|[^<])+<(?!/\\1>)|<(?!/?(tb|sc|[bfgi])>)" );
 }
 
 sub hilite {
@@ -14241,7 +14277,8 @@ sub wordfrequency {
 	my $index = '1.0';
 	my $wc    = 0;
 	my $end   = $textwindow->index('end');
-	searchoptset(qw/1 0 x 0/); # Default is whole word search
+	searchoptset(qw/1 0 x 0/);    # Default is whole word search
+
 	if ( $lglobal{wfpop} ) {
 		$lglobal{wfpop}->deiconify;
 		$lglobal{wfpop}->raise;
@@ -14366,7 +14403,8 @@ sub wordfrequency {
 			[
 			   'Ligatures',
 			   [
-				  \&anythingwfcheck, 'words with possible ligatures',
+				  \&anythingwfcheck,
+				  'words with possible ligatures',
 				  '(oe|ae|æ|Æ|\x{0153}|\x{0152})'
 			   ]
 			],
@@ -14507,7 +14545,7 @@ sub wordfrequency {
 					#$sword = escape_regexmetacharacters($sword);
 					$sword .= '\b'
 					  if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
-					searchoptset(qw/0 0 x 1/); # Case sensitive
+					searchoptset(qw/0 0 x 1/);    # Case sensitive
 				}
 
 				# not whole word search from character cnts popup
@@ -14533,6 +14571,7 @@ sub wordfrequency {
 						$sword = "(?<=-)$sword|$sword(?=-)";
 					}
 				}
+
 				#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt\n";
 				searchfromstartifnew($sword);
 				searchtext($sword);
@@ -14614,13 +14653,15 @@ sub wordfrequency {
 	$lglobal{wclistbox}->focus;
 	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
 	$wc = wordfrequencybuildwordlist();
+
 	#print "$index  ";
 	$lglobal{saveheader} = "$wc total words. " .
 	  keys( %{ $lglobal{seen} } ) . " distinct words in file.";
 	$lglobal{wclistbox}->delete( '0', 'end' );
 	$lglobal{last_sort} = $lglobal{ignore_case};
+
 	#print $lglobal{ignore_case}.":ignore\n";
-	if ($lglobal{ignore_case}) {
+	if ( $lglobal{ignore_case} ) {
 		searchoptset("x 1 x x");
 	} else {
 		searchoptset("x 0 x x");
@@ -14635,7 +14676,7 @@ sub wordfrequencybuildwordlist {
 	my $index = '1.0';
 	my $wc    = 0;
 	my $end   = $textwindow->index('end');
-	
+
 	my $filename = $textwindow->FileName;
 	unless ($filename) {
 		$filename = 'tempfile.tmp';
@@ -14693,7 +14734,7 @@ sub wordfrequencybuildwordlist {
 	close $fh;
 	unlink 'tempfile.tmp' if ( -e 'tempfile.tmp' );
 
-	return $wc
+	return $wc;
 }
 
 ## Gutcheck
@@ -14706,12 +14747,12 @@ sub gutcheck {
 	$textwindow->focus;
 	update_indicators();
 	my $title = $top->cget('title');
+
 	if ( $title =~ /No File Loaded/ ) {
 		$top->messageBox(
-			-icon => 'warning',
-			-type => 'OK',
-			-message =>
-			  'Nothing to check'
+						  -icon    => 'warning',
+						  -type    => 'OK',
+						  -message => 'Nothing to check'
 		);
 		return;
 	}
@@ -15178,14 +15219,14 @@ sub separatorpopup {
 						-underline        => 0,
 						-width            => 8
 		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-		my $undobutton =
-		  $sf4->Button(
-						-activebackground => $activecolor,
-						-command          => sub { undojoin() },
-						-text             => 'Undo',
-						-underline        => 0,
-						-width            => 8
-		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+#		my $undobutton =
+#		  $sf4->Button(
+#						-activebackground => $activecolor,
+#						-command          => sub { undojoin() },
+#						-text             => 'Undo',
+#						-underline        => 0,
+#						-width            => 8
+#		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
 		my $delbutton = $sf4->Button(
 									  -activebackground => $activecolor,
 									  -command   => sub { joinlines('d') },
@@ -15615,45 +15656,49 @@ sub footnotepop {
 
 sub epubmaker {
 	my $format = shift;
-	if ($lglobal{global_filename} =~ /(\w+.rst)$/) {
-		
-	print "\nBeginning epubmaker\n";
-	print "Files will appear in the directory $globallastpath.\n";
-	print "Running in background with no messages that processing is complete.\n";
-	my $rstfilename = $1;
-	my $pwd = getcwd();
-	chdir $globallastpath;
-	my $epubmakerpath = catfile( $lglobal{guigutsdirectory},
-								'python27', 'scripts', 'epubmaker-script.py' );
-	my $pythonpath = catfile( $lglobal{guigutsdirectory},
-								'python27', 'python.exe' );
-	if (defined $format and $format eq 'html') {
-		runner("$pythonpath $epubmakerpath --make html $rstfilename");
-	} else {
-		runner("$pythonpath $epubmakerpath $rstfilename");
-	}
-	chdir $pwd;
+	if ( $lglobal{global_filename} =~ /(\w+.rst)$/ ) {
+
+		print "\nBeginning epubmaker\n";
+		print "Files will appear in the directory $globallastpath.\n";
+		print
+"Running in background with no messages that processing is complete.\n";
+		my $rstfilename = $1;
+		my $pwd         = getcwd();
+		chdir $globallastpath;
+		my $epubmakerpath = catfile( $lglobal{guigutsdirectory},
+									 'python27', 'scripts',
+									 'epubmaker-script.py' );
+		my $pythonpath =
+		  catfile( $lglobal{guigutsdirectory}, 'python27', 'python.exe' );
+
+		if ( defined $format and $format eq 'html' ) {
+			runner("$pythonpath $epubmakerpath --make html $rstfilename");
+		} else {
+			runner("$pythonpath $epubmakerpath $rstfilename");
+		}
+		chdir $pwd;
 	} else {
 		print "Not an .rst file\n";
 	}
-	}
+}
 
 sub gnutenberg {
 	my $format = shift;
-		
+
 	print "\nBeginning Gnutenberg Press\n";
 	print "Warning: This requires installing perl including LibXML, and \n";
 	print "guiguts must be installed in c:\\guiguts on Windows systems.\n";
 	my $pwd = getcwd();
 	chdir $globallastpath;
-unless(-d 'output'){
-    mkdir 'output' or die;
-}
-	my $gnutenbergoutput = catfile($globallastpath,'output');								
-	chdir $gnutenbergdirectory;
-	runner("perl transform.pl -f $format $lglobal{global_filename} $gnutenbergoutput\\");
-	chdir $pwd;
+	unless ( -d 'output' ) {
+		mkdir 'output' or die;
 	}
+	my $gnutenbergoutput = catfile( $globallastpath, 'output' );
+	chdir $gnutenbergdirectory;
+	runner(
+"perl transform.pl -f $format $lglobal{global_filename} $gnutenbergoutput\\" );
+	chdir $pwd;
+}
 
 sub htmlpopup {
 	push @operations, ( localtime() . ' - HTML Markup' );
@@ -15689,7 +15734,7 @@ sub htmlpopup {
 			-activebackground => $activecolor,
 			-command          => sub {
 				runner( cmdinterp("$extops[3]{command}") );
-			},         
+			},
 			-text  => 'View in Browser',
 			-width => 16,
 		)->grid( -row => 1, -column => 4, -padx => 1, -pady => 1 );
@@ -17088,13 +17133,13 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 		undef $lglobal{toptool};
 	} elsif ( !$notoolbar && !$lglobal{toptool} ) {
 		$lglobal{toptool} = $top->ToolBar( -side => $toolside, -close => '30' );
-		$lglobal{toolfont} =
-		  $top->Font(
-					  -family => 'Times',
-					 # -slant  => 'italic',
-					  -weight => 'bold',
-					  -size   => 9
-		  );
+		$lglobal{toolfont} = $top->Font(
+			-family => 'Times',
+
+			# -slant  => 'italic',
+			-weight => 'bold',
+			-size   => 9
+		);
 		$lglobal{toptool}->separator;
 		$lglobal{toptool}->ToolButton(
 									   -image   => 'fileopen16',
