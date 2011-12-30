@@ -9,3 +9,7 @@ guiguts.bat (it includes copies of perl and Python languages). guiguts-win-1.0.0
 does not include support for RST and PGTEI or Python. guiguts-1.0.0.zip
 is a stripped down version for those who have all the helper applications or
 are upgrading or who use operating systems other than Windows.
+
+Version 1.0.1 Got rid of undo on fix page separatorpopup which does not work properly.
+Improved regexp to search for orphaned markup per RoryConnor. Cleared undo
+cache after HTML autogenerate.

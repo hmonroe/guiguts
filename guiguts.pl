@@ -5711,6 +5711,7 @@ sub htmlautoconvert {
 
 	html_wrapup( $textwindow, $headertext, $lglobal{leave_utf},
 				 $lglobal{autofraction}, $lglobal{classhash} );
+	$textwindow->ResetUndo;
 }
 
 sub entity {
@@ -9159,7 +9160,8 @@ sub initialize {
 		$geometryhash{ucharpop}      = '550x450+53+87';
 		$geometryhash{utfpop}        = '791x422+46+46';
 		$geometryhash{regexrefpop}   = '663x442+106+72';
-		$geometryhash{pagepop}       = '268x107+334+176';
+		$geometryhash{pagepop} = '346x130+334+176';
+		$geometryhash{fixpop} = '441x440+34+22'; 
 		$geometryhash{wfpop}         = '462x583+565+63';
 		$geometryhash{pnumpop}       = '210x253+502+97';
 		$geometryhash{hotpop}        = '583x462+144+119';
