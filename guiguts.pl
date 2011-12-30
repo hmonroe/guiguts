@@ -141,6 +141,7 @@ our $geometry3     = q{};
 our $geometry;
 our $globalaspellmode       = 'normal';
 our $globalbrowserstart     = 'start';
+if ( ! $OS_WIN ) { $globalbrowserstart = 'open'; }
 our $globalimagepath        = q{};
 our $globallastpath         = q{};
 our $globalspelldictopt     = q{};
@@ -227,7 +228,7 @@ our @sopt = ( 0, 0, 0, 0, 0 );    # default is not whole word search
 our @extops = (
 		  {
 			'label'   => 'W3C Markup Validation Service',
-			'command' => 'start http://validator.w3.org/'
+			'command' => "$globalbrowserstart http://validator.w3.org/" 
 		  },
 		  {
 			'label'   => 'W3C CSS Validation Service',
