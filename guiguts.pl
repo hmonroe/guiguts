@@ -6368,6 +6368,7 @@ sub joinlines {
 			}
 			$line = $textwindow->get("$index-1c");
 		}
+		print "line1:$line\n";
 		if ( $line =~ /-/ ) {
 			unless (
 					 $textwindow->search(
@@ -6375,13 +6376,27 @@ sub joinlines {
 									 "$index lineend" )
 			  )
 			{
+				if ($rwhyphenspace) {
+				$textwindow->insert( "$index", " " );
 				$index =
-				  $textwindow->search( '-regexp', '--', '\s', $index, 'end' );
+				  $textwindow->search( '-regexp', '--', '\s', "$index+1c", 'end' );
+					
+				} else {
+				$index =
+				  $textwindow->search( '-regexp', '--', '\s', "$index", 'end' );
+					
+				}
+				$textwindow->insert( "$index", " " );
+				$index =
+				  $textwindow->search( '-regexp', '--', '\s', "$index+1c", 'end' );
 				$textwindow->delete($index);
+				if ($rwhyphenspace) {
+				}
 				$lglobal{joinundo}++;
 			}
 		}
 		$line = $textwindow->get($index);
+		print "line2:$line\n";
 		if ( $line =~ /-/ ) {
 
 			#$textwindow->delete($index);
