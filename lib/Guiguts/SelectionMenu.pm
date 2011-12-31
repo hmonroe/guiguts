@@ -54,6 +54,7 @@ sub wrapper {
 			next;
 		}
 		if ( $word =~ /#\// ) {
+			$line =~ s/ $//; # remove trailing space
 			$paragraph .= $line . "\n" if $line;
 			$paragraph .= $word . "\n";
 			$leftmargin = $lmargin - 1;
@@ -163,6 +164,7 @@ sub selectrewrap {
 		}
 		&main::opstop();
 		$spaces = 0;
+		# main while loop
 		while (1) {
 			$indent = $main::defaultindent;
 			$thisblockend =
@@ -193,35 +195,44 @@ sub selectrewrap {
 			$textwindow->update;
 
 			#$firstmargin = $leftmargin if $blockwrap;
+			# if selection begins with "/#"
 			if ( $selection =~ /^\x7f*\/\#/ ) {
 				$main::blockwrap   = 1;
 				$leftmargin  = $main::blocklmargin + 1;
 				$firstmargin = $main::blocklmargin + 1;
 				$rightmargin = $main::blockrmargin;
+				# if there are any parameters /#[n...
 				if ( $selection =~ /^\x7f*\/#\[(\d+)/ )
 				{    #check for block rewrapping with parameter markup
 					if ($1) { $leftmargin = $1 + 1 }
 					$firstmargin = $leftmargin;
 				}
+				# if there are any parameters /#[n.n...
 				if ( $selection =~ /^\x7f*\/#\[(\d+)?(\.)(\d+)/ ) {
 					if ( length $3 ) { $firstmargin = $3 + 1 }
 				}
+				# if there are any parameters /#[n.n,n...
 				if ( $selection =~ /^\x7f*\/#\[(\d+)?(\.)?(\d+)?,(\d+)/ ) {
 					if ($4) { $rightmargin = $4 }
 				}
 			}
+			# if selection is /*, /L, or /l
 			if ( $selection =~ /^\x7f*\/[\*Ll]/ ) {
 				$inblock      = 1;
 				$enableindent = 1;
 			}    #check for no rewrap markup
+			# if there are any parameters /*[n
 			if ( $selection =~ /^\x7f*\/\*\[(\d+)/ ) { $indent = $1 }
+			# if selection begins /p or /P
 			if ( $selection =~ /^\x7f*\/[pP]/ ) {
 				$inblock      = 1;
 				$enableindent = 1;
 				$poem         = 1;
 				$indent       = $main::poetrylmargin;
 			}
+			# if selection begins /x or /X or /$
 			if ( $selection =~ /^\x7f*\/[Xx\$]/ ) { $inblock = 1 }
+			# if selection begins /f or /F
 			if ( $selection =~ /^\x7f*\/[fF]/ ) {
 				$inblock = 1;
 			}
@@ -303,11 +314,11 @@ sub selectrewrap {
 					$selection =~ s/\)/\x98/g;
 					if ($main::blockwrap) {
 						$rewrapped =
-						  &main::wrapper( $leftmargin,  $firstmargin,
+						  wrapper( $leftmargin,  $firstmargin,
 								   $rightmargin, $selection, $main::rwhyphenspace );
 					} else {    #rewrap the paragraph
 						$rewrapped =
-						  &main::wrapper( $main::lmargin, $main::lmargin, $main::rmargin, $selection,  
+						  wrapper( $main::lmargin, $main::lmargin, $main::rmargin, $selection,  
 						  $main::rwhyphenspace);
 					}
 					$rewrapped =~ s/\x8d/<i>/g;     #convert the characters back
