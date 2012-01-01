@@ -1061,7 +1061,7 @@ sub html_convert_pageanchors {
 								$markindex . 'linestart +4c' );
 
 			if ( $check =~ /<h[12]>/ ) {
-				$markindex = $textwindow->index("$mark-1l lineend");
+				#$markindex = $textwindow->index("$mark-1l lineend");
 			}
 			my $pagereference;
 			my $marknext = $textwindow->markNext($mark);
@@ -1152,6 +1152,17 @@ sub html_convert_pageanchors {
 				  )
 				{
 					$inserttext = '<p>' . $inserttext . '</p>';
+				}
+				my $hstart =
+				  $textwindow->search( '-backwards', '-exact', '--', '<h',
+									   $markindex, '1.0' )
+				  || '1.0';
+				my $hend =
+				  $textwindow->search( '-backwards', '-exact', '--', '</h',
+									   $markindex, '1.0' )
+				  || '1.0';
+				if ($textwindow->compare( $hend, '<', $hstart)) {
+					$insertpoint = $textwindow->index("$hstart-1l lineend");
 				}
 				$textwindow->ntinsert( $insertpoint, $inserttext )
 				  if $main::lglobal{pageanch};

@@ -6499,7 +6499,7 @@ sub errorcheckpop_up {
 			errorcheckpop_up($errorchecktype);
 			unlink 'null' if ( -e 'null' );
 		},
-		-text  => 'Check Errors',
+		-text  => 'Run Checks',
 		-width => 16
 	  )->pack(
 			   -side   => 'left',
@@ -7551,7 +7551,7 @@ sub fixpopup {
 		my $pframe1 = $lglobal{fixpop}->Frame->pack;
 		${ $lglobal{fixopt} }[15] = 1;
 		my @rbuttons = (
-			'Skip /* */ and /$  $/ marked blocks.',
+			'Skip /* */, /$ $/, and /X X/ marked blocks.',
 			'Fix up spaces around hyphens.',
 			'Remove spaces before periods.',
 			'Remove spaces before exclamation marks.',
@@ -15048,7 +15048,7 @@ sub fixup {
 
 	while ( $lastindex < $end ) {
 		$line = $textwindow->get( $lastindex, $index );
-		if ( $line =~ /\/[\$\*]/ ) { $inblock = 1 }
+		if ( $line =~ /\/[\$\*Xx]/ ) { $inblock = 1 }
 		if ( $line =~ /[\$\*]\// ) { $inblock = 0 }
 		unless ( $inblock && ${ $lglobal{fixopt} }[0] ) {
 			if ( ${ $lglobal{fixopt} }[10] ) {
@@ -16895,7 +16895,7 @@ sub doutfbuttons {
 ### Prefs
 
 sub setmargins {
-	my $getmargins = $top->DialogBox( -title   => 'Set margins for rewrap.',
+	my $getmargins = $top->DialogBox( -title   => 'Set margins for rewrap',
 									  -buttons => ['OK'], );
 	my $lmframe =
 	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );

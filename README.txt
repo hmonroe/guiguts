@@ -17,4 +17,7 @@ and use it for external operations. Dictionary search on the external operations
 now passes the selection as a search argument. Made ASCII Boxes popup resizable.
 Removed trailing space on last line of /# #/ block after rewrap. Respect
 preference to leave space after end of line hyphen during rewrap if 
-Join Lines Keep Hyphen is chosen.
+Join Lines Keep Hyphen is chosen. Removed period on "Set margins for rewrap." Changed
+"Check Errors" box to "Run Checks". Run fixup ignores /X X/ (as well as /* */ and /$ $/) 
+blocks if the first option is checked. Fixed ordering of page numbers anchored inside
+HTML <h1> or <h2> tags. 
