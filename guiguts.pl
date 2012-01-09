@@ -12207,7 +12207,7 @@ sub spellclearvars {
 # start aspell in interactive mode, repipe stdin and stdout to file handles
 sub aspellstart {
 	aspellstop();
-	my @cmd = (    # FIXME: Need to see what options are going to aspell
+	my @cmd = (  
 			 $lglobal{spellexename}, '-a', '-S', '--sug-mode', $globalaspellmode
 	);
 	push @cmd, '-d', $globalspelldictopt if $globalspelldictopt;
@@ -12216,6 +12216,7 @@ sub aspellstart {
 }
 
 sub get_spellchecker_version {
+	# the spellchecker version is not used anywhere
 	return $lglobal{spellversion} if $lglobal{spellversion};
 	my $aspell_version;
 	open my $aspell, '-|', "$lglobal{spellexename} help";
@@ -12243,8 +12244,11 @@ sub spellguesses {    #feed aspell a word to get a list of guess
 	my $word = shift;     # word to get guesses for
 	$textwindow->Busy;    # let the user know something is happening
 	@{ $lglobal{guesslist} } = ();    # clear the guesslist
+	utf8::encode($word);
+	
 	print OUT $word, "\n";            # send the word to the stdout file handle
 	my $list = <IN>;                  # and read the results
+	utf8::decode($word);
 	$list =~
 	  s/.*\: //;    # remove incidental stuff (word, index, number of guesses)
 	$list =~ s/\#.*0/\*none\*/;    # oops, no guesses, put a notice in.
@@ -12296,14 +12300,26 @@ sub spellget_misspellings {    # get list of misspelled words
 	  ;                             # get selection
 	$section =~ s/^-----File:.*//g;
 	open my $save, '>:bytes', 'checkfil.txt';
-	utf8::decode($section);
+	utf8::encode($section);
 	print $save $section;           # FIXME: probably encode before printing.
 	close $save;
-	my $spellopt = "list ";
+	my $spellopt = "list --encoding=utf-8 ";
 	$spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
-	@templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
-	  ;    # feed the text to aspell, get an array of misspelled words out
-	chomp @templist;    # get rid of any newlines
+#	@templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
+#	  ;    # feed the text to aspell, get an array of misspelled words out
+#	chomp @templist;    # get rid of any newlines
+	system "$lglobal{spellexename} $spellopt < checkfil.txt > temp.txt";
+  open INFILE, 'temp.txt';
+
+  my ($ln, $tmp);
+  while ($ln = <INFILE>) {
+    $ln =~ s/\r\n/\n/;
+    chomp $ln;
+    utf8::decode($ln);
+    push(@templist, $ln);
+  }
+  close INFILE ;
+	
 
 	foreach my $word (@templist) {
 		next if ( exists( $projectdict{$word} ) );
@@ -17352,8 +17368,6 @@ sub spelloptions {
 					 -width        => 30,
 					 -textvariable => \$lglobal{spellencoding},
 	  )->pack;
-
-# FIXME: Switching to utf-8 is barfola. Probably down in the checkfil.txt thingy.
 
 	my $dictlabel = $spellop->add( 'Label', -text => 'Dictionary files' )->pack;
 	$dictlist = $spellop->add(
