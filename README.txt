@@ -10,7 +10,9 @@ does not include support for RST and PGTEI or Python. guiguts-1.0.0.zip
 is a stripped down version for those who have all the helper applications or
 are upgrading or who use operating systems other than Windows.
 
-Version 1.0.1 Got rid of undo on fix page separatorpopup which does not work properly.
+Version 1.0.1. Revamped spell checker including in Word Frequency popup to handle 
+UTF-8. Fixed "wide character in print" error by running utf8::encode. 
+Got rid of undo on fix page separatorpopup which does not work properly.
 Improved regexp to search for orphaned markup per RoryConnor. Cleared undo
 cache after HTML autogenerate. Set command to open browser for non-Windows OS
 and use it for external operations. Dictionary search on the external operations menu 
@@ -20,4 +22,4 @@ preference to leave space after end of line hyphen during rewrap if
 Join Lines Keep Hyphen is chosen. Removed period on "Set margins for rewrap." Changed
 "Check Errors" box to "Run Checks". Run fixup ignores /X X/ (as well as /* */ and /$ $/) 
 blocks if the first option is checked. Fixed ordering of page numbers anchored inside
-HTML <h1> or <h2> tags. 
+HTML <h1> or <h2> tags.

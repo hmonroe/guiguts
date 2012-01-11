@@ -20,7 +20,7 @@
 
 #use criticism 'gentle';
 
-my $VERSION = '1.0.0';
+my $VERSION = '1.0.1';
 use strict;
 use warnings;
 use FindBin;
@@ -8133,47 +8133,20 @@ sub wordfrequencyspellcheck {
 }
 
 sub wordfrequencygetmisspelled {
-	%{ $lglobal{spellsort} } = ();
-	getprojectdic();
-	do "$lglobal{projectdictname}";
-	$lglobal{spellexename} =
-	  $OS_WIN
-	  ? dos_path($globalspellpath)
-	  : $globalspellpath;    # Make the exe path dos compliant
+	@{ $lglobal{misspelledlist} } = ();	
 	my ( $words, $uwords );
 	my $wordw = 0;
-	searchoptset(qw/1 x x 0/);    # FIXME: Test for whole word search setting
-
 	foreach ( sort ( keys %{ $lglobal{seen} } ) ) {
-		if ( $_ !~ /[\x{100}-\x{FFEF}]/ ) {
 			$words .= "$_\n";
-		} else {
-			next if ( exists( $projectdict{$_} ) );
-			$lglobal{spellsort}->{$_} = $lglobal{seen}->{$_} || '0';
-			$wordw++;
-		}
 	}
 	if ($words) {
-		utf8::decode($words);
-		open( my $file, ">:bytes", "checkfil.txt" )
-		  ;    #save it to a file temporarily
-		print $file $words;
-		close $file;
-
-		# FIXME: spellopt is getting set all over the joint
-		my $spellopt = get_spellchecker_version() lt "0.6" ? "list " : "list ";
-		$spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
-		my @templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
-		  ;    # feed the text to aspell, get an array of misspelled words out
-		chomp @templist;    # get rid of any newlines
-
-		for my $word (@templist) {
-			next if ( exists( $projectdict{$word} ) );
-			$lglobal{spellsort}->{$word} = $lglobal{seen}->{$word} || '0';
-			$wordw++;
-		}
+		spellinitializefilenames();
+		getmisspelledwords($words);
 	}
-	unlink 'checkfil.txt';
+	foreach(sort @{$lglobal{misspelledlist}}) {
+			$lglobal{spellsort}->{$_} = $lglobal{seen}->{$_} || '0';
+			$wordw++;
+	}
 	return $wordw;
 }
 
@@ -11928,8 +11901,7 @@ sub update_indicators {
 
 ## Spell Check
 
-# Initialize spellchecker
-sub spellcheckfirst {
+sub spellinitializefilenames {
 	$lglobal{spellexename} =
 	  ( $OS_WIN ? dos_path($globalspellpath) : $globalspellpath )
 	  ;    # Make the exe path dos compliant
@@ -11938,6 +11910,11 @@ sub spellcheckfirst {
 								? dos_path( $lglobal{global_filename} )
 								: $lglobal{global_filename}
 	);     # make the file path dos compliant
+}
+
+# Initialize spellchecker
+sub spellcheckfirst {
+	spellinitializefilenames();
 	@{ $lglobal{misspelledlist} } = ();
 	viewpagenums() if ( $lglobal{seepagenums} );
 	getprojectdic();
@@ -12248,7 +12225,6 @@ sub spellguesses {    #feed aspell a word to get a list of guess
 	
 	print OUT $word, "\n";            # send the word to the stdout file handle
 	my $list = <IN>;                  # and read the results
-	utf8::decode($word);
 	$list =~
 	  s/.*\: //;    # remove incidental stuff (word, index, number of guesses)
 	$list =~ s/\#.*0/\*none\*/;    # oops, no guesses, put a notice in.
@@ -12294,20 +12270,40 @@ sub spellget_misspellings {    # get list of misspelled words
 	spellcheckrange();         # get chunk of text to process
 	return if ( $lglobal{spellindexstart} eq $lglobal{spellindexend} );
 	$top->Busy( -recurse => 1 );    # let user know something is going on
-	my ( $word, @templist );
 	my $section =
 	  $textwindow->get( $lglobal{spellindexstart}, $lglobal{spellindexend} )
 	  ;                             # get selection
 	$section =~ s/^-----File:.*//g;
+	
+	getmisspelledwords($section);
+
+	wordfrequencybuildwordlist();
+
+	#wordfrequencygetmisspelled();
+
+	if ( $#{ $lglobal{misspelledlist} } > 0 ) {
+		$lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
+						  . ( $globalspelldictopt || '<default>' )
+						  . " | $#{$lglobal{misspelledlist}} words to check." );
+	} else {
+		$lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
+								   . ( $globalspelldictopt || 'No dictionary!' )
+								   . ' | No Misspelled Words Found.' );
+	}
+	$top->Unbusy( -recurse => 0 );    # done processing
+	unlink 'checkfil.txt';
+}
+
+sub getmisspelledwords() {
+	my $section= shift;
+	my ( $word, @templist );
+	
 	open my $save, '>:bytes', 'checkfil.txt';
 	utf8::encode($section);
-	print $save $section;           # FIXME: probably encode before printing.
+	print $save $section;
 	close $save;
 	my $spellopt = "list --encoding=utf-8 ";
 	$spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
-#	@templist = `$lglobal{spellexename} $spellopt < "checkfil.txt"`
-#	  ;    # feed the text to aspell, get an array of misspelled words out
-#	chomp @templist;    # get rid of any newlines
 	system "$lglobal{spellexename} $spellopt < checkfil.txt > temp.txt";
   open INFILE, 'temp.txt';
 
@@ -12326,21 +12322,6 @@ sub spellget_misspellings {    # get list of misspelled words
 		push @{ $lglobal{misspelledlist} },
 		  $word;        # filter out project dictionary word list.
 	}
-	wordfrequencybuildwordlist();
-
-	#wordfrequencygetmisspelled();
-
-	if ( $#{ $lglobal{misspelledlist} } > 0 ) {
-		$lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
-						  . ( $globalspelldictopt || '<default>' )
-						  . " | $#{$lglobal{misspelledlist}} words to check." );
-	} else {
-		$lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
-								   . ( $globalspelldictopt || 'No dictionary!' )
-								   . ' | No Misspelled Words Found.' );
-	}
-	$top->Unbusy( -recurse => 0 );    # done processing
-	unlink 'checkfil.txt';
 }
 
 # remove ignored words from checklist
