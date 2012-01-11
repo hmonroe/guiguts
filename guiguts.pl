@@ -6368,7 +6368,6 @@ sub joinlines {
 			}
 			$line = $textwindow->get("$index-1c");
 		}
-		print "line1:$line\n";
 		if ( $line =~ /-/ ) {
 			unless (
 					 $textwindow->search(
@@ -6377,18 +6376,24 @@ sub joinlines {
 			  )
 			{
 				if ($rwhyphenspace) {
-				$textwindow->insert( "$index", " " );
-				$index =
-				  $textwindow->search( '-regexp', '--', '\s', "$index+1c", 'end' );
-					
+					$textwindow->insert( "$index", " " );
+					$index =
+					  $textwindow->search( '-regexp', '--', '\s', "$index+1c",
+										   'end' );
+
 				} else {
-				$index =
-				  $textwindow->search( '-regexp', '--', '\s', "$index", 'end' );
-					
+					$index =
+					  $textwindow->search( '-regexp', '--', '\s', "$index",
+										   'end' );
+
 				}
 				$textwindow->insert( "$index", " " );
 				$index =
-				  $textwindow->search( '-regexp', '--', '\s', "$index+1c", 'end' );
+				  $textwindow->search(
+									   '-regexp', '--',
+									   '\s',      "$index+1c",
+									   'end'
+				  );
 				$textwindow->delete($index);
 				if ($rwhyphenspace) {
 				}
@@ -6396,7 +6401,6 @@ sub joinlines {
 			}
 		}
 		$line = $textwindow->get($index);
-		print "line2:$line\n";
 		if ( $line =~ /-/ ) {
 
 			#$textwindow->delete($index);
@@ -8133,19 +8137,19 @@ sub wordfrequencyspellcheck {
 }
 
 sub wordfrequencygetmisspelled {
-	@{ $lglobal{misspelledlist} } = ();	
+	@{ $lglobal{misspelledlist} } = ();
 	my ( $words, $uwords );
 	my $wordw = 0;
 	foreach ( sort ( keys %{ $lglobal{seen} } ) ) {
-			$words .= "$_\n";
+		$words .= "$_\n";
 	}
 	if ($words) {
 		spellinitializefilenames();
 		getmisspelledwords($words);
 	}
-	foreach(sort @{$lglobal{misspelledlist}}) {
-			$lglobal{spellsort}->{$_} = $lglobal{seen}->{$_} || '0';
-			$wordw++;
+	foreach ( sort @{ $lglobal{misspelledlist} } ) {
+		$lglobal{spellsort}->{$_} = $lglobal{seen}->{$_} || '0';
+		$wordw++;
 	}
 	return $wordw;
 }
@@ -12184,15 +12188,15 @@ sub spellclearvars {
 # start aspell in interactive mode, repipe stdin and stdout to file handles
 sub aspellstart {
 	aspellstop();
-	my @cmd = (  
-			 $lglobal{spellexename}, '-a', '-S', '--sug-mode', $globalaspellmode
-	);
+	my @cmd =
+	  ( $lglobal{spellexename}, '-a', '-S', '--sug-mode', $globalaspellmode );
 	push @cmd, '-d', $globalspelldictopt if $globalspelldictopt;
 	$lglobal{spellpid} = open2( \*IN, \*OUT, @cmd );
 	my $line = <IN>;
 }
 
 sub get_spellchecker_version {
+
 	# the spellchecker version is not used anywhere
 	return $lglobal{spellversion} if $lglobal{spellversion};
 	my $aspell_version;
@@ -12222,7 +12226,7 @@ sub spellguesses {    #feed aspell a word to get a list of guess
 	$textwindow->Busy;    # let the user know something is happening
 	@{ $lglobal{guesslist} } = ();    # clear the guesslist
 	utf8::encode($word);
-	
+
 	print OUT $word, "\n";            # send the word to the stdout file handle
 	my $list = <IN>;                  # and read the results
 	$list =~
@@ -12274,7 +12278,7 @@ sub spellget_misspellings {    # get list of misspelled words
 	  $textwindow->get( $lglobal{spellindexstart}, $lglobal{spellindexend} )
 	  ;                             # get selection
 	$section =~ s/^-----File:.*//g;
-	
+
 	getmisspelledwords($section);
 
 	wordfrequencybuildwordlist();
@@ -12295,9 +12299,9 @@ sub spellget_misspellings {    # get list of misspelled words
 }
 
 sub getmisspelledwords() {
-	my $section= shift;
+	my $section = shift;
 	my ( $word, @templist );
-	
+
 	open my $save, '>:bytes', 'checkfil.txt';
 	utf8::encode($section);
 	print $save $section;
@@ -12305,22 +12309,21 @@ sub getmisspelledwords() {
 	my $spellopt = "list --encoding=utf-8 ";
 	$spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
 	system "$lglobal{spellexename} $spellopt < checkfil.txt > temp.txt";
-  open INFILE, 'temp.txt';
+	open INFILE, 'temp.txt';
 
-  my ($ln, $tmp);
-  while ($ln = <INFILE>) {
-    $ln =~ s/\r\n/\n/;
-    chomp $ln;
-    utf8::decode($ln);
-    push(@templist, $ln);
-  }
-  close INFILE ;
-	
+	my ( $ln, $tmp );
+	while ( $ln = <INFILE> ) {
+		$ln =~ s/\r\n/\n/;
+		chomp $ln;
+		utf8::decode($ln);
+		push( @templist, $ln );
+	}
+	close INFILE;
 
 	foreach my $word (@templist) {
 		next if ( exists( $projectdict{$word} ) );
 		push @{ $lglobal{misspelledlist} },
-		  $word;        # filter out project dictionary word list.
+		  $word;    # filter out project dictionary word list.
 	}
 }
 
@@ -14252,6 +14255,7 @@ sub asciipopup {
 			-text  => 'Draw Box',
 			-width => 16
 		)->grid( -row => 4, -column => 2, -padx => 1, -pady => 2 );
+
 		#$lglobal{asciipop}->resizable( 'no', 'no' );
 
 		#$lglobal{asciipop}->deiconify;
@@ -15046,7 +15050,7 @@ sub fixup {
 	while ( $lastindex < $end ) {
 		$line = $textwindow->get( $lastindex, $index );
 		if ( $line =~ /\/[\$\*Xx]/ ) { $inblock = 1 }
-		if ( $line =~ /[\$\*]\// ) { $inblock = 0 }
+		if ( $line =~ /[\$\*]\// )   { $inblock = 0 }
 		unless ( $inblock && ${ $lglobal{fixopt} }[0] ) {
 			if ( ${ $lglobal{fixopt} }[10] ) {
 				while ( $line =~ s/(?<=\S)\s\s+(?=\S)/ / ) { $edited++ }
@@ -15251,14 +15255,14 @@ sub separatorpopup {
 						-width            => 8
 		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
 
-		#		my $undobutton =
-		#		  $sf4->Button(
-		#						-activebackground => $activecolor,
-		#						-command          => sub { undojoin() },
-		#						-text             => 'Undo',
-		#						-underline        => 0,
-		#						-width            => 8
-		#		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+		my $undobutton =
+		  $sf4->Button(
+						-activebackground => $activecolor,
+						-command          => sub { undojoin() },
+						-text             => 'Undo',
+						-underline        => 0,
+						-width            => 8
+		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
 		my $delbutton = $sf4->Button(
 									  -activebackground => $activecolor,
 									  -command   => sub { joinlines('d') },

@@ -12,7 +12,6 @@ are upgrading or who use operating systems other than Windows.
 
 Version 1.0.1. Revamped spell checker including in Word Frequency popup to handle 
 UTF-8. Fixed "wide character in print" error by running utf8::encode. 
-Got rid of undo on fix page separatorpopup which does not work properly.
 Improved regexp to search for orphaned markup per RoryConnor. Cleared undo
 cache after HTML autogenerate. Set command to open browser for non-Windows OS
 and use it for external operations. Dictionary search on the external operations menu 
