@@ -15,7 +15,7 @@ line of poetry so page numbers align vertically. Auto List on HTML palette no
 longer removes spaces before markup in multiline mode. HTML anchors for chapter 
 headings are no longer empty but surround the chapter title text. Join Lines 
 removes */ /* </i> <i> etc. markup only if it matches. Fixed Undo button on 
-Fix Page Separator popup. Added Redo button
+Fix Page Separator popup and added Redo button.
 
 Version 1.0.2. Fixed problem in which a regex replace with \G in the found text
 led to characters being converted to Greek. Added message to run final W3C markup 
