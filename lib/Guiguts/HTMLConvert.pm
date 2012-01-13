@@ -850,18 +850,18 @@ sub html_convert_body {
 										 . $aname
 										 . "\" id=\""
 										 . $aname
-										 . "\"></a>"
+										 . "\">"
 				);
 				$step++;
 				$selection = $textwindow->get( "$step.0", "$step.end" );
 				my $restofheader = $selection;
 				$restofheader =~ s/^\s+|\s+$//g;
 				if ( length($restofheader) ) {
-					$textwindow->ntinsert( "$step.end", '</h2>' );
+					$textwindow->ntinsert( "$step.end", '</a></h2>' );
 					$completeheader .= ' ' . $restofheader;
 				} else {
 					$step--;
-					$textwindow->ntinsert( "$step.end", '</h2>' );
+					$textwindow->ntinsert( "$step.end", '</a></h2>' );
 				}
 			}
 
