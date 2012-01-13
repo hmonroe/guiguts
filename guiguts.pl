@@ -1280,7 +1280,7 @@ sub file_menuitems {
 	   [ 'command',   '~Open', -command => \&file_open ],
 	   [ 'separator', '' ],
 	   map ( [
-			  Button => "$recentfile[$_]",                 # FIXME: Rewrite this
+			  Button => "$recentfile[$_]",
 			  -command => [ \&openfile, $recentfile[$_] ]
 		   ],
 		   ( 0 .. scalar(@recentfile) - 1 ) ),
@@ -4721,7 +4721,7 @@ sub autolist {
 			}
 			$selection =~ s/\n$//;
 			$selection .= '</' . $lglobal{liststyle} . ">\n";
-			$selection =~ s/ </</g;
+			#$selection =~ s/ </</g; # why is this necessary; reported as a bug
 			$textwindow->delete( $start, $end );
 			$textwindow->insert( $start, $selection );
 		} else {

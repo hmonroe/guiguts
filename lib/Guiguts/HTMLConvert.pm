@@ -1166,6 +1166,17 @@ sub html_convert_pageanchors {
 				if ($textwindow->compare( $hend, '<', $hstart)) {
 					$insertpoint = $textwindow->index("$hstart-1l lineend");
 				}
+				my $spanstart =
+				  $textwindow->search( '-backwards', '-exact', '--', '<span',
+									   $markindex, '1.0' )
+				  || '1.0';
+				my $spanend =
+				  $textwindow->search( '-backwards', '-exact', '--', '</span',
+									   $markindex, '1.0' )
+				  || '1.0';
+				if ($textwindow->compare( $spanend, '<', $spanstart)) {
+					$insertpoint = $spanend . '+7c';
+				}
 				$textwindow->ntinsert( $insertpoint, $inserttext )
 				  if $main::lglobal{pageanch};
 			}
