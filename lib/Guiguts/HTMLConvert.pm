@@ -60,6 +60,7 @@ sub html_convert_superscripts {
 }
 
 sub html_convert_ampersands {
+	my $textwindow = shift;
 	&main::working("Converting Ampersands");
 	&main::named( '&(?![\w#])', '&amp;' );
 	&main::named( '&$',         '&amp;' );
@@ -67,6 +68,9 @@ sub html_convert_ampersands {
 	&main::named( '&c\.',       '&amp;c.' );
 	&main::named( '&c,',        '&amp;c.,' );
 	&main::named( '&c ',        '&amp;c. ' );
+	$textwindow->FindAndReplaceAll( '-regexp', '-nocase', "(?<![a-zA-Z0-9/\\-\"])>","&gt;");
+	$textwindow->FindAndReplaceAll( '-regexp', '-nocase', "(?![\\n0-9])<(?![a-zA-Z0-9/\\-\\n])",'&lt;');
+	
 }
 
 # double hyphens go to character entity ref. FIXME: Add option for real emdash.
@@ -125,13 +129,10 @@ sub html_convert_utf {
 			$textwindow->ntinsert( $blockstart, "&#$xchar;" );
 		}
 	}
-
 	&main::working("Converting Named\n and Numeric Characters");
-	&main::named( ' >', ' &gt;' );
+	&main::named( ' >', ' &gt;' ); # see html_convert_ampersands -- probably no effect
 	&main::named( '< ', '&lt; ' );
-
 	if ( !$keep_latin1 ) { html_convert_latin1(); }
-
 }
 
 sub html_cleanup_markers {

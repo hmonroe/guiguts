@@ -5720,9 +5720,9 @@ sub htmlautoconvert {
 
 	html_convert_codepage();
 
-	$headertext = html_parse_header( $textwindow, $headertext );
+	html_convert_ampersands($textwindow);
 
-	html_convert_ampersands();
+	$headertext = html_parse_header( $textwindow, $headertext );
 
 	html_convert_emdashes();
 
@@ -5887,9 +5887,18 @@ sub entity {
 	return $char;
 }
 
+sub replaceallsaveset {
+	my ($sopts,$from,$to) = shift;
+					my @savesets = @sopt;
+					searchoptset(qw/0 x x 1/);
+	replaceall($from,$to);
+						searchoptset(@savesets);
+}
+
 sub named {
 	my ( $from, $to, $start, $end ) = @_;
 	my $length;
+	#print "from:$from:to:$to\n";
 	my $searchstartindex = $start;
 	$searchstartindex = '1.0' unless $searchstartindex;
 	$end              = 'end' unless $end;
@@ -6780,7 +6789,10 @@ sub errorcheckpop_up {
 		} else {
 			push @errorchecklines, "Check is complete: " . $thiserrorchecktype;
 			if ($thiserrorchecktype eq "W3C Validate") {
-				push @errorchecklines, "Do the final validate at validator.w3.org";
+				push @errorchecklines, "Do the final validation at validator.w3.org";
+			}
+			if ($thiserrorchecktype eq "W3C Validate CSS") {
+				push @errorchecklines, "Do the final validation at http://jigsaw.w3.org/css-validator/";
 			}
 			push @errorchecklines, "";
 		}
