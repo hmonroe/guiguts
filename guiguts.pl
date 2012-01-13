@@ -20,7 +20,7 @@
 
 #use criticism 'gentle';
 
-my $VERSION = '1.0.2';
+my $VERSION = '1.0.3';
 use strict;
 use warnings;
 use FindBin;
@@ -6270,8 +6270,8 @@ sub joinlines {
 	$textwindow->markGravity( $pagemark, 'left' );
 	$textwindow->markSet( 'insert', "$searchstartindex+1c" );
 	$index = $textwindow->index('page');
-
-	unless ( $op eq 'd' ) {
+	
+	unless ( $op eq 'd' ) { # if not deleting a line
 		while (1) {
 			$index = $textwindow->index('page');
 			$line  = $textwindow->get($index);
@@ -6298,6 +6298,7 @@ sub joinlines {
 			}
 		}
 	}
+	# join lines
 	if ( $op eq 'j' ) {
 		$index = $textwindow->index('page');
 
@@ -6306,10 +6307,13 @@ sub joinlines {
 		$line = $textwindow->get("$index-1c");
 		my $hyphens = 0;
 		if ( $line =~ /\// ) {
-			$textwindow->delete( $index, "$index+3c" );
-			$lglobal{joinundo}++;
-			$textwindow->delete( "$index-3c", $index );
-			$lglobal{joinundo}++;
+			my $match = $textwindow->get( "$index-3c","$index+2c");
+			if ($match =~ /(.)\/\/\1/) {
+				$textwindow->delete("$index-3c","$index+3c" );
+				$lglobal{joinundo}++;
+			} else {
+				$textwindow->insert("$index","\n");
+			}
 			$index = $textwindow->index('page');
 			$line  = $textwindow->get("$index-1c");
 			last if ( $textwindow->compare( $index, '>=', 'end' ) );
@@ -6324,7 +6328,7 @@ sub joinlines {
 		if ( $line =~ />/ ) {
 			my $markupl = $textwindow->get( "$index-4c", $index );
 			my $markupn = $textwindow->get( $index,      "$index+3c" );
-			if ( ( $markupl =~ /<\/[ib]>/i ) && ( $markupn =~ /<[ib]>/i ) ) {
+			if ( ( $markupl =~ /<\/([ib])>/i ) && ( $markupn =~ /<$1>/i ) ) {
 				$textwindow->delete( $index, "$index+3c" );
 				$lglobal{joinundo}++;
 				$textwindow->delete( "$index-4c", $index );
@@ -6369,7 +6373,7 @@ sub joinlines {
 		$lglobal{joinundo}++;
 		$textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
 		$lglobal{joinundo}++ if $lglobal{htmlpagenum};
-	} elsif ( $op eq 'k' ) {
+	} elsif ( $op eq 'k' ) { # join lines keep hyphen
 		$index = $textwindow->index('page');
 		$line  = $textwindow->get("$index-1c");
 		if ( $line =~ />/ ) {
@@ -6431,8 +6435,6 @@ sub joinlines {
 		}
 		$line = $textwindow->get($index);
 		if ( $line =~ /-/ ) {
-
-			#$textwindow->delete($index);
 			$lglobal{joinundo}++;
 			$index =
 			  $textwindow->search( '-regexp', '--', '\s', $index, 'end' );
@@ -6443,22 +6445,22 @@ sub joinlines {
 		$lglobal{joinundo}++;
 		$textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
 		$lglobal{joinundo}++ if $lglobal{htmlpagenum};
-	} elsif ( $op eq 'l' ) {
+	} elsif ( $op eq 'l' ) { # add a line
 		$textwindow->insert( $index, "\n\n" );
 		$lglobal{joinundo}++;
 		$textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
 		$lglobal{joinundo}++ if $lglobal{htmlpagenum};
-	} elsif ( $op eq 't' ) {
+	} elsif ( $op eq 't' ) { # new section
 		$textwindow->insert( $index, "\n\n\n" );
 		$lglobal{joinundo}++;
 		$textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
 		$lglobal{joinundo}++ if $lglobal{htmlpagenum};
-	} elsif ( $op eq 'h' ) {
+	} elsif ( $op eq 'h' ) { # new chapter
 		$textwindow->insert( $index, "\n\n\n\n\n" );
 		$lglobal{joinundo}++;
 		$textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
 		$lglobal{joinundo}++ if $lglobal{htmlpagenum};
-	} elsif ( $op eq 'd' ) {
+	} elsif ( $op eq 'd' ) { # delete
 		$textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
 		$lglobal{joinundo}++ if $lglobal{htmlpagenum};
 		$textwindow->delete("$index-1c");
