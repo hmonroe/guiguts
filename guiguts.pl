@@ -5961,7 +5961,7 @@ EOM
 
 sub convertfilnum {
 	viewpagenums() if ( $lglobal{seepagenums} );
-	$lglobal{joinundo} = 0;
+	#$lglobal{joinundo} = 0;
 	my ( $filenum, $line, $rnd1, $rnd2, $page );
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 	$searchstartindex = '1.0';
@@ -6245,6 +6245,7 @@ sub joinlines {
 	my ( $line, $index, $r, $c );
 	$searchstartindex = '1.0';
 	$searchendindex   = '1.0';
+	$lglobal{joinundo} = 0;
 	$searchstartindex =
 	  $textwindow->search( '-regexp', '--', '^-----*\s?File:', $searchendindex,
 						   'end' );
@@ -6466,8 +6467,9 @@ sub joinlines {
 		$textwindow->delete("$index-1c");
 		$lglobal{joinundo}++;
 	}
-	$lglobal{joinundo} = 0;
 	convertfilnum() if ( $lglobal{jautomatic} || $lglobal{jsemiautomatic} );
+	print "joinundo".$lglobal{joinundo} ."\n";
+	
 }
 
 sub undojoin {
@@ -6477,6 +6479,7 @@ sub undojoin {
 		return;
 	}
 	my $index;
+	print "joinundo".$lglobal{joinundo} ."\n";
 	$textwindow->undo for ( 0 .. $lglobal{joinundo} );
 	convertfilnum();
 }

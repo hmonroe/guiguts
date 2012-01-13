@@ -13,9 +13,9 @@ are upgrading or who use operating systems other than Windows.
 Version 1.0.3. Relocated HTML page number outside an open <span> eg for a 
 line of poetry so page numbers align vertically. Auto List on HTML palette no
 longer removes spaces before markup in multiline mode. HTML anchors for chapter 
-headings are no longer empty but surround the chapter title text. Revamped
-Fix Page Separator logic: Join Lines removes */ /* </i> <i> etc. markup only 
-if it matches.
+headings are no longer empty but surround the chapter title text. Join Lines 
+removes */ /* </i> <i> etc. markup only if it matches. Fixed Undo button on 
+Fix Page Separator popup.
 
 Version 1.0.2. Fixed problem in which a regex replace with \G in the found text
 led to characters being converted to Greek. Added message to run final W3C markup 
