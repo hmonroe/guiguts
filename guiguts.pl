@@ -206,6 +206,8 @@ $geometryhash{wfpop} = q{};
 
 our @bookmarks = ( 0, 0, 0, 0, 0, 0 );
 our @gcopt = ( 0, 0, 0, 0, 0, 0, 1, 0, 1 );
+our @joinundolist;
+our @joinredolist;
 our @mygcview;
 our @operations;
 our @pageindex;
@@ -6468,8 +6470,7 @@ sub joinlines {
 		$lglobal{joinundo}++;
 	}
 	convertfilnum() if ( $lglobal{jautomatic} || $lglobal{jsemiautomatic} );
-	print "joinundo".$lglobal{joinundo} ."\n";
-	
+	push @joinundolist, $lglobal{joinundo};
 }
 
 sub undojoin {
@@ -6478,10 +6479,22 @@ sub undojoin {
 		$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 		return;
 	}
-	my $index;
-	print "joinundo".$lglobal{joinundo} ."\n";
-	$textwindow->undo for ( 0 .. $lglobal{joinundo} );
+	my $joinundo = pop @joinundolist;
+	push @joinredolist, $joinundo;
+	$textwindow->undo for ( 0 .. $joinundo );
 	convertfilnum();
+}
+
+sub redojoin {
+	if ( $lglobal{jautomatic} ) {
+		$textwindow->redo;
+		$textwindow->tagRemove( 'highlight', '1.0', 'end' );
+		return;
+	}
+	my $joinredo = pop @joinredolist;
+	push @joinundolist, $joinredo;
+	$textwindow->redo for ( 0 .. $joinredo );
+	#convertfilnum();
 }
 
 sub add_navigation_events {
@@ -9207,7 +9220,7 @@ sub initialize {
 		$geometryhash{ucharpop}      = '550x450+53+87';
 		$geometryhash{utfpop}        = '791x422+46+46';
 		$geometryhash{regexrefpop}   = '663x442+106+72';
-		$geometryhash{pagepop}       = '346x130+334+176';
+        $geometryhash{pagepop} = '281x112+334+176';
 		$geometryhash{fixpop}        = '441x440+34+22';
 		$geometryhash{wfpop}         = '462x583+565+63';
 		$geometryhash{pnumpop}       = '210x253+502+97';
@@ -15303,6 +15316,14 @@ sub separatorpopup {
 						-underline        => 0,
 						-width            => 8
 		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
+		my $redobutton =
+		  $sf4->Button(
+						-activebackground => $activecolor,
+						-command          => sub { redojoin() },
+						-text             => 'Redo',
+						-underline        => 0,
+						-width            => 8
+		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
 		my $delbutton = $sf4->Button(
 									  -activebackground => $activecolor,
 									  -command   => sub { joinlines('d') },
@@ -15341,6 +15362,7 @@ sub separatorpopup {
 		}
 	);
 	$lglobal{pagepop}->Tk::bind( '<u>' => \&undojoin );
+	$lglobal{pagepop}->Tk::bind( '<e>' => \&redojoin );
 	$lglobal{pagepop}->Tk::bind(
 		'<a>' => sub {
 			if   ( $lglobal{jautomatic} ) { $lglobal{jautomatic} = 0 }
