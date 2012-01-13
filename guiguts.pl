@@ -20,7 +20,7 @@
 
 #use criticism 'gentle';
 
-my $VERSION = '1.0.1';
+my $VERSION = '1.0.2';
 use strict;
 use warnings;
 use FindBin;
@@ -4061,6 +4061,17 @@ sub replaceeval {
 	my @replarray = ();
 	my ( $replaceseg, $seg1, $seg2, $replbuild );
 	my ( $m1, $m2, $m3, $m4, $m5, $m6, $m7, $m8 );
+	my ($cfound,$lfound, $ufound, $tfound,$gafound,$gbfound,$gfound,$afound);
+	#check for control codes before the $1 codes for text found are inserted
+	if ( $replaceterm =~ /\\C/ ) {$cfound=1;}
+	if ( $replaceterm =~ /\\L/ ) {$lfound=1;}
+	if ( $replaceterm =~ /\\U/ ) {$ufound=1;}
+	if ( $replaceterm =~ /\\T/ ) {$tfound=1;}
+	if ( $replaceterm =~ /\\GA/ ) {$gafound=1;}
+	if ( $replaceterm =~ /\\GB/ ) {$gbfound=1;}
+	if ( $replaceterm =~ /\\G/ ) {$gfound=1;}
+	if ( $replaceterm =~ /\\A/ ) {$afound=1;}
+	
 	my $found = $textwindow->get( $searchstartindex, $searchendindex );
 	$searchterm =~ s/\Q(?<=\E.*?\)//;
 	$searchterm =~ s/\Q(?=\E.*?\)//;
@@ -4082,8 +4093,10 @@ sub replaceeval {
 	$replaceterm =~ s/(?<!\\)\$7/$m7/g if defined $m7;
 	$replaceterm =~ s/(?<!\\)\$8/$m8/g if defined $m8;
 	$replaceterm =~ s/\\\$/\$/g;
-
-	if ( $replaceterm =~ /\\C/ ) {
+# For an explanation see 
+# http://www.pgdp.net/wiki/PPTools/Guiguts/Searching#Replacing_by_Modifying_Quoted_Text
+	# \C indicates perl code to be run
+	if ($cfound ) {
 		if ( $lglobal{codewarn} ) {
 			my $message = <<'END';
 WARNING!! The replacement term will execute arbitrary perl code.
@@ -4126,7 +4139,8 @@ END
 		$replaceterm = $replbuild;
 		$replbuild   = '';
 	}
-	if ( $replaceterm =~ /\\L/ ) {
+	# \Ltest\L is converted to lower case
+	if ( $lfound ) {
 		if ( $replaceterm =~ s/^\\L// ) {
 			if ( $replaceterm =~ s/\\L// ) {
 				@replarray = split /\\L/, $replaceterm;
@@ -4146,7 +4160,8 @@ END
 		$replaceterm = $replbuild;
 		$replbuild   = '';
 	}
-	if ( $replaceterm =~ /\\U/ ) {
+	# \Utest\U is converted to lower case
+	if ( $ufound) {
 		if ( $replaceterm =~ s/^\\U// ) {
 			if ( $replaceterm =~ s/\\U// ) {
 				@replarray = split /\\U/, $replaceterm;
@@ -4166,7 +4181,8 @@ END
 		$replaceterm = $replbuild;
 		$replbuild   = '';
 	}
-	if ( $replaceterm =~ /\\T/ ) {
+	# \Ttest\T is converted to title case
+	if ( $tfound ) {
 		if ( $replaceterm =~ s/^\\T// ) {
 			if ( $replaceterm =~ s/\\T// ) {
 				@replarray = split /\\T/, $replaceterm;
@@ -4191,7 +4207,8 @@ END
 	}
 	$replaceterm =~ s/\\n/\n/g;
 	$replaceterm =~ s/\\t/\t/g;
-	if ( $replaceterm =~ /\\GA/ ) {
+	# \GA runs betaascii
+	if ( $gafound ) {
 		if ( $replaceterm =~ s/^\\GA// ) {
 			if ( $replaceterm =~ s/\\GA// ) {
 				@replarray = split /\\GA/, $replaceterm;
@@ -4211,7 +4228,8 @@ END
 		$replaceterm = $replbuild;
 		$replbuild   = '';
 	}
-	if ( $replaceterm =~ /\\GB/ ) {
+	# \GB runs betagreek
+	if ( $gbfound) {
 		if ( $replaceterm =~ s/^\\GB// ) {
 			if ( $replaceterm =~ s/\\GB// ) {
 				@replarray = split /\\GB/, $replaceterm;
@@ -4231,7 +4249,8 @@ END
 		$replaceterm = $replbuild;
 		$replbuild   = '';
 	}
-	if ( $replaceterm =~ /\\G/ ) {
+	# \G runs betagreek unicode
+	if ( $gfound) {
 		if ( $replaceterm =~ s/^\\G// ) {
 			if ( $replaceterm =~ s/\\G// ) {
 				@replarray = split /\\G/, $replaceterm;
@@ -4251,7 +4270,8 @@ END
 		$replaceterm = $replbuild;
 		$replbuild   = '';
 	}
-	if ( $replaceterm =~ /\\A/ ) {
+	# \A converts to anchor
+	if ( $afound) {
 		if ( $replaceterm =~ s/^\\A// ) {
 			if ( $replaceterm =~ s/\\A// ) {
 				@replarray = split /\\A/, $replaceterm;
@@ -6759,6 +6779,9 @@ sub errorcheckpop_up {
 "Could not perform validation: install java or use W3C CSS Validation web site.";
 		} else {
 			push @errorchecklines, "Check is complete: " . $thiserrorchecktype;
+			if ($thiserrorchecktype eq "W3C Validate") {
+				push @errorchecklines, "Do the final validate at validator.w3.org";
+			}
 			push @errorchecklines, "";
 		}
 		working();

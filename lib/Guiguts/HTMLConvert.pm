@@ -824,8 +824,9 @@ sub html_convert_body {
 			 && ( !$last5[3] )
 			 && ($selection) )
 		{
-
+			
 			my $hmark = $textwindow->markPrevious( ( $step - 1 ) . '.0' );
+			if ($hmark) {
 			my $hmarkindex = $textwindow->index($hmark);
 			my ( $pagemarkline, $pagemarkcol ) = split /\./, $hmarkindex;
 
@@ -834,7 +835,7 @@ sub html_convert_body {
 			if ( $step - 5 <= $pagemarkline ) {
 				$textwindow->markSet( "HRULE$pagemarkline", $hmarkindex );
 			}
-
+			}
 			# make an anchor for autogenerate TOC
 			$aname =~ s/<\/?[hscalup].*?>//g;
 			$aname = &main::makeanchor( &main::deaccent($selection) );

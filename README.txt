@@ -10,6 +10,10 @@ does not include support for RST and PGTEI or Python. guiguts-1.0.0.zip
 is a stripped down version for those who have all the helper applications or
 are upgrading or who use operating systems other than Windows.
 
+Version 1.0.2. Fixed problem in which a regex replace with \G in the found text
+led to characters being converted to Greek. Added message to run final W3C markup 
+validation at validator.w3.org.
+
 Version 1.0.1. Revamped spell checker including in Word Frequency popup to handle 
 UTF-8. Fixed "wide character in print" error by running utf8::encode. 
 Improved regexp to search for orphaned markup per RoryConnor. Cleared undo
