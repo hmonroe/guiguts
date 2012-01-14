@@ -9967,11 +9967,8 @@ sub findmatchingclosebracket {
 	print "here:$startIndex\n";
 
 	while ($indentLevel) {
-		print "here\n";
 		$closeIndex = $textwindow->search('-exact', '--', ']', "$startIndex" . '+1c', 'end' );
-		print "here1:$closeIndex\n";
 		my $openIndex = $textwindow->search('-exact', '--', '[', "$startIndex" . '+1c', 'end' );
-		print "here2:$openIndex\n";
 		if ( !$closeIndex) {
 			# no matching ]
 			return $startIndex;
@@ -9980,9 +9977,7 @@ sub findmatchingclosebracket {
 			# no [
 			return $closeIndex;
 		}
-			print "here3\n";
 		if ( $textwindow->compare( $openIndex, '<', $closeIndex ) ) {
-			print "here33\n";
 			$indentLevel++;
 			$startIndex = $openIndex;
 		} else {
@@ -9996,20 +9991,21 @@ sub findmatchingclosebracket {
 sub findgreek {
 	my $startIndex = shift;
 	$startIndex=$textwindow->index($startIndex);
-	print $startIndex."::\n";
+	print $startIndex.":findgreek start:\n";
 	my $chars;
 	my $greekIndex =
-	  $textwindow->search( '-exact', '--', '[Greek:', "$startIndex" . '+5c', 'end' );
-	print $greekIndex.":g:\n";
+	  $textwindow->search( '-exact', '--', '[Greek:', "$startIndex" , 'end' );
+	print $greekIndex.":findgreek greek:\n";
 	if ($greekIndex) {
 		my $closeIndex = findmatchingclosebracket($greekIndex);
-		print $greekIndex.":close:". $closeIndex."\n";
+		print $closeIndex.":findgreek close:\n";
 		return ( $greekIndex, $closeIndex );
 	} else {
 		return ( $greekIndex, $greekIndex );
 	}
 }
 
+# Puts Greek character into the Greek popup
 sub putgreek {
 	my ( $attrib, $hash ) = @_;
 	my $letter;
@@ -10272,7 +10268,7 @@ sub betagreek {
 			$phrase =~ s/$_/$lglobal{grkbeta2}{$_}/g;
 		}
 		for ( keys %{ $lglobal{grkbeta3} } ) {
-			$phrase =~ s/$_/%{$lglobal{grkbeta3}}{$_}/g;
+			$phrase =~ s/$_/$lglobal{grkbeta3}{$_}/g;
 		}
 		$phrase =~ s/\x{0386}/A\//g;
 		$phrase =~ s/\x{0388}/E\//g;
@@ -16657,6 +16653,7 @@ sub cleanup {
 sub findandextractgreek {
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 	my ( $greekIndex, $closeIndex ) = findgreek('insert');
+	print $greekIndex.":findand:". $closeIndex."\n";
 	if ($closeIndex) {
 		$textwindow->markSet( 'insert', $greekIndex );
 		$textwindow->tagAdd( 'highlight', $greekIndex, $greekIndex . "+7c" );

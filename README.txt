@@ -16,7 +16,8 @@ longer removes spaces before markup in multiline mode. HTML anchors for chapter
 headings are no longer empty but surround the chapter title text. Join Lines 
 removes */ /* </i> <i> etc. markup only if it matches. Fixed Undo button on 
 Fix Page Separator popup and added Redo button. Fixed Find Greek on the Fixup
-menu (which never worked).
+menu to find all [Greek: ] occurrences. Unicode->beta no longer converts \x{1FA7}
+and certain other characters into %{HASH(0x4f10ff8)} .
 
 Version 1.0.2. Fixed problem in which a regex replace with \G in the found text
 led to characters being converted to Greek. Added message to run final W3C markup 
