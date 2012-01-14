@@ -9960,19 +9960,29 @@ sub b2scroll {
 }
 
 sub findmatchingclosebracket {
+	print "here0\n";
 	my ($startIndex) = @_;
 	my $indentLevel = 1;
 	my $closeIndex;
+	print "here:$startIndex\n";
 
 	while ($indentLevel) {
-		$closeIndex = $textwindow->search( ']', $startIndex . '+1c', 'end' );
-		my $openIndex = $textwindow->search( '[', $startIndex . '+1c', 'end' );
-		if ( !$closeIndex ) {
-
+		print "here\n";
+		$closeIndex = $textwindow->search('-exact', '--', ']', "$startIndex" . '+1c', 'end' );
+		print "here1:$closeIndex\n";
+		my $openIndex = $textwindow->search('-exact', '--', '[', "$startIndex" . '+1c', 'end' );
+		print "here2:$openIndex\n";
+		if ( !$closeIndex) {
 			# no matching ]
+			return $startIndex;
+		}
+		if (  !$openIndex ) {
+			# no [
 			return $closeIndex;
 		}
+			print "here3\n";
 		if ( $textwindow->compare( $openIndex, '<', $closeIndex ) ) {
+			print "here33\n";
 			$indentLevel++;
 			$startIndex = $openIndex;
 		} else {
@@ -9984,12 +9994,16 @@ sub findmatchingclosebracket {
 }
 
 sub findgreek {
-	my ($startIndex) = @_;
+	my $startIndex = shift;
+	$startIndex=$textwindow->index($startIndex);
+	print $startIndex."::\n";
 	my $chars;
 	my $greekIndex =
-	  $textwindow->search( '[Greek:', $startIndex . '+5c', 'end' );
+	  $textwindow->search( '-exact', '--', '[Greek:', "$startIndex" . '+5c', 'end' );
+	print $greekIndex.":g:\n";
 	if ($greekIndex) {
 		my $closeIndex = findmatchingclosebracket($greekIndex);
+		print $greekIndex.":close:". $closeIndex."\n";
 		return ( $greekIndex, $closeIndex );
 	} else {
 		return ( $greekIndex, $greekIndex );
