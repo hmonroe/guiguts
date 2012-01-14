@@ -9960,11 +9960,9 @@ sub b2scroll {
 }
 
 sub findmatchingclosebracket {
-	print "here0\n";
 	my ($startIndex) = @_;
 	my $indentLevel = 1;
 	my $closeIndex;
-	print "here:$startIndex\n";
 
 	while ($indentLevel) {
 		$closeIndex = $textwindow->search('-exact', '--', ']', "$startIndex" . '+1c', 'end' );
@@ -9991,14 +9989,11 @@ sub findmatchingclosebracket {
 sub findgreek {
 	my $startIndex = shift;
 	$startIndex=$textwindow->index($startIndex);
-	print $startIndex.":findgreek start:\n";
 	my $chars;
 	my $greekIndex =
 	  $textwindow->search( '-exact', '--', '[Greek:', "$startIndex" , 'end' );
-	print $greekIndex.":findgreek greek:\n";
 	if ($greekIndex) {
 		my $closeIndex = findmatchingclosebracket($greekIndex);
-		print $closeIndex.":findgreek close:\n";
 		return ( $greekIndex, $closeIndex );
 	} else {
 		return ( $greekIndex, $greekIndex );
@@ -16653,7 +16648,6 @@ sub cleanup {
 sub findandextractgreek {
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 	my ( $greekIndex, $closeIndex ) = findgreek('insert');
-	print $greekIndex.":findand:". $closeIndex."\n";
 	if ($closeIndex) {
 		$textwindow->markSet( 'insert', $greekIndex );
 		$textwindow->tagAdd( 'highlight', $greekIndex, $greekIndex . "+7c" );
