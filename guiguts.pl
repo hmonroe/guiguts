@@ -6902,7 +6902,9 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
 		while ( $textwindow->compare( $index, '<', 'end' ) ) {
 			my $end = $textwindow->index("$index  lineend +1c");
-			print $td $textwindow->get( $index, $end );
+			my $gettext =$textwindow->get( $index, $end ); 
+			utf8::encode($gettext);
+			print $td $gettext;
 			$index = $end;
 		}
 		close $td;
@@ -9464,6 +9466,23 @@ sub initialize {
 								"\x{03AB}" => 'Y+',
 								"\x{03CA}" => 'i+',
 								"\x{03CB}" => 'y+',
+								"\x{03DE}" => '*#1',
+								"\x{03DE}" => '#1',
+								"\x{03DA}" => '*#2',
+								"\x{03DB}" => '#2',
+								"\x{03D8}" => '*#3',
+								"\x{03D9}" => '#3',
+								"\x{03E0}" => '*#5',
+								"\x{03E1}" => '#5',
+								"\x{20EF}" => '#6',
+								"\x{03FD}" => '#10',
+								"\x{03FF}" => '#11',
+								"\x{203B}" => '#13',
+								"\x{2E16}" => '#14',
+								"\x{03FE}" => '#16',
+								"\x{0259}" => '#55',
+								"\x{205A}" => '#73',
+								"\x{205D}" => '#74',
 	);
 
 	%{ $lglobal{grkbeta2} } = (
