@@ -168,7 +168,7 @@ our $regexpentry      = q();
 our $rmargin          = 72;
 our $rwhyphenspace    = 1;
 our $scannoslist      = q{};
-our $scannoslistpath  = q{};
+our $scannoslistpath  = q{wordlist};
 our $scannospath      = q{};
 our $scannosearch     = 0;
 our $scrollupdatespd  = 40;
@@ -214,14 +214,7 @@ our @pageindex;
 our @recentfile;
 
 @recentfile = (
-				'README.txt',
-				'ggmanual.html',
-				'tests\testfile.txt',
-				'tests\testhtml3.txt',
-				'tests\testhtml4.txt',
-				'tests\testhtml5.txt',
-				'samples\rst\canyon\37466.rst',
-				'samples\pgtei\alice\alice.tei'
+				'README.txt'
 );
 
 our @replace_history;
@@ -830,7 +823,10 @@ sub openpng {
 # Routine to find highlight word list
 sub scannosfile {
 	$scannoslistpath = os_normal($scannoslistpath);
-	$scannoslist = $top->getOpenFile( -title      => 'Word file?',
+	my $types = [ [ 'Text file', [ '.txt', ] ], [ 'All Files', ['*'] ], ];
+	
+	$scannoslist = $top->getOpenFile( -title      => 'List of words to highlight?',
+									  -filetypes => $types,
 									  -initialdir => $scannoslistpath );
 	if ($scannoslist) {
 		my ( $name, $path, $extension ) =
@@ -845,12 +841,25 @@ sub scannosfile {
 ##routine to automatically highlight words in the text
 sub highlightscannos {
 	return 0 unless $lglobal{scanno_hl};
-	unless ( %{ $lglobal{wordlist} } ) {
+	unless (%{ $lglobal{wordlist} } ) {
 		scannosfile() unless ( defined $scannoslist && -e $scannoslist );
 		return 0 unless $scannoslist;
 		if ( open my $fh, '<', $scannoslist ) {
 			while (<$fh>) {
 				utf8::decode($_);
+				if ($_ =~ 'scannoslist' ) {
+			my $dialog = $top->Dialog(
+								 -text    => 'Warning: File must contain only a list of words.',
+								 -bitmap  => 'warning',
+								 -title   => 'Warning!',
+								 -buttons => [ 'OK'],
+			);
+			my $answer = $dialog->Show;
+			$lglobal{scanno_hl}=0;
+			undef $scannoslist;
+			return;
+					
+				}
 				$_ =~ s/^\x{FFEF}?// if ( $. < 2 );
 				s/\cM\cJ|\cM|\cJ//g;
 				next unless length $_;
@@ -5703,7 +5712,7 @@ sub htmlautoconvert {
 		$top->messageBox(
 						  -icon    => 'warning',
 						  -type    => 'OK',
-						  -message => 'Nothing to check'
+						  -message => 'File must be saved first.'
 		);
 		return;
 	}

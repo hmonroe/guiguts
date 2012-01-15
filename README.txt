@@ -18,7 +18,8 @@ removes */ /* </i> <i> etc. markup only if it matches. Fixed Undo button on
 Fix Page Separator popup and added Redo button. Fixed Find Greek on the Fixup
 menu to find all [Greek: ] occurrences. Unicode->beta no longer converts \x{1FA7}
 and certain other characters into %{HASH(0x4f10ff8)}. Added beta code for Greek
-character stigma.
+character stigma. Fixed bug if user tries to highlight scannos using the scannos 
+list in the scannos directory rather than a a word list in the word list directory.
 
 Version 1.0.2. Fixed problem in which a regex replace with \G in the found text
 led to characters being converted to Greek. Added message to run final W3C markup 
