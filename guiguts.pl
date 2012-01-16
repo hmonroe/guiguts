@@ -14472,8 +14472,8 @@ sub wordfrequency {
 		$wcseframe->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				return if $lglobal{global_filename} =~ /No File Loaded/;
-				savefile() unless ( $textwindow->numberChanges == 0 );
+				#return if $lglobal{global_filename} =~ /No File Loaded/;
+				#savefile() unless ( $textwindow->numberChanges == 0 );
 				wordfrequency();
 			},
 			-text => 'Rerun '
@@ -15787,7 +15787,7 @@ sub footnotepop {
 
 sub epubmaker {
 	my $format = shift;
-	if ( $lglobal{global_filename} =~ /(\w+.rst)$/ ) {
+	if ( $lglobal{global_filename} =~ /(\w+.(rst|htm|html))$/ ) {
 
 		print "\nBeginning epubmaker\n";
 		print "Files will appear in the directory $globallastpath.\n";

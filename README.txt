@@ -10,6 +10,9 @@ does not include support for RST and PGTEI or Python. guiguts-1.0.nn.zip
 is a stripped down version for those who have all the helper applications or
 are upgrading or who use operating systems other than Windows.
 
+Version 1.0.4. Word frequency rerun after typing words in empty file reports
+now works.  
+
 Version 1.0.3. Relocated HTML page number outside an open <span> eg for a 
 line of poetry so page numbers align vertically. Auto List on HTML palette no
 longer removes spaces before markup in multiline mode. HTML anchors for chapter 
