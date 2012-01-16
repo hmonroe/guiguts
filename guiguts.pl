@@ -3849,10 +3849,12 @@ sub searchtext {
 
 	#print "start:$start\n";
 	if ($start) {    # but start is always defined?
-		$sopt[2]     # if backwards
-		  ? ( $searchstartindex = $start )
-		  : ( $searchendindex = "$start+1c" );    #forwards
-
+	
+		if ($sopt[2]) {     # if backwards
+		  $searchstartindex = $start ;
+		  } else {
+		   $searchendindex = "$start+1c" unless ($start eq '1.0');    #forwards
+		  }
 		# why should forward search begin +1c?
 		# answer: otherwise, the next search will find the same match
 	}
@@ -7940,25 +7942,14 @@ sub sortwords {
 sub commark {
 	$top->Busy( -recurse => 1 );
 	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
-	$lglobal{wclistbox}->update;
 	my %display = ();
 	my $wordw   = 0;
 	my $ssindex = '1.0';
 	my $length;
-	my $filename = $textwindow->FileName;
-	return if ( $filename =~ m/No File Loaded/ );
-	savefile() unless ( $textwindow->numberChanges == 0 );
-	my $wholefile;
-	{
-		local $/;    # slurp in the file
-		open my $fh, '<', $filename;
-		$wholefile = <$fh>;
-		close $fh;
-		utf8::decode($wholefile);
-	}
-	$wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
-
+	return if (nofileloaded());
+	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
+	$lglobal{wclistbox}->update;
+	my $wholefile = slurpfile();
 	if ($intelligentWF) {
 
 		# Skip if pattern is: . Hello, John
@@ -8008,26 +7999,16 @@ s/([\.\?\!]['"]*[\n\s]['"]*\p{Upper}\p{Alnum}*),([\n\s]['"]*\p{Upper})/$1 $2/g;
 sub itwords {
 	$top->Busy( -recurse => 1 );
 	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
-	$lglobal{wclistbox}->update;
 	my %display  = ();
 	my $wordw    = 0;
 	my $suspects = '0';
 	my %words;
 	my $ssindex = '1.0';
 	my $length;
-	my $filename = $textwindow->FileName;
-	return if ( $filename =~ m/No File Loaded/ );
-	savefile() unless ( $textwindow->numberChanges == 0 );
-	my $wholefile;
-	{
-		local $/;    # slurp in the file
-		open my $fh, '<', $filename;
-		$wholefile = <$fh>;
-		close $fh;
-		utf8::decode($wholefile);
-	}
-	$wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
+	return if (nofileloaded());
+	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
+	$lglobal{wclistbox}->update;
+	my $wholefile = slurpfile();
 	$markupthreshold = 0 unless $markupthreshold;
 	while ( $wholefile =~ m/(<(i|I|b|B|sc)>)(.*?)(<\/(i|I|b|B|sc)>)/sg ) {
 		my $word   = $1 . $3 . $4;
@@ -8060,19 +8041,10 @@ sub itwords {
 	searchoptset(qw/1 x x 0/);
 }
 
-sub bangmark {
-	$top->Busy( -recurse => 1 );
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
-	$lglobal{wclistbox}->update;
-	my %display  = ();
-	my $wordw    = 0;
-	my $ssindex  = '1.0';
-	my $length   = 0;
+sub slurpfile {
 	my $filename = $textwindow->FileName;
-	return if ( $filename =~ m/No File Loaded/ );
-	savefile() unless ( $textwindow->numberChanges == 0 );
 	my $wholefile;
+	savefile() unless ( $textwindow->numberChanges == 0 );
 	{
 		local $/;    # slurp in the file
 		open my $fh, '<', $filename;
@@ -8081,6 +8053,28 @@ sub bangmark {
 		utf8::decode($wholefile);
 	}
 	$wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
+	return $wholefile;
+}
+
+sub nofileloaded {
+	if ($lglobal{global_filename} =~ m/No File Loaded/ ) {
+		$lglobal{wclistbox}->insert( 'end', 'Please save the file first.' );
+		$lglobal{wclistbox}->update;
+		$top->Unbusy;
+		return 1;
+	};
+}
+sub bangmark {
+	$top->Busy( -recurse => 1 );
+	$lglobal{wclistbox}->delete( '0', 'end' );
+	my %display  = ();
+	my $wordw    = 0;
+	my $ssindex  = '1.0';
+	my $length   = 0;
+	return if (nofileloaded());
+	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
+	$lglobal{wclistbox}->update;
+	my $wholefile = slurpfile();
 	while (
 		   $wholefile =~ m/(\p{Alnum}+\.['"]?\n*\s*['"]?\p{Lower}\p{Alnum}*)/g )
 	{
@@ -8347,15 +8341,15 @@ sub anythingwfcheck {
 sub charsortcheck {
 	$top->Busy( -recurse => 1 );
 	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
-	$lglobal{wclistbox}->update;
 	my %display = ();
 	my %chars;
 	my $index    = '1.0';
 	my $end      = $textwindow->index('end');
 	my $wordw    = 0;
 	my $filename = $textwindow->FileName;
-	return if ( $filename =~ m/No File Loaded/ );
+	return if (nofileloaded());
+	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
+	$lglobal{wclistbox}->update;
 	savefile() unless ( $textwindow->numberChanges == 0 );
 	open my $fh, '<', $filename;
 
@@ -9272,6 +9266,9 @@ sub initialize {
 		  unless $validatecsscommand;
 		$gnutenbergdirectory =
 		  catfile( $lglobal{guigutsdirectory}, 'tools', 'gnutenberg', '0.4' )
+		  unless $gnutenbergdirectory;
+		$scannospath =
+		  catfile( $lglobal{guigutsdirectory}, 'scannos' )
 		  unless $gnutenbergdirectory;
 	}
 	%{ $lglobal{utfblocks} } = (
