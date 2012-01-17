@@ -15463,7 +15463,7 @@ sub footnotepop {
 		$lglobal{footpop} = $top->Toplevel;
 		initialize_popup_without_deletebinding('footpop');
 		my ( $checkn, $checka, $checkr );
-		$lglobal{footpop}->title('Footnote Fix Up');
+		$lglobal{footpop}->title('Footnote Fixup');
 		my $frame2 =
 		  $lglobal{footpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$frame2->Button(
