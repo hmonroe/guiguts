@@ -12,7 +12,7 @@ who have all the helper applications or are upgrading or who use
 operating systems other than Windows.
 
 Version 1.0.4. Fixed path and extension so EpubMaker will take .html
-files as input. PPV TXT and PP HTML labeled more clearly as pptxt and
+files as input. PPV TXT and PP HTML labeled more accurately as pptxt and
 pphtml. Only README.TXT appears in the prepopulated recently used file
 list. Search can find the first word in the file. Word frequency rerun
 after typing words in empty file reports now works and bug with
