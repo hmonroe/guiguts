@@ -5,7 +5,7 @@ use File::Basename;
 use Getopt::Long;
 
 # pphtml.pl
-# command line version of ppvhtml.pl
+# command line version of pphtml.pl
 # author: Roger Frank (DP:rfrank)
 # last edit: 03-Sep-2009 10:53 PM
 

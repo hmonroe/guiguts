@@ -1718,9 +1718,9 @@ sub fixup_menuitems {
 	   [ Button => 'Gutcheck options', -command => \&gutopts ],
 	   [ Button => 'Run ~Jeebies',     -command => \&jeebiespop_up ],
 	   [
-		  Button   => 'PPV Text',
+		  Button   => 'pptxt',
 		  -command => sub {
-			  errorcheckpop_up('PPV Text');
+			  errorcheckpop_up('pptxt');
 			  unlink 'null' if ( -e 'null' );
 		  },
 	   ],
@@ -6574,7 +6574,7 @@ sub errorcheckpop_up {
 	if (    ( $errorchecktype eq 'Check All' )
 		 or ( $errorchecktype eq 'Link Check' )
 		 or ( $errorchecktype eq 'W3C Validate CSS' )
-		 or ( $errorchecktype eq 'PP HTML' ) )
+		 or ( $errorchecktype eq 'pphtml' ) )
 	{
 		$ptopframe->Checkbutton(
 								 -variable    => \$verboseerrorchecks,
@@ -6669,7 +6669,7 @@ sub errorcheckpop_up {
 							 'Image Check',
 							 'Link Check',
 							 'W3C Validate CSS',
-							 'PP HTML'
+							 'pphtml'
 		);
 	} else {
 		@errorchecktypes = ($errorchecktype);
@@ -6740,7 +6740,7 @@ sub errorcheckpop_up {
 				{
 					last;
 				}
-				if ( $thiserrorchecktype eq 'PP HTML' ) {
+				if ( $thiserrorchecktype eq 'pphtml' ) {
 					if ( $line =~ /^-/i ) {    # skip lines beginning with '-'
 						next;
 					}
@@ -6768,7 +6768,7 @@ sub errorcheckpop_up {
 				} else {
 					if (    ( $thiserrorchecktype eq "W3C Validate" )
 						 or ( $thiserrorchecktype eq "W3C Validate Remote" )
-						 or ( $thiserrorchecktype eq "PP HTML" )
+						 or ( $thiserrorchecktype eq "pphtml" )
 						 or ( $thiserrorchecktype eq "Image Check" ) )
 					{
 						$line =~ s/^.*:(\d+:\d+)/line $1/;
@@ -6790,7 +6790,7 @@ sub errorcheckpop_up {
 					} else {
 						if (    ( $thiserrorchecktype eq "W3C Validate CSS" )
 							 or ( $thiserrorchecktype eq "Link Check" )
-							 or ( $thiserrorchecktype eq "PPV Text" ) )
+							 or ( $thiserrorchecktype eq "pptxt" ) )
 						{
 							$line =~ s/Line : (\d+)/line $1:1/;
 							push @errorchecklines, $line;
@@ -6976,7 +6976,7 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 					system(
 qq/java -jar $validatecsscommand file:$pwd\/$name > errors.err/ );
 				} else {
-					if ( $errorchecktype eq 'PP HTML' ) {
+					if ( $errorchecktype eq 'pphtml' ) {
 						system(
 qq/perl lib\/ppvchecks\/pphtml.pl -i $name -o errors.err/ );
 					}
@@ -6995,7 +6995,7 @@ qq/perl lib\/ppvchecks\/pphtml.pl -i $name -o errors.err/ );
 								system(
 qq/perl lib\/ppvchecks\/ppvimage.pl $name $d/ );
 							} else {
-								if ( $errorchecktype eq 'PPV Text' ) {
+								if ( $errorchecktype eq 'pptxt' ) {
 									system(
 qq/perl lib\/ppvchecks\/pptxt.pl -i $name -o errors.err/ );
 								}
@@ -16221,10 +16221,10 @@ sub htmlpopup {
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				errorcheckpop_up('PP HTML');
+				errorcheckpop_up('pphtml');
 				unlink 'null' if ( -e 'null' );
 			},
-			-text  => 'PP HTML',
+			-text  => 'pphtml',
 			-width => 16
 		)->grid( -row => 2, -column => 3, -padx => 1, -pady => 2 );
 		$f8->Button(
