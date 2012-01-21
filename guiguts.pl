@@ -20,14 +20,11 @@
 
 #use criticism 'gentle';
 
-my $VERSION = '1.0.3';
+my $VERSION = '1.0.4';
 use strict;
 use warnings;
 use FindBin;
 use lib $FindBin::Bin . "/lib";
-
-#use lib
-#  "c:/dp/dp/lib"; # Seems necessary to use pp/tkpp to create a windows .exe file
 
 #use Data::Dumper;
 use Cwd;
@@ -213,9 +210,7 @@ our @operations;
 our @pageindex;
 our @recentfile;
 
-@recentfile = (
-				'README.txt'
-);
+@recentfile = ('README.txt');
 
 our @replace_history;
 our @search_history;
@@ -729,8 +724,9 @@ sub clearvars {
 		}
 	}
 	%reghints = ();
-	%{ $lglobal{seenm} } = ();
-	$lglobal{seen}        = ();
+	%{ $lglobal{seenwordsdoublehyphen} } = ();
+	$lglobal{seenwords}        = ();
+	$lglobal{seenwordpairs}        = ();
 	$lglobal{fnarray}     = ();
 	%proofers             = ();
 	%pagenumbers          = ();
@@ -824,10 +820,12 @@ sub openpng {
 sub scannosfile {
 	$scannoslistpath = os_normal($scannoslistpath);
 	my $types = [ [ 'Text file', [ '.txt', ] ], [ 'All Files', ['*'] ], ];
-	
-	$scannoslist = $top->getOpenFile( -title      => 'List of words to highlight?',
-									  -filetypes => $types,
-									  -initialdir => $scannoslistpath );
+
+	$scannoslist = $top->getOpenFile(
+									  -title => 'List of words to highlight?',
+									  -filetypes  => $types,
+									  -initialdir => $scannoslistpath
+	);
 	if ($scannoslist) {
 		my ( $name, $path, $extension ) =
 		  fileparse( $scannoslist, '\.[^\.]*$' );
@@ -841,24 +839,26 @@ sub scannosfile {
 ##routine to automatically highlight words in the text
 sub highlightscannos {
 	return 0 unless $lglobal{scanno_hl};
-	unless (%{ $lglobal{wordlist} } ) {
+	unless ( %{ $lglobal{wordlist} } ) {
 		scannosfile() unless ( defined $scannoslist && -e $scannoslist );
 		return 0 unless $scannoslist;
 		if ( open my $fh, '<', $scannoslist ) {
 			while (<$fh>) {
 				utf8::decode($_);
-				if ($_ =~ 'scannoslist' ) {
-			my $dialog = $top->Dialog(
-								 -text    => 'Warning: File must contain only a list of words.',
-								 -bitmap  => 'warning',
-								 -title   => 'Warning!',
-								 -buttons => [ 'OK'],
-			);
-			my $answer = $dialog->Show;
-			$lglobal{scanno_hl}=0;
-			undef $scannoslist;
-			return;
-					
+				if ( $_ =~ 'scannoslist' ) {
+					my $dialog =
+					  $top->Dialog(
+						   -text =>
+							 'Warning: File must contain only a list of words.',
+						   -bitmap  => 'warning',
+						   -title   => 'Warning!',
+						   -buttons => ['OK'],
+					  );
+					my $answer = $dialog->Show;
+					$lglobal{scanno_hl} = 0;
+					undef $scannoslist;
+					return;
+
 				}
 				$_ =~ s/^\x{FFEF}?// if ( $. < 2 );
 				s/\cM\cJ|\cM|\cJ//g;
@@ -1291,10 +1291,10 @@ sub file_menuitems {
 	   [ 'command',   '~Open', -command => \&file_open ],
 	   [ 'separator', '' ],
 	   map ( [
-			  Button => "$recentfile[$_]",
-			  -command => [ \&openfile, $recentfile[$_] ]
-		   ],
-		   ( 0 .. scalar(@recentfile) - 1 ) ),
+				Button   => "$recentfile[$_]",
+				-command => [ \&openfile, $recentfile[$_] ]
+			 ],
+			 ( 0 .. scalar(@recentfile) - 1 ) ),
 	   [ 'separator', '' ],
 	   [
 		  'command',
@@ -1314,9 +1314,7 @@ sub file_menuitems {
 	   [ 'command',   'Export As Prep Text Files', -command => \&file_export ],
 	   [ 'separator', '' ],
 	   [
-		  'command',
-		  '~Guess Page Markers',
-		  -command => \&file_guess_page_marks
+		  'command', '~Guess Page Markers', -command => \&file_guess_page_marks
 	   ],
 	   [ 'command',   'Set Page ~Markers',    -command => \&file_mark_pages ],
 	   [ 'command',   '~Adjust Page Markers', -command => \&viewpagenums ],
@@ -3798,7 +3796,7 @@ sub searchtext {
 
 # $sopt[0] --> 0 = pattern search                       1 = whole word search
 # $sopt[1] --> 0 = case sensitive                     1 = case insensitive search
-# $sopt[2] --> 0 = search forwards                      1 = search backwards
+# $sopt[2] --> 0 = search forwards    \                  1 = search backwards
 # $sopt[3] --> 0 = normal search term           1 = regex search term - 3 and 0 are mutually exclusive
 # $sopt[4] --> 0 = search from last index       1 = Start from beginning
 	my $searchterm = shift;
@@ -3849,12 +3847,13 @@ sub searchtext {
 
 	#print "start:$start\n";
 	if ($start) {    # but start is always defined?
-	
-		if ($sopt[2]) {     # if backwards
-		  $searchstartindex = $start ;
-		  } else {
-		   $searchendindex = "$start+1c" unless ($start eq '1.0');    #forwards
-		  }
+
+		if ( $sopt[2] ) {    # if backwards
+			$searchstartindex = $start;
+		} else {
+			$searchendindex = "$start+1c" unless ( $start eq '1.0' );  #forwards
+		}
+
 		# why should forward search begin +1c?
 		# answer: otherwise, the next search will find the same match
 	}
@@ -3901,8 +3900,18 @@ sub searchtext {
 
 				# have to search on the whole file
 				my $wholefile = $textwindow->get( '1.0', $end );
-				while ( $wholefile =~ m/$searchterm/smg ) {
-					push @{ $lglobal{nlmatches} }, [ $-[0], ( $+[0] - $-[0] ) ];
+
+				# search is case sensitive if $sopt[1] is set
+				if ( $sopt[1] ) {
+					while ( $wholefile =~ m/$searchterm/smgi ) {
+						push @{ $lglobal{nlmatches} },
+						  [ $-[0], ( $+[0] - $-[0] ) ];
+					}
+				} else {
+					while ( $wholefile =~ m/$searchterm/smg ) {
+						push @{ $lglobal{nlmatches} },
+						  [ $-[0], ( $+[0] - $-[0] ) ];
+					}
 				}
 				$top->Unbusy;
 			}
@@ -4037,12 +4046,12 @@ sub getmark {
 }
 
 sub updatesearchlabels {
-	if ( $lglobal{seen} && $lglobal{searchpop} ) {
+	if ( $lglobal{seenwords} && $lglobal{searchpop} ) {
 		my $replaceterm = $lglobal{replaceentry}->get( '1.0', '1.end' );
 		my $searchterm1 = $lglobal{searchentry}->get( '1.0', '1.end' );
-		if ( ( $lglobal{seen}->{$searchterm1} ) && ( $sopt[0] ) ) {
+		if ( ( $lglobal{seenwords}->{$searchterm1} ) && ( $sopt[0] ) ) {
 			$lglobal{searchnumlabel}->configure(
-					   -text => "Found $lglobal{seen}->{$searchterm1} times." );
+					   -text => "Found $lglobal{seenwords}->{$searchterm1} times." );
 		} elsif ( ( $searchterm1 eq '' ) || ( !$sopt[0] ) ) {
 			$lglobal{searchnumlabel}->configure( -text => '' );
 		} else {
@@ -4074,17 +4083,21 @@ sub replaceeval {
 	my @replarray = ();
 	my ( $replaceseg, $seg1, $seg2, $replbuild );
 	my ( $m1, $m2, $m3, $m4, $m5, $m6, $m7, $m8 );
-	my ($cfound,$lfound, $ufound, $tfound,$gafound,$gbfound,$gfound,$afound);
+	my (
+		 $cfound,  $lfound,  $ufound, $tfound,
+		 $gafound, $gbfound, $gfound, $afound
+	);
+
 	#check for control codes before the $1 codes for text found are inserted
-	if ( $replaceterm =~ /\\C/ ) {$cfound=1;}
-	if ( $replaceterm =~ /\\L/ ) {$lfound=1;}
-	if ( $replaceterm =~ /\\U/ ) {$ufound=1;}
-	if ( $replaceterm =~ /\\T/ ) {$tfound=1;}
-	if ( $replaceterm =~ /\\GA/ ) {$gafound=1;}
-	if ( $replaceterm =~ /\\GB/ ) {$gbfound=1;}
-	if ( $replaceterm =~ /\\G/ ) {$gfound=1;}
-	if ( $replaceterm =~ /\\A/ ) {$afound=1;}
-	
+	if ( $replaceterm =~ /\\C/ )  { $cfound  = 1; }
+	if ( $replaceterm =~ /\\L/ )  { $lfound  = 1; }
+	if ( $replaceterm =~ /\\U/ )  { $ufound  = 1; }
+	if ( $replaceterm =~ /\\T/ )  { $tfound  = 1; }
+	if ( $replaceterm =~ /\\GA/ ) { $gafound = 1; }
+	if ( $replaceterm =~ /\\GB/ ) { $gbfound = 1; }
+	if ( $replaceterm =~ /\\G/ )  { $gfound  = 1; }
+	if ( $replaceterm =~ /\\A/ )  { $afound  = 1; }
+
 	my $found = $textwindow->get( $searchstartindex, $searchendindex );
 	$searchterm =~ s/\Q(?<=\E.*?\)//;
 	$searchterm =~ s/\Q(?=\E.*?\)//;
@@ -4106,10 +4119,11 @@ sub replaceeval {
 	$replaceterm =~ s/(?<!\\)\$7/$m7/g if defined $m7;
 	$replaceterm =~ s/(?<!\\)\$8/$m8/g if defined $m8;
 	$replaceterm =~ s/\\\$/\$/g;
-# For an explanation see 
+
+# For an explanation see
 # http://www.pgdp.net/wiki/PPTools/Guiguts/Searching#Replacing_by_Modifying_Quoted_Text
-	# \C indicates perl code to be run
-	if ($cfound ) {
+# \C indicates perl code to be run
+	if ($cfound) {
 		if ( $lglobal{codewarn} ) {
 			my $message = <<'END';
 WARNING!! The replacement term will execute arbitrary perl code.
@@ -4152,8 +4166,9 @@ END
 		$replaceterm = $replbuild;
 		$replbuild   = '';
 	}
+
 	# \Ltest\L is converted to lower case
-	if ( $lfound ) {
+	if ($lfound) {
 		if ( $replaceterm =~ s/^\\L// ) {
 			if ( $replaceterm =~ s/\\L// ) {
 				@replarray = split /\\L/, $replaceterm;
@@ -4173,8 +4188,9 @@ END
 		$replaceterm = $replbuild;
 		$replbuild   = '';
 	}
+
 	# \Utest\U is converted to lower case
-	if ( $ufound) {
+	if ($ufound) {
 		if ( $replaceterm =~ s/^\\U// ) {
 			if ( $replaceterm =~ s/\\U// ) {
 				@replarray = split /\\U/, $replaceterm;
@@ -4194,8 +4210,9 @@ END
 		$replaceterm = $replbuild;
 		$replbuild   = '';
 	}
+
 	# \Ttest\T is converted to title case
-	if ( $tfound ) {
+	if ($tfound) {
 		if ( $replaceterm =~ s/^\\T// ) {
 			if ( $replaceterm =~ s/\\T// ) {
 				@replarray = split /\\T/, $replaceterm;
@@ -4220,8 +4237,9 @@ END
 	}
 	$replaceterm =~ s/\\n/\n/g;
 	$replaceterm =~ s/\\t/\t/g;
+
 	# \GA runs betaascii
-	if ( $gafound ) {
+	if ($gafound) {
 		if ( $replaceterm =~ s/^\\GA// ) {
 			if ( $replaceterm =~ s/\\GA// ) {
 				@replarray = split /\\GA/, $replaceterm;
@@ -4241,8 +4259,9 @@ END
 		$replaceterm = $replbuild;
 		$replbuild   = '';
 	}
+
 	# \GB runs betagreek
-	if ( $gbfound) {
+	if ($gbfound) {
 		if ( $replaceterm =~ s/^\\GB// ) {
 			if ( $replaceterm =~ s/\\GB// ) {
 				@replarray = split /\\GB/, $replaceterm;
@@ -4262,8 +4281,9 @@ END
 		$replaceterm = $replbuild;
 		$replbuild   = '';
 	}
+
 	# \G runs betagreek unicode
-	if ( $gfound) {
+	if ($gfound) {
 		if ( $replaceterm =~ s/^\\G// ) {
 			if ( $replaceterm =~ s/\\G// ) {
 				@replarray = split /\\G/, $replaceterm;
@@ -4283,8 +4303,9 @@ END
 		$replaceterm = $replbuild;
 		$replbuild   = '';
 	}
+
 	# \A converts to anchor
-	if ( $afound) {
+	if ($afound) {
 		if ( $replaceterm =~ s/^\\A// ) {
 			if ( $replaceterm =~ s/\\A// ) {
 				@replarray = split /\\A/, $replaceterm;
@@ -4734,6 +4755,7 @@ sub autolist {
 			}
 			$selection =~ s/\n$//;
 			$selection .= '</' . $lglobal{liststyle} . ">\n";
+
 			#$selection =~ s/ </</g; # why is this necessary; reported as a bug
 			$textwindow->delete( $start, $end );
 			$textwindow->insert( $start, $selection );
@@ -5901,16 +5923,17 @@ sub entity {
 }
 
 sub replaceallsaveset {
-	my ($sopts,$from,$to) = shift;
-					my @savesets = @sopt;
-					searchoptset(qw/0 x x 1/);
-	replaceall($from,$to);
-						searchoptset(@savesets);
+	my ( $sopts, $from, $to ) = shift;
+	my @savesets = @sopt;
+	searchoptset(qw/0 x x 1/);
+	replaceall( $from, $to );
+	searchoptset(@savesets);
 }
 
 sub named {
 	my ( $from, $to, $start, $end ) = @_;
 	my $length;
+
 	#print "from:$from:to:$to\n";
 	my $searchstartindex = $start;
 	$searchstartindex = '1.0' unless $searchstartindex;
@@ -5974,6 +5997,7 @@ EOM
 
 sub convertfilnum {
 	viewpagenums() if ( $lglobal{seepagenums} );
+
 	#$lglobal{joinundo} = 0;
 	my ( $filenum, $line, $rnd1, $rnd2, $page );
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
@@ -6256,8 +6280,8 @@ sub joinlines {
 	viewpagenums() if ( $lglobal{seepagenums} );
 	my $op = shift;
 	my ( $line, $index, $r, $c );
-	$searchstartindex = '1.0';
-	$searchendindex   = '1.0';
+	$searchstartindex  = '1.0';
+	$searchendindex    = '1.0';
 	$lglobal{joinundo} = 0;
 	$searchstartindex =
 	  $textwindow->search( '-regexp', '--', '^-----*\s?File:', $searchendindex,
@@ -6284,8 +6308,8 @@ sub joinlines {
 	$textwindow->markGravity( $pagemark, 'left' );
 	$textwindow->markSet( 'insert', "$searchstartindex+1c" );
 	$index = $textwindow->index('page');
-	
-	unless ( $op eq 'd' ) { # if not deleting a line
+
+	unless ( $op eq 'd' ) {                      # if not deleting a line
 		while (1) {
 			$index = $textwindow->index('page');
 			$line  = $textwindow->get($index);
@@ -6312,6 +6336,7 @@ sub joinlines {
 			}
 		}
 	}
+
 	# join lines
 	if ( $op eq 'j' ) {
 		$index = $textwindow->index('page');
@@ -6321,12 +6346,12 @@ sub joinlines {
 		$line = $textwindow->get("$index-1c");
 		my $hyphens = 0;
 		if ( $line =~ /\// ) {
-			my $match = $textwindow->get( "$index-3c","$index+2c");
-			if ($match =~ /(.)\/\/\1/) {
-				$textwindow->delete("$index-3c","$index+3c" );
+			my $match = $textwindow->get( "$index-3c", "$index+2c" );
+			if ( $match =~ /(.)\/\/\1/ ) {
+				$textwindow->delete( "$index-3c", "$index+3c" );
 				$lglobal{joinundo}++;
 			} else {
-				$textwindow->insert("$index","\n");
+				$textwindow->insert( "$index", "\n" );
 			}
 			$index = $textwindow->index('page');
 			$line  = $textwindow->get("$index-1c");
@@ -6387,7 +6412,7 @@ sub joinlines {
 		$lglobal{joinundo}++;
 		$textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
 		$lglobal{joinundo}++ if $lglobal{htmlpagenum};
-	} elsif ( $op eq 'k' ) { # join lines keep hyphen
+	} elsif ( $op eq 'k' ) {    # join lines keep hyphen
 		$index = $textwindow->index('page');
 		$line  = $textwindow->get("$index-1c");
 		if ( $line =~ />/ ) {
@@ -6459,22 +6484,22 @@ sub joinlines {
 		$lglobal{joinundo}++;
 		$textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
 		$lglobal{joinundo}++ if $lglobal{htmlpagenum};
-	} elsif ( $op eq 'l' ) { # add a line
+	} elsif ( $op eq 'l' ) {    # add a line
 		$textwindow->insert( $index, "\n\n" );
 		$lglobal{joinundo}++;
 		$textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
 		$lglobal{joinundo}++ if $lglobal{htmlpagenum};
-	} elsif ( $op eq 't' ) { # new section
+	} elsif ( $op eq 't' ) {    # new section
 		$textwindow->insert( $index, "\n\n\n" );
 		$lglobal{joinundo}++;
 		$textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
 		$lglobal{joinundo}++ if $lglobal{htmlpagenum};
-	} elsif ( $op eq 'h' ) { # new chapter
+	} elsif ( $op eq 'h' ) {    # new chapter
 		$textwindow->insert( $index, "\n\n\n\n\n" );
 		$lglobal{joinundo}++;
 		$textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
 		$lglobal{joinundo}++ if $lglobal{htmlpagenum};
-	} elsif ( $op eq 'd' ) { # delete
+	} elsif ( $op eq 'd' ) {    # delete
 		$textwindow->insert( $index, $pagesep ) if $lglobal{htmlpagenum};
 		$lglobal{joinundo}++ if $lglobal{htmlpagenum};
 		$textwindow->delete("$index-1c");
@@ -6505,6 +6530,7 @@ sub redojoin {
 	my $joinredo = pop @joinredolist;
 	push @joinundolist, $joinredo;
 	$textwindow->redo for ( 0 .. $joinredo );
+
 	#convertfilnum();
 }
 
@@ -6817,11 +6843,13 @@ sub errorcheckpop_up {
 "Could not perform validation: install java or use W3C CSS Validation web site.";
 		} else {
 			push @errorchecklines, "Check is complete: " . $thiserrorchecktype;
-			if ($thiserrorchecktype eq "W3C Validate") {
-				push @errorchecklines, "Do the final validation at validator.w3.org";
+			if ( $thiserrorchecktype eq "W3C Validate" ) {
+				push @errorchecklines,
+				  "Do the final validation at validator.w3.org";
 			}
-			if ($thiserrorchecktype eq "W3C Validate CSS") {
-				push @errorchecklines, "Do the final validation at http://jigsaw.w3.org/css-validator/";
+			if ( $thiserrorchecktype eq "W3C Validate CSS" ) {
+				push @errorchecklines,
+"Do the final validation at http://jigsaw.w3.org/css-validator/";
 			}
 			push @errorchecklines, "";
 		}
@@ -6913,7 +6941,7 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
 		while ( $textwindow->compare( $index, '<', 'end' ) ) {
 			my $end = $textwindow->index("$index  lineend +1c");
-			my $gettext =$textwindow->get( $index, $end ); 
+			my $gettext = $textwindow->get( $index, $end );
 			utf8::encode($gettext);
 			print $td $gettext;
 			$index = $end;
@@ -7876,7 +7904,7 @@ sub harmonicspop {
 					   ( keys %{ $lglobal{harmonic} } ) )
 	{
 		$line =
-		  sprintf( "%-8d %s", $lglobal{seen}->{$word}, $word )
+		  sprintf( "%-8d %s", $lglobal{seenwords}->{$word}, $word )
 		  ;    # Print to the file
 		$lglobal{hlistbox}->insert( 'end', $line );
 	}
@@ -7890,7 +7918,7 @@ sub harmonics {
 	$word =~ s/\*\*\*\*$//;
 	$word =~ s/\s//g;
 	my $length = length $word;
-	for my $test ( keys %{ $lglobal{seen} } ) {
+	for my $test ( keys %{ $lglobal{seenwords} } ) {
 		next if ( abs( $length - length $test ) > 1 );
 		$lglobal{harmonic}{$test} = 1 if ( distance( $word, $test ) <= 1 );
 	}
@@ -7902,7 +7930,7 @@ sub harmonics2 {
 	$word =~ s/\*\*\*\*$//;
 	$word =~ s/\s//g;
 	my $length = length $word;
-	for my $test ( keys %{ $lglobal{seen} } ) {
+	for my $test ( keys %{ $lglobal{seenwords} } ) {
 		next if ( abs( $length - length $test ) > 2 );
 		$lglobal{harmonic}{$test} = 1 if ( distance( $word, $test ) <= 2 );
 	}
@@ -7946,10 +7974,11 @@ sub commark {
 	my $wordw   = 0;
 	my $ssindex = '1.0';
 	my $length;
-	return if (nofileloaded());
+	return if ( nofileloaded() );
 	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
 	$lglobal{wclistbox}->update;
 	my $wholefile = slurpfile();
+
 	if ($intelligentWF) {
 
 		# Skip if pattern is: . Hello, John
@@ -8005,11 +8034,12 @@ sub itwords {
 	my %words;
 	my $ssindex = '1.0';
 	my $length;
-	return if (nofileloaded());
+	return if ( nofileloaded() );
 	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
 	$lglobal{wclistbox}->update;
 	my $wholefile = slurpfile();
 	$markupthreshold = 0 unless $markupthreshold;
+
 	while ( $wholefile =~ m/(<(i|I|b|B|sc)>)(.*?)(<\/(i|I|b|B|sc)>)/sg ) {
 		my $word   = $1 . $3 . $4;
 		my $wordwo = $3;
@@ -8057,24 +8087,26 @@ sub slurpfile {
 }
 
 sub nofileloaded {
-	if ($lglobal{global_filename} =~ m/No File Loaded/ ) {
+	if ( $lglobal{global_filename} =~ m/No File Loaded/ ) {
 		$lglobal{wclistbox}->insert( 'end', 'Please save the file first.' );
 		$lglobal{wclistbox}->update;
 		$top->Unbusy;
 		return 1;
-	};
+	}
 }
+
 sub bangmark {
 	$top->Busy( -recurse => 1 );
 	$lglobal{wclistbox}->delete( '0', 'end' );
-	my %display  = ();
-	my $wordw    = 0;
-	my $ssindex  = '1.0';
-	my $length   = 0;
-	return if (nofileloaded());
+	my %display = ();
+	my $wordw   = 0;
+	my $ssindex = '1.0';
+	my $length  = 0;
+	return if ( nofileloaded() );
 	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
 	$lglobal{wclistbox}->update;
 	my $wholefile = slurpfile();
+
 	while (
 		   $wholefile =~ m/(\p{Alnum}+\.['"]?\n*\s*['"]?\p{Lower}\p{Alnum}*)/g )
 	{
@@ -8114,27 +8146,53 @@ sub hyphencheck {
 	my $wordw   = 0;
 	my $wordwo  = 0;
 	my %display = ();
-	foreach my $word ( keys %{ $lglobal{seen} } ) {
-		next if ( $lglobal{seen}->{$word} < 1 );
+	foreach my $word ( keys %{ $lglobal{seenwords} } ) {
+		next if ( $lglobal{seenwords}->{$word} < 1 );
+		# For words with hyphens
 		if ( $word =~ /-/ ) {
 			$wordw++;
 			my $wordtemp = $word;
-			$display{$word} = $lglobal{seen}->{$word}
+			$display{$word} = $lglobal{seenwords}->{$word}
 			  unless $lglobal{suspects_only};
+  		    # Check if the same word also appears with a double hyphen
 			$word =~ s/-/--/g;
-			if ( $lglobal{seenm}->{$word} ) {
-				$display{$wordtemp} = $lglobal{seen}->{$wordtemp}
+			if ( $lglobal{seenwordsdoublehyphen}->{$word} ) {
+				$display{$wordtemp} = $lglobal{seenwords}->{$wordtemp}
 				  if $lglobal{suspects_only};
 				my $aword = $word . ' ****';
-				$display{$aword} = $lglobal{seenm}->{$word};
+				$display{$aword} = $lglobal{seenwordsdoublehyphen}->{$word};
 				$wordwo++;
 			}
-			$word =~ s/-//g;
-			if ( $lglobal{seen}->{$word} ) {
-				$display{$wordtemp} = $lglobal{seen}->{$wordtemp}
+  		    # Check if the same word also appears with space
+			$word =~ s/-/ /g;
+			$word =~ s/  / /g;
+			if ( $lglobal{seenwordpairs}->{$word} ) {
+				my $aword = $word . ' ****';
+				$display{$aword} = $lglobal{seenwordpairs}->{$word};
+				$wordwo++;
+			}
+  		    # Check if the same word also appears without a space or hyphen
+			$word =~ s/ //g;
+			if ( $lglobal{seenwords}->{$word} ) {
+				$display{$wordtemp} = $lglobal{seenwords}->{$wordtemp}
 				  if $lglobal{suspects_only};
 				my $aword = $word . ' ****';
-				$display{$aword} = $lglobal{seen}->{$word};
+				$display{$aword} = $lglobal{seenwords}->{$word};
+				$wordwo++;
+			}
+		}
+	}
+	foreach my $word ( keys %{ $lglobal{seenwordpairs} } ) {
+		next if ( $lglobal{seenwordpairs}->{$word} < 1 ); # never true
+		# For each pair of consecutive words
+		if ( $word =~ / / ) { #always true
+			my $wordtemp = $word;
+  		    # Check if the same word also appears without a space 
+			$word =~ s/ //g;
+			if ( $lglobal{seenwords}->{$word} ) {
+				$display{$word} = $lglobal{seenwords}->{$word};
+				my $aword = $wordtemp . ' ****';
+				$display{$aword} = $lglobal{seenwordpairs}->{$wordtemp};
 				$wordwo++;
 			}
 		}
@@ -8154,21 +8212,21 @@ sub dashcheck {
 	my $wordw   = 0;
 	my $wordwo  = 0;
 	my %display = ();
-	foreach my $word ( keys %{ $lglobal{seenm} } ) {
-		next if ( $lglobal{seenm}->{$word} < 1 );
+	foreach my $word ( keys %{ $lglobal{seenwordsdoublehyphen} } ) {
+		next if ( $lglobal{seenwordsdoublehyphen}->{$word} < 1 );
 		if ( $word =~ /-/ ) {
 			$wordw++;
 			my $wordtemp = $word;
-			$display{$word} = $lglobal{seenm}->{$word}
+			$display{$word} = $lglobal{seenwordsdoublehyphen}->{$word}
 			  unless $lglobal{suspects_only};
 			$word =~ s/--/-/g;
 
 			#$word =~ s/—/-/g; # dp2rst creates real em-dashes
-			if ( $lglobal{seen}->{$word} ) {
+			if ( $lglobal{seenwords}->{$word} ) {
 				my $aword = $word . ' ****';
-				$display{$wordtemp} = $lglobal{seenm}->{$wordtemp}
+				$display{$wordtemp} = $lglobal{seenwordsdoublehyphen}->{$wordtemp}
 				  if $lglobal{suspects_only};
-				$display{$aword} = $lglobal{seen}->{$word};
+				$display{$aword} = $lglobal{seenwords}->{$word};
 				$wordwo++;
 			}
 		}
@@ -8198,7 +8256,7 @@ sub wordfrequencygetmisspelled {
 	@{ $lglobal{misspelledlist} } = ();
 	my ( $words, $uwords );
 	my $wordw = 0;
-	foreach ( sort ( keys %{ $lglobal{seen} } ) ) {
+	foreach ( sort ( keys %{ $lglobal{seenwords} } ) ) {
 		$words .= "$_\n";
 	}
 	if ($words) {
@@ -8206,7 +8264,7 @@ sub wordfrequencygetmisspelled {
 		getmisspelledwords($words);
 	}
 	foreach ( sort @{ $lglobal{misspelledlist} } ) {
-		$lglobal{spellsort}->{$_} = $lglobal{seen}->{$_} || '0';
+		$lglobal{spellsort}->{$_} = $lglobal{seenwords}->{$_} || '0';
 		$wordw++;
 	}
 	return $wordw;
@@ -8220,11 +8278,11 @@ sub alphanumcheck {
 	$lglobal{wclistbox}->update;
 	$lglobal{wclistbox}->delete( '0', 'end' );
 	my $wordw = 0;
-	foreach ( keys %{ $lglobal{seen} } ) {
+	foreach ( keys %{ $lglobal{seenwords} } ) {
 		next unless ( $_ =~ /\d/ );
 		next unless ( $_ =~ /\p{Alpha}/ );
 		$wordw++;
-		$display{$_} = $lglobal{seen}->{$_};
+		$display{$_} = $lglobal{seenwords}->{$_};
 	}
 	$lglobal{saveheader} = "$wordw mixed alphanumeric words.";
 	sortwords( \%display );
@@ -8245,13 +8303,13 @@ sub accentcheck {
 	my $wordw  = 0;
 	my $wordwo = 0;
 
-	foreach my $word ( keys %{ $lglobal{seen} } ) {
+	foreach my $word ( keys %{ $lglobal{seenwords} } ) {
 		if ( $word =~
 			 /[\xC0-\xCF\xD1-\xD6\xD9-\xDD\xE0-\xEF\xF1-\xF6\xF9-\xFD]/ )
 		{
 			$wordw++;
 			my $wordtemp = $word;
-			$display{$word} = $lglobal{seen}->{$word}
+			$display{$word} = $lglobal{seenwords}->{$word}
 			  unless $lglobal{suspects_only};
 			my @dwords = ( deaccent($word) );
 			if ( $word =~ s/\xC6/Ae/ ) {
@@ -8259,12 +8317,12 @@ sub accentcheck {
 			}
 			for my $wordd (@dwords) {
 				my $line;
-				$line = sprintf( "%-8d %s", $lglobal{seen}->{$wordd}, $wordd )
-				  if $lglobal{seen}->{$wordd};
-				if ( $lglobal{seen}->{$wordd} ) {
-					$display{$wordtemp} = $lglobal{seen}->{$wordtemp}
+				$line = sprintf( "%-8d %s", $lglobal{seenwords}->{$wordd}, $wordd )
+				  if $lglobal{seenwords}->{$wordd};
+				if ( $lglobal{seenwords}->{$wordd} ) {
+					$display{$wordtemp} = $lglobal{seenwords}->{$wordtemp}
 					  if $lglobal{suspects_only};
-					$display{ $wordd . ' ****' } = $lglobal{seen}->{$wordd};
+					$display{ $wordd . ' ****' } = $lglobal{seenwords}->{$wordd};
 					$wordwo++;
 				}
 			}
@@ -8285,11 +8343,11 @@ sub capscheck {
 	$lglobal{wclistbox}->update;
 	my %display = ();
 	my $wordw   = 0;
-	foreach ( keys %{ $lglobal{seen} } ) {
+	foreach ( keys %{ $lglobal{seenwords} } ) {
 		next if ( $_ =~ /\p{IsLower}/ );
 		if ( $_ =~ /\p{IsUpper}+(?!\p{IsLower})/ ) {
 			$wordw++;
-			$display{$_} = $lglobal{seen}->{$_};
+			$display{$_} = $lglobal{seenwords}->{$_};
 		}
 	}
 	$lglobal{saveheader} = "$wordw distinct capitalized words.";
@@ -8305,12 +8363,12 @@ sub mixedcasecheck {
 	$lglobal{wclistbox}->update;
 	my %display = ();
 	my $wordw   = 0;
-	foreach ( sort ( keys %{ $lglobal{seen} } ) ) {
+	foreach ( sort ( keys %{ $lglobal{seenwords} } ) ) {
 		next unless ( $_ =~ /\p{IsUpper}/ );
 		next unless ( $_ =~ /\p{IsLower}/ );
 		next if ( $_ =~ /^\p{Upper}[\p{IsLower}\d'-]+$/ );
 		$wordw++;
-		$display{$_} = $lglobal{seen}->{$_};
+		$display{$_} = $lglobal{seenwords}->{$_};
 	}
 	$lglobal{saveheader} = "$wordw distinct mixed case words.";
 	sortwords( \%display );
@@ -8327,10 +8385,10 @@ sub anythingwfcheck {
 	$lglobal{wclistbox}->update;
 	my %display = ();
 	my $wordw   = 0;
-	foreach ( sort ( keys %{ $lglobal{seen} } ) ) {
+	foreach ( sort ( keys %{ $lglobal{seenwords} } ) ) {
 		next unless ( $_ =~ /$checkregexp/ );
 		$wordw++;
-		$display{$_} = $lglobal{seen}->{$_};
+		$display{$_} = $lglobal{seenwords}->{$_};
 	}
 	$lglobal{saveheader} = "$wordw distinct $checktype.";
 	sortwords( \%display );
@@ -8347,7 +8405,7 @@ sub charsortcheck {
 	my $end      = $textwindow->index('end');
 	my $wordw    = 0;
 	my $filename = $textwindow->FileName;
-	return if (nofileloaded());
+	return if ( nofileloaded() );
 	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
 	$lglobal{wclistbox}->update;
 	savefile() unless ( $textwindow->numberChanges == 0 );
@@ -8402,10 +8460,10 @@ sub stealthcheck {
 		$list{$word}   = '';
 		$list{$scanno} = '';
 	}
-	foreach my $word ( keys %{ $lglobal{seen} } ) {
+	foreach my $word ( keys %{ $lglobal{seenwords} } ) {
 		next unless exists( $list{$word} );
 		$wordw++;
-		$display{$word} = $lglobal{seen}->{$word};
+		$display{$word} = $lglobal{seenwords}->{$word};
 	}
 	$lglobal{saveheader} = "$wordw suspect words found in file.";
 	sortwords( \%display );
@@ -9225,7 +9283,7 @@ sub initialize {
 		$geometryhash{ucharpop}      = '550x450+53+87';
 		$geometryhash{utfpop}        = '791x422+46+46';
 		$geometryhash{regexrefpop}   = '663x442+106+72';
-        $geometryhash{pagepop} = '281x112+334+176';
+		$geometryhash{pagepop}       = '281x112+334+176';
 		$geometryhash{fixpop}        = '441x440+34+22';
 		$geometryhash{wfpop}         = '462x583+565+63';
 		$geometryhash{pnumpop}       = '210x253+502+97';
@@ -9267,8 +9325,7 @@ sub initialize {
 		$gnutenbergdirectory =
 		  catfile( $lglobal{guigutsdirectory}, 'tools', 'gnutenberg', '0.4' )
 		  unless $gnutenbergdirectory;
-		$scannospath =
-		  catfile( $lglobal{guigutsdirectory}, 'scannos' )
+		$scannospath = catfile( $lglobal{guigutsdirectory}, 'scannos' )
 		  unless $gnutenbergdirectory;
 	}
 	%{ $lglobal{utfblocks} } = (
@@ -9990,13 +10047,19 @@ sub findmatchingclosebracket {
 	my $closeIndex;
 
 	while ($indentLevel) {
-		$closeIndex = $textwindow->search('-exact', '--', ']', "$startIndex" . '+1c', 'end' );
-		my $openIndex = $textwindow->search('-exact', '--', '[', "$startIndex" . '+1c', 'end' );
-		if ( !$closeIndex) {
+		$closeIndex =
+		  $textwindow->search( '-exact', '--', ']', "$startIndex" . '+1c',
+							   'end' );
+		my $openIndex =
+		  $textwindow->search( '-exact', '--', '[', "$startIndex" . '+1c',
+							   'end' );
+		if ( !$closeIndex ) {
+
 			# no matching ]
 			return $startIndex;
 		}
-		if (  !$openIndex ) {
+		if ( !$openIndex ) {
+
 			# no [
 			return $closeIndex;
 		}
@@ -10013,10 +10076,10 @@ sub findmatchingclosebracket {
 
 sub findgreek {
 	my $startIndex = shift;
-	$startIndex=$textwindow->index($startIndex);
+	$startIndex = $textwindow->index($startIndex);
 	my $chars;
 	my $greekIndex =
-	  $textwindow->search( '-exact', '--', '[Greek:', "$startIndex" , 'end' );
+	  $textwindow->search( '-exact', '--', '[Greek:', "$startIndex", 'end' );
 	if ($greekIndex) {
 		my $closeIndex = findmatchingclosebracket($greekIndex);
 		return ( $greekIndex, $closeIndex );
@@ -12035,14 +12098,14 @@ sub spellcheckfirst {
 	spellshow_guesses();    # populate the listbox with guesses
 
 	$lglobal{hyphen_words} = ();    # hyphenated list of words
-	if ( scalar( $lglobal{seen} ) ) {
+	if ( scalar( $lglobal{seenwords} ) ) {
 		$lglobal{misspelledlabel}->configure( -text =>
-					"Not in Dictionary:  -  $lglobal{seen}->{$term} in text." );
+					"Not in Dictionary:  -  $lglobal{seenwords}->{$term} in text." );
 
 		# collect hyphenated words for faster, more accurate spell-check later
-		foreach my $word ( keys %{ $lglobal{seen} } ) {
-			if ( $lglobal{seen}->{$word} >= 1 && $word =~ /-/ ) {
-				$lglobal{hyphen_words}->{$word} = $lglobal{seen}->{$word};
+		foreach my $word ( keys %{ $lglobal{seenwords} } ) {
+			if ( $lglobal{seenwords}->{$word} >= 1 && $word =~ /-/ ) {
+				$lglobal{hyphen_words}->{$word} = $lglobal{seenwords}->{$word};
 			}
 		}
 	}
@@ -12130,19 +12193,19 @@ sub spellchecknext {
 						  . ( $globalspelldictopt || 'No dictionary!' )
 						  . " | $#{$lglobal{misspelledlist}} words to check." );
 
-	if ( scalar( $lglobal{seen} ) ) {
+	if ( scalar( $lglobal{seenwords} ) ) {
 		my $spell_count_case = 0;
 		my $hyphen_count     = 0;
 		my $cur_word         = $lglobal{misspelledlist}[ $lglobal{nextmiss} ];
 		my $proper_case      = lc($cur_word);
 		$proper_case =~ s/(^\w)/\U$1\E/;
-		$spell_count_case += ( $lglobal{seen}->{ uc($cur_word) } || 0 )
+		$spell_count_case += ( $lglobal{seenwords}->{ uc($cur_word) } || 0 )
 		  if $cur_word ne uc($cur_word)
 		;    # Add the full-uppercase version to the count
-		$spell_count_case += ( $lglobal{seen}->{ lc($cur_word) } || 0 )
+		$spell_count_case += ( $lglobal{seenwords}->{ lc($cur_word) } || 0 )
 		  if $cur_word ne lc($cur_word)
 		;    # Add the full-lowercase version to the count
-		$spell_count_case += ( $lglobal{seen}->{$proper_case} || 0 )
+		$spell_count_case += ( $lglobal{seenwords}->{$proper_case} || 0 )
 		  if $cur_word ne
 			  $proper_case;    # Add the propercase version to the count
 
@@ -12156,16 +12219,16 @@ sub spellchecknext {
 			}
 		}
 		my $spell_count_non_poss = 0;
-		$spell_count_non_poss = ( $lglobal{seen}->{$1} || 0 )
+		$spell_count_non_poss = ( $lglobal{seenwords}->{$1} || 0 )
 		  if $cur_word =~ /^(.*)'s$/i;
-		$spell_count_non_poss = ( $lglobal{seen}->{ $cur_word . '\'s' } || 0 )
+		$spell_count_non_poss = ( $lglobal{seenwords}->{ $cur_word . '\'s' } || 0 )
 		  if $cur_word !~ /^(.*)'s$/i;
-		$spell_count_non_poss += ( $lglobal{seen}->{ $cur_word . '\'S' } || 0 )
+		$spell_count_non_poss += ( $lglobal{seenwords}->{ $cur_word . '\'S' } || 0 )
 		  if $cur_word !~ /^(.*)'s$/i;
 		$lglobal{misspelledlabel}->configure(
 			   -text => 'Not in Dictionary:  -  '
 				 . (
-				   $lglobal{seen}
+				   $lglobal{seenwords}
 					 ->{ $lglobal{misspelledlist}[ $lglobal{nextmiss} ] } || '0'
 				 )
 				 . (
@@ -14389,8 +14452,8 @@ sub wordfrequency {
 	push @operations, ( localtime() . ' - Word Frequency' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	oppopupdate()  if $lglobal{oppop};
-	$lglobal{seen} = ();
-	%{ $lglobal{seenm} } = ();
+	$lglobal{seenwords} = ();
+	%{ $lglobal{seenwordsdoublehyphen} } = ();
 	my ( @words, $match, @savesets );
 	my $index = '1.0';
 	my $wc    = 0;
@@ -14469,6 +14532,7 @@ sub wordfrequency {
 		$wcseframe->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
+
 				#return if $lglobal{global_filename} =~ /No File Loaded/;
 				#savefile() unless ( $textwindow->numberChanges == 0 );
 				wordfrequency();
@@ -14489,8 +14553,8 @@ sub wordfrequency {
 			[
 			   'All Words' => sub {
 				   $lglobal{saveheader} = "$wc total words. " .
-					 keys( %{ $lglobal{seen} } ) . " distinct words in file.";
-				   sortwords( $lglobal{seen} );
+					 keys( %{ $lglobal{seenwords} } ) . " distinct words in file.";
+				   sortwords( $lglobal{seenwords} );
 				   searchoptset(qw/1 0 x 0/);    #default is whole word search
 				 }
 			],
@@ -14774,7 +14838,7 @@ sub wordfrequency {
 
 	#print "$index  ";
 	$lglobal{saveheader} = "$wc total words. " .
-	  keys( %{ $lglobal{seen} } ) . " distinct words in file.";
+	  keys( %{ $lglobal{seenwords} } ) . " distinct words in file.";
 	$lglobal{wclistbox}->delete( '0', 'end' );
 	$lglobal{last_sort} = $lglobal{ignore_case};
 
@@ -14785,7 +14849,7 @@ sub wordfrequency {
 		searchoptset("x 0 x x");
 	}
 	$top->Unbusy( -recurse => 1 );
-	sortwords( \%{ $lglobal{seen} } );
+	sortwords( \%{ $lglobal{seenwords} } );
 	update_indicators();
 }
 
@@ -14811,6 +14875,7 @@ sub wordfrequencybuildwordlist {
 	  if (    ( $textwindow->FileName )
 		   && ( $textwindow->numberChanges != 0 ) );
 	open my $fh, '<', $filename;
+	my $lastwordseen = '';
 	while ( my $line = <$fh> ) {
 		utf8::decode($line);
 		next if $line =~ m/^-----*\s?File:\s?\S+\.(png|jpg)---/;
@@ -14821,6 +14886,7 @@ sub wordfrequencybuildwordlist {
 		#print "$line\n";
 		if ( $lglobal{ignore_case} ) { $line = lc($line) }
 		@words = split( /\s+/, $line );
+		# build a list of "word--word""
 		for my $word (@words) {
 			next unless ( $word =~ /--/ );
 			next if ( $word =~ /---/ );
@@ -14828,22 +14894,26 @@ sub wordfrequencybuildwordlist {
 			$word =~ s/^[\.'-]+//;
 			next if ( $word eq '' );
 			$match = ( $lglobal{ignore_case} ) ? lc($word) : $word;
-			$lglobal{seenm}->{$match}++;
+			$lglobal{seenwordsdoublehyphen}->{$match}++;
 		}
-		$line =~ s/[^'\.,\p{Alnum}-]/ /g;
-		$line =~ s/--/ /g;
+		$line =~ s/[^'\.,\p{Alnum}-]/ /g; # get rid of nonalphanumeric
+		$line =~ s/--/ /g; # get rid of --
 		$line =~
 		  s/—/ /g;    # trying to catch words with real em-dashes, from dp2rst
-		$line =~ s/(\D),/$1 /g;
-		$line =~ s/,(\D)/ $1/g;
+		$line =~ s/(\D),/$1 /g; # throw away comma after non-digit
+		$line =~ s/,(\D)/ $1/g; # and before
 		@words = split( /\s+/, $line );
 		for my $word (@words) {
-			$word =~ s/[\.',-]+$//;
-			$word =~ s/^[\.,'-]+//;
+			$word =~ s/[\.',-]+$//; # throw away punctuation at end
+			$word =~ s/^[\.,'-]+//; #and at the beginning
 			next if ( $word eq '' );
 			$wc++;
 			$match = ( $lglobal{ignore_case} ) ? lc($word) : $word;
-			$lglobal{seen}->{$match}++;
+			$lglobal{seenwords}->{$match}++;
+			if ($lastwordseen) {
+				$lglobal{seenwordpairs}->{"$lastwordseen $match"}++;
+			}
+			$lastwordseen = $word;
 		}
 		$index++;
 		$index .= '.0';
@@ -19425,10 +19495,6 @@ if ( $lglobal{runtests} ) {
 	runtests();
 } else {
 
-	# If we are building winguts.exe, then exit
-	if ( glob '*.par' ) {
-		_exit();
-	}
 	print
 "If you have any problems, please report any error messages that appear here.\n";
 	MainLoop;
