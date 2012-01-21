@@ -19,7 +19,7 @@ accurately as pptxt and pphtml. Only README.TXT appears in the prepopulated
 recently used file list. Search can find the first word in the file. Word 
 frequency rerun after typing words in empty file reports now works and bug with
 unresponsive save as dialog fixed. Guiguts.bat calls perl in a way that should 
-ignore preexisting installations of perl.
+(may) ignore preexisting installations of perl.
 
 Version 1.0.3. Relocated HTML page number outside an open <span> eg for a line
 of poetry so page numbers align vertically. Auto List on HTML palette no
