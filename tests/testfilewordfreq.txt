@@ -17,6 +17,10 @@ flash light
 flash-light
 flash--light
 
+doorjamb
+
+door jamb
+
 a b c d
 
 

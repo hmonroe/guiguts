@@ -127,6 +127,7 @@ our $blocklmargin     = 5;
 our $blockrmargin     = 72;
 our $poetrylmargin    = 4;
 our $blockwrap;
+our $booklang = 'en';
 our $bold_char     = "=";
 our $defaultindent = 0;
 our $failedsearch  = 0;
@@ -532,6 +533,7 @@ sub _bin_save {
 		}
 		print $fh ");\n\n";
 		print $fh "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
+		print $fh "\$booklang = '$booklang';\n\n";
 		print $fh
 "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
 		print $fh '1;';
@@ -8190,9 +8192,9 @@ sub hyphencheck {
   		    # Check if the same word also appears without a space 
 			$word =~ s/ //g;
 			if ( $lglobal{seenwords}->{$word} ) {
-				$display{$word} = $lglobal{seenwords}->{$word};
-				my $aword = $wordtemp . ' ****';
-				$display{$aword} = $lglobal{seenwordpairs}->{$wordtemp};
+				$display{$word} = $lglobal{seenwords}->{$word} unless $display{"$word ****"};
+				my $aword = $wordtemp . ' ****' ;
+				$display{$aword} = $lglobal{seenwordpairs}->{$wordtemp} unless $display{$wordtemp};
 				$wordwo++;
 			}
 		}
@@ -14469,39 +14471,39 @@ sub wordfrequency {
 		$lglobal{wfpop}
 		  ->title('Word frequency - Ctrl+s to save, Ctrl+x to export');
 		initialize_popup_without_deletebinding('wfpop');
-		my $wcseframe =
+		my $wordfreqseframe =
 		  $lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $wcopt3 =
-		  $wcseframe->Checkbutton(
+		  $wordfreqseframe->Checkbutton(
 								   -variable    => \$lglobal{suspects_only},
 								   -selectcolor => $lglobal{checkcolor},
 								   -text        => 'Suspects only'
 		  )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		my $wcopt1 =
-		  $wcseframe->Checkbutton(
+		  $wordfreqseframe->Checkbutton(
 								   -variable    => \$lglobal{ignore_case},
 								   -selectcolor => $lglobal{checkcolor},
 								   -text        => 'No case',
 		  )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
-		$wcseframe->Radiobutton(
+		$wordfreqseframe->Radiobutton(
 								 -variable    => \$alpha_sort,
 								 -selectcolor => $lglobal{checkcolor},
 								 -value       => 'a',
 								 -text        => 'Alph',
 		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
-		$wcseframe->Radiobutton(
+		$wordfreqseframe->Radiobutton(
 								 -variable    => \$alpha_sort,
 								 -selectcolor => $lglobal{checkcolor},
 								 -value       => 'f',
 								 -text        => 'Frq',
 		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
-		$wcseframe->Radiobutton(
+		$wordfreqseframe->Radiobutton(
 								 -variable    => \$alpha_sort,
 								 -selectcolor => $lglobal{checkcolor},
 								 -value       => 'l',
 								 -text        => 'Len',
 		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
-		$wcseframe->Button(
+		$wordfreqseframe->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
 				return unless ( $lglobal{wclistbox}->curselection );
@@ -14515,7 +14517,7 @@ sub wordfrequency {
 				   -pady   => 1,
 				   -anchor => 'nw'
 		  );
-		$wcseframe->Button(
+		$wordfreqseframe->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
 				return unless ( $lglobal{wclistbox}->curselection );
@@ -14529,7 +14531,7 @@ sub wordfrequency {
 				   -pady   => 1,
 				   -anchor => 'nw'
 		  );
-		$wcseframe->Button(
+		$wordfreqseframe->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
 
@@ -14544,7 +14546,7 @@ sub wordfrequency {
 				   -pady   => 1,
 				   -anchor => 'nw'
 		  );
-		my $wcseframe1 =
+		my $wordfreqseframe1 =
 		  $lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my @wfbuttons = (
 			[ 'Emdashes'  => \&dashcheck ],
@@ -14609,7 +14611,7 @@ sub wordfrequency {
 			++$inc;
 			if ( not( $_->[0] eq 'RegExpEntry' ) ) {
 				my $button =
-				  $wcseframe1->Button(
+				  $wordfreqseframe1->Button(
 									   -activebackground => $activecolor,
 									   -command          => $_->[1],
 									   -text             => $_->[0],
@@ -14623,7 +14625,7 @@ sub wordfrequency {
 				$button->bind( '<3>' => $_->[2] ) if $_->[2];
 			} else {
 				$lglobal{regexpentry} =
-				  $wcseframe1->Entry(
+				  $wordfreqseframe1->Entry(
 									  -background   => $bkgcolor,
 									  -textvariable => \$regexpentry,
 									  -width        => 13,
