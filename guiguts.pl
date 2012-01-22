@@ -373,7 +373,7 @@ $textwindow->SetGUICallbacks(
 );
 
 # Set up the custom menus
-buildmenu();
+menubuild();
 
 # Set up the key bindings for the text widget
 textbindings();
@@ -715,7 +715,7 @@ sub menurebuild {
 	for ( 0 .. 10 ) {
 		$menubar->delete('last');
 	}
-	buildmenu();
+	menubuild();
 }
 
 ## Clear persistant variables before loading another file
@@ -1739,7 +1739,7 @@ sub external_menuitems {
 	];
 }
 
-sub buildmenuold {
+sub menubuildold {
 	my $file = $menubar->cascade(
 								  -label     => '~File',
 								  -tearoff   => 1,
@@ -2487,9 +2487,9 @@ sub buildmenuold {
 	);
 }
 
-sub buildmenu {
+sub menubuild {
 	if ($useoldmenustructure) {
-		buildmenuold();
+		menubuildold();
 		return;
 	}
 	my $file = $menubar->cascade(
