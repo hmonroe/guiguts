@@ -1388,124 +1388,6 @@ sub edit_menuitems {
 	];
 }
 
-sub search_menuitems {
-	[
-	   [ 'command', 'Search & ~Replace', -command => \&searchpopup ],
-	   [ 'command', '~Stealth Scannos',  -command => \&stealthscanno ],
-	   [ 'command', 'Spell ~Check',      -command => \&spellchecker ],
-	   [
-		  'command',
-		  'Goto ~Line...',
-		  -command => sub {
-			  gotoline();
-			  update_indicators();
-			}
-	   ],
-	   [
-		  'command',
-		  'Goto ~Page',
-		  -command => sub {
-			  gotopage();
-			  update_indicators();
-			}
-	   ],
-	   [
-		  'command', '~Which Line?',
-		  -command => sub { $textwindow->WhatLineNumberPopUp }
-	   ],
-	   [ 'separator', '' ],
-	   [
-		  'command',
-		  'Find next /*..*/ block',
-		  -command => [ \&nextblock, 'default', 'forward' ]
-	   ],
-	   [
-		  'command',
-		  'Find previous /*..*/ block',
-		  -command => [ \&nextblock, 'default', 'reverse' ]
-	   ],
-	   [
-		  'command',
-		  'Find next /#..#/ block',
-		  -command => [ \&nextblock, 'block', 'forward' ]
-	   ],
-	   [
-		  'command',
-		  'Find previous /#..#/ block',
-		  -command => [ \&nextblock, 'block', 'reverse' ]
-	   ],
-	   [
-		  'command',
-		  'Find next /$..$/ block',
-		  -command => [ \&nextblock, 'stet', 'forward' ]
-	   ],
-	   [
-		  'command',
-		  'Find previous /$..$/ block',
-		  -command => [ \&nextblock, 'stet', 'reverse' ]
-	   ],
-	   [
-		  'command',
-		  'Find next /p..p/ block',
-		  -command => [ \&nextblock, 'poetry', 'forward' ]
-	   ],
-	   [
-		  'command',
-		  'Find previous /p..p/ block',
-		  -command => [ \&nextblock, 'poetry', 'reverse' ]
-	   ],
-	   [
-		  'command',
-		  'Find next indented block',
-		  -command => [ \&nextblock, 'indent', 'forward' ]
-	   ],
-	   [
-		  'command',
-		  'Find previous indented block',
-		  -command => [ \&nextblock, 'indent', 'reverse' ]
-	   ],
-	   [ 'separator', '' ],
-	   [ 'command', 'Find ~Orphaned Brackets', -command => \&orphanedbrackets ],
-	   [ 'command', 'Find Orphaned Markup',    -command => \&orphanedmarkup ],
-	   [
-		  'command',
-		  'Find Proofer Comments',
-		  -command => \&find_proofer_comment
-	   ],
-	   [ 'command', 'Find Asterisks w/o slash', -command => \&find_asterisks ],
-	   [
-		  'command',
-		  'Find Transliterations',
-		  -command => \&find_transliterations
-	   ],
-	   [ 'separator', '' ],
-	   [
-		  'command', 'Highlight double quotes in selection',
-		  -command     => [ \&hilite, '"' ],
-		  -accelerator => 'Ctrl+Shift+"'
-	   ],
-	   [
-		  'command', 'Highlight single quotes in selection',
-		  -command     => [ \&hilite, '\'' ],
-		  -accelerator => 'Ctrl+\''
-	   ],
-	   [
-		  'command', 'Highlight arbitrary characters in selection',
-		  -command     => \&hilitepopup,
-		  -accelerator => 'Ctrl+Alt+h'
-	   ],
-	   [
-		  'command',
-		  'Remove Highlights',
-		  -command => sub {    # FIXME: sub search_rm_hilites
-			  $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-			  $textwindow->tagRemove( 'quotemark', '1.0', 'end' );
-		  },
-		  -accelerator => 'Ctrl+0'
-	   ],
-	];
-}
-
 sub bookmarks_menuitems {
 	[
 	   map ( [
@@ -1525,189 +1407,6 @@ sub bookmarks_menuitems {
 }
 
 sub selection_menuitems {
-	[
-	   [
-		  Button   => '~lowercase Selection',
-		  -command => sub { case ( $textwindow, 'lc' ); }
-	   ],
-	   [
-		  Button   => '~Sentence case Selection',
-		  -command => sub { case ( $textwindow, 'sc' ); }
-	   ],
-	   [
-		  Button   => '~Title Case Selection',
-		  -command => sub { case ( $textwindow, 'tc' ); }
-	   ],
-	   [
-		  Button   => '~UPPERCASE Selection',
-		  -command => sub { case ( $textwindow, 'uc' ); }
-	   ],
-	   [ 'separator', '' ],
-	   [
-		  Button   => 'Surround Selection With....',
-		  -command => sub {
-			  if ( defined( $lglobal{surpop} ) ) {
-				  $lglobal{surpop}->deiconify;
-				  $lglobal{surpop}->raise;
-				  $lglobal{surpop}->focus;
-			  } else {
-				  $lglobal{surpop} = $top->Toplevel;
-				  $lglobal{surpop}->title('Surround text with:');
-
-				  my $f =
-					$lglobal{surpop}
-					->Frame->pack( -side => 'top', -anchor => 'n' );
-				  $f->Label( -text =>
-"Surround the selection with?\n\\n will be replaced with a newline.",
-					)->pack(
-							 -side   => 'top',
-							 -pady   => 5,
-							 -padx   => 2,
-							 -anchor => 'n'
-					);
-				  my $f1 =
-					$lglobal{surpop}
-					->Frame->pack( -side => 'top', -anchor => 'n' );
-				  my $surstrt =
-					$f1->Entry(
-								-width      => 8,
-								-background => $bkgcolor,
-								-font       => $lglobal{font},
-								-relief     => 'sunken',
-					)->pack(
-							 -side   => 'left',
-							 -pady   => 5,
-							 -padx   => 2,
-							 -anchor => 'n'
-					);
-				  my $surend =
-					$f1->Entry(
-								-width      => 8,
-								-background => $bkgcolor,
-								-font       => $lglobal{font},
-								-relief     => 'sunken',
-					)->pack(
-							 -side   => 'left',
-							 -pady   => 5,
-							 -padx   => 2,
-							 -anchor => 'n'
-					);
-				  my $f2 =
-					$lglobal{surpop}
-					->Frame->pack( -side => 'top', -anchor => 'n' );
-				  my $gobut = $f2->Button(
-					  -activebackground => $activecolor,
-					  -command          => sub {
-						  surroundit( $surstrt->get, $surend->get,
-									  $textwindow );
-					  },
-					  -text  => 'OK',
-					  -width => 16
-					)->pack(
-							 -side   => 'top',
-							 -pady   => 5,
-							 -padx   => 2,
-							 -anchor => 'n'
-					);
-				  $lglobal{surpop}->protocol(
-					  'WM_DELETE_WINDOW' => sub {
-						  $lglobal{surpop}->destroy;
-						  undef $lglobal{surpop};
-					  }
-				  );
-				  $surstrt->insert( 'end', '_' ) unless ( $surstrt->get );
-				  $surend->insert( 'end', '_' ) unless ( $surend->get );
-				  $lglobal{surpop}->Icon( -image => $icon );
-			  }
-			}
-	   ],
-	   [
-		  Button   => 'Flood Fill Selection With....',
-		  -command => sub {
-			  $textwindow->addGlobStart;
-			  $lglobal{floodpop} =
-				flood( $textwindow, $top, $lglobal{floodpop}, $lglobal{font},
-					   $activecolor, $icon );
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [ 'separator', '' ],
-	   [
-		  Button   => 'Indent Selection 1',
-		  -command => sub {
-			  $textwindow->addGlobStart;
-			  indent( $textwindow, 'in' );
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [
-		  Button   => 'Indent Selection -1',
-		  -command => sub {
-			  $textwindow->addGlobStart;
-			  indent( $textwindow, 'out', $operationinterrupt );
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [ 'separator', '' ],
-	   [
-		  Button   => '~Rewrap Selection',
-		  -command => sub {
-			  $textwindow->addGlobStart;
-			  selectrewrap( $textwindow, $lglobal{seepagenums},
-							$lglobal{scanno_hl}, $rwhyphenspace );
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [
-		  Button   => '~Block Rewrap Selection',
-		  -command => sub {
-			  $textwindow->addGlobStart;
-			  blockrewrap();
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [
-		  Button   => 'Interrupt Rewrap',
-		  -command => sub { $operationinterrupt = 1 }
-	   ],
-	   [ 'separator', '' ],
-	   [ Button => 'ASCII ~Boxes',          -command => \&asciipopup ],
-	   [ Button => '~Align text on string', -command => \&alignpopup ],
-	   [ 'separator', '' ],
-	   [
-		  Button   => 'Convert To Named/Numeric Entities',
-		  -command => sub {
-			  $textwindow->addGlobStart;
-			  tonamed($textwindow);
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [
-		  Button   => 'Convert From Named/Numeric Entities',
-		  -command => sub {
-			  $textwindow->addGlobStart;
-			  fromnamed($textwindow);
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [
-		  Button   => 'Convert Fractions',
-		  -command => sub {
-			  my @ranges = $textwindow->tagRanges('sel');
-			  $textwindow->addGlobStart;
-			  if (@ranges) {
-				  while (@ranges) {
-					  my $end   = pop @ranges;
-					  my $start = pop @ranges;
-					  fracconv( $textwindow, $start, $end );
-				  }
-			  } else {
-				  fracconv( $textwindow, '1.0', 'end' );
-			  }
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	];
 }
 
 sub fixup_menuitems {
@@ -1983,7 +1682,191 @@ sub buildmenu {
 	my $selection = $menubar->cascade(
 									   -label     => '~Selection',
 									   -tearoff   => 1,
-									   -menuitems => selection_menuitems,
+									   -menuitems => 
+	[
+	   [
+		  Button   => '~lowercase Selection',
+		  -command => sub { case ( $textwindow, 'lc' ); }
+	   ],
+	   [
+		  Button   => '~Sentence case Selection',
+		  -command => sub { case ( $textwindow, 'sc' ); }
+	   ],
+	   [
+		  Button   => '~Title Case Selection',
+		  -command => sub { case ( $textwindow, 'tc' ); }
+	   ],
+	   [
+		  Button   => '~UPPERCASE Selection',
+		  -command => sub { case ( $textwindow, 'uc' ); }
+	   ],
+	   [ 'separator', '' ],
+	   [
+		  Button   => 'Surround Selection With....',
+		  -command => sub {
+			  if ( defined( $lglobal{surpop} ) ) {
+				  $lglobal{surpop}->deiconify;
+				  $lglobal{surpop}->raise;
+				  $lglobal{surpop}->focus;
+			  } else {
+				  $lglobal{surpop} = $top->Toplevel;
+				  $lglobal{surpop}->title('Surround text with:');
+
+				  my $f =
+					$lglobal{surpop}
+					->Frame->pack( -side => 'top', -anchor => 'n' );
+				  $f->Label( -text =>
+"Surround the selection with?\n\\n will be replaced with a newline.",
+					)->pack(
+							 -side   => 'top',
+							 -pady   => 5,
+							 -padx   => 2,
+							 -anchor => 'n'
+					);
+				  my $f1 =
+					$lglobal{surpop}
+					->Frame->pack( -side => 'top', -anchor => 'n' );
+				  my $surstrt =
+					$f1->Entry(
+								-width      => 8,
+								-background => $bkgcolor,
+								-font       => $lglobal{font},
+								-relief     => 'sunken',
+					)->pack(
+							 -side   => 'left',
+							 -pady   => 5,
+							 -padx   => 2,
+							 -anchor => 'n'
+					);
+				  my $surend =
+					$f1->Entry(
+								-width      => 8,
+								-background => $bkgcolor,
+								-font       => $lglobal{font},
+								-relief     => 'sunken',
+					)->pack(
+							 -side   => 'left',
+							 -pady   => 5,
+							 -padx   => 2,
+							 -anchor => 'n'
+					);
+				  my $f2 =
+					$lglobal{surpop}
+					->Frame->pack( -side => 'top', -anchor => 'n' );
+				  my $gobut = $f2->Button(
+					  -activebackground => $activecolor,
+					  -command          => sub {
+						  surroundit( $surstrt->get, $surend->get,
+									  $textwindow );
+					  },
+					  -text  => 'OK',
+					  -width => 16
+					)->pack(
+							 -side   => 'top',
+							 -pady   => 5,
+							 -padx   => 2,
+							 -anchor => 'n'
+					);
+				  $lglobal{surpop}->protocol(
+					  'WM_DELETE_WINDOW' => sub {
+						  $lglobal{surpop}->destroy;
+						  undef $lglobal{surpop};
+					  }
+				  );
+				  $surstrt->insert( 'end', '_' ) unless ( $surstrt->get );
+				  $surend->insert( 'end', '_' ) unless ( $surend->get );
+				  $lglobal{surpop}->Icon( -image => $icon );
+			  }
+			}
+	   ],
+	   [
+		  Button   => 'Flood Fill Selection With....',
+		  -command => sub {
+			  $textwindow->addGlobStart;
+			  $lglobal{floodpop} =
+				flood( $textwindow, $top, $lglobal{floodpop}, $lglobal{font},
+					   $activecolor, $icon );
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [ 'separator', '' ],
+	   [
+		  Button   => 'Indent Selection 1',
+		  -command => sub {
+			  $textwindow->addGlobStart;
+			  indent( $textwindow, 'in' );
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [
+		  Button   => 'Indent Selection -1',
+		  -command => sub {
+			  $textwindow->addGlobStart;
+			  indent( $textwindow, 'out', $operationinterrupt );
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [ 'separator', '' ],
+	   [
+		  Button   => '~Rewrap Selection',
+		  -command => sub {
+			  $textwindow->addGlobStart;
+			  selectrewrap( $textwindow, $lglobal{seepagenums},
+							$lglobal{scanno_hl}, $rwhyphenspace );
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [
+		  Button   => '~Block Rewrap Selection',
+		  -command => sub {
+			  $textwindow->addGlobStart;
+			  blockrewrap();
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [
+		  Button   => 'Interrupt Rewrap',
+		  -command => sub { $operationinterrupt = 1 }
+	   ],
+	   [ 'separator', '' ],
+	   [ Button => 'ASCII ~Boxes',          -command => \&asciipopup ],
+	   [ Button => '~Align text on string', -command => \&alignpopup ],
+	   [ 'separator', '' ],
+	   [
+		  Button   => 'Convert To Named/Numeric Entities',
+		  -command => sub {
+			  $textwindow->addGlobStart;
+			  tonamed($textwindow);
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [
+		  Button   => 'Convert From Named/Numeric Entities',
+		  -command => sub {
+			  $textwindow->addGlobStart;
+			  fromnamed($textwindow);
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [
+		  Button   => 'Convert Fractions',
+		  -command => sub {
+			  my @ranges = $textwindow->tagRanges('sel');
+			  $textwindow->addGlobStart;
+			  if (@ranges) {
+				  while (@ranges) {
+					  my $end   = pop @ranges;
+					  my $start = pop @ranges;
+					  fracconv( $textwindow, $start, $end );
+				  }
+			  } else {
+				  fracconv( $textwindow, '1.0', 'end' );
+			  }
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	]
+									   
 	);
 
 	my $fixup = $menubar->cascade(
