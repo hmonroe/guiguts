@@ -2519,17 +2519,10 @@ sub menubuild {
 		  '~Include File',
 		  -command => sub { file_include($textwindow) }
 	   ],
-	   [ 'command',   '~Close',                    -command => \&file_close ],
-	   [ 'separator', '' ],
 	   [ 'command',   'Import Prep Text Files',    -command => \&file_import ],
 	   [ 'command',   'Export As Prep Text Files', -command => \&file_export ],
 	   [ 'separator', '' ],
-	   [
-		  'command', '~Guess Page Markers', -command => \&file_guess_page_marks
-	   ],
-	   [ 'command',   'Set Page ~Markers',    -command => \&file_mark_pages ],
-	   [ 'command',   '~Adjust Page Markers', -command => \&viewpagenums ],
-	   [ 'separator', '' ],
+	   [ 'command',   '~Close',                    -command => \&file_close ],
 	   [ 'command',   'E~xit',                -command => \&_exit ],
 	]
 
@@ -2553,15 +2546,11 @@ sub menubuild {
 		  -command     => sub { $textwindow->redo },
 		  -accelerator => 'Ctrl+y'
 	   ],
-	   [ 'separator', '' ],
-
 	   [
 		  'command', 'Cut',
 		  -command     => sub { cut() },
 		  -accelerator => 'Ctrl+x'
 	   ],
-
-	   [ 'separator', '' ],
 	   [
 		  'command', 'Copy',
 		  -command     => sub { textcopy() },
@@ -2599,17 +2588,7 @@ sub menubuild {
 		  },
 		  -accelerator => 'Ctrl+\\'
 	   ],
-	]
-								  
-	);
-	my $search = $menubar->cascade(
-									-label     => 'Search & ~Replace',
-									-tearoff   => 1,
-									-menuitems => 
-	[
 	   [ 'command', 'Search & ~Replace', -command => \&searchpopup ],
-	   [ 'command', '~Stealth Scannos',  -command => \&stealthscanno ],
-	   [ 'command', 'Spell ~Check',      -command => \&spellchecker ],
 	   [
 		  'command',
 		  'Goto ~Line...',
@@ -2630,7 +2609,16 @@ sub menubuild {
 		  'command', '~Which Line?',
 		  -command => sub { $textwindow->WhatLineNumberPopUp }
 	   ],
-	   [ 'separator', '' ],
+	]
+								  
+	);
+	my $search = $menubar->cascade(
+									-label     => 'Search & ~Replace',
+									-tearoff   => 1,
+									-menuitems => 
+	[
+	   [ 'command', '~Stealth Scannos',  -command => \&stealthscanno ],
+	   [ 'command', 'Spell ~Check',      -command => \&spellchecker ],
 	   [
 		  'command',
 		  'Find next /*..*/ block',
@@ -3146,6 +3134,12 @@ sub menubuild {
 		-label     => 'Advanced',
 		-tearoff   => 1,
 		-menuitems => [
+	   [
+		  'command', '~Guess Page Markers', -command => \&file_guess_page_marks
+	   ],
+	   [ 'command',   'Set Page ~Markers',    -command => \&file_mark_pages ],
+	   [ 'command',   '~Adjust Page Markers', -command => \&viewpagenums ],
+	   [ 'separator', '' ],
 	   [
 		  Cascade    => 'PGTEI Tools',
 		  -tearoff   => 0,
