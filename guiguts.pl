@@ -1289,65 +1289,6 @@ sub file_mark_pages {
 }
 
 sub edit_menuitems {
-	[
-	   [
-		  'command', 'Undo',
-		  -command     => sub { $textwindow->undo },
-		  -accelerator => 'Ctrl+z'
-	   ],
-
-	   [
-		  'command', 'Redo',
-		  -command     => sub { $textwindow->redo },
-		  -accelerator => 'Ctrl+y'
-	   ],
-	   [ 'separator', '' ],
-
-	   [
-		  'command', 'Cut',
-		  -command     => sub { cut() },
-		  -accelerator => 'Ctrl+x'
-	   ],
-
-	   [ 'separator', '' ],
-	   [
-		  'command', 'Copy',
-		  -command     => sub { textcopy() },
-		  -accelerator => 'Ctrl+c'
-	   ],
-	   [
-		  'command', 'Paste',
-		  -command     => sub { paste() },
-		  -accelerator => 'Ctrl+v'
-	   ],
-	   [
-		  'command',
-		  'Col Paste',
-		  -command => sub {    # FIXME: sub edit_column_paste
-			  $textwindow->addGlobStart;
-			  $textwindow->clipboardColumnPaste;
-			  $textwindow->addGlobEnd;
-		  },
-		  -accelerator => 'Ctrl+`'
-	   ],
-	   [ 'separator', '' ],
-	   [
-		  'command',
-		  'Select All',
-		  -command => sub {
-			  $textwindow->selectAll;
-		  },
-		  -accelerator => 'Ctrl+/'
-	   ],
-	   [
-		  'command',
-		  'Unselect All',
-		  -command => sub {
-			  $textwindow->unselectAll;
-		  },
-		  -accelerator => 'Ctrl+\\'
-	   ],
-	];
 }
 
 sub bookmarks_menuitems {
@@ -1430,7 +1371,67 @@ sub buildmenu {
 	my $edit = $menubar->cascade(
 								  -label     => '~Edit',
 								  -tearoff   => 1,
-								  -menuitems => edit_menuitems,
+								  -menuitems => 
+	[
+	   [
+		  'command', 'Undo',
+		  -command     => sub { $textwindow->undo },
+		  -accelerator => 'Ctrl+z'
+	   ],
+
+	   [
+		  'command', 'Redo',
+		  -command     => sub { $textwindow->redo },
+		  -accelerator => 'Ctrl+y'
+	   ],
+	   [ 'separator', '' ],
+
+	   [
+		  'command', 'Cut',
+		  -command     => sub { cut() },
+		  -accelerator => 'Ctrl+x'
+	   ],
+
+	   [ 'separator', '' ],
+	   [
+		  'command', 'Copy',
+		  -command     => sub { textcopy() },
+		  -accelerator => 'Ctrl+c'
+	   ],
+	   [
+		  'command', 'Paste',
+		  -command     => sub { paste() },
+		  -accelerator => 'Ctrl+v'
+	   ],
+	   [
+		  'command',
+		  'Col Paste',
+		  -command => sub {    # FIXME: sub edit_column_paste
+			  $textwindow->addGlobStart;
+			  $textwindow->clipboardColumnPaste;
+			  $textwindow->addGlobEnd;
+		  },
+		  -accelerator => 'Ctrl+`'
+	   ],
+	   [ 'separator', '' ],
+	   [
+		  'command',
+		  'Select All',
+		  -command => sub {
+			  $textwindow->selectAll;
+		  },
+		  -accelerator => 'Ctrl+/'
+	   ],
+	   [
+		  'command',
+		  'Unselect All',
+		  -command => sub {
+			  $textwindow->unselectAll;
+		  },
+		  -accelerator => 'Ctrl+\\'
+	   ],
+	]
+								  
 	);
 	my $search = $menubar->cascade(
 									-label     => 'Search & ~Replace',
