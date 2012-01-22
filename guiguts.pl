@@ -712,7 +712,7 @@ sub runner {
 # Menus are not easily modifiable in place. Easier to just destroy and
 ## rebuild every time it is modified
 sub menurebuild {
-	for ( 0 .. 10 ) {
+	for ( 0 .. 11 ) {
 		$menubar->delete('last');
 	}
 	menubuild();
@@ -1295,7 +1295,9 @@ sub menu_preferences {
 					  Checkbutton => 'Use Old Menu Structure',
 					  -variable   => \$useoldmenustructure,
 					  -onvalue    => 1,
-					  -offvalue   => 0
+					  -offvalue   => 0,
+					  -command => \&menurebuild
+					  
 				   ],
 			[
 			   Cascade  => 'File ~Paths and Commands',
