@@ -1747,61 +1747,6 @@ sub fixup_menuitems {
 	   [ 'separator', '' ],
 	   [ Button => '~Footnote Fixup', -command => \&footnotepop ],
 	   [ Button => '~HTML Fixup',     -command => \&htmlpopup ],
-	   [
-		  Cascade    => 'PGTEI Tools',
-		  -tearoff   => 0,
-		  -menuitems => [
-			  [
-				 Button   => 'W3C Validate PGTEI',
-				 -command => sub { errorcheckpop_up('W3C Validate') }
-			  ],
-			  [
-				 Button   => 'Gnutenberg Press Online',
-				 -command => sub {
-					 runner(
-"$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
-				   }
-			  ],
-			  [
-				 Button   => 'Gnutenberg Press (HTML only)',
-				 -command => sub { gnutenberg('html') }
-			  ],
-			  [
-				 Button   => 'Gnutenberg Press (Text only)',
-				 -command => sub { gnutenberg('txt') }
-			  ],
-
-		  ]
-	   ],
-	   [
-		  Cascade    => 'RST Tools',
-		  -tearoff   => 0,
-		  -menuitems => [
-			  [
-				 Button   => 'EpubMaker Online',
-				 -command => sub {
-					 runner("$globalbrowserstart http://epubmaker.pglaf.org/");
-				   }
-			  ],
-			  [
-				 Button   => 'EpubMaker (all formats)',
-				 -command => sub { epubmaker() }
-			  ],
-			  [
-				 Button   => 'EpubMaker (HTML only)',
-				 -command => sub { epubmaker('html') }
-			  ],
-			  [
-				 Button   => 'dp2rst Conversion',
-				 -command => sub {
-					 runner(
-						   "$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst"
-					 );
-				   }
-			  ],
-		  ]
-	   ],
-
 	   [ Button => '~Sidenote Fixup', -command => \&sidenotes ],
 	   [
 		  Button   => 'Reformat Poetry ~Line Numbers',
@@ -1911,7 +1856,122 @@ sub buildmenu {
 	my $search = $menubar->cascade(
 									-label     => 'Search & ~Replace',
 									-tearoff   => 1,
-									-menuitems => search_menuitems,
+									-menuitems => 
+	[
+	   [ 'command', 'Search & ~Replace', -command => \&searchpopup ],
+	   [ 'command', '~Stealth Scannos',  -command => \&stealthscanno ],
+	   [ 'command', 'Spell ~Check',      -command => \&spellchecker ],
+	   [
+		  'command',
+		  'Goto ~Line...',
+		  -command => sub {
+			  gotoline();
+			  update_indicators();
+			}
+	   ],
+	   [
+		  'command',
+		  'Goto ~Page',
+		  -command => sub {
+			  gotopage();
+			  update_indicators();
+			}
+	   ],
+	   [
+		  'command', '~Which Line?',
+		  -command => sub { $textwindow->WhatLineNumberPopUp }
+	   ],
+	   [ 'separator', '' ],
+	   [
+		  'command',
+		  'Find next /*..*/ block',
+		  -command => [ \&nextblock, 'default', 'forward' ]
+	   ],
+	   [
+		  'command',
+		  'Find previous /*..*/ block',
+		  -command => [ \&nextblock, 'default', 'reverse' ]
+	   ],
+	   [
+		  'command',
+		  'Find next /#..#/ block',
+		  -command => [ \&nextblock, 'block', 'forward' ]
+	   ],
+	   [
+		  'command',
+		  'Find previous /#..#/ block',
+		  -command => [ \&nextblock, 'block', 'reverse' ]
+	   ],
+	   [
+		  'command',
+		  'Find next /$..$/ block',
+		  -command => [ \&nextblock, 'stet', 'forward' ]
+	   ],
+	   [
+		  'command',
+		  'Find previous /$..$/ block',
+		  -command => [ \&nextblock, 'stet', 'reverse' ]
+	   ],
+	   [
+		  'command',
+		  'Find next /p..p/ block',
+		  -command => [ \&nextblock, 'poetry', 'forward' ]
+	   ],
+	   [
+		  'command',
+		  'Find previous /p..p/ block',
+		  -command => [ \&nextblock, 'poetry', 'reverse' ]
+	   ],
+	   [
+		  'command',
+		  'Find next indented block',
+		  -command => [ \&nextblock, 'indent', 'forward' ]
+	   ],
+	   [
+		  'command',
+		  'Find previous indented block',
+		  -command => [ \&nextblock, 'indent', 'reverse' ]
+	   ],
+	   [ 'separator', '' ],
+	   [ 'command', 'Find ~Orphaned Brackets', -command => \&orphanedbrackets ],
+	   [ 'command', 'Find Orphaned Markup',    -command => \&orphanedmarkup ],
+	   [
+		  'command',
+		  'Find Proofer Comments',
+		  -command => \&find_proofer_comment
+	   ],
+	   [ 'command', 'Find Asterisks w/o slash', -command => \&find_asterisks ],
+	   [
+		  'command',
+		  'Find Transliterations',
+		  -command => \&find_transliterations
+	   ],
+	   [ 'separator', '' ],
+	   [
+		  'command', 'Highlight double quotes in selection',
+		  -command     => [ \&hilite, '"' ],
+		  -accelerator => 'Ctrl+Shift+"'
+	   ],
+	   [
+		  'command', 'Highlight single quotes in selection',
+		  -command     => [ \&hilite, '\'' ],
+		  -accelerator => 'Ctrl+\''
+	   ],
+	   [
+		  'command', 'Highlight arbitrary characters in selection',
+		  -command     => \&hilitepopup,
+		  -accelerator => 'Ctrl+Alt+h'
+	   ],
+	   [
+		  'command',
+		  'Remove Highlights',
+		  -command => sub {    # FIXME: sub search_rm_hilites
+			  $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+			  $textwindow->tagRemove( 'quotemark', '1.0', 'end' );
+		  },
+		  -accelerator => 'Ctrl+0'
+	   ],
+	]									
 	);
 
 	my $bookmarks = $menubar->cascade(
@@ -2043,6 +2103,68 @@ sub buildmenu {
 			);
 		}
 	}
+
+	$menubar->Cascade(
+		-label     => 'Advanced',
+		-tearoff   => 1,
+		-menuitems => [
+	   [
+		  Cascade    => 'PGTEI Tools',
+		  -tearoff   => 0,
+		  -menuitems => [
+			  [
+				 Button   => 'W3C Validate PGTEI',
+				 -command => sub { errorcheckpop_up('W3C Validate') }
+			  ],
+			  [
+				 Button   => 'Gnutenberg Press Online',
+				 -command => sub {
+					 runner(
+"$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
+				   }
+			  ],
+			  [
+				 Button   => 'Gnutenberg Press (HTML only)',
+				 -command => sub { gnutenberg('html') }
+			  ],
+			  [
+				 Button   => 'Gnutenberg Press (Text only)',
+				 -command => sub { gnutenberg('txt') }
+			  ],
+
+		  ]
+	   ],
+	   [
+		  Cascade    => 'RST Tools',
+		  -tearoff   => 0,
+		  -menuitems => [
+			  [
+				 Button   => 'EpubMaker Online',
+				 -command => sub {
+					 runner("$globalbrowserstart http://epubmaker.pglaf.org/");
+				   }
+			  ],
+			  [
+				 Button   => 'EpubMaker (all formats)',
+				 -command => sub { epubmaker() }
+			  ],
+			  [
+				 Button   => 'EpubMaker (HTML only)',
+				 -command => sub { epubmaker('html') }
+			  ],
+			  [
+				 Button   => 'dp2rst Conversion',
+				 -command => sub {
+					 runner(
+						   "$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst"
+					 );
+				   }
+			  ],
+		  ]
+	   ],
+
+		
+		]);
 
 	$menubar->Cascade(
 		-label     => '~Preferences',
