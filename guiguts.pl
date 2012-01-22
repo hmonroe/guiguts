@@ -1288,44 +1288,6 @@ sub file_mark_pages {
 	$top->Unbusy( -recurse => 1 );
 }
 
-sub file_menuitems {
-	[
-	   [ 'command',   '~Open', -command => \&file_open ],
-	   [ 'separator', '' ],
-	   map ( [
-				Button   => "$recentfile[$_]",
-				-command => [ \&openfile, $recentfile[$_] ]
-			 ],
-			 ( 0 .. scalar(@recentfile) - 1 ) ),
-	   [ 'separator', '' ],
-	   [
-		  'command',
-		  '~Save',
-		  -accelerator => 'Ctrl+s',
-		  -command     => \&savefile
-	   ],
-	   [ 'command', 'Save ~As', -command => \&file_saveas ],
-	   [
-		  'command',
-		  '~Include File',
-		  -command => sub { file_include($textwindow) }
-	   ],
-	   [ 'command',   '~Close',                    -command => \&file_close ],
-	   [ 'separator', '' ],
-	   [ 'command',   'Import Prep Text Files',    -command => \&file_import ],
-	   [ 'command',   'Export As Prep Text Files', -command => \&file_export ],
-	   [ 'separator', '' ],
-	   [
-		  'command', '~Guess Page Markers', -command => \&file_guess_page_marks
-	   ],
-	   [ 'command',   'Set Page ~Markers',    -command => \&file_mark_pages ],
-	   [ 'command',   '~Adjust Page Markers', -command => \&viewpagenums ],
-	   [ 'separator', '' ],
-	   [ 'command',   'E~xit',                -command => \&_exit ],
-	]
-
-}
-
 sub edit_menuitems {
 	[
 	   [
@@ -1406,9 +1368,6 @@ sub bookmarks_menuitems {
 	];
 }
 
-sub text_menuitems {
-}
-
 sub external_menuitems {
 	[
 	   [
@@ -1428,7 +1387,44 @@ sub buildmenu {
 	my $file = $menubar->cascade(
 								  -label     => '~File',
 								  -tearoff   => 1,
-								  -menuitems => file_menuitems,
+								  -menuitems =>
+								  	[
+	   [ 'command',   '~Open', -command => \&file_open ],
+	   [ 'separator', '' ],
+	   map ( [
+				Button   => "$recentfile[$_]",
+				-command => [ \&openfile, $recentfile[$_] ]
+			 ],
+			 ( 0 .. scalar(@recentfile) - 1 ) ),
+	   [ 'separator', '' ],
+	   [
+		  'command',
+		  '~Save',
+		  -accelerator => 'Ctrl+s',
+		  -command     => \&savefile
+	   ],
+	   [ 'command', 'Save ~As', -command => \&file_saveas ],
+	   [
+		  'command',
+		  '~Include File',
+		  -command => sub { file_include($textwindow) }
+	   ],
+	   [ 'command',   '~Close',                    -command => \&file_close ],
+	   [ 'separator', '' ],
+	   [ 'command',   'Import Prep Text Files',    -command => \&file_import ],
+	   [ 'command',   'Export As Prep Text Files', -command => \&file_export ],
+	   [ 'separator', '' ],
+	   [
+		  'command', '~Guess Page Markers', -command => \&file_guess_page_marks
+	   ],
+	   [ 'command',   'Set Page ~Markers',    -command => \&file_mark_pages ],
+	   [ 'command',   '~Adjust Page Markers', -command => \&viewpagenums ],
+	   [ 'separator', '' ],
+	   [ 'command',   'E~xit',                -command => \&_exit ],
+	]
+
+								  
+								  
 	);
 
 	my $edit = $menubar->cascade(
