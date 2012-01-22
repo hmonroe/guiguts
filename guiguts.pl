@@ -1289,7 +1289,7 @@ sub file_mark_pages {
 	$top->Unbusy( -recurse => 1 );
 }
 
-sub preferences_menuitems {
+sub menu_preferences {
 		[
 				   [
 					  Checkbutton => 'Use Old Menu Structure',
@@ -1706,7 +1706,7 @@ sub preferences_menuitems {
 }
 
 
-sub bookmarks_menuitems {
+sub menu_bookmarks {
 	[
 	   map ( [
 				Button       => "Set Bookmark $_",
@@ -1724,7 +1724,7 @@ sub bookmarks_menuitems {
 	];
 }
 
-sub external_menuitems {
+sub menu_external {
 	[
 	   [
 		  Button   => 'Setup External Operations',
@@ -1972,7 +1972,7 @@ sub menubuildold {
 	my $bookmarks = $menubar->cascade(
 									   -label     => '~Bookmarks',
 									   -tearoff   => 1,
-									   -menuitems => bookmarks_menuitems,
+									   -menuitems => menu_bookmarks,
 	);
 
 	my $selection = $menubar->cascade(
@@ -2285,7 +2285,7 @@ sub menubuildold {
 	my $external = $menubar->cascade(
 									  -label     => 'External',
 									  -tearoff   => 1,
-									  -menuitems => external_menuitems,
+									  -menuitems => menu_external,
 	);
 
 	# FIXME: We'll leave this alone for now.
@@ -2453,7 +2453,7 @@ sub menubuildold {
 	$menubar->Cascade(
 		-label     => '~Preferences',
 		-tearoff   => 1,
-		-menuitems => preferences_menuitems 
+		-menuitems => menu_preferences 
 	);
 
 	$menubar->Cascade(
@@ -2724,7 +2724,7 @@ sub menubuild {
 	my $bookmarks = $menubar->cascade(
 									   -label     => '~Bookmarks',
 									   -tearoff   => 1,
-									   -menuitems => bookmarks_menuitems,
+									   -menuitems => menu_bookmarks,
 	);
 
 	my $selection = $menubar->cascade(
@@ -3037,7 +3037,7 @@ sub menubuild {
 	my $external = $menubar->cascade(
 									  -label     => 'External',
 									  -tearoff   => 1,
-									  -menuitems => external_menuitems,
+									  -menuitems => menu_external,
 	);
 
 	# FIXME: We'll leave this alone for now.
@@ -3204,7 +3204,7 @@ sub menubuild {
 	$menubar->Cascade(
 		-label     => '~Preferences',
 		-tearoff   => 1,
-		-menuitems => preferences_menuitems
+		-menuitems => menu_preferences
 	);
 
 	$menubar->Cascade(
