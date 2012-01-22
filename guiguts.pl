@@ -1406,123 +1406,7 @@ sub bookmarks_menuitems {
 	];
 }
 
-sub selection_menuitems {
-}
-
-sub fixup_menuitems {
-	[
-	   [ Button => 'Run ~Word Frequency Routine', -command => \&wordfrequency ],
-	   [ 'separator', '' ],
-	   [ Button => 'Run ~Gutcheck',    -command => \&gutcheck ],
-	   [ Button => 'Gutcheck options', -command => \&gutopts ],
-	   [ Button => 'Run ~Jeebies',     -command => \&jeebiespop_up ],
-	   [
-		  Button   => 'pptxt',
-		  -command => sub {
-			  errorcheckpop_up('pptxt');
-			  unlink 'null' if ( -e 'null' );
-		  },
-	   ],
-	   [ 'separator', '' ],
-	   [
-		  Button   => 'Remove End-of-line Spaces',
-		  -command => sub {
-			  $textwindow->addGlobStart;
-			  endofline();
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [ Button => 'Run Fi~xup', -command => \&fixpopup ],
-	   [ 'separator', '' ],
-	   [ Button => 'Fix ~Page Separators', -command => \&separatorpopup ],
-	   [
-		  Button   => 'Remove Blank Lines Before Page Separators',
-		  -command => sub {
-			  $textwindow->addGlobStart;
-			  delblanklines();
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [ 'separator', '' ],
-	   [ Button => '~Footnote Fixup', -command => \&footnotepop ],
-	   [ Button => '~HTML Fixup',     -command => \&htmlpopup ],
-	   [ Button => '~Sidenote Fixup', -command => \&sidenotes ],
-	   [
-		  Button   => 'Reformat Poetry ~Line Numbers',
-		  -command => \&poetrynumbers
-	   ],
-	   [
-		  Button   => 'Convert Windows CP 1252 characters to Unicode',
-		  -command => \&cp1252toUni
-	   ],
-	   [ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
-	   [ 'separator', '' ],
-	   [ Button => 'ASCII Table Special Effects', -command => \&tablefx ],
-	   [ 'separator', '' ],
-	   [
-		  Button   => 'Clean Up Rewrap ~Markers',
-		  -command => sub {
-			  $textwindow->addGlobStart;
-			  cleanup();
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [ 'separator', '' ],
-	   [ Button => 'Find Greek', -command => \&findandextractgreek ],
-
-	   # FIXME: [   Button   => 'Convert Greek [STUB - does nothing yet]',
-	   #    -command => \&convertgreek
-	   # ],
-
-	];
-}
-
 sub text_menuitems {
-	[
-	   [
-		  Button   => "Convert Italics",
-		  -command => sub { text_convert_italic( $textwindow, $italic_char ) }
-	   ],
-	   [
-		  Button   => "Convert Bold",
-		  -command => sub { text_convert_bold( $textwindow, $bold_char ) }
-	   ],
-	   [
-		  Button   => 'Convert <tb> to asterisk break',
-		  -command => sub {
-			  $textwindow->addGlobStart;
-			  text_convert_tb($textwindow);
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [
-		  Button   => 'All of the above',
-		  -command => sub {
-			  text_convert_italic( $textwindow, $italic_char );
-			  text_convert_bold( $textwindow, $bold_char );
-			  $textwindow->addGlobStart;
-			  text_convert_tb($textwindow);
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [
-		  Button   => '~Add a Thought Break',
-		  -command => sub {
-			  $textwindow->addGlobStart;
-			  text_thought_break($textwindow);
-			  $textwindow->addGlobEnd;
-			}
-	   ],
-	   [
-		  Button   => 'Small caps to all caps',
-		  -command => \&text_convert_smallcaps
-	   ],
-	   [
-		  Button   => 'Remove small caps markup',
-		  -command => \&text_remove_smallcaps_markup
-	   ],
-	   [ Button => "Options", -command => \&text_convert_options ],
-	];
 }
 
 sub external_menuitems {
@@ -1872,13 +1756,118 @@ sub buildmenu {
 	my $fixup = $menubar->cascade(
 								   -label     => 'Fi~xup',
 								   -tearoff   => 1,
-								   -menuitems => fixup_menuitems,
-	);
+								   -menuitems => 
+	[
+	   [ Button => 'Run ~Word Frequency Routine', -command => \&wordfrequency ],
+	   [ 'separator', '' ],
+	   [ Button => 'Run ~Gutcheck',    -command => \&gutcheck ],
+	   [ Button => 'Gutcheck options', -command => \&gutopts ],
+	   [ Button => 'Run ~Jeebies',     -command => \&jeebiespop_up ],
+	   [
+		  Button   => 'pptxt',
+		  -command => sub {
+			  errorcheckpop_up('pptxt');
+			  unlink 'null' if ( -e 'null' );
+		  },
+	   ],
+	   [ 'separator', '' ],
+	   [
+		  Button   => 'Remove End-of-line Spaces',
+		  -command => sub {
+			  $textwindow->addGlobStart;
+			  endofline();
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [ Button => 'Run Fi~xup', -command => \&fixpopup ],
+	   [ 'separator', '' ],
+	   [ Button => 'Fix ~Page Separators', -command => \&separatorpopup ],
+	   [
+		  Button   => 'Remove Blank Lines Before Page Separators',
+		  -command => sub {
+			  $textwindow->addGlobStart;
+			  delblanklines();
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [ 'separator', '' ],
+	   [ Button => '~Footnote Fixup', -command => \&footnotepop ],
+	   [ Button => '~HTML Fixup',     -command => \&htmlpopup ],
+	   [ Button => '~Sidenote Fixup', -command => \&sidenotes ],
+	   [
+		  Button   => 'Reformat Poetry ~Line Numbers',
+		  -command => \&poetrynumbers
+	   ],
+	   [
+		  Button   => 'Convert Windows CP 1252 characters to Unicode',
+		  -command => \&cp1252toUni
+	   ],
+	   [ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
+	   [ 'separator', '' ],
+	   [ Button => 'ASCII Table Special Effects', -command => \&tablefx ],
+	   [ 'separator', '' ],
+	   [
+		  Button   => 'Clean Up Rewrap ~Markers',
+		  -command => sub {
+			  $textwindow->addGlobStart;
+			  cleanup();
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [ 'separator', '' ],
+	   [ Button => 'Find Greek', -command => \&findandextractgreek ]
+	]);
 
 	my $text = $menubar->cascade(
 								  -label     => 'Text Processing',
 								  -tearoff   => 1,
-								  -menuitems => text_menuitems,
+								  -menuitems => 
+	[
+	   [
+		  Button   => "Convert Italics",
+		  -command => sub { text_convert_italic( $textwindow, $italic_char ) }
+	   ],
+	   [
+		  Button   => "Convert Bold",
+		  -command => sub { text_convert_bold( $textwindow, $bold_char ) }
+	   ],
+	   [
+		  Button   => 'Convert <tb> to asterisk break',
+		  -command => sub {
+			  $textwindow->addGlobStart;
+			  text_convert_tb($textwindow);
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [
+		  Button   => 'All of the above',
+		  -command => sub {
+			  text_convert_italic( $textwindow, $italic_char );
+			  text_convert_bold( $textwindow, $bold_char );
+			  $textwindow->addGlobStart;
+			  text_convert_tb($textwindow);
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [
+		  Button   => '~Add a Thought Break',
+		  -command => sub {
+			  $textwindow->addGlobStart;
+			  text_thought_break($textwindow);
+			  $textwindow->addGlobEnd;
+			}
+	   ],
+	   [
+		  Button   => 'Small caps to all caps',
+		  -command => \&text_convert_smallcaps
+	   ],
+	   [
+		  Button   => 'Remove small caps markup',
+		  -command => \&text_remove_smallcaps_markup
+	   ],
+	   [ Button => "Options", -command => \&text_convert_options ],
+	]
+								  
 	);
 
 	my $external = $menubar->cascade(
