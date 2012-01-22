@@ -2049,60 +2049,7 @@ sub buildmenu {
 		-tearoff   => 1,
 		-menuitems => [
 			[
-			   Cascade    => 'Toolbar Prefs',
-			   -tearoff   => 1,
-			   -menuitems => [
-				   [
-					  Checkbutton => 'Enable Toolbar',
-					  -variable   => \$notoolbar,
-					  -command    => [ \&toolbar_toggle ],
-					  -onvalue    => 0,
-					  -offvalue   => 1
-				   ],
-				   [
-					  Radiobutton => 'Toolbar on Top',
-					  -variable   => \$toolside,
-					  -command    => sub {
-						  $lglobal{toptool}->destroy if $lglobal{toptool};
-						  undef $lglobal{toptool};
-						  toolbar_toggle();
-					  },
-					  -value => 'top'
-				   ],
-				   [
-					  Radiobutton => 'Toolbar on Bottom',
-					  -variable   => \$toolside,
-					  -command    => sub {
-						  $lglobal{toptool}->destroy if $lglobal{toptool};
-						  undef $lglobal{toptool};
-						  toolbar_toggle();
-					  },
-					  -value => 'bottom'
-				   ],
-				   [
-					  Radiobutton => 'Toolbar on Left',
-					  -variable   => \$toolside,
-					  -command    => sub {
-						  $lglobal{toptool}->destroy if $lglobal{toptool};
-						  undef $lglobal{toptool};
-						  toolbar_toggle();
-					  },
-					  -value => 'left'
-				   ],
-				   [
-					  Radiobutton => 'Toolbar on Right',
-					  -variable   => \$toolside,
-					  -command    => sub {
-						  $lglobal{toptool}->destroy if $lglobal{toptool};
-						  undef $lglobal{toptool};
-						  toolbar_toggle();
-					  },
-					  -value => 'right'
-				   ],
-			   ]
-			],
-			[
-			   Cascade  => 'Set File ~Paths',
+			   Cascade  => 'File ~Paths and Commands',
 			   -tearoff => 0,
 			   -menuitems =>
 				 [ # FIXME: sub this and generalize for all occurences in menu code.
@@ -2229,6 +2176,12 @@ sub buildmenu {
 						}
 				   ],
 				   [
+					  Checkbutton => 'Do W3C Validation Remotely',
+					  -variable   => \$w3cremote,
+					  -onvalue    => 1,
+					  -offvalue   => 0
+				   ],
+				   [
 					  Button =>
 'Locate W3C CSS Validator (css-validator.jar) Executable',
 					  -command => sub {
@@ -2258,24 +2211,28 @@ sub buildmenu {
 					  -command => \&viewerpath
 				   ],
 				   [
-					  Button =>
-'Locate Gnutenberg Press (if self-installed)',
+					  Button   => 'Browser Start Command...',
+					  -command => \&setbrowser
+				   ],
+				   [
+					  Button   => 'Locate Gnutenberg Press (if self-installed)',
 					  -command => sub {
 						  my $types;
-							  $types = [
-										 [ 'Perl file', [ '.pl', ] ],
-										 [ 'All Files',  ['*'] ],
-							  ];
+						  $types = [
+									 [ 'Perl file', [ '.pl', ] ],
+									 [ 'All Files', ['*'] ],
+						  ];
 						  $gnutenbergdirectory =
 							$textwindow->getOpenFile(
-							  -filetypes  => $types,
-							  -initialdir => $gnutenbergdirectory,
-							  -title =>
-'Where is the Gnutenberg Press (transform.pl)?'
+							   -filetypes  => $types,
+							   -initialdir => $gnutenbergdirectory,
+							   -title =>
+								 'Where is the Gnutenberg Press (transform.pl)?'
 							);
 						  return unless $gnutenbergdirectory;
-						  $gnutenbergdirectory = os_normal($gnutenbergdirectory);
-						  $gnutenbergdirectory = dirname($gnutenbergdirectory );
+						  $gnutenbergdirectory =
+							os_normal($gnutenbergdirectory);
+						  $gnutenbergdirectory = dirname($gnutenbergdirectory);
 						  saveset();
 						}
 				   ],
@@ -2285,87 +2242,177 @@ sub buildmenu {
 				   ],
 				 ]
 			],
-			[ Button => 'Browser Start Command...', -command => \&setbrowser ],
-			[ Button => '~Font...',                 -command => \&fontsize ],
 			[
-			   Checkbutton => 'Do W3C Validation Remotely',
-			   -variable   => \$w3cremote,
-			   -onvalue    => 1,
-			   -offvalue   => 0
+			   Cascade  => 'Appearance',
+			   -tearoff => 0,
+			   -menuitems =>
+				 [ # FIXME: sub this and generalize for all occurences in menu code.
+				   [
+					  Cascade    => 'Toolbar Prefs',
+					  -tearoff   => 1,
+					  -menuitems => [
+						  [
+							 Checkbutton => 'Enable Toolbar',
+							 -variable   => \$notoolbar,
+							 -command    => [ \&toolbar_toggle ],
+							 -onvalue    => 0,
+							 -offvalue   => 1
+						  ],
+						  [
+							 Radiobutton => 'Toolbar on Top',
+							 -variable   => \$toolside,
+							 -command    => sub {
+								 $lglobal{toptool}->destroy
+								   if $lglobal{toptool};
+								 undef $lglobal{toptool};
+								 toolbar_toggle();
+							 },
+							 -value => 'top'
+						  ],
+						  [
+							 Radiobutton => 'Toolbar on Bottom',
+							 -variable   => \$toolside,
+							 -command    => sub {
+								 $lglobal{toptool}->destroy
+								   if $lglobal{toptool};
+								 undef $lglobal{toptool};
+								 toolbar_toggle();
+							 },
+							 -value => 'bottom'
+						  ],
+						  [
+							 Radiobutton => 'Toolbar on Left',
+							 -variable   => \$toolside,
+							 -command    => sub {
+								 $lglobal{toptool}->destroy
+								   if $lglobal{toptool};
+								 undef $lglobal{toptool};
+								 toolbar_toggle();
+							 },
+							 -value => 'left'
+						  ],
+						  [
+							 Radiobutton => 'Toolbar on Right',
+							 -variable   => \$toolside,
+							 -command    => sub {
+								 $lglobal{toptool}->destroy
+								   if $lglobal{toptool};
+								 undef $lglobal{toptool};
+								 toolbar_toggle();
+							 },
+							 -value => 'right'
+						  ],
+					  ]
+				   ],
+				   [ Button => '~Font...', -command => \&fontsize ],
+				   [
+					  Checkbutton => 'Keep Pop-ups On Top',
+					  -variable   => \$stayontop,
+					  -onvalue    => 1,
+					  -offvalue   => 0
+				   ],
+				   [
+					  Checkbutton => 'Keep Word Frequency Pop-up On Top',
+					  -variable   => \$wfstayontop,
+					  -onvalue    => 1,
+					  -offvalue   => 0
+				   ],
+				   [
+					  Checkbutton => 'Enable Bell',
+					  -variable   => \$nobell,
+					  -onvalue    => 0,
+					  -offvalue   => 1
+				   ],
+				   [
+					  Button   => 'Set Background Color...',
+					  -command => sub {
+						  my $thiscolor = setcolor($bkgcolor);
+						  $bkgcolor = $thiscolor if $thiscolor;
+						  saveset();
+						}
+				   ],
+				   [
+					  Button   => 'Set Button Highlight Color...',
+					  -command => sub {
+						  my $thiscolor = setcolor($activecolor);
+						  $activecolor = $thiscolor if $thiscolor;
+						  $OS_WIN
+							? $lglobal{checkcolor} = 'white'
+							: $lglobal{checkcolor} = $activecolor;
+						  saveset();
+						}
+				   ],
+				   [
+					  Button   => 'Set Scanno Highlight Color...',
+					  -command => sub {
+						  my $thiscolor = setcolor($highlightcolor);
+						  $highlightcolor = $thiscolor if $thiscolor;
+						  $textwindow->tagConfigure( 'scannos',
+											   -background => $highlightcolor );
+						  saveset();
+						}
+				   ],
+				   [
+					  Checkbutton => 'Auto Show Page Images',
+					  -variable   => \$auto_show_images,
+					  -onvalue    => 1,
+					  -offvalue   => 0
+				   ],
+				   [
+					  Checkbutton => 'Enable Quotes Highlighting',
+					  -variable   => \$nohighlights,
+					  -onvalue    => 1,
+					  -offvalue   => 0
+				   ],
+				   [
+					  Checkbutton => 'Enable Scanno Highlighting',
+					  -variable   => \$lglobal{scanno_hl},
+					  -onvalue    => 1,
+					  -offvalue   => 0,
+					  -command    => \&hilitetgl
+				   ],
+				   [
+					  Checkbutton => 'Leave Bookmarks Highlighted',
+					  -variable   => \$bkmkhl,
+					  -onvalue    => 1,
+					  -offvalue   => 0
+				   ],
+				 ]
 			],
-		        [ 'separator', '' ],
 			[
-			   Checkbutton => 'Keep Pop-ups On Top',
-			   -variable   => \$stayontop,
-			   -onvalue    => 1,
-			   -offvalue   => 0
+			   Cascade  => 'Backup',
+			   -tearoff => 0,
+			   -menuitems =>
+				 [ # FIXME: sub this and generalize for all occurences in menu code.
+				   [
+					  Checkbutton => 'Enable Auto Save',
+					  -variable   => \$autosave,
+					  -command    => sub {
+						  toggle_autosave();
+						  saveset();
+						}
+				   ],
+				   [
+					  Button   => 'Auto Save Interval...',
+					  -command => sub {
+						  saveinterval();
+						  saveset();
+						  set_autosave() if $autosave;
+						}
+				   ],
+				   [
+					  Checkbutton => 'Enable Auto Backups',
+					  -variable   => \$autobackup,
+					  -onvalue    => 1,
+					  -offvalue   => 0
+				   ]
+				 ]
 			],
 			[
-			   Checkbutton => 'Keep Word Frequency Pop-up On Top',
-			   -variable   => \$wfstayontop,
-			   -onvalue    => 1,
-			   -offvalue   => 0
-			],
-			[
-			   Checkbutton => 'Enable Bell',
-			   -variable   => \$nobell,
-			   -onvalue    => 0,
-			   -offvalue   => 1
-			],
-		        [ 'separator', '' ],
-			[
-			   Button   => 'Set Background Color...',
-			   -command => sub {
-				   my $thiscolor = setcolor($bkgcolor);
-				   $bkgcolor = $thiscolor if $thiscolor;
-				   saveset();
-				 }
-			],
-			[
-			   Button   => 'Set Button Highlight Color...',
-			   -command => sub {
-				   my $thiscolor = setcolor($activecolor);
-				   $activecolor = $thiscolor if $thiscolor;
-				   $OS_WIN
-					 ? $lglobal{checkcolor} = 'white'
-					 : $lglobal{checkcolor} = $activecolor;
-				   saveset();
-				 }
-			],
-			[
-			   Button   => 'Set Scanno Highlight Color...',
-			   -command => sub {
-				   my $thiscolor = setcolor($highlightcolor);
-				   $highlightcolor = $thiscolor if $thiscolor;
-				   $textwindow->tagConfigure( 'scannos',
-											  -background => $highlightcolor );
-				   saveset();
-				 }
-			],
-		        [ 'separator', '' ],
-			[
-			   Checkbutton => 'Enable Auto Save',
-			   -variable   => \$autosave,
-			   -command    => sub {
-				   toggle_autosave();
-				   saveset();
-				 }
-			],
-			[
-			   Button   => 'Auto Save Interval...',
-			   -command => sub {
-				   saveinterval();
-				   saveset();
-				   set_autosave() if $autosave;
-				 }
-			],
-			[
-			   Checkbutton => 'Enable Auto Backups',
-			   -variable   => \$autobackup,
-			   -onvalue    => 1,
-			   -offvalue   => 0
-			],
-		        [ 'separator', '' ],
+			   Cascade  => 'Processing',
+			   -tearoff => 0,
+			   -menuitems =>
+				 [ # FIXME: sub this and generalize for all occurences in menu code.
 			[
 			   Checkbutton => 'Auto Set Page Markers On File Open',
 			   -variable   => \$auto_page_marks,
@@ -2385,7 +2432,6 @@ sub buildmenu {
 			   -onvalue    => 1,
 			   -offvalue   => 0
 			],
-		        [ 'separator', '' ],
 			[
 			   Button   => 'Search History Size...',
 			   -command => sub {
@@ -2403,37 +2449,11 @@ sub buildmenu {
 			   Button   => 'Spellcheck Dictionary Select...',
 			   -command => sub { spelloptions() }
 			],
-		        [ 'separator', '' ],
-			[
-			   Checkbutton => 'Auto Show Page Images',
-			   -variable   => \$auto_show_images,
-			   -onvalue    => 1,
-			   -offvalue   => 0
-			],
-			[
-			   Checkbutton => 'Enable Quotes Highlighting',
-			   -variable   => \$nohighlights,
-			   -onvalue    => 1,
-			   -offvalue   => 0
-			],
-			[
-			   Checkbutton => 'Enable Scanno Highlighting',
-			   -variable   => \$lglobal{scanno_hl},
-			   -onvalue    => 1,
-			   -offvalue   => 0,
-			   -command    => \&hilitetgl
-			],
-			[
-			   Checkbutton => 'Leave Bookmarks Highlighted',
-			   -variable   => \$bkmkhl,
-			   -onvalue    => 1,
-			   -offvalue   => 0
-			],
-		        [ 'separator', '' ],
-			[ Button => 'Set Rewrap ~Margins...',   -command => \&setmargins ],
+			[ Button => 'Set Rewrap ~Margins...', -command => \&setmargins ],
+				 ]
+			]
 		]
 	);
-
 
 	$menubar->Cascade(
 		-label     => '~Help',
@@ -7052,7 +7072,7 @@ qq/perl lib\/ppvchecks\/epubfriendly.pl -i $name -o errors.err/ );
 	return;
 }
 
-sub validatecssremote {          # this does not work--does not  load the file
+sub validatecssremote {    # this does not work--does not  load the file
 	push @operations, ( localtime() . ' - W3C CSS Validate Remote' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	if ( $lglobal{validatepop} ) {
