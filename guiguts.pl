@@ -556,7 +556,7 @@ sub _recentupdate {    # FIXME: Seems to be choking.
 
 	# limit the list to 10 entries
 	pop @recentfile while ( $#recentfile > 10 );
-	rebuildmenu();
+	menurebuild();
 }
 
 # Pop up window allowing tracking and auto reselection of last selection
@@ -711,7 +711,7 @@ sub runner {
 
 # Menus are not easily modifiable in place. Easier to just destroy and
 ## rebuild every time it is modified
-sub rebuildmenu {
+sub menurebuild {
 	for ( 0 .. 10 ) {
 		$menubar->delete('last');
 	}
@@ -2300,7 +2300,7 @@ sub buildmenuold {
 					[
 					   Radiobutton => 'Sort by Name',
 					   -variable   => \$lglobal{utfrangesort},
-					   -command    => \&rebuildmenu,
+					   -command    => \&menurebuild,
 					   -value      => 0,
 					],
 					[
@@ -2346,7 +2346,7 @@ sub buildmenuold {
 					[
 					   Radiobutton => 'Sort by Range',
 					   -variable   => \$lglobal{utfrangesort},
-					   -command    => \&rebuildmenu,
+					   -command    => \&menurebuild,
 					   -value      => 1,
 					],
 					[
@@ -3052,7 +3052,7 @@ sub buildmenu {
 					[
 					   Radiobutton => 'Sort by Name',
 					   -variable   => \$lglobal{utfrangesort},
-					   -command    => \&rebuildmenu,
+					   -command    => \&menurebuild,
 					   -value      => 0,
 					],
 					[
@@ -3098,7 +3098,7 @@ sub buildmenu {
 					[
 					   Radiobutton => 'Sort by Range',
 					   -variable   => \$lglobal{utfrangesort},
-					   -command    => \&rebuildmenu,
+					   -command    => \&menurebuild,
 					   -value      => 1,
 					],
 					[
@@ -3201,7 +3201,6 @@ sub buildmenu {
 
 		
 		]);
-
 	$menubar->Cascade(
 		-label     => '~Preferences',
 		-tearoff   => 1,
@@ -17688,7 +17687,7 @@ sub externalpopup {    # Set up the external commands menu
 			-activebackground => $activecolor,
 			-command          => sub {
 				saveset();
-				rebuildmenu();
+				menurebuild();
 				$lglobal{xtpop}->destroy;
 				undef $lglobal{xtpop};
 			},
