@@ -20,7 +20,7 @@
 
 #use criticism 'gentle';
 
-my $VERSION = '1.0.4';
+my $VERSION = '1.0.5';
 use strict;
 use warnings;
 use FindBin;
@@ -127,7 +127,7 @@ our $blocklmargin     = 5;
 our $blockrmargin     = 72;
 our $poetrylmargin    = 4;
 our $blockwrap;
-our $booklang = 'en';
+our $booklang      = 'en';
 our $bold_char     = "=";
 our $defaultindent = 0;
 our $failedsearch  = 0;
@@ -727,15 +727,15 @@ sub clearvars {
 	}
 	%reghints = ();
 	%{ $lglobal{seenwordsdoublehyphen} } = ();
-	$lglobal{seenwords}        = ();
-	$lglobal{seenwordpairs}        = ();
-	$lglobal{fnarray}     = ();
-	%proofers             = ();
-	%pagenumbers          = ();
-	@operations           = ();
-	@bookmarks            = ();
-	$pngspath             = q{};
-	$lglobal{seepagenums} = 0;
+	$lglobal{seenwords}     = ();
+	$lglobal{seenwordpairs} = ();
+	$lglobal{fnarray}       = ();
+	%proofers               = ();
+	%pagenumbers            = ();
+	@operations             = ();
+	@bookmarks              = ();
+	$pngspath               = q{};
+	$lglobal{seepagenums}   = 0;
 	@{ $lglobal{fnarray} } = ();
 	undef $lglobal{prepfile};
 }
@@ -4053,7 +4053,7 @@ sub updatesearchlabels {
 		my $searchterm1 = $lglobal{searchentry}->get( '1.0', '1.end' );
 		if ( ( $lglobal{seenwords}->{$searchterm1} ) && ( $sopt[0] ) ) {
 			$lglobal{searchnumlabel}->configure(
-					   -text => "Found $lglobal{seenwords}->{$searchterm1} times." );
+				  -text => "Found $lglobal{seenwords}->{$searchterm1} times." );
 		} elsif ( ( $searchterm1 eq '' ) || ( !$sopt[0] ) ) {
 			$lglobal{searchnumlabel}->configure( -text => '' );
 		} else {
@@ -6697,6 +6697,7 @@ sub errorcheckpop_up {
 							 'Image Check',
 							 'Link Check',
 							 'W3C Validate CSS',
+							 'Epub Friendly',
 							 'pphtml'
 		);
 	} else {
@@ -6797,6 +6798,7 @@ sub errorcheckpop_up {
 					if (    ( $thiserrorchecktype eq "W3C Validate" )
 						 or ( $thiserrorchecktype eq "W3C Validate Remote" )
 						 or ( $thiserrorchecktype eq "pphtml" )
+						 or ( $thiserrorchecktype eq "Epub Friendly" )
 						 or ( $thiserrorchecktype eq "Image Check" ) )
 					{
 						$line =~ s/^.*:(\d+:\d+)/line $1/;
@@ -7009,14 +7011,10 @@ qq/java -jar $validatecsscommand file:$pwd\/$name > errors.err/ );
 					if ( $errorchecktype eq 'pphtml' ) {
 						system(
 qq/perl lib\/ppvchecks\/pphtml.pl -i $name -o errors.err/ );
-					}
-
-					else {
+					} else {
 						if ( $errorchecktype eq 'Link Check' ) {
 							linkcheckrun;
-						}
-
-						else {
+						} else {
 							if ( $errorchecktype eq 'Image Check' ) {
 								$fname = dos_path( $lglobal{global_filename} )
 								  if $OS_WIN;
@@ -7028,6 +7026,11 @@ qq/perl lib\/ppvchecks\/ppvimage.pl $name $d/ );
 								if ( $errorchecktype eq 'pptxt' ) {
 									system(
 qq/perl lib\/ppvchecks\/pptxt.pl -i $name -o errors.err/ );
+								} else {
+									if ( $errorchecktype eq 'Epub Friendly' ) {
+										system(
+qq/perl lib\/ppvchecks\/epubfriendly.pl -i $name -o errors.err/ );
+									}
 								}
 							}
 						}
@@ -7041,7 +7044,7 @@ qq/perl lib\/ppvchecks\/pptxt.pl -i $name -o errors.err/ );
 	return;
 }
 
-sub validatecssremote {    # this does not work--does not  load the file
+sub validatecssremote {          # this does not work--does not  load the file
 	push @operations, ( localtime() . ' - W3C CSS Validate Remote' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	if ( $lglobal{validatepop} ) {
@@ -8150,13 +8153,15 @@ sub hyphencheck {
 	my %display = ();
 	foreach my $word ( keys %{ $lglobal{seenwords} } ) {
 		next if ( $lglobal{seenwords}->{$word} < 1 );
+
 		# For words with hyphens
 		if ( $word =~ /-/ ) {
 			$wordw++;
 			my $wordtemp = $word;
 			$display{$word} = $lglobal{seenwords}->{$word}
 			  unless $lglobal{suspects_only};
-  		    # Check if the same word also appears with a double hyphen
+
+			# Check if the same word also appears with a double hyphen
 			$word =~ s/-/--/g;
 			if ( $lglobal{seenwordsdoublehyphen}->{$word} ) {
 				$display{$wordtemp} = $lglobal{seenwords}->{$wordtemp}
@@ -8165,7 +8170,8 @@ sub hyphencheck {
 				$display{$aword} = $lglobal{seenwordsdoublehyphen}->{$word};
 				$wordwo++;
 			}
-  		    # Check if the same word also appears with space
+
+			# Check if the same word also appears with space
 			$word =~ s/-/ /g;
 			$word =~ s/  / /g;
 			if ( $lglobal{seenwordpairs}->{$word} ) {
@@ -8173,7 +8179,8 @@ sub hyphencheck {
 				$display{$aword} = $lglobal{seenwordpairs}->{$word};
 				$wordwo++;
 			}
-  		    # Check if the same word also appears without a space or hyphen
+
+			# Check if the same word also appears without a space or hyphen
 			$word =~ s/ //g;
 			if ( $lglobal{seenwords}->{$word} ) {
 				$display{$wordtemp} = $lglobal{seenwords}->{$wordtemp}
@@ -8185,16 +8192,19 @@ sub hyphencheck {
 		}
 	}
 	foreach my $word ( keys %{ $lglobal{seenwordpairs} } ) {
-		next if ( $lglobal{seenwordpairs}->{$word} < 1 ); # never true
-		# For each pair of consecutive words
-		if ( $word =~ / / ) { #always true
+		next if ( $lglobal{seenwordpairs}->{$word} < 1 );    # never true
+		     # For each pair of consecutive words
+		if ( $word =~ / / ) {    #always true
 			my $wordtemp = $word;
-  		    # Check if the same word also appears without a space 
+
+			# Check if the same word also appears without a space
 			$word =~ s/ //g;
 			if ( $lglobal{seenwords}->{$word} ) {
-				$display{$word} = $lglobal{seenwords}->{$word} unless $display{"$word ****"};
-				my $aword = $wordtemp . ' ****' ;
-				$display{$aword} = $lglobal{seenwordpairs}->{$wordtemp} unless $display{$wordtemp};
+				$display{$word} = $lglobal{seenwords}->{$word}
+				  unless $display{"$word ****"};
+				my $aword = $wordtemp . ' ****';
+				$display{$aword} = $lglobal{seenwordpairs}->{$wordtemp}
+				  unless $display{$wordtemp};
 				$wordwo++;
 			}
 		}
@@ -8226,7 +8236,8 @@ sub dashcheck {
 			#$word =~ s/—/-/g; # dp2rst creates real em-dashes
 			if ( $lglobal{seenwords}->{$word} ) {
 				my $aword = $word . ' ****';
-				$display{$wordtemp} = $lglobal{seenwordsdoublehyphen}->{$wordtemp}
+				$display{$wordtemp} =
+				  $lglobal{seenwordsdoublehyphen}->{$wordtemp}
 				  if $lglobal{suspects_only};
 				$display{$aword} = $lglobal{seenwords}->{$word};
 				$wordwo++;
@@ -8319,12 +8330,14 @@ sub accentcheck {
 			}
 			for my $wordd (@dwords) {
 				my $line;
-				$line = sprintf( "%-8d %s", $lglobal{seenwords}->{$wordd}, $wordd )
+				$line =
+				  sprintf( "%-8d %s", $lglobal{seenwords}->{$wordd}, $wordd )
 				  if $lglobal{seenwords}->{$wordd};
 				if ( $lglobal{seenwords}->{$wordd} ) {
 					$display{$wordtemp} = $lglobal{seenwords}->{$wordtemp}
 					  if $lglobal{suspects_only};
-					$display{ $wordd . ' ****' } = $lglobal{seenwords}->{$wordd};
+					$display{ $wordd . ' ****' } =
+					  $lglobal{seenwords}->{$wordd};
 					$wordwo++;
 				}
 			}
@@ -12102,7 +12115,7 @@ sub spellcheckfirst {
 	$lglobal{hyphen_words} = ();    # hyphenated list of words
 	if ( scalar( $lglobal{seenwords} ) ) {
 		$lglobal{misspelledlabel}->configure( -text =>
-					"Not in Dictionary:  -  $lglobal{seenwords}->{$term} in text." );
+			   "Not in Dictionary:  -  $lglobal{seenwords}->{$term} in text." );
 
 		# collect hyphenated words for faster, more accurate spell-check later
 		foreach my $word ( keys %{ $lglobal{seenwords} } ) {
@@ -12223,9 +12236,11 @@ sub spellchecknext {
 		my $spell_count_non_poss = 0;
 		$spell_count_non_poss = ( $lglobal{seenwords}->{$1} || 0 )
 		  if $cur_word =~ /^(.*)'s$/i;
-		$spell_count_non_poss = ( $lglobal{seenwords}->{ $cur_word . '\'s' } || 0 )
+		$spell_count_non_poss =
+		  ( $lglobal{seenwords}->{ $cur_word . '\'s' } || 0 )
 		  if $cur_word !~ /^(.*)'s$/i;
-		$spell_count_non_poss += ( $lglobal{seenwords}->{ $cur_word . '\'S' } || 0 )
+		$spell_count_non_poss +=
+		  ( $lglobal{seenwords}->{ $cur_word . '\'S' } || 0 )
 		  if $cur_word !~ /^(.*)'s$/i;
 		$lglobal{misspelledlabel}->configure(
 			   -text => 'Not in Dictionary:  -  '
@@ -14475,33 +14490,33 @@ sub wordfrequency {
 		  $lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $wcopt3 =
 		  $wordfreqseframe->Checkbutton(
-								   -variable    => \$lglobal{suspects_only},
-								   -selectcolor => $lglobal{checkcolor},
-								   -text        => 'Suspects only'
+										 -variable => \$lglobal{suspects_only},
+										 -selectcolor => $lglobal{checkcolor},
+										 -text        => 'Suspects only'
 		  )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		my $wcopt1 =
 		  $wordfreqseframe->Checkbutton(
-								   -variable    => \$lglobal{ignore_case},
-								   -selectcolor => $lglobal{checkcolor},
-								   -text        => 'No case',
+										 -variable    => \$lglobal{ignore_case},
+										 -selectcolor => $lglobal{checkcolor},
+										 -text        => 'No case',
 		  )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		$wordfreqseframe->Radiobutton(
-								 -variable    => \$alpha_sort,
-								 -selectcolor => $lglobal{checkcolor},
-								 -value       => 'a',
-								 -text        => 'Alph',
+									   -variable    => \$alpha_sort,
+									   -selectcolor => $lglobal{checkcolor},
+									   -value       => 'a',
+									   -text        => 'Alph',
 		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		$wordfreqseframe->Radiobutton(
-								 -variable    => \$alpha_sort,
-								 -selectcolor => $lglobal{checkcolor},
-								 -value       => 'f',
-								 -text        => 'Frq',
+									   -variable    => \$alpha_sort,
+									   -selectcolor => $lglobal{checkcolor},
+									   -value       => 'f',
+									   -text        => 'Frq',
 		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		$wordfreqseframe->Radiobutton(
-								 -variable    => \$alpha_sort,
-								 -selectcolor => $lglobal{checkcolor},
-								 -value       => 'l',
-								 -text        => 'Len',
+									   -variable    => \$alpha_sort,
+									   -selectcolor => $lglobal{checkcolor},
+									   -value       => 'l',
+									   -text        => 'Len',
 		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		$wordfreqseframe->Button(
 			-activebackground => $activecolor,
@@ -14554,8 +14569,10 @@ sub wordfrequency {
 			[ 'Alpha/num' => \&alphanumcheck ],
 			[
 			   'All Words' => sub {
-				   $lglobal{saveheader} = "$wc total words. " .
-					 keys( %{ $lglobal{seenwords} } ) . " distinct words in file.";
+				   $lglobal{saveheader} =
+					 "$wc total words. " .
+					 keys( %{ $lglobal{seenwords} } )
+					 . " distinct words in file.";
 				   sortwords( $lglobal{seenwords} );
 				   searchoptset(qw/1 0 x 0/);    #default is whole word search
 				 }
@@ -14612,10 +14629,10 @@ sub wordfrequency {
 			if ( not( $_->[0] eq 'RegExpEntry' ) ) {
 				my $button =
 				  $wordfreqseframe1->Button(
-									   -activebackground => $activecolor,
-									   -command          => $_->[1],
-									   -text             => $_->[0],
-									   -width            => 13
+											 -activebackground => $activecolor,
+											 -command          => $_->[1],
+											 -text             => $_->[0],
+											 -width            => 13
 				  )->grid(
 						   -row    => $row,
 						   -column => $col,
@@ -14626,9 +14643,9 @@ sub wordfrequency {
 			} else {
 				$lglobal{regexpentry} =
 				  $wordfreqseframe1->Entry(
-									  -background   => $bkgcolor,
-									  -textvariable => \$regexpentry,
-									  -width        => 13,
+											-background   => $bkgcolor,
+											-textvariable => \$regexpentry,
+											-width        => 13,
 				  )->grid( -row => $row, -column => $col );
 			}
 		}
@@ -14888,6 +14905,7 @@ sub wordfrequencybuildwordlist {
 		#print "$line\n";
 		if ( $lglobal{ignore_case} ) { $line = lc($line) }
 		@words = split( /\s+/, $line );
+
 		# build a list of "word--word""
 		for my $word (@words) {
 			next unless ( $word =~ /--/ );
@@ -14898,16 +14916,16 @@ sub wordfrequencybuildwordlist {
 			$match = ( $lglobal{ignore_case} ) ? lc($word) : $word;
 			$lglobal{seenwordsdoublehyphen}->{$match}++;
 		}
-		$line =~ s/[^'\.,\p{Alnum}-]/ /g; # get rid of nonalphanumeric
-		$line =~ s/--/ /g; # get rid of --
+		$line =~ s/[^'\.,\p{Alnum}-]/ /g;    # get rid of nonalphanumeric
+		$line =~ s/--/ /g;                   # get rid of --
 		$line =~
 		  s/—/ /g;    # trying to catch words with real em-dashes, from dp2rst
-		$line =~ s/(\D),/$1 /g; # throw away comma after non-digit
-		$line =~ s/,(\D)/ $1/g; # and before
+		$line =~ s/(\D),/$1 /g;    # throw away comma after non-digit
+		$line =~ s/,(\D)/ $1/g;    # and before
 		@words = split( /\s+/, $line );
 		for my $word (@words) {
-			$word =~ s/[\.',-]+$//; # throw away punctuation at end
-			$word =~ s/^[\.,'-]+//; #and at the beginning
+			$word =~ s/[\.',-]+$//;    # throw away punctuation at end
+			$word =~ s/^[\.,'-]+//;    #and at the beginning
 			next if ( $word eq '' );
 			$wc++;
 			$match = ( $lglobal{ignore_case} ) ? lc($word) : $word;
@@ -16311,14 +16329,23 @@ sub htmlpopup {
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
+				errorcheckpop_up('Epub Friendly');
+				unlink 'null' if ( -e 'null' );
+			},
+			-text  => 'Epub Friendly',
+			-width => 16
+		)->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
+		$f8->Button(
+			-activebackground => $activecolor,
+			-command          => sub {
 				errorcheckpop_up('Check All');
 				unlink 'null' if ( -e 'null' );
 			},
 			-text  => 'Check All',
 			-width => 16
-		)->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
-		$diventry->insert( 'end', ' style="margin-left: 2em;"' );
-		$spanentry->insert( 'end', ' style="margin-left: 2em;"' );
+		)->grid( -row => 3, -column => 3, -padx => 1, -pady => 2 );
+		$diventry->insert( 'end', ' class="i2"' );
+		$spanentry->insert( 'end', ' class="i2"' );
 		$lglobal{markpop}->protocol(
 			'WM_DELETE_WINDOW' => sub {
 				$lglobal{markpop}->destroy;

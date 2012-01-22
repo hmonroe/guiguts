@@ -34,7 +34,7 @@ usage()
     
 sub usage {
     print "Unknown option: @_\n" if (@_);
-    print "usage: pptxt.pl [-i infile.txt] [-o pphtml.log]\n";
+    print "usage: pptxt.pl [-i infile.txt] [-o pptxt.log]\n";
     exit;
 }
     

@@ -11,6 +11,10 @@ PGTEI or Python. guiguts-1.0.nn.zip is a stripped down version for those
 who have all the helper applications or are upgrading or who use
 operating systems other than Windows.
 
+Version 1.0.5. Added a rudimentary check of whether HTML is "Epub friendly".
+Changed <p> css in headerdefault.txt to work better on mobi devices: 
+margin-top: .51em; margin-bottom: .49em;. 
+
 Version 1.0.4. Hyphen check now also checks for "flash light" not only
 "flash-light", "flash--light", and "flashlight". A regular expression search 
 over line breaks now respects the ignore case flag. Fixed path and extension 

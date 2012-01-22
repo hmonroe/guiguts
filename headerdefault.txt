@@ -20,9 +20,9 @@ body {
 }
 
 p {
-    margin-top: .75em;
+    margin-top: .51em;
     text-align: justify;
-    margin-bottom: .75em;
+    margin-bottom: .49em;
 }
 
 .p2       {margin-top: 2em;}
