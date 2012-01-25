@@ -37,6 +37,8 @@
 '&c(,| |$)' => '&c.$1',
 '^[!;:,.?]' => '',
 '^-[^-]', => '',
+'\t', => ' ',
+'\xAD', => '-',
 );
 
 # For a hint, use the regex expression EXACTLY as it appears in the %scannoslist hash
@@ -82,5 +84,7 @@
 'v(?<!\p{Alpha})' => 'Find a string that ends with a v and change it to a y.',
 '«[^»]+»\n?' => 'Find pairs of guillemots. The \\n assertion is not significant to the search for guillemots, it just activates the special search function that will search across lines. (Only going to work in .34 and above.)',
 '&c(,| |$)' => 'Find the abreviation "&c." that doesn\'t have a period after it and insert one.',
+'\t', => 'Replace tabs with single spaces.',
+'\xAD', => 'Replace Soft Hyphens with Hyphens.',
 );
 
