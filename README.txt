@@ -16,7 +16,8 @@ margin-top: .51em; margin-bottom: .49em;. Reorganized the Preference menu.
 Added Advanced Menu with RST and PGTEI tools. Fixed bug with Gutcheck
 hanging on rerun. Added check for whether the string entered in the 
 RegExp field in the Word Frequency popup is a valid regular expression. 
-Added Source menu with View Project Comments item. 
+Added Source menu with View Project Comments item. Added PP Process Checklist
+to Help menu.
 
 Version 1.0.4. Hyphen check now also checks for "flash light" not only
 "flash-light", "flash--light", and "flashlight". A regular expression search 

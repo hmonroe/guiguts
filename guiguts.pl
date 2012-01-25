@@ -2522,6 +2522,15 @@ sub menubuildold {
 				 }
 			],
 
+			[
+			   Button   => '~PP Process Checklist',
+			   -command => sub {        # FIXME: sub this out.
+				   runner(
+"$globalbrowserstart http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
+				   ) if ( -e 'ggmanual.html' );
+				 }
+			],
+
 			# FIXME: Disable update check until it works
 			[
 			   Button   => 'Check For ~Updates',
@@ -3319,6 +3328,15 @@ sub menubuild {
 			   -command => sub {        # FIXME: sub this out.
 				   runner(
 "$globalbrowserstart http://www.pgdp.net/wiki/PPTools/Guiguts"
+				   ) if ( -e 'ggmanual.html' );
+				 }
+			],
+
+			[
+			   Button   => '~PP Process Checklist',
+			   -command => sub {        # FIXME: sub this out.
+				   runner(
+"$globalbrowserstart http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
 				   ) if ( -e 'ggmanual.html' );
 				 }
 			],
