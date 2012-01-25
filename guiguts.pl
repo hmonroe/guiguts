@@ -33,6 +33,7 @@ use FileHandle;
 use File::Basename;
 use File::Spec::Functions qw(rel2abs);
 use File::Spec::Functions qw(catfile);
+use File::Spec::Functions qw(catdir);
 use File::Temp qw/tempfile/;
 use File::Copy;
 use File::Compare;
@@ -654,6 +655,7 @@ sub cmdinterp {
 	my $command = shift;
 	my ( $fname, $pagenum, $number, $pname );
 	my ( $selection, $ranges );
+	# Replace $t with selected text for instance for a dictionary search
 	if ( $command =~ m/\$t/ ) {
 		my @ranges = $textwindow->tagRanges('sel');
 		return ' ' unless @ranges;
@@ -664,17 +666,34 @@ sub cmdinterp {
 		$command   =~ s/\$t/$selection/;
 		$command = encode( "utf-8", $command );
 	}
+	# Pass file to default file handler, $f $d $e give the fully specified path/filename
 	if ( $command =~ m/\$f|\$d|\$e/ ) {
-
-		# Pass selection to file handler
-		return ' ' if ( $lglobal{global_filename} =~ m/No File Loaded/ );
+		if ( $lglobal{global_filename} =~ m/No File Loaded/ ) {
+			my $dialog = $top->Dialog(
+								 -text    => "No File Loaded",
+								 -bitmap  => 'warning',
+								 -title   => "No File Loaded",
+								 -buttons => [ 'OK' ]);
+			my $answer = $dialog->Show;
+			return ' ';
+		};
 		$fname = $lglobal{global_filename};
 		$fname = dos_path( $lglobal{global_filename} ) if $OS_WIN;
 		my ( $f, $d, $e ) = fileparse( $fname, qr{\.[^\.]*$} );
 		$command =~ s/\$f/$f/ if $f;
 		$command =~ s/\$d/$d/ if $d;
 		$command =~ s/\$e/$e/ if $e;
+	if ( $command =~ m/project_comments.html/ ) {
+	   	opendir(DIR, "$d");
+	   	for (readdir(DIR)) {
+	   		if ($_ =~ m/project.*_comments.html/){
+				$command =~ s/project_comments.html/$_/;
+	   		}
+	   	};
+	   	closedir(DIR);
 	}
+	}
+	# Pass image file to default file handler
 	if ( $command =~ m/\$p/ ) {
 		return unless $lglobal{img_num_label};
 		$number = $lglobal{img_num_label}->cget( -text );
@@ -712,7 +731,7 @@ sub runner {
 # Menus are not easily modifiable in place. Easier to just destroy and
 ## rebuild every time it is modified
 sub menurebuild {
-	for ( 0 .. 11 ) {
+	for ( 0 .. 12 ) {
 		$menubar->delete('last');
 	}
 	menubuild();
@@ -2495,7 +2514,7 @@ sub menubuild {
 		return;
 	}
 	my $file = $menubar->cascade(
-								  -label     => '~Filexxx',
+								  -label     => '~File',
 								  -tearoff   => 1,
 								  -menuitems =>
 								  	[
@@ -2612,6 +2631,20 @@ sub menubuild {
 	]
 								  
 	);
+	my $source = $menubar->cascade(
+									-label     => 'Source',
+									-tearoff   => 1,
+									-menuitems => 
+	[
+	   [ 'command', 'View Project Comments',  -command => sub {
+	   	my $defaulthandler = $extops[3]{command};
+	   	$defaulthandler =~ s/\$f\$e/project_comments.html/;
+ 				runner( cmdinterp($defaulthandler) );
+	   }],
+	   
+	   [ 'command', '~Stealth Scannos',  -command => \&stealthscanno ],
+	
+	]);
 	my $search = $menubar->cascade(
 									-label     => 'Search & ~Replace',
 									-tearoff   => 1,
@@ -7888,296 +7921,296 @@ sub validatecssremote {    # this does not work--does not  load the file
 my @gsopt;
 
 sub gcheckpop_up {
-	my @gclines;
-	my ( $line, $linenum, $colnum, $lincol, $word );
-	viewpagenums() if ( $lglobal{seepagenums} );
-	if ( $lglobal{gcpop} ) {
-		$lglobal{gcpop}->deiconify;
-		$lglobal{gclistbox}->delete( '0', 'end' );
-	} else {
-		$lglobal{gcpop} = $top->Toplevel;
-		$lglobal{gcpop}->title('Gutcheck');
-		initialize_popup_without_deletebinding('gcpop');
-		$lglobal{gcpop}->transient($top) if $stayontop;
-		my $ptopframe = $lglobal{gcpop}->Frame->pack;
-		my $opsbutton =
-		  $ptopframe->Button(
-							  -activebackground => $activecolor,
-							  -command => sub { gcviewops( \@gclines ) },
-							  -text    => 'GC View Options',
-							  -width   => 16
-		  )->pack(
-				   -side   => 'left',
-				   -pady   => 10,
-				   -padx   => 2,
-				   -anchor => 'n'
-		  );
-		my $opsbutton2 =
-		  $ptopframe->Button(
-							  -activebackground => $activecolor,
-							  -command          => sub { gutcheck() },
-							  -text             => 'Re-run Gutcheck',
-							  -width            => 16
-		  )->pack(
-				   -side   => 'left',
-				   -pady   => 10,
-				   -padx   => 2,
-				   -anchor => 'n'
-		  );
-		my $opsbutton3 =
-		  $ptopframe->Button(
-							  -activebackground => $activecolor,
-							  -command          => sub { gutopts() },
-							  -text             => 'GC Run Options',
-							  -width            => 16
-		  )->pack(
-				   -side   => 'left',
-				   -pady   => 10,
-				   -padx   => 2,
-				   -anchor => 'n'
-		  );
-		my $pframe =
-		  $lglobal{gcpop}->Frame->pack( -fill => 'both', -expand => 'both', );
-		$lglobal{gclistbox} =
-		  $pframe->Scrolled(
-							 'Listbox',
-							 -scrollbars  => 'se',
-							 -background  => $bkgcolor,
-							 -font        => $lglobal{font},
-							 -selectmode  => 'single',
-							 -activestyle => 'none',
-		  )->pack(
-				   -anchor => 'nw',
-				   -fill   => 'both',
-				   -expand => 'both',
-				   -padx   => 2,
-				   -pady   => 2
-		  );
-		drag( $lglobal{gclistbox} );
-		$lglobal{gcpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{viewpop}->iconify if defined $lglobal{viewpop};
-				$lglobal{gcpop}->destroy;
-				undef $lglobal{gcpop};
-				$textwindow->markUnset($_) for values %gc;
-			}
-		);
-		BindMouseWheel( $lglobal{gclistbox} );
-		$lglobal{gclistbox}->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
-		$lglobal{gclistbox}->bind( '<<view>>', sub { gcview() } );
+    my @gclines;
+    my ( $line, $linenum, $colnum, $lincol, $word );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    if ( $lglobal{gcpop} ) {
+        $lglobal{gcpop}->deiconify;
+        $lglobal{gclistbox}->delete( '0', 'end' );
+    }
+    else {
+        $lglobal{gcpop} = $top->Toplevel;
+        $lglobal{gcpop}->title('Gutcheck');
+        $lglobal{gcpop}->geometry($geometry2) if $geometry2;
+        $lglobal{gcpop}->transient($top)      if $stayontop;
+        my $ptopframe = $lglobal{gcpop}->Frame->pack;
+        my $opsbutton = $ptopframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub { gcviewops( \@gclines ) },
+            -text             => 'GC View Options',
+            -width            => 16
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+        my $opsbutton2 = $ptopframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub { gutcheck() },
+            -text             => 'Re-run Gutcheck',
+            -width            => 16
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+        my $opsbutton3 = $ptopframe->Button(
+            -activebackground => $activecolor,
+            -command          => sub { gutopts() },
+            -text             => 'GC Run Options',
+            -width            => 16
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+        my $pframe = $lglobal{gcpop}
+            ->Frame->pack( -fill => 'both', -expand => 'both', );
+        $lglobal{gclistbox} = $pframe->Scrolled(
+            'Listbox',
+            -scrollbars  => 'se',
+            -background  => 'white',
+            -font        => $lglobal{font},
+            -selectmode  => 'single',
+            -activestyle => 'none',
+            )->pack(
+            -anchor => 'nw',
+            -fill   => 'both',
+            -expand => 'both',
+            -padx   => 2,
+            -pady   => 2
+            );
+        drag( $lglobal{gclistbox} );
+        $lglobal{gcpop}->protocol(
+            'WM_DELETE_WINDOW' => sub {
+                $lglobal{viewpop}->iconify if defined $lglobal{viewpop};
+                $lglobal{gcpop}->destroy;
+                undef $lglobal{gcpop};
+                $textwindow->markUnset($_) for values %gc;
+            }
+        );
+        $lglobal{gcpop}->Icon( -image => $icon );
+        BindMouseWheel( $lglobal{gclistbox} );
+        $lglobal{gclistbox}
+            ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
+        $lglobal{gclistbox}->bind( '<<view>>', sub { gcview() } );
+        $lglobal{gcpop}->bind(
+            '<Configure>' => sub {
+                $lglobal{gcpop}->XEvent;
+                $geometry2 = $lglobal{gcpop}->geometry;
+                $lglobal{geometryupdate} = 1;
+            }
+        );
+        $lglobal{gclistbox}->eventAdd(
+            '<<remove>>' => '<ButtonRelease-2>',
+            '<ButtonRelease-3>'
+        );
+        $lglobal{gclistbox}->bind(
+            '<<remove>>',
+            sub {
+                $lglobal{gclistbox}->activate(
+                    $lglobal{gclistbox}->index(
+                        '@'
+                            . (
+                                  $lglobal{gclistbox}->pointerx
+                                - $lglobal{gclistbox}->rootx
+                            )
+                            . ','
+                            . (
+                                  $lglobal{gclistbox}->pointery
+                                - $lglobal{gclistbox}->rooty
+                            )
+                    )
+                );
+                $textwindow->markUnset(
+                    $gc{ $lglobal{gclistbox}->get('active') } );
+                undef $gc{ $lglobal{gclistbox}->get('active') };
+                $lglobal{gclistbox}->delete('active');
+                $lglobal{gclistbox}->selectionClear( '0', 'end' );
+                $lglobal{gclistbox}->selectionSet('active');
+                gcview();
+                $lglobal{gclistbox}->after( $lglobal{delay} );
+            }
+        );
+        $lglobal{gclistbox}->bind(
+            '<Button-3>',
+            sub {
+                $lglobal{gclistbox}->activate(
+                    $lglobal{gclistbox}->index(
+                        '@'
+                            . (
+                                  $lglobal{gclistbox}->pointerx
+                                - $lglobal{gclistbox}->rootx
+                            )
+                            . ','
+                            . (
+                                  $lglobal{gclistbox}->pointery
+                                - $lglobal{gclistbox}->rooty
+                            )
+                    )
+                );
+            }
+        );
+    }
+    $lglobal{gclistbox}->focus;
+    my $results;
+    unless ( open $results, '<', 'gutrslts.txt' ) {
+        my $dialog = $top->Dialog(
+            -text =>
+                'Could not read gutcheck results file. Problem with gutcheck.',
+            -bitmap  => 'question',
+            -title   => 'Gutcheck problem',
+            -buttons => [qw/OK/],
+        );
+        $dialog->Show;
+        return;
+    }
+    my $mark = 0;
+    %gc      = ();
+    @gclines = ();
+    while ( $line = <$results> ) {
+        $line =~ s/^\s//g;
+        chomp $line;
+        $line =~ s/^(File: )gutchk.tmp/$1$lglobal{global_filename}/g;
+        {
 
-		add_navigation_events( $lglobal{gclistbox} );
+            no warnings 'uninitialized';
+            next if $line eq $gclines[-1];
+        }
+        push @gclines, $line;
+        $gc{$line} = '';
+        $colnum    = '0';
+        $lincol    = '';
+        if ( $line =~ /Line (\d+)/ ) {
+            $linenum = $1;
 
-		$lglobal{gclistbox}->eventAdd( '<<remove>>' => '<ButtonRelease-2>',
-									   '<ButtonRelease-3>' );
-		$lglobal{gclistbox}->bind(
-			'<<remove>>',
-			sub {
-				$lglobal{gclistbox}->activate(
-										 $lglobal{gclistbox}->index(
-											 '@'
-											   . (
-												 $lglobal{gclistbox}->pointerx -
-												   $lglobal{gclistbox}->rootx
-											   )
-											   . ','
-											   . (
-												 $lglobal{gclistbox}->pointery -
-												   $lglobal{gclistbox}->rooty
-											   )
-										 )
-				);
-				$textwindow->markUnset(
-									$gc{ $lglobal{gclistbox}->get('active') } );
-				undef $gc{ $lglobal{gclistbox}->get('active') };
-				$lglobal{gclistbox}->delete('active');
-				$lglobal{gclistbox}->selectionClear( '0', 'end' );
-				$lglobal{gclistbox}->selectionSet('active');
-				gcview();
-				$lglobal{gclistbox}->after( $lglobal{delay} );
-			}
-		);
-		$lglobal{gclistbox}->bind(
-			'<Button-3>',
-			sub {
-				$lglobal{gclistbox}->activate(
-										 $lglobal{gclistbox}->index(
-											 '@'
-											   . (
-												 $lglobal{gclistbox}->pointerx -
-												   $lglobal{gclistbox}->rootx
-											   )
-											   . ','
-											   . (
-												 $lglobal{gclistbox}->pointery -
-												   $lglobal{gclistbox}->rooty
-											   )
-										 )
-				);
-			}
-		);
-	}
-	$lglobal{gclistbox}->focus;
-	my $results;
-	unless ( open $results, '<', 'gutrslts.txt' ) {
-		my $dialog = $top->Dialog(
-			   -text =>
-				 'Could not read gutcheck results file. Problem with gutcheck.',
-			   -bitmap  => 'question',
-			   -title   => 'Gutcheck problem',
-			   -buttons => [qw/OK/],
-		);
-		$dialog->Show;
-		return;
-	}
-	my $mark = 0;
-	%gc      = ();
-	@gclines = ();
-	while ( $line = <$results> ) {
-		$line =~ s/^\s//g;
-		chomp $line;
-		$line =~ s/^(File: )gutchk.tmp/$1$lglobal{global_filename}/g;
-		{
-
-			no warnings 'uninitialized';
-			next if $line eq $gclines[-1];
-		}
-		push @gclines, $line;
-		$gc{$line} = '';
-		$colnum    = '0';
-		$lincol    = '';
-		if ( $line =~ /Line (\d+)/ ) {
-			$linenum = $1;
-
-			if ( $line =~ /Line \d+ column (\d+)/ ) {
-				$colnum = $1;
-				$colnum--
-				  unless ( $line =~ /Long|Short|digit|space|bracket\?/ );
-				my $tempvar =
-				  $textwindow->get( "$linenum.0", "$linenum.$colnum" );
-				while ( $tempvar =~ s/<[ib]>// ) {
-					$tempvar .= $textwindow->get( "$linenum.$colnum",
-												  "$linenum.$colnum +3c" );
-					$colnum += 3;
-				}
-				while ( $tempvar =~ s/<\/[ib]>// ) {
-					$tempvar .= $textwindow->get( "$linenum.$colnum",
-												  "$linenum.$colnum +4c" );
-					$colnum += 4;
-				}
-			} else {
-				if ( $line =~ /Query digit in ([\w\d]+)/ ) {
-					$word   = $1;
-					$lincol = $textwindow->search( '--', $word, "$linenum.0",
-												   "$linenum.0 +1l" );
-				}
-				if ( $line =~ /Query standalone (\d)/ ) {
-					$word = '(?<=\D)' . $1 . '(?=\D)';
-					$lincol =
-					  $textwindow->search( '-regexp', '--', $word, "$linenum.0",
-										   "$linenum.0 +1l" );
-				}
-				if ( $line =~ /Asterisk?/ ) {
-					$lincol = $textwindow->search( '--', '*', "$linenum.0",
-												   "$linenum.0 +1l" );
-				}
-				if ( $line =~ /Hyphen at end of line?/ ) {
-					$lincol =
-					  $textwindow->search(
-										   '-regexp', '--',
-										   '-$',      "$linenum.0",
-										   "$linenum.0 +1l"
-					  );
-				}
-				if ( $line =~ /Non-ASCII character (\d+)/ ) {
-					$word   = chr($1);
-					$lincol = $textwindow->search( $word, "$linenum.0",
-												   "$linenum.0 +1l" );
-				}
-				if ( $line =~ /dash\?/ ) {
-					$lincol =
-					  $textwindow->search(
-										   '-regexp',       '--',
-										   '-- | --| -|- ', "$linenum.0",
-										   "$linenum.0 +1l"
-					  );
-				}
-				if ( $line =~ /HTML symbol/ ) {
-					$lincol =
-					  $textwindow->search(
-										   '-regexp', '--',
-										   '&',       "$linenum.0",
-										   "$linenum.0 +1l"
-					  );
-				}
-				if ( $line =~ /HTML Tag/ ) {
-					$lincol =
-					  $textwindow->search(
-										   '-regexp', '--',
-										   '<',       "$linenum.0",
-										   "$linenum.0 +1l"
-					  );
-				}
-				if ( $line =~ /Query word ([\p{Alnum}']+)/ ) {
-					$word = $1;
-					if ( $word =~ /[\xA0-\xFF]/ ) {
-						$lincol =
-						  $textwindow->search( '-regexp', '--',
-									 '(?<!\p{Alnum})' . $word . '(?!\p{Alnum})',
-									 "$linenum.0", "$linenum.0 +1l" );
-					} elsif ( $word eq 'i' ) {
-						$lincol =
-						  $textwindow->search(
-										   '-regexp',              '--',
-										   ' ' . $word . '[^a-z]', "$linenum.0",
-										   "$linenum.0 +1l"
-						  );
-						$lincol =
-						  $textwindow->search( '-regexp', '--',
-									'[^A-Za-z0-9<\/]' . $word . '[^A-Za-z0-9>]',
-									"$linenum.0", "$linenum.0 +1l" )
-						  unless $lincol;
-						$lincol = $textwindow->index("$lincol +1c")
-						  if ($lincol);
-					} else {
-						$lincol =
-						  $textwindow->search(
-											  '-regexp',           '--',
-											  '\b' . $word . '\b', "$linenum.0",
-											  "$linenum.0 +1l"
-						  );
-					}
-				}
-				if ( $line =~ /Query he\/be/ ) {
-					$lincol =
-					  $textwindow->search(
-										   '-regexp',       '--',
-										   '(?<= )[bh]e\W', "$linenum.0",
-										   "$linenum.0 +1l"
-					  );
-				}
-				if ( $line =~ /Query hut\/but/ ) {
-					$lincol =
-					  $textwindow->search(
-										   '-regexp',        '--',
-										   '(?<= )[bh]ut\W', "$linenum.0",
-										   "$linenum.0 +1l"
-					  );
-				}
-			}
-			$mark++;
-			if ($lincol) {
-				$textwindow->markSet( "g$mark", $lincol );
-			} else {
-				$colnum = '0' unless $colnum;
-				$textwindow->markSet( "g$mark", "$linenum.$colnum" );
-			}
-			$gc{$line} = "g$mark";
-		}
-	}
-	close $results;
-	unlink 'gutrslts.txt';
-	gutwindowpopulate( \@gclines );
+            if ( $line =~ /Line \d+ column (\d+)/ ) {
+                $colnum = $1;
+                $colnum--
+                    unless ( $line =~ /Long|Short|digit|space|bracket\?/ );
+                my $tempvar
+                    = $textwindow->get( "$linenum.0", "$linenum.$colnum" );
+                while ( $tempvar =~ s/<[ib]>// ) {
+                    $tempvar .= $textwindow->get( "$linenum.$colnum",
+                        "$linenum.$colnum +3c" );
+                    $colnum += 3;
+                }
+                while ( $tempvar =~ s/<\/[ib]>// ) {
+                    $tempvar .= $textwindow->get( "$linenum.$colnum",
+                        "$linenum.$colnum +4c" );
+                    $colnum += 4;
+                }
+            }
+            else {
+                if ( $line =~ /Query digit in ([\w\d]+)/ ) {
+                    $word   = $1;
+                    $lincol = $textwindow->search( '--', $word, "$linenum.0",
+                        "$linenum.0 +1l" );
+                }
+                if ( $line =~ /Query standalone (\d)/ ) {
+                    $word   = '(?<=\D)' . $1 . '(?=\D)';
+                    $lincol = $textwindow->search( '-regexp', '--', $word,
+                        "$linenum.0", "$linenum.0 +1l" );
+                }
+                if ( $line =~ /Asterisk?/ ) {
+                    $lincol = $textwindow->search( '--', '*', "$linenum.0",
+                        "$linenum.0 +1l" );
+                }
+                if ( $line =~ /Hyphen at end of line?/ ) {
+                    $lincol = $textwindow->search(
+                        '-regexp', '--',
+                        '-$',      "$linenum.0",
+                        "$linenum.0 +1l"
+                    );
+                }
+                if ( $line =~ /Non-ASCII character (\d+)/ ) {
+                    $word   = chr($1);
+                    $lincol = $textwindow->search( $word, "$linenum.0",
+                        "$linenum.0 +1l" );
+                }
+                if ( $line =~ /dash\?/ ) {
+                    $lincol = $textwindow->search(
+                        '-regexp',       '--',
+                        '-- | --| -|- ', "$linenum.0",
+                        "$linenum.0 +1l"
+                    );
+                }
+                if ( $line =~ /HTML symbol/ ) {
+                    $lincol = $textwindow->search(
+                        '-regexp', '--',
+                        '&',       "$linenum.0",
+                        "$linenum.0 +1l"
+                    );
+                }
+                if ( $line =~ /HTML Tag/ ) {
+                    $lincol = $textwindow->search(
+                        '-regexp', '--',
+                        '<',       "$linenum.0",
+                        "$linenum.0 +1l"
+                    );
+                }
+                if ( $line =~ /Query word ([\p{Alnum}']+)/ ) {
+                    $word = $1;
+                    if ( $word =~ /[\xA0-\xFF]/ ) {
+                        $lincol
+                            = $textwindow->search( '-regexp', '--',
+                            '(?<!\p{Alnum})' . $word . '(?!\p{Alnum})',
+                            "$linenum.0", "$linenum.0 +1l" );
+                    }
+                    elsif ( $word eq 'i' ) {
+                        $lincol = $textwindow->search(
+                            '-regexp',              '--',
+                            ' ' . $word . '[^a-z]', "$linenum.0",
+                            "$linenum.0 +1l"
+                        );
+                        $lincol
+                            = $textwindow->search( '-regexp', '--',
+                            '[^A-Za-z0-9<\/]' . $word . '[^A-Za-z0-9>]',
+                            "$linenum.0", "$linenum.0 +1l" )
+                            unless $lincol;
+                        $lincol = $textwindow->index("$lincol +1c")
+                            if ($lincol);
+                    }
+                    else {
+                        $lincol = $textwindow->search(
+                            '-regexp',           '--',
+                            '\b' . $word . '\b', "$linenum.0",
+                            "$linenum.0 +1l"
+                        );
+                    }
+                }
+                if ( $line =~ /Query he\/be/ ) {
+                    $lincol = $textwindow->search(
+                        '-regexp',       '--',
+                        '(?<= )[bh]e\W', "$linenum.0",
+                        "$linenum.0 +1l"
+                    );
+                }
+                if ( $line =~ /Query hut\/but/ ) {
+                    $lincol = $textwindow->search(
+                        '-regexp',        '--',
+                        '(?<= )[bh]ut\W', "$linenum.0",
+                        "$linenum.0 +1l"
+                    );
+                }
+            }
+            $mark++;
+            if ($lincol) {
+                $textwindow->markSet( "g$mark", $lincol );
+            }
+            else {
+                $colnum = '0' unless $colnum;
+                $textwindow->markSet( "g$mark", "$linenum.$colnum" );
+            }
+            $gc{$line} = "g$mark";
+        }
+    }
+    close $results;
+    unlink 'gutrslts.txt';
+    gutwindowpopulate( \@gclines );
 }
 
 sub gcview {
@@ -8201,206 +8234,215 @@ sub gcview {
 }
 
 sub gcviewops {
-	my $linesref = shift;
-	my @gsoptions;
-	@{ $lglobal{gcarray} } = (
-							   'Asterisk',
-							   'Begins with punctuation',
-							   'Broken em-dash',
-							   'Capital "S"',
-							   'Carat character',
-							   'CR without LF',
-							   'Double punctuation',
-							   'endquote missing punctuation',
-							   'Extra period',
-							   'Forward slash',
-							   'HTML symbol',
-							   'HTML Tag',
-							   'Hyphen at end of line',
-							   'Long line',
-							   'Mismatched curly brackets',
-							   'Mismatched quotes',
-							   'Mismatched round brackets',
-							   'Mismatched singlequotes',
-							   'Mismatched square brackets',
-							   'Mismatched underscores',
-							   'Missing space',
-							   'No CR',
-							   'No punctuation at para end',
-							   'Non-ASCII character',
-							   'Non-ISO-8859 character',
-							   'Paragraph starts with lower-case',
-							   'Query angled bracket with From',
-							   'Query digit in',
-							   "Query he\/be error",
-							   "Query hut\/but error",
-							   'Query I=exclamation mark',
-							   'Query missing paragraph break',
-							   'Query possible scanno',
-							   'Query punctuation after',
-							   'Query single character line',
-							   'Query standalone 0',
-							   'Query standalone 1',
-							   'Query word',
-							   'Short line',
-							   'Spaced dash',
-							   'Spaced doublequote',
-							   'Spaced em-dash',
-							   'Spaced punctuation',
-							   'Spaced quote',
-							   'Spaced singlequote',
-							   'Tab character',
-							   'Tilde character',
-							   'Two successive CRs',
-							   'Unspaced bracket',
-							   'Unspaced quotes',
-							   'Wrongspaced quotes',
-							   'Wrongspaced singlequotes',
-	);
-	my $gcrows = int( ( @{ $lglobal{gcarray} } / 3 ) + .9 );
-	if ( defined( $lglobal{viewpop} ) ) {
-		$lglobal{viewpop}->deiconify;
-		$lglobal{viewpop}->raise;
-		$lglobal{viewpop}->focus;
-	} else {
-		$lglobal{viewpop} = $top->Toplevel;
-		$lglobal{viewpop}->title('Gutcheck view options');
-		initialize_popup_with_deletebinding('viewpop');
-		my $pframe = $lglobal{viewpop}->Frame->pack;
-		$pframe->Label( -text => 'Select option to hide that error.', )->pack;
-		my $pframe1 = $lglobal{viewpop}->Frame->pack;
-		my ( $gcrow, $gccol );
-		for ( 0 .. $#{ $lglobal{gcarray} } ) {
-			$gccol = int( $_ / $gcrows );
-			$gcrow = $_ % $gcrows;
-			$gsoptions[$_] =
-			  $pframe1->Checkbutton(
-							   -variable => \$gsopt[$_],
-							   -command => sub { gutwindowpopulate($linesref) },
-							   -selectcolor => $lglobal{checkcolor},
-							   -text        => $lglobal{gcarray}->[$_],
-			  )->grid( -row => $gcrow, -column => $gccol, -sticky => 'nw' );
-		}
-		my $pframe2 = $lglobal{viewpop}->Frame->pack;
-		$pframe2->Button(
-			-activebackground => $activecolor,
-			-command          => sub {
-				for ( 0 .. $#gsoptions ) {
-					$gsoptions[$_]->select;
-				}
-				gutwindowpopulate($linesref);
-			},
-			-text  => 'Hide all',
-			-width => 12
-		  )->pack(
-				   -side   => 'left',
-				   -pady   => 10,
-				   -padx   => 2,
-				   -anchor => 'n'
-		  );
-		$pframe2->Button(
-			-activebackground => $activecolor,
-			-command          => sub {
-				for ( 0 .. $#gsoptions ) {
-					$gsoptions[$_]->deselect;
-				}
-				gutwindowpopulate($linesref);
-			},
-			-text  => 'See all',
-			-width => 12
-		  )->pack(
-				   -side   => 'left',
-				   -pady   => 10,
-				   -padx   => 2,
-				   -anchor => 'n'
-		  );
-		$pframe2->Button(
-			-activebackground => $activecolor,
-			-command          => sub {
-				for ( 0 .. $#gsoptions ) {
-					$gsoptions[$_]->toggle;
-				}
-				gutwindowpopulate($linesref);
-			},
-			-text  => 'Toggle View',
-			-width => 12
-		  )->pack(
-				   -side   => 'left',
-				   -pady   => 10,
-				   -padx   => 2,
-				   -anchor => 'n'
-		  );
-		$pframe2->Button(
-			-activebackground => $activecolor,
-			-command          => sub {
-				for ( 0 .. $#mygcview ) {
-					if ( $mygcview[$_] ) {
-						$gsoptions[$_]->select;
-					} else {
-						$gsoptions[$_]->deselect;
-					}
-				}
-				gutwindowpopulate($linesref);
-			},
-			-text  => 'Load My View',
-			-width => 12
-		  )->pack(
-				   -side   => 'left',
-				   -pady   => 10,
-				   -padx   => 2,
-				   -anchor => 'n'
-		  );
-		$pframe2->Button(
-			-activebackground => $activecolor,
-			-command          => sub {
-				for ( 0 .. $#gsopt ) {
-					$mygcview[$_] = $gsopt[$_];
-				}
-				saveset();
-			},
-			-text  => 'Save My View',
-			-width => 12
-		  )->pack(
-				   -side   => 'left',
-				   -pady   => 10,
-				   -padx   => 2,
-				   -anchor => 'n'
-		  );
-
-		#$lglobal{viewpop}->resizable( 'no', 'no' );
-	}
+    my $linesref = shift;
+    my @gsoptions;
+    @{ $lglobal{gcarray} } = (
+        'Asterisk',
+        'Begins with punctuation',
+        'Broken em-dash',
+        'Capital "S"',
+        'Carat character',
+        'CR without LF',
+        'Double punctuation',
+        'endquote missing punctuation',
+        'Extra period',
+        'Forward slash',
+        'HTML symbol',
+        'HTML Tag',
+        'Hyphen at end of line',
+        'Long line',
+        'Mismatched curly brackets',
+        'Mismatched quotes',
+        'Mismatched round brackets',
+        'Mismatched singlequotes',
+        'Mismatched square brackets',
+        'Mismatched underscores',
+        'Missing space',
+        'No CR',
+        'No punctuation at para end',
+        'Non-ASCII character',
+        'Non-ISO-8859 character',
+        'Paragraph starts with lower-case',
+        'Query angled bracket with From',
+        'Query digit in',
+        "Query he\/be error",
+        "Query hut\/but error",
+        'Query I=exclamation mark',
+        'Query missing paragraph break',
+        'Query possible scanno',
+        'Query punctuation after',
+        'Query single character line',
+        'Query standalone 0',
+        'Query standalone 1',
+        'Query word',
+        'Short line',
+        'Spaced dash',
+        'Spaced doublequote',
+        'Spaced em-dash',
+        'Spaced punctuation',
+        'Spaced quote',
+        'Spaced singlequote',
+        'Tab character',
+        'Tilde character',
+        'Two successive CRs',
+        'Unspaced bracket',
+        'Unspaced quotes',
+        'Wrongspaced quotes',
+        'Wrongspaced singlequotes',
+    );
+    my $gcrows = int( ( @{ $lglobal{gcarray} } / 3 ) + .9 );
+    if ( defined( $lglobal{viewpop} ) ) {
+        $lglobal{viewpop}->deiconify;
+        $lglobal{viewpop}->raise;
+        $lglobal{viewpop}->focus;
+    }
+    else {
+        $lglobal{viewpop} = $top->Toplevel;
+        $lglobal{viewpop}->title('Gutcheck view options');
+        my $pframe = $lglobal{viewpop}->Frame->pack;
+        $pframe->Label( -text => 'Select option to hide that error.', )->pack;
+        my $pframe1 = $lglobal{viewpop}->Frame->pack;
+        my ( $gcrow, $gccol );
+        for ( 0 .. $#{ $lglobal{gcarray} } ) {
+            $gccol         = int( $_ / $gcrows );
+            $gcrow         = $_ % $gcrows;
+            $gsoptions[$_] = $pframe1->Checkbutton(
+                -variable    => \$gsopt[$_],
+                -command     => sub { gutwindowpopulate($linesref) },
+                -selectcolor => $lglobal{checkcolor},
+                -text        => $lglobal{gcarray}->[$_],
+            )->grid( -row => $gcrow, -column => $gccol, -sticky => 'nw' );
+        }
+        my $pframe2 = $lglobal{viewpop}->Frame->pack;
+        $pframe2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                for ( 0 .. $#gsoptions ) {
+                    $gsoptions[$_]->select;
+                }
+                gutwindowpopulate($linesref);
+            },
+            -text  => 'Hide all',
+            -width => 12
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+        $pframe2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                for ( 0 .. $#gsoptions ) {
+                    $gsoptions[$_]->deselect;
+                }
+                gutwindowpopulate($linesref);
+            },
+            -text  => 'See all',
+            -width => 12
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+        $pframe2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                for ( 0 .. $#gsoptions ) {
+                    $gsoptions[$_]->toggle;
+                }
+                gutwindowpopulate($linesref);
+            },
+            -text  => 'Toggle View',
+            -width => 12
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+        $pframe2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                for ( 0 .. $#mygcview ) {
+                    if ( $mygcview[$_] ) {
+                        $gsoptions[$_]->select;
+                    }
+                    else {
+                        $gsoptions[$_]->deselect;
+                    }
+                }
+                gutwindowpopulate($linesref);
+            },
+            -text  => 'Load My View',
+            -width => 12
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+        $pframe2->Button(
+            -activebackground => $activecolor,
+            -command          => sub {
+                for ( 0 .. $#gsopt ) {
+                    $mygcview[$_] = $gsopt[$_];
+                }
+                saveset();
+            },
+            -text  => 'Save My View',
+            -width => 12
+            )->pack(
+            -side   => 'left',
+            -pady   => 10,
+            -padx   => 2,
+            -anchor => 'n'
+            );
+        $lglobal{viewpop}->protocol(
+            'WM_DELETE_WINDOW' => sub {
+                $lglobal{viewpop}->destroy;
+                @{ $lglobal{gcarray} } = ();
+                undef $lglobal{viewpop};
+            }
+        );
+        $lglobal{viewpop}->resizable( 'no', 'no' );
+        $lglobal{viewpop}->Icon( -image => $icon );
+    }
 }
 
 sub gutwindowpopulate {
-	my $linesref = shift;
-	return unless defined $lglobal{gcpop};
-	my ( $line, $flag, $count, $start );
-	$lglobal{gclistbox}->delete( '0', 'end' );
-	foreach my $line ( @{$linesref} ) {
-		$flag = 0;
-		$start++ unless ( index( $line, 'Line', 0 ) > 0 );
-		next unless defined $gc{$line};
-		for ( 0 .. $#{ $lglobal{gcarray} } ) {
-			next unless ( index( $line, $lglobal{gcarray}->[$_] ) > 0 );
-			$gsopt[$_] = 0 unless defined $gsopt[$_];
-			$flag = 1 if $gsopt[$_];
-			last;
-		}
-		next if $flag;
-		$count++;
-		$lglobal{gclistbox}->insert( 'end', $line );
-	}
-	$count -= $start;
-	$lglobal{gclistbox}->insert( $start, '', "  --> $count queries.", '' );
-	$lglobal{gclistbox}->update;
-	$lglobal{gclistbox}->yview( 'scroll', 1,  'units' );
-	$lglobal{gclistbox}->yview( 'scroll', -1, 'units' );
+    my $linesref = shift;
+    return unless defined $lglobal{gcpop};
+    my ( $line, $flag, $count, $start );
+    $lglobal{gclistbox}->delete( '0', 'end' );
+    foreach $line ( @{$linesref} ) {
+        $flag = 0;
+        $start++ unless ( index( $line, 'Line', 0 ) > 0 );
+        next unless defined $gc{$line};
+        for ( 0 .. $#{ $lglobal{gcarray} } ) {
+            next unless ( index( $line, $lglobal{gcarray}->[$_] ) > 0 );
+            $gsopt[$_] = 0 unless defined $gsopt[$_];
+            $flag = 1 if $gsopt[$_];
+            last;
+        }
+        next if $flag;
+        $count++;
+        $lglobal{gclistbox}->insert( 'end', $line );
+    }
+    $count -= $start;
+    $lglobal{gclistbox}->insert( $start, '', "  --> $count queries.", '' );
+    $lglobal{gclistbox}->update;
+    #$lglobal{gclistbox}->yview( 'scroll', 1,  'units' );
+#    $lglobal{gclistbox}->yview( 'scroll', -1, 'units' );
 }
 
 sub gutcheckrun {
-	my ( $gutcheckstart, $gutcheckoptions, $thisfile ) = @_;
-	system(qq/$gutcheckstart $gutcheckoptions $thisfile > gutrslts.txt/);
+    my ( $gutcheckstart, $gutcheckoptions, $thisfile ) = @_;
+    system(qq/$gutcheckstart $gutcheckoptions $thisfile > gutrslts.txt/);
 }
+
+
 
 sub fixpopup {
 	viewpagenums() if ( $lglobal{seepagenums} );
@@ -9170,10 +9212,15 @@ sub mixedcasecheck {
 # Refactor various word frequency checks into one
 sub anythingwfcheck {
 	my ( $checktype, $checkregexp ) = @_;
-	$top->Busy( -recurse => 1 );
 	$lglobal{wclistbox}->delete( '0', 'end' );
+	if (not isvalid($checkregexp)) {
+		$lglobal{wclistbox}->insert( 'end', "Invalid regular expression: $checkregexp" );
+		$lglobal{wclistbox}->update;
+		return;
+	}
 	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
 	$lglobal{wclistbox}->update;
+	$top->Busy( -recurse => 1 );
 	my %display = ();
 	my $wordw   = 0;
 	foreach ( sort ( keys %{ $lglobal{seenwords} } ) ) {
@@ -15723,97 +15770,97 @@ sub wordfrequencybuildwordlist {
 
 ## Gutcheck
 sub gutcheck {
-	no warnings;
-	push @operations, ( localtime() . ' - Gutcheck' );
-	viewpagenums() if ( $lglobal{seepagenums} );
-	oppopupdate()  if $lglobal{oppop};
-	my ( $name, $path, $extension, @path );
-	$textwindow->focus;
-	update_indicators();
-	my $title = $top->cget('title');
+	print 1;
+    no warnings;
+    push @operations, ( localtime() . ' - Gutcheck' );
+    viewpagenums() if ( $lglobal{seepagenums} );
+    oppopupdate()  if $lglobal{oppop};
+	print 2;
+    my ( $name, $path, $extension, @path );
+    $textwindow->focus;
+    update_indicators();
+    my $title = $top->cget('title');
+	print 3;
+    return if ( $title =~ /No File Loaded/ );
+    #$top->Busy( -recurse => 1 );
 
-	if ( $title =~ /No File Loaded/ ) {
-		$top->messageBox(
-						  -icon    => 'warning',
-						  -type    => 'OK',
-						  -message => 'Nothing to check'
-		);
-		return;
-	}
-	$top->Busy( -recurse => 1 );
+	print 4;
+    # FIXME: wide character in print warning next line with unicode
+    # Figure out how to determine encoding. See scratchpad.pl
+    # open my $gc, ">:encoding(UTF-8)", "gutchk.tmp");
+    if ( open my $gc, ">:bytes", 'gutchk.tmp' ) {
+	print 5;
+        my $count = 0;
+        my $index = '1.0';
+        my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
+	print 6;
+        while ( $textwindow->compare( $index, '<', 'end' ) ) {
+            my $end = $textwindow->index("$index  lineend +1c");
+            print $gc $textwindow->get( $index, $end );
+            $index = $end;
+        }
+        close $gc;
+	print 7;
+    }
+    else {
+        warn "Could not open temp file for writing. $!";
+        my $dialog = $top->Dialog(
+            -text => 'Could not write to the '
+                . cwd()
+                . ' directory. Check for write permission or space problems.',
+            -bitmap  => 'question',
+            -title   => 'Gutcheck problem',
+            -buttons => [qw/OK/],
+        );
+        $dialog->Show;
+        return;
+    }
+    $title =~ s/$window_title - //
+        ;    #FIXME: sub this out; this and next in the tidy code
+    $title =~ s/edited - //;
+    $title = os_normal($title);
+    $title = dos_path($title) if $OS_WIN;
+    ( $name, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
+    my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
+    unless ($gutcommand) {
+        $gutcommand = $textwindow->getOpenFile(
+            -filetypes => $types,
+            -title     => 'Where is the Gutcheck executable?'
+        );
+    }
+    return unless $gutcommand;
+    my $gutcheckoptions = ' -ey'
+        ; # e - echo queried line. y - puts errors to stdout instead of stderr.
+    if ( $gcopt[0] ) { $gutcheckoptions .= 't' }
+    ;     # Check common typos
+    if ( $gcopt[1] ) { $gutcheckoptions .= 'x' }
+    ;     # "Trust no one" Paranoid mode. Queries everything
+    if ( $gcopt[2] ) { $gutcheckoptions .= 'p' }
+    ;     # Require closure of quotes on every paragraph
+    if ( $gcopt[3] ) { $gutcheckoptions .= 's' }
+    ;     # Force checking for matched pairs of single quotes
+    if ( $gcopt[4] ) { $gutcheckoptions .= 'm' }
+    ;     # Ignore markup in < >
+    if ( $gcopt[5] ) { $gutcheckoptions .= 'l' }
+    ;     # Line end checking - defaults on
+    if ( $gcopt[6] ) { $gutcheckoptions .= 'v' }
+    ;     # Verbose - list EVERYTHING!
+    if ( $gcopt[7] ) { $gutcheckoptions .= 'u' }
+    ;     # Use file of User-defined Typos
+    if ( $gcopt[8] ) { $gutcheckoptions .= 'd' }
+    ;     # Ignore DP style page separators
+    $gutcheckoptions .= ' ';
+    $gutcommand = os_normal($gutcommand);
+    $gutcommand = dos_path($gutcommand) if $OS_WIN;
+    saveset();
 
-	# FIXME: wide character in print warning next line with unicode
-	# Figure out how to determine encoding. See scratchpad.pl
-	# open my $gc, ">:encoding(UTF-8)", "gutchk.tmp");
-	if ( open my $gc, ">:bytes", 'gutchk.tmp' ) {
-		my $count = 0;
-		my $index = '1.0';
-		my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
-		while ( $textwindow->compare( $index, '<', 'end' ) ) {
-			my $end = $textwindow->index("$index  lineend +1c");
-			print $gc $textwindow->get( $index, $end );
-			$index = $end;
-		}
-		close $gc;
-	} else {
-		warn "Could not open temp file for writing. $!";
-		my $dialog = $top->Dialog(
-				-text => 'Could not write to the '
-				  . cwd()
-				  . ' directory. Check for write permission or space problems.',
-				-bitmap  => 'question',
-				-title   => 'Gutcheck problem',
-				-buttons => [qw/OK/],
-		);
-		$dialog->Show;
-		return;
-	}
-	$title =~
-	  s/$window_title - //; #FIXME: sub this out; this and next in the tidy code
-	$title =~ s/edited - //;
-	$title = os_normal($title);
-	$title = dos_path($title) if $OS_WIN;
-	( $name, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
-	my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
-	unless ($gutcommand) {
-		$gutcommand =
-		  $textwindow->getOpenFile(-filetypes => $types,
-								   -title => 'Where is the Gutcheck executable?'
-		  );
-	}
-	return unless $gutcommand;
-	my $gutcheckoptions = ' -ey'
-	  ;    # e - echo queried line. y - puts errors to stdout instead of stderr.
-	if ( $gcopt[0] ) { $gutcheckoptions .= 't' }
-	;      # Check common typos
-	if ( $gcopt[1] ) { $gutcheckoptions .= 'x' }
-	;      # "Trust no one" Paranoid mode. Queries everything
-	if ( $gcopt[2] ) { $gutcheckoptions .= 'p' }
-	;      # Require closure of quotes on every paragraph
-	if ( $gcopt[3] ) { $gutcheckoptions .= 's' }
-	;      # Force checking for matched pairs of single quotes
-	if ( $gcopt[4] ) { $gutcheckoptions .= 'm' }
-	;      # Ignore markup in < >
-	if ( $gcopt[5] ) { $gutcheckoptions .= 'l' }
-	;      # Line end checking - defaults on
-	if ( $gcopt[6] ) { $gutcheckoptions .= 'v' }
-	;      # Verbose - list EVERYTHING!
-	if ( $gcopt[7] ) { $gutcheckoptions .= 'u' }
-	;      # Use file of User-defined Typos
-	if ( $gcopt[8] ) { $gutcheckoptions .= 'd' }
-	;      # Ignore DP style page separators
-	$gutcheckoptions .= ' ';
-	$gutcommand = os_normal($gutcommand);
-	$gutcommand = dos_path($gutcommand) if $OS_WIN;
-	saveset();
-
-	if ( $lglobal{gcpop} ) {
-		$lglobal{gclistbox}->delete( '0', 'end' );
-	}
-	gutcheckrun( $gutcommand, $gutcheckoptions, 'gutchk.tmp' );
-	$top->Unbusy;
-	unlink 'gutchk.tmp';
-	gcheckpop_up();
+    if ( $lglobal{gcpop} ) {
+        $lglobal{gclistbox}->delete( '0', 'end' );
+    }
+    gutcheckrun( $gutcommand, $gutcheckoptions, 'gutchk.tmp' );
+    #$top->Unbusy;
+    unlink 'gutchk.tmp';
+    gcheckpop_up();
 }
 
 sub gutopts {
