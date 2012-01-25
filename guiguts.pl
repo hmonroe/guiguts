@@ -163,6 +163,7 @@ our $notoolbar           = 0;
 our $intelligentWF       = 0;
 our $operationinterrupt;
 our $pngspath         = q{};
+our $projectid = q{};
 our $regexpentry      = q();
 our $rmargin          = 72;
 our $rwhyphenspace    = 1;
@@ -535,6 +536,7 @@ sub _bin_save {
 		}
 		print $fh ");\n\n";
 		print $fh "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
+		print $fh "\$projectid = '$projectid';\n\n";
 		print $fh "\$booklang = '$booklang';\n\n";
 		print $fh
 "\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
@@ -710,6 +712,21 @@ sub cmdinterp {
 	}
 	return $command;
 }
+
+sub getprojectid {
+		my $fname = $lglobal{global_filename};
+		$fname = dos_path( $lglobal{global_filename} ) if $OS_WIN;
+		my ( $f, $d, $e ) = fileparse( $fname, qr{\.[^\.]*$} );
+	   	opendir(DIR, "$d");
+	   	for (readdir(DIR)) {
+	   		if ($_ =~ m/(project.*)_comments.html/){
+				$projectid = $1;
+	   		}
+	   	};
+	   	closedir(DIR);
+	}
+	
+
 
 ## Routine to spawn another perl process and use it to execute an
 # external program
@@ -13468,6 +13485,7 @@ sub openfile {    # and open it
 		$textwindow->see( $bookmarks[0] );
 		$textwindow->focus;
 	}
+	getprojectid() unless $projectid;
 	_recentupdate($name);
 	update_indicators();
 	file_mark_pages() if $auto_page_marks;
