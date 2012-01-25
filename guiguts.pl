@@ -680,8 +680,8 @@ sub cmdinterp {
 		$command =~ s/\$d/$d/ if $d;
 		$command =~ s/\$e/$e/ if $e;
 		if ( $command =~ m/project_comments.html/ ) {
-					$command =~ s/project/$projectid/;
-			}
+			$command =~ s/project/$projectid/;
+		}
 	}
 
 	# Pass image file to default file handler
@@ -703,16 +703,16 @@ sub cmdinterp {
 }
 
 sub nofileloadedwarning {
-		if ( $lglobal{global_filename} =~ m/No File Loaded/ ) {
-			my $dialog = $top->Dialog(
-									   -text    => "No File Loaded",
-									   -bitmap  => 'warning',
-									   -title   => "No File Loaded",
-									   -buttons => ['OK']
-			);
-			my $answer = $dialog->Show;
-			return 1;
-		}
+	if ( $lglobal{global_filename} =~ m/No File Loaded/ ) {
+		my $dialog = $top->Dialog(
+								   -text    => "No File Loaded",
+								   -bitmap  => 'warning',
+								   -title   => "No File Loaded",
+								   -buttons => ['OK']
+		);
+		my $answer = $dialog->Show;
+		return 1;
+	}
 }
 
 sub getprojectid {
@@ -2662,7 +2662,7 @@ sub menubuild {
 
 	);
 	my $source = $menubar->cascade(
-		-label     => 'Source',
+		-label     => 'Source Cleanup',
 		-tearoff   => 1,
 		-menuitems => [
 			[
@@ -2678,22 +2678,12 @@ sub menubuild {
 			   'command',
 			   'View Project Discussion',
 			   -command => sub {
-			   	return if nofileloadedwarning();
-			   	
-				   runner("$globalbrowserstart http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$projectid" ) if $projectid;
+				   return if nofileloadedwarning();
+				   runner(
+"$globalbrowserstart http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$projectid"
+				   ) if $projectid;
 				 }
 			],
-
-			[ 'command', '~Stealth Scannos', -command => \&stealthscanno ],
-
-		]
-	);
-	my $search = $menubar->cascade(
-		-label     => 'Search & ~Replace',
-		-tearoff   => 1,
-		-menuitems => [
-			[ 'command', '~Stealth Scannos', -command => \&stealthscanno ],
-			[ 'command', 'Spell ~Check',     -command => \&spellchecker ],
 			[
 			   'command',
 			   'Find next /*..*/ block',
@@ -2766,42 +2756,177 @@ sub menubuild {
 			   'Find Transliterations',
 			   -command => \&find_transliterations
 			],
-			[ 'separator', '' ],
 			[
-			   'command', 'Highlight double quotes in selection',
-			   -command     => [ \&hilite, '"' ],
-			   -accelerator => 'Ctrl+Shift+"'
+			   Button   => 'Remove End-of-line Spaces',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   endofline();
+				   $textwindow->addGlobEnd;
+				 }
 			],
+			[ Button => 'Run Fi~xup', -command => \&fixpopup ],
+			[ Button => 'Find Greek', -command => \&findandextractgreek ],
+			[ Button => 'Fix ~Page Separators', -command => \&separatorpopup ],
 			[
-			   'command', 'Highlight single quotes in selection',
-			   -command     => [ \&hilite, '\'' ],
-			   -accelerator => 'Ctrl+\''
+			   Button   => 'Remove Blank Lines Before Page Separators',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   delblanklines();
+				   $textwindow->addGlobEnd;
+				 }
 			],
+			[ Button => '~Sidenote Fixup', -command => \&sidenotes ],
+			[ Button => '~Footnote Fixup', -command => \&footnotepop ],
 			[
-			   'command', 'Highlight arbitrary characters in selection',
-			   -command     => \&hilitepopup,
-			   -accelerator => 'Ctrl+Alt+h'
-			],
-			[
-			   'command',
-			   'Remove Highlights',
-			   -command => sub {    # FIXME: sub search_rm_hilites
-				   $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-				   $textwindow->tagRemove( 'quotemark', '1.0', 'end' );
-			   },
-			   -accelerator => 'Ctrl+0'
+			   Button   => 'Reformat Poetry ~Line Numbers',
+			   -command => \&poetrynumbers
 			],
 		]
 	);
 
-	my $bookmarks = $menubar->cascade(
-									   -label     => '~Bookmarks',
-									   -tearoff   => 1,
-									   -menuitems => menu_bookmarks,
+	my $sourcechecks = $menubar->cascade(
+		-label     => 'Source Checks',
+		-tearoff   => 1,
+		-menuitems => [
+
+			[
+			   Button   => 'Run ~Word Frequency Routine',
+			   -command => \&wordfrequency
+			],
+			[ 'command',   '~Stealth Scannos', -command => \&stealthscanno ],
+			[ 'separator', '' ],
+			[ Button => 'Run ~Gutcheck',    -command => \&gutcheck ],
+			[ Button => 'Gutcheck options', -command => \&gutopts ],
+			[ Button => 'Run ~Jeebies',     -command => \&jeebiespop_up ],
+			[ 'command', 'Spell ~Check', -command => \&spellchecker ],
+			[
+			   Button   => 'pptxt',
+			   -command => sub {
+				   errorcheckpop_up('pptxt');
+				   unlink 'null' if ( -e 'null' );
+			   },
+			],
+		]
+	);
+
+	my $txtcleanup = $menubar->cascade(
+		-label     => '.txt version(s)',
+		-tearoff   => 1,
+		-menuitems => [
+			[
+			   Button   => "Convert Italics",
+			   -command => sub {
+				   text_convert_italic( $textwindow, $italic_char );
+				 }
+			],
+			[
+			   Button   => "Convert Bold",
+			   -command => sub { text_convert_bold( $textwindow, $bold_char ) }
+			],
+			[
+			   Button   => 'Convert <tb> to asterisk break',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   text_convert_tb($textwindow);
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => 'All of the above',
+			   -command => sub {
+				   text_convert_italic( $textwindow, $italic_char );
+				   text_convert_bold( $textwindow, $bold_char );
+				   $textwindow->addGlobStart;
+				   text_convert_tb($textwindow);
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => '~Add a Thought Break',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   text_thought_break($textwindow);
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => 'Small caps to all caps',
+			   -command => \&text_convert_smallcaps
+			],
+			[
+			   Button   => 'Remove small caps markup',
+			   -command => \&text_remove_smallcaps_markup
+			],
+			[ Button => "Options", -command => \&text_convert_options ],
+			[ 'separator', '' ],
+			[ Button => 'ASCII ~Boxes', -command => \&asciipopup ],
+			[ Button => 'ASCII Table Special Effects', -command => \&tablefx ],
+			[
+			   Button   => '~Rewrap Selection',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   selectrewrap( $textwindow, $lglobal{seepagenums},
+								 $lglobal{scanno_hl}, $rwhyphenspace );
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => '~Block Rewrap Selection',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   blockrewrap();
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => 'Interrupt Rewrap',
+			   -command => sub { $operationinterrupt = 1 }
+			],
+			[
+			   Button   => 'Clean Up Rewrap ~Markers',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   cleanup();
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[ 'separator', '' ],
+			[
+			   Button   => 'Convert Windows CP 1252 characters to Unicode',
+			   -command => \&cp1252toUni
+			],
+		]
+	);
+
+	my $fixup = $menubar->cascade(
+		-label     => 'HTML Version',
+		-tearoff   => 1,
+		-menuitems => [
+			[ Button => '~HTML Fixup',             -command => \&htmlpopup ],
+			[ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
+			[
+			   Cascade    => 'HTML to Epub',
+			   -tearoff   => 0,
+			   -menuitems => [
+				   [
+					  Button   => 'EpubMaker Online',
+					  -command => sub {
+						  runner(
+							   "$globalbrowserstart http://epubmaker.pglaf.org/"
+						  );
+						}
+				   ],
+				   [
+					  Button   => 'EpubMaker (HTML only)',
+					  -command => sub { epubmaker('html') }
+				   ],
+				 ]
+			]
+		]
 	);
 
 	my $selection = $menubar->cascade(
-		-label     => '~Selection',
+		-label     => 'Tools',
 		-tearoff   => 1,
 		-menuitems => [
 			[
@@ -2929,29 +3054,6 @@ sub menubuild {
 				 }
 			],
 			[ 'separator', '' ],
-			[
-			   Button   => '~Rewrap Selection',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   selectrewrap( $textwindow, $lglobal{seepagenums},
-								 $lglobal{scanno_hl}, $rwhyphenspace );
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[
-			   Button   => '~Block Rewrap Selection',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   blockrewrap();
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[
-			   Button   => 'Interrupt Rewrap',
-			   -command => sub { $operationinterrupt = 1 }
-			],
-			[ 'separator', '' ],
-			[ Button => 'ASCII ~Boxes',          -command => \&asciipopup ],
 			[ Button => '~Align text on string', -command => \&alignpopup ],
 			[ 'separator', '' ],
 			[
@@ -2987,129 +3089,39 @@ sub menubuild {
 				   $textwindow->addGlobEnd;
 				 }
 			],
-		  ]
-
-	);
-
-	my $fixup = $menubar->cascade(
-		-label     => 'Fi~xup',
-		-tearoff   => 1,
-		-menuitems => [
-			[
-			   Button   => 'Run ~Word Frequency Routine',
-			   -command => \&wordfrequency
-			],
 			[ 'separator', '' ],
-			[ Button => 'Run ~Gutcheck',    -command => \&gutcheck ],
-			[ Button => 'Gutcheck options', -command => \&gutopts ],
-			[ Button => 'Run ~Jeebies',     -command => \&jeebiespop_up ],
 			[
-			   Button   => 'pptxt',
-			   -command => sub {
-				   errorcheckpop_up('pptxt');
-				   unlink 'null' if ( -e 'null' );
+			   'command', 'Highlight double quotes in selection',
+			   -command     => [ \&hilite, '"' ],
+			   -accelerator => 'Ctrl+Shift+"'
+			],
+			[
+			   'command', 'Highlight single quotes in selection',
+			   -command     => [ \&hilite, '\'' ],
+			   -accelerator => 'Ctrl+\''
+			],
+			[
+			   'command', 'Highlight arbitrary characters in selection',
+			   -command     => \&hilitepopup,
+			   -accelerator => 'Ctrl+Alt+h'
+			],
+			[
+			   'command',
+			   'Remove Highlights',
+			   -command => sub {    # FIXME: sub search_rm_hilites
+				   $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+				   $textwindow->tagRemove( 'quotemark', '1.0', 'end' );
 			   },
+			   -accelerator => 'Ctrl+0'
 			],
-			[ 'separator', '' ],
-			[
-			   Button   => 'Remove End-of-line Spaces',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   endofline();
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[ Button => 'Run Fi~xup', -command => \&fixpopup ],
-			[ 'separator', '' ],
-			[ Button => 'Fix ~Page Separators', -command => \&separatorpopup ],
-			[
-			   Button   => 'Remove Blank Lines Before Page Separators',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   delblanklines();
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[ 'separator', '' ],
-			[ Button => '~Footnote Fixup', -command => \&footnotepop ],
-			[ Button => '~HTML Fixup',     -command => \&htmlpopup ],
-			[ Button => '~Sidenote Fixup', -command => \&sidenotes ],
-			[
-			   Button   => 'Reformat Poetry ~Line Numbers',
-			   -command => \&poetrynumbers
-			],
-			[
-			   Button   => 'Convert Windows CP 1252 characters to Unicode',
-			   -command => \&cp1252toUni
-			],
-			[ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
-			[ 'separator', '' ],
-			[ Button => 'ASCII Table Special Effects', -command => \&tablefx ],
-			[ 'separator', '' ],
-			[
-			   Button   => 'Clean Up Rewrap ~Markers',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   cleanup();
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[ 'separator', '' ],
-			[ Button => 'Find Greek', -command => \&findandextractgreek ]
-		]
-	);
-
-	my $text = $menubar->cascade(
-		-label     => 'Text Processing',
-		-tearoff   => 1,
-		-menuitems => [
-			[
-			   Button   => "Convert Italics",
-			   -command => sub {
-				   text_convert_italic( $textwindow, $italic_char );
-				 }
-			],
-			[
-			   Button   => "Convert Bold",
-			   -command => sub { text_convert_bold( $textwindow, $bold_char ) }
-			],
-			[
-			   Button   => 'Convert <tb> to asterisk break',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   text_convert_tb($textwindow);
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[
-			   Button   => 'All of the above',
-			   -command => sub {
-				   text_convert_italic( $textwindow, $italic_char );
-				   text_convert_bold( $textwindow, $bold_char );
-				   $textwindow->addGlobStart;
-				   text_convert_tb($textwindow);
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[
-			   Button   => '~Add a Thought Break',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   text_thought_break($textwindow);
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[
-			   Button   => 'Small caps to all caps',
-			   -command => \&text_convert_smallcaps
-			],
-			[
-			   Button   => 'Remove small caps markup',
-			   -command => \&text_remove_smallcaps_markup
-			],
-			[ Button => "Options", -command => \&text_convert_options ],
 		  ]
 
+	);
+
+	my $bookmarks = $menubar->cascade(
+									   -label     => '~Bookmarks',
+									   -tearoff   => 1,
+									   -menuitems => menu_bookmarks,
 	);
 
 	my $external = $menubar->cascade(
