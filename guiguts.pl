@@ -2452,13 +2452,6 @@ sub menubuildold {
 						}
 				   ],
 				   [
-					  Button   => 'Gnutenberg Press Online',
-					  -command => sub {
-						  runner(
-"$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
-						}
-				   ],
-				   [
 					  Button   => 'Gnutenberg Press (HTML only)',
 					  -command => sub { gnutenberg('html') }
 				   ],
@@ -2466,7 +2459,13 @@ sub menubuildold {
 					  Button   => 'Gnutenberg Press (Text only)',
 					  -command => sub { gnutenberg('txt') }
 				   ],
-
+				   [
+					  Button   => 'Gnutenberg Press Online',
+					  -command => sub {
+						  runner(
+"$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
+						}
+				   ],
 			   ]
 			],
 			[
@@ -3164,8 +3163,35 @@ sub menubuild {
 					  Button   => 'EpubMaker',
 					  -command => sub { epubmaker('epub') }
 				   ],
-			   ]
-			]
+			   ],
+			],
+			[ Button => 'Link Check', -command => sub { errorcheckpop_up('Link Check') } ],
+			[ Button => 'HTML Tidy', -command => sub { errorcheckpop_up('HTML Tidy') } ],
+			[ Button => 'W3C Validate', -command => sub {
+				if   ($w3cremote) { errorcheckpop_up('W3C Validate Remote') }
+				else              { errorcheckpop_up('W3C Validate'); }
+				unlink 'null' if ( -e 'null' );
+			} ],
+			[ Button => 'W3C Validate CSS', -command => sub {
+				errorcheckpop_up('W3C Validate CSS');    #validatecssrun('');
+				unlink 'null' if ( -e 'null' );
+			} ],
+			[ Button => 'pphtml', -command => sub {
+				errorcheckpop_up('pphtml');
+				unlink 'null' if ( -e 'null' );
+			} ],
+			[ Button => 'Image Check', -command => sub {
+				errorcheckpop_up('Image Check');
+				unlink 'null' if ( -e 'null' );
+			} ],
+			[ Button => 'Epub Friendly', -command => sub {
+				errorcheckpop_up('Epub Friendly');
+				unlink 'null' if ( -e 'null' );
+			} ],
+			[ Button => 'Check All', -command => sub {
+				errorcheckpop_up('Check All');
+				unlink 'null' if ( -e 'null' );
+			} ],
 		]
 	);
 
@@ -3206,11 +3232,10 @@ sub menubuild {
 			   -tearoff   => 0,
 			   -menuitems => [
 				   [
-					  Button   => 'EpubMaker Online',
+					  Button   => 'dp2rst Conversion',
 					  -command => sub {
 						  runner(
-							   "$globalbrowserstart http://epubmaker.pglaf.org/"
-						  );
+"$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst" );
 						}
 				   ],
 				   [
@@ -3222,10 +3247,11 @@ sub menubuild {
 					  -command => sub { epubmaker('html') }
 				   ],
 				   [
-					  Button   => 'dp2rst Conversion',
+					  Button   => 'EpubMaker Online',
 					  -command => sub {
 						  runner(
-"$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst" );
+							   "$globalbrowserstart http://epubmaker.pglaf.org/"
+						  );
 						}
 				   ],
 			   ],
@@ -17213,6 +17239,7 @@ sub htmlpopup {
 					 -text             => 'Hyperlink Page Nums',
 					 -width            => 16
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+		if ($useoldmenustructure) {
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
@@ -17285,7 +17312,7 @@ sub htmlpopup {
 			},
 			-text  => 'Check All',
 			-width => 16
-		)->grid( -row => 3, -column => 3, -padx => 1, -pady => 2 );
+		)->grid( -row => 3, -column => 3, -padx => 1, -pady => 2 );}
 		$diventry->insert( 'end', ' class="i2"' );
 		$spanentry->insert( 'end', ' class="i2"' );
 		$lglobal{markpop}->protocol(
@@ -20462,6 +20489,9 @@ sub runtests {
 
 # Ready to enter main loop
 checkforupdatesmonthly();
+		unless ( -e 'header.txt' ) {
+			&main::copy( 'headerdefault.txt', 'header.txt' );
+		}
 if ( $lglobal{runtests} ) {
 	runtests();
 } else {

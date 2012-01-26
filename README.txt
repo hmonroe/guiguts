@@ -10,14 +10,16 @@ languages). guiguts-mac-1.0.nn should also work out of the box for Mac users.
 guiguts-1.0.nn.zip is a stripped down version for those who have all the helper
 applications or are upgrading or who use operating systems other than Windows/Mac.
 
-Version 1.0.5. Added a rudimentary check of whether HTML is "Epub friendly".
-Changed <p> css in headerdefault.txt to work better on mobi devices: 
-margin-top: .51em; margin-bottom: .49em;. Reorganized the Preference menu. 
-Added Advanced Menu with RST and PGTEI tools. Fixed bug with Gutcheck
-hanging on rerun. Added check for whether the string entered in the 
-RegExp field in the Word Frequency popup is a valid regular expression. 
-Added Source menu with View Project Comments item. Added PP Process Checklist
-to Help menu.
+Version 1.0.5. Introduced a major restructuring of menus wizard based
+approach that steps PPers through the GG checklist, while providing an
+option to users to maintain the old menu structure. Added a rudimentary
+check of whether HTML is "Epub friendly". Changed <p> css in
+headerdefault.txt to work better on mobi devices: margin-top: .51em;
+margin-bottom: .49em;. Reorganized the Preference menu. Fixed bug with
+Gutcheck hanging on rerun. Added check for whether the string entered in
+the RegExp field in the Word Frequency popup is a valid regular
+expression. Added PP Process Checklist to Help menu. Moved HTML
+checks to the HTML menu.
 
 Version 1.0.4. Hyphen check now also checks for "flash light" not only
 "flash-light", "flash--light", and "flashlight". A regular expression search 
