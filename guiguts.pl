@@ -715,6 +715,7 @@ sub nofileloadedwarning {
 	}
 }
 
+#FIXME: doesnt work quite right if multiple volumes held in same directory!
 sub getprojectid {
 	my $fname = $lglobal{global_filename};
 	$fname = dos_path( $lglobal{global_filename} ) if $OS_WIN;
