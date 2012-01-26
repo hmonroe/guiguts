@@ -746,6 +746,19 @@ sub runner {
 	system "perl spawn.pl $args";
 }
 
+# Run external program.  Redirect STDOUT to "external.tmp"
+sub run_external {
+	my $child = fork();
+	return unless defined $child;
+
+	if ( $child ) {
+	  waitpid( $child, 0 );
+	} else {
+	  open STDOUT, '>', 'external.tmp' || die "Can't write to external.tmp";
+	  exec( @_ );
+        }
+}
+
 # Menus are not easily modifiable in place. Easier to just destroy and
 ## rebuild every time it is modified
 sub menurebuild {
@@ -8191,7 +8204,7 @@ sub gcheckpop_up {
 	}
 	$lglobal{gclistbox}->focus;
 	my $results;
-	unless ( open $results, '<', 'gutrslts.txt' ) {
+	unless ( open $results, '<', 'external.tmp' ) {
 		my $dialog = $top->Dialog(
 			   -text =>
 				 'Could not read gutcheck results file. Problem with gutcheck.',
@@ -8348,7 +8361,7 @@ sub gcheckpop_up {
 		}
 	}
 	close $results;
-	unlink 'gutrslts.txt';
+	unlink 'external.tmp';
 	gutwindowpopulate( \@gclines );
 }
 
@@ -8574,20 +8587,6 @@ sub gutwindowpopulate {
 
 	#$lglobal{gclistbox}->yview( 'scroll', 1,  'units' );
 	#    $lglobal{gclistbox}->yview( 'scroll', -1, 'units' );
-}
-
-sub gutcheckrun {
-	my ( $gutcheckstart, $gutcheckoptions, $thisfile ) = @_;
-
-	my $child = fork();
-	return unless defined $child;
-
-	if ( $child ) {
-	  waitpid( $child, 0 );
-	} else {
-	  open STDOUT, '>', 'gutrslts.txt' || die "Can't write to gutrslts.txt";
-	  exec( $gutcheckstart, $gutcheckoptions, $thisfile );
-        }
 }
 
 sub fixpopup {
@@ -16009,7 +16008,7 @@ sub gutcheck {
 	if ( $lglobal{gcpop} ) {
 		$lglobal{gclistbox}->delete( '0', 'end' );
 	}
-	gutcheckrun( $gutcommand, $gutcheckoptions, 'gutchk.tmp' );
+	run_external( $gutcommand, $gutcheckoptions, 'gutchk.tmp' );
 
 	#$top->Unbusy;
 	unlink 'gutchk.tmp';
