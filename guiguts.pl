@@ -8578,7 +8578,16 @@ sub gutwindowpopulate {
 
 sub gutcheckrun {
 	my ( $gutcheckstart, $gutcheckoptions, $thisfile ) = @_;
-	system(qq/$gutcheckstart $gutcheckoptions $thisfile > gutrslts.txt/);
+
+	my $child = fork();
+	return unless defined $child;
+
+	if ( $child ) {
+	  waitpid( $child, 0 );
+	} else {
+	  open STDOUT, '>', 'gutrslts.txt' || die "Can't write to gutrslts.txt";
+	  exec( $gutcheckstart, $gutcheckoptions, $thisfile );
+        }
 }
 
 sub fixpopup {
@@ -15973,7 +15982,7 @@ sub gutcheck {
 		  );
 	}
 	return unless $gutcommand;
-	my $gutcheckoptions = ' -ey'
+	my $gutcheckoptions = '-ey'
 	  ;    # e - echo queried line. y - puts errors to stdout instead of stderr.
 	if ( $gcopt[0] ) { $gutcheckoptions .= 't' }
 	;      # Check common typos
@@ -15993,7 +16002,6 @@ sub gutcheck {
 	;      # Use file of User-defined Typos
 	if ( $gcopt[8] ) { $gutcheckoptions .= 'd' }
 	;      # Ignore DP style page separators
-	$gutcheckoptions .= ' ';
 	$gutcommand = os_normal($gutcommand);
 	$gutcommand = dos_path($gutcommand) if $OS_WIN;
 	saveset();
