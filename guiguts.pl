@@ -8594,7 +8594,7 @@ sub fixpopup {
 			++$row;
 		}
 		$pframe1->Radiobutton(
-							-variable    => \${ $lglobal{fixopt} }[15],
+							-variable    => \${ $lglobal{fixopt} }[16],
 							-selectcolor => $lglobal{checkcolor},
 							-value       => 1,
 							-text => 'French style angle quotes «guillemots»',
@@ -10204,7 +10204,6 @@ sub initialize {
 
 	readsettings();
 
-	#FIXME: may need to change geometry of Fixup for added option
 	# For backward compatibility, carry over old geometry settings
 	unless ($geometry2) {
 		$geometry2 = '462x583+684+72';
@@ -16219,7 +16218,7 @@ sub fixup {
 				$edited++ if $line =~ s/(?<![\.\!\?])\.{3}(?!\.)/ \.\.\./g;
 				$edited++ if $line =~ s/^ \./\./;
 			}
-                   # Remove Blank Page markers
+					# Remove [Blank Page] markers
 			if ( ${ $lglobal{fixopt} }[14] ) {
 				$edited++ if $line =~ s/\[Blank Page\]\n//g;
 			}
