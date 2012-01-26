@@ -8564,7 +8564,7 @@ sub fixpopup {
 		$pframe->Label( -text => 'Select options for the fixup routine.', )
 		  ->pack;
 		my $pframe1 = $lglobal{fixpop}->Frame->pack;
-		${ $lglobal{fixopt} }[16] = 1;
+		${ $lglobal{fixopt} }[15] = 1;
 		my @rbuttons = (
 			'Skip /* */, /$ $/, and /X X/ marked blocks.',
 			'Fix up spaces around hyphens.',
@@ -8580,7 +8580,6 @@ sub fixpopup {
 'Format a line with 5 * and nothing else as a standard thought break.',
 			'Fix obvious l<->1 problems, lst, llth, etc.',
 			'Format ellipses correctly',
-			'Remove [Blank Page] markers',
 'Remove spaces after beginning and before ending angle quotes « ».',
 
 		);
@@ -8594,14 +8593,14 @@ sub fixpopup {
 			++$row;
 		}
 		$pframe1->Radiobutton(
-							-variable    => \${ $lglobal{fixopt} }[16],
+							-variable    => \${ $lglobal{fixopt} }[15],
 							-selectcolor => $lglobal{checkcolor},
 							-value       => 1,
 							-text => 'French style angle quotes «guillemots»',
 		)->grid( -row => $row, -column => 1 );
 		++$row;
 		$pframe1->Radiobutton(
-							-variable    => \${ $lglobal{fixopt} }[16],
+							-variable    => \${ $lglobal{fixopt} }[15],
 							-selectcolor => $lglobal{checkcolor},
 							-value       => 0,
 							-text => 'German style angle quotes »guillemots«',
@@ -10194,7 +10193,7 @@ sub initialize {
 	$lglobal{visibleline}       = '';
 	$lglobal{zoneindex}         = 0;
 	@{ $lglobal{ascii} } = qw/+ - + | | | + - +/;
-	@{ $lglobal{fixopt} } = ( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 );
+	@{ $lglobal{fixopt} } = ( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 );
 
 	if ( $0 =~ m/\/|\\/ ) {
 		my $dir = $0;
@@ -16218,21 +16217,17 @@ sub fixup {
 				$edited++ if $line =~ s/(?<![\.\!\?])\.{3}(?!\.)/ \.\.\./g;
 				$edited++ if $line =~ s/^ \./\./;
 			}
-					# Remove [Blank Page] markers
-			if ( ${ $lglobal{fixopt} }[14] ) {
-				$edited++ if $line =~ s/\[Blank Page\]\n//g;
-			}
 			if ( ${ $lglobal{fixopt} }[11] ) {
 				$edited++
 				  if $line =~
 s/^\s*(\*\s*){5}$/       \*       \*       \*       \*       \*\n/;
 			}
 			$edited++ if ( $line =~ s/ +$// );
-			if ( ${ $lglobal{fixopt} }[15] and ${ $lglobal{fixopt} }[16] ) {
+			if ( ${ $lglobal{fixopt} }[14] and ${ $lglobal{fixopt} }[15] ) {
 				$edited++ if $line =~ s/«\s+/«/g;
 				$edited++ if $line =~ s/\s+»/»/g;
 			}
-			if ( ${ $lglobal{fixopt} }[15] and !${ $lglobal{fixopt} }[16] ) {
+			if ( ${ $lglobal{fixopt} }[14] and !${ $lglobal{fixopt} }[15] ) {
 				$edited++ if $line =~ s/\s+«/«/g;
 				$edited++ if $line =~ s/»\s+/»/g;
 			}
