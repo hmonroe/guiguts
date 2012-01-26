@@ -18,7 +18,7 @@
 #along with this program; if not, write to the Free Software
 #Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#use criticism 'gentle';
+#use criticism 'gentle'; 
 
 my $VERSION = '1.0.5';
 use strict;
@@ -1087,9 +1087,9 @@ sub file_import {
 	$directory      = os_normal($directory);
 	$globallastpath = $directory;
 
-	for my $file (@files) {
-		if ( $file =~ /^(\d+)\.txt/ ) {
-			$textwindow->ntinsert( 'end', ( "\n" . '-' x 6 ) );
+	for my $file (sort {$a <=> $b} @files) {
+		if ( $file =~ /^(\w+)\.txt/ ) {
+			$textwindow->ntinsert( 'end', ( "\n" . '-' x 5 ) );
 			$textwindow->ntinsert( 'end', "File: $1.png" );
 			$textwindow->ntinsert( 'end', ( '-' x 45 ) . "\n" );
 			if ( open my $fh, '<', "$directory$file" ) {
@@ -2594,17 +2594,7 @@ sub menubuild {
 		-label     => '~Edit',
 		-tearoff   => 1,
 		-menuitems => [
-			[
-			   'command', 'Undo',
-			   -command     => sub { $textwindow->undo },
-			   -accelerator => 'Ctrl+z'
-			],
-
-			[
-			   'command', 'Redo',
-			   -command     => sub { $textwindow->redo },
-			   -accelerator => 'Ctrl+y'
-			],
+			[ 'command', 'Search & ~Replace', -command => \&searchpopup ],
 			[
 			   'command', 'Cut',
 			   -command     => sub { cut() },
@@ -2630,6 +2620,20 @@ sub menubuild {
 			   },
 			   -accelerator => 'Ctrl+`'
 			],
+			[
+			   'command',
+			   'Undo',
+			   -command => sub {
+				   $textwindow->undo;
+			   },
+			   -accelerator => 'Ctrl+z'
+			],
+
+			[
+			   'command', 'Redo',
+			   -command     => sub { $textwindow->redo },
+			   -accelerator => 'Ctrl+y'
+			],
 			[ 'separator', '' ],
 			[
 			   'command',
@@ -2647,7 +2651,6 @@ sub menubuild {
 			   },
 			   -accelerator => 'Ctrl+\\'
 			],
-			[ 'command', 'Search & ~Replace', -command => \&searchpopup ],
 			[
 			   'command',
 			   'Goto ~Line...',
@@ -2670,269 +2673,6 @@ sub menubuild {
 			],
 		  ]
 
-	);
-	my $source = $menubar->cascade(
-		-label     => 'Source Cleanup',
-		-tearoff   => 1,
-		-menuitems => [
-			[
-			   'command',
-			   'View Project Comments',
-			   -command => sub {
-				   my $defaulthandler = $extops[3]{command};
-				   $defaulthandler =~ s/\$f\$e/project_comments.html/;
-				   runner( cmdinterp($defaulthandler) );
-				 }
-			],
-			[
-			   'command',
-			   'View Project Discussion',
-			   -command => sub {
-				   return if nofileloadedwarning();
-				   runner(
-"$globalbrowserstart http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$projectid"
-				   ) if $projectid;
-				 }
-			],
-			[
-			   'command',
-			   'Find next /*..*/ block',
-			   -command => [ \&nextblock, 'default', 'forward' ]
-			],
-			[
-			   'command',
-			   'Find previous /*..*/ block',
-			   -command => [ \&nextblock, 'default', 'reverse' ]
-			],
-			[
-			   'command',
-			   'Find next /#..#/ block',
-			   -command => [ \&nextblock, 'block', 'forward' ]
-			],
-			[
-			   'command',
-			   'Find previous /#..#/ block',
-			   -command => [ \&nextblock, 'block', 'reverse' ]
-			],
-			[
-			   'command',
-			   'Find next /$..$/ block',
-			   -command => [ \&nextblock, 'stet', 'forward' ]
-			],
-			[
-			   'command',
-			   'Find previous /$..$/ block',
-			   -command => [ \&nextblock, 'stet', 'reverse' ]
-			],
-			[
-			   'command',
-			   'Find next /p..p/ block',
-			   -command => [ \&nextblock, 'poetry', 'forward' ]
-			],
-			[
-			   'command',
-			   'Find previous /p..p/ block',
-			   -command => [ \&nextblock, 'poetry', 'reverse' ]
-			],
-			[
-			   'command',
-			   'Find next indented block',
-			   -command => [ \&nextblock, 'indent', 'forward' ]
-			],
-			[
-			   'command',
-			   'Find previous indented block',
-			   -command => [ \&nextblock, 'indent', 'reverse' ]
-			],
-			[ 'separator', '' ],
-			[
-			   'command',
-			   'Find ~Orphaned Brackets',
-			   -command => \&orphanedbrackets
-			],
-			[ 'command', 'Find Orphaned Markup', -command => \&orphanedmarkup ],
-			[
-			   'command',
-			   'Find Proofer Comments',
-			   -command => \&find_proofer_comment
-			],
-			[
-			   'command',
-			   'Find Asterisks w/o slash',
-			   -command => \&find_asterisks
-			],
-			[
-			   'command',
-			   'Find Transliterations',
-			   -command => \&find_transliterations
-			],
-			[
-			   Button   => 'Remove End-of-line Spaces',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   endofline();
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[ Button => 'Run Fi~xup', -command => \&fixpopup ],
-			[ Button => 'Find Greek', -command => \&findandextractgreek ],
-			[ Button => 'Fix ~Page Separators', -command => \&separatorpopup ],
-			[
-			   Button   => 'Remove Blank Lines Before Page Separators',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   delblanklines();
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[ Button => '~Sidenote Fixup', -command => \&sidenotes ],
-			[ Button => '~Footnote Fixup', -command => \&footnotepop ],
-			[
-			   Button   => 'Reformat Poetry ~Line Numbers',
-			   -command => \&poetrynumbers
-			],
-		]
-	);
-
-	my $sourcechecks = $menubar->cascade(
-		-label     => 'Source Checks',
-		-tearoff   => 1,
-		-menuitems => [
-
-			[
-			   Button   => 'Run ~Word Frequency Routine',
-			   -command => \&wordfrequency
-			],
-			[ 'command',   '~Stealth Scannos', -command => \&stealthscanno ],
-			[ 'separator', '' ],
-			[ Button => 'Run ~Gutcheck',    -command => \&gutcheck ],
-			[ Button => 'Gutcheck options', -command => \&gutopts ],
-			[ Button => 'Run ~Jeebies',     -command => \&jeebiespop_up ],
-			[ 'command', 'Spell ~Check', -command => \&spellchecker ],
-			[
-			   Button   => 'pptxt',
-			   -command => sub {
-				   errorcheckpop_up('pptxt');
-				   unlink 'null' if ( -e 'null' );
-			   },
-			],
-		]
-	);
-
-	my $txtcleanup = $menubar->cascade(
-		-label     => '.txt version(s)',
-		-tearoff   => 1,
-		-menuitems => [
-			[
-			   Button   => "Convert Italics",
-			   -command => sub {
-				   text_convert_italic( $textwindow, $italic_char );
-				 }
-			],
-			[
-			   Button   => "Convert Bold",
-			   -command => sub { text_convert_bold( $textwindow, $bold_char ) }
-			],
-			[
-			   Button   => 'Convert <tb> to asterisk break',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   text_convert_tb($textwindow);
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[
-			   Button   => 'All of the above',
-			   -command => sub {
-				   text_convert_italic( $textwindow, $italic_char );
-				   text_convert_bold( $textwindow, $bold_char );
-				   $textwindow->addGlobStart;
-				   text_convert_tb($textwindow);
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[
-			   Button   => '~Add a Thought Break',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   text_thought_break($textwindow);
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[
-			   Button   => 'Small caps to all caps',
-			   -command => \&text_convert_smallcaps
-			],
-			[
-			   Button   => 'Remove small caps markup',
-			   -command => \&text_remove_smallcaps_markup
-			],
-			[ Button => "Options", -command => \&text_convert_options ],
-			[ 'separator', '' ],
-			[ Button => 'ASCII ~Boxes', -command => \&asciipopup ],
-			[ Button => 'ASCII Table Special Effects', -command => \&tablefx ],
-			[
-			   Button   => '~Rewrap Selection',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   selectrewrap( $textwindow, $lglobal{seepagenums},
-								 $lglobal{scanno_hl}, $rwhyphenspace );
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[
-			   Button   => '~Block Rewrap Selection',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   blockrewrap();
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[
-			   Button   => 'Interrupt Rewrap',
-			   -command => sub { $operationinterrupt = 1 }
-			],
-			[
-			   Button   => 'Clean Up Rewrap ~Markers',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   cleanup();
-				   $textwindow->addGlobEnd;
-				 }
-			],
-			[ 'separator', '' ],
-			[
-			   Button   => 'Convert Windows CP 1252 characters to Unicode',
-			   -command => \&cp1252toUni
-			],
-		]
-	);
-
-	my $fixup = $menubar->cascade(
-		-label     => 'HTML Version',
-		-tearoff   => 1,
-		-menuitems => [
-			[ Button => '~HTML Fixup',             -command => \&htmlpopup ],
-			[ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
-			[
-			   Cascade    => 'HTML to Epub',
-			   -tearoff   => 0,
-			   -menuitems => [
-				   [
-					  Button   => 'EpubMaker Online',
-					  -command => sub {
-						  runner(
-							   "$globalbrowserstart http://epubmaker.pglaf.org/"
-						  );
-						}
-				   ],
-				   [
-					  Button   => 'EpubMaker (HTML only)',
-					  -command => sub { epubmaker('html') }
-				   ],
-				 ]
-			]
-		]
 	);
 
 	my $selection = $menubar->cascade(
@@ -3124,20 +2864,374 @@ sub menubuild {
 			   },
 			   -accelerator => 'Ctrl+0'
 			],
+			[
+			   Cascade    => 'Bookmarks',
+			   -tearoff   => 0,
+			   -menuitems => menu_bookmarks
+			],
+			[
+			   Cascade    => 'External',
+			   -tearoff   => 0,
+			   -menuitems => menu_external
+			],
+			[
+			   Cascade    => 'Page Markers',
+			   -tearoff   => 0,
+			   -menuitems => [
+				   [
+					  'command',
+					  '~Guess Page Markers',
+					  -command => \&file_guess_page_marks
+				   ],
+				   [
+					  'command',
+					  'Set Page ~Markers',
+					  -command => \&file_mark_pages
+				   ],
+				   [
+					  'command',
+					  '~Adjust Page Markers',
+					  -command => \&viewpagenums
+				   ],
+				 ]
+			],
+			[ Button => '~Greek Transliteration', -command => \&greekpopup ],
+			[ Button => '~UTF Character entry',   -command => \&utford ],
+			[ Button => '~UTF Character Search',  -command => \&uchar ],
+			
+			
 		  ]
-
 	);
 
-	my $bookmarks = $menubar->cascade(
-									   -label     => '~Bookmarks',
-									   -tearoff   => 1,
-									   -menuitems => menu_bookmarks,
+	my $source = $menubar->cascade(
+		-label     => 'Source Cleanup',
+		-tearoff   => 1,
+		-menuitems => [
+			[
+			   'command',
+			   'View Project Comments',
+			   -command => sub {
+				   my $defaulthandler = $extops[3]{command};
+				   $defaulthandler =~ s/\$f\$e/project_comments.html/;
+				   runner( cmdinterp($defaulthandler) );
+				 }
+			],
+			[
+			   'command',
+			   'View Project Discussion',
+			   -command => sub {
+				   return if nofileloadedwarning();
+				   runner(
+"$globalbrowserstart http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$projectid"
+				   ) if $projectid;
+				 }
+			],
+			[ 'separator', '' ],
+			[
+			   'command',
+			   'Find next /*..*/ block',
+			   -command => [ \&nextblock, 'default', 'forward' ]
+			],
+			[
+			   'command',
+			   'Find previous /*..*/ block',
+			   -command => [ \&nextblock, 'default', 'reverse' ]
+			],
+			[
+			   'command',
+			   'Find next /#..#/ block',
+			   -command => [ \&nextblock, 'block', 'forward' ]
+			],
+			[
+			   'command',
+			   'Find previous /#..#/ block',
+			   -command => [ \&nextblock, 'block', 'reverse' ]
+			],
+			[
+			   'command',
+			   'Find next /$..$/ block',
+			   -command => [ \&nextblock, 'stet', 'forward' ]
+			],
+			[
+			   'command',
+			   'Find previous /$..$/ block',
+			   -command => [ \&nextblock, 'stet', 'reverse' ]
+			],
+			[
+			   'command',
+			   'Find next /p..p/ block',
+			   -command => [ \&nextblock, 'poetry', 'forward' ]
+			],
+			[
+			   'command',
+			   'Find previous /p..p/ block',
+			   -command => [ \&nextblock, 'poetry', 'reverse' ]
+			],
+			[
+			   'command',
+			   'Find next indented block',
+			   -command => [ \&nextblock, 'indent', 'forward' ]
+			],
+			[
+			   'command',
+			   'Find previous indented block',
+			   -command => [ \&nextblock, 'indent', 'reverse' ]
+			],
+			[ 'separator', '' ],
+			[
+			   'command',
+			   'Find ~Orphaned Brackets',
+			   -command => \&orphanedbrackets
+			],
+			[ 'command', 'Find Orphaned Markup', -command => \&orphanedmarkup ],
+			[
+			   'command',
+			   'Find Proofer Comments',
+			   -command => \&find_proofer_comment
+			],
+			[
+			   'command',
+			   'Find Asterisks w/o slash',
+			   -command => \&find_asterisks
+			],
+			[
+			   'command',
+			   'Find Transliterations',
+			   -command => \&find_transliterations
+			],
+			[ 'separator', '' ],
+			[
+			   Button   => 'Remove End-of-line Spaces',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   endofline();
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[ Button => 'Run Fi~xup', -command => \&fixpopup ],
+			[ Button => 'Find Greek', -command => \&findandextractgreek ],
+			[ Button => 'Fix ~Page Separators', -command => \&separatorpopup ],
+			[
+			   Button   => 'Remove Blank Lines Before Page Separators',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   delblanklines();
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[ Button => '~Sidenote Fixup', -command => \&sidenotes ],
+			[ Button => '~Footnote Fixup', -command => \&footnotepop ],
+			[
+			   Button   => 'Reformat Poetry ~Line Numbers',
+			   -command => \&poetrynumbers
+			],
+		]
 	);
 
-	my $external = $menubar->cascade(
-									  -label     => 'External',
-									  -tearoff   => 1,
-									  -menuitems => menu_external,
+	my $sourcechecks = $menubar->cascade(
+		-label     => 'Source Checks',
+		-tearoff   => 1,
+		-menuitems => [
+
+			[
+			   Button   => 'Run ~Word Frequency Routine',
+			   -command => \&wordfrequency
+			],
+			[ 'command',   '~Stealth Scannos', -command => \&stealthscanno ],
+			[ 'separator', '' ],
+			[ Button => 'Run ~Gutcheck',    -command => \&gutcheck ],
+			[ Button => 'Gutcheck options', -command => \&gutopts ],
+			[ Button => 'Run ~Jeebies',     -command => \&jeebiespop_up ],
+			[ 'command', 'Spell ~Check', -command => \&spellchecker ],
+			[
+			   Button   => 'pptxt',
+			   -command => sub {
+				   errorcheckpop_up('pptxt');
+				   unlink 'null' if ( -e 'null' );
+			   },
+			],
+		]
+	);
+
+	my $txtcleanup = $menubar->cascade(
+		-label     => 'Text Version(s)',
+		-tearoff   => 1,
+		-menuitems => [
+			[
+			   Button   => "Convert Italics",
+			   -command => sub {
+				   text_convert_italic( $textwindow, $italic_char );
+				 }
+			],
+			[
+			   Button   => "Convert Bold",
+			   -command => sub { text_convert_bold( $textwindow, $bold_char ) }
+			],
+			[
+			   Button   => 'Convert <tb> to asterisk break',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   text_convert_tb($textwindow);
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => 'All of the above',
+			   -command => sub {
+				   text_convert_italic( $textwindow, $italic_char );
+				   text_convert_bold( $textwindow, $bold_char );
+				   $textwindow->addGlobStart;
+				   text_convert_tb($textwindow);
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => '~Add a Thought Break',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   text_thought_break($textwindow);
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => 'Small caps to all caps',
+			   -command => \&text_convert_smallcaps
+			],
+			[
+			   Button   => 'Remove small caps markup',
+			   -command => \&text_remove_smallcaps_markup
+			],
+			[ Button => "Options", -command => \&text_convert_options ],
+			[ 'separator', '' ],
+			[ Button => 'ASCII ~Boxes', -command => \&asciipopup ],
+			[ Button => 'ASCII Table Special Effects', -command => \&tablefx ],
+			[
+			   Button   => '~Rewrap Selection',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   selectrewrap( $textwindow, $lglobal{seepagenums},
+								 $lglobal{scanno_hl}, $rwhyphenspace );
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => '~Block Rewrap Selection',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   blockrewrap();
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => 'Interrupt Rewrap',
+			   -command => sub { $operationinterrupt = 1 }
+			],
+			[
+			   Button   => 'Clean Up Rewrap ~Markers',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   cleanup();
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[ 'separator', '' ],
+			[
+			   Button   => 'Convert Windows CP 1252 characters to Unicode',
+			   -command => \&cp1252toUni
+			],
+		]
+	);
+
+	my $htmlversion = $menubar->cascade(
+		-label     => 'HTML Version',
+		-tearoff   => 1,
+		-menuitems => [
+			[ Button => '~HTML Fixup',             -command => \&htmlpopup ],
+			[ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
+			[
+			   Cascade    => 'HTML to Epub',
+			   -tearoff   => 0,
+			   -menuitems => [
+				   [
+					  Button   => 'EpubMaker Online',
+					  -command => sub {
+						  runner(
+							   "$globalbrowserstart http://epubmaker.pglaf.org/"
+						  );
+						}
+				   ],
+				   [
+					  Button   => 'EpubMaker',
+					  -command => sub { epubmaker('epub') }
+				   ],
+			   ]
+			]
+		]
+	);
+
+	my $singlesource = $menubar->cascade(
+		-label     => 'Single Source',
+		-tearoff   => 1,
+		-menuitems => [
+			[
+			   Cascade    => 'PGTEI Tools',
+			   -tearoff   => 0,
+			   -menuitems => [
+				   [
+					  Button   => 'W3C Validate PGTEI',
+					  -command => sub {
+						  errorcheckpop_up('W3C Validate');
+						}
+				   ],
+				   [
+					  Button   => 'Gnutenberg Press Online',
+					  -command => sub {
+						  runner(
+"$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
+						}
+				   ],
+				   [
+					  Button   => 'Gnutenberg Press (HTML only)',
+					  -command => sub { gnutenberg('html') }
+				   ],
+				   [
+					  Button   => 'Gnutenberg Press (Text only)',
+					  -command => sub { gnutenberg('txt') }
+				   ],
+
+			   ]
+			],
+			[
+			   Cascade    => 'RST Tools',
+			   -tearoff   => 0,
+			   -menuitems => [
+				   [
+					  Button   => 'EpubMaker Online',
+					  -command => sub {
+						  runner(
+							   "$globalbrowserstart http://epubmaker.pglaf.org/"
+						  );
+						}
+				   ],
+				   [
+					  Button   => 'EpubMaker (all formats)',
+					  -command => sub { epubmaker() }
+				   ],
+				   [
+					  Button   => 'EpubMaker (HTML only)',
+					  -command => sub { epubmaker('html') }
+				   ],
+				   [
+					  Button   => 'dp2rst Conversion',
+					  -command => sub {
+						  runner(
+"$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst" );
+						}
+				   ],
+			   ],
+			]
+
+		]
 	);
 
 	# FIXME: We'll leave this alone for now.
@@ -3241,78 +3335,6 @@ sub menubuild {
 	}
 
 	$menubar->Cascade(
-		-label     => 'Advanced',
-		-tearoff   => 1,
-		-menuitems => [
-			[
-			   'command',
-			   '~Guess Page Markers',
-			   -command => \&file_guess_page_marks
-			],
-			[ 'command', 'Set Page ~Markers', -command => \&file_mark_pages ],
-			[ 'command',   '~Adjust Page Markers', -command => \&viewpagenums ],
-			[ 'separator', '' ],
-			[
-			   Cascade    => 'PGTEI Tools',
-			   -tearoff   => 0,
-			   -menuitems => [
-				   [
-					  Button   => 'W3C Validate PGTEI',
-					  -command => sub {
-						  errorcheckpop_up('W3C Validate');
-						}
-				   ],
-				   [
-					  Button   => 'Gnutenberg Press Online',
-					  -command => sub {
-						  runner(
-"$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
-						}
-				   ],
-				   [
-					  Button   => 'Gnutenberg Press (HTML only)',
-					  -command => sub { gnutenberg('html') }
-				   ],
-				   [
-					  Button   => 'Gnutenberg Press (Text only)',
-					  -command => sub { gnutenberg('txt') }
-				   ],
-
-			   ]
-			],
-			[
-			   Cascade    => 'RST Tools',
-			   -tearoff   => 0,
-			   -menuitems => [
-				   [
-					  Button   => 'EpubMaker Online',
-					  -command => sub {
-						  runner(
-							   "$globalbrowserstart http://epubmaker.pglaf.org/"
-						  );
-						}
-				   ],
-				   [
-					  Button   => 'EpubMaker (all formats)',
-					  -command => sub { epubmaker() }
-				   ],
-				   [
-					  Button   => 'EpubMaker (HTML only)',
-					  -command => sub { epubmaker('html') }
-				   ],
-				   [
-					  Button   => 'dp2rst Conversion',
-					  -command => sub {
-						  runner(
-"$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst" );
-						}
-				   ],
-			   ]
-			],
-
-		]
-	);
-	$menubar->Cascade(
 					   -label     => '~Preferences',
 					   -tearoff   => 1,
 					   -menuitems => menu_preferences
@@ -3349,11 +3371,7 @@ sub menubuild {
 			],
 			[ Button => '~Hot keys',              -command => \&hotkeyshelp ],
 			[ Button => '~Function History',      -command => \&opspop_up ],
-			[ Button => '~Greek Transliteration', -command => \&greekpopup ],
-			[ Button => '~Latin 1 Chart',         -command => \&latinpopup ],
 			[ Button => '~Regex Quick Reference', -command => \&regexref ],
-			[ Button => '~UTF Character entry',   -command => \&utford ],
-			[ Button => '~UTF Character Search',  -command => \&uchar ],
 		]
 	);
 }
@@ -5223,7 +5241,7 @@ END
 			( $seg1, $seg2 ) = split /\\E/, $replaceseg, 2;
 			my $linkname;
 			$linkname = makeanchor( deaccent($seg1) );
-			$seg1     = "<a name=\"$linkname\" id=\"$linkname\"></a>";
+			$seg1     = "<a id=\"$linkname\"></a>";
 			$replbuild .= $seg1;
 			$replbuild .= $seg2 if $seg2;
 		}
@@ -6035,8 +6053,7 @@ sub markup {
 			$selection = $textwindow->get( $thisblockstart, $thisblockend )
 			  || '';
 			$linkname = makeanchor( deaccent($selection) );
-			$done =
-			  "<a name=\"" . $linkname . "\" id=\"" . $linkname . "\"></a>";
+			$done     = "<a id=\"" . $linkname . "\"></a>";
 			$textwindow->insert( $thisblockstart, $done );
 		} elsif ( $mark =~ /h\d/ ) {
 			$selection = $textwindow->get( $thisblockstart, $thisblockend );
@@ -9070,12 +9087,16 @@ sub hyphencheck {
 		if ( $word =~ /-/ ) {
 			$wordw++;
 			my $wordtemp = $word;
+
+			# display all words with hyphens unless suspects only is chosen
 			$display{$word} = $lglobal{seenwords}->{$word}
 			  unless $lglobal{suspects_only};
 
 			# Check if the same word also appears with a double hyphen
 			$word =~ s/-/--/g;
 			if ( $lglobal{seenwordsdoublehyphen}->{$word} ) {
+
+				# display with single and with double hyphen
 				$display{$wordtemp} = $lglobal{seenwords}->{$wordtemp}
 				  if $lglobal{suspects_only};
 				my $aword = $word . ' ****';
@@ -16810,8 +16831,8 @@ sub epubmaker {
 		my $pythonpath =
 		  catfile( $lglobal{guigutsdirectory}, 'python27', 'python.exe' );
 
-		if ( defined $format and $format eq 'html' ) {
-			runner("$pythonpath $epubmakerpath --make html $rstfilename");
+		if ( defined $format and (($format eq 'html') or ($format eq 'epub')) ) {
+			runner("$pythonpath $epubmakerpath --make $format $rstfilename");
 		} else {
 			runner("$pythonpath $epubmakerpath $rstfilename");
 		}
@@ -20444,7 +20465,6 @@ checkforupdatesmonthly();
 if ( $lglobal{runtests} ) {
 	runtests();
 } else {
-
 	print
 "If you have any problems, please report any error messages that appear here.\n";
 	MainLoop;
