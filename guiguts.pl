@@ -747,14 +747,14 @@ sub runner {
 }
 
 # Run external program.  Redirect STDOUT to "external.tmp"
-sub run_external {
+sub run_to_tmpfile {
 	my $child = fork();
 	return unless defined $child;
 
 	if ( $child ) {
 	  waitpid( $child, 0 );
 	} else {
-	  open STDOUT, '>', 'external.tmp' || die "Can't write to external.tmp";
+	  open STDOUT, '>', 'results.tmp' || die "Can't write to results.tmp";
 	  exec( @_ );
         }
 }
@@ -8204,7 +8204,7 @@ sub gcheckpop_up {
 	}
 	$lglobal{gclistbox}->focus;
 	my $results;
-	unless ( open $results, '<', 'external.tmp' ) {
+	unless ( open $results, '<', 'results.tmp' ) {
 		my $dialog = $top->Dialog(
 			   -text =>
 				 'Could not read gutcheck results file. Problem with gutcheck.',
@@ -8361,7 +8361,7 @@ sub gcheckpop_up {
 		}
 	}
 	close $results;
-	unlink 'external.tmp';
+	unlink 'results.tmp';
 	gutwindowpopulate( \@gclines );
 }
 
@@ -16008,7 +16008,7 @@ sub gutcheck {
 	if ( $lglobal{gcpop} ) {
 		$lglobal{gclistbox}->delete( '0', 'end' );
 	}
-	run_external( $gutcommand, $gutcheckoptions, 'gutchk.tmp' );
+	run_to_tmpfile( $gutcommand, $gutcheckoptions, 'gutchk.tmp' );
 
 	#$top->Unbusy;
 	unlink 'gutchk.tmp';
