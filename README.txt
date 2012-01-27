@@ -25,7 +25,7 @@ there is only one footnote. Text that is gesperrt <g>abc</g> now becomes
 a&nbsp;b&nbsp;c. Autogenerate HTML no longer uses /* or captions as the 
 title. Auto Illus Search no longer doubles tags in figleft and figright.
 Import Prep Text allows letters in png filenames. Additional external
-operations added.
+operations added. 
 
 Version 1.0.4. Hyphen check now also checks for "flash light" not only
 "flash-light", "flash--light", and "flashlight". A regular expression search 
