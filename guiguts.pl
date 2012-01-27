@@ -767,10 +767,21 @@ sub runner {
 	system "perl spawn.pl $args";
 }
 
-# Run external program.  Redirect STDOUT to "results.tmp"
+# Run external program.  stdout is redirected to "results.tmp"
 sub run_to_tmpfile {
-	my ( $gutcheckstart, $gutcheckoptions, $thisfile ) = @_;	 
-    system(qq/$gutcheckstart $gutcheckoptions $thisfile > results.tmp/);	
+	my $oldstdout;
+	if ( not open ( $oldstdout, '>&', \*STDOUT ) ) {
+		warn "Failed to save stdout: $!";
+		return;
+	}
+	if ( not open ( STDOUT, '>', 'results.tmp' ) ) {
+		warn "Can't write to results.tmp: $!";
+		return;
+	}
+	system ( @_ );
+	if ( not open ( STDOUT, '>&', $oldstdout ) ) {
+		warn "Failed to restore stdout: $!";
+	}
 }
 
 # Menus are not easily modifiable in place. Easier to just destroy and
