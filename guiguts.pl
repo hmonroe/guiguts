@@ -111,6 +111,7 @@ $SIG{INT} = sub { _exit() };
 
 ### Constants
 my $OS_WIN          = $^O =~ m{Win};
+my $OS_MAC   		= $^O =~ m{darwin}; 
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
@@ -139,8 +140,16 @@ our $geometry2     = q{};
 our $geometry3     = q{};
 our $geometry;
 our $globalaspellmode   = 'normal';
-our $globalbrowserstart = 'start';
-if ( !$OS_WIN ) { $globalbrowserstart = 'open'; }
+our $globalbrowserstart = 'start'; 
+if ( !$OS_WIN ) { 
+    if( $OS_MAC ) { $globalbrowserstart = 'open'; } 
+    else { $globalbrowserstart = 'xdg-open'; } 
+} 
+our $globalfirefoxstart = 'start firefox'; 
+if ( !$OS_WIN ) { 
+    if( $OS_MAC ) { $globalbrowserstart = 'open -a firefox'; } 
+    else { $globalbrowserstart = 'firefox'; } 
+} 
 our $globalimagepath        = q{};
 our $globallastpath         = q{};
 our $globalspelldictopt     = q{};
@@ -179,7 +188,7 @@ our $spellindexbkmrk  = q{};
 our $stayontop        = 0;
 our $suspectindex;
 our $toolside            = 'bottom';
-our $useoldmenustructure = 0;
+our $useoldmenustructure = 1;
 our $utffontname         = 'Courier New';
 our $utffontsize         = 14;
 our $verboseerrorchecks  = 0;
@@ -219,31 +228,43 @@ our @recentfile;
 our @replace_history;
 our @search_history;
 our @sopt = ( 0, 0, 0, 0, 0 );    # default is not whole word search
-our @extops = (
-	{
-	   'label'   => 'W3C Markup Validation Service',
-	   'command' => "$globalbrowserstart http://validator.w3.org/"
-	},
-	{
-	   'label'   => 'W3C CSS Validation Service',
-	   'command' => "$globalbrowserstart http://jigsaw.w3.org/css-validator/"
-	},
-	{
-	   'label'   => 'Dictionary Search',
-	   'command' => "$globalbrowserstart "
-		 . 'http://www.specialist-online-dictionary.com/websters/headword_search.cgi?query=$t'
-	},
-	{
-	   'label'   => 'Pass open file to default handler',
-	   'command' => 'start $d$f$e'
-	},
-	{ 'label' => q{}, 'command' => q{} },
-	{ 'label' => q{}, 'command' => q{} },
-	{ 'label' => q{}, 'command' => q{} },
-	{ 'label' => q{}, 'command' => q{} },
-	{ 'label' => q{}, 'command' => q{} },
-	{ 'label' => q{}, 'command' => q{} },
-);
+our @extops = ( 
+        { 
+         'label'   => 'Open current file in its default program', 
+         'command' => "$globalbrowserstart \$d\$f\$e" 
+        }, 
+        { 
+         'label'   => 'Open current file in Firefox', 
+         'command' => "$globalfirefoxstart \$d\$f\$e" 
+        }, 
+        { 
+         'label'   => "Websters 1913 (Specialist Online Dictionary)", 
+         'command' => "$globalbrowserstart http://www.specialist-online-dictionary.com/websters/headword_search.cgi?query=\$t" 
+        }, 
+        { 
+         'label'   => "Websters 1828 American Dictionary", 
+         'command' => "$globalbrowserstart http://www.1828-dictionary.com/d/word/\$t" 
+        }, 
+        { 
+         'label'   => 'Onelook.com (several dictionaries)', 
+         'command' => "$globalbrowserstart http://www.onelook.com/?ls=a&w=\$t" 
+        }, 
+        { 
+         'label'   => 'Shape Catcher (Unicode character finder)', 
+         'command' => "$globalbrowserstart http://shapecatcher.com/" 
+        }, 
+        { 
+         'label'   => 'W3C Markup Validation Service', 
+         'command' => "$globalbrowserstart http://validator.w3.org/" 
+        }, 
+        { 
+         'label'   => 'W3C CSS Validation Service', 
+         'command' => "$globalbrowserstart http://jigsaw.w3.org/css-validator/#validate_by_upload" 
+        }, 
+        { 'label' => q{}, 'command' => q{} }, 
+        { 'label' => q{}, 'command' => q{} }, 
+        { 'label' => q{}, 'command' => q{} }, 
+); 
 
 #All local global variables contained in one hash. # now global
 our %lglobal;
@@ -1351,7 +1372,7 @@ sub menu_preferences {
 	   ],
 	   [
 		  Cascade  => 'File ~Paths and Commands',
-		  -tearoff => 0,
+		  -tearoff => 1,
 		  -menuitems =>
 			[  # FIXME: sub this and generalize for all occurences in menu code.
 			  [
@@ -1775,7 +1796,7 @@ sub menu_bookmarks {
 sub menu_external {
 	[
 	   [
-		  Button   => 'Setup External Operations',
+		  Button   => 'Setup External Operations...',
 		  -command => \&externalpopup
 	   ],
 	   [ 'separator', '' ],
@@ -1823,10 +1844,10 @@ sub menubuildold {
 			 [ 'separator', '' ],
 			 [
 			   'command',
-			   '~Guess Page Markers',
+			   '~Guess Page Markers...',
 			   -command => \&file_guess_page_marks
 			 ],
-			 [ 'command', 'Set Page ~Markers', -command => \&file_mark_pages ],
+			 [ 'command', 'Set Page ~Markers...', -command => \&file_mark_pages ],
 			 [ 'command', '~Adjust Page Markers', -command => \&viewpagenums ],
 			 [ 'separator', '' ],
 			 [ 'command', 'E~xit', -command => \&_exit ],
@@ -1902,9 +1923,9 @@ sub menubuildold {
 		-label     => 'Search & ~Replace',
 		-tearoff   => 1,
 		-menuitems => [
-			[ 'command', 'Search & ~Replace', -command => \&searchpopup ],
-			[ 'command', '~Stealth Scannos',  -command => \&stealthscanno ],
-			[ 'command', 'Spell ~Check',      -command => \&spellchecker ],
+			[ 'command', 'Search & ~Replace...', -command => \&searchpopup ],
+			[ 'command', '~Stealth Scannos...',  -command => \&stealthscanno ],
+			[ 'command', 'Spell ~Check...',      -command => \&spellchecker ],
 			[
 			   'command',
 			   'Goto ~Line...',
@@ -1915,7 +1936,7 @@ sub menubuildold {
 			],
 			[
 			   'command',
-			   'Goto ~Page',
+			   'Goto ~Page...',
 			   -command => sub {
 				   gotopage();
 				   update_indicators();
@@ -1979,10 +2000,10 @@ sub menubuildold {
 			[ 'separator', '' ],
 			[
 			   'command',
-			   'Find ~Orphaned Brackets',
+			   'Find ~Orphaned Brackets...',
 			   -command => \&orphanedbrackets
 			],
-			[ 'command', 'Find Orphaned Markup', -command => \&orphanedmarkup ],
+			[ 'command', 'Find Orphaned Markup...', -command => \&orphanedmarkup ],
 			[
 			   'command',
 			   'Find Proofer Comments',
@@ -1995,7 +2016,7 @@ sub menubuildold {
 			],
 			[
 			   'command',
-			   'Find Transliterations',
+			   'Find Transliterations...',
 			   -command => \&find_transliterations
 			],
 			[ 'separator', '' ],
@@ -2010,7 +2031,7 @@ sub menubuildold {
 			   -accelerator => 'Ctrl+\''
 			],
 			[
-			   'command', 'Highlight arbitrary characters in selection',
+			   'command', 'Highlight arbitrary characters in selection...',
 			   -command     => \&hilitepopup,
 			   -accelerator => 'Ctrl+Alt+h'
 			],
@@ -2056,7 +2077,7 @@ sub menubuildold {
 			],
 			[ 'separator', '' ],
 			[
-			   Button   => 'Surround Selection With....',
+			   Button   => 'Surround Selection With...',
 			   -command => sub {
 				   if ( defined( $lglobal{surpop} ) ) {
 					   $lglobal{surpop}->deiconify;
@@ -2134,7 +2155,7 @@ sub menubuildold {
 				 }
 			],
 			[
-			   Button   => 'Flood Fill Selection With....',
+			   Button   => 'Flood Fill Selection With...',
 			   -command => sub {
 				   $textwindow->addGlobStart;
 				   $lglobal{floodpop} =
@@ -2183,8 +2204,8 @@ sub menubuildold {
 			   -command => sub { $operationinterrupt = 1 }
 			],
 			[ 'separator', '' ],
-			[ Button => 'ASCII ~Boxes',          -command => \&asciipopup ],
-			[ Button => '~Align text on string', -command => \&alignpopup ],
+			[ Button => 'ASCII ~Boxes...',          -command => \&asciipopup ],
+			[ Button => '~Align text on string...', -command => \&alignpopup ],
 			[ 'separator', '' ],
 			[
 			   Button   => 'Convert To Named/Numeric Entities',
@@ -2228,15 +2249,15 @@ sub menubuildold {
 		-tearoff   => 1,
 		-menuitems => [
 			[
-			   Button   => 'Run ~Word Frequency Routine',
+			   Button   => 'Run ~Word Frequency Routine...',
 			   -command => \&wordfrequency
 			],
 			[ 'separator', '' ],
-			[ Button => 'Run ~Gutcheck',    -command => \&gutcheck ],
-			[ Button => 'Gutcheck options', -command => \&gutopts ],
-			[ Button => 'Run ~Jeebies',     -command => \&jeebiespop_up ],
+			[ Button => 'Run ~Gutcheck...',    -command => \&gutcheck ],
+			[ Button => 'Gutcheck options...', -command => \&gutopts ],
+			[ Button => 'Run ~Jeebies...',     -command => \&jeebiespop_up ],
 			[
-			   Button   => 'pptxt',
+			   Button   => 'pptxt...',
 			   -command => sub {
 				   errorcheckpop_up('pptxt');
 				   unlink 'null' if ( -e 'null' );
@@ -2251,9 +2272,9 @@ sub menubuildold {
 				   $textwindow->addGlobEnd;
 				 }
 			],
-			[ Button => 'Run Fi~xup', -command => \&fixpopup ],
+			[ Button => 'Run Fi~xup...', -command => \&fixpopup ],
 			[ 'separator', '' ],
-			[ Button => 'Fix ~Page Separators', -command => \&separatorpopup ],
+			[ Button => 'Fix ~Page Separators...', -command => \&separatorpopup ],
 			[
 			   Button   => 'Remove Blank Lines Before Page Separators',
 			   -command => sub {
@@ -2263,9 +2284,9 @@ sub menubuildold {
 				 }
 			],
 			[ 'separator', '' ],
-			[ Button => '~Footnote Fixup', -command => \&footnotepop ],
-			[ Button => '~HTML Fixup',     -command => \&htmlpopup ],
-			[ Button => '~Sidenote Fixup', -command => \&sidenotes ],
+			[ Button => '~Footnote Fixup...', -command => \&footnotepop ],
+			[ Button => '~HTML Fixup...',     -command => \&htmlpopup ],
+			[ Button => '~Sidenote Fixup...', -command => \&sidenotes ],
 			[
 			   Button   => 'Reformat Poetry ~Line Numbers',
 			   -command => \&poetrynumbers
@@ -2276,7 +2297,7 @@ sub menubuildold {
 			],
 			[ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
 			[ 'separator', '' ],
-			[ Button => 'ASCII Table Special Effects', -command => \&tablefx ],
+			[ Button => 'ASCII Table Special Effects...', -command => \&tablefx ],
 			[ 'separator', '' ],
 			[
 			   Button   => 'Clean Up Rewrap ~Markers',
@@ -2287,7 +2308,7 @@ sub menubuildold {
 				 }
 			],
 			[ 'separator', '' ],
-			[ Button => 'Find Greek', -command => \&findandextractgreek ]
+			[ Button => 'Find Greek...', -command => \&findandextractgreek ]
 		]
 	);
 
@@ -2339,7 +2360,7 @@ sub menubuildold {
 			   Button   => 'Remove small caps markup',
 			   -command => \&text_remove_smallcaps_markup
 			],
-			[ Button => "Options", -command => \&text_convert_options ],
+			[ Button => "Options...", -command => \&text_convert_options ],
 		  ]
 
 	);
@@ -2606,7 +2627,7 @@ sub menubuild {
 		-label     => '~Edit',
 		-tearoff   => 1,
 		-menuitems => [
-			[ 'command', 'Search & ~Replace', -command => \&searchpopup ],
+			[ 'command', 'Search & ~Replace...', -command => \&searchpopup ],
 			[
 			   'command', 'Cut',
 			   -command     => sub { cut() },
@@ -2673,7 +2694,7 @@ sub menubuild {
 			],
 			[
 			   'command',
-			   'Goto ~Page',
+			   'Goto ~Page...',
 			   -command => sub {
 				   gotopage();
 				   update_indicators();
@@ -2688,7 +2709,7 @@ sub menubuild {
 	);
 
 	my $selection = $menubar->cascade(
-		-label     => 'Tools',
+		-label     => '~Tools',
 		-tearoff   => 1,
 		-menuitems => [
 			[
@@ -2711,7 +2732,7 @@ sub menubuild {
 			],
 			[ 'separator', '' ],
 			[
-			   Button   => 'Surround Selection With....',
+			   Button   => 'Surround Selection With...',
 			   -command => sub {
 				   if ( defined( $lglobal{surpop} ) ) {
 					   $lglobal{surpop}->deiconify;
@@ -2789,7 +2810,7 @@ sub menubuild {
 				 }
 			],
 			[
-			   Button   => 'Flood Fill Selection With....',
+			   Button   => 'Flood Fill Selection With...',
 			   -command => sub {
 				   $textwindow->addGlobStart;
 				   $lglobal{floodpop} =
@@ -2816,7 +2837,7 @@ sub menubuild {
 				 }
 			],
 			[ 'separator', '' ],
-			[ Button => '~Align text on string', -command => \&alignpopup ],
+			[ Button => '~Align text on string...', -command => \&alignpopup ],
 			[ 'separator', '' ],
 			[
 			   Button   => 'Convert To Named/Numeric Entities',
@@ -2863,7 +2884,7 @@ sub menubuild {
 			   -accelerator => 'Ctrl+\''
 			],
 			[
-			   'command', 'Highlight arbitrary characters in selection',
+			   'command', 'Highlight arbitrary characters in selection...',
 			   -command     => \&hilitepopup,
 			   -accelerator => 'Ctrl+Alt+h'
 			],
@@ -2892,12 +2913,12 @@ sub menubuild {
 			   -menuitems => [
 				   [
 					  'command',
-					  '~Guess Page Markers',
+					  '~Guess Page Markers...',
 					  -command => \&file_guess_page_marks
 				   ],
 				   [
 					  'command',
-					  'Set Page ~Markers',
+					  'Set Page ~Markers...',
 					  -command => \&file_mark_pages
 				   ],
 				   [
@@ -2916,14 +2937,14 @@ sub menubuild {
 	);
 
 	my $source = $menubar->cascade(
-		-label     => 'Source Cleanup',
+		-label     => '~Source Cleanup',
 		-tearoff   => 1,
 		-menuitems => [
 			[
 			   'command',
 			   'View Project Comments',
 			   -command => sub {
-				   my $defaulthandler = $extops[3]{command};
+				   my $defaulthandler = $extops[0]{command};
 				   $defaulthandler =~ s/\$f\$e/project_comments.html/;
 				   runner( cmdinterp($defaulthandler) );
 				 }
@@ -2992,10 +3013,10 @@ sub menubuild {
 			[ 'separator', '' ],
 			[
 			   'command',
-			   'Find ~Orphaned Brackets',
+			   'Find ~Orphaned Brackets...',
 			   -command => \&orphanedbrackets
 			],
-			[ 'command', 'Find Orphaned Markup', -command => \&orphanedmarkup ],
+			[ 'command', 'Find Orphaned Markup...', -command => \&orphanedmarkup ],
 			[
 			   'command',
 			   'Find Proofer Comments',
@@ -3008,7 +3029,7 @@ sub menubuild {
 			],
 			[
 			   'command',
-			   'Find Transliterations',
+			   'Find Transliterations...',
 			   -command => \&find_transliterations
 			],
 			[ 'separator', '' ],
@@ -3020,8 +3041,8 @@ sub menubuild {
 				   $textwindow->addGlobEnd;
 				 }
 			],
-			[ Button => 'Run Fi~xup', -command => \&fixpopup ],
-			[ Button => 'Find Greek', -command => \&findandextractgreek ],
+			[ Button => 'Run Fi~xup...', -command => \&fixpopup ],
+			[ Button => 'Find Greek...', -command => \&findandextractgreek ],
 			[ Button => 'Fix ~Page Separators', -command => \&separatorpopup ],
 			[
 			   Button   => 'Remove Blank Lines Before Page Separators',
@@ -3031,8 +3052,8 @@ sub menubuild {
 				   $textwindow->addGlobEnd;
 				 }
 			],
-			[ Button => '~Sidenote Fixup', -command => \&sidenotes ],
-			[ Button => '~Footnote Fixup', -command => \&footnotepop ],
+			[ Button => '~Sidenote Fixup...', -command => \&sidenotes ],
+			[ Button => '~Footnote Fixup...', -command => \&footnotepop ],
 			[
 			   Button   => 'Reformat Poetry ~Line Numbers',
 			   -command => \&poetrynumbers
@@ -3041,22 +3062,22 @@ sub menubuild {
 	);
 
 	my $sourcechecks = $menubar->cascade(
-		-label     => 'Source Checks',
+		-label     => 'Source ~Checks',
 		-tearoff   => 1,
 		-menuitems => [
 
 			[
-			   Button   => 'Run ~Word Frequency Routine',
+			   Button   => 'Run ~Word Frequency Routine...',
 			   -command => \&wordfrequency
 			],
-			[ 'command',   '~Stealth Scannos', -command => \&stealthscanno ],
+			[ 'command',   '~Stealth Scannos...', -command => \&stealthscanno ],
 			[ 'separator', '' ],
-			[ Button => 'Run ~Gutcheck',    -command => \&gutcheck ],
-			[ Button => 'Gutcheck options', -command => \&gutopts ],
-			[ Button => 'Run ~Jeebies',     -command => \&jeebiespop_up ],
-			[ 'command', 'Spell ~Check', -command => \&spellchecker ],
+			[ Button => 'Run ~Gutcheck...',    -command => \&gutcheck ],
+			[ Button => 'Gutcheck options...', -command => \&gutopts ],
+			[ Button => 'Run ~Jeebies...',     -command => \&jeebiespop_up ],
+			[ 'command', 'Spell ~Check...', -command => \&spellchecker ],
 			[
-			   Button   => 'pptxt',
+			   Button   => 'pptxt...',
 			   -command => sub {
 				   errorcheckpop_up('pptxt');
 				   unlink 'null' if ( -e 'null' );
@@ -3066,7 +3087,7 @@ sub menubuild {
 	);
 
 	my $txtcleanup = $menubar->cascade(
-		-label     => 'Text Version(s)',
+		-label     => 'Te~xt Version(s)',
 		-tearoff   => 1,
 		-menuitems => [
 			[
@@ -3113,10 +3134,10 @@ sub menubuild {
 			   Button   => 'Remove small caps markup',
 			   -command => \&text_remove_smallcaps_markup
 			],
-			[ Button => "Options", -command => \&text_convert_options ],
+			[ Button => "Options...", -command => \&text_convert_options ],
 			[ 'separator', '' ],
-			[ Button => 'ASCII ~Boxes', -command => \&asciipopup ],
-			[ Button => 'ASCII Table Special Effects', -command => \&tablefx ],
+			[ Button => 'ASCII ~Boxes...', -command => \&asciipopup ],
+			[ Button => 'ASCII Table Special Effects...', -command => \&tablefx ],
 			[
 			   Button   => '~Rewrap Selection',
 			   -command => sub {
@@ -3155,7 +3176,7 @@ sub menubuild {
 	);
 
 	my $htmlversion = $menubar->cascade(
-		-label     => 'HTML Version',
+		-label     => '~HTML Version',
 		-tearoff   => 1,
 		-menuitems => [
 			[ Button => '~HTML Fixup',             -command => \&htmlpopup ],
@@ -3209,7 +3230,7 @@ sub menubuild {
 	);
 
 	my $singlesource = $menubar->cascade(
-		-label     => 'Single Source',
+		-label     => 'Sin~gle Source',
 		-tearoff   => 1,
 		-menuitems => [
 			[
@@ -3628,7 +3649,7 @@ sub footnotetidy {
 	my ( $begin, $end, $colon );
 	$lglobal{fnsecondpass} = 0;
 	footnotefixup();
-	return unless $lglobal{fntotal} > 1;
+	return unless $lglobal{fntotal} > 0;
 	$lglobal{fnindex} = 1;
 	while (1) {
 		$begin = $textwindow->index( 'fns' . $lglobal{fnindex} );
@@ -6315,27 +6336,28 @@ sub htmlimage {
 					$title =~ s/'/&#39;/g;
 					$title = " title=\"$title\"" if $title;
 					$textwindow->addGlobStart;
+					my $closeimg = "px;\">\n<img src=\"$name\" $sizexy$alt$title />\n$selection</div>$preservep";
 
 					if ( $alignment eq 'center' ) {
 						$textwindow->delete( 'thisblockstart', 'thisblockend' );
 						$textwindow->insert( 'thisblockstart',
 							    "<div class=\"figcenter\" style=\"width: " 
 							  . $width
-							  . "px;\">\n<img src=\"$name\" $sizexy$alt$title />\n$selection</div>$preservep"
+							  . $closeimg
 						);
 					} elsif ( $alignment eq 'left' ) {
 						$textwindow->delete( 'thisblockstart', 'thisblockend' );
 						$textwindow->insert( 'thisblockstart',
 							    "<div class=\"figleft\" style=\"width: " 
 							  . $width
-							  . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
+							  . $closeimg
 						);
 					} elsif ( $alignment eq 'right' ) {
 						$textwindow->delete( 'thisblockstart', 'thisblockend' );
 						$textwindow->insert( 'thisblockstart',
 							    "<div class=\"figright\" style=\"width: " 
 							  . $width
-							  . "px;\">\n<img src=\"$name\" $sizexy alt=\"$alt\" title=\"$title\" />\n$selection</div>$preservep"
+							  . $closeimg
 						);
 					}
 					$textwindow->addGlobEnd;
@@ -9233,7 +9255,7 @@ sub wordfrequencyspellcheck {
 }
 
 sub wordfrequencygetmisspelled {
-	@{ $lglobal{misspelledlist} } = ();
+	$lglobal{misspelledlist}= ();
 	my ( $words, $uwords );
 	my $wordw = 0;
 	foreach ( sort ( keys %{ $lglobal{seenwords} } ) ) {
@@ -13435,6 +13457,7 @@ sub spellget_misspellings {    # get list of misspelled words
 }
 
 sub getmisspelledwords() {
+    $lglobal{misspelledlist}=();	
 	my $section = shift;
 	my ( $word, @templist );
 
@@ -15443,8 +15466,8 @@ sub wordfrequency {
 	push @operations, ( localtime() . ' - Word Frequency' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	oppopupdate()  if $lglobal{oppop};
-	$lglobal{seenwords} = ();
-	%{ $lglobal{seenwordsdoublehyphen} } = ();
+	#$lglobal{seenwords} = ();
+	#%{ $lglobal{seenwordsdoublehyphen} } = ();
 	my ( @words, $match, @savesets );
 	my $index = '1.0';
 	my $wc    = 0;
@@ -15851,6 +15874,10 @@ sub wordfrequencybuildwordlist {
 	my $index = '1.0';
 	my $wc    = 0;
 	my $end   = $textwindow->index('end');
+	$lglobal{seenwordsdoublehyphen} = ();
+	$lglobal{seenwords} = ();
+	$lglobal{seenwordpairs} = ();
+	
 
 	my $filename = $textwindow->FileName;
 	unless ($filename) {
@@ -16926,7 +16953,7 @@ sub htmlpopup {
 		$f0->Button(    #hkm added
 			-activebackground => $activecolor,
 			-command          => sub {
-				runner( cmdinterp("$extops[3]{command}") );
+				runner( cmdinterp("$extops[0]{command}") );
 			},
 			-text  => 'View in Browser',
 			-width => 16,
