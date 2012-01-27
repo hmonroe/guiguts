@@ -188,7 +188,7 @@ our $spellindexbkmrk  = q{};
 our $stayontop        = 0;
 our $suspectindex;
 our $toolside            = 'bottom';
-our $useoldmenustructure = 1;
+our $useppwizardmenus = 0;
 our $utffontname         = 'Courier New';
 our $utffontsize         = 14;
 our $verboseerrorchecks  = 0;
@@ -767,17 +767,10 @@ sub runner {
 	system "perl spawn.pl $args";
 }
 
-# Run external program.  Redirect STDOUT to "external.tmp"
+# Run external program.  Redirect STDOUT to "results.tmp"
 sub run_to_tmpfile {
-	my $child = fork();
-	return unless defined $child;
-
-	if ( $child ) {
-	  waitpid( $child, 0 );
-	} else {
-	  open STDOUT, '>', 'results.tmp' || die "Can't write to results.tmp";
-	  exec( @_ );
-        }
+	my ( $gutcheckstart, $gutcheckoptions, $thisfile ) = @_;	 
+    system(qq/$gutcheckstart $gutcheckoptions $thisfile > results.tmp/);	
 }
 
 # Menus are not easily modifiable in place. Easier to just destroy and
@@ -1363,8 +1356,8 @@ sub file_mark_pages {
 sub menu_preferences {
 	[
 	   [
-		  Checkbutton => 'Use Old Menu Structure',
-		  -variable   => \$useoldmenustructure,
+		  Checkbutton => 'Use PP Wizard Menus',
+		  -variable   => \$useppwizardmenus,
 		  -onvalue    => 1,
 		  -offvalue   => 0,
 		  -command    => \&menurebuild
@@ -2582,7 +2575,7 @@ sub menubuildold {
 }
 
 sub menubuild {
-	if ($useoldmenustructure) {
+	unless ($useppwizardmenus) {
 		menubuildold();
 		return;
 	}
@@ -12136,7 +12129,7 @@ EOM
 			geometry2 geometry3 geometrypnumpop globalaspellmode highlightcolor history_size ignoreversionnumber
 			intelligentWF ignoreversions italic_char jeebiesmode lastversioncheck lmargin nobell nohighlights
 			notoolbar poetrylmargin rmargin rwhyphenspace multiterm stayontop toolside utffontname utffontsize
-			useoldmenustructure verboseerrorchecks vislnnm w3cremote wfstayontop/
+			useppwizardmenus verboseerrorchecks vislnnm w3cremote wfstayontop/
 		  )
 		{
 			if ( eval '$' . $_ ) {
@@ -15948,39 +15941,30 @@ sub wordfrequencybuildwordlist {
 
 ## Gutcheck
 sub gutcheck {
-	print 1;
 	no warnings;
 	push @operations, ( localtime() . ' - Gutcheck' );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	oppopupdate()  if $lglobal{oppop};
-	print 2;
 	my ( $name, $path, $extension, @path );
 	$textwindow->focus;
 	update_indicators();
 	my $title = $top->cget('title');
-	print 3;
 	return if ( $title =~ /No File Loaded/ );
-
 	#$top->Busy( -recurse => 1 );
-
-	print 4;
 
 	# FIXME: wide character in print warning next line with unicode
 	# Figure out how to determine encoding. See scratchpad.pl
 	# open my $gc, ">:encoding(UTF-8)", "gutchk.tmp");
 	if ( open my $gc, ">:bytes", 'gutchk.tmp' ) {
-		print 5;
 		my $count = 0;
 		my $index = '1.0';
 		my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
-		print 6;
 		while ( $textwindow->compare( $index, '<', 'end' ) ) {
 			my $end = $textwindow->index("$index  lineend +1c");
 			print $gc $textwindow->get( $index, $end );
 			$index = $end;
 		}
 		close $gc;
-		print 7;
 	} else {
 		warn "Could not open temp file for writing. $!";
 		my $dialog = $top->Dialog(
@@ -17273,12 +17257,12 @@ sub htmlpopup {
 					 -text             => 'Hyperlink Page Nums',
 					 -width            => 16
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-		if ($useoldmenustructure) {
+		unless ($useppwizardmenus) {
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
 				errorcheckpop_up('Link Check');
-				unlink 'null' if ( -e 'null' );
+				unlink 'null' if ( -e 'null' )
 			},
 			-text  => 'Link Check',
 			-width => 16
