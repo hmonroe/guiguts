@@ -1,6 +1,6 @@
 %scannoslist = (
 '(<\w>)\s+' => '$1',
-'(?<=\[)([^FSI])' => '$1',
+'(?<=\[)([^FSIG\d])' => '$1',
 '([0-9]),([0-9]{4})' => '$1, $2',
 '([^gG])uess' => '$1ness',
 '([abimou])hl([ie])' => '$1bl$2',
@@ -49,7 +49,7 @@
 
 %reghints = (
 '(<\w>)\s+' => 'Find HTML opening marker followed by whitespace and remove the whitespace.',
-'(?<=\[)([^FSI])' => 'Find an opening square bracket followed by a anything but F, S or I. (Footnote, Sidenote or Illustration).',
+'(?<=\[)([^FSIG\d])' => 'Find an opening square bracket followed by anything but F, S, I, G or a number. (Footnote, Sidenote, Illustration, Greek.).',
 '([0-9]),([0-9]{4})' => 'Find dates that are missing a space between the month and year, and add a space.',
 '([^gG])uess' => 'Find the string "uess" not preceded by a g and change it to ness.',
 '([abimou])hl([ie])' => 'Find a string that contains hl preceded by one of (a,b,i,m,o or u) and followed by i or e and change it to bl.',
