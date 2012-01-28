@@ -787,6 +787,7 @@ sub run_to_tmpfile {
 
 # Menus are not easily modifiable in place. Easier to just destroy and
 ## rebuild every time it is modified
+# FIXME - should the for statement know how many menus there are?
 sub menurebuild {
 	for ( 0 .. 12 ) {
 		$menubar->delete('last');
@@ -3438,6 +3439,773 @@ sub menubuild {
 			[ Button => '~Hot keys',              -command => \&hotkeyshelp ],
 			[ Button => '~Function History',      -command => \&opspop_up ],
 			[ Button => '~Regex Quick Reference', -command => \&regexref ],
+		]
+	);
+}
+
+#another attempt at menus
+sub menubuildtwo {
+	my $file = $menubar->cascade(
+		-label     => '~File',
+		-tearoff   => 1,
+		-menuitems => [
+			 [ 'command',   '~Open', -command => \&file_open ],
+			 [ 'separator', '' ],
+			 map ( [
+					 Button   => "$recentfile[$_]",
+					 -command => [ \&openfile, $recentfile[$_] ]
+				   ],
+				   ( 0 .. scalar(@recentfile) - 1 ) ),
+			 [ 'separator', '' ],
+			 [
+			   'command',
+			   '~Save',
+			   -accelerator => 'Ctrl+s',
+			   -command     => \&savefile
+			 ],
+			 [ 'command', 'Save ~As', -command => \&file_saveas ],
+			 [
+			   'command',
+			   '~Include File',
+			   -command => sub { file_include($textwindow) }
+			 ],
+			 [ 'command',   '~Close', -command => \&file_close ],
+			 [ 'separator', '' ],
+			 [ 'command', 'Import Prep Text Files', -command => \&file_import ],
+			 [
+			   'command',
+			   'Export As Prep Text Files',
+			   -command => \&file_export
+			 ],
+			 [ 'separator', '' ],
+			 [
+			   'command',
+			   '~Guess Page Markers...',
+			   -command => \&file_guess_page_marks
+			 ],
+			 [ 'command', 'Set Page ~Markers...', -command => \&file_mark_pages ],
+			 [ 'command', '~Adjust Page Markers', -command => \&viewpagenums ],
+			 [ 'separator', '' ],
+			 [ 'command', 'E~xit', -command => \&_exit ],
+		  ]
+
+	);
+
+	my $edit = $menubar->cascade(
+		-label     => '~Edit',
+		-tearoff   => 1,
+		-menuitems => [
+			[
+			   'command', 'Undo',
+			   -command     => sub { $textwindow->undo },
+			   -accelerator => 'Ctrl+z'
+			],
+
+			[
+			   'command', 'Redo',
+			   -command     => sub { $textwindow->redo },
+			   -accelerator => 'Ctrl+y'
+			],
+			[ 'separator', '' ],
+
+			[
+			   'command', 'Cut',
+			   -command     => sub { cut() },
+			   -accelerator => 'Ctrl+x'
+			],
+
+			[ 'separator', '' ],
+			[
+			   'command', 'Copy',
+			   -command     => sub { textcopy() },
+			   -accelerator => 'Ctrl+c'
+			],
+			[
+			   'command', 'Paste',
+			   -command     => sub { paste() },
+			   -accelerator => 'Ctrl+v'
+			],
+			[
+			   'command',
+			   'Col Paste',
+			   -command => sub {    # FIXME: sub edit_column_paste
+				   $textwindow->addGlobStart;
+				   $textwindow->clipboardColumnPaste;
+				   $textwindow->addGlobEnd;
+			   },
+			   -accelerator => 'Ctrl+`'
+			],
+			[ 'separator', '' ],
+			[
+			   'command',
+			   'Select All',
+			   -command => sub {
+				   $textwindow->selectAll;
+			   },
+			   -accelerator => 'Ctrl+/'
+			],
+			[
+			   'command',
+			   'Unselect All',
+			   -command => sub {
+				   $textwindow->unselectAll;
+			   },
+			   -accelerator => 'Ctrl+\\'
+			],
+		  ]
+
+	);
+	my $search = $menubar->cascade(
+		-label     => 'Search & ~Replace',
+		-tearoff   => 1,
+		-menuitems => [
+			[ 'command', 'Search & ~Replace...', -command => \&searchpopup ],
+			[ 'command', '~Stealth Scannos...',  -command => \&stealthscanno ],
+			[ 'command', 'Spell ~Check...',      -command => \&spellchecker ],
+			[
+			   'command',
+			   'Goto ~Line...',
+			   -command => sub {
+				   gotoline();
+				   update_indicators();
+				 }
+			],
+			[
+			   'command',
+			   'Goto ~Page...',
+			   -command => sub {
+				   gotopage();
+				   update_indicators();
+				 }
+			],
+			[
+			   'command', '~Which Line?',
+			   -command => sub { $textwindow->WhatLineNumberPopUp }
+			],
+			[ 'separator', '' ],
+			[
+			   'command',
+			   'Find next /*..*/ block',
+			   -command => [ \&nextblock, 'default', 'forward' ]
+			],
+			[
+			   'command',
+			   'Find previous /*..*/ block',
+			   -command => [ \&nextblock, 'default', 'reverse' ]
+			],
+			[
+			   'command',
+			   'Find next /#..#/ block',
+			   -command => [ \&nextblock, 'block', 'forward' ]
+			],
+			[
+			   'command',
+			   'Find previous /#..#/ block',
+			   -command => [ \&nextblock, 'block', 'reverse' ]
+			],
+			[
+			   'command',
+			   'Find next /$..$/ block',
+			   -command => [ \&nextblock, 'stet', 'forward' ]
+			],
+			[
+			   'command',
+			   'Find previous /$..$/ block',
+			   -command => [ \&nextblock, 'stet', 'reverse' ]
+			],
+			[
+			   'command',
+			   'Find next /p..p/ block',
+			   -command => [ \&nextblock, 'poetry', 'forward' ]
+			],
+			[
+			   'command',
+			   'Find previous /p..p/ block',
+			   -command => [ \&nextblock, 'poetry', 'reverse' ]
+			],
+			[
+			   'command',
+			   'Find next indented block',
+			   -command => [ \&nextblock, 'indent', 'forward' ]
+			],
+			[
+			   'command',
+			   'Find previous indented block',
+			   -command => [ \&nextblock, 'indent', 'reverse' ]
+			],
+			[ 'separator', '' ],
+			[
+			   'command',
+			   'Find ~Orphaned Brackets...',
+			   -command => \&orphanedbrackets
+			],
+			[ 'command', 'Find Orphaned Markup...', -command => \&orphanedmarkup ],
+			[
+			   'command',
+			   'Find Proofer Comments',
+			   -command => \&find_proofer_comment
+			],
+			[
+			   'command',
+			   'Find Asterisks w/o slash',
+			   -command => \&find_asterisks
+			],
+			[
+			   'command',
+			   'Find Transliterations...',
+			   -command => \&find_transliterations
+			],
+			[ 'separator', '' ],
+			[
+			   'command', 'Highlight double quotes in selection',
+			   -command     => [ \&hilite, '"' ],
+			   -accelerator => 'Ctrl+Shift+"'
+			],
+			[
+			   'command', 'Highlight single quotes in selection',
+			   -command     => [ \&hilite, '\'' ],
+			   -accelerator => 'Ctrl+\''
+			],
+			[
+			   'command', 'Highlight arbitrary characters in selection...',
+			   -command     => \&hilitepopup,
+			   -accelerator => 'Ctrl+Alt+h'
+			],
+			[
+			   'command',
+			   'Remove Highlights',
+			   -command => sub {    # FIXME: sub search_rm_hilites
+				   $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+				   $textwindow->tagRemove( 'quotemark', '1.0', 'end' );
+			   },
+			   -accelerator => 'Ctrl+0'
+			],
+		]
+	);
+
+	my $bookmarks = $menubar->cascade(
+									   -label     => '~Bookmarks',
+									   -tearoff   => 1,
+									   -menuitems => menu_bookmarks,
+	);
+
+	my $selection = $menubar->cascade(
+		-label     => '~Selection',
+		-tearoff   => 1,
+		-menuitems => [
+			[
+			   Button   => '~lowercase Selection',
+			   -command => sub {
+				   case ( $textwindow, 'lc' );
+				 }
+			],
+			[
+			   Button   => '~Sentence case Selection',
+			   -command => sub { case ( $textwindow, 'sc' ); }
+			],
+			[
+			   Button   => '~Title Case Selection',
+			   -command => sub { case ( $textwindow, 'tc' ); }
+			],
+			[
+			   Button   => '~UPPERCASE Selection',
+			   -command => sub { case ( $textwindow, 'uc' ); }
+			],
+			[ 'separator', '' ],
+			[
+			   Button   => 'Surround Selection With...',
+			   -command => sub {
+				   if ( defined( $lglobal{surpop} ) ) {
+					   $lglobal{surpop}->deiconify;
+					   $lglobal{surpop}->raise;
+					   $lglobal{surpop}->focus;
+				   } else {
+					   $lglobal{surpop} = $top->Toplevel;
+					   $lglobal{surpop}->title('Surround text with:');
+
+					   my $f =
+						 $lglobal{surpop}
+						 ->Frame->pack( -side => 'top', -anchor => 'n' );
+					   $f->Label( -text =>
+"Surround the selection with?\n\\n will be replaced with a newline.",
+						 )->pack(
+								  -side   => 'top',
+								  -pady   => 5,
+								  -padx   => 2,
+								  -anchor => 'n'
+						 );
+					   my $f1 =
+						 $lglobal{surpop}
+						 ->Frame->pack( -side => 'top', -anchor => 'n' );
+					   my $surstrt =
+						 $f1->Entry(
+									 -width      => 8,
+									 -background => $bkgcolor,
+									 -font       => $lglobal{font},
+									 -relief     => 'sunken',
+						 )->pack(
+								  -side   => 'left',
+								  -pady   => 5,
+								  -padx   => 2,
+								  -anchor => 'n'
+						 );
+					   my $surend =
+						 $f1->Entry(
+									 -width      => 8,
+									 -background => $bkgcolor,
+									 -font       => $lglobal{font},
+									 -relief     => 'sunken',
+						 )->pack(
+								  -side   => 'left',
+								  -pady   => 5,
+								  -padx   => 2,
+								  -anchor => 'n'
+						 );
+					   my $f2 =
+						 $lglobal{surpop}
+						 ->Frame->pack( -side => 'top', -anchor => 'n' );
+					   my $gobut = $f2->Button(
+						   -activebackground => $activecolor,
+						   -command          => sub {
+							   surroundit( $surstrt->get, $surend->get,
+										   $textwindow );
+						   },
+						   -text  => 'OK',
+						   -width => 16
+						 )->pack(
+								  -side   => 'top',
+								  -pady   => 5,
+								  -padx   => 2,
+								  -anchor => 'n'
+						 );
+					   $lglobal{surpop}->protocol(
+						   'WM_DELETE_WINDOW' => sub {
+							   $lglobal{surpop}->destroy;
+							   undef $lglobal{surpop};
+						   }
+					   );
+					   $surstrt->insert( 'end', '_' ) unless ( $surstrt->get );
+					   $surend->insert( 'end', '_' ) unless ( $surend->get );
+					   $lglobal{surpop}->Icon( -image => $icon );
+				   }
+				 }
+			],
+			[
+			   Button   => 'Flood Fill Selection With...',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   $lglobal{floodpop} =
+					 flood( $textwindow, $top, $lglobal{floodpop},
+							$lglobal{font}, $activecolor, $icon );
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[ 'separator', '' ],
+			[
+			   Button   => 'Indent Selection 1',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   indent( $textwindow, 'in' );
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => 'Indent Selection -1',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   indent( $textwindow, 'out', $operationinterrupt );
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[ 'separator', '' ],
+			[
+			   Button   => '~Rewrap Selection',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   selectrewrap( $textwindow, $lglobal{seepagenums},
+								 $lglobal{scanno_hl}, $rwhyphenspace );
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => '~Block Rewrap Selection',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   blockrewrap();
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => 'Interrupt Rewrap',
+			   -command => sub { $operationinterrupt = 1 }
+			],
+			[ 'separator', '' ],
+			[ Button => 'ASCII ~Boxes...',          -command => \&asciipopup ],
+			[ Button => '~Align text on string...', -command => \&alignpopup ],
+			[ 'separator', '' ],
+			[
+			   Button   => 'Convert To Named/Numeric Entities',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   tonamed($textwindow);
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => 'Convert From Named/Numeric Entities',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   fromnamed($textwindow);
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => 'Convert Fractions',
+			   -command => sub {
+				   my @ranges = $textwindow->tagRanges('sel');
+				   $textwindow->addGlobStart;
+				   if (@ranges) {
+					   while (@ranges) {
+						   my $end   = pop @ranges;
+						   my $start = pop @ranges;
+						   fracconv( $textwindow, $start, $end );
+					   }
+				   } else {
+					   fracconv( $textwindow, '1.0', 'end' );
+				   }
+				   $textwindow->addGlobEnd;
+				 }
+			],
+		  ]
+
+	);
+
+	my $fixup = $menubar->cascade(
+		-label     => 'Fi~xup',
+		-tearoff   => 1,
+		-menuitems => [
+			[
+			   Button   => 'Run ~Word Frequency Routine...',
+			   -command => \&wordfrequency
+			],
+			[ 'separator', '' ],
+			[ Button => 'Run ~Gutcheck...',    -command => \&gutcheck ],
+			[ Button => 'Gutcheck options...', -command => \&gutopts ],
+			[ Button => 'Run ~Jeebies...',     -command => \&jeebiespop_up ],
+			[
+			   Button   => 'pptxt...',
+			   -command => sub {
+				   errorcheckpop_up('pptxt');
+				   unlink 'null' if ( -e 'null' );
+			   },
+			],
+			[ 'separator', '' ],
+			[
+			   Button   => 'Remove End-of-line Spaces',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   endofline();
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[ Button => 'Run Fi~xup...', -command => \&fixpopup ],
+			[ 'separator', '' ],
+			[ Button => 'Fix ~Page Separators...', -command => \&separatorpopup ],
+			[
+			   Button   => 'Remove Blank Lines Before Page Separators',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   delblanklines();
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[ 'separator', '' ],
+			[ Button => '~Footnote Fixup...', -command => \&footnotepop ],
+			[ Button => '~HTML Fixup...',     -command => \&htmlpopup ],
+			[ Button => '~Sidenote Fixup...', -command => \&sidenotes ],
+			[
+			   Button   => 'Reformat Poetry ~Line Numbers',
+			   -command => \&poetrynumbers
+			],
+			[
+			   Button   => 'Convert Windows CP 1252 characters to Unicode',
+			   -command => \&cp1252toUni
+			],
+			[ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
+			[
+			   Cascade    => 'PGTEI Tools',
+			   -tearoff   => 0,
+			   -menuitems => [
+				   [
+					  Button   => 'W3C Validate PGTEI',
+					  -command => sub {
+						  errorcheckpop_up('W3C Validate');
+						}
+				   ],
+				   [
+					  Button   => 'Gnutenberg Press (HTML only)',
+					  -command => sub { gnutenberg('html') }
+				   ],
+				   [
+					  Button   => 'Gnutenberg Press (Text only)',
+					  -command => sub { gnutenberg('txt') }
+				   ],
+				   [
+					  Button   => 'Gnutenberg Press Online',
+					  -command => sub {
+						  runner(
+"$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
+						}
+				   ],
+			   ]
+			],
+			[
+			   Cascade    => 'RST Tools',
+			   -tearoff   => 0,
+			   -menuitems => [
+				   [
+					  Button   => 'EpubMaker Online',
+					  -command => sub {
+						  runner(
+							   "$globalbrowserstart http://epubmaker.pglaf.org/"
+						  );
+						}
+				   ],
+				   [
+					  Button   => 'EpubMaker (all formats)',
+					  -command => sub { epubmaker() }
+				   ],
+				   [
+					  Button   => 'EpubMaker (HTML only)',
+					  -command => sub { epubmaker('html') }
+				   ],
+				   [
+					  Button   => 'dp2rst Conversion',
+					  -command => sub {
+						  runner(
+"$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst" );
+						}
+				   ],
+			   ]
+			],
+
+			[ 'separator', '' ],
+			[ Button => 'ASCII Table Special Effects...', -command => \&tablefx ],
+			[ 'separator', '' ],
+			[
+			   Button   => 'Clean Up Rewrap ~Markers',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   cleanup();
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[ 'separator', '' ],
+			[ Button => 'Find Greek...', -command => \&findandextractgreek ]
+		]
+	);
+
+	my $text = $menubar->cascade(
+		-label     => 'Text Processing',
+		-tearoff   => 1,
+		-menuitems => [
+			[
+			   Button   => "Convert Italics",
+			   -command => sub {
+				   text_convert_italic( $textwindow, $italic_char );
+				 }
+			],
+			[
+			   Button   => "Convert Bold",
+			   -command => sub { text_convert_bold( $textwindow, $bold_char ) }
+			],
+			[
+			   Button   => 'Convert <tb> to asterisk break',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   text_convert_tb($textwindow);
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => 'All of the above',
+			   -command => sub {
+				   text_convert_italic( $textwindow, $italic_char );
+				   text_convert_bold( $textwindow, $bold_char );
+				   $textwindow->addGlobStart;
+				   text_convert_tb($textwindow);
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => '~Add a Thought Break',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   text_thought_break($textwindow);
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			[
+			   Button   => 'Small caps to all caps',
+			   -command => \&text_convert_smallcaps
+			],
+			[
+			   Button   => 'Remove small caps markup',
+			   -command => \&text_remove_smallcaps_markup
+			],
+			[ Button => "Options...", -command => \&text_convert_options ],
+		  ]
+
+	);
+
+	my $external = $menubar->cascade(
+									  -label     => 'External',
+									  -tearoff   => 1,
+									  -menuitems => menu_external,
+	);
+
+	# FIXME: We'll leave this alone for now.
+	if ( $Tk::VERSION =~ m{804} ) {
+		my %utfsorthash;
+		for ( keys %{ $lglobal{utfblocks} } ) {
+			$utfsorthash{ $lglobal{utfblocks}{$_}->[0] } = $_;
+		}
+		if ( $lglobal{utfrangesort} ) {
+			$menubar->Cascade(
+				qw/-label ~Unicode -tearoff 1 -menuitems/ => [
+					[
+					   Radiobutton => 'Sort by Name',
+					   -variable   => \$lglobal{utfrangesort},
+					   -command    => \&menurebuild,
+					   -value      => 0,
+					],
+					[
+					   Cascade  => 'More',
+					   -tearoff => 0,
+					   -menuitems =>
+						 [ # FIXME: sub this and generalize for all occurences in menu code.
+						   map ( [
+								  Button   => "$utfsorthash{$_}",
+								  -command => [
+									  \&utfpopup,
+									  $utfsorthash{$_},
+									  $lglobal{utfblocks}{ $utfsorthash{$_} }
+										[0],
+									  $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
+								  ],
+								  -accelerator =>
+									$lglobal{utfblocks}{ $utfsorthash{$_} }[0]
+									. ' - '
+									. $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
+							   ],
+							   ( sort ( keys %utfsorthash ) )[ 34 .. 67 ] ),
+						 ]
+					],
+					map ( [
+							Button   => "$utfsorthash{$_}",
+							-command => [
+									 \&utfpopup,
+									 $utfsorthash{$_},
+									 $lglobal{utfblocks}{ $utfsorthash{$_} }[0],
+									 $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
+							],
+							-accelerator =>
+							  $lglobal{utfblocks}{ $utfsorthash{$_} }[0] . ' - '
+							  . $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
+						 ],
+						 ( sort ( keys %utfsorthash ) )[ 0 .. 33 ] ),
+				],
+			);
+		} else {
+			$menubar->Cascade(
+				qw/-label ~Unicode -tearoff 1 -menuitems/ => [
+					[
+					   Radiobutton => 'Sort by Range',
+					   -variable   => \$lglobal{utfrangesort},
+					   -command    => \&menurebuild,
+					   -value      => 1,
+					],
+					[
+					   Cascade  => 'More',
+					   -tearoff => 0,
+					   -menuitems =>
+						 [ # FIXME: sub this and generalize for all occurences in menu code.
+						   map ( [
+								   Button   => "$_",
+								   -command => [
+												 \&utfpopup,
+												 $_,
+												 $lglobal{utfblocks}{$_}[0],
+												 $lglobal{utfblocks}{$_}[1]
+								   ],
+								   -accelerator => $lglobal{utfblocks}{$_}[0]
+									 . ' - '
+									 . $lglobal{utfblocks}{$_}[1]
+								 ],
+								 ( sort ( keys %{ $lglobal{utfblocks} } ) )
+								   [ 34 .. 67 ] ),
+						 ]
+					],
+					map ( [
+							 Button   => "$_",
+							 -command => [
+										   \&utfpopup,
+										   $_,
+										   $lglobal{utfblocks}{$_}[0],
+										   $lglobal{utfblocks}{$_}[1]
+							 ],
+							 -accelerator => $lglobal{utfblocks}{$_}[0] . ' - '
+							   . $lglobal{utfblocks}{$_}[1]
+						  ],
+						  ( sort ( keys %{ $lglobal{utfblocks} } ) )[ 1 .. 33 ]
+					),
+				],
+			);
+		}
+	}
+
+	$menubar->Cascade(
+					   -label     => '~Preferences',
+					   -tearoff   => 1,
+					   -menuitems => menu_preferences
+	);
+
+	$menubar->Cascade(
+		-label     => '~Help',
+		-tearoff   => 1,
+		-menuitems => [
+			[ Button => '~About',    -command => \&about_pop_up ],
+			[ Button => '~Versions', -command => [ \&showversion, $top ] ],
+			[
+			   Button   => '~Manual',
+			   -command => sub {        # FIXME: sub this out.
+				   runner(
+"$globalbrowserstart http://www.pgdp.net/wiki/PPTools/Guiguts"
+				   ) if ( -e 'ggmanual.html' );
+				 }
+			],
+
+			[
+			   Button   => '~PP Process Checklist',
+			   -command => sub {        # FIXME: sub this out.
+				   runner(
+"$globalbrowserstart http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
+				   ) if ( -e 'ggmanual.html' );
+				 }
+			],
+
+			# FIXME: Disable update check until it works
+			[
+			   Button   => 'Check For ~Updates',
+			   -command => sub { checkforupdates(0) }
+			],
+			[ Button => '~Hot keys',              -command => \&hotkeyshelp ],
+			[ Button => '~Function History',      -command => \&opspop_up ],
+			[ Button => '~Greek Transliteration', -command => \&greekpopup ],
+			[ Button => '~Latin 1 Chart',         -command => \&latinpopup ],
+			[ Button => '~Regex Quick Reference', -command => \&regexref ],
+			[ Button => '~UTF Character entry',   -command => \&utford ],
+			[ Button => '~UTF Character Search',  -command => \&uchar ],
 		]
 	);
 }
