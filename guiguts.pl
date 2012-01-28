@@ -3490,6 +3490,28 @@ sub menubuildtwo {
 			 [ 'command', 'Set Page ~Markers...', -command => \&file_mark_pages ],
 			 [ 'command', '~Adjust Page Markers', -command => \&viewpagenums ],
 			 [ 'separator', '' ],
+			 # copyied in from new menu structure
+			[
+			   'command',
+			   'View Project Comments',
+			   -command => sub {
+				   my $defaulthandler = $extops[0]{command};
+				   $defaulthandler =~ s/\$f\$e/project_comments.html/;
+				   runner( cmdinterp($defaulthandler) );
+				 }
+			],
+			[
+			   'command',
+			   'View Project Discussion',
+			   -command => sub {
+				   return if nofileloadedwarning();
+				   runner(
+"$globalbrowserstart http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$projectid"
+				   ) if $projectid;
+				 }
+			],
+			# end of copy
+			 [ 'separator', '' ],
 			 [ 'command', 'E~xit', -command => \&_exit ],
 		  ]
 
@@ -3995,18 +4017,7 @@ sub menubuildtwo {
 				   ],
 			   ]
 			],
-
-			[ 'separator', '' ],
-			[ Button => 'ASCII Table Special Effects...', -command => \&tablefx ],
-			[ 'separator', '' ],
-			[
-			   Button   => 'Clean Up Rewrap ~Markers',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   cleanup();
-				   $textwindow->addGlobEnd;
-				 }
-			],
+			# ASCII tables and clean up moved to text processing
 			[ 'separator', '' ],
 			[ Button => 'Find Greek...', -command => \&findandextractgreek ]
 		]
@@ -4060,7 +4071,21 @@ sub menubuildtwo {
 			   Button   => 'Remove small caps markup',
 			   -command => \&text_remove_smallcaps_markup
 			],
-			[ Button => "Options...", -command => \&text_convert_options ],
+			[ Button => "Options...", -command => \&text_convert_options
+			],
+			# moved from fixup menu
+			[ 'separator', '' ],
+			[ Button => 'ASCII Table Special Effects...', -command => \&tablefx ],
+			[ 'separator', '' ],
+			[
+			   Button   => 'Clean Up Rewrap ~Markers',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   cleanup();
+				   $textwindow->addGlobEnd;
+				 }
+			],
+			# end of move
 		  ]
 
 	);
