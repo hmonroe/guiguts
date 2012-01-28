@@ -12937,7 +12937,7 @@ EOM
 			geometry2 geometry3 geometrypnumpop globalaspellmode highlightcolor history_size ignoreversionnumber
 			intelligentWF ignoreversions italic_char jeebiesmode lastversioncheck lmargin nobell nohighlights
 			notoolbar poetrylmargin rmargin rwhyphenspace multiterm stayontop toolside utffontname utffontsize
-			useppwizardmenus usemenustwo verboseerrorchecks vislnnm w3cremote wfstayontop/
+			useppwizardmenus usemenutwo verboseerrorchecks vislnnm w3cremote wfstayontop/
 		  )
 		{
 			if ( eval '$' . $_ ) {
@@ -18064,7 +18064,7 @@ sub htmlpopup {
 					 -text             => 'Hyperlink Page Nums',
 					 -width            => 16
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-		unless ($useppwizardmenus and not $usemenustwo) {
+		unless ($useppwizardmenus and not $usemenutwo) {
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
