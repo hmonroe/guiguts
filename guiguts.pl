@@ -13424,7 +13424,7 @@ sub buildstatusbar {
 		}
 	);
 
-	$lglobal{highlighlabel} =
+	$lglobal{highlightlabel} =
 	  $counter_frame->Label(
 							 -text       => 'H',
 							 -width      => 2,
@@ -13432,7 +13432,7 @@ sub buildstatusbar {
 							 -background => 'gray',
 	  )->grid( -row => 1, -column => 1 );
 
-	$lglobal{highlighlabel}->bind(
+	$lglobal{highlightlabel}->bind(
 		'<1>',
 		sub {
 			if ( $lglobal{scanno_hl} ) {
@@ -13447,28 +13447,28 @@ sub buildstatusbar {
 			hilitetgl();
 		}
 	);
-	$lglobal{highlighlabel}->bind( '<3>', sub { scannosfile() } );
-	$lglobal{highlighlabel}->bind(
+	$lglobal{highlightlabel}->bind( '<3>', sub { scannosfile() } );
+	$lglobal{highlightlabel}->bind(
 		'<Enter>',
 		sub {
 			$lglobal{highlighttempcolor} =
-			  $lglobal{highlighlabel}->cget( -background );
-			$lglobal{highlighlabel}->configure( -background => $activecolor );
-			$lglobal{highlighlabel}->configure( -relief     => 'raised' );
+			  $lglobal{highlightlabel}->cget( -background );
+			$lglobal{highlightlabel}->configure( -background => $activecolor );
+			$lglobal{highlightlabel}->configure( -relief     => 'raised' );
 		}
 	);
-	$lglobal{highlighlabel}->bind(
+	$lglobal{highlightlabel}->bind(
 		'<Leave>',
 		sub {
-			$lglobal{highlighlabel}
+			$lglobal{highlightlabel}
 			  ->configure( -background => $lglobal{highlighttempcolor} );
-			$lglobal{highlighlabel}->configure( -relief => 'ridge' );
+			$lglobal{highlightlabel}->configure( -relief => 'ridge' );
 		}
 	);
-	$lglobal{highlighlabel}->bind(
+	$lglobal{highlightlabel}->bind(
 		'<ButtonRelease-1>',
 		sub {
-			$lglobal{highlighlabel}->configure( -relief => 'raised' );
+			$lglobal{highlightlabel}->configure( -relief => 'raised' );
 		}
 	);
 	$lglobal{insert_overstrike_mode_label} =
@@ -13521,7 +13521,7 @@ sub buildstatusbar {
 		-balloonmsg =>
 "Decimal & Hexadecimal ordinal of the\ncharacter to the right of the cursor."
 	);
-	$lglobal{statushelp}->attach( $lglobal{highlighlabel},
+	$lglobal{statushelp}->attach( $lglobal{highlightlabel},
 					-balloonmsg =>
 					  "Highlight words from list. Right click to select list" );
 	$lglobal{statushelp}->attach( $lglobal{selectionlabel},
@@ -13834,10 +13834,10 @@ sub update_indicators {
 	  if ( $lglobal{insert_overstrike_mode_label} );
 	my $filename = $textwindow->FileName;
 	$filename = 'No File Loaded' unless ( defined($filename) );
-	$lglobal{highlighlabel}->configure( -background => $highlightcolor )
+	$lglobal{highlightlabel}->configure( -background => $highlightcolor )
 	  if ( $lglobal{scanno_hl} );
-	if ( $lglobal{highlighlabel} ) {
-		$lglobal{highlighlabel}->configure( -background => 'gray' )
+	if ( $lglobal{highlightlabel} ) {
+		$lglobal{highlightlabel}->configure( -background => 'gray' )
 		  unless ( $lglobal{scanno_hl} );
 	}
 	$filename = os_normal($filename);
