@@ -12134,7 +12134,7 @@ EOM
 			geometry2 geometry3 geometrypnumpop globalaspellmode highlightcolor history_size ignoreversionnumber
 			intelligentWF ignoreversions italic_char jeebiesmode lastversioncheck lmargin nobell nohighlights
 			notoolbar poetrylmargin rmargin rwhyphenspace multiterm stayontop toolside utffontname utffontsize
-			useppwizardmenus verboseerrorchecks vislnnm w3cremote wfstayontop/
+			useppwizardmenus usemenustwo verboseerrorchecks vislnnm w3cremote wfstayontop/
 		  )
 		{
 			if ( eval '$' . $_ ) {
