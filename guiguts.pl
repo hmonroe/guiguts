@@ -3482,14 +3482,29 @@ sub menubuildtwo {
 			   -command => \&file_export
 			 ],
 			 [ 'separator', '' ],
+			# include cascading page marker section
 			 [
-			   'command',
-			   '~Guess Page Markers...',
-			   -command => \&file_guess_page_marks
-			 ],
-			 [ 'command', 'Set Page ~Markers...', -command => \&file_mark_pages ],
-			 [ 'command', '~Adjust Page Markers', -command => \&viewpagenums ],
-			 [ 'separator', '' ],
+			   Cascade    => 'Page Markers',
+			   -tearoff   => 0,
+			   -menuitems => [
+				   [
+					  'command',
+					  '~Guess Page Markers...',
+					  -command => \&file_guess_page_marks
+				   ],
+				   [
+					  'command',
+					  'Set Page ~Markers...',
+					  -command => \&file_mark_pages
+				   ],
+				   [
+					  'command',
+					  '~Adjust Page Markers',
+					  -command => \&viewpagenums
+				   ],
+				 ]
+			],
+			[ 'separator', '' ],
 			 # copyied in from new menu structure
 			[
 			   'command',
