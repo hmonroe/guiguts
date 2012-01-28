@@ -10,7 +10,8 @@ languages). guiguts-mac-1.0.nn should also work out of the box for Mac users.
 guiguts-1.0.nn.zip is a stripped down version for those who have all the helper
 applications or are upgrading or who use operating systems other than Windows/Mac.
 
-Version 1.0.6. 
+Version 1.0.6. Fix problem with scannos highlighting a long time
+to turn over; default scannos file en-common.txt is selected.
 
 Version 1.0.5. Introduced a PP Wizard, an alternative menu structure,
 that steps PPers through the GG checklist, which is not the default

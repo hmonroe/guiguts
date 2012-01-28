@@ -1,5 +1,5 @@
 erase g*.zip
-7z a -x!.* -x!setting.rc -x!header.txt -x!*.bat -x!gg.ico -x!tools -x!samples -x!tests -x!perl -x!Python27 -x!Win*.* -r guiguts-1.0.5.zip *.* lib\Tk\Toolbar\tkIcons 
+7z a -x!.* -x!setting.rc -x!header.txt -x!*.bat -x!gg.ico -x!tools -x!samples -x!tests -x!perl -x!Python27 -x!*.zip -x!Win*.* -r guiguts-1.0.5.zip *.* lib\Tk\Toolbar\tkIcons 
 7z a -x!.* -x!*.exe -r guiguts-1.0.5.zip tools\gutcheck tools\jeebies
 
 REM other.zip contains perl, Python27 and tools

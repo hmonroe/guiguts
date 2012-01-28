@@ -21351,7 +21351,7 @@ sub runtests {
 	#about_pop_up();
 	#opspop_up();
 	#greekpopup();
-	ok( $debug == 0, "Do not release with $debug = 1" );
+	ok( $debug == 0, "Do not release with \$debug = 1" );
 	ok( 1 == 1, "This is the last test" );
 	done_testing();
 	exit;
