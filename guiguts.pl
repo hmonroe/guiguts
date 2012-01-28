@@ -1368,7 +1368,7 @@ sub file_mark_pages {
 sub menu_preferences {
 	[
 	   [
-		  Checkbutton => 'Use PP Wizard Menus',
+		  Checkbutton => 'PP Wizard',
 		  -variable   => \$useppwizardmenus,
 		  -onvalue    => 1,
 		  -offvalue   => 0,
@@ -4777,7 +4777,12 @@ sub searchtext {
 # $sopt[2] --> 0 = search forwards    \                  1 = search backwards
 # $sopt[3] --> 0 = normal search term           1 = regex search term - 3 and 0 are mutually exclusive
 # $sopt[4] --> 0 = search from last index       1 = Start from beginning
+
+#	$searchstartindex--where the last search for this $searchterm ended
+#   replaced with the insertion point if the user has clicked someplace else
+
 	my $searchterm = shift;
+	#print $sopt[4]."from beginning\n";
 	$searchterm = '' unless defined $searchterm;
 	if ( length($searchterm) ) {    #and not ($searchterm =~ /\W/)
 		add_search_history( $searchterm, \@search_history, $history_size );
@@ -4791,12 +4796,10 @@ sub searchtext {
 	my $range_total = @ranges;
 	$searchstartindex = $textwindow->index('insert') unless $searchstartindex;
 	my $searchstartingpoint = $textwindow->index('insert');
-
 	# this is a search within a selection
 	if ( $range_total == 0 && $lglobal{selectionsearch} ) {
 		$start = $textwindow->index('insert');
 		$end   = $lglobal{selectionsearch};
-
 		# this is a search through the end of the document
 	} elsif ( $range_total == 0 && !$lglobal{selectionsearch} ) {
 		$start = $textwindow->index('insert');
@@ -4814,7 +4817,6 @@ sub searchtext {
 			$start = 'end';
 			$end   = '1.0';
 		} else {
-
 			# search forwards and Start From Beginning so start from the end
 			$start = '1.0';
 			$end   = 'end';
@@ -4822,31 +4824,23 @@ sub searchtext {
 		$lglobal{searchop4}->deselect if ( defined $lglobal{searchpop} );
 		$lglobal{lastsearchterm} = "resetresetreset";
 	}
-
 	#print "start:$start\n";
 	if ($start) {    # but start is always defined?
-
 		if ( $sopt[2] ) {    # if backwards
 			$searchstartindex = $start;
 		} else {
-			$searchendindex = "$start+1c" unless ( $start eq '1.0' );  #forwards
+			$searchendindex = "$start+1c";  #forwards. #unless ( $start eq '1.0' )
 		}
-
-		# why should forward search begin +1c?
-		# answer: otherwise, the next search will find the same match
+		# forward search begin +1c or the next search would find the same match
 	}
-
-	#print "start:$start\n";
-	{
-
-		# Turn off warnings temporarily since $searchterm is undefined on first
+	{   # Turn off warnings temporarily since $searchterm is undefined on first
 		# search
 		no warnings;
 		unless ( length($searchterm) ) {
 			$searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
 			add_search_history( $searchterm, \@search_history, $history_size );
 		}
-	}
+	} # warnings back on; keep this bracket
 	return ('') unless length($searchterm);
 	if ( $sopt[3] ) {
 		unless ( isvalid($searchterm) ) {
@@ -4854,7 +4848,6 @@ sub searchtext {
 			return;
 		}
 	}
-
 	# if this is a new searchterm
 	unless ( $searchterm eq $lglobal{lastsearchterm} ) {
 		if ( $sopt[2] ) {
@@ -4944,7 +4937,7 @@ sub searchtext {
 		if   ( $sopt[0] or $sopt[3] ) { $mode = '-regexp' }
 		else                          { $mode = '-exact' }
 
-		#print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";
+		print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";
 
 		#finally we actually do some searching
 		if ( $sopt[1] ) {
@@ -9151,10 +9144,10 @@ sub hyphencheck {
 			if ( $lglobal{seenwordsdoublehyphen}->{$word} ) {
 
 				# display with single and with double hyphen
-				$display{$wordtemp} = $lglobal{seenwords}->{$wordtemp}
+				$display{$wordtemp. ' ****'} = $lglobal{seenwords}->{$wordtemp}
 				  if $lglobal{suspects_only};
 				my $aword = $word . ' ****';
-				$display{$aword} = $lglobal{seenwordsdoublehyphen}->{$word};
+				$display{$word. ' ****'} = $lglobal{seenwordsdoublehyphen}->{$word};
 				$wordwo++;
 			}
 
@@ -9170,7 +9163,7 @@ sub hyphencheck {
 			# Check if the same word also appears without a space or hyphen
 			$word =~ s/ //g;
 			if ( $lglobal{seenwords}->{$word} ) {
-				$display{$wordtemp} = $lglobal{seenwords}->{$wordtemp}
+				$display{$wordtemp. ' ****'} = $lglobal{seenwords}->{$wordtemp}
 				  if $lglobal{suspects_only};
 				my $aword = $word . ' ****';
 				$display{$aword} = $lglobal{seenwords}->{$word};
@@ -9187,11 +9180,18 @@ sub hyphencheck {
 			# Check if the same word also appears without a space
 			$word =~ s/ //g;
 			if ( $lglobal{seenwords}->{$word} ) {
-				$display{$word} = $lglobal{seenwords}->{$word}
-				  unless $display{"$word ****"};
+				$display{$word. ' ****'} = $lglobal{seenwords}->{$word};
 				my $aword = $wordtemp . ' ****';
 				$display{$aword} = $lglobal{seenwordpairs}->{$wordtemp}
-				  unless $display{$wordtemp};
+				  unless $display{$aword};
+				$wordwo++;
+			}
+			$word =~ s/-//g;
+			if ( $lglobal{seenwords}->{$word} ) {
+				$display{$word. ' ****'} = $lglobal{seenwords}->{$word};
+				my $aword = $wordtemp . ' ****';
+				$display{$aword} = $lglobal{seenwordpairs}->{$wordtemp}
+				  unless $display{$aword};
 				$wordwo++;
 			}
 		}
@@ -15900,8 +15900,6 @@ sub wordfrequencybuildwordlist {
 		$line =~ s/_/ /g;
 		$line =~ s/<!--//g;
 		$line =~ s/-->//g;
-
-		#print "$line\n";
 		if ( $lglobal{ignore_case} ) { $line = lc($line) }
 		@words = split( /\s+/, $line );
 
@@ -15923,16 +15921,17 @@ sub wordfrequencybuildwordlist {
 		$line =~ s/,(\D)/ $1/g;    # and before
 		@words = split( /\s+/, $line );
 		for my $word (@words) {
+			if ($lastwordseen && not ("$lastwordseen $match" =~ m/\d/)) {
+				$lglobal{seenwordpairs}->{"$lastwordseen $match"}++;
+			}
+			$lastwordseen = $word;
+			$word =~ s/\*//;    # throw away punctuation at end
 			$word =~ s/[\.',-]+$//;    # throw away punctuation at end
 			$word =~ s/^[\.,'-]+//;    #and at the beginning
 			next if ( $word eq '' );
 			$wc++;
 			$match = ( $lglobal{ignore_case} ) ? lc($word) : $word;
 			$lglobal{seenwords}->{$match}++;
-			if ($lastwordseen) {
-				$lglobal{seenwordpairs}->{"$lastwordseen $match"}++;
-			}
-			$lastwordseen = $word;
 		}
 		$index++;
 		$index .= '.0';
