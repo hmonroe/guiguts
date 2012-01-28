@@ -4040,7 +4040,8 @@ sub menubuildtwo {
 			],
 			# ASCII tables and clean up moved to text processing
 			[ 'separator', '' ],
-			[ Button => 'Find Greek...', -command => \&findandextractgreek ]
+			[ Button => 'Find Greek...', -command => \&findandextractgreek ],
+			[ Button => '~Greek Transliteration', -command => \&greekpopup ],
 		]
 	);
 
@@ -4227,8 +4228,6 @@ sub menubuildtwo {
 		-label     => '~Helpx',
 		-tearoff   => 1,
 		-menuitems => [
-			[ Button => '~About',    -command => \&about_pop_up ],
-			[ Button => '~Versions', -command => [ \&showversion, $top ] ],
 			[
 			   Button   => '~Manual',
 			   -command => sub {        # FIXME: sub this out.
@@ -4243,22 +4242,27 @@ sub menubuildtwo {
 			   -command => sub {        # FIXME: sub this out.
 				   runner(
 "$globalbrowserstart http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
+				# FIXME: got this next line wrong
 				   ) if ( -e 'ggmanual.html' );
 				 }
 			],
+			[ Button => '~Latin 1 Chart',         -command => \&latinpopup ],
+			[ Button => '~Regex Quick Reference', -command => \&regexref ],
+			[ Button => '~Hot keys',              -command => \&hotkeyshelp ],
+			[ 'separator', '' ],
+			[ Button => '~UTF Character entry',   -command => \&utford ],
+			[ Button => '~UTF Character Search',  -command => \&uchar ],
+			[ 'separator', '' ],
+			[ Button => '~About',    -command => \&about_pop_up ],
+			[ Button => '~Versions', -command => [ \&showversion, $top ] ],
 
 			# FIXME: Disable update check until it works
 			[
 			   Button   => 'Check For ~Updates',
 			   -command => sub { checkforupdates(0) }
 			],
-			[ Button => '~Hot keys',              -command => \&hotkeyshelp ],
+			[ 'separator', '' ],
 			[ Button => '~Function History',      -command => \&opspop_up ],
-			[ Button => '~Greek Transliteration', -command => \&greekpopup ],
-			[ Button => '~Latin 1 Chart',         -command => \&latinpopup ],
-			[ Button => '~Regex Quick Reference', -command => \&regexref ],
-			[ Button => '~UTF Character entry',   -command => \&utford ],
-			[ Button => '~UTF Character Search',  -command => \&uchar ],
 		]
 	);
 }
