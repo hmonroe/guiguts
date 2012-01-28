@@ -10,23 +10,24 @@ languages). guiguts-mac-1.0.nn should also work out of the box for Mac users.
 guiguts-1.0.nn.zip is a stripped down version for those who have all the helper
 applications or are upgrading or who use operating systems other than Windows/Mac.
 
-Version 1.0.5. Introduced an experimental alternative menu structure
-with a wizard-based approach that steps PPers through the GG checklist,
-which is not the default option. Added a rudimentary check of whether
-HTML is "Epub friendly". Changed <p> css in headerdefault.txt to work
-better on mobi devices: margin-top: .51em; margin-bottom: .49em;.
-Reorganized the Preference menu. Fixed bug with Gutcheck hanging on
-rerun. Added check for whether the string entered in the RegExp field in
-the Word Frequency popup is a valid regular expression. Added PP Process
-Checklist to Help menu. Copied headerdefault.txt to header.txt on
-startup if header.txt does not exist. Spellcheck no longer double counts
-occurrences of a word if run a second time. Tidy Up Footnotes works if
-there is only one footnote. Text that is gesperrt <g>abc</g> now becomes
-a&nbsp;b&nbsp;c. Autogenerate HTML no longer uses /* or captions as the 
-title. Auto Illus Search no longer doubles tags in figleft and figright.
-Import Prep Text allows letters in png filenames. Additional external
-operations added. Search at beginning again starts at the beginning
-(but search does not find text at the very start of the file).
+Version 1.0.5. Introduced a PP Wizard, an alternative menu structure,
+that steps PPers through the GG checklist, which is not the default
+option. Added a rudimentary check of whether HTML is "Epub friendly".
+Changed <p> css in headerdefault.txt to work better on mobi devices:
+margin-top: .51em; margin-bottom: .49em;. Reorganized the Preference
+menu. Fixed bug with Gutcheck hanging on rerun. Added check for whether
+the string entered in the RegExp field in the Word Frequency popup is a
+valid regular expression. Added PP Process Checklist to Help menu.
+Copied headerdefault.txt to header.txt on startup if header.txt does not
+exist. Spellcheck no longer double counts occurrences of a word if run a
+second time. Tidy Up Footnotes works if there is only one footnote. Text
+that is gesperrt <g>abc</g> now becomes a&nbsp;b&nbsp;c. Autogenerate HTML no
+longer uses /* or captions as the title. Auto Illus Search no longer
+doubles tags in figleft and figright. Import Prep Text allows letters in
+png filenames. Additional external operations added. Search at beginning
+works again (broken in 1.0.4) but search will not find the very first 
+text in a file (fixed in 1.0.4). Problem with spaces in gutcheck and other 
+paths fixed.
 
 Version 1.0.4. Hyphen check now also checks for "flash light" not only
 "flash-light", "flash--light", and "flashlight". A regular expression search 
