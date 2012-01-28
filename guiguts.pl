@@ -189,7 +189,7 @@ our $stayontop        = 0;
 our $suspectindex;
 our $toolside            = 'bottom';
 our $useppwizardmenus    = 0;
-our $usemenutwo          = 0;
+our $usemenustwo          = 0;
 our $utffontname         = 'Courier New';
 our $utffontsize         = 14;
 our $verboseerrorchecks  = 0;
@@ -1367,9 +1367,17 @@ sub file_mark_pages {
 
 sub menu_preferences {
 	[
-	   [
+		[
 		  Checkbutton => 'PP Wizard',
 		  -variable   => \$useppwizardmenus,
+		  -onvalue    => 1,
+		  -offvalue   => 0,
+		  -command    => \&menurebuild
+
+	   ],
+		[
+		  Checkbutton => 'Test menus v2 - require PP wizard to be ticked',
+		  -variable   => \$usemenustwo,
 		  -onvalue    => 1,
 		  -offvalue   => 0,
 		  -command    => \&menurebuild
