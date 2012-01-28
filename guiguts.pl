@@ -188,7 +188,7 @@ our $spellindexbkmrk  = q{};
 our $stayontop        = 0;
 our $suspectindex;
 our $toolside            = 'bottom';
-our $useppwizardmenus = 0;
+our $useppwizardmenus    = 0;
 our $utffontname         = 'Courier New';
 our $utffontsize         = 14;
 our $verboseerrorchecks  = 0;
