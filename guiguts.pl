@@ -3508,7 +3508,6 @@ sub menubuildtwo {
 				 ]
 			],
 			[ 'separator', '' ],
-			 # copyied in from new menu structure
 			[
 			   'command',
 			   'View Project Comments',
@@ -3632,11 +3631,6 @@ sub menubuildtwo {
 			   'command',
 			   'Find Proofer Comments',
 			   -command => \&find_proofer_comment
-			],
-			[
-			   'command',
-			   'Find Asterisks w/o slash',
-			   -command => \&find_asterisks
 			],
 			[
 			   'command',
@@ -3949,6 +3943,11 @@ sub menubuildtwo {
 			[ 'separator', '' ],
 			[ Button => 'Fix ~Page Separators...', -command => \&separatorpopup ],
 			[ 'separator', '' ],
+			[
+			   'command',
+			   'Find Asterisks w/o slash',
+			   -command => \&find_asterisks
+			],
 			[
 			   'command',
 			   'Find Transliterations...',
