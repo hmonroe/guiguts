@@ -400,7 +400,7 @@ sub selectrewrap {
 		$textwindow->delete( $thisblockstart, "$thisblockstart lineend" );
 	}
 	$textwindow->see($start);
-	#$lglobal{scanno_hl} = $scannosave;
+	#$scanno_hl = $scannosave;
 	$textwindow->Unbusy( -recurse => 1 );
 }
 

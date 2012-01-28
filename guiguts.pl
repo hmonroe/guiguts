@@ -21,6 +21,7 @@
 #use criticism 'gentle'; 
 
 my $VERSION = '1.0.5';
+our $debug = 0; # turn on to report debug messages. Do not commit with $debug on
 use strict;
 use warnings;
 use FindBin;
@@ -189,7 +190,7 @@ our $stayontop        = 0;
 our $suspectindex;
 our $toolside            = 'bottom';
 our $useppwizardmenus    = 0;
-our $usemenustwo          = 0;
+our $usemenutwo          = 0;
 our $utffontname         = 'Courier New';
 our $utffontsize         = 14;
 our $verboseerrorchecks  = 0;
@@ -787,7 +788,6 @@ sub run_to_tmpfile {
 
 # Menus are not easily modifiable in place. Easier to just destroy and
 ## rebuild every time it is modified
-# FIXME - should the for statement know how many menus there are?
 sub menurebuild {
 	for ( 0 .. 12 ) {
 		$menubar->delete('last');
@@ -918,6 +918,7 @@ sub scannosfile {
 
 ##routine to automatically highlight words in the text
 sub highlightscannos {
+	print "highlightscannos\n";
 	return 0 unless $lglobal{scanno_hl};
 	unless ( %{ $lglobal{wordlist} } ) {
 		scannosfile() unless ( defined $scannoslist && -e $scannoslist );
@@ -1369,40 +1370,18 @@ sub file_mark_pages {
 sub menu_preferences {
 	[
 	   [
-		  Cascade  => 'File ~Paths',
+		  Checkbutton => 'PP Wizard',
+		  -variable   => \$useppwizardmenus,
+		  -onvalue    => 1,
+		  -offvalue   => 0,
+		  -command    => \&menurebuild
+
+	   ],
+	   [
+		  Cascade  => 'File ~Paths and Commands',
 		  -tearoff => 1,
 		  -menuitems =>
 			[  # FIXME: sub this and generalize for all occurences in menu code.
-			  [
-				 Button   => 'Locate Aspell Executable',
-				 -command => sub {
-					 my $types;
-					 if ($OS_WIN) {
-						 $types = [
-									[ 'Executable', [ '.exe', ] ],
-									[ 'All Files',  ['*'] ],
-						 ];
-					 } else {
-						 $types = [ [ 'All Files', ['*'] ] ];
-					 }
-					 $lglobal{pathtemp} =
-					   $textwindow->getOpenFile(
-									-filetypes => $types,
-									-title => 'Where is the Aspell executable?',
-									-initialdir => dirname($globalspellpath)
-					   );
-					 $globalspellpath = $lglobal{pathtemp}
-					   if $lglobal{pathtemp};
-					 return unless $globalspellpath;
-					 $globalspellpath = os_normal($globalspellpath);
-					 saveset();
-				   }
-			  ],
-			  [
-				 Button   => 'Locate Image Viewer Executable',
-				 -command => \&viewerpath
-			  ],
-			  [ 'separator', '' ],
 			  [
 				 Button   => 'Locate Gutcheck Executable',
 				 -command => sub {
@@ -1454,6 +1433,31 @@ sub menu_preferences {
 				   }
 			  ],
 			  [
+				 Button   => 'Locate Aspell Executable',
+				 -command => sub {
+					 my $types;
+					 if ($OS_WIN) {
+						 $types = [
+									[ 'Executable', [ '.exe', ] ],
+									[ 'All Files',  ['*'] ],
+						 ];
+					 } else {
+						 $types = [ [ 'All Files', ['*'] ] ];
+					 }
+					 $lglobal{pathtemp} =
+					   $textwindow->getOpenFile(
+									-filetypes => $types,
+									-title => 'Where is the Aspell executable?',
+									-initialdir => dirname($globalspellpath)
+					   );
+					 $globalspellpath = $lglobal{pathtemp}
+					   if $lglobal{pathtemp};
+					 return unless $globalspellpath;
+					 $globalspellpath = os_normal($globalspellpath);
+					 saveset();
+				   }
+			  ],
+			  [
 				 Button   => 'Locate Tidy Executable',
 				 -command => sub {
 					 my $types;
@@ -1501,6 +1505,12 @@ sub menu_preferences {
 				   }
 			  ],
 			  [
+				 Checkbutton => 'Do W3C Validation Remotely',
+				 -variable   => \$w3cremote,
+				 -onvalue    => 1,
+				 -offvalue   => 0
+			  ],
+			  [
 				 Button =>
 				   'Locate W3C CSS Validator (css-validator.jar) Executable',
 				 -command => sub {
@@ -1526,6 +1536,14 @@ sub menu_preferences {
 				   }
 			  ],
 			  [
+				 Button   => 'Locate Image Viewer Executable',
+				 -command => \&viewerpath
+			  ],
+			  [
+				 Button   => 'Browser Start Command...',
+				 -command => \&setbrowser
+			  ],
+			  [
 				 Button   => 'Locate Gnutenberg Press (if self-installed)',
 				 -command => sub {
 					 my $types;
@@ -1544,7 +1562,6 @@ sub menu_preferences {
 					 saveset();
 				   }
 			  ],
-			  [ 'separator', '' ],
 			  [
 				 Button   => 'Set Images Directory',
 				 -command => \&setpngspath
@@ -1556,6 +1573,63 @@ sub menu_preferences {
 		  -tearoff => 0,
 		  -menuitems =>
 			[  # FIXME: sub this and generalize for all occurences in menu code.
+			  [
+				 Cascade    => 'Toolbar Prefs',
+				 -tearoff   => 1,
+				 -menuitems => [
+					 [
+						Checkbutton => 'Enable Toolbar',
+						-variable   => \$notoolbar,
+						-command    => [ \&toolbar_toggle ],
+						-onvalue    => 0,
+						-offvalue   => 1
+					 ],
+					 [
+						Radiobutton => 'Toolbar on Top',
+						-variable   => \$toolside,
+						-command    => sub {
+							$lglobal{toptool}->destroy
+							  if $lglobal{toptool};
+							undef $lglobal{toptool};
+							toolbar_toggle();
+						},
+						-value => 'top'
+					 ],
+					 [
+						Radiobutton => 'Toolbar on Bottom',
+						-variable   => \$toolside,
+						-command    => sub {
+							$lglobal{toptool}->destroy
+							  if $lglobal{toptool};
+							undef $lglobal{toptool};
+							toolbar_toggle();
+						},
+						-value => 'bottom'
+					 ],
+					 [
+						Radiobutton => 'Toolbar on Left',
+						-variable   => \$toolside,
+						-command    => sub {
+							$lglobal{toptool}->destroy
+							  if $lglobal{toptool};
+							undef $lglobal{toptool};
+							toolbar_toggle();
+						},
+						-value => 'left'
+					 ],
+					 [
+						Radiobutton => 'Toolbar on Right',
+						-variable   => \$toolside,
+						-command    => sub {
+							$lglobal{toptool}->destroy
+							  if $lglobal{toptool};
+							undef $lglobal{toptool};
+							toolbar_toggle();
+						},
+						-value => 'right'
+					 ],
+				 ]
+			  ],
 			  [ Button => '~Font...', -command => \&fontsize ],
 			  [
 				 Checkbutton => 'Keep Pop-ups On Top',
@@ -1610,7 +1684,6 @@ sub menu_preferences {
 				 -onvalue    => 1,
 				 -offvalue   => 0
 			  ],
-			  [ 'separator', '' ],
 			  [
 				 Checkbutton => 'Enable Quotes Highlighting',
 				 -variable   => \$nohighlights,
@@ -1632,86 +1705,6 @@ sub menu_preferences {
 			  ],
 			]
 	   ],
-	   [
-		  Cascade  => 'Menu structure',
-		  -tearoff => 0,
-		  -menuitems =>
-			[  # FIXME: sub this and generalize for all occurences in menu code.
-				[
-					Checkbutton => 'New menus',
-				  -variable   => \$useppwizardmenus,
-				  -onvalue    => 1,
-				  -offvalue   => 0,
-				  -command    => \&menurebuild
-
-			   ],
-				[
-				  Checkbutton => 'New menu v2 - requires New menus to be ticked',
-				  -variable   => \$usemenustwo,
-				  -onvalue    => 1,
-				  -offvalue   => 0,
-				  -command    => \&menurebuild
-
-			   ],
-			]
-	   ],
-	   [
-		 Cascade    => 'Toolbar',
-		 -tearoff   => 1,
-		 -menuitems => [
-			 [
-				Checkbutton => 'Enable Toolbar',
-				-variable   => \$notoolbar,
-				-command    => [ \&toolbar_toggle ],
-				-onvalue    => 0,
-				-offvalue   => 1
-			 ],
-			 [
-				Radiobutton => 'Toolbar on Top',
-				-variable   => \$toolside,
-				-command    => sub {
-					$lglobal{toptool}->destroy
-					  if $lglobal{toptool};
-					undef $lglobal{toptool};
-					toolbar_toggle();
-				},
-				-value => 'top'
-			 ],
-			 [
-				Radiobutton => 'Toolbar on Bottom',
-				-variable   => \$toolside,
-				-command    => sub {
-					$lglobal{toptool}->destroy
-					  if $lglobal{toptool};
-					undef $lglobal{toptool};
-					toolbar_toggle();
-				},
-				-value => 'bottom'
-			 ],
-			 [
-				Radiobutton => 'Toolbar on Left',
-				-variable   => \$toolside,
-				-command    => sub {
-					$lglobal{toptool}->destroy
-					  if $lglobal{toptool};
-					undef $lglobal{toptool};
-					toolbar_toggle();
-				},
-				-value => 'left'
-			 ],
-			 [
-				Radiobutton => 'Toolbar on Right',
-				-variable   => \$toolside,
-				-command    => sub {
-					$lglobal{toptool}->destroy
-					  if $lglobal{toptool};
-					undef $lglobal{toptool};
-					toolbar_toggle();
-				},
-				-value => 'right'
-			 ],
-	   ],
-		],
 	   [
 		  Cascade  => 'Backup',
 		  -tearoff => 0,
@@ -1753,12 +1746,6 @@ sub menu_preferences {
 				 -offvalue   => 0
 			  ],
 			  [
-				 Checkbutton => 'Do W3C Validation Remotely',
-				 -variable   => \$w3cremote,
-				 -onvalue    => 1,
-				 -offvalue   => 0
-			  ],
-			  [
 				 Checkbutton =>
 				   'Leave Space After End-Of-Line Hyphens During Rewrap',
 				 -variable => \$rwhyphenspace,
@@ -1772,29 +1759,23 @@ sub menu_preferences {
 				 -offvalue   => 0
 			  ],
 			  [
-				 Checkbutton => 'Return After Failed Search',
-				 -variable   => \$failedsearch,
-				 -onvalue    => 1,
-				 -offvalue   => 0
-			  ],
-			  [ 'separator', '' ],
-			  [
-				 Button   => 'Spellcheck Dictionary Select...',
-				 -command => sub { spelloptions() }
-			  ],
-			  [
 				 Button   => 'Search History Size...',
 				 -command => sub {
 					 searchsize();
 					 saveset();
 				   }
 			  ],
-			  [ Button => 'Set Rewrap ~Margins...', -command => \&setmargins ],
-			  [ 'separator', '' ],
 			  [
-				 Button   => 'Browser Start Command...',
-				 -command => \&setbrowser
+				 Checkbutton => 'Return After Failed Search',
+				 -variable   => \$failedsearch,
+				 -onvalue    => 1,
+				 -offvalue   => 0
 			  ],
+			  [
+				 Button   => 'Spellcheck Dictionary Select...',
+				 -command => sub { spelloptions() }
+			  ],
+			  [ Button => 'Set Rewrap ~Margins...', -command => \&setmargins ],
 			]
 	   ]
 	]
@@ -2595,10 +2576,6 @@ sub menubuildold {
 sub menubuild {
 	unless ($useppwizardmenus) {
 		menubuildold();
-		return;
-	}
-	if ($usemenustwo) {
-		menubuildtwo();
 		return;
 	}
 	my $file = $menubar->cascade(
