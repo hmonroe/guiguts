@@ -20,7 +20,7 @@
 
 #use criticism 'gentle'; 
 
-my $VERSION = '1.0.5';
+my $VERSION = '1.0.6';
 our $debug = 0; # turn on to report debug messages. Do not commit with $debug on
 use strict;
 use warnings;
@@ -177,7 +177,7 @@ our $projectid        = q{};
 our $regexpentry      = q();
 our $rmargin          = 72;
 our $rwhyphenspace    = 1;
-our $scannoslist      = q{};
+our $scannoslist      = q{wordlist/en-common.txt};
 our $scannoslistpath  = q{wordlist};
 our $scannospath      = q{};
 our $scannosearch     = 0;
@@ -269,12 +269,8 @@ our @extops = (
 ); 
 
 #All local global variables contained in one hash. # now global
-our %lglobal;
-
-#open (FH, ">errors.log"); # Zero-out log file
-#close (FH);
-#open (STDERR, ">>errors.log");
-#open (STDOUT, ">>errors.log");
+our %lglobal; # need to document each variable
+# $lglobal{hl_index} 	line number being scanned for highlighting
 
 if ( eval { require Text::LevenshteinXS } ) {
 	$lglobal{LevenshteinXS} = 1;
@@ -898,7 +894,10 @@ sub openpng {
 
 # Routine to find highlight word list
 sub scannosfile {
+	if ($debug) {print "sub scannosfile\n";}
+	if ($debug) {print "scannoslistpath=$scannoslistpath\n";}
 	$scannoslistpath = os_normal($scannoslistpath);
+	if ($debug) {print "sub scannosfile1\n";}
 	my $types = [ [ 'Text file', [ '.txt', ] ], [ 'All Files', ['*'] ], ];
 
 	$scannoslist = $top->getOpenFile(
@@ -918,9 +917,9 @@ sub scannosfile {
 
 ##routine to automatically highlight words in the text
 sub highlightscannos {
-	print "highlightscannos\n";
+	if ($debug) {print "sub highlightscannos\n";}
 	return 0 unless $lglobal{scanno_hl};
-	unless ( %{ $lglobal{wordlist} } ) {
+	unless (  $lglobal{wordlist}  ) {
 		scannosfile() unless ( defined $scannoslist && -e $scannoslist );
 		return 0 unless $scannoslist;
 		if ( open my $fh, '<', $scannoslist ) {
@@ -16053,7 +16052,7 @@ sub hilite {
 		}
 	}
 }
-
+# Popup for highlighting arbitrary characters in selection
 sub hilitepopup {
 	viewpagenums() if ( $lglobal{seepagenums} );
 	if ( defined( $lglobal{hilitepop} ) ) {
