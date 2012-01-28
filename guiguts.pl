@@ -1368,21 +1368,28 @@ sub file_mark_pages {
 
 sub menu_preferences {
 	[
-		[
-		  Checkbutton => 'PP Wizard',
-		  -variable   => \$useppwizardmenus,
-		  -onvalue    => 1,
-		  -offvalue   => 0,
-		  -command    => \&menurebuild
+	   [
+		  Cascade  => 'Menu structure',
+		  -tearoff => 0,
+		  -menuitems =>
+			[  # FIXME: sub this and generalize for all occurences in menu code.
+				[
+					Checkbutton => 'New menus',
+				  -variable   => \$useppwizardmenus,
+				  -onvalue    => 1,
+				  -offvalue   => 0,
+				  -command    => \&menurebuild
 
-	   ],
-		[
-		  Checkbutton => 'Test menus v2 - require PP wizard to be ticked',
-		  -variable   => \$usemenustwo,
-		  -onvalue    => 1,
-		  -offvalue   => 0,
-		  -command    => \&menurebuild
+			   ],
+				[
+				  Checkbutton => 'New menu v2 - requires New menus to be ticked',
+				  -variable   => \$usemenustwo,
+				  -onvalue    => 1,
+				  -offvalue   => 0,
+				  -command    => \&menurebuild
 
+			   ],
+			]
 	   ],
 	   [
 		  Cascade  => 'File ~Paths and Commands',
@@ -3450,10 +3457,17 @@ sub menubuild {
 #another attempt at menus
 sub menubuildtwo {
 	my $file = $menubar->cascade(
-		-label     => '~Filex',
+		-label     => '~File v2',
 		-tearoff   => 1,
 		-menuitems => [
 			 [ 'command',   '~Open', -command => \&file_open ],
+			 [
+			   'command',
+			   '~Save',
+			   -accelerator => 'Ctrl+s',
+			   -command     => \&savefile
+			 ],
+			 [ 'command', 'Save ~As', -command => \&file_saveas ],
 			 [ 'separator', '' ],
 			 map ( [
 					 Button   => "$recentfile[$_]",
@@ -3463,18 +3477,9 @@ sub menubuildtwo {
 			 [ 'separator', '' ],
 			 [
 			   'command',
-			   '~Save',
-			   -accelerator => 'Ctrl+s',
-			   -command     => \&savefile
-			 ],
-			 [ 'command', 'Save ~As', -command => \&file_saveas ],
-			 [
-			   'command',
 			   '~Include File',
 			   -command => sub { file_include($textwindow) }
 			 ],
-			 [ 'command',   '~Close', -command => \&file_close ],
-			 [ 'separator', '' ],
 			 [ 'command', 'Import Prep Text Files', -command => \&file_import ],
 			 [
 			   'command',
@@ -3527,6 +3532,7 @@ sub menubuildtwo {
 			],
 			# end of copy
 			 [ 'separator', '' ],
+			 [ 'command',   '~Close', -command => \&file_close ],
 			 [ 'command', 'E~xit', -command => \&_exit ],
 		  ]
 
