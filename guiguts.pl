@@ -2575,14 +2575,6 @@ sub menubuildold {
 				 }
 			],
 
-			[
-			   Button   => '~PP Process Checklist',
-			   -command => sub {        # FIXME: sub this out.
-				   runner(
-"$globalbrowserstart http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
-				   ) if ( -e 'ggmanual.html' );
-				 }
-			],
 
 			# FIXME: Disable update check until it works
 			[
@@ -3702,17 +3694,11 @@ sub menubuildtwo {
 			   'Find Asterisks w/o slash',
 			   -command => \&find_asterisks
 			],
-			[
-			   'command',
-			   'Find Transliterations...',
-			   -command => \&find_transliterations
-			],
-			# highlighting moved to selection menu
 		]
 	);
 
 	my $bookmarks = $menubar->cascade(
-									   -label     => '~Bookmarksx',
+									   -label     => '~Bookmarks',
 									   -tearoff   => 1,
 									   -menuitems => menu_bookmarks,
 	);
@@ -3939,23 +3925,6 @@ sub menubuildtwo {
 		-tearoff   => 1,
 		-menuitems => [
 			[
-			   Button   => 'Run ~Word Frequency Routine...',
-			   -command => \&wordfrequency
-			],
-			[ 'command', 'Spell ~Check...',      -command => \&spellchecker ],
-			[ 'separator', '' ],
-			[ Button => 'Run ~Gutcheck...',    -command => \&gutcheck ],
-			[ Button => 'Gutcheck options...', -command => \&gutopts ],
-			[ Button => 'Run ~Jeebies...',     -command => \&jeebiespop_up ],
-			[
-			   Button   => 'pptxt...',
-			   -command => sub {
-				   errorcheckpop_up('pptxt');
-				   unlink 'null' if ( -e 'null' );
-			   },
-			],
-			[ 'separator', '' ],
-			[
 			   Button   => 'Remove End-of-line Spaces',
 			   -command => sub {
 				   $textwindow->addGlobStart;
@@ -3963,9 +3932,10 @@ sub menubuildtwo {
 				   $textwindow->addGlobEnd;
 				 }
 			],
-			[ Button => 'Run Fi~xup...', -command => \&fixpopup ],
-			[ 'separator', '' ],
-			[ Button => 'Fix ~Page Separators...', -command => \&separatorpopup ],
+			[
+			   Button   => 'Convert Windows CP 1252 characters to Unicode',
+			   -command => \&cp1252toUni
+			],
 			[
 			   Button   => 'Remove Blank Lines Before Page Separators',
 			   -command => sub {
@@ -3974,18 +3944,43 @@ sub menubuildtwo {
 				   $textwindow->addGlobEnd;
 				 }
 			],
+			[ Button => 'Run Fi~xup...', -command => \&fixpopup ],
+			[ 'separator', '' ],
+			[ Button => 'Fix ~Page Separators...', -command => \&separatorpopup ],
+			[ 'separator', '' ],
+			[ Button => 'Find Greek...', -command => \&findandextractgreek ],
+			[ Button => '~Greek Transliteration', -command => \&greekpopup ],
+			[
+			   'command',
+			   'Find Transliterations...',
+			   -command => \&find_transliterations
+			],
 			[ 'separator', '' ],
 			[ Button => '~Footnote Fixup...', -command => \&footnotepop ],
-			[ Button => '~HTML Fixup...',     -command => \&htmlpopup ],
 			[ Button => '~Sidenote Fixup...', -command => \&sidenotes ],
 			[
 			   Button   => 'Reformat Poetry ~Line Numbers',
 			   -command => \&poetrynumbers
 			],
+			[ 'separator', '' ],
 			[
-			   Button   => 'Convert Windows CP 1252 characters to Unicode',
-			   -command => \&cp1252toUni
+			   Button   => 'Run ~Word Frequency Routine...',
+			   -command => \&wordfrequency
 			],
+			[ 'command', 'Spell ~Check...',      -command => \&spellchecker ],
+			[ 'separator', '' ],
+			[ Button => 'Run ~Jeebies...',     -command => \&jeebiespop_up ],
+			[ Button => 'Run ~Gutcheck...',    -command => \&gutcheck ],
+			[ Button => 'Gutcheck options...', -command => \&gutopts ],
+			[
+			   Button   => 'pptxt...',
+			   -command => sub {
+				   errorcheckpop_up('pptxt');
+				   unlink 'null' if ( -e 'null' );
+			   },
+			],
+			[ 'separator', '' ],
+			[ Button => '~HTML Fixup...',     -command => \&htmlpopup ],
 			[ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
 			[
 			   Cascade    => 'PGTEI Tools',
@@ -4012,7 +4007,7 @@ sub menubuildtwo {
 "$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
 						}
 				   ],
-			   ]
+			   ],
 			],
 			[
 			   Cascade    => 'RST Tools',
@@ -4043,10 +4038,6 @@ sub menubuildtwo {
 				   ],
 			   ]
 			],
-			# ASCII tables and clean up moved to text processing
-			[ 'separator', '' ],
-			[ Button => 'Find Greek...', -command => \&findandextractgreek ],
-			[ Button => '~Greek Transliteration', -command => \&greekpopup ],
 		]
 	);
 
@@ -4082,14 +4073,8 @@ sub menubuildtwo {
 				   $textwindow->addGlobEnd;
 				 }
 			],
-			[
-			   Button   => '~Add a Thought Break',
-			   -command => sub {
-				   $textwindow->addGlobStart;
-				   text_thought_break($textwindow);
-				   $textwindow->addGlobEnd;
-				 }
-			],
+			[ Button => "Options...", -command => \&text_convert_options ],
+			[ 'separator', '' ],
 			[
 			   Button   => 'Small caps to all caps',
 			   -command => \&text_convert_smallcaps
@@ -4098,10 +4083,15 @@ sub menubuildtwo {
 			   Button   => 'Remove small caps markup',
 			   -command => \&text_remove_smallcaps_markup
 			],
-			[ Button => "Options...", -command => \&text_convert_options
-			],
-			# moved from fixup menu
 			[ 'separator', '' ],
+			[
+			   Button   => '~Add a Thought Break',
+			   -command => sub {
+				   $textwindow->addGlobStart;
+				   text_thought_break($textwindow);
+				   $textwindow->addGlobEnd;
+				 }
+			],
 			[ Button => 'ASCII Table Special Effects...', -command => \&tablefx ],
 			[ Button => 'ASCII ~Boxes...',          -command => \&asciipopup ],
 			[ 'separator', '' ],
@@ -4113,13 +4103,12 @@ sub menubuildtwo {
 				   $textwindow->addGlobEnd;
 				 }
 			],
-			# end of move
 		  ]
 
 	);
 
 	my $external = $menubar->cascade(
-									  -label     => 'Externalx',
+									  -label     => 'External',
 									  -tearoff   => 1,
 									  -menuitems => menu_external,
 	);
@@ -4225,13 +4214,13 @@ sub menubuildtwo {
 	}
 
 	$menubar->Cascade(
-					   -label     => '~Preferencesx',
+					   -label     => '~Preferences',
 					   -tearoff   => 1,
 					   -menuitems => menu_preferences
 	);
 
 	$menubar->Cascade(
-		-label     => '~Helpx',
+		-label     => '~Help',
 		-tearoff   => 1,
 		-menuitems => [
 			[
