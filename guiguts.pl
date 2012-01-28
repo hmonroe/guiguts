@@ -2593,6 +2593,10 @@ sub menubuild {
 		menubuildold();
 		return;
 	}
+	if ($usemenustwo) {
+		menubuildtwo();
+		return;
+	}
 	my $file = $menubar->cascade(
 		-label     => '~File',
 		-tearoff   => 1,
@@ -3446,7 +3450,7 @@ sub menubuild {
 #another attempt at menus
 sub menubuildtwo {
 	my $file = $menubar->cascade(
-		-label     => '~File',
+		-label     => '~Filex',
 		-tearoff   => 1,
 		-menuitems => [
 			 [ 'command',   '~Open', -command => \&file_open ],
@@ -3492,7 +3496,7 @@ sub menubuildtwo {
 	);
 
 	my $edit = $menubar->cascade(
-		-label     => '~Edit',
+		-label     => '~Editx',
 		-tearoff   => 1,
 		-menuitems => [
 			[
@@ -3556,7 +3560,7 @@ sub menubuildtwo {
 
 	);
 	my $search = $menubar->cascade(
-		-label     => 'Search & ~Replace',
+		-label     => 'Search & ~Replacex',
 		-tearoff   => 1,
 		-menuitems => [
 			[ 'command', 'Search & ~Replace...', -command => \&searchpopup ],
@@ -3684,13 +3688,13 @@ sub menubuildtwo {
 	);
 
 	my $bookmarks = $menubar->cascade(
-									   -label     => '~Bookmarks',
+									   -label     => '~Bookmarksx',
 									   -tearoff   => 1,
 									   -menuitems => menu_bookmarks,
 	);
 
 	my $selection = $menubar->cascade(
-		-label     => '~Selection',
+		-label     => '~Selectionx',
 		-tearoff   => 1,
 		-menuitems => [
 			[
@@ -3881,7 +3885,7 @@ sub menubuildtwo {
 	);
 
 	my $fixup = $menubar->cascade(
-		-label     => 'Fi~xup',
+		-label     => 'Fi~xupx',
 		-tearoff   => 1,
 		-menuitems => [
 			[
@@ -4006,7 +4010,7 @@ sub menubuildtwo {
 	);
 
 	my $text = $menubar->cascade(
-		-label     => 'Text Processing',
+		-label     => 'Text Processingx',
 		-tearoff   => 1,
 		-menuitems => [
 			[
@@ -4059,7 +4063,7 @@ sub menubuildtwo {
 	);
 
 	my $external = $menubar->cascade(
-									  -label     => 'External',
+									  -label     => 'Externalx',
 									  -tearoff   => 1,
 									  -menuitems => menu_external,
 	);
@@ -4165,13 +4169,13 @@ sub menubuildtwo {
 	}
 
 	$menubar->Cascade(
-					   -label     => '~Preferences',
+					   -label     => '~Preferencesx',
 					   -tearoff   => 1,
 					   -menuitems => menu_preferences
 	);
 
 	$menubar->Cascade(
-		-label     => '~Help',
+		-label     => '~Helpx',
 		-tearoff   => 1,
 		-menuitems => [
 			[ Button => '~About',    -command => \&about_pop_up ],
@@ -18037,7 +18041,7 @@ sub htmlpopup {
 					 -text             => 'Hyperlink Page Nums',
 					 -width            => 16
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-		unless ($useppwizardmenus) {
+		unless ($useppwizardmenus and not $usemenustwo) {
 		$f8->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
