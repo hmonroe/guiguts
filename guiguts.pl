@@ -3659,31 +3659,7 @@ sub menubuildtwo {
 			   'Find Transliterations...',
 			   -command => \&find_transliterations
 			],
-			[ 'separator', '' ],
-			[
-			   'command', 'Highlight double quotes in selection',
-			   -command     => [ \&hilite, '"' ],
-			   -accelerator => 'Ctrl+Shift+"'
-			],
-			[
-			   'command', 'Highlight single quotes in selection',
-			   -command     => [ \&hilite, '\'' ],
-			   -accelerator => 'Ctrl+\''
-			],
-			[
-			   'command', 'Highlight arbitrary characters in selection...',
-			   -command     => \&hilitepopup,
-			   -accelerator => 'Ctrl+Alt+h'
-			],
-			[
-			   'command',
-			   'Remove Highlights',
-			   -command => sub {    # FIXME: sub search_rm_hilites
-				   $textwindow->tagRemove( 'highlight', '1.0', 'end' );
-				   $textwindow->tagRemove( 'quotemark', '1.0', 'end' );
-			   },
-			   -accelerator => 'Ctrl+0'
-			],
+			# highlighting moved to selection menu
 		]
 	);
 
@@ -3880,6 +3856,33 @@ sub menubuildtwo {
 				   $textwindow->addGlobEnd;
 				 }
 			],
+			# highlighting moved here from search and replace
+			[ 'separator', '' ],
+			[
+			   'command', 'Highlight double quotes in selection',
+			   -command     => [ \&hilite, '"' ],
+			   -accelerator => 'Ctrl+Shift+"'
+			],
+			[
+			   'command', 'Highlight single quotes in selection',
+			   -command     => [ \&hilite, '\'' ],
+			   -accelerator => 'Ctrl+\''
+			],
+			[
+			   'command', 'Highlight arbitrary characters in selection...',
+			   -command     => \&hilitepopup,
+			   -accelerator => 'Ctrl+Alt+h'
+			],
+			[
+			   'command',
+			   'Remove Highlights',
+			   -command => sub {    # FIXME: sub search_rm_hilites
+				   $textwindow->tagRemove( 'highlight', '1.0', 'end' );
+				   $textwindow->tagRemove( 'quotemark', '1.0', 'end' );
+			   },
+			   -accelerator => 'Ctrl+0'
+			],
+			# end of moved section
 		  ]
 
 	);
