@@ -21122,7 +21122,7 @@ sub text_convert_options {
 sub runtests {
 
 	# From the command line run "guiguts.pl runtests"
-	use Test::More;    #tests => 33;
+	use Test::More;    #tests => 34;
 	ok( 1 == 1, "Dummy test 1==1" );
 
 	#if ( -e "setting.rc" ) { rename( "setting.rc", "setting.old" ); }
@@ -21307,6 +21307,7 @@ sub runtests {
 	#about_pop_up();
 	#opspop_up();
 	#greekpopup();
+	ok( $debug == 0, "Do not release with $debug = 1" );
 	ok( 1 == 1, "This is the last test" );
 	done_testing();
 	exit;
