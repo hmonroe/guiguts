@@ -16,7 +16,8 @@ Version 1.0.6. Fixed problem with scannos highlighting taking forever to
 turn on; default scannos file en-common.txt is selected. Handle spaces in
 gutcheck path (mentioned in #3434768). In guiguts.bat, put tools\perl
 higher on the path than the existing path; fixed path for ENCFONTS used
-by the Gnutenberg Press. Made highlighting of scannos sticky.
+by the Gnutenberg Press. Made highlighting of scannos sticky. Set default
+path for gutcheck and jeebies on non-Windows systems.
 
 Version 1.0.5. Introduced a PP Wizard, an alternative menu structure,
 that steps PPers through the GG checklist, which is not the default

@@ -11176,6 +11176,13 @@ sub initialize {
 		  unless $gnutenbergdirectory;
 		$scannospath = catfile( $lglobal{guigutsdirectory}, 'scannos' )
 		  unless $gnutenbergdirectory;
+	} else {
+		$gutcommand = catfile( $lglobal{guigutsdirectory},
+							   'tools', 'gutcheck', 'gutcheck' )
+		  unless $gutcommand;
+		$jeebiescommand = catfile( $lglobal{guigutsdirectory},
+								   'tools', 'jeebies', 'jeebies' )
+		
 	}
 	%{ $lglobal{utfblocks} } = (
 		'Alphabetic Presentation Forms' => [ 'FB00', 'FB4F' ],
