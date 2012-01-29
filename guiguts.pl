@@ -7742,14 +7742,6 @@ sub entity {
 	return $char;
 }
 
-sub replaceallsaveset {
-	my ( $sopts, $from, $to ) = shift;
-	my @savesets = @sopt;
-	searchoptset(qw/0 x x 1/);
-	replaceall( $from, $to );
-	searchoptset(@savesets);
-}
-
 sub named {
 	my ( $from, $to, $start, $end ) = @_;
 	my $length;
