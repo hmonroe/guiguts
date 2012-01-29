@@ -1395,7 +1395,7 @@ sub menu_preferences {
 					   if $lglobal{pathtemp};
 					 return unless $globalspellpath;
 					 $globalspellpath = os_normal($globalspellpath);
-					 saveset();
+					 savesettings();
 				   }
 			  ],
 			  [
@@ -1425,7 +1425,7 @@ sub menu_preferences {
 					   if $lglobal{pathtemp};
 					 return unless $gutcommand;
 					 $gutcommand = os_normal($gutcommand);
-					 saveset();
+					 savesettings();
 				   }
 			  ],
 			  [
@@ -1450,7 +1450,7 @@ sub menu_preferences {
 					   if $lglobal{pathtemp};
 					 return unless $jeebiescommand;
 					 $jeebiescommand = os_normal($jeebiescommand);
-					 saveset();
+					 savesettings();
 				   }
 			  ],
 			  [
@@ -1473,7 +1473,7 @@ sub menu_preferences {
 					   );
 					 return unless $tidycommand;
 					 $tidycommand = os_normal($tidycommand);
-					 saveset();
+					 savesettings();
 				   }
 			  ],
 			  [
@@ -1497,7 +1497,7 @@ sub menu_preferences {
 					   );
 					 return unless $validatecommand;
 					 $validatecommand = os_normal($validatecommand);
-					 saveset();
+					 savesettings();
 				   }
 			  ],
 			  [
@@ -1522,7 +1522,7 @@ sub menu_preferences {
 					   );
 					 return unless $validatecsscommand;
 					 $validatecsscommand = os_normal($validatecsscommand);
-					 saveset();
+					 savesettings();
 				   }
 			  ],
 			  [
@@ -1541,7 +1541,7 @@ sub menu_preferences {
 					 return unless $gnutenbergdirectory;
 					 $gnutenbergdirectory = os_normal($gnutenbergdirectory);
 					 $gnutenbergdirectory = dirname($gnutenbergdirectory);
-					 saveset();
+					 savesettings();
 				   }
 			  ],
 			  [ 'separator', '' ],
@@ -1580,7 +1580,7 @@ sub menu_preferences {
 				 -command => sub {
 					 my $thiscolor = setcolor($bkgcolor);
 					 $bkgcolor = $thiscolor if $thiscolor;
-					 saveset();
+					 savesettings();
 				   }
 			  ],
 			  [
@@ -1591,7 +1591,7 @@ sub menu_preferences {
 					 $OS_WIN
 					   ? $lglobal{checkcolor} = 'white'
 					   : $lglobal{checkcolor} = $activecolor;
-					 saveset();
+					 savesettings();
 				   }
 			  ],
 			  [
@@ -1601,7 +1601,7 @@ sub menu_preferences {
 					 $highlightcolor = $thiscolor if $thiscolor;
 					 $textwindow->tagConfigure( 'scannos',
 											   -background => $highlightcolor );
-					 saveset();
+					 savesettings();
 				   }
 			  ],
 			  [
@@ -1722,14 +1722,14 @@ sub menu_preferences {
 				 -variable   => \$autosave,
 				 -command    => sub {
 					 toggle_autosave();
-					 saveset();
+					 savesettings();
 				   }
 			  ],
 			  [
 				 Button   => 'Auto Save Interval...',
 				 -command => sub {
 					 saveinterval();
-					 saveset();
+					 savesettings();
 					 set_autosave() if $autosave;
 				   }
 			  ],
@@ -1786,7 +1786,7 @@ sub menu_preferences {
 				 Button   => 'Search History Size...',
 				 -command => sub {
 					 searchsize();
-					 saveset();
+					 savesettings();
 				   }
 			  ],
 			  [ Button => 'Set Rewrap ~Margins...', -command => \&setmargins ],
@@ -5241,7 +5241,7 @@ sub search_history {
 	my ( $widget, $history_array_ref ) = @_;
 	my $menu = $widget->Menu( -title => 'History', -tearoff => 0 );
 	$menu->command( -label   => 'Clear History',
-					-command => sub { @$history_array_ref = (); saveset(); }, );
+					-command => sub { @$history_array_ref = (); savesettings(); }, );
 	$menu->separator;
 	for my $item (@$history_array_ref) {
 		$menu->command(
@@ -6611,7 +6611,7 @@ sub autolist {
 
 sub markup {
 	viewpagenums() if ( $lglobal{seepagenums} );
-	saveset();
+	savesettings();
 	my $mark = shift;
 	my $mark1;
 	$mark1 = shift if @_;
@@ -8748,7 +8748,7 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 			}
 		}
 	}
-	saveset();
+	savesettings();
 	$top->Busy( -recurse => 1 );
 	if (    ( $errorchecktype eq 'W3C Validate Remote' )
 		 or ( $errorchecktype eq 'W3C Validate CSS' ) )
@@ -9400,7 +9400,7 @@ sub gcviewops {
 				for ( 0 .. $#gsopt ) {
 					$mygcview[$_] = $gsopt[$_];
 				}
-				saveset();
+				savesettings();
 			},
 			-text  => 'Save My View',
 			-width => 12
@@ -12955,7 +12955,7 @@ sub pmovedown {    # move the page marker down a line
 ## End Page Number Adjust
 
 ## Save setting.rc file
-sub saveset {
+sub savesettings {
 
 	#print time()."savesettings\n";
 	my $message = <<EOM;
@@ -13391,7 +13391,7 @@ sub buildstatusbar {
 			else            { $vislnnm = 1 }
 			$textwindow->showlinenum if $vislnnm;
 			$textwindow->hidelinenum unless $vislnnm;
-			saveset();
+			savesettings();
 		}
 	);
 	$lglobal{selectionlabel} =
@@ -13899,7 +13899,7 @@ sub update_indicators {
 	}
 	$textwindow->tagRemove( 'bkmk', '1.0', 'end' ) unless $bkmkhl;
 	if ( $lglobal{geometryupdate} ) {
-		saveset();
+		savesettings();
 		$lglobal{geometryupdate} = 0;
 	}
 }
@@ -14492,7 +14492,7 @@ sub openfile {    # and open it
 	file_mark_pages() if $auto_page_marks;
 	push @operations, ( localtime() . " - Open $lglobal{global_filename}" );
 	oppopupdate() if $lglobal{oppop};
-	saveset();
+	savesettings();
 	set_autosave() if $autosave;
 }
 
@@ -15241,7 +15241,7 @@ sub stealthscanno {
 	searchoptset(qw/1 x x 0 1/)
 	  ;    # force search to begin at start of doc, whole word
 	if ( loadscannos() ) {
-		saveset();
+		savesettings();
 		searchpopup();
 		getnextscanno();
 		searchtext();
@@ -15347,7 +15347,7 @@ sub spellchecker {    # Set up spell check window
 				  $textwindow->index( $lglobal{lastmatchindex} . '-1c' )
 				  || '1.0';
 				$textwindow->markSet( 'spellbkmk', $spellindexbkmrk );
-				saveset();
+				savesettings();
 			},
 			-text  => 'Set Bookmark',
 			-width => 14,
@@ -16865,7 +16865,7 @@ sub gutcheck {
 	;      # Ignore DP style page separators
 	$gutcommand = os_normal($gutcommand);
 	$gutcommand = dos_path($gutcommand) if $OS_WIN;
-	saveset();
+	savesettings();
 
 	if ( $lglobal{gcpop} ) {
 		$lglobal{gclistbox}->delete( '0', 'end' );
@@ -16936,7 +16936,7 @@ sub gutopts {
 								 -text => '-d Ignore DP style page separators.',
 	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
 	$lglobal{gcdialog}->Show;
-	saveset();
+	savesettings();
 }
 
 sub jeebiespop_up {
@@ -18744,7 +18744,7 @@ sub externalpopup {    # Set up the external commands menu
 		my $gobut = $f2->Button(
 			-activebackground => $activecolor,
 			-command          => sub {
-				saveset();
+				savesettings();
 				menurebuild();
 				$lglobal{xtpop}->destroy;
 				undef $lglobal{xtpop};
@@ -19043,7 +19043,7 @@ sub setmargins {
 		);
 		setmargins();
 	}
-	saveset();
+	savesettings();
 }
 
 # FIXME: Adapt to work with fontCreate thingy
@@ -19110,7 +19110,7 @@ sub fontsize {
 			-command          => sub {
 				$lglobal{fspop}->destroy;
 				undef $lglobal{fspop};
-				saveset();
+				savesettings();
 			}
 		)->grid( -row => 3, -column => 2, -pady => 5 );
 		$lglobal{fspop}->resizable( 'no', 'no' );
@@ -19139,7 +19139,7 @@ sub setbrowser {
 		-width            => 6,
 		-command          => sub {
 			$globalbrowserstart = $browserentry->get;
-			saveset();
+			savesettings();
 			$browsepop->destroy;
 			undef $browsepop;
 		}
@@ -19173,7 +19173,7 @@ sub viewerpath {    #Find your image viewer
 	  );
 	$globalviewerpath = $lglobal{pathtemp} if $lglobal{pathtemp};
 	$globalviewerpath = os_normal($globalviewerpath);
-	saveset();
+	savesettings();
 }
 
 sub setpngspath {
@@ -19315,7 +19315,7 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 								   -tip => 'Remove trailing spaces in selection'
 		);
 	}
-	saveset();
+	savesettings();
 }
 
 sub setcolor {    # Color picking routine
@@ -19354,7 +19354,7 @@ sub spelloptions {
 				$globalspellpath = os_normal($globalspellpath);
 				$spellpathentry->delete( 0, 'end' );
 				$spellpathentry->insert( 'end', $globalspellpath );
-				saveset();
+				savesettings();
 
 				$OS_WIN
 				  ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
@@ -19427,7 +19427,7 @@ sub spelloptions {
 			$spelldictxt->insert( '1.0', $selection );
 			$selection = '' if $selection eq "No dictionary!";
 			$globalspelldictopt = $selection;
-			saveset();
+			savesettings();
 			aspellstart();
 			$top->Busy( -recurse => 1 );
 
@@ -19570,7 +19570,7 @@ sub hilitetgl {    # Enable / disable word highlighting in the text
 		$textwindow->tagRemove( 'scannos', '1.0', 'end' );
 	}
 	update_indicators();
-	saveset();
+	savesettings();
 }
 
 sub searchsize {  # Pop up a window where you can adjust the search history size
@@ -19607,7 +19607,7 @@ sub searchsize {  # Pop up a window where you can adjust the search history size
 			-text    => 'Ok',
 			-width   => 10,
 			-command => sub {
-				saveset();
+				savesettings();
 				$lglobal{hssizepop}->destroy;
 				undef $lglobal{hssizepop};
 			}
@@ -19784,7 +19784,7 @@ sub checkforupdates {
 
 				#print $ignoreversionnumber;
 				$ignoreversionnumber = $onlineversion;
-				saveset();
+				savesettings();
 				$versionbox->destroy;
 				undef $versionbox;
 			}
@@ -21160,7 +21160,7 @@ sub text_convert_options {
 						  -textvariable => \$bold_char,
 	  )->pack( -side => 'left' );
 	$options->Show;
-	saveset();
+	savesettings();
 }
 
 sub runtests {

@@ -93,7 +93,7 @@ sub selectrewrap {
 	my ($textwindow, $seepagenums,$scannos_highlighted ) = @_;
 	
 	&main::viewpagenums() if ( $seepagenums );
-	&main::saveset();
+	&main::savesettings();
 	my $marker      = shift @_;
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
@@ -642,7 +642,7 @@ sub asciibox {
 }
 
 sub case {
-	&main::saveset();
+	&main::savesettings();
 	my ($textwindow,$marker) = @_;
 	#my $marker      = shift;
 	my @ranges      = $textwindow->tagRanges('sel');
@@ -838,7 +838,7 @@ sub floodfill {
 
 
 sub indent {
-	&main::saveset();
+	&main::savesettings();
 	my ($textwindow,$indent) = @_;
 	#my $indent      = shift;
 	my @ranges      = $textwindow->tagRanges('sel');
