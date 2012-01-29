@@ -909,7 +909,7 @@ sub scannosfile {
 		my ( $name, $path, $extension ) =
 		  fileparse( $scannoslist, '\.[^\.]*$' );
 		$scannoslistpath = $path;
-		hilitetgl() if ( $lglobal{scanno_hl} );
+		hilitetgl() if ( $lglobal{scannos_highlighted} );
 		%{ $lglobal{wordlist} } = ();
 		hilitetgl();
 	}
@@ -918,7 +918,7 @@ sub scannosfile {
 ##routine to automatically highlight words in the text
 sub highlightscannos {
 	if ($debug) {print "sub highlightscannos\n";}
-	return 0 unless $lglobal{scanno_hl};
+	return 0 unless $lglobal{scannos_highlighted};
 	unless (  $lglobal{wordlist}  ) {
 		scannosfile() unless ( defined $scannoslist && -e $scannoslist );
 		return 0 unless $scannoslist;
@@ -935,7 +935,7 @@ sub highlightscannos {
 						   -buttons => ['OK'],
 					  );
 					my $answer = $dialog->Show;
-					$lglobal{scanno_hl} = 0;
+					$lglobal{scannos_highlighted} = 0;
 					undef $scannoslist;
 					return;
 
@@ -1619,7 +1619,7 @@ sub menu_preferences {
 			  ],
 			  [
 				 Checkbutton => 'Enable Scanno Highlighting',
-				 -variable   => \$lglobal{scanno_hl},
+				 -variable   => \$lglobal{scannos_highlighted},
 				 -onvalue    => 1,
 				 -offvalue   => 0,
 				 -command    => \&hilitetgl
@@ -2213,7 +2213,7 @@ sub menubuildold {
 			   -command => sub {
 				   $textwindow->addGlobStart;
 				   selectrewrap( $textwindow, $lglobal{seepagenums},
-								 $lglobal{scanno_hl}, $rwhyphenspace );
+								 $lglobal{scannos_highlighted}, $rwhyphenspace );
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -3158,7 +3158,7 @@ sub menubuild {
 			   -command => sub {
 				   $textwindow->addGlobStart;
 				   selectrewrap( $textwindow, $lglobal{seepagenums},
-								 $lglobal{scanno_hl}, $rwhyphenspace );
+								 $lglobal{scannos_highlighted}, $rwhyphenspace );
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -3831,7 +3831,7 @@ sub menubuildtwo {
 			   -command => sub {
 				   $textwindow->addGlobStart;
 				   selectrewrap( $textwindow, $lglobal{seepagenums},
-								 $lglobal{scanno_hl}, $rwhyphenspace );
+								 $lglobal{scannos_highlighted}, $rwhyphenspace );
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -4509,7 +4509,7 @@ sub footnotetidy {
 		$end = $textwindow->index( 'fne' . $lglobal{fnindex} );
 		$textwindow->delete("$end-1c");
 		$textwindow->tagAdd( 'sel', 'fns' . $lglobal{fnindex}, "$end+1c" );
-		selectrewrap( $textwindow, $lglobal{seepagenums}, $lglobal{scanno_hl},
+		selectrewrap( $textwindow, $lglobal{seepagenums}, $lglobal{scannos_highlighted},
 					  $rwhyphenspace );
 		$lglobal{fnindex}++;
 		last if $lglobal{fnindex} > $lglobal{fntotal};
@@ -13445,13 +13445,13 @@ sub buildstatusbar {
 	$lglobal{highlightlabel}->bind(
 		'<1>',
 		sub {
-			if ( $lglobal{scanno_hl} ) {
-				$lglobal{scanno_hl}          = 0;
+			if ( $lglobal{scannos_highlighted} ) {
+				$lglobal{scannos_highlighted}          = 0;
 				$lglobal{highlighttempcolor} = 'gray';
 			} else {
 				scannosfile() unless $scannoslist;
 				return unless $scannoslist;
-				$lglobal{scanno_hl}          = 1;
+				$lglobal{scannos_highlighted}          = 1;
 				$lglobal{highlighttempcolor} = $highlightcolor;
 			}
 			hilitetgl();
@@ -13845,10 +13845,10 @@ sub update_indicators {
 	my $filename = $textwindow->FileName;
 	$filename = 'No File Loaded' unless ( defined($filename) );
 	$lglobal{highlightlabel}->configure( -background => $highlightcolor )
-	  if ( $lglobal{scanno_hl} );
+	  if ( $lglobal{scannos_highlighted} );
 	if ( $lglobal{highlightlabel} ) {
 		$lglobal{highlightlabel}->configure( -background => 'gray' )
-		  unless ( $lglobal{scanno_hl} );
+		  unless ( $lglobal{scannos_highlighted} );
 	}
 	$filename = os_normal($filename);
 	$lglobal{global_filename} = $filename;
@@ -16167,7 +16167,7 @@ sub gotobookmark {
 
 sub blockrewrap {
 	$blockwrap = 1;
-	selectrewrap( $textwindow, $lglobal{seepagenums}, $lglobal{scanno_hl},
+	selectrewrap( $textwindow, $lglobal{seepagenums}, $lglobal{scannos_highlighted},
 				  $rwhyphenspace );
 	$blockwrap = 0;
 }
@@ -19560,13 +19560,13 @@ sub set_autosave {
 }
 
 sub hilitetgl {    # Enable / disable word highlighting in the text
-	if ( $lglobal{scanno_hl} ) {
+	if ( $lglobal{scannos_highlighted} ) {
 		$lglobal{hl_index} = 1;
 		highlightscannos();
-		$lglobal{scanno_hlid} = $top->repeat( 400, \&highlightscannos );
+		$lglobal{scannos_highlightedid} = $top->repeat( 400, \&highlightscannos );
 	} else {
-		$lglobal{scanno_hlid}->cancel if $lglobal{scanno_hlid};
-		undef $lglobal{scanno_hlid};
+		$lglobal{scannos_highlightedid}->cancel if $lglobal{scannos_highlightedid};
+		undef $lglobal{scannos_highlightedid};
 		$textwindow->tagRemove( 'scannos', '1.0', 'end' );
 	}
 	update_indicators();
@@ -21191,7 +21191,7 @@ sub runtests {
 	ok(
 		1 == do {
 			selectrewrap( $textwindow, $lglobal{seepagenums},
-						  $lglobal{scanno_hl}, $rwhyphenspace );
+						  $lglobal{scannos_highlighted}, $rwhyphenspace );
 			1;
 		},
 		"Rewrap Selection"

@@ -90,7 +90,7 @@ sub wrapper {
 }
 
 sub selectrewrap {
-	my ($textwindow, $seepagenums,$scanno_hl ) = @_;
+	my ($textwindow, $seepagenums,$scannos_highlighted ) = @_;
 	
 	&main::viewpagenums() if ( $seepagenums );
 	&main::saveset();
@@ -99,8 +99,8 @@ sub selectrewrap {
 	my $range_total = @ranges;
 	my $thisblockstart;
 	my $start;
-	my $scannosave = $scanno_hl;
-	$scanno_hl = 0;
+	my $scannosave = $scannos_highlighted;
+	$scannos_highlighted = 0;
 	$main::operationinterrupt = 0;
 
 	if ( $range_total == 0 ) {
@@ -400,7 +400,7 @@ sub selectrewrap {
 		$textwindow->delete( $thisblockstart, "$thisblockstart lineend" );
 	}
 	$textwindow->see($start);
-	#$scanno_hl = $scannosave;
+	#$scannos_highlighted = $scannosave;
 	$textwindow->Unbusy( -recurse => 1 );
 }
 
