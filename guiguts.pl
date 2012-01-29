@@ -177,6 +177,7 @@ our $projectid        = q{};
 our $regexpentry      = q();
 our $rmargin          = 72;
 our $rwhyphenspace    = 1;
+our $scannos_highlighted=0;
 our $scannoslist      = q{wordlist/en-common.txt};
 our $scannoslistpath  = q{wordlist};
 our $scannospath      = q{};
@@ -270,6 +271,7 @@ our @extops = (
 
 #All local global variables contained in one hash. # now global
 our %lglobal; # need to document each variable
+
 # $lglobal{hl_index} 	line number being scanned for highlighting
 
 if ( eval { require Text::LevenshteinXS } ) {
@@ -909,7 +911,7 @@ sub scannosfile {
 		my ( $name, $path, $extension ) =
 		  fileparse( $scannoslist, '\.[^\.]*$' );
 		$scannoslistpath = $path;
-		highlight_scannos() if ( $lglobal{scannos_highlighted} );
+		highlight_scannos() if ( $scannos_highlighted );
 		%{ $lglobal{wordlist} } = ();
 		highlight_scannos();
 	}
@@ -918,7 +920,7 @@ sub scannosfile {
 ##routine to automatically highlight words in the text
 sub highlightscannos {
 	if ($debug) {print "sub highlightscannos\n";}
-	return 0 unless $lglobal{scannos_highlighted};
+	return 0 unless $scannos_highlighted;
 	unless (  $lglobal{wordlist}  ) {
 		scannosfile() unless ( defined $scannoslist && -e $scannoslist );
 		return 0 unless $scannoslist;
@@ -935,7 +937,7 @@ sub highlightscannos {
 						   -buttons => ['OK'],
 					  );
 					my $answer = $dialog->Show;
-					$lglobal{scannos_highlighted} = 0;
+					$scannos_highlighted = 0;
 					undef $scannoslist;
 					return;
 
@@ -1619,7 +1621,7 @@ sub menu_preferences {
 			  ],
 			  [
 				 Checkbutton => 'Enable Scanno Highlighting',
-				 -variable   => \$lglobal{scannos_highlighted},
+				 -variable   => \$scannos_highlighted,
 				 -onvalue    => 1,
 				 -offvalue   => 0,
 				 -command    => \&highlight_scannos
@@ -2213,7 +2215,7 @@ sub menubuildold {
 			   -command => sub {
 				   $textwindow->addGlobStart;
 				   selectrewrap( $textwindow, $lglobal{seepagenums},
-								 $lglobal{scannos_highlighted}, $rwhyphenspace );
+								 $scannos_highlighted, $rwhyphenspace );
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -3158,7 +3160,7 @@ sub menubuild {
 			   -command => sub {
 				   $textwindow->addGlobStart;
 				   selectrewrap( $textwindow, $lglobal{seepagenums},
-								 $lglobal{scannos_highlighted}, $rwhyphenspace );
+								 $scannos_highlighted, $rwhyphenspace );
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -3831,7 +3833,7 @@ sub menubuildtwo {
 			   -command => sub {
 				   $textwindow->addGlobStart;
 				   selectrewrap( $textwindow, $lglobal{seepagenums},
-								 $lglobal{scannos_highlighted}, $rwhyphenspace );
+								 $scannos_highlighted, $rwhyphenspace );
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -4509,7 +4511,7 @@ sub footnotetidy {
 		$end = $textwindow->index( 'fne' . $lglobal{fnindex} );
 		$textwindow->delete("$end-1c");
 		$textwindow->tagAdd( 'sel', 'fns' . $lglobal{fnindex}, "$end+1c" );
-		selectrewrap( $textwindow, $lglobal{seepagenums}, $lglobal{scannos_highlighted},
+		selectrewrap( $textwindow, $lglobal{seepagenums}, $scannos_highlighted,
 					  $rwhyphenspace );
 		$lglobal{fnindex}++;
 		last if $lglobal{fnindex} > $lglobal{fntotal};
@@ -12966,13 +12968,14 @@ EOM
 		print $save_handle '@gcopt = (';
 		print $save_handle "$_," || '0,' for @gcopt;
 		print $save_handle ");\n\n";
+		# a variable's value is not saved unless it is nonzero
 
 		for (
 			qw/alpha_sort activecolor auto_page_marks auto_show_images autobackup autosave autosaveinterval bkgcolor
 			blocklmargin blockrmargin bold_char defaultindent failedsearch fontname fontsize fontweight geometry
 			geometry2 geometry3 geometrypnumpop globalaspellmode highlightcolor history_size ignoreversionnumber
-			intelligentWF ignoreversions italic_char jeebiesmode lastversioncheck lmargin nobell nohighlights
-			notoolbar poetrylmargin rmargin rwhyphenspace multiterm stayontop toolside utffontname utffontsize
+			intelligentWF ignoreversions italic_char jeebiesmode lastversioncheck lmargin multiterm nobell nohighlights
+			notoolbar poetrylmargin rmargin rwhyphenspace scannos_highlighted stayontop toolside utffontname utffontsize
 			useppwizardmenus usemenutwo verboseerrorchecks vislnnm w3cremote wfstayontop/
 		  )
 		{
@@ -13437,13 +13440,13 @@ sub buildstatusbar {
 	$lglobal{highlightlabel}->bind(
 		'<1>',
 		sub {
-			if ( $lglobal{scannos_highlighted} ) {
-				$lglobal{scannos_highlighted}          = 0;
+			if ( $scannos_highlighted ) {
+				$scannos_highlighted          = 0;
 				$lglobal{highlighttempcolor} = 'gray';
 			} else {
 				scannosfile() unless $scannoslist;
 				return unless $scannoslist;
-				$lglobal{scannos_highlighted}          = 1;
+				$scannos_highlighted          = 1;
 				$lglobal{highlighttempcolor} = $highlightcolor;
 			}
 			highlight_scannos();
@@ -13837,10 +13840,10 @@ sub update_indicators {
 	my $filename = $textwindow->FileName;
 	$filename = 'No File Loaded' unless ( defined($filename) );
 	$lglobal{highlightlabel}->configure( -background => $highlightcolor )
-	  if ( $lglobal{scannos_highlighted} );
+	  if ( $scannos_highlighted );
 	if ( $lglobal{highlightlabel} ) {
 		$lglobal{highlightlabel}->configure( -background => 'gray' )
-		  unless ( $lglobal{scannos_highlighted} );
+		  unless ( $scannos_highlighted );
 	}
 	$filename = os_normal($filename);
 	$lglobal{global_filename} = $filename;
@@ -14405,6 +14408,7 @@ sub file_open {    # Find a text file to open
 
 sub openfile {    # and open it
 	my $name = shift;
+	print $scannos_highlighted;
 	return if ( $name eq '*empty*' );
 	return if ( confirmempty() =~ /cancel/i );
 	unless ( -e $name ) {
@@ -16159,7 +16163,7 @@ sub gotobookmark {
 
 sub blockrewrap {
 	$blockwrap = 1;
-	selectrewrap( $textwindow, $lglobal{seepagenums}, $lglobal{scannos_highlighted},
+	selectrewrap( $textwindow, $lglobal{seepagenums}, $scannos_highlighted,
 				  $rwhyphenspace );
 	$blockwrap = 0;
 }
@@ -19552,7 +19556,7 @@ sub set_autosave {
 }
 
 sub highlight_scannos {    # Enable / disable word highlighting in the text
-	if ( $lglobal{scannos_highlighted} ) {
+	if ( $scannos_highlighted ) {
 		$lglobal{hl_index} = 1;
 		highlightscannos();
 		$lglobal{scannos_highlightedid} = $top->repeat( 400, \&highlightscannos );
@@ -21183,7 +21187,7 @@ sub runtests {
 	ok(
 		1 == do {
 			selectrewrap( $textwindow, $lglobal{seepagenums},
-						  $lglobal{scannos_highlighted}, $rwhyphenspace );
+						  $scannos_highlighted, $rwhyphenspace );
 			1;
 		},
 		"Rewrap Selection"
