@@ -18,12 +18,13 @@
 #along with this program; if not, write to the Free Software
 #Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+use strict;
+use warnings;
 #use criticism 'gentle'; 
 
 my $VERSION = '1.0.6';
 our $debug = 0; # turn on to report debug messages. Do not commit with $debug on
-use strict;
-use warnings;
+
 use FindBin;
 use lib $FindBin::Bin . "/lib";
 
