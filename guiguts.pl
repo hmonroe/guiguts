@@ -909,9 +909,9 @@ sub scannosfile {
 		my ( $name, $path, $extension ) =
 		  fileparse( $scannoslist, '\.[^\.]*$' );
 		$scannoslistpath = $path;
-		hilitetgl() if ( $lglobal{scannos_highlighted} );
+		highlight_scannos() if ( $lglobal{scannos_highlighted} );
 		%{ $lglobal{wordlist} } = ();
-		hilitetgl();
+		highlight_scannos();
 	}
 }
 
@@ -1622,7 +1622,7 @@ sub menu_preferences {
 				 -variable   => \$lglobal{scannos_highlighted},
 				 -onvalue    => 1,
 				 -offvalue   => 0,
-				 -command    => \&hilitetgl
+				 -command    => \&highlight_scannos
 			  ],
 			  [
 				 Checkbutton => 'Leave Bookmarks Highlighted',
@@ -13446,7 +13446,7 @@ sub buildstatusbar {
 				$lglobal{scannos_highlighted}          = 1;
 				$lglobal{highlighttempcolor} = $highlightcolor;
 			}
-			hilitetgl();
+			highlight_scannos();
 		}
 	);
 	$lglobal{highlightlabel}->bind( '<3>', sub { scannosfile() } );
@@ -19551,7 +19551,7 @@ sub set_autosave {
 	$lglobal{autosaveinterval} = time;
 }
 
-sub hilitetgl {    # Enable / disable word highlighting in the text
+sub highlight_scannos {    # Enable / disable word highlighting in the text
 	if ( $lglobal{scannos_highlighted} ) {
 		$lglobal{hl_index} = 1;
 		highlightscannos();
