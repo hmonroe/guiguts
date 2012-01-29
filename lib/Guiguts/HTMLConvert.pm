@@ -57,6 +57,11 @@ sub html_convert_superscripts {
 		$textwindow->ntdelete( "$step.0", "$step.end" );
 		$textwindow->ntinsert( "$step.0", $selection );
 	}
+  # handle <g>gesperrt text</g>
+	if ( $selection =~ s/<g>(.*)<\/g>/<em class="gesperrt">$1<\/em>/g ) {
+		$textwindow->ntdelete( "$step.0", "$step.end" );
+		$textwindow->ntinsert( "$step.0", $selection );
+	}
 }
 
 sub html_convert_ampersands {

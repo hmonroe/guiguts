@@ -76,3 +76,4 @@ composing com-posing comp--osing
 <i>unmatched</b> <b>bold</i> <sc>bold</asc>
 <tb>  test
 
+<g>gesperrt test</g> end of gesperrt.
