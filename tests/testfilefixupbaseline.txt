@@ -12,15 +12,17 @@ This paragraph has multiple spaces, and periods in the wrong place.
 I got it wrong! Or have I? "To be: or not, to be; that is the
 question."
 
-       *       *       *       *       *
+<tb>
 
-  * * * *
+<tb>
 
 And (said I), for the 1st time, [Illustration] what about the
 {curly brackets}....
 
 That's enough for now! Need to do more work on "the double quotes"
 and ... the elipses at the end of line. And why not convert * * * * * into
-<tb>. I don't know!
+<tb>. I don't know! Double guote management only works for beginning,
+and end of lines.
+
 
 

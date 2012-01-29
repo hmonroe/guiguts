@@ -18,7 +18,9 @@ gutcheck path (mentioned in #3434768). In guiguts.bat, put tools\perl
 higher on the path than the existing path; fixed path for ENCFONTS used
 by the Gnutenberg Press. Made highlighting of scannos sticky. Set default
 path for gutcheck and jeebies on non-Windows systems. <g>gesperrt text</g>
-is converted to <em class="gesperrt">gesperrt text</em>.
+is converted to <em class="gesperrt">gesperrt text</em>. Added second
+alternative menu structure for comment. Altered Fixup 'thought break'
+response.
 
 Version 1.0.5. Introduced a PP Wizard, an alternative menu structure,
 that steps PPers through the GG checklist, which is not the default

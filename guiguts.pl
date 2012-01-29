@@ -3623,10 +3623,11 @@ sub menubuildtwo {
 				   update_indicators();
 				 }
 			],
-			[
-			   'command', '~Which Line?',
-			   -command => sub { $textwindow->WhatLineNumberPopUp }
-			],
+# no need - on status bar
+#			[
+#			   'command', '~Which Line?',
+#			   -command => sub { $textwindow->WhatLineNumberPopUp }
+#			],
 			[ 'separator', '' ],
 			[
 			   'command',
@@ -8152,6 +8153,7 @@ sub joinlines {
 	}
 
 	# join lines
+	# FIXME why is there a space after hyphens after a join?
 	if ( $op eq 'j' ) {
 		$index = $textwindow->index('page');
 
@@ -9482,7 +9484,7 @@ sub fixpopup {
 			'Remove spaces before commas.',
 			'Remove spaces after beginning and before ending double quote.',
 'Remove spaces after opening and before closing brackets, () [], {}.',
-'Format a line with 5 * and nothing else as a standard thought break.',
+'Mark up a line with 4 or more * and nothing else as <tb>.',
 			'Fix obvious l<->1 problems, lst, llth, etc.',
 			'Format ellipses correctly',
 'Remove spaces after beginning and before ending angle quotes « ».',
@@ -17109,6 +17111,7 @@ sub fixup {
 				  if $line =~ s/ +,/,/g;
 			}
 			;   # Get rid of space before commas
+			# FIXME way to go on managing quotes
 			if ( ${ $lglobal{fixopt} }[9] ) {
 				$edited++
 				  if $line =~ s/^\" +/\"/
@@ -17125,12 +17128,12 @@ sub fixup {
 				  if $line =~ s/ (?=(\)|\}|\]))//g
 			;   # Get rid of space before closing brackets
 			}
-			;	# FIXME format to standard thought breaks ?why not <tb>
+			;	# FIXME format to standard thought breaks - changed to <tb>
 			if ( ${ $lglobal{fixopt} }[11] ) {
 				$edited++
-				  if $line =~
-s/^\s*(\*\s*){5}$/       \*       \*       \*       \*       \*\n/;
-			;   # better would be  =~ s/^\s*(\*\s*){5}$/<tb>\n/;
+#				  if $line =~
+# s/^\s*(\*\s*){5}$/       \*       \*       \*       \*       \*\n/;
+				  if $line =~ s/^\s*(\*\s*){4,}$/<tb>\n/;
 			}
 			$edited++ if ( $line =~ s/ +$// );
 			;	# Fix llth, lst
