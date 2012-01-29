@@ -114,6 +114,17 @@ table {
 
 .u        {text-decoration: underline;}
 
+.gesperrt 
+{ 
+    letter-spacing: 0.2em; 
+    margin-right: -0.2em; 
+} 
+
+em.gesperrt 
+{ 
+    font-style: normal; 
+}
+
 .caption  {font-weight: bold;}
 
 /* Images */

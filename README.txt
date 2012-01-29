@@ -6,12 +6,16 @@ guiguts-win-1.0.nn.zip is the best download for Windows users. It
 includes guiguts.pl and supporting files and helper applications
 including those for working with RST and PGTEI files. It should work out
 of the box by running guiguts.bat (it includes copies of perl and Python
-languages). guiguts-mac-1.0.nn should also work out of the box for Mac users.
-guiguts-1.0.nn.zip is a stripped down version for those who have all the helper
-applications or are upgrading or who use operating systems other than Windows/Mac.
+languages). guiguts-mac-1.0.nn should also work out of the box for Mac
+users; it does not include as many helper applications.
+guiguts-1.0.nn.zip is a stripped down version for those who have all the
+helper applications or are upgrading or who use operating systems other
+than Windows/Mac.
 
-Version 1.0.6. Fix problem with scannos highlighting a long time
-to turn over; default scannos file en-common.txt is selected.
+Fixed problem with scannos highlighting taking forever to turn; default
+scannos file en-common.txt is selected. Handle spaces in gutcheck path
+(mentioned in #3434768). In guiguts.bat, put tools\perl higher on the
+path than the existing path.
 
 Version 1.0.5. Introduced a PP Wizard, an alternative menu structure,
 that steps PPers through the GG checklist, which is not the default
@@ -23,24 +27,24 @@ the string entered in the RegExp field in the Word Frequency popup is a
 valid regular expression. Added PP Process Checklist to Help menu.
 Copied headerdefault.txt to header.txt on startup if header.txt does not
 exist. Spellcheck no longer double counts occurrences of a word if run a
-second time. Tidy Up Footnotes works if there is only one footnote. Text
-that is gesperrt <g>abc</g> now becomes a&nbsp;b&nbsp;c. Autogenerate HTML no
-longer uses /* or captions as the title. Auto Illus Search no longer
-doubles tags in figleft and figright. Import Prep Text allows letters in
-png filenames. Additional external operations added. Search at beginning
-works again (broken in 1.0.4) but search will not find the very first 
-text in a file (fixed in 1.0.4). Problem with spaces in gutcheck and other 
-paths fixed.
+second time. Tidy Up Footnotes works if there is only one footnote.
+Autogenerate HTML no longer uses /* or captions as the title. Auto Illus
+Search no longer doubles tags in figleft and figright. Import Prep Text
+allows letters in png filenames. Additional external operations added.
+Search at beginning works again (broken in 1.0.4) but search will not
+find the very first text in a file (fixed in 1.0.4). Problem with spaces
+in gutcheck and other paths fixed.
 
 Version 1.0.4. Hyphen check now also checks for "flash light" not only
-"flash-light", "flash--light", and "flashlight". A regular expression search 
-over line breaks now respects the ignore case flag. Fixed path and extension 
-so EpubMaker will take .html files as input. PPV TXT and PP HTML labeled more 
-accurately as pptxt and pphtml. Only README.TXT appears in the prepopulated 
-recently used file list. Search can find the first word in the file. Word 
-frequency rerun after typing words in empty file reports now works and bug with
-unresponsive save as dialog fixed. Guiguts.bat calls perl in a way that should 
-(may) ignore preexisting installations of perl.
+"flash-light", "flash--light", and "flashlight". A regular expression
+search over line breaks now respects the ignore case flag. Fixed path
+and extension so EpubMaker will take .html files as input. PPV TXT and
+PP HTML labeled more accurately as pptxt and pphtml. Only README.TXT
+appears in the prepopulated recently used file list. Search can find the
+first word in the file. Word frequency rerun after typing words in empty
+file reports now works and bug with unresponsive save as dialog fixed.
+Guiguts.bat calls perl in a way that should (may) ignore preexisting
+installations of perl.
 
 Version 1.0.3. Relocated HTML page number outside an open <span> eg for a line
 of poetry so page numbers align vertically. Auto List on HTML palette no
@@ -67,7 +71,7 @@ RoryConnor. Cleared undo cache after HTML autogenerate. Set command to
 open browser for non-Windows OS and use it for external operations.
 Dictionary search on the external operations menu now passes the
 selection as a search argument. Made ASCII Boxes popup resizable.
-Removed trailing space on last line of /# #/ block after rewrap. Respect 
+Removed trailing space on last line of /# #/ block after rewrap. Respect
 preference to leave space after end of line hyphen during rewrap if Join
 Lines Keep Hyphen is chosen. Removed period on "Set margins for rewrap."
 Changed "Check Errors" box to "Run Checks". Run fixup ignores /X X/ (as
