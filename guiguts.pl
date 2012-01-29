@@ -3942,8 +3942,9 @@ sub menubuildtwo {
 			   Button   => 'Convert Windows CP 1252 characters to Unicode',
 			   -command => \&cp1252toUni
 			],
-			[ Button => '~Sidenote Fixup...', -command => \&sidenotes ],
+			[ Button => 'Fix sidenotes', -command => \&sidenotes ],
 			[ Button => 'Run Fi~xup...', -command => \&fixpopup ],
+			[ Button => '~Footnote Fixup...', -command => \&footnotepop ],
 			[ 'separator', '' ],
 			[ Button => 'Fix ~Page Separators...', -command => \&separatorpopup ],
 			[ 'separator', '' ],
@@ -3960,7 +3961,6 @@ sub menubuildtwo {
 			[ Button => 'Find Greek...', -command => \&findandextractgreek ],
 			[ Button => '~Greek Transliteration', -command => \&greekpopup ],
 			[ 'separator', '' ],
-			[ Button => '~Footnote Fixup...', -command => \&footnotepop ],
 			[
 			   Button   => 'Reformat Poetry ~Line Numbers',
 			   -command => \&poetrynumbers
