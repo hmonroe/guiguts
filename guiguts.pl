@@ -13232,7 +13232,10 @@ sub jeebiesrun {
 				 '---------------- Please wait: Processing. ----------------' );
 	$listbox->update;
 
-	if ( open my $fh, '-|', "$jeebiescommand $jeebiesoptions $title" ) {
+	my $runner = runner::tofile('results.tmp');
+	$runner->run($jeebiescommand, $jeebiesoptions, $title);
+	if ( not $? ) {
+		open my $fh, '<', 'results.tmp';
 		while ( my $line = <$fh> ) {
 			$line =~ s/\n//;
 			$line =~ s/^\s+/  /;
@@ -13248,6 +13251,7 @@ sub jeebiesrun {
 				$listbox->insert( 'end', $line );
 			}
 		}
+		unlink 'results.tmp';
 	} else {
 		warn "Unable to run Jeebies. $!";
 	}
