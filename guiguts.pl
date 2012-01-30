@@ -8871,10 +8871,8 @@ $validatecommand, "--directory=$validatepath", "--catalog=xhtml.soc",
 							linkcheckrun;
 						} else {
 							if ( $errorchecktype eq 'Image Check' ) {
-								$fname = dos_path( $lglobal{global_filename} )
-								  if $OS_WIN;
 								my ( $f, $d, $e ) =
-								  fileparse( $fname, qr{\.[^\.]*$} );
+								  fileparse( $lglobal{global_filename}, qr{\.[^\.]*$} );
 								system(
 "perl", "lib/ppvchecks/ppvimage.pl", $name, $d );
 							} else {
