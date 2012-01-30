@@ -17761,9 +17761,9 @@ sub epubmaker {
 		  catfile( $lglobal{guigutsdirectory}, 'python27', 'python.exe' );
 
 		if ( defined $format and (($format eq 'html') or ($format eq 'epub')) ) {
-			runner("$pythonpath $epubmakerpath --make $format $rstfilename");
+			runner($pythonpath, $epubmakerpath, "--make", $format, $rstfilename);
 		} else {
-			runner("$pythonpath $epubmakerpath $rstfilename");
+			runner($pythonpath, $epubmakerpath, $rstfilename);
 		}
 		chdir $pwd;
 	} else {
@@ -17785,7 +17785,7 @@ sub gnutenberg {
 	my $gnutenbergoutput = catfile( $globallastpath, 'output' );
 	chdir $gnutenbergdirectory;
 	runner(
-"perl transform.pl -f $format $lglobal{global_filename} $gnutenbergoutput\\" );
+"perl", "transform.pl", "-f", $format, $lglobal{global_filename}, "$gnutenbergoutput\\" );
 	chdir $pwd;
 }
 
