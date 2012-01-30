@@ -2379,7 +2379,7 @@ sub menubuildold {
 					  Button   => 'Gnutenberg Press Online',
 					  -command => sub {
 						  runner(
-"$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
+$globalbrowserstart, "http://pgtei.pglaf.org/marcello/0.4/tei-online" );
 						}
 				   ],
 			   ]
@@ -2392,7 +2392,7 @@ sub menubuildold {
 					  Button   => 'EpubMaker Online',
 					  -command => sub {
 						  runner(
-							   "$globalbrowserstart http://epubmaker.pglaf.org/"
+							   $globalbrowserstart, "http://epubmaker.pglaf.org/"
 						  );
 						}
 				   ],
@@ -2408,7 +2408,7 @@ sub menubuildold {
 					  Button   => 'dp2rst Conversion',
 					  -command => sub {
 						  runner(
-"$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst" );
+$globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 						}
 				   ],
 			   ]
@@ -2605,7 +2605,7 @@ sub menubuildold {
 			   Button   => '~Manual',
 			   -command => sub {        # FIXME: sub this out.
 				   runner(
-"$globalbrowserstart http://www.pgdp.net/wiki/PPTools/Guiguts"
+$globalbrowserstart, "http://www.pgdp.net/wiki/PPTools/Guiguts"
 				   ) if ( -e 'ggmanual.html' );
 				 }
 			],
@@ -3005,7 +3005,7 @@ sub menubuild {
 			   -command => sub {
 				   return if nofileloadedwarning();
 				   runner(
-"$globalbrowserstart http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$projectid"
+$globalbrowserstart, "http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$projectid"
 				   ) if $projectid;
 				 }
 			],
@@ -3239,7 +3239,7 @@ sub menubuild {
 					  Button   => 'EpubMaker Online',
 					  -command => sub {
 						  runner(
-							   "$globalbrowserstart http://epubmaker.pglaf.org/"
+							   $globalbrowserstart, "http://epubmaker.pglaf.org/"
 						  );
 						}
 				   ],
@@ -3297,7 +3297,7 @@ sub menubuild {
 					  Button   => 'Gnutenberg Press Online',
 					  -command => sub {
 						  runner(
-"$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
+$globalbrowserstart, "http://pgtei.pglaf.org/marcello/0.4/tei-online" );
 						}
 				   ],
 				   [
@@ -3319,7 +3319,7 @@ sub menubuild {
 					  Button   => 'dp2rst Conversion',
 					  -command => sub {
 						  runner(
-"$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst" );
+$globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 						}
 				   ],
 				   [
@@ -3334,7 +3334,7 @@ sub menubuild {
 					  Button   => 'EpubMaker Online',
 					  -command => sub {
 						  runner(
-							   "$globalbrowserstart http://epubmaker.pglaf.org/"
+							   $globalbrowserstart, "http://epubmaker.pglaf.org/"
 						  );
 						}
 				   ],
@@ -3460,7 +3460,7 @@ sub menubuild {
 			   Button   => '~Manual',
 			   -command => sub {        # FIXME: sub this out.
 				   runner(
-"$globalbrowserstart http://www.pgdp.net/wiki/PPTools/Guiguts"
+$globalbrowserstart, "http://www.pgdp.net/wiki/PPTools/Guiguts"
 				   ) if ( -e 'ggmanual.html' );
 				 }
 			],
@@ -3469,7 +3469,7 @@ sub menubuild {
 			   Button   => '~PP Process Checklist',
 			   -command => sub {        # FIXME: sub this out.
 				   runner(
-"$globalbrowserstart http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
+$globalbrowserstart, "http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
 				   ) if ( -e 'ggmanual.html' );
 				 }
 			],
@@ -4061,7 +4061,7 @@ sub menubuildtwo {
 					  Button   => 'Gnutenberg Press Online',
 					  -command => sub {
 						  runner(
-"$globalbrowserstart http://pgtei.pglaf.org/marcello/0.4/tei-online" );
+$globalbrowserstart, "http://pgtei.pglaf.org/marcello/0.4/tei-online" );
 						}
 				   ],
 			   ],
@@ -4074,7 +4074,7 @@ sub menubuildtwo {
 					  Button   => 'EpubMaker Online',
 					  -command => sub {
 						  runner(
-							   "$globalbrowserstart http://epubmaker.pglaf.org/"
+							   $globalbrowserstart, "http://epubmaker.pglaf.org/"
 						  );
 						}
 				   ],
@@ -4090,7 +4090,7 @@ sub menubuildtwo {
 					  Button   => 'dp2rst Conversion',
 					  -command => sub {
 						  runner(
-"$globalbrowserstart http://www.pgdp.net/wiki/Dp2rst" );
+$globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 						}
 				   ],
 			   ]
@@ -4284,7 +4284,7 @@ sub menubuildtwo {
 			   Button   => '~Manual',
 			   -command => sub {        # FIXME: sub this out.
 				   runner(
-"$globalbrowserstart http://www.pgdp.net/wiki/PPTools/Guiguts"
+$globalbrowserstart, "http://www.pgdp.net/wiki/PPTools/Guiguts"
 				   ) if ( -e 'ggmanual.html' );
 				 }
 			],
@@ -4293,7 +4293,7 @@ sub menubuildtwo {
 			   Button   => '~PP Process Checklist',
 			   -command => sub {        # FIXME: sub this out.
 				   runner(
-"$globalbrowserstart http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
+$globalbrowserstart, "http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
 				# FIXME: got this next line wrong
 				   ) if ( -e 'ggmanual.html' );
 				 }
@@ -7990,9 +7990,9 @@ sub showproofers {
 sub prfrmessage {
 	my $proofer = shift;
 	if ( $proofer eq '' ) {
-		runner("$globalbrowserstart $no_proofer_url");
+		runner($globalbrowserstart, $no_proofer_url);
 	} else {
-		runner("$globalbrowserstart $yes_proofer_url$proofer");
+		runner($globalbrowserstart, "$yes_proofer_url$proofer");
 	}
 }
 
@@ -19803,7 +19803,7 @@ sub checkforupdates {
 			-text    => 'Update',
 			-command => sub {
 				runner(
-"$globalbrowserstart http://sourceforge.net/projects/guiguts/" );
+$globalbrowserstart, "http://sourceforge.net/projects/guiguts/" );
 				$versionbox->destroy;
 				undef $versionbox;
 			}
