@@ -13377,14 +13377,6 @@ sub natural_sort_freq {
 
 ## Low level file processing functions
 
-# This turns long Windows path to DOS path, e.g., C:\Program Files\
-# becomes C:\Progra~1\.
-# Probably need this for DOS command window on Win98/95. Needed for XP also.
-sub dos_path {
-	$_[0] = Win32::GetShortPathName( $_[0] );
-	return $_[0];
-}
-
 ## FIXME: These are barfing on Unix systems, apparently.
 # Normalize line endings
 #sub eol_convert {
