@@ -7369,7 +7369,6 @@ sub linkcheckrun {
 		print LOGFILE "You need to save your file first.";
 		return;
 	}
-	$fname = dos_path( $lglobal{global_filename} ) if $OS_WIN;
 	my ( $f, $d, $e ) = fileparse( $fname, qr{\.[^\.]*$} );
 	my %imagefiles;
 	my @ifiles   = ();
@@ -8753,7 +8752,6 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		}
 		return 1 unless $tidycommand;
 		$tidycommand = os_normal($tidycommand);
-		$tidycommand = dos_path($tidycommand) if $OS_WIN;
 	} else {
 		if ( ( $errorchecktype eq "W3C Validate" ) and ( $w3cremote == 0 ) ) {
 			unless ($validatecommand) {
@@ -8765,7 +8763,6 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 			}
 			return 1 unless $validatecommand;
 			$validatecommand = os_normal($validatecommand);
-			$validatecommand = dos_path($validatecommand) if $OS_WIN;
 		} else {
 			if ( $errorchecktype eq 'W3C CSS Validate' ) {
 				unless ($validatecsscommand) {
@@ -8778,9 +8775,6 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 				}
 				return 1 unless $validatecsscommand;
 				$validatecsscommand = os_normal($validatecsscommand);
-				$validatecsscommand = dos_path($validatecsscommand)
-				  if $OS_WIN;
-
 			}
 		}
 	}
@@ -13213,7 +13207,6 @@ sub jeebiesrun {
 	$listbox->delete( '0', 'end' );
 	savefile() if ( $textwindow->numberChanges );
 	my $title = os_normal( $lglobal{global_filename} );
-	$title = dos_path($title) if $OS_WIN;
 	my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
 	unless ($jeebiescommand) {
 		$jeebiescommand =
@@ -13224,7 +13217,6 @@ sub jeebiesrun {
 	return unless $jeebiescommand;
 	my $jeebiesoptions = "-$jeebiesmode" . 'e';
 	$jeebiescommand = os_normal($jeebiescommand);
-	$jeebiescommand = dos_path($jeebiescommand) if $OS_WIN;
 	%jeeb           = ();
 	my $mark = 0;
 	$top->Busy( -recurse => 1 );
@@ -13955,20 +13947,8 @@ sub update_indicators {
 
 ## Spell Check
 
-sub spellinitializefilenames {
-	$lglobal{spellexename} =
-	  ( $OS_WIN ? dos_path($globalspellpath) : $globalspellpath )
-	  ;    # Make the exe path dos compliant
-	$lglobal{spellfilename} = (
-								$OS_WIN
-								? dos_path( $lglobal{global_filename} )
-								: $lglobal{global_filename}
-	);     # make the file path dos compliant
-}
-
 # Initialize spellchecker
 sub spellcheckfirst {
-	spellinitializefilenames();
 	@{ $lglobal{misspelledlist} } = ();
 	viewpagenums() if ( $lglobal{seepagenums} );
 	getprojectdic();
@@ -14241,7 +14221,7 @@ sub spellclearvars {
 sub aspellstart {
 	aspellstop();
 	my @cmd =
-	  ( $lglobal{spellexename}, '-a', '-S', '--sug-mode', $globalaspellmode );
+	  ( $globalspellpath, '-a', '-S', '--sug-mode', $globalaspellmode );
 	push @cmd, '-d', $globalspelldictopt if $globalspelldictopt;
 	$lglobal{spellpid} = open2( \*IN, \*OUT, @cmd );
 	my $line = <IN>;
@@ -14253,7 +14233,7 @@ sub get_spellchecker_version {
 	return $lglobal{spellversion} if $lglobal{spellversion};
 	my $aspell_version;
 	my $runner = runner::tofile('aspell.tmp');
-	$runner->run($lglobal{spellexename}, 'help');
+	$runner->run($globalspellpath, 'help');
 	open my $aspell, '<', 'aspell.tmp';
 	while (<$aspell>) {
 		$aspell_version = $1 if m/^Aspell ([\d\.]+)/;
@@ -14366,7 +14346,7 @@ sub getmisspelledwords() {
 	push @spellopt, "-d", $globalspelldictopt if $globalspelldictopt;
 
 	my $runner = runner::withfiles('checkfil.txt', 'temp.txt');
-	$runner->run($lglobal{spellexename}, @spellopt);
+	$runner->run($globalspellpath, @spellopt);
 
 	open INFILE, 'temp.txt';
 	my ( $ln, $tmp );
@@ -16888,7 +16868,6 @@ sub gutcheck {
 	  s/$window_title - //; #FIXME: sub this out; this and next in the tidy code
 	$title =~ s/edited - //;
 	$title = os_normal($title);
-	$title = dos_path($title) if $OS_WIN;
 	( $name, $path, $extension ) = fileparse( $title, '\.[^\.]*$' );
 	my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
 	unless ($gutcommand) {
@@ -16919,7 +16898,6 @@ sub gutcheck {
 	if ( $gcopt[8] ) { $gutcheckoptions .= 'd' }
 	;      # Ignore DP style page separators
 	$gutcommand = os_normal($gutcommand);
-	$gutcommand = dos_path($gutcommand) if $OS_WIN;
 	savesettings();
 
 	if ( $lglobal{gcpop} ) {
@@ -19393,9 +19371,6 @@ sub setcolor {    # Color picking routine
 
 sub spelloptions {
 	if ($globalspellpath) {
-		$OS_WIN
-		  ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
-		  : ( $lglobal{spellexename} = $globalspellpath );
 		aspellstart() unless $lglobal{spellpid};
 	}
 	my $dicts;
@@ -19419,12 +19394,8 @@ sub spelloptions {
 				$spellpathentry->insert( 'end', $globalspellpath );
 				savesettings();
 
-				$OS_WIN
-				  ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
-				  : ( $lglobal{spellexename} = $globalspellpath );
-
 				my $runner = runner::tofile('aspell.tmp');
-				$runner->run($lglobal{spellexename}, 'dump', 'dicts');
+				$runner->run($globalspellpath, 'dump', 'dicts');
 				warn "Unable to access dictionaries.\n" if $?;
 
 				open my $infile, '<', 'aspell.tmp';
@@ -19474,12 +19445,8 @@ sub spelloptions {
 	#$dictlist->insert( 'end', "No dictionary!" );
 
 	if ($globalspellpath) {
-		$OS_WIN
-		  ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
-		  : ( $lglobal{spellexename} = $globalspellpath );
-
 		my $runner = runner::tofile('aspell.tmp');
-		$runner->run($lglobal{spellexename}, 'dump', 'dicts');
+		$runner->run($globalspellpath, 'dump', 'dicts');
 		warn "Unable to access dictionaries.\n" if $?;
 
 		open my $infile, 'aspell.tmp';
