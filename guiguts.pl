@@ -768,20 +768,59 @@ sub runner {
 	system "perl spawn.pl $args";
 }
 
-# Run external program.  stdout is redirected to "results.tmp"
-sub run_to_tmpfile {
-	my $oldstdout;
-	if ( not open ( $oldstdout, '>&', \*STDOUT ) ) {
-		warn "Failed to save stdout: $!";
-		return;
+# Run external program, with stdin and/or stdout redirected to temporary files
+{
+	package runner;
+
+	sub tofile {
+		my ($outfile) = @_;
+		withfiles(undef, $outfile);
 	}
-	if ( not open ( STDOUT, '>', 'results.tmp' ) ) {
-		warn "Can't write to results.tmp: $!";
-		return;
+	sub withfiles {
+		my ($infile, $outfile) = @_;
+		bless {
+			infile => $infile,
+			outfile => $outfile,
+		};
 	}
-	system ( @_ );
-	if ( not open ( STDOUT, '>&', $oldstdout ) ) {
-		warn "Failed to restore stdout: $!";
+	sub run {
+		my ($self, @args) = @_;
+
+		my ($oldstdout, $oldstdin);
+		unless ( open $oldstdin, '<&', \*STDIN ) {
+			warn "Failed to save stdin: $!";
+			return -1;
+		}
+		unless ( open $oldstdout, '>&', \*STDOUT ) {
+			warn "Failed to save stdout: $!";
+			return -1;
+		}
+
+		if ( defined $self->{infile} ) {
+			unless ( open STDIN, '<', $self->{infile} ) {
+				warn "Failed to open '$self->{infile}': $!";
+				return -1;
+			}
+		}
+		if ( defined $self->{outfile} ) {
+			unless ( open STDOUT, '>', $self->{outfile} ) {
+				warn "Failed to open '$self->{outfile}' for writing: $!";
+				# Don't bother to restore STDIN here.
+				return -1;
+			}
+		}
+		system( @args );
+
+		unless ( open STDOUT, '>&', $oldstdout ) {
+			warn "Failed to restore stdout: $!";
+		}
+
+		# We restore STDIN here, just because perl warns about it otherwise.
+		unless ( open STDIN, '<&', $oldstdin ) {
+			warn "Failed to restore stdin: $!";
+		}
+
+		return $?;
 	}
 }
 
@@ -9061,7 +9100,7 @@ sub gcheckpop_up {
 	}
 	$lglobal{gclistbox}->focus;
 	my $results;
-	unless ( open $results, '<', 'results.tmp' ) {
+	unless ( open $results, '<', 'gutrslts.tmp' ) {
 		my $dialog = $top->Dialog(
 			   -text =>
 				 'Could not read gutcheck results file. Problem with gutcheck.',
@@ -9218,7 +9257,7 @@ sub gcheckpop_up {
 		}
 	}
 	close $results;
-	unlink 'results.tmp';
+	unlink 'gutreslts.tmp';
 	gutwindowpopulate( \@gclines );
 }
 
@@ -16876,7 +16915,8 @@ sub gutcheck {
 	if ( $lglobal{gcpop} ) {
 		$lglobal{gclistbox}->delete( '0', 'end' );
 	}
-	run_to_tmpfile( $gutcommand, $gutcheckoptions, 'gutchk.tmp' );
+	my $runner = runner::tofile('gutrslts.tmp');
+	$runner->run( $gutcommand, $gutcheckoptions, 'gutchk.tmp' );
 
 	#$top->Unbusy;
 	unlink 'gutchk.tmp';
