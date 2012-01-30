@@ -8818,6 +8818,7 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 				}
 			} else {
 				if ( $errorchecktype eq 'W3C Validate CSS' ) {
+					my $validatecsspath = dirname($validatecsscommand);
 					system(
 qq/java -jar $validatecsscommand file:$name > errors.err/ );
 				} else {
