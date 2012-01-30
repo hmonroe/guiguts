@@ -8857,8 +8857,9 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 				}
 			} else {
 				if ( $errorchecktype eq 'W3C Validate CSS' ) {
-					system(
-qq/java -jar $validatecsscommand file:$name > errors.err/ );
+					my $runner = runner::tofile("errors.err");
+					$runner->run(
+"java", "-jar", $validatecsscommand, "file:$name" );
 				} else {
 					if ( $errorchecktype eq 'pphtml' ) {
 						system(
