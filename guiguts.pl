@@ -677,54 +677,52 @@ sub selection {
 
 # Command parsing for External command routine
 sub cmdinterp {
-	# Allow basic quoting, in case anyone specifies paths with spaces.
-	# Don't support paths with quotes.  The standard \" and \\ escapes
-	# would not be friendly on Windows-style paths.
-	my @args = shift =~ m/"[^"]+"|\S+/g;
-
+	my $command = shift;
 	my ( $fname, $pagenum, $number, $pname );
 	my ( $selection, $ranges );
 
-	foreach my $arg (@args) {
-		# Replace $t with selected text for instance for a dictionary search
-		if ( $arg =~ m/\$t/ ) {
-			my @ranges = $textwindow->tagRanges('sel');
-			return ' ' unless @ranges;
-			my $end   = pop(@ranges);
-			my $start = pop(@ranges);
-			$selection = $textwindow->get( $start, $end );
-			$arg =~ s/\$t/$selection/;
-			$arg = encode( "utf-8", $arg );
-		}
+	# Replace $t with selected text for instance for a dictionary search
+	if ( $command =~ m/\$t/ ) {
+		my @ranges = $textwindow->tagRanges('sel');
+		return ' ' unless @ranges;
+		my $end   = pop(@ranges);
+		my $start = pop(@ranges);
+		$selection = $textwindow->get( $start, $end );
+		$selection =~ s/ /%20/;
+		$command   =~ s/\$t/$selection/;
+		$command = encode( "utf-8", $command );
+	}
 
 # Pass file to default file handler, $f $d $e give the fully specified path/filename
-		if ( $arg =~ m/\$f|\$d|\$e/ ) {
-			return if nofileloadedwarning();
-			$fname = $lglobal{global_filename};
-			my ( $f, $d, $e ) = fileparse( $fname, qr{\.[^\.]*$} );
-			$arg =~ s/\$f/$f/ if $f;
-			$arg =~ s/\$d/$d/ if $d;
-			$arg =~ s/\$e/$e/ if $e;
-			if ( $arg =~ m/project_comments.html/ ) {
-				$arg =~ s/project/$projectid/;
-			}
-		}
-
-		# Pass image file to default file handler
-		if ( $arg =~ m/\$p/ ) {
-			return unless $lglobal{img_num_label};
-			$number = $lglobal{img_num_label}->cget( -text );
-			$number =~ s/.+?(\d+).*/$1/;
-			$pagenum = $number;
-			return ' ' unless $pagenum;
-			$arg =~ s/\$p/$number/;
-		}
-		if ( $arg =~ m/\$i/ ) {
-			return ' ' unless $pngspath;
-			$arg =~ s/\$i/$pngspath/;
+	if ( $command =~ m/\$f|\$d|\$e/ ) {
+		return if nofileloadedwarning();
+		$fname = $lglobal{global_filename};
+		$fname = dos_path( $lglobal{global_filename} ) if $OS_WIN;
+		my ( $f, $d, $e ) = fileparse( $fname, qr{\.[^\.]*$} );
+		$command =~ s/\$f/$f/ if $f;
+		$command =~ s/\$d/$d/ if $d;
+		$command =~ s/\$e/$e/ if $e;
+		if ( $command =~ m/project_comments.html/ ) {
+			$command =~ s/project/$projectid/;
 		}
 	}
-	return @args;
+
+	# Pass image file to default file handler
+	if ( $command =~ m/\$p/ ) {
+		return unless $lglobal{img_num_label};
+		$number = $lglobal{img_num_label}->cget( -text );
+		$number =~ s/.+?(\d+).*/$1/;
+		$pagenum = $number;
+		return ' ' unless $pagenum;
+		$command =~ s/\$p/$number/;
+	}
+	if ( $command =~ m/\$i/ ) {
+		return ' ' unless $pngspath;
+		$pname = $pngspath;
+		$pname = dos_path($pngspath) if $OS_WIN;
+		$command =~ s/\$i/$pngspath/;
+	}
+	return $command;
 }
 
 sub nofileloadedwarning {
@@ -743,6 +741,7 @@ sub nofileloadedwarning {
 #FIXME: doesnt work quite right if multiple volumes held in same directory!
 sub getprojectid {
 	my $fname = $lglobal{global_filename};
+	$fname = dos_path( $lglobal{global_filename} ) if $OS_WIN;
 	my ( $f, $d, $e ) = fileparse( $fname, qr{\.[^\.]*$} );
 	opendir( DIR, "$d" );
 	for ( readdir(DIR) ) {
@@ -13376,6 +13375,14 @@ sub natural_sort_freq {
 }
 
 ## Low level file processing functions
+
+# This turns long Windows path to DOS path, e.g., C:\Program Files\
+# becomes C:\Progra~1\.
+# Probably need this for DOS command window on Win98/95. Needed for XP also.
+sub dos_path {
+	$_[0] = Win32::GetShortPathName( $_[0] );
+	return $_[0];
+}
 
 ## FIXME: These are barfing on Unix systems, apparently.
 # Normalize line endings
