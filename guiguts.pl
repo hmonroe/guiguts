@@ -11182,9 +11182,10 @@ sub initialize {
 
 	}
 
+	$lglobal{guigutsdirectory} = dirname( rel2abs($0) )
+	  unless defined $lglobal{guigutsdirectory};
+
 	if ($OS_WIN) {
-		$lglobal{guigutsdirectory} = dirname( rel2abs($0) )
-		  unless defined $lglobal{guigutsdirectory};
 		$gutcommand = catfile( $lglobal{guigutsdirectory},
 							   'tools', 'gutcheck', 'gutcheck.exe' )
 		  unless $gutcommand;
