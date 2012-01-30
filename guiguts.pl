@@ -10132,7 +10132,6 @@ sub wordfrequencygetmisspelled {
 		$words .= "$_\n";
 	}
 	if ($words) {
-		spellinitializefilenames();
 		getmisspelledwords($words);
 	}
 	foreach ( sort @{ $lglobal{misspelledlist} } ) {
