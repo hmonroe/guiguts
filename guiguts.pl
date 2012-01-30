@@ -29,6 +29,7 @@ use FindBin;
 use lib $FindBin::Bin . "/lib";
 
 #use Data::Dumper;
+use Config;
 use Cwd;
 use Encode;
 use FileHandle;
@@ -751,21 +752,19 @@ sub getprojectid {
 	closedir(DIR);
 }
 
-## Routine to spawn another perl process and use it to execute an
-# external program
+# Start an external program
 sub runner {
-	my $args;
-	$args = join ' ', @_;
-	unless ( -e 'spawn.pl' ) {
-		open my $spawn, '>', 'spawn.pl';
-		print $spawn 'exec @ARGV;';
-	}
-	if ($OS_WIN) {
-		$args = '"' . $args . '"';
-	} else {
-		$args .= ' &';
-	}
-	system "perl spawn.pl $args";
+	# We can't fork() the GUI process directly, because Tk crashes
+	system( 'perl', '-W', '-e', '
+my $pid = fork();
+die "fork()" unless defined $pid;
+
+# Parent process returns immediately
+exit if $pid;
+
+# Child process runs program in the background
+exec @ARGV;',
+	'--', @_ );
 }
 
 # Run external program, with stdin and/or stdout redirected to temporary files
