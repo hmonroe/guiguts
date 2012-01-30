@@ -8822,13 +8822,15 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		$lglobal{errorchecklistbox}->delete( '0', 'end' );
 	}
 	if ( $errorchecktype eq 'HTML Tidy' ) {
-		system(qq/$tidycommand  -f errors.err -o null  $name/);
+		system($tidycommand, "-f", "errors.err", "-o", "null", $name);
 	} else {
 		if ( $errorchecktype eq 'W3C Validate' ) {
 			if ( $w3cremote == 0 ) {
 				my $validatepath = dirname($validatecommand);
 				system(
-qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
+$validatecommand, "--directory=$validatepath", "--catalog=xhtml.soc",
+ "--no-output", "--open-entities", "--error-file=errors.err",
+ $name );
 			}
 		} else {
 			if ( $errorchecktype eq 'W3C Validate Remote' ) {
@@ -8863,7 +8865,7 @@ qq/$validatecommand -D $validatepath -c xhtml.soc -se -f errors.err $name/ );
 				} else {
 					if ( $errorchecktype eq 'pphtml' ) {
 						system(
-qq/perl lib\/ppvchecks\/pphtml.pl -i $name -o errors.err/ );
+"perl", "lib/ppvchecks/pphtml.pl", "-i", $name, "-o", "errors.err" );
 					} else {
 						if ( $errorchecktype eq 'Link Check' ) {
 							linkcheckrun;
@@ -8874,15 +8876,15 @@ qq/perl lib\/ppvchecks\/pphtml.pl -i $name -o errors.err/ );
 								my ( $f, $d, $e ) =
 								  fileparse( $fname, qr{\.[^\.]*$} );
 								system(
-qq/perl lib\/ppvchecks\/ppvimage.pl $name $d/ );
+"perl", "lib/ppvchecks/ppvimage.pl", $name, $d );
 							} else {
 								if ( $errorchecktype eq 'pptxt' ) {
 									system(
-qq/perl lib\/ppvchecks\/pptxt.pl -i $name -o errors.err/ );
+"perl", "lib/ppvchecks/pptxt.pl", "-i", $name, "-o", "errors.err" );
 								} else {
 									if ( $errorchecktype eq 'Epub Friendly' ) {
 										system(
-qq/perl lib\/ppvchecks\/epubfriendly.pl -i $name -o errors.err/ );
+"perl", "lib/ppvchecks/epubfriendly.pl", "-i", $name, "-o", "errors.err" );
 									}
 								}
 							}
