@@ -916,18 +916,12 @@ sub openpng {
 		return;
 	}
 	$lglobal{pageimageviewed} = $pagenum;
-	my $dospath;
-	my $dosfile;
 	if ( not $globalviewerpath ) {
 		viewerpath();
 	}
 	my $imagefile = get_image_file($pagenum);
 	if ( $imagefile && $globalviewerpath ) {
-		$dospath = $globalviewerpath;
-		if ($OS_WIN) {
-			$dospath = dos_path($dospath);
-		}
-		runner( $dospath, $imagefile );
+		runner( $globalviewerpath, $imagefile );
 	} else {
 		setpngspath($pagenum);
 	}
@@ -18722,9 +18716,6 @@ sub get_image_file {
 			$imagefile = "$pngspath$pagenum.jpg";
 			unless ( -e $imagefile ) {
 			}
-		}
-		if ($OS_WIN) {
-			$imagefile = dos_path($imagefile);
 		}
 	}
 	return $imagefile;
