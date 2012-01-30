@@ -14248,11 +14248,14 @@ sub get_spellchecker_version {
 	# the spellchecker version is not used anywhere
 	return $lglobal{spellversion} if $lglobal{spellversion};
 	my $aspell_version;
-	open my $aspell, '-|', "$lglobal{spellexename} help";
+	my $runner = runner::tofile('aspell.tmp');
+	$runner->run($lglobal{spellexename}, 'help');
+	open my $aspell, '<', 'aspell.tmp';
 	while (<$aspell>) {
 		$aspell_version = $1 if m/^Aspell ([\d\.]+)/;
 	}
 	close $aspell;
+	unlink 'aspell.tmp';
 	return $lglobal{spellversion} = $aspell_version;
 }
 
@@ -14355,11 +14358,13 @@ sub getmisspelledwords() {
 	utf8::encode($section);
 	print $save $section;
 	close $save;
-	my $spellopt = "list --encoding=utf-8 ";
-	$spellopt .= "-d $globalspelldictopt" if $globalspelldictopt;
-	system "$lglobal{spellexename} $spellopt < checkfil.txt > temp.txt";
-	open INFILE, 'temp.txt';
+	my @spellopt = ("list", "--encoding=utf-8");
+	push @spellopt, "-d", $globalspelldictopt if $globalspelldictopt;
 
+	my $runner = runner::withfiles('checkfil.txt', 'temp.txt');
+	$runner->run($lglobal{spellexename}, @spellopt);
+
+	open INFILE, 'temp.txt';
 	my ( $ln, $tmp );
 	while ( $ln = <INFILE> ) {
 		$ln =~ s/\r\n/\n/;
@@ -19413,14 +19418,19 @@ sub spelloptions {
 				$OS_WIN
 				  ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
 				  : ( $lglobal{spellexename} = $globalspellpath );
-				open my $infile, '-|', "$lglobal{spellexename} dump dicts"
-				  or warn "Unable to access dictionaries. $!\n";
+
+				my $runner = runner::tofile('aspell.tmp');
+				$runner->run($lglobal{spellexename}, 'dump', 'dicts');
+				warn "Unable to access dictionaries.\n" if $?;
+
+				open my $infile, '<', 'aspell.tmp';
 				while ( $dicts = <$infile> ) {
 					chomp $dicts;
 					next if ( $dicts =~ m/-/ );
 					$dictlist->insert( 'end', $dicts );
 				}
 				close $infile;
+				unlink 'aspell.tmp'
 			}
 		}
 	)->pack( -pady => 4 );
@@ -19463,14 +19473,19 @@ sub spelloptions {
 		$OS_WIN
 		  ? ( $lglobal{spellexename} = dos_path($globalspellpath) )
 		  : ( $lglobal{spellexename} = $globalspellpath );
-		open my $infile, '-|', "$lglobal{spellexename} dump dicts"
-		  or warn "Unable to access dictionaries. $!\n";
+
+		my $runner = runner::tofile('aspell.tmp');
+		$runner->run($lglobal{spellexename}, 'dump', 'dicts');
+		warn "Unable to access dictionaries.\n" if $?;
+
+		open my $infile, 'aspell.tmp';
 		while ( $dicts = <$infile> ) {
 			chomp $dicts;
 			next if ( $dicts =~ m/-/ );
 			$dictlist->insert( 'end', $dicts );
 		}
 		close $infile;
+		unlink 'aspell.tmp';
 	}
 	$dictlist->eventAdd( '<<dictsel>>' => '<Double-Button-1>' );
 	$dictlist->bind(
