@@ -29,7 +29,6 @@ use FindBin;
 use lib $FindBin::Bin . "/lib";
 
 #use Data::Dumper;
-use Config;
 use Cwd;
 use Encode;
 use FileHandle;
@@ -753,19 +752,72 @@ sub getprojectid {
 	closedir(DIR);
 }
 
+
+sub system1 {
+	require Win32;
+	require Win32::Process;
+
+	my @args = @_;
+	my $exe = $args[0];
+
+	# <http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/
+	#  everyone-quotes-arguments-the-wrong-way.aspx>
+	#
+	# That includes the perl function system(LIST)
+	# (and exec() - in different ways).
+	#
+	foreach my $arg (@args) {
+		$arg =~ s/(\\*)"/$1$1\\"/g;
+		$arg =~ s/^(.*)(\\*)$/"$1$2$2"/g if $arg =~ m/[ "]|^$/;
+	}
+
+	my $pid = system 1, join(' ', @args);
+
+	if ( $? == (255 << 8) ) {
+		return -1;
+	} else {
+		return $pid;
+	}
+}
+
+# system(LIST)
+sub run {
+	my @args = @_;
+
+	if ( ! $OS_WIN ) {
+		system { $args[0] } @args;
+	} else {
+		my $pid = system1(@args);
+		waitpid($pid, 0) if $pid > 0;
+	}
+}
+
 # Start an external program
 sub runner {
-	# We can't fork() the GUI process directly, because Tk crashes
-	system( 'perl', '-W', '-e', '
-my $pid = fork();
-die "fork()" unless defined $pid;
+	my @args = @_;
+	unless (@args) {
+		warn "Tried to run an empty command";
+		return -1;
+	}
 
-# Parent process returns immediately
-exit if $pid;
+	if ( ! $OS_WIN) {
+		# We can't call perl fork() in the main GUI process, because Tk crashes
+		print join(' ', @args);
+		system( 'perl', 'spawn.pl', @args );
+	} else {
 
-# Child process runs program in the background
-exec @ARGV;',
-	'--', @_ );
+		# <http://stackoverflow.com/questions/72671/
+		#  how-to-create-batch-file-in-windows-using-start-with-a-path-and-command-with-s
+		#
+		# We never need to create a titled DOS window,
+		# but people do sometimes run the 'start' command on files with spaces.
+		if ( $args[0] eq 'start') {
+			@args = ('start', '', @args[1 .. $#args]);
+		}
+
+		my $pid = system1(@args);
+		return (defined $pid) ? 0 : -1;
+	}
 }
 
 # Run external program, with stdin and/or stdout redirected to temporary files
@@ -809,7 +861,7 @@ exec @ARGV;',
 				return -1;
 			}
 		}
-		system( @args );
+		main::run( @args );
 
 		unless ( open STDOUT, '>&', $oldstdout ) {
 			warn "Failed to restore stdout: $!";
@@ -8810,12 +8862,12 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		$lglobal{errorchecklistbox}->delete( '0', 'end' );
 	}
 	if ( $errorchecktype eq 'HTML Tidy' ) {
-		system($tidycommand, "-f", "errors.err", "-o", "null", $name);
+		run($tidycommand, "-f", "errors.err", "-o", "null", $name);
 	} else {
 		if ( $errorchecktype eq 'W3C Validate' ) {
 			if ( $w3cremote == 0 ) {
 				my $validatepath = dirname($validatecommand);
-				system(
+				run(
 $validatecommand, "--directory=$validatepath", "--catalog=xhtml.soc",
  "--no-output", "--open-entities", "--error-file=errors.err",
  $name );
@@ -8852,7 +8904,7 @@ $validatecommand, "--directory=$validatepath", "--catalog=xhtml.soc",
 "java", "-jar", $validatecsscommand, "file:$name" );
 				} else {
 					if ( $errorchecktype eq 'pphtml' ) {
-						system(
+						run(
 "perl", "lib/ppvchecks/pphtml.pl", "-i", $name, "-o", "errors.err" );
 					} else {
 						if ( $errorchecktype eq 'Link Check' ) {
@@ -8861,15 +8913,15 @@ $validatecommand, "--directory=$validatepath", "--catalog=xhtml.soc",
 							if ( $errorchecktype eq 'Image Check' ) {
 								my ( $f, $d, $e ) =
 								  fileparse( $lglobal{global_filename}, qr{\.[^\.]*$} );
-								system(
+								run(
 "perl", "lib/ppvchecks/ppvimage.pl", $name, $d );
 							} else {
 								if ( $errorchecktype eq 'pptxt' ) {
-									system(
+									run(
 "perl", "lib/ppvchecks/pptxt.pl", "-i", $name, "-o", "errors.err" );
 								} else {
 									if ( $errorchecktype eq 'Epub Friendly' ) {
-										system(
+										run(
 "perl", "lib/ppvchecks/epubfriendly.pl", "-i", $name, "-o", "errors.err" );
 									}
 								}
