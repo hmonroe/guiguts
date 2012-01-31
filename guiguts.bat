@@ -7,4 +7,4 @@ PATH=%cd%\perl;%cd%\perl\lib;%cd%\python27;%cd%\python27\scripts;%cd%\tools\grof
     set TTFONTS=     c:/guiguts/tools/gnutenberg/0.4/pdf/fonts/generated
     set TEXPSHEADERS=c:/guiguts/tools/gnutenberg/0.4/pdf/fonts/generated
 
-%cd%\perl\perl.exe guiguts.pl %1
+"%cd%\perl\perl.exe" guiguts.pl "%1"
