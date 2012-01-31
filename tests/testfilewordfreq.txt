@@ -1,4 +1,5 @@
-﻿Flash Light
+﻿composing comp-osing comp--osing
+Flash Light
 Flash light
 flash Light
 flash light
@@ -14,8 +15,10 @@ light
 flashlight
 flash-light
 flash light
-flash-light
+flash-*light
 flash--light
+door-*
+jamb
 
 doorjamb
 
@@ -26,8 +29,7 @@ a b c d
 
 composing comp-osing comp--osing
 
-
-
+>>>>>>> .r763
 cañon
 niño
 cañón
