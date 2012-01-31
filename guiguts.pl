@@ -10133,9 +10133,11 @@ sub wordfrequencygetmisspelled {
 	if ($words) {
 		getmisspelledwords($words);
 	}
-	foreach ( sort @{ $lglobal{misspelledlist} } ) {
-		$lglobal{spellsort}->{$_} = $lglobal{seenwords}->{$_} || '0';
-		$wordw++;
+	if ($lglobal{misspelledlist}){
+		foreach ( sort @{ $lglobal{misspelledlist} } ) {
+			$lglobal{spellsort}->{$_} = $lglobal{seenwords}->{$_} || '0';
+			$wordw++;
+		}
 	}
 	return $wordw;
 }
