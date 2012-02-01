@@ -2566,7 +2566,49 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 									  -tearoff   => 1,
 									  -menuitems => menu_external,
 	);
+	
+	unicodemenu();
 
+
+	$menubar->Cascade(
+					   -label     => '~Preferences',
+					   -tearoff   => 1,
+					   -menuitems => menu_preferences
+	);
+
+	$menubar->Cascade(
+		-label     => '~Help',
+		-tearoff   => 1,
+		-menuitems => [
+			[ Button => '~About',    -command => \&about_pop_up ],
+			[ Button => '~Versions', -command => [ \&showversion, $top ] ],
+			[
+			   Button   => '~Manual',
+			   -command => sub {        # FIXME: sub this out.
+				   runner(
+$globalbrowserstart, "http://www.pgdp.net/wiki/PPTools/Guiguts"
+				   ) if ( -e 'ggmanual.html' );
+				 }
+			],
+
+
+			# FIXME: Disable update check until it works
+			[
+			   Button   => 'Check For ~Updates',
+			   -command => sub { checkforupdates(0) }
+			],
+			[ Button => '~Hot keys',              -command => \&hotkeyshelp ],
+			[ Button => '~Function History',      -command => \&opspop_up ],
+			[ Button => '~Greek Transliteration', -command => \&greekpopup ],
+			[ Button => '~Latin 1 Chart',         -command => \&latinpopup ],
+			[ Button => '~Regex Quick Reference', -command => \&regexref ],
+			[ Button => '~UTF Character entry',   -command => \&utford ],
+			[ Button => '~UTF Character Search',  -command => \&uchar ],
+		]
+	);
+}
+
+sub unicodemenu {
 	# FIXME: We'll leave this alone for now.
 	if ( $Tk::VERSION =~ m{804} ) {
 		my %utfsorthash;
@@ -2666,43 +2708,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 			);
 		}
 	}
-
-	$menubar->Cascade(
-					   -label     => '~Preferences',
-					   -tearoff   => 1,
-					   -menuitems => menu_preferences
-	);
-
-	$menubar->Cascade(
-		-label     => '~Help',
-		-tearoff   => 1,
-		-menuitems => [
-			[ Button => '~About',    -command => \&about_pop_up ],
-			[ Button => '~Versions', -command => [ \&showversion, $top ] ],
-			[
-			   Button   => '~Manual',
-			   -command => sub {        # FIXME: sub this out.
-				   runner(
-$globalbrowserstart, "http://www.pgdp.net/wiki/PPTools/Guiguts"
-				   ) if ( -e 'ggmanual.html' );
-				 }
-			],
-
-
-			# FIXME: Disable update check until it works
-			[
-			   Button   => 'Check For ~Updates',
-			   -command => sub { checkforupdates(0) }
-			],
-			[ Button => '~Hot keys',              -command => \&hotkeyshelp ],
-			[ Button => '~Function History',      -command => \&opspop_up ],
-			[ Button => '~Greek Transliteration', -command => \&greekpopup ],
-			[ Button => '~Latin 1 Chart',         -command => \&latinpopup ],
-			[ Button => '~Regex Quick Reference', -command => \&regexref ],
-			[ Button => '~UTF Character entry',   -command => \&utford ],
-			[ Button => '~UTF Character Search',  -command => \&uchar ],
-		]
-	);
+	
 }
 
 sub menubuild {
@@ -3421,106 +3427,9 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 
 		]
 	);
+	
+	unicodemenu();
 
-	# FIXME: We'll leave this alone for now.
-	if ( $Tk::VERSION =~ m{804} ) {
-		my %utfsorthash;
-		for ( keys %{ $lglobal{utfblocks} } ) {
-			$utfsorthash{ $lglobal{utfblocks}{$_}->[0] } = $_;
-		}
-		if ( $lglobal{utfrangesort} ) {
-			$menubar->Cascade(
-				qw/-label ~Unicode -tearoff 1 -menuitems/ => [
-					[
-					   Radiobutton => 'Sort by Name',
-					   -variable   => \$lglobal{utfrangesort},
-					   -command    => \&menurebuild,
-					   -value      => 0,
-					],
-					[
-					   Cascade  => 'More',
-					   -tearoff => 0,
-					   -menuitems =>
-						 [ # FIXME: sub this and generalize for all occurences in menu code.
-						   map ( [
-								  Button   => "$utfsorthash{$_}",
-								  -command => [
-									  \&utfpopup,
-									  $utfsorthash{$_},
-									  $lglobal{utfblocks}{ $utfsorthash{$_} }
-										[0],
-									  $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
-								  ],
-								  -accelerator =>
-									$lglobal{utfblocks}{ $utfsorthash{$_} }[0]
-									. ' - '
-									. $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
-							   ],
-							   ( sort ( keys %utfsorthash ) )[ 34 .. 67 ] ),
-						 ]
-					],
-					map ( [
-							Button   => "$utfsorthash{$_}",
-							-command => [
-									 \&utfpopup,
-									 $utfsorthash{$_},
-									 $lglobal{utfblocks}{ $utfsorthash{$_} }[0],
-									 $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
-							],
-							-accelerator =>
-							  $lglobal{utfblocks}{ $utfsorthash{$_} }[0] . ' - '
-							  . $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
-						 ],
-						 ( sort ( keys %utfsorthash ) )[ 0 .. 33 ] ),
-				],
-			);
-		} else {
-			$menubar->Cascade(
-				qw/-label ~Unicode -tearoff 1 -menuitems/ => [
-					[
-					   Radiobutton => 'Sort by Range',
-					   -variable   => \$lglobal{utfrangesort},
-					   -command    => \&menurebuild,
-					   -value      => 1,
-					],
-					[
-					   Cascade  => 'More',
-					   -tearoff => 0,
-					   -menuitems =>
-						 [ # FIXME: sub this and generalize for all occurences in menu code.
-						   map ( [
-								   Button   => "$_",
-								   -command => [
-												 \&utfpopup,
-												 $_,
-												 $lglobal{utfblocks}{$_}[0],
-												 $lglobal{utfblocks}{$_}[1]
-								   ],
-								   -accelerator => $lglobal{utfblocks}{$_}[0]
-									 . ' - '
-									 . $lglobal{utfblocks}{$_}[1]
-								 ],
-								 ( sort ( keys %{ $lglobal{utfblocks} } ) )
-								   [ 34 .. 67 ] ),
-						 ]
-					],
-					map ( [
-							 Button   => "$_",
-							 -command => [
-										   \&utfpopup,
-										   $_,
-										   $lglobal{utfblocks}{$_}[0],
-										   $lglobal{utfblocks}{$_}[1]
-							 ],
-							 -accelerator => $lglobal{utfblocks}{$_}[0] . ' - '
-							   . $lglobal{utfblocks}{$_}[1]
-						  ],
-						  ( sort ( keys %{ $lglobal{utfblocks} } ) )[ 1 .. 33 ]
-					),
-				],
-			);
-		}
-	}
 
 	$menubar->Cascade(
 					   -label     => '~Preferences',
@@ -4178,7 +4087,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 	);
 
 	my $text = $menubar->cascade(
-		-label     => 'Text',
+		-label     => "Text",
 		-tearoff   => 1,
 		-menuitems => [
 			[
@@ -4248,106 +4157,8 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 									  -tearoff   => 1,
 									  -menuitems => menu_external,
 	);
-
-	# FIXME: We'll leave this alone for now.
-	if ( $Tk::VERSION =~ m{804} ) {
-		my %utfsorthash;
-		for ( keys %{ $lglobal{utfblocks} } ) {
-			$utfsorthash{ $lglobal{utfblocks}{$_}->[0] } = $_;
-		}
-		if ( $lglobal{utfrangesort} ) {
-			$menubar->Cascade(
-				qw/-label ~Unicode -tearoff 1 -menuitems/ => [
-					[
-					   Radiobutton => 'Sort by Name',
-					   -variable   => \$lglobal{utfrangesort},
-					   -command    => \&menurebuild,
-					   -value      => 0,
-					],
-					[
-					   Cascade  => 'More',
-					   -tearoff => 0,
-					   -menuitems =>
-						 [ # FIXME: sub this and generalize for all occurences in menu code.
-						   map ( [
-								  Button   => "$utfsorthash{$_}",
-								  -command => [
-									  \&utfpopup,
-									  $utfsorthash{$_},
-									  $lglobal{utfblocks}{ $utfsorthash{$_} }
-										[0],
-									  $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
-								  ],
-								  -accelerator =>
-									$lglobal{utfblocks}{ $utfsorthash{$_} }[0]
-									. ' - '
-									. $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
-							   ],
-							   ( sort ( keys %utfsorthash ) )[ 34 .. 67 ] ),
-						 ]
-					],
-					map ( [
-							Button   => "$utfsorthash{$_}",
-							-command => [
-									 \&utfpopup,
-									 $utfsorthash{$_},
-									 $lglobal{utfblocks}{ $utfsorthash{$_} }[0],
-									 $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
-							],
-							-accelerator =>
-							  $lglobal{utfblocks}{ $utfsorthash{$_} }[0] . ' - '
-							  . $lglobal{utfblocks}{ $utfsorthash{$_} }[1]
-						 ],
-						 ( sort ( keys %utfsorthash ) )[ 0 .. 33 ] ),
-				],
-			);
-		} else {
-			$menubar->Cascade(
-				qw/-label ~Unicode -tearoff 1 -menuitems/ => [
-					[
-					   Radiobutton => 'Sort by Range',
-					   -variable   => \$lglobal{utfrangesort},
-					   -command    => \&menurebuild,
-					   -value      => 1,
-					],
-					[
-					   Cascade  => 'More',
-					   -tearoff => 0,
-					   -menuitems =>
-						 [ # FIXME: sub this and generalize for all occurences in menu code.
-						   map ( [
-								   Button   => "$_",
-								   -command => [
-												 \&utfpopup,
-												 $_,
-												 $lglobal{utfblocks}{$_}[0],
-												 $lglobal{utfblocks}{$_}[1]
-								   ],
-								   -accelerator => $lglobal{utfblocks}{$_}[0]
-									 . ' - '
-									 . $lglobal{utfblocks}{$_}[1]
-								 ],
-								 ( sort ( keys %{ $lglobal{utfblocks} } ) )
-								   [ 34 .. 67 ] ),
-						 ]
-					],
-					map ( [
-							 Button   => "$_",
-							 -command => [
-										   \&utfpopup,
-										   $_,
-										   $lglobal{utfblocks}{$_}[0],
-										   $lglobal{utfblocks}{$_}[1]
-							 ],
-							 -accelerator => $lglobal{utfblocks}{$_}[0] . ' - '
-							   . $lglobal{utfblocks}{$_}[1]
-						  ],
-						  ( sort ( keys %{ $lglobal{utfblocks} } ) )[ 1 .. 33 ]
-					),
-				],
-			);
-		}
-	}
+	
+	unicodemenu();
 
 	$menubar->Cascade(
 					   -label     => 'Options',
