@@ -1293,6 +1293,7 @@ sub file_export {
 		print $fh $file;
 	}
 	$top->Unbusy( -recurse => 1 );
+	return;
 }
 
 sub file_guess_page_marks {
@@ -1420,6 +1421,7 @@ sub file_guess_page_marks {
 			-width => 18
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
 	}
+	return;
 }
 
 sub file_mark_pages {
@@ -1474,6 +1476,7 @@ sub file_mark_pages {
 	}
 	delete $proofers{''};
 	$top->Unbusy( -recurse => 1 );
+	return;
 }
 
 sub menu_preferences {

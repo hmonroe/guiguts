@@ -13,8 +13,8 @@ BEGIN {
 }
 
 sub html_convert_tb {
-	no warnings;    # FIXME: Warning-- Exiting subroutine via next
 	my ( $textwindow, $selection, $step ) = @_;
+	no warnings;    # FIXME: Warning-- Exiting subroutine via next
 
 	if ( $selection =~ s/\s{7}(\*\s{7}){4}\*/<hr class="tb" \/>/ ) {
 
@@ -31,6 +31,7 @@ sub html_convert_tb {
 		$textwindow->ntinsert( "$step.0", $selection );
 		next;
 	}
+	return;
 
 }
 
@@ -41,6 +42,7 @@ sub html_convert_subscripts {
 		$textwindow->ntdelete( "$step.0", "$step.end" );
 		$textwindow->ntinsert( "$step.0", $selection );
 	}
+	return;
 }
 
 # FIXME: Doesn't convert Gen^rl; workaround Gen^{rl}
@@ -62,6 +64,7 @@ sub html_convert_superscripts {
 		$textwindow->ntdelete( "$step.0", "$step.end" );
 		$textwindow->ntinsert( "$step.0", $selection );
 	}
+	return;
 }
 
 sub html_convert_ampersands {
@@ -75,7 +78,7 @@ sub html_convert_ampersands {
 	&main::named( '&c ',        '&amp;c. ' );
 	$textwindow->FindAndReplaceAll( '-regexp', '-nocase', "(?<![a-zA-Z0-9/\\-\"])>","&gt;");
 	$textwindow->FindAndReplaceAll( '-regexp', '-nocase', "(?![\\n0-9])<(?![a-zA-Z0-9/\\-\\n])",'&lt;');
-	
+	return;
 }
 
 # double hyphens go to character entity ref. FIXME: Add option for real emdash.
@@ -87,6 +90,7 @@ sub html_convert_emdashes {
 	&main::named( '^--(?=[^-])',          '&mdash;' );
 	&main::named( '^--$',                 '&mdash;' );
 	&main::named( "\x{A0}",               '&nbsp;' );
+	return;
 }
 
 # convert latin1 and utf charactes to HTML Character Entity Reference's.
@@ -96,11 +100,13 @@ sub html_convert_latin1 {
 		my $from = lc sprintf( "%x", $_ );
 		&main::named( '\x' . $from, &main::entity( '\x' . $from ) );
 	}
+	return;
 }
 
 sub html_convert_codepage {
 	&main::working("Converting Windows Codepage 1252\ncharacters to Unicode");
 	&main::cp1252toUni();
+	return;
 }
 
 sub html_convert_utf {
@@ -138,6 +144,7 @@ sub html_convert_utf {
 	&main::named( ' >', ' &gt;' ); # see html_convert_ampersands -- probably no effect
 	&main::named( '< ', '&lt; ' );
 	if ( !$keep_latin1 ) { html_convert_latin1(); }
+	return;
 }
 
 sub html_cleanup_markers {
@@ -168,7 +175,7 @@ sub html_cleanup_markers {
 	{
 		$textwindow->ntdelete( "$blockstart+5c", "$blockstart+9c" );
 	}
-
+	return;
 }
 
 sub html_convert_footnotes {
@@ -248,7 +255,7 @@ sub html_convert_footnotes {
 			$textwindow->ntinsert( $thisblank, "</p>\n<p>" );
 		}
 	}
-
+	return;
 }
 
 sub html_convert_body {
@@ -940,6 +947,7 @@ sub html_convert_body {
 		$incontents, $contentstext
 
 	) if @contents;
+	return;
 }
 
 sub html_convert_underscoresmallcaps {
@@ -998,7 +1006,7 @@ sub html_convert_underscoresmallcaps {
 			last;
 		}
 	}
-
+	return;
 }
 
 sub html_convert_sidenotes {
@@ -1036,7 +1044,7 @@ sub html_convert_sidenotes {
 	{
 		$textwindow->ntdelete( "$thisblockstart+12c", "$thisblockstart+16c" );
 	}
-
+	return;
 }
 
 sub html_convert_pageanchors {
@@ -1208,6 +1216,7 @@ sub html_convert_pageanchors {
 			}
 		}
 	}
+	return;
 }
 
 sub html_parse_header {
@@ -1356,6 +1365,7 @@ sub html_wrapup {
 	&main::working();
 	$textwindow->Unbusy;
 	$textwindow->see('1.0');
+	return;
 
 }
 
