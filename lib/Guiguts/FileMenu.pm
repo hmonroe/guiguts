@@ -26,6 +26,7 @@ sub file_include {    # FIXME: Should include even if no file loaded.
 	  if defined($name)
 		  and length($name);
 	&main::update_indicators();
+	return;
 }
 
 ## Global Exit

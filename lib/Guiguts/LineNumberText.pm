@@ -120,6 +120,7 @@ sub Populate {
             @arr;
         };
     }
+    return;
 }    # end Populate
 
 # Configure methods
@@ -132,6 +133,7 @@ sub linenumside {
     $w->{'side'} = $side;
     $w->hidelinenum;
     $w->showlinenum;
+    return;
 }
 
 sub linenumbg {
@@ -159,6 +161,7 @@ sub showlinenum {
     ( $w->{'side'} eq 'right' ) ? ( $col = 2 ) : ( $col = 0 );
     $w->{'ltext'}->grid( -row => 0, -column => $col, -sticky => 'ns' );
     $w->{'linenumshowing'} = 1;
+    return;
 }
 
 sub hidelinenum {
@@ -166,6 +169,7 @@ sub hidelinenum {
     return unless ( $w->{'linenumshowing'} );
     $w->{'ltext'}->gridForget;
     $w->{'linenumshowing'} = 0;
+    return;
 }
 
 #Private Methods
@@ -250,6 +254,7 @@ sub _lineupdate {
     }
     $w->{'ltext'}->tagAdd( 'RIGHT', '1.0', 'end' );
     $w->{'rtext'}->xviewMoveto( $xsave[0] );
+    return;
 }
 1;
 
