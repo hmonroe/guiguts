@@ -4380,7 +4380,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
 
 # just working out how to do things
 # prints everything I can think of to debug.txt
-sub debug_dump(){
+sub debug_dump {
 	open my $save, '>', 'debug.txt';
 	print $save "\%lglobal values:\n";
 	for my $key (keys %lglobal) { 
@@ -5324,7 +5324,7 @@ sub roman {
 	my @figure      = reverse sort keys %roman_digit;
 	grep( $roman_digit{$_} = [ split( //, $roman_digit{$_}, 2 ) ], @figure );
 	my $arg = shift;
-	return undef unless defined $arg;
+	return unless defined $arg;
 	0 < $arg and $arg < 4000 or return;
 	my ( $x, $roman );
 	foreach (@figure) {
@@ -7445,14 +7445,14 @@ sub hyperlinkpagenums {
 }
 
 sub linkcheckrun {
-	open LOGFILE, "> errors.err" || die "output file error\n";
+	open my $logfile, "> errors.err" || die "output file error\n";
 	my ( %anchor,  %id,  %link,   %image,  %badlink, $length, $upper );
 	my ( $anchors, $ids, $ilinks, $elinks, $images,  $count,  $css ) =
 	  ( 0, 0, 0, 0, 0, 0, 0 );
 	my @warning = ();
 	my $fname   = $lglobal{global_filename};
 	if ( $fname =~ /(No File Loaded)/ ) {
-		print LOGFILE "You need to save your file first.";
+		print $logfile "You need to save your file first.";
 		return;
 	}
 	my ( $f, $d, $e ) = fileparse( $fname, qr{\.[^\.]*$} );
@@ -7465,10 +7465,10 @@ sub linkcheckrun {
 	my @temp = split( /[\\\/]/, $textwindow->FileName );
 	my $tempfilename = $temp[-1];
 	if ( $tempfilename =~ /projectid/i ) {
-		print LOGFILE "Choose a human readable filename: $tempfilename\n";
+		print $logfile "Choose a human readable filename: $tempfilename\n";
 	}
 	if ( $tempfilename =~ /[A-Z]/ ) {
-		print LOGFILE "Use only lower case in filename: $tempfilename\n";
+		print $logfile "Use only lower case in filename: $tempfilename\n";
 	}
 	if ( $textwindow->numberChanges ) {
 		( $fh, $filename ) = tempfile();
@@ -7558,7 +7558,7 @@ sub linkcheckrun {
 				 || ( defined $id{$_} )
 				 || ( $link{$_} eq $_ ) )
 		{
-			print LOGFILE "+#$link{$_}: Internal link without anchor\n";
+			print $logfile "+#$link{$_}: Internal link without anchor\n";
 			$count++;
 		}
 	}
@@ -7566,49 +7566,49 @@ sub linkcheckrun {
 	for ( natural_sort_alpha( keys %link ) ) {
 		if ( $link{$_} eq $_ ) {
 			if ( $_ =~ /:\/\// ) {
-				print LOGFILE "+$link{$_}: External link\n";
+				print $logfile "+$link{$_}: External link\n";
 			} else {
 				my $temp = $_;
 				$temp =~ s/^([^#]+).*/$1/;
 				unless ( -e $d . $temp ) {
-					print LOGFILE "local file(s) not found!\n"
+					print $logfile "local file(s) not found!\n"
 					  unless $externflag;
-					print LOGFILE "+$link{$_}:\n";
+					print $logfile "+$link{$_}:\n";
 					$externflag++;
 				}
 			}
 		}
 	}
 	for ( natural_sort_alpha( keys %badlink ) ) {
-		print LOGFILE "+$badlink{$_}: Link with bad characters\n";
+		print $logfile "+$badlink{$_}: Link with bad characters\n";
 	}
-	print LOGFILE @warning if @warning;
-	print LOGFILE "";
+	print $logfile @warning if @warning;
+	print $logfile "";
 	if ( keys %imagefiles ) {
 		for ( natural_sort_alpha( keys %imagefiles ) ) {
-			print LOGFILE "+" . $_ . ": File not used!\n"
+			print $logfile "+" . $_ . ": File not used!\n"
 			  if ( $_ =~ /\.(png|jpg|gif|bmp)/ );
 		}
-		print LOGFILE "";
+		print $logfile "";
 	}
-	print LOGFILE "Link statistics:\n";
-	print LOGFILE "$anchors named anchors\n";
-	print LOGFILE "$ids unnamed anchors (tag with id attribute)\n";
-	print LOGFILE "$ilinks internal links\n";
-	print LOGFILE "$images image links\n";
-	print LOGFILE "$css CSS style image links\n";
-	print LOGFILE "$elinks external links\n";
-	print LOGFILE "ANCHORS WITHOUT LINKS. - (INFORMATIONAL)\n";
+	print $logfile "Link statistics:\n";
+	print $logfile "$anchors named anchors\n";
+	print $logfile "$ids unnamed anchors (tag with id attribute)\n";
+	print $logfile "$ilinks internal links\n";
+	print $logfile "$images image links\n";
+	print $logfile "$css CSS style image links\n";
+	print $logfile "$elinks external links\n";
+	print $logfile "ANCHORS WITHOUT LINKS. - (INFORMATIONAL)\n";
 
 	for ( natural_sort_alpha( keys %anchor ) ) {
 		unless ( exists $link{$_} ) {
-			print LOGFILE "$anchor{$_}\n";
+			print $logfile "$anchor{$_}\n";
 			$count++;
 		}
 	}
-	print LOGFILE "$count  anchors without links\n";
+	print $logfile "$count  anchors without links\n";
 	unlink $filename if $filename;
-	close LOGFILE;
+	close $logfile;
 }
 
 sub htmlimages {
@@ -14421,7 +14421,7 @@ sub spellget_misspellings {    # get list of misspelled words
 	unlink 'checkfil.txt';
 }
 
-sub getmisspelledwords() {
+sub getmisspelledwords {
     $lglobal{misspelledlist}=();	
 	my $section = shift;
 	my ( $word, @templist );
@@ -14528,9 +14528,9 @@ sub spelladdforeignwords {
 		return;
 	}
 	chdir $globallastpath;
-	open( DAT, "foreign_words.txt" ) || die("Could not open foreign_words.txt!");
-	my @raw_data = <DAT>;
-	close(DAT);
+	open( my $dat, "foreign_words.txt" ) || die("Could not open foreign_words.txt!");
+	my @raw_data = <$dat>;
+	close($dat);
 	my $word = q{};
 	foreach my $word (@raw_data) {
 		spellmyaddword( substr( $word, 0, -1 ) );
@@ -19560,7 +19560,7 @@ sub spelloptions {
 		$runner->run($globalspellpath, 'dump', 'dicts');
 		warn "Unable to access dictionaries.\n" if $?;
 
-		open my $infile, 'aspell.tmp';
+		open my $infile,'<', 'aspell.tmp';
 		while ( $dicts = <$infile> ) {
 			chomp $dicts;
 			next if ( $dicts =~ m/-/ );
@@ -21376,16 +21376,16 @@ sub runtests {
 
 	ok( -e "tests/testhtml1baseline.html",
 		"tests/testhtml1baseline.html exists" );
-	open INFILE,  "tests/testhtml1.html"       || die "no source file\n";
-	open LOGFILE, "> tests/testhtml1temp.html" || die "output file error\n";
-	while ( $ln = <INFILE> ) {
-		if ($inbody) { print LOGFILE $ln; }
+	open my $infile,  "<","tests/testhtml1.html"       || die "no source file\n";
+	open my $logfile, ">","tests/testhtml1temp.html" || die "output file error\n";
+	while ( $ln = <$infile> ) {
+		if ($inbody) { print $logfile $ln; }
 		if ( $ln =~ /<\/head>/ ) {
 			$inbody = 1;
 		}
 	}
-	close INFILE;
-	close LOGFILE;
+	close $infile;
+	close $logfile;
 	ok(
 		compare( "tests/testhtml1baseline.html", 'tests/testhtml1temp.html' ) ==
 		  0,
@@ -21414,18 +21414,18 @@ sub runtests {
 
 	ok( -e "tests/testhtml2baseline.html",
 		"tests/testhtml2baseline.html exists" );
-	open INFILE,  "tests/testhtml2.html"       || die "no source file\n";
-	open LOGFILE, "> tests/testhtml2temp.html" || die "output file error\n";
+	open $infile,  "tests/testhtml2.html"       || die "no source file\n";
+	open $logfile, "> tests/testhtml2temp.html" || die "output file error\n";
 	@book   = ();
 	$inbody = 0;
-	while ( $ln = <INFILE> ) {
-		if ($inbody) { print LOGFILE $ln; }
+	while ( $ln = <$infile> ) {
+		if ($inbody) { print $logfile $ln; }
 		if ( $ln =~ /<\/head>/ ) {
 			$inbody = 1;
 		}
 	}
-	close INFILE;
-	close LOGFILE;
+	close $infile;
+	close $logfile;
 	ok(
 		compare( "tests/testhtml2baseline.html", 'tests/testhtml2temp.html' ) ==
 		  0,
