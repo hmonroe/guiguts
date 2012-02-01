@@ -1096,6 +1096,7 @@ sub html_convert_pageanchors {
 				if (@pagerefs) {
 					my $br = "";
 					$pagereference = "";
+					no warnings; # roman numerals are nonnumeric
 					for ( sort { $a <=> $b } @pagerefs ) {
 						$pagereference .= "$br"
 						  . "<a name=\"Page_$_\" id=\"Page_$_\">[Pg $_]</a>";

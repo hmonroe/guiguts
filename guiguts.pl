@@ -833,7 +833,7 @@ sub runner {
 		bless {
 			infile => $infile,
 			outfile => $outfile,
-		};
+		}, 'runner';
 	}
 	sub run {
 		my ($self, @args) = @_;
@@ -962,7 +962,6 @@ sub tglprfbar {
 }
 
 # Routine to handle image viewer file requests
-# TODO switch focus back to the text window after showing the PNG
 sub openpng {
 	my $pagenum = shift;
 	if ( $pagenum eq 'Pg' ) {
@@ -1414,12 +1413,18 @@ sub file_mark_pages {
 	$searchendindex   = '1.0';
 	while ($searchstartindex) {
 		$searchstartindex =
-		  $textwindow->search( '-nocase', '-regexp', '--',
-							   '-*\s?File:\s?(\S+)\.(png|jpg)---.*$',
+		  $textwindow->search( '-exact', '--',
+							   '--- File:',
 							   $searchendindex, 'end' );
+#		$searchstartindex =  # The debugger chokes on this search; see revised version above
+		#  $textwindow->search( '-nocase', '-regexp', '--',
+			#				   '-*\s?File:\s?(\S+)\.(png|jpg)---.*$',
+							   #$searchendindex, 'end' );
 		last unless $searchstartindex;
+		my ( $row, $col ) = split /\./, $searchstartindex;
+		$line = $textwindow->get( "$row.0", "$row.end" );
 		$searchendindex = $textwindow->index("$searchstartindex lineend");
-		$line = $textwindow->get( $searchstartindex, $searchendindex );
+		#$line = $textwindow->get( $searchstartindex, $searchendindex );
 
 		# get the page name - we do this separate from pulling the
 		# proofer names in case we did an Import Test Prep Files
@@ -5910,7 +5915,7 @@ sub searchtext {
 		if   ( $sopt[0] or $sopt[3] ) { $mode = '-regexp' }
 		else                          { $mode = '-exact' }
 
-		print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";
+		if ($debug) {print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";}
 
 		#finally we actually do some searching
 		if ( $sopt[1] ) {
@@ -8875,7 +8880,7 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		while ( $textwindow->compare( $index, '<', 'end' ) ) {
 			my $end = $textwindow->index("$index  lineend +1c");
 			my $gettext = $textwindow->get( $index, $end );
-			utf8::encode($gettext);
+			#utf8::encode($gettext);
 			print $td $gettext;
 			$index = $end;
 		}
@@ -14557,7 +14562,6 @@ sub file_open {    # Find a text file to open
 
 sub openfile {    # and open it
 	my $name = shift;
-	print $scannos_highlighted;
 	return if ( $name eq '*empty*' );
 	return if ( confirmempty() =~ /cancel/i );
 	unless ( -e $name ) {

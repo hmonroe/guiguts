@@ -57,7 +57,7 @@ sub wrapper {
 			$line =~ s/ $//; # remove trailing space
 			$paragraph .= $line . "\n" if $line;
 			$paragraph .= $word . "\n";
-			$leftmargin = $lmargin - 1;
+			$leftmargin = $main::lmargin - 1;
 			$line       = '';
 			next;
 		}
@@ -167,9 +167,23 @@ sub selectrewrap {
 		# main while loop
 		while (1) {
 			$indent = $main::defaultindent;
+			my $length =5;
+			$searchstartindex =
+			  $textwindow->search(
+								   '-regex', '-forwards',
+								   '-count' => \$length,
+								   '--', 'x', '1.0', 'end'
+			  );
+			
+			my $regex = 'x';
+			$thisblockend = $textwindow->search( '-regex', $regex, '1.0',
+								   'end' );    #find end of paragraph
+			
 			$thisblockend =
-			  $textwindow->search( '-regex', '--', '^(\x7f)*$', $thisblockstart,
+			  $textwindow->search( '-regex', '--', '^[\x7f]*$', $thisblockstart,
 								   $end );    #find end of paragraph
+#			  $textwindow->search( '-regex', '--', '^(\x7f)*$', $thisblockstart, #debugger chokes
+#								   $end );    #find end of paragraph
 			if ($thisblockend) {
 				$thisblockend =
 				  $textwindow->index( $thisblockend . ' lineend' );
@@ -576,13 +590,13 @@ sub asciibox {
 		my $start = pop(@ranges);
 		$textwindow->markSet( 'asciistart', $start );
 		$textwindow->markSet( 'asciiend',   $end );
-		my $saveleft  = $lmargin;
+		my $saveleft  = $main::lmargin;
 		my $saveright = $rmargin;
 		$textwindow->addGlobStart;
-		$lmargin = 0;
+		$main::lmargin = 0;
 		$rmargin = ( $asciiwidth - 4 );
 		&main::selectrewrap unless $asciiwrap;
-		$lmargin = $saveleft;
+		$main::lmargin = $saveleft;
 		$rmargin = $saveright;
 		$textwindow->insert(
 							 'asciistart',
