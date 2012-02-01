@@ -7445,7 +7445,7 @@ sub hyperlinkpagenums {
 }
 
 sub linkcheckrun {
-	open my $logfile, "> errors.err" || die "output file error\n";
+	open my $logfile, ">", "errors.err" || die "output file error\n";
 	my ( %anchor,  %id,  %link,   %image,  %badlink, $length, $upper );
 	my ( $anchors, $ids, $ilinks, $elinks, $images,  $count,  $css ) =
 	  ( 0, 0, 0, 0, 0, 0, 0 );
@@ -9544,7 +9544,7 @@ sub gutwindowpopulate {
 	return unless defined $lglobal{gcpop};
 	my ( $line, $flag, $count, $start );
 	$lglobal{gclistbox}->delete( '0', 'end' );
-	foreach $line ( @{$linesref} ) {
+	foreach my $line ( @{$linesref} ) {
 		$flag = 0;
 		$start++ unless ( index( $line, 'Line', 0 ) > 0 );
 		next unless defined $gc{$line};
@@ -14436,15 +14436,15 @@ sub getmisspelledwords {
 	my $runner = runner::withfiles('checkfil.txt', 'temp.txt');
 	$runner->run($globalspellpath, @spellopt);
 
-	open INFILE, 'temp.txt';
+	open my $infile,'>', 'temp.txt';
 	my ( $ln, $tmp );
-	while ( $ln = <INFILE> ) {
+	while ( $ln = <$infile> ) {
 		$ln =~ s/\r\n/\n/;
 		chomp $ln;
 		utf8::decode($ln);
 		push( @templist, $ln );
 	}
-	close INFILE;
+	close $infile;
 
 	foreach my $word (@templist) {
 		next if ( exists( $projectdict{$word} ) );
@@ -14528,7 +14528,7 @@ sub spelladdforeignwords {
 		return;
 	}
 	chdir $globallastpath;
-	open( my $dat, "foreign_words.txt" ) || die("Could not open foreign_words.txt!");
+	open( my $dat,"<", "foreign_words.txt" ) || die("Could not open foreign_words.txt!");
 	my @raw_data = <$dat>;
 	close($dat);
 	my $word = q{};
@@ -21414,8 +21414,8 @@ sub runtests {
 
 	ok( -e "tests/testhtml2baseline.html",
 		"tests/testhtml2baseline.html exists" );
-	open $infile,  "tests/testhtml2.html"       || die "no source file\n";
-	open $logfile, "> tests/testhtml2temp.html" || die "output file error\n";
+	open $infile,"<","tests/testhtml2.html"       || die "no source file\n";
+	open $logfile, ">", "tests/testhtml2temp.html" || die "output file error\n";
 	@book   = ();
 	$inbody = 0;
 	while ( $ln = <$infile> ) {
