@@ -455,10 +455,11 @@ sub _flash_save {
 				$lglobal{savetool}->configure(
 											   -background       => 'yellow',
 											   -activebackground => 'yellow'
-				) if $textwindow->numberChanges and !$notoolbar;
+				) if ($textwindow->numberChanges and (!$notoolbar));
 			}
 		}
 	);
+	return;
 }
 
 ## save the .bin file associated with the text file
@@ -567,6 +568,7 @@ sub _bin_save {
 	} else {
 		$top->BackTrace("Cannot open $binname:$!");
 	}
+	return;
 }
 
 ## Track recently open files for the menu
@@ -582,6 +584,7 @@ sub _recentupdate {    # FIXME: Seems to be choking.
 	# limit the list to 10 entries
 	pop @recentfile while ( $#recentfile > 10 );
 	menurebuild();
+	return;
 }
 
 # Pop up window allowing tracking and auto reselection of last selection
@@ -672,6 +675,7 @@ sub selection {
 		$lglobal{seleentry}->insert( 'end', $textwindow->index('selend') );
 	}
 	$lglobal{selsentry}->selectionRange( 0, 'end' );
+	return
 }
 
 # Command parsing for External command routine
@@ -750,6 +754,7 @@ sub getprojectid {
 		}
 	}
 	closedir(DIR);
+	return;
 }
 
 
@@ -778,6 +783,7 @@ sub system1 {
 	} else {
 		return $pid;
 	}
+	return;
 }
 
 # system(LIST)
@@ -790,6 +796,7 @@ sub run {
 		my $pid = system1(@args);
 		waitpid($pid, 0) if $pid > 0;
 	}
+	return;
 }
 
 # Start an external program
@@ -818,6 +825,7 @@ sub runner {
 		my $pid = system1(@args);
 		return (defined $pid) ? 0 : -1;
 	}
+	return;
 }
 
 # Run external program, with stdin and/or stdout redirected to temporary files
@@ -883,6 +891,7 @@ sub menurebuild {
 		$menubar->delete('last');
 	}
 	menubuild();
+	return;
 }
 
 ## Clear persistant variables before loading another file
@@ -906,6 +915,7 @@ sub clearvars {
 	$lglobal{seepagenums}   = 0;
 	@{ $lglobal{fnarray} } = ();
 	undef $lglobal{prepfile};
+	return;
 }
 
 ## Make toolbar visible if invisible and vice versa
@@ -959,6 +969,7 @@ sub tglprfbar {
 		}
 		$lglobal{proofbarvisible} = 1;
 	}
+	return;
 }
 
 # Routine to handle image viewer file requests
@@ -977,6 +988,7 @@ sub openpng {
 	} else {
 		setpngspath($pagenum);
 	}
+	return;
 }
 
 # Routine to find highlight word list
@@ -1000,6 +1012,7 @@ sub scannosfile {
 		%{ $lglobal{wordlist} } = ();
 		highlight_scannos();
 	}
+	return;
 }
 
 ##routine to automatically highlight words in the text
@@ -1152,6 +1165,7 @@ sub highlightscannos {
 		  if $ypix >= ( $theight - 1 );  #we have reached the end of the display
 		last if ( $y == $ypix );
 	}
+	return;
 }
 
 ## The main menu building code.
@@ -1191,12 +1205,14 @@ sub file_saveas {
 		return;
 	}
 	update_indicators();
+	return;
 }
 
 sub file_close {
 	return if ( confirmempty() =~ m{cancel}i );
 	clearvars();
 	update_indicators();
+	return;
 }
 
 sub file_import {
@@ -1239,6 +1255,7 @@ sub file_import {
 	file_mark_pages();
 	$pngspath = '';
 	$top->Unbusy( -recurse => 1 );
+	return;
 }
 
 sub file_export {
