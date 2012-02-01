@@ -3616,6 +3616,7 @@ sub menubuildtwo {
 			],
 			# end of copy
 			 [ 'separator', '' ],
+			 [ 'command', 'Debug', -command => \&debug_dump ],
 			 [ 'command',   '~Close', -command => \&file_close ],
 			 [ 'command', 'E~xit', -command => \&_exit ],
 		  ]
@@ -4371,6 +4372,40 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
 		]
 	);
 }
+
+# just working out how to do things
+# prints everything I can think of to debug.txt
+sub debug_dump(){
+	open my $save, '>', 'debug.txt';
+	print $save "\%lglobal values:\n";
+	for my $key (keys %lglobal) { 
+		print $save "$key => $lglobal{$key}\n";
+		};
+	print $save "\n\@ARGV command line arguments:\n";
+	for my $element (@ARGV) {
+		print $save "$element\n";
+		};
+	print $save "\n\%SIG variables:\n";
+	for my $key (keys %SIG) { 
+		print $save "$key => $SIG{$key}\n";
+		};
+	print $save "\n\%ENV environment variables:\n";
+	for my $key (keys %ENV) { 
+		print $save "$key => $ENV{$key}\n";
+		};
+	print $save "\n\@INC include path:\n";
+	for my $element (@INC) {
+		print $save "$element\n";
+		};
+	print $save "\n\%INC included filenames:\n";
+	for my $key (keys %INC) { 
+		print $save "$key => $INC{$key}\n";
+		};
+		
+	close $save;
+	};
+
+
 
 ## Toggle visible page markers. This is not line numbers but marks for pages.
 sub viewpagenums {
