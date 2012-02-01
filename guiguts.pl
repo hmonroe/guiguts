@@ -14505,6 +14505,33 @@ sub spelladdgoodwords {
 	}
 }
 
+# add foreign words - part of multi-lingual spellchecking
+# RORYWORK
+# plan spellcheck in first language and save misspelt words
+# spellcheck misspelt in second language and save misspelt words
+# diff two files and save second language correct words
+# add second language correct words to project dictionary
+sub spelladdforeignwords {
+	my $ans = $top->messageBox(
+		-icon    => 'warning',
+		-type    => 'YesNo',
+		-default => 'yes',
+		-message =>
+'Warning: Before adding foreign_words.txt first check whether they do not contain misspellings, multiple spellings, etc. Continue?'
+	);
+	if ( $ans =~ /no/i ) {
+		return;
+	}
+	chdir $globallastpath;
+	open( DAT, "foreign_words.txt" ) || die("Could not open foreign_words.txt!");
+	my @raw_data = <DAT>;
+	close(DAT);
+	my $word = q{};
+	foreach my $word (@raw_data) {
+		spellmyaddword( substr( $word, 0, -1 ) );
+	}
+}
+
 ## End Spellcheck
 
 ### File Menu
