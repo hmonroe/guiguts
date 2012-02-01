@@ -12018,7 +12018,8 @@ sub togreektr {
 	$phrase =~ s/u/\x{03C5}/g;
 	$phrase =~ s/Ô/\x{03A9}/g;
 	$phrase =~ s/ô/\x{03C9}/g;
-	$phrase =~ s/\?/;/g;
+	$phrase =~ s/\?/\x{037E}/g;
+	$phrase =~ s/;/\x{0387}/g;
 	return $phrase;
 }
 
@@ -12098,7 +12099,8 @@ sub fromgreektr {
 	$phrase =~ s/([AEIOUaeiou])\x{03C5}/$1u/g;
 	$phrase =~ s/\x{03A5}/Y/g;
 	$phrase =~ s/\x{03C5}/y/g;
-	$phrase =~ s/;/?/g;
+	$phrase =~ s/\x{037E}/?/g;
+	$phrase =~ s/\x{0387}/;/g;
 	$phrase =~ s/(\p{Upper}\p{Lower}\p{Upper})/\U$1\E/g;
 	$phrase =~ s/([AEIOUaeiou])y/$1u/g;
 	return $phrase;
@@ -12141,7 +12143,9 @@ sub betagreek {
 		$phrase =~ s/u\)/\x{1F50}/g;
 		$phrase =~ s/u\(/\x{1F51}/g;
 		$phrase =~ s/U\(/\x{1F59}/g;
-
+		$phrase =~ s/\?/\x{037E}/g;
+		$phrase =~ s/;/\x{0387}/g;
+		
 		my %atebkrg = reverse %{ $lglobal{grkbeta3} };
 		for ( keys %atebkrg ) {
 			$phrase =~ s/\Q$_\E/$atebkrg{$_}/g;
@@ -12178,7 +12182,9 @@ sub betagreek {
 		$phrase =~ s/\x{03CC}/o\//g;
 		$phrase =~ s/\x{03CE}/ô\//g;
 		$phrase =~ s/\x{03CD}/y\//g;
-		return fromgreektr($phrase);
+		$phrase =~ s/\x{037E}/?/g;
+		$phrase =~ s/\x{0387}/;/g;
+	return fromgreektr($phrase);
 	}
 }
 

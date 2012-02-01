@@ -20,7 +20,7 @@ by the Gnutenberg Press. Made highlighting of scannos sticky. Set default
 path for gutcheck and jeebies on non-Windows systems. <g>gesperrt text</g>
 is converted to <em class="gesperrt">gesperrt text</em>. Added second
 alternative menu structure for comment. Altered Fixup 'thought break'
-response.
+response. Updated Greek transliteration of punctuation.
 
 Version 1.0.5. Introduced a PP Wizard, an alternative menu structure,
 that steps PPers through the GG checklist, which is not the default
