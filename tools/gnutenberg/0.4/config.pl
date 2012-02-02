@@ -5,18 +5,22 @@
 # this file tells transform.pl where your binaries are located
 #
 
+use File::Spec;
+use File::Basename;
+my $config_dir = dirname(File::Spec->rel2abs($0));
+
 $config = {
 # the directory the transform.pl executable is in
-    install_dir        => 'c:/guiguts/tools/gnutenberg/0.4/',
+    install_dir        => $config_dir,
 
 # the xmlcatalog file
-    catalog_file       => 'c:/guiguts/tools/gnutenberg/0.4/xmlcatalog',
+    catalog_file       => $config_dir . '/xmlcatalog',
 
 #tei2html
-    tidy               => 'C:/giuguts/tools/tidy/tidy.exe',
+    tidy               => $config_dir . '/../../../tools/tidy/tidy.exe',
 
 # tei2txt
-    nroff              => 'C:/guiguts/tools/groff/bin/groff.exe',
+    nroff              => $config_dir . '/../../../tools/groff/bin/groff.exe',
 
 # tei2pdf
     pdflatex           => 'c:/texlive/2011/bin/win32/pdflatex',
