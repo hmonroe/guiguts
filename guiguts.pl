@@ -3521,7 +3521,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 			   -command => sub {        # FIXME: sub this out.
 				   runner(
 $globalbrowserstart, "http://www.pgdp.net/wiki/PPTools/Guiguts"
-				   ) if ( -e 'ggmanual.html' );
+				   );
 				 }
 			],
 
@@ -3530,7 +3530,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/PPTools/Guiguts"
 			   -command => sub {        # FIXME: sub this out.
 				   runner(
 $globalbrowserstart, "http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
-				   ) if ( -e 'ggmanual.html' );
+				   );
 				 }
 			],
 
@@ -4248,7 +4248,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 			   -command => sub {        # FIXME: sub this out.
 				   runner(
 $globalbrowserstart, "http://www.pgdp.net/wiki/PPTools/Guiguts"
-				   ) if ( -e 'ggmanual.html' );
+				   );
 				 }
 			],
 
@@ -4257,8 +4257,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/PPTools/Guiguts"
 			   -command => sub {        # FIXME: sub this out.
 				   runner(
 $globalbrowserstart, "http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
-				# FIXME: got this next line wrong
-				   ) if ( -e 'ggmanual.html' );
+				   );
 				 }
 			],
 			[ Button => '~Latin 1 Chart',         -command => \&latinpopup ],
