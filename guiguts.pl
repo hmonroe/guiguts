@@ -759,43 +759,124 @@ sub getprojectid {
 }
 
 
-sub system1 {
-	require Win32;
-	require Win32::Process;
-
+sub win32_cmdline {
 	my @args = @_;
-	my $exe = $args[0];
 
 	# <http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/
 	#  everyone-quotes-arguments-the-wrong-way.aspx>
 	#
-	# That includes the perl function system(LIST)
-	# (and exec() - in different ways).
+	# which includes perl's system(LIST).  So we do our own quoting.
 	#
-	foreach my $arg (@args) {
-		$arg =~ s/(\\*)"/$1$1\\"/g;
-		$arg =~ s/^(.*)(\\*)$/"$1$2$2"/g if $arg =~ m/[ "]|^$/;
+	foreach ( @args ) {
+		s/(\\*)\"/$!$!\\\"/g;
+		s/^(.*)(\\*)$/\"$1$2$2\"/ if m/[ "]/;
+	}
+	return join " ", @args;
+}
+
+sub win32_start {
+	my @args = @_;
+
+	# Windows command to open a file (or URL) using the default program
+
+	# start command must be run through CMD.EXE
+	# (we don't have Win32:Gui, or we could use ShellExecute())
+	#
+	# <http://www.autohotkey.net/~deleyd/parameters/parameters.htm>
+	#
+	# Other external commands can go through win32_create_process(),
+	# which doesn't have this limitation.
+	#
+	foreach ( @args ) {
+		if ( m/["<>|&()!%^]/ ) {
+			warn 'Refusing to run "start" command with unsafe characters ("<>|&()!%^): '
+			     . join(" ", @args);
+			return -1;
+		}
 	}
 
-	my $pid = system 1, join(' ', @args);
+	# <http://stackoverflow.com/questions/72671/
+	#  how-to-create-batch-file-in-windows-using-start-with-a-path-and-command-with-s
+	#
+	# Users never need to create a titled DOS window,
+	# but they may need to run the 'start' command on files with spaces.
+	#
+	@args = ( 'start', '', @args );
 
-	if ( $? == (255 << 8) ) {
-		return -1;
+	my $cmdline = win32_cmdline( @args );
+	system $cmdline;
+}
+
+sub win32_is_exe {
+	my ( $exe ) = @_;
+	return -x $exe && ! -d $exe;
+}
+
+sub win32_find_exe {
+	my ( $exe ) = @_;
+
+	return $exe if win32_is_exe($exe);
+
+	foreach my $ext ( split ';', $ENV{PATHEXT} )
+	{
+		my $p = $exe . $ext;
+		return $p if win32_is_exe($p);
+	}
+
+	if ( ! File::Spec->file_name_is_absolute($exe) )
+	{
+		foreach my $path ( split ';', $ENV{PATH} )
+		{
+			my $stem = catfile($path, $exe);
+			return $stem if win32_is_exe($stem);
+
+			foreach my $ext ( split ';', $ENV{PATHEXT} ) {
+				my $p = $stem . $ext;
+				return $p if win32_is_exe($p);
+			}
+		}
+	}
+
+	# No such program; caller will find out :).
+	return $exe;
+}
+
+sub win32_create_process {
+	require Win32;
+	require Win32::Process;
+
+	my @args = @_;
+
+	my $exe = win32_find_exe( $args[0] );
+	my $cmdline = win32_cmdline( @args );
+
+	my $proc;
+	if ( Win32::Process::Create( $proc, $exe, $cmdline, 1, 0, '.' ) ) {
+		return $proc;
 	} else {
-		return $pid;
+		print STDERR "Failed to run $args[0]: ";
+		print STDERR Win32::FormatMessage( Win32::GetLastError() );
+		return undef;
 	}
 	return;
 }
 
 # system(LIST)
+# (but slightly more robust, particularly on Windows).
 sub run {
 	my @args = @_;
 
 	if ( ! $OS_WIN ) {
 		system { $args[0] } @args;
 	} else {
-		my $pid = system1(@args);
-		waitpid($pid, 0) if $pid > 0;
+		require Win32;
+		require Win32::Process;
+
+		my $proc = win32_create_process( @args );
+		return -1 unless defined $proc;
+		$proc->Wait( Win32::Process::INFINITE() );
+		$proc->GetExitCode( my $exitcode );
+		$? = $exitcode << 8;
 	}
 	return;
 }
@@ -803,28 +884,21 @@ sub run {
 # Start an external program
 sub runner {
 	my @args = @_;
-	unless (@args) {
+	unless ( @args ) {
 		warn "Tried to run an empty command";
 		return -1;
 	}
 
-	if ( ! $OS_WIN) {
+	if ( ! $OS_WIN ) {
 		# We can't call perl fork() in the main GUI process, because Tk crashes
-		print join(' ', @args);
 		system( 'perl', 'spawn.pl', @args );
 	} else {
-
-		# <http://stackoverflow.com/questions/72671/
-		#  how-to-create-batch-file-in-windows-using-start-with-a-path-and-command-with-s
-		#
-		# We never need to create a titled DOS window,
-		# but people do sometimes run the 'start' command on files with spaces.
 		if ( $args[0] eq 'start') {
-			@args = ('start', '', @args[1 .. $#args]);
+			win32_start( @args[1 .. $#args] );
+		} else {
+			my $proc = win32_create_process( @args );
+			return (defined $proc) ? 0 : -1;
 		}
-
-		my $pid = system1(@args);
-		return (defined $pid) ? 0 : -1;
 	}
 	return;
 }
