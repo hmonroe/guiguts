@@ -3,7 +3,7 @@ package Guiguts::WordFrequency;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&wordfrequencybuildwordlist &wordfrequency &bangmark)
+	@EXPORT=qw(&wordfrequencybuildwordlist &wordfrequency)
 }
 
 sub wordfrequencybuildwordlist {
@@ -199,18 +199,15 @@ sub wordfrequency {
 			],
 			[ 'Check Spelling', \&main::wordfrequencyspellcheck ],
 			[ 'Ital/Bold/SC', \&main::itwords, \&main::ital_adjust ],
-			[ 'ALL CAPS',     \&main::capscheck ],
-			[ 'MiXeD CasE',   \&main::mixedcasecheck ],
-			[
-			   'Initial Caps',
-			   [
-				  \&main::anythingwfcheck, 'words with initial caps',
-				  '^\p{Upper}\P{Upper}+$'
-			   ]
+			[ 'ALL CAPS',     sub {capscheck($top)} ],
+			[ 'MiXeD CasE',   sub {mixedcasecheck($top)} ],
+			[ 'Initial Caps',
+				  sub {anythingwfcheck('words with initial caps',
+				  '^\p{Upper}\P{Upper}+$',$top)}
 			],
 			[ 'Character Cnts', \&main::charsortcheck ],
 			[ 'Check , Upper',  \&main::commark ],
-			[ 'Check . Lower',  sub{&main::bangmark($top) }],
+			[ 'Check . Lower',  sub{bangmark($top) }],
 			[ 'Check Accents',  \&main::accentcheck ],
 			[
 			   'Unicode > FF',
@@ -224,18 +221,18 @@ sub wordfrequency {
 			[
 			   'Ligatures',
 			   [
-				  \&main::anythingwfcheck,
+				  \&anythingwfcheck,
 				  'words with possible ligatures',
-				  '(oe|ae|æ|Æ|\x{0153}|\x{0152})'
+				  '(oe|ae|æ|Æ|\x{0153}|\x{0152})',$top
 			   ]
 			],
-			[ 'RegExpEntry', [ \&main::anythingwfcheck, 'dummy entry', 'dummy' ] ],
+			[ 'RegExpEntry', [ \&main::anythingwfcheck, 'dummy entry', 'dummy',$top] ],
 			[
 			   '<--RegExp',
 			   [
 				  sub {
 					  &main::anythingwfcheck( 'words matching regular expression',
-									   $main::regexpentry );
+									   $main::regexpentry,$top );
 					}
 			   ]
 			],
@@ -594,6 +591,74 @@ sub alphanumcheck {
 	$main::lglobal{wclistbox}->update;
 	$main::lglobal{wclistbox}->yview( 'scroll', -1, 'units' );
 	&main::searchoptset(qw/0 x x 0/);
+	$top->Unbusy;
+}
+
+sub capscheck {
+	my $top = shift;
+	$top->Busy( -recurse => 1 );
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$main::lglobal{wclistbox}->update;
+	my %display = ();
+	my $wordw   = 0;
+	foreach ( keys %{ $main::lglobal{seenwords} } ) {
+		next if ( $_ =~ /\p{IsLower}/ );
+		if ( $_ =~ /\p{IsUpper}+(?!\p{IsLower})/ ) {
+			$wordw++;
+			$display{$_} = $main::lglobal{seenwords}->{$_};
+		}
+	}
+	$main::lglobal{saveheader} = "$wordw distinct capitalized words.";
+	&main::sortwords( \%display );
+	&main::searchoptset(qw/1 x x 0/);
+	$top->Unbusy;
+}
+
+sub mixedcasecheck {
+	my $top = shift;
+	$top->Busy( -recurse => 1 );
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$main::lglobal{wclistbox}->update;
+	my %display = ();
+	my $wordw   = 0;
+	foreach ( sort ( keys %{ $main::lglobal{seenwords} } ) ) {
+		next unless ( $_ =~ /\p{IsUpper}/ );
+		next unless ( $_ =~ /\p{IsLower}/ );
+		next if ( $_ =~ /^\p{Upper}[\p{IsLower}\d'-]+$/ );
+		$wordw++;
+		$display{$_} = $main::lglobal{seenwords}->{$_};
+	}
+	$main::lglobal{saveheader} = "$wordw distinct mixed case words.";
+	&main::sortwords( \%display );
+	&main::searchoptset(qw/1 x x 0/);
+	$top->Unbusy;
+}
+
+# Refactor various word frequency checks into one
+sub anythingwfcheck {
+	my ( $checktype, $checkregexp,$top ) = @_;
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	if ( not &main::isvalid($checkregexp) ) {
+		$main::lglobal{wclistbox}
+		  ->insert( 'end', "Invalid regular expression: $checkregexp" );
+		$main::lglobal{wclistbox}->update;
+		return;
+	}
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$main::lglobal{wclistbox}->update;
+	$top->Busy( -recurse => 1 );
+	my %display = ();
+	my $wordw   = 0;
+	foreach ( sort ( keys %{ $main::lglobal{seenwords} } ) ) {
+		next unless ( $_ =~ /$checkregexp/ );
+		$wordw++;
+		$display{$_} = $main::lglobal{seenwords}->{$_};
+	}
+	$main::lglobal{saveheader} = "$wordw distinct $checktype.";
+	&main::sortwords( \%display );
+	&main::searchoptset(qw/1 x x 0/);
 	$top->Unbusy;
 }
 
