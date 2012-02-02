@@ -143,16 +143,15 @@ our $geometry2     = q{};
 our $geometry3     = q{};
 our $geometry;
 our $globalaspellmode   = 'normal';
-our $globalbrowserstart = 'start'; 
-if ( !$OS_WIN ) { 
-    if( $OS_MAC ) { $globalbrowserstart = 'open'; } 
-    else { $globalbrowserstart = 'xdg-open'; } 
-} 
-our $globalfirefoxstart = 'start firefox'; 
-if ( !$OS_WIN ) { 
-    if( $OS_MAC ) { $globalbrowserstart = 'open -a firefox'; } 
-    else { $globalbrowserstart = 'firefox'; } 
-} 
+
+our $globalbrowserstart = $ENV{BROWSER};
+if ( ! $globalbrowserstart ) { $globalbrowserstart = 'xdg-open'; }
+if ( $OS_WIN ) { $globalbrowserstart = 'start'; }
+if ( $OS_MAC ) { $globalbrowserstart = 'open'; }
+
+our $globalfirefoxstart = 'firefox';
+if( $OS_MAC ) { $globalbrowserstart = 'open -a firefox'; }
+
 our $globalimagepath        = q{};
 our $globallastpath         = q{};
 our $globalspelldictopt     = q{};
