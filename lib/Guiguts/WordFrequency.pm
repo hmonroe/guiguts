@@ -206,7 +206,7 @@ sub wordfrequency {
 				  '^\p{Upper}\P{Upper}+$',$top)}
 			],
 			[ 'Character Cnts', \&main::charsortcheck ],
-			[ 'Check , Upper',  \&main::commark ],
+			[ 'Check , Upper',  sub{commark($top)} ],
 			[ 'Check . Lower',  sub{bangmark($top) }],
 			[ 'Check Accents',  sub{accentcheck($top)} ],
 			[
@@ -708,6 +708,64 @@ sub accentcheck {
 	$top->Unbusy;
 }
 
+sub commark {
+	my $top = shift;
+	$top->Busy( -recurse => 1 );
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	my %display = ();
+	my $wordw   = 0;
+	my $ssindex = '1.0';
+	my $length;
+	return if ( &main::nofileloaded() );
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
+	$main::lglobal{wclistbox}->update;
+	my $wholefile = &main::slurpfile();
+
+	if ($main::intelligentWF) {
+
+		# Skip if pattern is: . Hello, John
+		$wholefile =~
+s/([\.\?\!]['"]*[\n\s]['"]*\p{Upper}\p{Alnum}*),([\n\s]['"]*\p{Upper})/$1 $2/g;
+
+		# Skip if pattern is: \n\nHello, John
+		$wholefile =~
+		  s/(\n\n *['"]*\p{Upper}\p{Alnum}*),( ['"]*\p{Upper})/$1 $2/g;
+	}
+	while (
+		   $wholefile =~ m/,(['"]*\n*\s*['"]*\p{Upper}\p{Alnum}*)([\.\?\!]?)/g )
+	{
+		my $word = $1;
+		next
+		  if $intelligentWF
+			  && $2
+			  && $2 ne '';    # ignore if word followed by period, !, or ?
+		$wordw++;
+
+		if ( $wordw == 0 ) {
+
+			# FIXME: think this code DOESN'T WORK. skipping
+			$word =~ s/<\/?[bidhscalup].*?>//g;
+			$word =~ s/(\p{Alnum})'(\p{Alnum})/$1PQzJ$2/g;
+			$word =~ s/"/pQzJ/g;
+			$word =~ s/(\p{Alnum})\.(\p{Alnum})/$1PqzJ$2/g;
+			$word =~ s/(\p{Alnum})-(\p{Alnum})/$1PLXJ$2/g;
+			$word =~ s/[^\s\p{Alnum}]//g;
+			$word =~ s/PQzJ/'/g;
+			$word =~ s/PqzJ/./g;
+			$word =~ s/PLXJ/-/g;
+			$word =~ s/pQzJ/"/g;
+			$word =~ s/\P{Alnum}+$//g;
+			$word =~ s/\x{d}//g;
+		}
+		$word =~ s/\n/\\n/g;
+		$display{ ',' . $word }++;
+	}
+	$main::lglobal{saveheader} =
+	  "$wordw words with uppercase following commas. " . '(\n means newline)';
+	&main::sortwords( \%display );
+	$top->Unbusy;
+	&main::searchoptset(qw/0 0 x 1/);
+}
 
 1;
 
