@@ -186,7 +186,7 @@ sub wordfrequency {
 		my @wfbuttons = (
 			[ 'Emdashes'  => sub {dashcheck($top) }],
 			[ 'Hyphens'   => \&main::hyphencheck ],
-			[ 'Alpha/num' => \&main::alphanumcheck ],
+			[ 'Alpha/num' => sub{alphanumcheck($top) }],
 			[
 			   'All Words' => sub {
 				   $main::lglobal{saveheader} =
@@ -570,6 +570,30 @@ sub dashcheck {
 	  "$wordw emdash phrases, $wordwo suspects (marked with ****).";
 	&main::sortwords( \%display );
 	&main::searchoptset(qw /0 x x 0/);
+	$top->Unbusy;
+}
+
+sub alphanumcheck {
+	my $top = shift;
+	$top->Busy( -recurse => 1 );
+	my %display = ();
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$main::lglobal{wclistbox}->update;
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	my $wordw = 0;
+	foreach ( keys %{ $main::lglobal{seenwords} } ) {
+		next unless ( $_ =~ /\d/ );
+		next unless ( $_ =~ /\p{Alpha}/ );
+		$wordw++;
+		$display{$_} = $main::lglobal{seenwords}->{$_};
+	}
+	$main::lglobal{saveheader} = "$wordw mixed alphanumeric words.";
+	&main::sortwords( \%display );
+	$main::lglobal{wclistbox}->yview( 'scroll', 1, 'units' );
+	$main::lglobal{wclistbox}->update;
+	$main::lglobal{wclistbox}->yview( 'scroll', -1, 'units' );
+	&main::searchoptset(qw/0 x x 0/);
 	$top->Unbusy;
 }
 

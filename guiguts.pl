@@ -10051,29 +10051,6 @@ sub wordfrequencygetmisspelled {
 	return $wordw;
 }
 
-sub alphanumcheck {
-	$top->Busy( -recurse => 1 );
-	my %display = ();
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
-	$lglobal{wclistbox}->update;
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	my $wordw = 0;
-	foreach ( keys %{ $lglobal{seenwords} } ) {
-		next unless ( $_ =~ /\d/ );
-		next unless ( $_ =~ /\p{Alpha}/ );
-		$wordw++;
-		$display{$_} = $lglobal{seenwords}->{$_};
-	}
-	$lglobal{saveheader} = "$wordw mixed alphanumeric words.";
-	sortwords( \%display );
-	$lglobal{wclistbox}->yview( 'scroll', 1, 'units' );
-	$lglobal{wclistbox}->update;
-	$lglobal{wclistbox}->yview( 'scroll', -1, 'units' );
-	searchoptset(qw/0 x x 0/);
-	$top->Unbusy;
-}
-
 sub accentcheck {
 	$top->Busy( -recurse => 1 );
 	$lglobal{wclistbox}->delete( '0', 'end' );
