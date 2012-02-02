@@ -8624,6 +8624,7 @@ sub errorcheckpop_up {
 						last;
 					}
 				}
+
 				no warnings 'uninitialized';
 				if ( $thiserrorchecktype eq 'HTML Tidy' ) {
 					if (     ( $line =~ /^[lI\d]/ )
@@ -8639,46 +8640,44 @@ sub errorcheckpop_up {
 							$errors{$line} = "t$mark";
 						}
 					}
-				} else {
-					if (    ( $thiserrorchecktype eq "W3C Validate" )
+				}
+				elsif (    ( $thiserrorchecktype eq "W3C Validate" )
 						 or ( $thiserrorchecktype eq "W3C Validate Remote" )
 						 or ( $thiserrorchecktype eq "pphtml" )
 						 or ( $thiserrorchecktype eq "Epub Friendly" )
 						 or ( $thiserrorchecktype eq "Image Check" ) )
-					{
-						$line =~ s/^.*:(\d+:\d+)/line $1/;
-						$line =~ s/^(\d+:\d+)/line $1/;
-						$errors{$line} = '';
-						$lincol = '';
-						if ( $line =~ /line (\d+):(\d+)/ ) {
-							push @errorchecklines, $line;
-							$lincol = "$1.$2";
-							$lincol =~
-							  s/\.0/\.1/;    # change column zero to column 1
-							$mark++;
-							$textwindow->markSet( "t$mark", $lincol );
-							$errors{$line} = "t$mark";
-						}
-						if ( $line =~ /^\+/ ) {
-							push @errorchecklines, $line;
-						}
-					} else {
-						if (    ( $thiserrorchecktype eq "W3C Validate CSS" )
-							 or ( $thiserrorchecktype eq "Link Check" )
-							 or ( $thiserrorchecktype eq "pptxt" ) )
-						{
-							$line =~ s/Line : (\d+)/line $1:1/;
-							push @errorchecklines, $line;
-							$errors{$line} = '';
-							$lincol = '';
-							if ( $line =~ /line (\d+):(\d+)/ ) {
-								my $plusone = $1 + 1;
-								$lincol = "$plusone.$2";
-								$mark++;
-								$textwindow->markSet( "t$mark", $lincol );
-								$errors{$line} = "t$mark";
-							}
-						}
+				{
+					$line =~ s/^.*:(\d+:\d+)/line $1/;
+					$line =~ s/^(\d+:\d+)/line $1/;
+					$errors{$line} = '';
+					$lincol = '';
+					if ( $line =~ /line (\d+):(\d+)/ ) {
+						push @errorchecklines, $line;
+						$lincol = "$1.$2";
+						$lincol =~
+							s/\.0/\.1/;    # change column zero to column 1
+						$mark++;
+						$textwindow->markSet( "t$mark", $lincol );
+						$errors{$line} = "t$mark";
+					}
+					if ( $line =~ /^\+/ ) {
+						push @errorchecklines, $line;
+					}
+				}
+				else if (    ( $thiserrorchecktype eq "W3C Validate CSS" )
+							or ( $thiserrorchecktype eq "Link Check" )
+							or ( $thiserrorchecktype eq "pptxt" ) )
+				{
+					$line =~ s/Line : (\d+)/line $1:1/;
+					push @errorchecklines, $line;
+					$errors{$line} = '';
+					$lincol = '';
+					if ( $line =~ /line (\d+):(\d+)/ ) {
+						my $plusone = $1 + 1;
+						$lincol = "$plusone.$2";
+						$mark++;
+						$textwindow->markSet( "t$mark", $lincol );
+						$errors{$line} = "t$mark";
 					}
 				}
 			}
@@ -8734,7 +8733,9 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 	if ( $errorchecktype eq 'W3C Validate CSS' ) {
 		$types = [ [ 'JAR file', [ '.jar', ] ], [ 'All Files', ['*'] ], ];
 	}
-	if ( $errorchecktype eq 'HTML Tidy' ) {
+
+	if ( $errorchecktype eq 'HTML Tidy' )
+	{
 		unless ($tidycommand) {
 			$tidycommand =
 			  $textwindow->getOpenFile(
@@ -8744,33 +8745,33 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		}
 		return 1 unless $tidycommand;
 		$tidycommand = os_normal($tidycommand);
-	} else {
-		if ( ( $errorchecktype eq "W3C Validate" ) and ( $w3cremote == 0 ) ) {
-			unless ($validatecommand) {
-				$validatecommand =
-				  $textwindow->getOpenFile(
-					 -filetypes => $types,
-					 -title => 'Where is the W3C Validate (onsgmls) executable?'
-				  );
-			}
-			return 1 unless $validatecommand;
-			$validatecommand = os_normal($validatecommand);
-		} else {
-			if ( $errorchecktype eq 'W3C CSS Validate' ) {
-				unless ($validatecsscommand) {
-					$validatecsscommand =
-					  $textwindow->getOpenFile(
-						-filetypes => $types,
-						-title =>
-'Where is the W3C Validate CSS (css-validate.jar) executable?'
-					  );
-				}
-				return 1 unless $validatecsscommand;
-				$validatecsscommand = os_normal($validatecsscommand);
-			}
+	}
+	elsif ( ( $errorchecktype eq "W3C Validate" ) and ( $w3cremote == 0 ) )
+	{
+		unless ($validatecommand) {
+			$validatecommand =
+				$textwindow->getOpenFile(
+					-filetypes => $types,
+					-title => 'Where is the W3C Validate (onsgmls) executable?'
+				);
 		}
+		return 1 unless $validatecommand;
+		$validatecommand = os_normal($validatecommand);
+	}
+	elsif ( $errorchecktype eq 'W3C CSS Validate' )
+	{
+		unless ($validatecsscommand) {
+			$validatecsscommand =
+				$textwindow->getOpenFile(
+				-filetypes => $types,
+				-title => 'Where is the W3C Validate CSS (css-validate.jar) executable?'
+				);
+		}
+		return 1 unless $validatecsscommand;
+		$validatecsscommand = os_normal($validatecsscommand);
 	}
 	savesettings();
+
 	$top->Busy( -recurse => 1 );
 	if (    ( $errorchecktype eq 'W3C Validate Remote' )
 		 or ( $errorchecktype eq 'W3C Validate CSS' ) )
@@ -8807,76 +8808,73 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 	if ( $lglobal{errorcheckpop} ) {
 		$lglobal{errorchecklistbox}->delete( '0', 'end' );
 	}
-	if ( $errorchecktype eq 'HTML Tidy' ) {
+
+	if ( $errorchecktype eq 'HTML Tidy' )
+	{
 		run($tidycommand, "-f", "errors.err", "-o", "null", $name);
-	} else {
-		if ( $errorchecktype eq 'W3C Validate' ) {
-			if ( $w3cremote == 0 ) {
-				my $validatepath = dirname($validatecommand);
-				run(
-$validatecommand, "--directory=$validatepath", "--catalog=xhtml.soc",
- "--no-output", "--open-entities", "--error-file=errors.err",
- $name );
+	}
+	elsif ( $errorchecktype eq 'W3C Validate' )
+	{
+		if ( $w3cremote == 0 ) {
+			my $validatepath = dirname($validatecommand);
+			run($validatecommand, "--directory=$validatepath", "--catalog=xhtml.soc",
+			    "--no-output", "--open-entities", "--error-file=errors.err",
+			    $name );
+		}
+	}
+	elsif ( $errorchecktype eq 'W3C Validate Remote' )
+	{
+		my $validator =
+			WebService::Validator::HTML::W3C->new( detailed => 1 );
+		if ( $validator->validate_file('./validate.html') ) {
+			if ( open my $td, '>', "errors.err" ) {
+				if ( $validator->is_valid ) {
+				} else {
+					foreach my $error ( @{ $validator->errors } ) {
+						printf $td (
+								"W3C:validate.tmp:%s:%s:Eremote:%s\n",
+								$error->line, $error->col, $error->msg
+						);
+					}
+					print $td "Remote response complete";
+				}
+				close $td;
 			}
 		} else {
-			if ( $errorchecktype eq 'W3C Validate Remote' ) {
-				my $validator =
-				  WebService::Validator::HTML::W3C->new( detailed => 1 );
-				if ( $validator->validate_file('./validate.html') ) {
-					if ( open my $td, '>', "errors.err" ) {
-						if ( $validator->is_valid ) {
-						} else {
-							foreach my $error ( @{ $validator->errors } ) {
-								printf $td (
-										  "W3C:validate.tmp:%s:%s:Eremote:%s\n",
-										  $error->line, $error->col, $error->msg
-								);
-							}
-							print $td "Remote response complete";
-						}
-						close $td;
-					}
-				} else {
-					if ( open my $td, '>', "errors.err" ) {
-						print $td
+			if ( open my $td, '>', "errors.err" ) {
+				print $td
 'Could not contact remote validator; try using local validator onsgmls.';
-						close $td;
-					}
-				}
-			} else {
-				if ( $errorchecktype eq 'W3C Validate CSS' ) {
-					my $runner = runner::tofile("errors.err");
-					$runner->run(
-"java", "-jar", $validatecsscommand, "file:$name" );
-				} else {
-					if ( $errorchecktype eq 'pphtml' ) {
-						run(
-"perl", "lib/ppvchecks/pphtml.pl", "-i", $name, "-o", "errors.err" );
-					} else {
-						if ( $errorchecktype eq 'Link Check' ) {
-							linkcheckrun;
-						} else {
-							if ( $errorchecktype eq 'Image Check' ) {
-								my ( $f, $d, $e ) =
-								  fileparse( $lglobal{global_filename}, qr{\.[^\.]*$} );
-								run(
-"perl", "lib/ppvchecks/ppvimage.pl", $name, $d );
-							} else {
-								if ( $errorchecktype eq 'pptxt' ) {
-									run(
-"perl", "lib/ppvchecks/pptxt.pl", "-i", $name, "-o", "errors.err" );
-								} else {
-									if ( $errorchecktype eq 'Epub Friendly' ) {
-										run(
-"perl", "lib/ppvchecks/epubfriendly.pl", "-i", $name, "-o", "errors.err" );
-									}
-								}
-							}
-						}
-					}
-				}
+				close $td;
 			}
 		}
+	}
+	elsif ( $errorchecktype eq 'W3C Validate CSS' )
+	{
+		my $runner = runner::tofile("errors.err");
+
+		$runner->run("java", "-jar", $validatecsscommand, "file:$name" );
+	}
+	elsif ( $errorchecktype eq 'pphtml' )
+	{
+		run("perl", "lib/ppvchecks/pphtml.pl", "-i", $name, "-o", "errors.err" );
+	}
+	elsif ( $errorchecktype eq 'Link Check' )
+	{
+		linkcheckrun;
+	}
+	elsif ( $errorchecktype eq 'Image Check' )
+	{
+		my ( $f, $d, $e ) = fileparse( $lglobal{global_filename}, qr{\.[^\.]*$} );
+
+		run("perl", "lib/ppvchecks/ppvimage.pl", $name, $d );
+	}
+	elsif ( $errorchecktype eq 'pptxt' )
+	{
+		run("perl", "lib/ppvchecks/pptxt.pl", "-i", $name, "-o", "errors.err" );
+	}
+	elsif ( $errorchecktype eq 'Epub Friendly' )
+	{
+		run("perl", "lib/ppvchecks/epubfriendly.pl", "-i", $name, "-o", "errors.err" );
 	}
 	$top->Unbusy;
 	unlink $name;
