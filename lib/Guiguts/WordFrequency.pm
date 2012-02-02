@@ -184,7 +184,7 @@ sub wordfrequency {
 		my $wordfreqseframe1 =
 		  $main::lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my @wfbuttons = (
-			[ 'Emdashes'  => \&main::dashcheck ],
+			[ 'Emdashes'  => sub {dashcheck($top) }],
 			[ 'Hyphens'   => \&main::hyphencheck ],
 			[ 'Alpha/num' => \&main::alphanumcheck ],
 			[
@@ -527,16 +527,51 @@ sub bangmark {
 			$word =~ s/\x{d}//g;
 		}
 		$word =~ s/\n/\\n/g;
-		$main::display{$word}++;
+		$display{$word}++;
 	}
 	$main::lglobal{saveheader} =
 	  "$wordw words with lower case after period. " . '(\n means newline)';
-	&main::sortwords( \%main::display );
+	&main::sortwords( \%display );
 	$top->Unbusy;
 	&main::searchoptset(qw/0 x x 1/);
 }
 
+sub dashcheck {
+	my $top=shift;
+	$top->Busy( -recurse => 1 );
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
+	$main::lglobal{wclistbox}->update;
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	my $wordw   = 0;
+	my $wordwo  = 0;
+	my %display = ();
+	foreach my $word ( keys %{ $main::lglobal{seenwordsdoublehyphen} } ) {
+		next if ( $main::lglobal{seenwordsdoublehyphen}->{$word} < 1 );
+		if ( $word =~ /-/ ) {
+			$wordw++;
+			my $wordtemp = $word;
+			$display{$word} = $main::lglobal{seenwordsdoublehyphen}->{$word}
+			  unless $main::lglobal{suspects_only};
+			$word =~ s/--/-/g;
 
+			#$word =~ s/—/-/g; # dp2rst creates real em-dashes
+			if ( $main::lglobal{seenwords}->{$word} ) {
+				my $aword = $word . ' ****';
+				$display{$wordtemp} =
+				  $main::lglobal{seenwordsdoublehyphen}->{$wordtemp}
+				  if $main::lglobal{suspects_only};
+				$display{$aword} = $main::lglobal{seenwords}->{$word};
+				$wordwo++;
+			}
+		}
+	}
+	$main::lglobal{saveheader} =
+	  "$wordw emdash phrases, $wordwo suspects (marked with ****).";
+	&main::sortwords( \%display );
+	&main::searchoptset(qw /0 x x 0/);
+	$top->Unbusy;
+}
 
 1;
 

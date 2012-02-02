@@ -10018,42 +10018,6 @@ sub hyphencheck {
 	$top->Unbusy;
 }
 
-sub dashcheck {
-	$top->Busy( -recurse => 1 );
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
-	$lglobal{wclistbox}->update;
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	my $wordw   = 0;
-	my $wordwo  = 0;
-	my %display = ();
-	foreach my $word ( keys %{ $lglobal{seenwordsdoublehyphen} } ) {
-		next if ( $lglobal{seenwordsdoublehyphen}->{$word} < 1 );
-		if ( $word =~ /-/ ) {
-			$wordw++;
-			my $wordtemp = $word;
-			$display{$word} = $lglobal{seenwordsdoublehyphen}->{$word}
-			  unless $lglobal{suspects_only};
-			$word =~ s/--/-/g;
-
-			#$word =~ s/—/-/g; # dp2rst creates real em-dashes
-			if ( $lglobal{seenwords}->{$word} ) {
-				my $aword = $word . ' ****';
-				$display{$wordtemp} =
-				  $lglobal{seenwordsdoublehyphen}->{$wordtemp}
-				  if $lglobal{suspects_only};
-				$display{$aword} = $lglobal{seenwords}->{$word};
-				$wordwo++;
-			}
-		}
-	}
-	$lglobal{saveheader} =
-	  "$wordw emdash phrases, $wordwo suspects (marked with ****).";
-	sortwords( \%display );
-	searchoptset(qw /0 x x 0/);
-	$top->Unbusy;
-}
-
 sub wordfrequencyspellcheck {
 	spelloptions() unless $globalspellpath;
 	return unless $globalspellpath;
