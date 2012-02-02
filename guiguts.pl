@@ -8664,7 +8664,7 @@ sub errorcheckpop_up {
 						push @errorchecklines, $line;
 					}
 				}
-				else if (    ( $thiserrorchecktype eq "W3C Validate CSS" )
+				elsif (    ( $thiserrorchecktype eq "W3C Validate CSS" )
 							or ( $thiserrorchecktype eq "Link Check" )
 							or ( $thiserrorchecktype eq "pptxt" ) )
 				{
