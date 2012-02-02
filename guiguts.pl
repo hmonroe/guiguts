@@ -2660,7 +2660,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 			   -command => sub {        # FIXME: sub this out.
 				   runner(
 $globalbrowserstart, "http://www.pgdp.net/wiki/PPTools/Guiguts"
-				   ) if ( -e 'ggmanual.html' );
+				   );
 				 }
 			],
 
