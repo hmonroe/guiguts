@@ -85,65 +85,65 @@ sub wordfrequencybuildwordlist {
 
 ## Word Frequency
 sub wordfrequency {
-	my $textwindow = shift;
+	my ($textwindow,$top) = @_;
 	push @main::operations, ( localtime() . ' - Word Frequency' );
-	&main::viewpagenums() if ( $lglobal{seepagenums} );
-	&main::oppopupdate()  if $lglobal{oppop};
-	#$lglobal{seenwords} = ();
-	#%{ $lglobal{seenwordsdoublehyphen} } = ();
+	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
+	&main::oppopupdate()  if $main::lglobal{oppop};
+	#$main::lglobal{seenwords} = ();
+	#%{ $main::lglobal{seenwordsdoublehyphen} } = ();
 	my ( @words, $match, @savesets );
 	my $index = '1.0';
 	my $wc    = 0;
 	my $end   = $textwindow->index('end');
 	&main::searchoptset(qw/1 0 x 0/);    # Default is whole word search
 
-	if ( $lglobal{wfpop} ) {
-		$lglobal{wfpop}->deiconify;
-		$lglobal{wfpop}->raise;
-		$lglobal{wclistbox}->delete( '0', 'end' );
+	if ( $main::lglobal{wfpop} ) {
+		$main::lglobal{wfpop}->deiconify;
+		$main::lglobal{wfpop}->raise;
+		$main::lglobal{wclistbox}->delete( '0', 'end' );
 	} else {
-		$lglobal{wfpop} = $top->Toplevel;
-		$lglobal{wfpop}
+		$main::lglobal{wfpop} = $top->Toplevel;
+		$main::lglobal{wfpop}
 		  ->title('Word frequency - Ctrl+s to save, Ctrl+x to export');
 		&main::initialize_popup_without_deletebinding('wfpop');
 		my $wordfreqseframe =
-		  $lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $main::lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $wcopt3 =
 		  $wordfreqseframe->Checkbutton(
-										 -variable => \$lglobal{suspects_only},
-										 -selectcolor => $lglobal{checkcolor},
+										 -variable => \$main::lglobal{suspects_only},
+										 -selectcolor => $main::lglobal{checkcolor},
 										 -text        => 'Suspects only'
 		  )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		my $wcopt1 =
 		  $wordfreqseframe->Checkbutton(
-										 -variable    => \$lglobal{ignore_case},
-										 -selectcolor => $lglobal{checkcolor},
+										 -variable    => \$main::lglobal{ignore_case},
+										 -selectcolor => $main::lglobal{checkcolor},
 										 -text        => 'No case',
 		  )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		$wordfreqseframe->Radiobutton(
-									   -variable    => \$alpha_sort,
-									   -selectcolor => $lglobal{checkcolor},
+									   -variable    => \$main::alpha_sort,
+									   -selectcolor => $main::lglobal{checkcolor},
 									   -value       => 'a',
 									   -text        => 'Alph',
 		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		$wordfreqseframe->Radiobutton(
-									   -variable    => \$alpha_sort,
-									   -selectcolor => $lglobal{checkcolor},
+									   -variable    => \$main::alpha_sort,
+									   -selectcolor => $main::lglobal{checkcolor},
 									   -value       => 'f',
 									   -text        => 'Frq',
 		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		$wordfreqseframe->Radiobutton(
-									   -variable    => \$alpha_sort,
-									   -selectcolor => $lglobal{checkcolor},
+									   -variable    => \$main::alpha_sort,
+									   -selectcolor => $main::lglobal{checkcolor},
 									   -value       => 'l',
 									   -text        => 'Len',
 		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		$wordfreqseframe->Button(
-			-activebackground => $activecolor,
+			-activebackground => $main::activecolor,
 			-command          => sub {
-				return unless ( $lglobal{wclistbox}->curselection );
-				$lglobal{harmonics} = 1;
-				harmonicspop();
+				return unless ( $main::lglobal{wclistbox}->curselection );
+				$main::lglobal{harmonics} = 1;
+				&main::harmonicspop();
 			},
 			-text => '1st Harm',
 		  )->pack(
@@ -153,11 +153,11 @@ sub wordfrequency {
 				   -anchor => 'nw'
 		  );
 		$wordfreqseframe->Button(
-			-activebackground => $activecolor,
+			-activebackground => $main::activecolor,
 			-command          => sub {
-				return unless ( $lglobal{wclistbox}->curselection );
-				$lglobal{harmonics} = 2;
-				harmonicspop();
+				return unless ( $main::lglobal{wclistbox}->curselection );
+				$main::lglobal{harmonics} = 2;
+				&main::harmonicspop();
 			},
 			-text => '2nd Harm',
 		  )->pack(
@@ -167,10 +167,10 @@ sub wordfrequency {
 				   -anchor => 'nw'
 		  );
 		$wordfreqseframe->Button(
-			-activebackground => $activecolor,
+			-activebackground => $main::activecolor,
 			-command          => sub {
 
-				#return if $lglobal{global_filename} =~ /No File Loaded/;
+				#return if $main::lglobal{global_filename} =~ /No File Loaded/;
 				#savefile() unless ( $textwindow->numberChanges == 0 );
 				wordfrequency($textwindow);
 			},
@@ -182,19 +182,19 @@ sub wordfrequency {
 				   -anchor => 'nw'
 		  );
 		my $wordfreqseframe1 =
-		  $lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $main::lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my @wfbuttons = (
 			[ 'Emdashes'  => \&main::dashcheck ],
 			[ 'Hyphens'   => \&main::hyphencheck ],
 			[ 'Alpha/num' => \&main::alphanumcheck ],
 			[
 			   'All Words' => sub {
-				   $lglobal{saveheader} =
+				   $main::lglobal{saveheader} =
 					 "$wc total words. " .
-					 keys( %{ $lglobal{seenwords} } )
+					 keys( %{ $main::lglobal{seenwords} } )
 					 . " distinct words in file.";
-				   &main::sortwords( $lglobal{seenwords} );
-				   searchoptset(qw/1 0 x 0/);    #default is whole word search
+				   &main::sortwords( $main::lglobal{seenwords} );
+				   &main::searchoptset(qw/1 0 x 0/);    #default is whole word search
 				 }
 			],
 			[ 'Check Spelling', \&main::wordfrequencyspellcheck ],
@@ -204,7 +204,7 @@ sub wordfrequency {
 			[
 			   'Initial Caps',
 			   [
-				  \&anythingwfcheck, 'words with initial caps',
+				  \&main::anythingwfcheck, 'words with initial caps',
 				  '^\p{Upper}\P{Upper}+$'
 			   ]
 			],
@@ -224,18 +224,18 @@ sub wordfrequency {
 			[
 			   'Ligatures',
 			   [
-				  \&anythingwfcheck,
+				  \&main::anythingwfcheck,
 				  'words with possible ligatures',
 				  '(oe|ae|æ|Æ|\x{0153}|\x{0152})'
 			   ]
 			],
-			[ 'RegExpEntry', [ \&anythingwfcheck, 'dummy entry', 'dummy' ] ],
+			[ 'RegExpEntry', [ \&main::anythingwfcheck, 'dummy entry', 'dummy' ] ],
 			[
 			   '<--RegExp',
 			   [
 				  sub {
-					  anythingwfcheck( 'words matching regular expression',
-									   $regexpentry );
+					  &main::anythingwfcheck( 'words matching regular expression',
+									   $main::regexpentry );
 					}
 			   ]
 			],
@@ -249,7 +249,7 @@ sub wordfrequency {
 			if ( not( $_->[0] eq 'RegExpEntry' ) ) {
 				my $button =
 				  $wordfreqseframe1->Button(
-											 -activebackground => $activecolor,
+											 -activebackground => $main::activecolor,
 											 -command          => $_->[1],
 											 -text             => $_->[0],
 											 -width            => 13
@@ -261,23 +261,23 @@ sub wordfrequency {
 				  );
 				$button->bind( '<3>' => $_->[2] ) if $_->[2];
 			} else {
-				$lglobal{regexpentry} =
+				$main::lglobal{regexpentry} =
 				  $wordfreqseframe1->Entry(
-											-background   => $bkgcolor,
-											-textvariable => \$regexpentry,
+											-background   => $main::bkgcolor,
+											-textvariable => \$main::regexpentry,
 											-width        => 13,
 				  )->grid( -row => $row, -column => $col );
 			}
 		}
 
 		my $wcframe =
-		  $lglobal{wfpop}->Frame->pack( -fill => 'both', -expand => 'both', );
-		$lglobal{wclistbox} =
+		  $main::lglobal{wfpop}->Frame->pack( -fill => 'both', -expand => 'both', );
+		$main::lglobal{wclistbox} =
 		  $wcframe->Scrolled(
 							  'Listbox',
 							  -scrollbars  => 'se',
-							  -background  => $bkgcolor,
-							  -font        => $lglobal{font},
+							  -background  => $main::bkgcolor,
+							  -font        => $main::lglobal{font},
 							  -selectmode  => 'single',
 							  -activestyle => 'none',
 		  )->pack(
@@ -287,70 +287,70 @@ sub wordfrequency {
 				   -padx   => 2,
 				   -pady   => 2
 		  );
-		drag( $lglobal{wclistbox} );
-		$lglobal{wfpop}->protocol(
+		&main::drag( $main::lglobal{wclistbox} );
+		$main::lglobal{wfpop}->protocol(
 			'WM_DELETE_WINDOW' => sub {
-				$lglobal{wfpop}->destroy;
-				undef $lglobal{wfpop};
-				undef $lglobal{wclistbox};
+				$main::lglobal{wfpop}->destroy;
+				undef $main::lglobal{wfpop};
+				undef $main::lglobal{wclistbox};
 			}
 		);
-		BindMouseWheel( $lglobal{wclistbox} );
-		$lglobal{wclistbox}->eventAdd( '<<search>>' => '<ButtonRelease-3>' );
-		$lglobal{wclistbox}->bind(
+		&main::BindMouseWheel( $main::lglobal{wclistbox} );
+		$main::lglobal{wclistbox}->eventAdd( '<<search>>' => '<ButtonRelease-3>' );
+		$main::lglobal{wclistbox}->bind(
 			'<<search>>',
 			sub {
-				$lglobal{wclistbox}->selectionClear( 0, 'end' );
-				$lglobal{wclistbox}->selectionSet(
-										 $lglobal{wclistbox}->index(
+				$main::lglobal{wclistbox}->selectionClear( 0, 'end' );
+				$main::lglobal{wclistbox}->selectionSet(
+										 $main::lglobal{wclistbox}->index(
 											 '@'
 											   . (
-												 $lglobal{wclistbox}->pointerx -
-												   $lglobal{wclistbox}->rootx
+												 $main::lglobal{wclistbox}->pointerx -
+												   $main::lglobal{wclistbox}->rootx
 											   )
 											   . ','
 											   . (
-												 $lglobal{wclistbox}->pointery -
-												   $lglobal{wclistbox}->rooty
+												 $main::lglobal{wclistbox}->pointery -
+												   $main::lglobal{wclistbox}->rooty
 											   )
 										 )
 				);
 
 				# right click means popup a search box
 				my ($sword) =
-				  $lglobal{wclistbox}->get( $lglobal{wclistbox}->curselection );
-				searchpopup();
+				  $main::lglobal{wclistbox}->get( $main::lglobal{wclistbox}->curselection );
+				&main::searchpopup();
 				$sword =~ s/\d+\s+(\S)/$1/;
 				$sword =~ s/\s+\*\*\*\*$//;
 				if ( $sword =~ /\*space\*/ ) {
 					$sword = ' ';
-					searchoptset(qw/0 x x 1/);
+					&main::searchoptset(qw/0 x x 1/);
 				} elsif ( $sword =~ /\*tab\*/ ) {
 					$sword = '\t';
-					searchoptset(qw/0 x x 1/);
+					&main::searchoptset(qw/0 x x 1/);
 				} elsif ( $sword =~ /\*newline\*/ ) {
 					$sword = '\n';
-					searchoptset(qw/0 x x 1/);
+					&main::searchoptset(qw/0 x x 1/);
 				} elsif ( $sword =~ /\*nbsp\*/ ) {
 					$sword = '\x{A0}';
-					searchoptset(qw/0 x x 1/);
+					&main::searchoptset(qw/0 x x 1/);
 				} elsif ( $sword =~ /\W/ ) {
 					$sword =~ s/([^\w\s\\])/\\$1/g;
-					searchoptset(qw/0 x x 1/);
+					&main::searchoptset(qw/0 x x 1/);
 				}
-				$lglobal{searchentry}->delete( '1.0', 'end' );
-				$lglobal{searchentry}->insert( 'end', $sword );
-				updatesearchlabels();
-				$lglobal{searchentry}->after( $lglobal{delay} );
+				$main::lglobal{searchentry}->delete( '1.0', 'end' );
+				$main::lglobal{searchentry}->insert( 'end', $sword );
+				&main::updatesearchlabels();
+				$main::lglobal{searchentry}->after( $main::lglobal{delay} );
 			}
 		);
-		$lglobal{wclistbox}
+		$main::lglobal{wclistbox}
 		  ->eventAdd( '<<find>>' => '<Double-Button-1>', '<Return>' );
-		$lglobal{wclistbox}->bind(    # FIXME: This needs to go in GC code.
+		$main::lglobal{wclistbox}->bind(    # FIXME: This needs to go in GC code.
 			'<<find>>',
 			sub {
 				my ($sword) =
-				  $lglobal{wclistbox}->get( $lglobal{wclistbox}->curselection );
+				  $main::lglobal{wclistbox}->get( $main::lglobal{wclistbox}->curselection );
 				return unless length $sword;
 				@savesets = @sopt;
 				$sword =~ s/(\d+)\s+(\S)/$2/;
@@ -366,16 +366,16 @@ sub wordfrequency {
 					#$sword = escape_regexmetacharacters($sword);
 					$sword .= '\b'
 					  if ( ( length $sword gt 1 ) && ( $sword =~ /\w$/ ) );
-					searchoptset(qw/0 0 x 1/);    # Case sensitive
+					&main::searchoptset(qw/0 0 x 1/);    # Case sensitive
 				}
 
 				# not whole word search from character cnts popup
 				if (     ( length($sword) == 1 )
-					 and ( $lglobal{saveheader} =~ /characters in the file./ ) )
+					 and ( $main::lglobal{saveheader} =~ /characters in the file./ ) )
 				{
-					searchoptset(qw/0 0 x 0/);
+					&main::searchoptset(qw/0 0 x 0/);
 				}
-				if ( $intelligentWF && $sword =~ /^\\,(\s|\\n)/ ) {
+				if ( $main::intelligentWF && $sword =~ /^\\,(\s|\\n)/ ) {
 
 		# during comma-Upper ck, ignore if name followed by period, !, or ?
 		# NOTE: sword will be used as a regular expression filter during display
@@ -387,79 +387,79 @@ sub wordfrequency {
 				elsif ( $sword =~ /\*newline\*/ ) { $sword = "\n" }
 				elsif ( $sword =~ /\*nbsp\*/ )    { $sword = "\xA0" }
 				unless ($snum) {
-					searchoptset(qw/0 x x 1/);
+					&main::searchoptset(qw/0 x x 1/);
 					unless ( $sword =~ m/--/ ) {
 						$sword = "(?<=-)$sword|$sword(?=-)";
 					}
 				}
 
 				#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt\n";
-				searchfromstartifnew($sword);
-				searchtext($sword);
-				searchoptset(@savesets);
-				$top->raise;
+				&main::searchfromstartifnew($sword);
+				&main::searchtext($sword);
+				&main::searchoptset(@savesets);
+				$main::top->raise;
 			}
 		);
-		$lglobal{wclistbox}->eventAdd( '<<harm>>' => '<Control-Button-1>' );
-		$lglobal{wclistbox}->bind(
+		$main::lglobal{wclistbox}->eventAdd( '<<harm>>' => '<Control-Button-1>' );
+		$main::lglobal{wclistbox}->bind(
 			'<<harm>>',
 			sub {
-				return unless ( $lglobal{wclistbox}->curselection );
-				harmonics( $lglobal{wclistbox}->get('active') );
-				harmonicspop();
+				return unless ( $main::lglobal{wclistbox}->curselection );
+				&main::harmonics( $main::lglobal{wclistbox}->get('active') );
+				&main::harmonicspop();
 			}
 		);
-		$lglobal{wclistbox}->eventAdd( '<<adddict>>' => '<Control-Button-2>',
+		$main::lglobal{wclistbox}->eventAdd( '<<adddict>>' => '<Control-Button-2>',
 									   '<Control-Button-3>' );
-		$lglobal{wclistbox}->bind(
+		$main::lglobal{wclistbox}->bind(
 			'<<adddict>>',
 			sub {
-				return unless ( $lglobal{wclistbox}->curselection );
-				return unless $lglobal{wclistbox}->index('active');
-				my $sword = $lglobal{wclistbox}->get('active');
+				return unless ( $main::lglobal{wclistbox}->curselection );
+				return unless $main::lglobal{wclistbox}->index('active');
+				my $sword = $main::lglobal{wclistbox}->get('active');
 				$sword =~ s/\d+\s+([\w'-]*)/$1/;
 				$sword =~ s/\*\*\*\*$//;
 				$sword =~ s/\s//g;
 				return if ( $sword =~ /[^\p{Alnum}']/ );
-				spellmyaddword($sword);
-				delete( $lglobal{spellsort}->{$sword} );
-				$lglobal{saveheader} =
-				  scalar( keys %{ $lglobal{spellsort} } )
+				&main::spellmyaddword($sword);
+				delete( $main::lglobal{spellsort}->{$sword} );
+				$main::lglobal{saveheader} =
+				  scalar( keys %{ $main::lglobal{spellsort} } )
 				  . ' words not recognised by the spellchecker.';
-				sortwords( \%{ $lglobal{spellsort} } );
+				&main::sortwords( \%{ $main::lglobal{spellsort} } );
 			}
 		);
-		add_navigation_events( $lglobal{wclistbox} );
-		$lglobal{wfpop}->bind(
+		&main::add_navigation_events( $main::lglobal{wclistbox} );
+		$main::lglobal{wfpop}->bind(
 			'<Control-s>' => sub {
 				my ($name);
 				$name =
 				  $textwindow->getSaveFile(
 										-title => 'Save Word Frequency List As',
-										-initialdir  => $globallastpath,
+										-initialdir  => $main::globallastpath,
 										-initialfile => 'wordfreq.txt'
 				  );
 				if ( defined($name) and length($name) ) {
 					open( my $save, ">", "$name" );
 					print $save join "\n",
-					  $lglobal{wclistbox}->get( '0', 'end' );
+					  $main::lglobal{wclistbox}->get( '0', 'end' );
 				}
 			}
 		);
-		$lglobal{wfpop}->bind(
+		$main::lglobal{wfpop}->bind(
 			'<Control-x>' => sub {
 				my ($name);
 				$name =
 				  $textwindow->getSaveFile(
 									  -title => 'Export Word Frequency List As',
-									  -initialdir  => $globallastpath,
+									  -initialdir  => $main::globallastpath,
 									  -initialfile => 'wordlist.txt'
 				  );
 				if ( defined($name) and length($name) ) {
-					my $count = $lglobal{wclistbox}->index('end');
+					my $count = $main::lglobal{wclistbox}->index('end');
 					open( my $save, ">", "$name" );
 					for ( 1 .. $count ) {
-						my $word = $lglobal{wclistbox}->get($_);
+						my $word = $main::lglobal{wclistbox}->get($_);
 						if ( ( defined $word ) && ( length $word ) ) {
 							$word =~ s/^\d+\s+//;
 							$word =~ s/\s+\*{4}\s*$//;
@@ -471,25 +471,25 @@ sub wordfrequency {
 		);
 	}
 	$top->Busy( -recurse => 1 );
-	$lglobal{wclistbox}->focus;
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$main::lglobal{wclistbox}->focus;
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
 	$wc = wordfrequencybuildwordlist($textwindow);
 
 	#print "$index  ";
-	$lglobal{saveheader} = "$wc total words. " .
-	  keys( %{ $lglobal{seenwords} } ) . " distinct words in file.";
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{last_sort} = $lglobal{ignore_case};
+	$main::lglobal{saveheader} = "$wc total words. " .
+	  keys( %{ $main::lglobal{seenwords} } ) . " distinct words in file.";
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	$main::lglobal{last_sort} = $main::lglobal{ignore_case};
 
-	#print $lglobal{ignore_case}.":ignore\n";
-	if ( $lglobal{ignore_case} ) {
-		searchoptset("x 1 x x");
+	#print $main::lglobal{ignore_case}.":ignore\n";
+	if ( $main::lglobal{ignore_case} ) {
+		&main::searchoptset("x 1 x x");
 	} else {
-		searchoptset("x 0 x x");
+		&main::searchoptset("x 0 x x");
 	}
 	$top->Unbusy( -recurse => 1 );
-	sortwords( \%{ $lglobal{seenwords} } );
-	update_indicators();
+	&main::sortwords( \%{ $main::lglobal{seenwords} } );
+	&main::update_indicators();
 }
 
 

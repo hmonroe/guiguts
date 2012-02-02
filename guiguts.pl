@@ -2462,7 +2462,7 @@ sub menubuildold {
 		-menuitems => [
 			[
 			   Button   => 'Run ~Word Frequency Routine...',
-			   -command => \&wordfrequency
+			   -command => sub{wordfrequency($textwindow, $top)}
 			],
 			[ 'separator', '' ],
 			[ Button => 'Run ~Gutcheck...',    -command => \&gutcheck ],
@@ -3275,7 +3275,7 @@ $globalbrowserstart, "http://www.pgdp.net/c/tools/proofers/project_topic.php?pro
 
 			[
 			   Button   => 'Run ~Word Frequency Routine...',
-			   -command => \&wordfrequency
+			   -command => sub{wordfrequency($textwindow,$top)}
 			],
 			[ 'command',   '~Stealth Scannos...', -command => \&stealthscanno ],
 			[ 'separator', '' ],
@@ -4061,7 +4061,7 @@ sub menubuildtwo {
 			[ 'separator', '' ],
 			[
 			   Button   => 'Run ~Word Frequency Routine...',
-			   -command => \&wordfrequency
+			   -command => sub{wordfrequency($textwindow,$top)}
 			],
 			[ 'command', 'Spell ~Check...',      -command => \&spellchecker ],
 			[ 'separator', '' ],
@@ -11195,13 +11195,14 @@ sub initialize {
 		  catfile( $lglobal{guigutsdirectory}, 'tools', 'gnutenberg', '0.4' )
 		  unless $gnutenbergdirectory;
 		$scannospath = catfile( $lglobal{guigutsdirectory}, 'scannos' )
-		  unless $gnutenbergdirectory;
+		  unless $scannospath;
 	} else {
 		$gutcommand = catfile( $lglobal{guigutsdirectory},
 							   'tools', 'gutcheck', 'gutcheck' )
 		  unless $gutcommand;
 		$jeebiescommand = catfile( $lglobal{guigutsdirectory},
-								   'tools', 'jeebies', 'jeebies' )
+								   'tools', 'jeebies', 'jeebies' ) 
+								   unless $jeebiescommand;
 		
 	}
 	%{ $lglobal{utfblocks} } = (
@@ -14327,7 +14328,7 @@ sub getmisspelledwords {
 	my $runner = runner::withfiles('checkfil.txt', 'temp.txt');
 	$runner->run($globalspellpath, @spellopt);
 
-	open my $infile,'>', 'temp.txt';
+	open my $infile,'<', 'temp.txt';
 	my ( $ln, $tmp );
 	while ( $ln = <$infile> ) {
 		$ln =~ s/\r\n/\n/;
@@ -18824,7 +18825,7 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 		$lglobal{toptool}->ToolButton(
 									   -text    => 'WF²',
 									   -font    => $lglobal{toolfont},
-									   -command => [ \&wordfrequency ],
+									   -command => [ sub{wordfrequency($textwindow,$top)} ],
 									   -tip     => 'Word Frequency'
 		);
 		$lglobal{toptool}->ToolButton(
