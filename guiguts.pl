@@ -5392,20 +5392,14 @@ sub regedit {
 			print $reg "'$srch' => '$repl',\n";
 		}
 		print $reg ");\n\n";
-		print $reg # FIXME: here doc or just stuff in a text file and suck that out.
-'# For a hint, use the regex expression EXACTLY as it appears in the %scannoslist hash'
-		  . "\n";
-		print $reg
-'# but replace the replacement term (heh) with the hint text. Note: if a single quote'
-		  . "\n";
-		print $reg
-'# appears anywhere in the hint text, you\'ll need to escape it with a backslash. I.E. isn\\\'t'
-		  . "\n";
-		print $reg
-'# I could have made this more compact by converting the scannoslist hash into a two dimensional'
-		  . "\n";
-		print $reg '# hash, but would have sacrificed backward compatibility.'
-		  . "\n\n";
+		print $reg <<'EOF';
+# For a hint, use the regex expression EXACTLY as it appears in the %scannoslist hash
+# but replace the replacement term (heh) with the hint text. Note: if a single quote
+# appears anywhere in the hint text, you'll need to escape it with a backslash. I.E. isn't
+# I could have made this more compact by converting the scannoslist hash into a two dimensional
+# hash, but would have sacrificed backward compatibility.
+
+EOF
 		print $reg '%reghints = (' . "\n";
 
 		foreach my $word ( sort ( keys %reghints ) ) {
@@ -19456,9 +19450,7 @@ sub hotkeyshelp {
 		  )->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
 		drag($rotextbox);
 		$rotextbox->focus;
-		$rotextbox->insert(
-			'end',
-			    <<'EOF'
+		$rotextbox->insert( 'end', <<'EOF' );
 
 MAIN WINDOW
 
@@ -19583,7 +19575,6 @@ PAGE SEPARATOR POPUP
 's' -- Toggle Semi Automatic mode.
 '?' -- View hotkey help popup.
 EOF
-		);
 		my $button_ok = $frame->Button(
 			-activebackground => $activecolor,
 			-text             => 'OK',
