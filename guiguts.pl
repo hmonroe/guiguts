@@ -890,7 +890,7 @@ sub runner {
 
 	if ( ! $OS_WIN ) {
 		# We can't call perl fork() in the main GUI process, because Tk crashes
-		system( 'perl', 'spawn.pl', @args );
+		system( "perl", "$lglobal{guigutsdirectory}/spawn.pl", @args );
 	} else {
 		if ( $args[0] eq 'start') {
 			win32_start( @args[1 .. $#args] );
@@ -17321,7 +17321,7 @@ sub gnutenberg {
 	my $gnutenbergoutput = catfile( $globallastpath, 'output' );
 	chdir $gnutenbergdirectory;
 	runner(
-"perl", "transform.pl", "-f", $format, $lglobal{global_filename}, "$gnutenbergoutput\\" );
+"perl", "transform.pl", "-f", $format, $lglobal{global_filename}, "$gnutenbergoutput" );
 	chdir $pwd;
 }
 
