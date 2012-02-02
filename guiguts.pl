@@ -36,7 +36,6 @@ use File::Basename;
 use File::Spec::Functions qw(rel2abs);
 use File::Spec::Functions qw(catfile);
 use File::Spec::Functions qw(catdir);
-use File::Temp qw/tempfile/;
 use File::Copy;
 use File::Compare;
 use HTML::TokeParser;
