@@ -3,7 +3,7 @@ package Guiguts::WordFrequency;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&wordfrequencybuildwordlist &wordfrequency)
+	@EXPORT=qw(&wordfrequencybuildwordlist &wordfrequency &bangmark)
 }
 
 sub wordfrequencybuildwordlist {
@@ -210,7 +210,7 @@ sub wordfrequency {
 			],
 			[ 'Character Cnts', \&main::charsortcheck ],
 			[ 'Check , Upper',  \&main::commark ],
-			[ 'Check . Lower',  \&main::bangmark ],
+			[ 'Check . Lower',  sub{&main::bangmark($top) }],
 			[ 'Check Accents',  \&main::accentcheck ],
 			[
 			   'Unicode > FF',
@@ -490,6 +490,50 @@ sub wordfrequency {
 	$top->Unbusy( -recurse => 1 );
 	&main::sortwords( \%{ $main::lglobal{seenwords} } );
 	&main::update_indicators();
+}
+
+sub bangmark {
+	my $top=shift;
+	$top->Busy( -recurse => 1 );
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	my %display = ();
+	my $wordw   = 0;
+	my $ssindex = '1.0';
+	my $length  = 0;
+	return if ( &main::nofileloaded() );
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
+	$main::lglobal{wclistbox}->update;
+	my $wholefile = &main::slurpfile();
+
+	while (
+		   $wholefile =~ m/(\p{Alnum}+\.['"]?\n*\s*['"]?\p{Lower}\p{Alnum}*)/g )
+	{
+		my $word = $1;
+		$wordw++;
+		if ( $wordw == 0 ) {
+
+			# FIXME: think this code DOESN'T WORK. skipping
+			$word =~ s/<\/?[bidhscalup].*?>//g;
+			$word =~ s/(\p{Alnum})'(\p{Alnum})/$1PQzJ$2/g;
+			$word =~ s/"/pQzJ/g;
+			$word =~ s/(\p{Alnum})\.(\s*\S)/$1PqzJ$2/g;
+			$word =~ s/(\p{Alnum})-(\p{Alnum})/$1PLXj$2/g;
+			$word =~ s/[^\s\p{Alnum}]//g;
+			$word =~ s/PQzJ/'/g;
+			$word =~ s/PqzJ/./g;
+			$word =~ s/PLXj/-/g;
+			$word =~ s/pQzJ/"/g;
+			$word =~ s/\P{Alnum}+$//g;
+			$word =~ s/\x{d}//g;
+		}
+		$word =~ s/\n/\\n/g;
+		$main::display{$word}++;
+	}
+	$main::lglobal{saveheader} =
+	  "$wordw words with lower case after period. " . '(\n means newline)';
+	&main::sortwords( \%main::display );
+	$top->Unbusy;
+	&main::searchoptset(qw/0 x x 1/);
 }
 
 
