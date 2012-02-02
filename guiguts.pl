@@ -14225,6 +14225,7 @@ sub getmisspelledwords {
 
 	my $runner = runner::withfiles('checkfil.txt', 'temp.txt');
 	$runner->run($globalspellpath, @spellopt);
+	unlink 'checkfil.txt';
 
 	open my $infile,'<', 'temp.txt';
 	my ( $ln, $tmp );
@@ -14235,6 +14236,7 @@ sub getmisspelledwords {
 		push( @templist, $ln );
 	}
 	close $infile;
+	unlink 'temp.txt';
 
 	foreach my $word (@templist) {
 		next if ( exists( $projectdict{$word} ) );
