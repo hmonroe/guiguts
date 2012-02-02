@@ -208,7 +208,7 @@ sub wordfrequency {
 			[ 'Character Cnts', \&main::charsortcheck ],
 			[ 'Check , Upper',  \&main::commark ],
 			[ 'Check . Lower',  sub{bangmark($top) }],
-			[ 'Check Accents',  \&main::accentcheck ],
+			[ 'Check Accents',  sub{accentcheck($top)} ],
 			[
 			   'Unicode > FF',
 			   [
@@ -661,6 +661,53 @@ sub anythingwfcheck {
 	&main::searchoptset(qw/1 x x 0/);
 	$top->Unbusy;
 }
+
+sub accentcheck {
+	my $top = shift;
+	$top->Busy( -recurse => 1 );
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	my %display = ();
+	my %accent  = ();
+	$main::lglobal{wclistbox}->update;
+	my $wordw  = 0;
+	my $wordwo = 0;
+
+	foreach my $word ( keys %{ $main::lglobal{seenwords} } ) {
+		if ( $word =~
+			 /[\xC0-\xCF\xD1-\xD6\xD9-\xDD\xE0-\xEF\xF1-\xF6\xF9-\xFD]/ )
+		{
+			$wordw++;
+			my $wordtemp = $word;
+			$display{$word} = $main::lglobal{seenwords}->{$word}
+			  unless $main::lglobal{suspects_only};
+			my @dwords = ( &main::deaccent($word) );
+			if ( $word =~ s/\xC6/Ae/ ) {
+				push @dwords, ( &main::deaccent($word) );
+			}
+			for my $wordd (@dwords) {
+				my $line;
+				$line =
+				  sprintf( "%-8d %s", $main::lglobal{seenwords}->{$wordd}, $wordd )
+				  if $main::lglobal{seenwords}->{$wordd};
+				if ( $main::lglobal{seenwords}->{$wordd} ) {
+					$display{$wordtemp} = $main::lglobal{seenwords}->{$wordtemp}
+					  if $main::lglobal{suspects_only};
+					$display{ $wordd . ' ****' } =
+					  $main::lglobal{seenwords}->{$wordd};
+					$wordwo++;
+				}
+			}
+			$accent{$word}++;
+		}
+	}
+	$main::lglobal{saveheader} =
+	  "$wordw accented words, $wordwo suspects (marked with ****).";
+	&main::sortwords( \%display );
+	&main::searchoptset(qw/0 x x 0/);
+	$top->Unbusy;
+}
+
 
 1;
 

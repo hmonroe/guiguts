@@ -10051,51 +10051,6 @@ sub wordfrequencygetmisspelled {
 	return $wordw;
 }
 
-sub accentcheck {
-	$top->Busy( -recurse => 1 );
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
-	my %display = ();
-	my %accent  = ();
-	$lglobal{wclistbox}->update;
-	my $wordw  = 0;
-	my $wordwo = 0;
-
-	foreach my $word ( keys %{ $lglobal{seenwords} } ) {
-		if ( $word =~
-			 /[\xC0-\xCF\xD1-\xD6\xD9-\xDD\xE0-\xEF\xF1-\xF6\xF9-\xFD]/ )
-		{
-			$wordw++;
-			my $wordtemp = $word;
-			$display{$word} = $lglobal{seenwords}->{$word}
-			  unless $lglobal{suspects_only};
-			my @dwords = ( deaccent($word) );
-			if ( $word =~ s/\xC6/Ae/ ) {
-				push @dwords, ( deaccent($word) );
-			}
-			for my $wordd (@dwords) {
-				my $line;
-				$line =
-				  sprintf( "%-8d %s", $lglobal{seenwords}->{$wordd}, $wordd )
-				  if $lglobal{seenwords}->{$wordd};
-				if ( $lglobal{seenwords}->{$wordd} ) {
-					$display{$wordtemp} = $lglobal{seenwords}->{$wordtemp}
-					  if $lglobal{suspects_only};
-					$display{ $wordd . ' ****' } =
-					  $lglobal{seenwords}->{$wordd};
-					$wordwo++;
-				}
-			}
-			$accent{$word}++;
-		}
-	}
-	$lglobal{saveheader} =
-	  "$wordw accented words, $wordwo suspects (marked with ****).";
-	sortwords( \%display );
-	searchoptset(qw/0 x x 0/);
-	$top->Unbusy;
-}
-
 sub charsortcheck {
 	$top->Busy( -recurse => 1 );
 	$lglobal{wclistbox}->delete( '0', 'end' );
