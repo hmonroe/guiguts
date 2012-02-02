@@ -16,8 +16,6 @@ exit if $pid;
 # No need to bother user with filename + line number messages
 no warnings 'exec';
 
-print join(' ',@ARGV);
-
 if ( (exec {$ARGV[0]} @ARGV) < 0 ) {
-	print qq/Error running "$ARGV[0]": $!\n/;
+	print STDERR qq/Error running "$ARGV[0]": $!\n/;
 }
