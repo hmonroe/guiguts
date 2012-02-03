@@ -2025,7 +2025,7 @@ sub menubuildold {
 		-label     => '~File',
 		-tearoff   => 1,
 		-menuitems => [
-			 [ 'command',   '~Open', -command => \&file_open ],
+			 [ 'command',   '~Open', -command => sub {file_open($textwindow)} ],
 			 [ 'separator', '' ],
 			 map ( [
 					 Button   => "$recentfile[$_]",
@@ -2797,7 +2797,7 @@ sub menubuild {
 		-label     => '~File',
 		-tearoff   => 1,
 		-menuitems => [
-			 [ 'command',   '~Open', -command => \&file_open ],
+			 [ 'command',   '~Open', -command => sub {file_open($textwindow)} ],
 			 [ 'separator', '' ],
 			 map ( [
 					 Button   => "$recentfile[$_]",
@@ -3552,7 +3552,7 @@ sub menubuildtwo {
 		-label     => '~File v2',
 		-tearoff   => 1,
 		-menuitems => [
-			 [ 'command',   '~Open', -command => \&file_open ],
+			 [ 'command',   '~Open', -command => sub {file_open($textwindow)} ],
 			 [
 			   'command',
 			   '~Save',
@@ -13615,26 +13615,6 @@ sub spelladdforeignwords {
 ## End Spellcheck
 
 ### File Menu
-sub file_open {    # Find a text file to open
-	my ($name);
-	return if ( confirmempty() =~ /cancel/i );
-	my $types = [
-				  [
-					'Text Files',
-					[qw/.txt .text .ggp .htm .html .rst .bk1 .bk2 .xml .tei/]
-				  ],
-				  [ 'All Files', ['*'] ],
-	];
-	$name = $textwindow->getOpenFile(
-									  -filetypes  => $types,
-									  -title      => 'Open File',
-									  -initialdir => $globallastpath
-	);
-	if ( defined($name) and length($name) ) {
-		openfile($name);
-	}
-}
-
 sub openfile {    # and open it
 	my $name = shift;
 	return if ( $name eq '*empty*' );
@@ -17951,7 +17931,7 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 		$lglobal{toptool}->separator;
 		$lglobal{toptool}->ToolButton(
 									   -image   => 'fileopen16',
-									   -command => [ \&file_open ],
+									   -command => sub {file_open($textwindow)} ,
 									   -tip     => 'Open'
 		);
 		$lglobal{savetool} =
@@ -20025,46 +20005,6 @@ sub runtests {
 	ok( not( -e "tests/testhtml2.html" ),
 		"Deletion confirmed of tests/testhtml2.html" );
 
-	#
-	#	# Test 3 of HTML generation
-	#	ok( 1 == do { openfile("tests/testhtml3.txt"); 1 },
-	#		"openfile on tests/testhtml3.txt" );
-	#	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml3.txt" );
-	#	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml3.html'); 1 },
-	#		"test of file save as tests/testhtml3.html" );
-	#	ok( -e 'tests/testhtml3.html', "tests/testhtml3.html was saved" );
-	#
-	#	ok( -e "tests/testhtml3baseline.html",
-	#		"tests/testhtml3baseline.html exists" );
-	#	open INFILE,  "tests/testhtml3.html"       || die "no source file\n";
-	#	open LOGFILE, "> tests/testhtml3temp.html" || die "output file error\n";
-	#	@book   = ();
-	#	$inbody = 0;
-	#	while ( $ln = <INFILE> ) {
-	#		if ($inbody) { print LOGFILE $ln; }
-	#		if ( $ln =~ /<\/head>/ ) {
-	#			$inbody = 1;
-	#		}
-	#	}
-	#	close INFILE;
-	#	close LOGFILE;
-	#	ok(
-	#		compare( "tests/testhtml3baseline.html", 'tests/testhtml3temp.html' ) ==
-	#		  0,
-	#		"Autogenerate HTML successful"
-	#	);
-	#	print "begin diff\n";
-	#	system "diff tests/testhtml3baseline.html tests/testhtml3temp.html";
-	#	print "end diff\n";
-	#
-	#	unlink 'tests/testhtml3.html';
-	#	unlink 'tests/testhtml3temp.html';
-	#	unlink 'tests/testhtml3-htmlbak.txt';
-	#	unlink 'tests/testhtml3-htmlbak.txt.bin';
-	#	ok( not( -e "tests/testhtml3temp.html" ),
-	#		"Deletion confirmed of tests/testhtml3temp.html" );
-	#	ok( not( -e "tests/testhtml3.html" ),
-	#		"Deletion confirmed of tests/testhtml3.html" );
 	#	fnview();
 	#htmlimage();
 ##errorcheckpop_up('test');

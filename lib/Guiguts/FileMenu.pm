@@ -3,8 +3,31 @@ package Guiguts::FileMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&file_include &_exit )
+	@EXPORT=qw(&file_open &file_include &_exit )
 }
+
+sub file_open {    # Find a text file to open
+	my $textwindow = shift;
+	my ($name);
+	return if ( &main::confirmempty() =~ /cancel/i );
+	my $types = [
+				  [
+					'Text Files',
+					[qw/.txt .text .ggp .htm .html .rst .bk1 .bk2 .xml .tei/]
+				  ],
+				  [ 'All Files', ['*'] ],
+	];
+	$name = $textwindow->getOpenFile(
+									  -filetypes  => $types,
+									  -title      => 'Open File',
+									  -initialdir => $main::globallastpath
+	);
+	if ( defined($name) and length($name) ) {
+		&main::openfile($name);
+	}
+}
+
+
 
 sub file_include {    # FIXME: Should include even if no file loaded.
 	my $textwindow= shift;
