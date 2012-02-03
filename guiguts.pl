@@ -9801,34 +9801,6 @@ sub nofileloaded {
 	}
 }
 
-sub stealthcheck {
-	loadscannos();
-	$top->Busy( -recurse => 1 );
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
-	$lglobal{wclistbox}->update;
-	my %display = ();
-	my ( $line, $word, %list, @words, $scanno );
-	my $index = '1.0';
-	my $end   = $textwindow->index('end');
-	my $wordw = 0;
-
-	while ( ( $scanno, $word ) = each(%scannoslist) ) {
-		$list{$word}   = '';
-		$list{$scanno} = '';
-	}
-	foreach my $word ( keys %{ $lglobal{seenwords} } ) {
-		next unless exists( $list{$word} );
-		$wordw++;
-		$display{$word} = $lglobal{seenwords}->{$word};
-	}
-	$lglobal{saveheader} = "$wordw suspect words found in file.";
-	sortwords( \%display );
-	searchoptset(qw/1 x x 0/);
-	$top->Unbusy;
-}
-## End Word Frequency
-
 sub confirmdiscard {
 	if ( $textwindow->numberChanges ) {
 		my $ans = $top->messageBox(

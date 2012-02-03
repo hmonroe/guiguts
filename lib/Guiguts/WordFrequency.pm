@@ -214,7 +214,7 @@ sub wordfrequency {
 			   ]
 			],
 
-			[ 'Stealtho Check', \&main::stealthcheck ],
+			[ 'Stealtho Check', sub {stealthcheck($textwindow,$top)} ],
 			[
 			   'Ligatures',
 			   [
@@ -223,7 +223,7 @@ sub wordfrequency {
 				  '(oe|ae|æ|Æ|\x{0153}|\x{0152})',$top
 			   ]
 			],
-			[ 'RegExpEntry', [ \&main::anythingwfcheck, 'dummy entry', 'dummy',$top] ],
+			[ 'RegExpEntry', [ \&anythingwfcheck, 'dummy entry', 'dummy',$top] ],
 			[
 			   '<--RegExp',
 			   [
@@ -1005,6 +1005,34 @@ sub charsortcheck {
 	$main::lglobal{saveheader} = "$wordw characters in the file.";
 	&main::sortwords( \%display );
 	&main::searchoptset(qw/0 x x 0/);
+	$top->Unbusy;
+}
+
+sub stealthcheck {
+	my ($textwindow, $top) = @_;
+	&main::loadscannos();
+	$top->Busy( -recurse => 1 );
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
+	$main::lglobal{wclistbox}->update;
+	my %display = ();
+	my ( $line, $word, %list, @words, $scanno );
+	my $index = '1.0';
+	my $end   = $textwindow->index('end');
+	my $wordw = 0;
+
+	while ( ( $scanno, $word ) = each(%main::scannoslist) ) {
+		$list{$word}   = '';
+		$list{$scanno} = '';
+	}
+	foreach my $word ( keys %{ $main::lglobal{seenwords} } ) {
+		next unless exists( $list{$word} );
+		$wordw++;
+		$display{$word} = $main::lglobal{seenwords}->{$word};
+	}
+	$main::lglobal{saveheader} = "$wordw suspect words found in file.";
+	&main::sortwords( \%display );
+	&main::searchoptset(qw/1 x x 0/);
 	$top->Unbusy;
 }
 
