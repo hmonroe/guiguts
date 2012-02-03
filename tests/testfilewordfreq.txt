@@ -16,6 +16,7 @@ flashlight
 flash-light
 flash light
 flash-*light
+flash-* light
 flash--light
 door-*
 jamb
@@ -29,7 +30,6 @@ a b c d
 
 composing comp-osing comp--osing
 
->>>>>>> .r763
 cañon
 niño
 cañón

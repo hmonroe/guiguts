@@ -15,8 +15,6 @@ sub wordfrequencybuildwordlist {
 	$main::lglobal{seenwordsdoublehyphen} = ();
 	$main::lglobal{seenwords} = ();
 	$main::lglobal{seenwordpairs} = ();
-	
-
 	my $filename = $textwindow->FileName;
 	unless ($filename) {
 		$filename = 'tempfile.tmp';
@@ -29,7 +27,7 @@ sub wordfrequencybuildwordlist {
 			$index = $end;
 		}
 	}
-	savefile()
+	&main::savefile()
 	  if (    ( $textwindow->FileName )
 		   && ( $textwindow->numberChanges != 0 ) );
 	open my $fh, '<', $filename;
@@ -53,7 +51,7 @@ sub wordfrequencybuildwordlist {
 			$match = ( $main::lglobal{ignore_case} ) ? lc($word) : $word;
 			$main::lglobal{seenwordsdoublehyphen}->{$match}++;
 		}
-		$line =~ s/[^'\.,\p{Alnum}-]/ /g;    # get rid of nonalphanumeric
+		$line =~ s/[^'\.,\p{Alnum}-\*]/ /g;    # get rid of nonalphanumeric
 		$line =~ s/--/ /g;                   # get rid of --
 		$line =~
 		  s/—/ /g;    # trying to catch words with real em-dashes, from dp2rst
@@ -61,11 +59,13 @@ sub wordfrequencybuildwordlist {
 		$line =~ s/,(\D)/ $1/g;    # and before
 		@words = split( /\s+/, $line );
 		for my $word (@words) {
-			if ($lastwordseen && not ("$lastwordseen $match" =~ m/\d/)) {
-				$main::lglobal{seenwordpairs}->{"$lastwordseen $match"}++;
+			$word =~s/ //g;
+			if (length($word)==0) {next;}
+			if ($lastwordseen && not ("$lastwordseen $word" =~ m/\d/)) {
+				$main::lglobal{seenwordpairs}->{"$lastwordseen $word"}++;
 			}
 			$lastwordseen = $word;
-			$word =~ s/\*//;    # throw away punctuation at end
+			#$word =~ s/\*//;    
 			$word =~ s/[\.',-]+$//;    # throw away punctuation at end
 			$word =~ s/^[\.,'-]+//;    #and at the beginning
 			next if ( $word eq '' );
@@ -79,7 +79,6 @@ sub wordfrequencybuildwordlist {
 	}
 	close $fh;
 	unlink 'tempfile.tmp' if ( -e 'tempfile.tmp' );
-
 	return $wc;
 }
 
@@ -89,8 +88,6 @@ sub wordfrequency {
 	push @main::operations, ( localtime() . ' - Word Frequency' );
 	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
 	&main::oppopupdate()  if $main::lglobal{oppop};
-	#$main::lglobal{seenwords} = ();
-	#%{ $main::lglobal{seenwordsdoublehyphen} } = ();
 	my ( @words, $match, @savesets );
 	my $index = '1.0';
 	my $wc    = 0;
@@ -172,7 +169,7 @@ sub wordfrequency {
 
 				#return if $main::lglobal{global_filename} =~ /No File Loaded/;
 				#savefile() unless ( $textwindow->numberChanges == 0 );
-				wordfrequency($textwindow);
+				wordfrequency($textwindow,$top);
 			},
 			-text => 'Rerun '
 		  )->pack(
@@ -185,7 +182,7 @@ sub wordfrequency {
 		  $main::lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my @wfbuttons = (
 			[ 'Emdashes'  => sub {dashcheck($top) }],
-			[ 'Hyphens'   => \&main::hyphencheck ],
+			[ 'Hyphens'   => sub{hyphencheck($top)} ],
 			[ 'Alpha/num' => sub{alphanumcheck($top) }],
 			[
 			   'All Words' => sub {
@@ -848,7 +845,84 @@ sub ital_adjust {
 	)->grid( -row => 2, -column => 1, -padx => 2, -pady => 4 );
 }
 
+sub hyphencheck {
+	my $top = shift;
+	$top->Busy( -recurse => 1 );
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$main::lglobal{wclistbox}->update;
+	my $wordw   = 0;
+	my $wordwo  = 0;
+	my %display = ();
+	foreach my $word ( keys %{ $main::lglobal{seenwords} } ) {
+		next if ( $main::lglobal{seenwords}->{$word} < 1 );
+
+		# For words with hyphens
+		if ( $word =~ /-/ ) {
+			$wordw++;
+			my $wordtemp = $word;
+			# display all words with hyphens unless suspects only is chosen
+			$display{$word} = $main::lglobal{seenwords}->{$word}
+			  unless $main::lglobal{suspects_only};
+			# Check if the same word also appears with a double hyphen
+			$word =~ s/-/--/g;
+			if ( $main::lglobal{seenwordsdoublehyphen}->{$word} ) {
+				# display with single and with double hyphen
+				$display{$wordtemp. ' ****'} = $main::lglobal{seenwords}->{$wordtemp}
+				  if $main::lglobal{suspects_only};
+				my $aword = $word . ' ****';
+				$display{$word. ' ****'} = $main::lglobal{seenwordsdoublehyphen}->{$word};
+				$wordwo++;
+			}
+			# Check if the same word also appears with space
+			$word =~ s/-/ /g;
+			$word =~ s/  / /g;
+			if ( $main::lglobal{seenwordpairs}->{$word} ) {
+				my $aword = $word . ' ****';
+				$display{$aword} = $main::lglobal{seenwordpairs}->{$word};
+				$wordwo++;
+			}
+
+			# Check if the same word also appears without a space or hyphen
+			$word =~ s/ //g;
+			if ( $main::lglobal{seenwords}->{$word} ) {
+				$display{$wordtemp. ' ****'} = $main::lglobal{seenwords}->{$wordtemp}
+				  if $main::lglobal{suspects_only};
+				my $aword = $word . ' ****';
+				$display{$aword} = $main::lglobal{seenwords}->{$word};
+				$wordwo++;
+			}
+		}
+	}
+	foreach my $word ( keys %{ $main::lglobal{seenwordpairs} } ) {
+		next if ( $main::lglobal{seenwordpairs}->{$word} < 1 );    # never true
+		     # For each pair of consecutive words
+		if ( $word =~ / / ) {    #always true
+			my $wordtemp = $word;
+
+			# Check if the same word also appears without a space
+			$word =~ s/ //g;
+			if ( $main::lglobal{seenwords}->{$word} ) {
+				$display{$word. ' ****'} = $main::lglobal{seenwords}->{$word};
+				my $aword = $wordtemp . ' ****';
+				$display{$aword} = $main::lglobal{seenwordpairs}->{$wordtemp}
+				  unless $display{$aword};
+				$wordwo++;
+			}
+			$word =~ s/-//g;
+			if ( $main::lglobal{seenwords}->{$word} ) {
+				$display{$word. ' ****'} = $main::lglobal{seenwords}->{$word};
+				my $aword = $wordtemp . ' ****';
+				$display{$aword} = $main::lglobal{seenwordpairs}->{$wordtemp}
+				  unless $display{$aword};
+				$wordwo++;
+			}
+		}
+	}
+	$main::lglobal{saveheader} =
+	  "$wordw words with hyphens, $wordwo suspects (marked ****).";
+	&main::sortwords( \%display );
+	$top->Unbusy;
+}
 
 1;
-
-
