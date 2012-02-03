@@ -688,6 +688,8 @@ sub cmdinterp {
 	my ( $selection, $ranges );
 
 	foreach my $arg (@args) {
+		$arg =~ s/^"(.*)"$/$1/;
+
 		# Replace $t with selected text for instance for a dictionary search
 		if ( $arg =~ m/\$t/ ) {
 			my @ranges = $textwindow->tagRanges('sel');
