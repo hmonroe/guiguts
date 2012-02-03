@@ -9531,36 +9531,6 @@ sub fixpopup {
 	}
 }
 
-sub ital_adjust {
-	my $markuppop = $top->Toplevel( -title => 'Word count threshold', );
-	my $f0 = $markuppop->Frame->pack( -side => 'top', -anchor => 'n' );
-	$f0->Label( -text =>
-"Threshold word count for marked up phrase.\nPhrases with more words will be skipped.\nDefault is 4."
-	)->pack;
-	my $f1 = $markuppop->Frame->pack( -side => 'top', -anchor => 'n' );
-	$f1->Entry(
-		-width        => 10,
-		-background   => $bkgcolor,
-		-relief       => 'sunken',
-		-textvariable => \$markupthreshold,
-		-validate     => 'key',
-		-vcmd         => sub {
-			return 1 unless $_[1];
-			return 1 unless ( $_[1] =~ /\D/ );
-			return 0;
-		},
-	)->grid( -row => 1, -column => 1, -padx => 2, -pady => 4 );
-	$f1->Button(
-		-activebackground => $activecolor,
-		-command          => sub {
-			$markuppop->destroy;
-			undef $markuppop;
-		},
-		-text  => 'OK',
-		-width => 8
-	)->grid( -row => 2, -column => 1, -padx => 2, -pady => 4 );
-}
-
 # Reset search from start of doc if new search term
 sub searchfromstartifnew {
 	my $new_term = shift;
@@ -9805,52 +9775,6 @@ sub sortwords {
 	$lglobal{wclistbox}->update;
 	$lglobal{wclistbox}->yview( 'scroll', -1, 'units' );
 	$top->Unbusy;
-}
-
-sub itwords {
-	$top->Busy( -recurse => 1 );
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	my %display  = ();
-	my $wordw    = 0;
-	my $suspects = '0';
-	my %words;
-	my $ssindex = '1.0';
-	my $length;
-	return if ( nofileloaded() );
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
-	$lglobal{wclistbox}->update;
-	my $wholefile = slurpfile();
-	$markupthreshold = 0 unless $markupthreshold;
-
-	while ( $wholefile =~ m/(<(i|I|b|B|sc)>)(.*?)(<\/(i|I|b|B|sc)>)/sg ) {
-		my $word   = $1 . $3 . $4;
-		my $wordwo = $3;
-		my $num    = 0;
-		$num++ while ( $word =~ /(\S\s)/g );
-		next if ( $num >= $markupthreshold );
-		$word =~ s/\n/\\n/g;
-		$display{$word}++;
-		$wordwo =~ s/\n/\\n/g;
-		$words{$wordwo} = $display{$word};
-	}
-	$wordw = scalar keys %display;
-	for my $wordwo ( keys %words ) {
-		my $wordwo2 = $wordwo;
-		$wordwo2 =~ s/\\n/\n/g;
-		while ( $wholefile =~ m/(?<=\W)\Q$wordwo2\E(?=\W)/sg ) {
-			$display{$wordwo}++;
-		}
-		$display{$wordwo} = $display{$wordwo} - $words{$wordwo}
-		  if ( ( $words{$wordwo} ) || ( $display{$wordwo} =~ /\\n/ ) );
-		delete $display{$wordwo} unless $display{$wordwo};
-	}
-	$suspects = ( scalar keys %display ) - $wordw;
-	$lglobal{saveheader} =
-"$wordw words/phrases with markup, $suspects similar without. (\\n means newline)";
-	$wholefile = ();
-	sortwords( \%display );
-	$top->Unbusy;
-	searchoptset(qw/1 x x 0/);
 }
 
 sub slurpfile {

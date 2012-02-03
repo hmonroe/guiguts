@@ -198,7 +198,7 @@ sub wordfrequency {
 				 }
 			],
 			[ 'Check Spelling', \&main::wordfrequencyspellcheck ],
-			[ 'Ital/Bold/SC', \&main::itwords, \&main::ital_adjust ],
+			[ 'Ital/Bold/SC', sub {itwords($top); ital_adjust($top) }],
 			[ 'ALL CAPS',     sub {capscheck($top)} ],
 			[ 'MiXeD CasE',   sub {mixedcasecheck($top)} ],
 			[ 'Initial Caps',
@@ -212,8 +212,8 @@ sub wordfrequency {
 			[
 			   'Unicode > FF',
 			   [
-				  \&main::anythingwfcheck, 'words with unicode chars > FF',
-				  '[\x{100}-\x{FFEF}]'
+				  \&anythingwfcheck, 'words with unicode chars > FF',
+				  '[\x{100}-\x{FFEF}]',$top
 			   ]
 			],
 
@@ -231,7 +231,7 @@ sub wordfrequency {
 			   '<--RegExp',
 			   [
 				  sub {
-					  &main::anythingwfcheck( 'words matching regular expression',
+					  anythingwfcheck( 'words matching regular expression',
 									   $main::regexpentry,$top );
 					}
 			   ]
@@ -290,6 +290,8 @@ sub wordfrequency {
 				$main::lglobal{wfpop}->destroy;
 				undef $main::lglobal{wfpop};
 				undef $main::lglobal{wclistbox};
+				$main::lglobal{markuppop}->destroy if $main::lglobal{markuppop};
+				undef $main::lglobal{markuppop};
 			}
 		);
 		&main::BindMouseWheel( $main::lglobal{wclistbox} );
@@ -766,6 +768,86 @@ s/([\.\?\!]['"]*[\n\s]['"]*\p{Upper}\p{Alnum}*),([\n\s]['"]*\p{Upper})/$1 $2/g;
 	$top->Unbusy;
 	&main::searchoptset(qw/0 0 x 1/);
 }
+
+sub itwords {
+	my $top = shift;
+	$top->Busy( -recurse => 1 );
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	my %display  = ();
+	my $wordw    = 0;
+	my $suspects = '0';
+	my %words;
+	my $ssindex = '1.0';
+	my $length;
+	return if ( &main::nofileloaded() );
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
+	$main::lglobal{wclistbox}->update;
+	my $wholefile = &main::slurpfile();
+	$main::markupthreshold = 0 unless $main::markupthreshold;
+
+	while ( $wholefile =~ m/(<(i|I|b|B|sc)>)(.*?)(<\/(i|I|b|B|sc)>)/sg ) {
+		my $word   = $1 . $3 . $4;
+		my $wordwo = $3;
+		my $num    = 0;
+		$num++ while ( $word =~ /(\S\s)/g );
+		next if ( $num >= $main::markupthreshold );
+		$word =~ s/\n/\\n/g;
+		$display{$word}++;
+		$wordwo =~ s/\n/\\n/g;
+		$words{$wordwo} = $display{$word};
+	}
+	$wordw = scalar keys %display;
+	for my $wordwo ( keys %words ) {
+		my $wordwo2 = $wordwo;
+		$wordwo2 =~ s/\\n/\n/g;
+		while ( $wholefile =~ m/(?<=\W)\Q$wordwo2\E(?=\W)/sg ) {
+			$display{$wordwo}++;
+		}
+		$display{$wordwo} = $display{$wordwo} - $words{$wordwo}
+		  if ( ( $words{$wordwo} ) || ( $display{$wordwo} =~ /\\n/ ) );
+		delete $display{$wordwo} unless $display{$wordwo};
+	}
+	$suspects = ( scalar keys %display ) - $wordw;
+	$main::lglobal{saveheader} =
+"$wordw words/phrases with markup, $suspects similar without. (\\n means newline)";
+	$wholefile = ();
+	&main::sortwords( \%display );
+	$top->Unbusy;
+	&main::searchoptset(qw/1 x x 0/);
+}
+
+sub ital_adjust {
+	my $top = shift;
+	return if $main::lglobal{markuppop}; 
+	$main::lglobal{markuppop} = $top->Toplevel( -title => 'Word count threshold', );
+	my $f0 = $main::lglobal{markuppop}->Frame->pack( -side => 'top', -anchor => 'n' );
+	$f0->Label( -text =>
+"Threshold word count for marked up phrase.\nPhrases with more words will be skipped.\nDefault is 4."
+	)->pack;
+	my $f1 = $main::lglobal{markuppop}->Frame->pack( -side => 'top', -anchor => 'n' );
+	$f1->Entry(
+		-width        => 10,
+		-background   => $main::bkgcolor,
+		-relief       => 'sunken',
+		-textvariable => \$main::markupthreshold,
+		-validate     => 'key',
+		-vcmd         => sub {
+			return 1 unless $_[1];
+			return 1 unless ( $_[1] =~ /\D/ );
+			return 0;
+		},
+	)->grid( -row => 1, -column => 1, -padx => 2, -pady => 4 );
+	$f1->Button(
+		-activebackground => $main::activecolor,
+		-command          => sub {
+			$main::lglobal{markuppop}->destroy;
+			undef $main::lglobal{markuppop};
+		},
+		-text  => 'OK',
+		-width => 8
+	)->grid( -row => 2, -column => 1, -padx => 2, -pady => 4 );
+}
+
 
 1;
 
