@@ -140,7 +140,7 @@ sub wordfrequency {
 			-command          => sub {
 				return unless ( $main::lglobal{wclistbox}->curselection );
 				$main::lglobal{harmonics} = 1;
-				&main::harmonicspop();
+				harmonicspop($top);
 			},
 			-text => '1st Harm',
 		  )->pack(
@@ -154,7 +154,7 @@ sub wordfrequency {
 			-command          => sub {
 				return unless ( $main::lglobal{wclistbox}->curselection );
 				$main::lglobal{harmonics} = 2;
-				&main::harmonicspop();
+				harmonicspop($top);
 			},
 			-text => '2nd Harm',
 		  )->pack(
@@ -393,7 +393,7 @@ sub wordfrequency {
 				&main::searchfromstartifnew($sword);
 				&main::searchtext($sword);
 				&main::searchoptset(@savesets);
-				$main::top->raise;
+				$top->raise;
 			}
 		);
 		$main::lglobal{wclistbox}->eventAdd( '<<harm>>' => '<Control-Button-1>' );
@@ -401,8 +401,8 @@ sub wordfrequency {
 			'<<harm>>',
 			sub {
 				return unless ( $main::lglobal{wclistbox}->curselection );
-				&main::harmonics( $main::lglobal{wclistbox}->get('active') );
-				&main::harmonicspop();
+				harmonics( $main::lglobal{wclistbox}->get('active') );
+				harmonicspop();
 			}
 		);
 		$main::lglobal{wclistbox}->eventAdd( '<<adddict>>' => '<Control-Button-2>',
@@ -1034,6 +1034,246 @@ sub stealthcheck {
 	&main::sortwords( \%display );
 	&main::searchoptset(qw/1 x x 0/);
 	$top->Unbusy;
+}
+
+sub harmonicspop {
+	my $top = shift;
+	my ( $line, $word, $sword, $snum, @savesets, $wc );
+	if ( $main::lglobal{hpopup} ) {
+		$main::lglobal{hpopup}->deiconify;
+		$main::lglobal{hpopup}->raise;
+		$main::lglobal{hlistbox}->delete( '0', 'end' );
+	} else {
+		$main::lglobal{hpopup} = $top->Toplevel;
+		$main::lglobal{hpopup}->title('Word harmonics');
+		&main::initialize_popup_with_deletebinding('hpopup');
+		my $frame =
+		  $main::lglobal{hpopup}->Frame->pack( -fill => 'both', -expand => 'both', );
+		$main::lglobal{hlistbox} =
+		  $frame->Scrolled(
+							'Listbox',
+							-scrollbars  => 'se',
+							-background  => $main::bkgcolor,
+							-font        => $main::lglobal{font},
+							-selectmode  => 'single',
+							-activestyle => 'none',
+		  )->pack(
+				   -anchor => 'nw',
+				   -fill   => 'both',
+				   -expand => 'both',
+				   -padx   => 2,
+				   -pady   => 2
+		  );
+		&main::drag( $main::lglobal{hlistbox} );
+		$main::lglobal{hpopup}->protocol(
+			'WM_DELETE_WINDOW' => sub {
+				$main::lglobal{hpopup}->destroy;
+				undef $main::lglobal{hpopup};
+				undef $main::lglobal{hlistbox};
+			}
+		);
+		&main::BindMouseWheel( $main::lglobal{hlistbox} );
+		$main::lglobal{hlistbox}->eventAdd( '<<search>>' => '<ButtonRelease-3>' );
+		$main::lglobal{hlistbox}->bind(
+			'<<search>>',
+			sub {
+				$main::lglobal{hlistbox}->selectionClear( 0, 'end' );
+				$main::lglobal{hlistbox}->selectionSet(
+										  $main::lglobal{hlistbox}->index(
+											  '@'
+												. (
+												  $main::lglobal{hlistbox}->pointerx -
+													$main::lglobal{hlistbox}->rootx
+												)
+												. ','
+												. (
+												  $main::lglobal{hlistbox}->pointery -
+													$main::lglobal{hlistbox}->rooty
+												)
+										  )
+				);
+				my ($sword) =
+				  $main::lglobal{hlistbox}->get( $main::lglobal{hlistbox}->curselection );
+				searchpopup();
+				$sword =~ s/\d+\s+([\w'-]*)/$1/;
+				$sword =~ s/\s+\*\*\*\*$//;
+				$main::lglobal{searchentry}->delete( '1.0', 'end' );
+				$main::lglobal{searchentry}->insert( 'end', $sword );
+				&main::updatesearchlabels();
+				$main::lglobal{searchentry}->after( $main::lglobal{delay} );
+			}
+		);
+		$main::lglobal{hlistbox}->eventAdd( '<<find>>' => '<Double-Button-1>' );
+		$main::lglobal{hlistbox}->bind(
+			'<<find>>',
+			sub {
+				return unless $main::lglobal{hlistbox}->index('active');
+				$top->Busy( -recurse => 1 );
+				$sword = $main::lglobal{hlistbox}->get('active');
+				return unless ( $main::lglobal{hlistbox}->curselection );
+				$sword =~ s/(\d+)\s+([\w'-]*)/$2/;
+				$snum = $1;
+				$sword =~ s/\s+\*\*\*\*$//;
+				@savesets = @sopt;
+
+				unless ($snum) {
+					&main::searchoptset(qw/0 x x 1/);
+					$sword = "(?<=-)$sword|$sword(?=-)";
+				}
+				&main::searchfromstartifnew($sword);
+				&main::searchtext($sword);
+				&main::searchoptset(@savesets);
+				$top->Unbusy( -recurse => 1 );
+			}
+		);
+		$main::lglobal{hlistbox}->bind(
+			'<Down>',
+			sub {
+				return unless defined $main::lglobal{wclistbox};
+				my $index = $main::lglobal{wclistbox}->index('active');
+				$main::lglobal{wclistbox}->selectionClear( '0', 'end' );
+				$main::lglobal{wclistbox}->activate( $index + 1 );
+				$main::lglobal{wclistbox}->selectionSet( $index + 1 );
+				$main::lglobal{wclistbox}->see('active');
+				harmonics( $main::lglobal{wclistbox}->get('active') );
+				harmonicspop();
+				$main::lglobal{hpopup}->break;
+			}
+		);
+		$main::lglobal{hlistbox}->bind(
+			'<Up>',
+			sub {
+				return unless defined $main::lglobal{wclistbox};
+				my $index = $main::lglobal{wclistbox}->index('active');
+				$main::lglobal{wclistbox}->selectionClear( '0', 'end' );
+				$main::lglobal{wclistbox}->activate( $index - 1 );
+				$main::lglobal{wclistbox}->selectionSet( $index - 1 );
+				$main::lglobal{wclistbox}->see('active');
+				harmonics( $main::lglobal{wclistbox}->get('active') );
+				harmonicspop();
+				$main::lglobal{hpopup}->break;
+			}
+		);
+		$main::lglobal{hlistbox}->eventAdd( '<<harm>>' => '<Control-Button-1>' );
+		$main::lglobal{hlistbox}->bind(
+			'<<harm>>',
+			sub {
+				return unless ( $main::lglobal{hlistbox}->curselection );
+				harmonics( $main::lglobal{hlistbox}->get('active') );
+				harmonicspop();
+			}
+		);
+	}
+	my $active = $main::lglobal{wclistbox}->get('active');
+	$active =~ s/\d+\s+([\w'-]*)/$1/;
+	$active =~ s/\*\*\*\*$//;
+	$active =~ s/\s//g;
+	$main::lglobal{hlistbox}->insert( 'end', 'Please wait... searching...' );
+	$main::lglobal{hlistbox}->update;
+	if ( defined $main::lglobal{harmonics} && $main::lglobal{harmonics} == 2 ) {
+		harmonics2($active);
+		$wc = scalar( keys( %{ $main::lglobal{harmonic} } ) );
+		$main::lglobal{hlistbox}->delete( '0', 'end' );
+		$main::lglobal{hlistbox}
+		  ->insert( 'end', "$wc 2nd order harmonics for $active." );
+	} else {
+		harmonics($active);
+		$wc = scalar( keys( %{ $main::lglobal{harmonic} } ) );
+		$main::lglobal{hlistbox}->delete( '0', 'end' );
+		$main::lglobal{hlistbox}
+		  ->insert( 'end', "$wc 1st order harmonics for $active." );
+	}
+	foreach my $word ( sort { &main::deaccent( lc $a ) cmp &main::deaccent( lc $b ) }
+					   ( keys %{ $main::lglobal{harmonic} } ) )
+	{
+		$line =
+		  sprintf( "%-8d %s", $main::lglobal{seenwords}->{$word}, $word )
+		  ;    # Print to the file
+		$main::lglobal{hlistbox}->insert( 'end', $line );
+	}
+	%{ $main::lglobal{harmonic} } = ();
+	$main::lglobal{hlistbox}->focus;
+}
+
+sub harmonics {
+	my $word = shift;
+	$word =~ s/\d+\s+([\w'-]*)/$1/;
+	$word =~ s/\*\*\*\*$//;
+	$word =~ s/\s//g;
+	my $length = length $word;
+	for my $test ( keys %{ $main::lglobal{seenwords} } ) {
+		next if ( abs( $length - length $test ) > 1 );
+		$main::lglobal{harmonic}{$test} = 1 if ( distance( $word, $test ) <= 1 );
+	}
+}
+
+sub harmonics2 {
+	my $word = shift;
+	$word =~ s/\d+\s+([\w'-]*)/$1/;
+	$word =~ s/\*\*\*\*$//;
+	$word =~ s/\s//g;
+	my $length = length $word;
+	for my $test ( keys %{ $main::lglobal{seenwords} } ) {
+		next if ( abs( $length - length $test ) > 2 );
+		$main::lglobal{harmonic}{$test} = 1 if ( distance( $word, $test ) <= 2 );
+	}
+}
+
+#### Levenshtein edit distance calculations #################
+#### taken from the Text::Levenshtein Module ################
+#### If available, uses Text::LevenshteinXS #################
+#### which is orders of magnitude faster. ###################
+
+sub distance {
+	if ( $main::lglobal{LevenshteinXS} ) {
+		return Text::LevenshteinXS::distance(@_);
+	}
+
+	no warnings;
+	my $word1 = shift;
+	my $word2 = shift;
+
+	return 0 if $word1 eq $word2;
+	my @d;
+
+	my $len1 = length $word1;
+	my $len2 = length $word2;
+
+	$d[0][0] = 0;
+	for ( 1 .. $len1 ) {
+		$d[$_][0] = $_;
+		return $_
+		  if $_ != $len1 && substr( $word1, $_ ) eq substr( $word2, $_ );
+	}
+	for ( 1 .. $len2 ) {
+		$d[0][$_] = $_;
+		return $_
+		  if $_ != $len2 && substr( $word1, $_ ) eq substr( $word2, $_ );
+	}
+
+	for my $i ( 1 .. $len1 ) {
+		my $w1 = substr( $word1, $i - 1, 1 );
+		for ( 1 .. $len2 ) {
+			$d[$i][$_] =
+			  _min(
+					$d[ $i - 1 ][$_] + 1,
+					$d[$i][ $_ - 1 ] + 1,
+					$d[ $i - 1 ][ $_ - 1 ] +
+					  ( $w1 eq substr( $word2, $_ - 1, 1 ) ? 0 : 1 )
+			  );
+		}
+	}
+	return $d[$len1][$len2];
+}
+
+sub _min {
+	return
+	    $_[0] < $_[1]
+	  ? $_[0] < $_[2]
+		  ? $_[0]
+		  : $_[2]
+	  : $_[1] < $_[2] ? $_[1]
+	  :                 $_[2];
 }
 
 1;
