@@ -8,4 +8,4 @@ set PATH=%cd%\perl;%cd%\perl\lib;%cd%\python27;%cd%\python27\scripts;%cd%\tools\
     set TTFONTS=     %cd%/tools/gnutenberg/0.4/pdf/fonts/generated
     set TEXPSHEADERS=%cd%/tools/gnutenberg/0.4/pdf/fonts/generated
 
-"%cd%\perl\perl.exe" guiguts.pl "%1"
+"%cd%\perl\perl.exe" guiguts.pl %1
