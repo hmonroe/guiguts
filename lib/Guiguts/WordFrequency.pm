@@ -6,6 +6,7 @@ BEGIN {
 	@EXPORT=qw(&wordfrequencybuildwordlist &wordfrequency)
 }
 
+# build lists of words, word pairs, and double hyphenated words
 sub wordfrequencybuildwordlist {
 	my $textwindow = shift;
 	my ( @words, $match, @savesets );
