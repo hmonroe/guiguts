@@ -1243,13 +1243,6 @@ sub highlightscannos {
 
 ## The main menu building code.
 
-sub file_close {
-	return if ( confirmempty() =~ m{cancel}i );
-	clearvars();
-	update_indicators();
-	return;
-}
-
 sub file_import {
 	return if ( confirmempty() =~ /cancel/i );
 	my $directory = $top->chooseDirectory( -title =>

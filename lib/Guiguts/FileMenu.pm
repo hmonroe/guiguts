@@ -3,7 +3,7 @@ package Guiguts::FileMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&file_open &file_saveas &file_include &_exit )
+	@EXPORT=qw(&file_open &file_saveas &file_include &file_close &_exit )
 }
 
 sub file_open {    # Find a text file to open
@@ -91,6 +91,13 @@ sub file_saveas {
 	return;
 }
 
+
+sub file_close {
+	return if ( &main::confirmempty() =~ m{cancel}i );
+	&main::clearvars();
+	&main::update_indicators();
+	return;
+}
 
 
 ## Global Exit
