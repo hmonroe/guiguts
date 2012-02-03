@@ -9563,37 +9563,6 @@ sub searchoptset {
 	#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt set\n";
 }
 
-sub sortwords {
-	my $href = shift;
-	$top->Busy( -recurse => 1 );
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, sorting list....' );
-	$lglobal{wclistbox}->update;
-	if ( $alpha_sort eq 'f' ) {    # Sorted by word frequency
-		for ( natural_sort_freq($href) ) {
-			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
-			$lglobal{wclistbox}->insert( 'end', $line );
-		}
-	} elsif ( $alpha_sort eq 'a' ) {    # Sorted alphabetically
-		for ( natural_sort_alpha( keys %$href ) ) {
-			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
-			$lglobal{wclistbox}->insert( 'end', $line );
-		}
-	} elsif ( $alpha_sort eq 'l' ) {    # Sorted by word length
-		for ( natural_sort_length( keys %$href ) ) {
-			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
-			$lglobal{wclistbox}->insert( 'end', $line );
-		}
-	}
-	$lglobal{wclistbox}->delete('0');
-	$lglobal{wclistbox}->insert( '0', $lglobal{saveheader} );
-	$lglobal{wclistbox}->update;
-	$lglobal{wclistbox}->yview( 'scroll', 1, 'units' );
-	$lglobal{wclistbox}->update;
-	$lglobal{wclistbox}->yview( 'scroll', -1, 'units' );
-	$top->Unbusy;
-}
-
 sub slurpfile {
 	my $filename = $textwindow->FileName;
 	my $wholefile;

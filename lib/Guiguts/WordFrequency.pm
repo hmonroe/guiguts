@@ -190,7 +190,7 @@ sub wordfrequency {
 					 "$wc total words. " .
 					 keys( %{ $main::lglobal{seenwords} } )
 					 . " distinct words in file.";
-				   &main::sortwords( $main::lglobal{seenwords} );
+				   sortwords( $main::lglobal{seenwords} );
 				   &main::searchoptset(qw/1 0 x 0/);    #default is whole word search
 				 }
 			],
@@ -422,7 +422,7 @@ sub wordfrequency {
 				$main::lglobal{saveheader} =
 				  scalar( keys %{ $main::lglobal{spellsort} } )
 				  . ' words not recognised by the spellchecker.';
-				&main::sortwords( \%{ $main::lglobal{spellsort} } );
+				sortwords( \%{ $main::lglobal{spellsort} } );
 			}
 		);
 		&main::add_navigation_events( $main::lglobal{wclistbox} );
@@ -484,7 +484,7 @@ sub wordfrequency {
 		&main::searchoptset("x 0 x x");
 	}
 	$top->Unbusy( -recurse => 1 );
-	&main::sortwords( \%{ $main::lglobal{seenwords} } );
+	sortwords( \%{ $main::lglobal{seenwords} } );
 	&main::update_indicators();
 }
 
@@ -527,7 +527,7 @@ sub bangmark {
 	}
 	$main::lglobal{saveheader} =
 	  "$wordw words with lower case after period. " . '(\n means newline)';
-	&main::sortwords( \%display );
+	sortwords( \%display );
 	$top->Unbusy;
 	&main::searchoptset(qw/0 x x 1/);
 }
@@ -564,7 +564,7 @@ sub dashcheck {
 	}
 	$main::lglobal{saveheader} =
 	  "$wordw emdash phrases, $wordwo suspects (marked with ****).";
-	&main::sortwords( \%display );
+	sortwords( \%display );
 	&main::searchoptset(qw /0 x x 0/);
 	$top->Unbusy;
 }
@@ -585,7 +585,7 @@ sub alphanumcheck {
 		$display{$_} = $main::lglobal{seenwords}->{$_};
 	}
 	$main::lglobal{saveheader} = "$wordw mixed alphanumeric words.";
-	&main::sortwords( \%display );
+	sortwords( \%display );
 	$main::lglobal{wclistbox}->yview( 'scroll', 1, 'units' );
 	$main::lglobal{wclistbox}->update;
 	$main::lglobal{wclistbox}->yview( 'scroll', -1, 'units' );
@@ -609,7 +609,7 @@ sub capscheck {
 		}
 	}
 	$main::lglobal{saveheader} = "$wordw distinct capitalized words.";
-	&main::sortwords( \%display );
+	sortwords( \%display );
 	&main::searchoptset(qw/1 x x 0/);
 	$top->Unbusy;
 }
@@ -630,7 +630,7 @@ sub mixedcasecheck {
 		$display{$_} = $main::lglobal{seenwords}->{$_};
 	}
 	$main::lglobal{saveheader} = "$wordw distinct mixed case words.";
-	&main::sortwords( \%display );
+	sortwords( \%display );
 	&main::searchoptset(qw/1 x x 0/);
 	$top->Unbusy;
 }
@@ -656,7 +656,7 @@ sub anythingwfcheck {
 		$display{$_} = $main::lglobal{seenwords}->{$_};
 	}
 	$main::lglobal{saveheader} = "$wordw distinct $checktype.";
-	&main::sortwords( \%display );
+	sortwords( \%display );
 	&main::searchoptset(qw/1 x x 0/);
 	$top->Unbusy;
 }
@@ -702,7 +702,7 @@ sub accentcheck {
 	}
 	$main::lglobal{saveheader} =
 	  "$wordw accented words, $wordwo suspects (marked with ****).";
-	&main::sortwords( \%display );
+	sortwords( \%display );
 	&main::searchoptset(qw/0 x x 0/);
 	$top->Unbusy;
 }
@@ -761,7 +761,7 @@ s/([\.\?\!]['"]*[\n\s]['"]*\p{Upper}\p{Alnum}*),([\n\s]['"]*\p{Upper})/$1 $2/g;
 	}
 	$main::lglobal{saveheader} =
 	  "$wordw words with uppercase following commas. " . '(\n means newline)';
-	&main::sortwords( \%display );
+	sortwords( \%display );
 	$top->Unbusy;
 	&main::searchoptset(qw/0 0 x 1/);
 }
@@ -808,7 +808,7 @@ sub itwords {
 	$main::lglobal{saveheader} =
 "$wordw words/phrases with markup, $suspects similar without. (\\n means newline)";
 	$wholefile = ();
-	&main::sortwords( \%display );
+	sortwords( \%display );
 	$top->Unbusy;
 	&main::searchoptset(qw/1 x x 0/);
 }
@@ -921,7 +921,7 @@ sub hyphencheck {
 	}
 	$main::lglobal{saveheader} =
 	  "$wordw words with hyphens, $wordwo suspects (marked ****).";
-	&main::sortwords( \%display );
+	sortwords( \%display );
 	$top->Unbusy;
 }
 
@@ -955,7 +955,7 @@ sub wordfrequencyspellcheck {
 
 	my $wordw = wordfrequencygetmisspelled();
 	$main::lglobal{saveheader} = "$wordw words not recognised by the spellchecker.";
-	&main::sortwords( \%{ $main::lglobal{spellsort} } );
+	sortwords( \%{ $main::lglobal{spellsort} } );
 	$top->Unbusy;
 }
 
@@ -1003,7 +1003,7 @@ sub charsortcheck {
 	delete $display{"\x{d}"} if $chars{"\x{d}"};
 	delete $display{"\n"}    if $chars{"\n"};
 	$main::lglobal{saveheader} = "$wordw characters in the file.";
-	&main::sortwords( \%display );
+	sortwords( \%display );
 	&main::searchoptset(qw/0 x x 0/);
 	$top->Unbusy;
 }
@@ -1031,7 +1031,7 @@ sub stealthcheck {
 		$display{$word} = $main::lglobal{seenwords}->{$word};
 	}
 	$main::lglobal{saveheader} = "$wordw suspect words found in file.";
-	&main::sortwords( \%display );
+	sortwords( \%display );
 	&main::searchoptset(qw/1 x x 0/);
 	$top->Unbusy;
 }
@@ -1274,6 +1274,35 @@ sub _min {
 		  : $_[2]
 	  : $_[1] < $_[2] ? $_[1]
 	  :                 $_[2];
+}
+
+sub sortwords {
+	my $href = shift;
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, sorting list....' );
+	$main::lglobal{wclistbox}->update;
+	if ( $main::alpha_sort eq 'f' ) {    # Sorted by word frequency
+		for ( &main::natural_sort_freq($href) ) {
+			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
+			$main::lglobal{wclistbox}->insert( 'end', $line );
+		}
+	} elsif ( $main::alpha_sort eq 'a' ) {    # Sorted alphabetically
+		for ( &main::natural_sort_alpha( keys %$href ) ) {
+			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
+			$main::lglobal{wclistbox}->insert( 'end', $line );
+		}
+	} elsif ( $main::alpha_sort eq 'l' ) {    # Sorted by word length
+		for ( &main::natural_sort_length( keys %$href ) ) {
+			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
+			$main::lglobal{wclistbox}->insert( 'end', $line );
+		}
+	}
+	$main::lglobal{wclistbox}->delete('0');
+	$main::lglobal{wclistbox}->insert( '0', $main::lglobal{saveheader} );
+	$main::lglobal{wclistbox}->update;
+	$main::lglobal{wclistbox}->yview( 'scroll', 1, 'units' );
+	$main::lglobal{wclistbox}->update;
+	$main::lglobal{wclistbox}->yview( 'scroll', -1, 'units' );
 }
 
 1;
