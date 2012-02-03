@@ -10366,6 +10366,8 @@ sub initialize {
 
 	$lglobal{guigutsdirectory} = dirname( rel2abs($0) )
 	  unless defined $lglobal{guigutsdirectory};
+	$scannospath = catfile( $lglobal{guigutsdirectory}, 'scannos' )
+         unless $scannospath;
 
 	if ($OS_WIN) {
 		$gutcommand = catfile( $lglobal{guigutsdirectory},
@@ -10387,8 +10389,6 @@ sub initialize {
 		$gnutenbergdirectory =
 		  catfile( $lglobal{guigutsdirectory}, 'tools', 'gnutenberg', '0.4' )
 		  unless $gnutenbergdirectory;
-		$scannospath = catfile( $lglobal{guigutsdirectory}, 'scannos' )
-		  unless $scannospath;
 	} else {
 		$gutcommand = catfile( $lglobal{guigutsdirectory},
 							   'tools', 'gutcheck', 'gutcheck' )
@@ -10396,8 +10396,8 @@ sub initialize {
 		$jeebiescommand = catfile( $lglobal{guigutsdirectory},
 								   'tools', 'jeebies', 'jeebies' ) 
 								   unless $jeebiescommand;
-		
 	}
+	
 	%{ $lglobal{utfblocks} } = (
 		'Alphabetic Presentation Forms' => [ 'FB00', 'FB4F' ],
 		'Arabic Presentation Forms-A'   => [ 'FB50', 'FDCF' ]
