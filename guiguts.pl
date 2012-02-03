@@ -1243,44 +1243,6 @@ sub highlightscannos {
 
 ## The main menu building code.
 
-sub file_saveas {
-	my ($name);
-	$name = $textwindow->getSaveFile( -title      => 'Save As',
-									  -initialdir => $globallastpath );
-	if ( defined($name) and length($name) ) {
-		my $binname = $name;
-		$binname =~ s/\.[^\.]*?$/\.bin/;
-		if ( $binname eq $name ) { $binname .= '.bin' }
-		if ( -e $binname ) {
-			my $warning = $top->Dialog(    # FIXME: heredoc
-				-text =>
-"WARNING! A file already exists that will use the same .bin filename.\n"
-				  . "It is highly recommended that a different file name is chosen to avoid\n"
-				  . "corrupting the .bin files.\n\n Are you sure you want to continue?",
-				-title          => 'Bin File Collision!',
-				-bitmap         => 'warning',
-				-buttons        => [qw/Continue Cancel/],
-				-default_button => qw/Cancel/,
-			);
-			my $answer = $warning->Show;
-			return unless ( $answer eq 'Continue' );
-		}
-		$textwindow->SaveUTF($name);
-		my ( $fname, $extension, $filevar );
-		( $fname, $globallastpath, $extension ) = fileparse($name);
-		$globallastpath = os_normal($globallastpath);
-		$name           = os_normal($name);
-		$textwindow->FileName($name);
-		$lglobal{global_filename} = $name;
-		_bin_save();
-		_recentupdate($name);
-	} else {
-		return;
-	}
-	update_indicators();
-	return;
-}
-
 sub file_close {
 	return if ( confirmempty() =~ m{cancel}i );
 	clearvars();
@@ -2039,7 +2001,7 @@ sub menubuildold {
 			   -accelerator => 'Ctrl+s',
 			   -command     => \&savefile
 			 ],
-			 [ 'command', 'Save ~As', -command => \&file_saveas ],
+			 [ 'command', 'Save ~As', -command => sub{file_saveas($textwindow)} ],
 			 [
 			   'command',
 			   '~Include File',
@@ -2811,7 +2773,7 @@ sub menubuild {
 			   -accelerator => 'Ctrl+s',
 			   -command     => \&savefile
 			 ],
-			 [ 'command', 'Save ~As', -command => \&file_saveas ],
+			 [ 'command', 'Save ~As', -command => sub{file_saveas($textwindow)} ],
 			 [
 			   'command',
 			   '~Include File',
@@ -3559,7 +3521,7 @@ sub menubuildtwo {
 			   -accelerator => 'Ctrl+s',
 			   -command     => \&savefile
 			 ],
-			 [ 'command', 'Save ~As', -command => \&file_saveas ],
+			 [ 'command', 'Save ~As', -command => sub{file_saveas($textwindow)} ],
 			 [ 'separator', '' ],
 			 map ( [
 					 Button   => "$recentfile[$_]",

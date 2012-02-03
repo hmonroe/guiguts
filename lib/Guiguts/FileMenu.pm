@@ -3,7 +3,7 @@ package Guiguts::FileMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&file_open &file_include &_exit )
+	@EXPORT=qw(&file_open &file_saveas &file_include &_exit )
 }
 
 sub file_open {    # Find a text file to open
@@ -51,6 +51,47 @@ sub file_include {    # FIXME: Should include even if no file loaded.
 	&main::update_indicators();
 	return;
 }
+
+sub file_saveas {
+	my $textwindow = shift;
+	my ($name);
+	$name = $textwindow->getSaveFile( -title      => 'Save As',
+									  -initialdir => $main::globallastpath );
+	if ( defined($name) and length($name) ) {
+		my $binname = $name;
+		$binname =~ s/\.[^\.]*?$/\.bin/;
+		if ( $binname eq $name ) { $binname .= '.bin' }
+		if ( -e $binname ) {
+			my $warning = $top->Dialog(    # FIXME: heredoc
+				-text =>
+"WARNING! A file already exists that will use the same .bin filename.\n"
+				  . "It is highly recommended that a different file name is chosen to avoid\n"
+				  . "corrupting the .bin files.\n\n Are you sure you want to continue?",
+				-title          => 'Bin File Collision!',
+				-bitmap         => 'warning',
+				-buttons        => [qw/Continue Cancel/],
+				-default_button => qw/Cancel/,
+			);
+			my $answer = $warning->Show;
+			return unless ( $answer eq 'Continue' );
+		}
+		$textwindow->SaveUTF($name);
+		my ( $fname, $extension, $filevar );
+		( $fname, $main::globallastpath, $extension ) = &main::fileparse($name);
+		$main::globallastpath = &main::os_normal($main::globallastpath);
+		$name           = &main::os_normal($name);
+		$textwindow->FileName($name);
+		$main::lglobal{global_filename} = $name;
+		&main::_bin_save();
+		&main::_recentupdate($name);
+	} else {
+		return;
+	}
+	&main::update_indicators();
+	return;
+}
+
+
 
 ## Global Exit
 sub _exit {
