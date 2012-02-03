@@ -496,7 +496,7 @@ sub bangmark {
 	my $wordw   = 0;
 	my $ssindex = '1.0';
 	my $length  = 0;
-	return if ( &main::nofileloaded() );
+	return if ( nofileloaded($top) );
 	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
 	$main::lglobal{wclistbox}->update;
 	my $wholefile = &main::slurpfile();
@@ -715,7 +715,7 @@ sub commark {
 	my $wordw   = 0;
 	my $ssindex = '1.0';
 	my $length;
-	return if ( &main::nofileloaded() );
+	return if ( nofileloaded($top) );
 	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
 	$main::lglobal{wclistbox}->update;
 	my $wholefile = &main::slurpfile();
@@ -776,7 +776,7 @@ sub itwords {
 	my %words;
 	my $ssindex = '1.0';
 	my $length;
-	return if ( &main::nofileloaded() );
+	return if ( nofileloaded($top) );
 	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
 	$main::lglobal{wclistbox}->update;
 	my $wholefile = &main::slurpfile();
@@ -969,7 +969,7 @@ sub charsortcheck {
 	my $end      = $textwindow->index('end');
 	my $wordw    = 0;
 	my $filename = $textwindow->FileName;
-	return if ( &main::nofileloaded() );
+	return if ( nofileloaded($top) );
 	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
 	$main::lglobal{wclistbox}->update;
 	&main::savefile() unless ( $textwindow->numberChanges == 0 );
@@ -1304,5 +1304,16 @@ sub sortwords {
 	$main::lglobal{wclistbox}->update;
 	$main::lglobal{wclistbox}->yview( 'scroll', -1, 'units' );
 }
+
+sub nofileloaded {
+	my $top = shift;
+	if ( $main::lglobal{global_filename} =~ m/No File Loaded/ ) {
+		$main::lglobal{wclistbox}->insert( 'end', 'Please save the file first.' );
+		$main::lglobal{wclistbox}->update;
+		$top->Unbusy;
+		return 1;
+	}
+}
+
 
 1;

@@ -9578,15 +9578,6 @@ sub slurpfile {
 	return $wholefile;
 }
 
-sub nofileloaded {
-	if ( $lglobal{global_filename} =~ m/No File Loaded/ ) {
-		$lglobal{wclistbox}->insert( 'end', 'Please save the file first.' );
-		$lglobal{wclistbox}->update;
-		$top->Unbusy;
-		return 1;
-	}
-}
-
 sub confirmdiscard {
 	if ( $textwindow->numberChanges ) {
 		my $ans = $top->messageBox(
