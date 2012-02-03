@@ -202,7 +202,7 @@ sub wordfrequency {
 				  sub {anythingwfcheck('words with initial caps',
 				  '^\p{Upper}\P{Upper}+$',$top)}
 			],
-			[ 'Character Cnts', \&main::charsortcheck ],
+			[ 'Character Cnts', sub{charsortcheck($textwindow,$top) }],
 			[ 'Check , Upper',  sub{commark($top)} ],
 			[ 'Check . Lower',  sub{bangmark($top) }],
 			[ 'Check Accents',  sub{accentcheck($top)} ],
@@ -959,6 +959,53 @@ sub wordfrequencyspellcheck {
 	$top->Unbusy;
 }
 
+sub charsortcheck {
+	my ($textwindow, $top) = @_;
+	$top->Busy( -recurse => 1 );
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	my %display = ();
+	my %chars;
+	my $index    = '1.0';
+	my $end      = $textwindow->index('end');
+	my $wordw    = 0;
+	my $filename = $textwindow->FileName;
+	return if ( &main::nofileloaded() );
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
+	$main::lglobal{wclistbox}->update;
+	&main::savefile() unless ( $textwindow->numberChanges == 0 );
+	open my $fh, '<', $filename;
 
+	while ( my $line = <$fh> ) {
+		utf8::decode($line);
+		$line =~ s/^\x{FEFF}?// if ( $. < 2 );    # Drop the BOM!
+		if ( $main::lglobal{ignore_case} ) { $line = lc($line) }
+		my @words = split( //, $line );
+		foreach (@words) {
+			$chars{$_}++;
+			$wordw++;
+		}
+		$index++;
+		$index .= '.0';
+	}
+	close $fh;
+	my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
+	$wordw += ( $last_line - 2 );
+	foreach ( keys %chars ) {
+		next if ( $chars{$_} < 1 );
+		next if ( $_ =~ / / );
+		if ( $_ =~ /\t/ ) { $display{'*tab*'} = $chars{$_}; next }
+		$display{$_} = $chars{$_};
+	}
+	$display{'*newline*'} = $last_line - 2;
+	$display{'*space*'}   = $chars{' '};
+	$display{'*nbsp*'}    = $chars{"\xA0"} if $chars{"\xA0"};
+	delete $display{"\xA0"}  if $chars{"\xA0"};
+	delete $display{"\x{d}"} if $chars{"\x{d}"};
+	delete $display{"\n"}    if $chars{"\n"};
+	$main::lglobal{saveheader} = "$wordw characters in the file.";
+	&main::sortwords( \%display );
+	&main::searchoptset(qw/0 x x 0/);
+	$top->Unbusy;
+}
 
 1;
