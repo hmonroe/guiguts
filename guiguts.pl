@@ -9801,39 +9801,6 @@ sub nofileloaded {
 	}
 }
 
-sub wordfrequencyspellcheck {
-	spelloptions() unless $globalspellpath;
-	return unless $globalspellpath;
-	$top->Busy( -recurse => 1 );
-	$lglobal{wclistbox}->delete( '0', 'end' );
-	$lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
-	$lglobal{wclistbox}->update;
-
-	my $wordw = wordfrequencygetmisspelled();
-	$lglobal{saveheader} = "$wordw words not recognised by the spellchecker.";
-	sortwords( \%{ $lglobal{spellsort} } );
-	$top->Unbusy;
-}
-
-sub wordfrequencygetmisspelled {
-	$lglobal{misspelledlist}= ();
-	my ( $words, $uwords );
-	my $wordw = 0;
-	foreach ( sort ( keys %{ $lglobal{seenwords} } ) ) {
-		$words .= "$_\n";
-	}
-	if ($words) {
-		getmisspelledwords($words);
-	}
-	if ($lglobal{misspelledlist}){
-		foreach ( sort @{ $lglobal{misspelledlist} } ) {
-			$lglobal{spellsort}->{$_} = $lglobal{seenwords}->{$_} || '0';
-			$wordw++;
-		}
-	}
-	return $wordw;
-}
-
 sub charsortcheck {
 	$top->Busy( -recurse => 1 );
 	$lglobal{wclistbox}->delete( '0', 'end' );

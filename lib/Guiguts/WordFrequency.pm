@@ -194,7 +194,7 @@ sub wordfrequency {
 				   &main::searchoptset(qw/1 0 x 0/);    #default is whole word search
 				 }
 			],
-			[ 'Check Spelling', \&main::wordfrequencyspellcheck ],
+			[ 'Check Spelling', sub{wordfrequencyspellcheck($top)} ],
 			[ 'Ital/Bold/SC', sub {itwords($top); ital_adjust($top) }],
 			[ 'ALL CAPS',     sub {capscheck($top)} ],
 			[ 'MiXeD CasE',   sub {mixedcasecheck($top)} ],
@@ -924,5 +924,41 @@ sub hyphencheck {
 	&main::sortwords( \%display );
 	$top->Unbusy;
 }
+
+sub wordfrequencygetmisspelled {
+	$main::lglobal{misspelledlist}= ();
+	my ( $words, $uwords );
+	my $wordw = 0;
+	foreach ( sort ( keys %{ $main::lglobal{seenwords} } ) ) {
+		$words .= "$_\n";
+	}
+	if ($words) {
+		&main::getmisspelledwords($words);
+	}
+	if ($main::lglobal{misspelledlist}){
+		foreach ( sort @{ $main::lglobal{misspelledlist} } ) {
+			$main::lglobal{spellsort}->{$_} = $main::lglobal{seenwords}->{$_} || '0';
+			$wordw++;
+		}
+	}
+	return $wordw;
+}
+
+sub wordfrequencyspellcheck {
+	my $top = shift;
+	&main::spelloptions() unless $main::globalspellpath;
+	return unless $main::globalspellpath;
+	$top->Busy( -recurse => 1 );
+	$main::lglobal{wclistbox}->delete( '0', 'end' );
+	$main::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$main::lglobal{wclistbox}->update;
+
+	my $wordw = wordfrequencygetmisspelled();
+	$main::lglobal{saveheader} = "$wordw words not recognised by the spellchecker.";
+	&main::sortwords( \%{ $main::lglobal{spellsort} } );
+	$top->Unbusy;
+}
+
+
 
 1;
