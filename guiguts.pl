@@ -1243,44 +1243,6 @@ sub highlightscannos {
 	return;
 }
 
-sub file_export {
-	my $directory = $top->chooseDirectory(
-			   -title => 'Choose the directory to export the text files to.', );
-	return 0 unless ( defined $directory and $directory ne '' );
-	unless ( -e $directory ) {
-		mkdir $directory or warn "Could not make directory $!\n" and return;
-	}
-	$top->Busy( -recurse => 1 );
-	my @marks = $textwindow->markNames;
-	my @pages = sort grep ( /^Pg\S+$/, @marks );
-	my $unicode =
-	  $textwindow->search( '-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0',
-						   'end' );
-	while (@pages) {
-		my $page = shift @pages;
-		my ($filename) = $page =~ /Pg(\S+)/;
-		$filename .= '.txt';
-		my $next;
-		if (@pages) {
-			$next = $pages[0];
-		} else {
-			$next = 'end';
-		}
-		my $file = $textwindow->get( $page, $next );
-		$file =~ s/-*\s?File:\s?(\S+)\.(png|jpg)---[^\n]*\n//;
-		$file =~ s/\n+$//;
-		open my $fh, '>', "$directory/$filename";
-		if ($unicode) {
-
-			#$file = "\x{FEFF}" . $file;    # Add the BOM to beginning of file.
-			utf8::encode($file);
-		}
-		print $fh $file;
-	}
-	$top->Unbusy( -recurse => 1 );
-	return;
-}
-
 sub file_guess_page_marks {
 	my ( $totpages, $line25, $linex );
 	if ( $lglobal{pgpop} ) {
@@ -1963,7 +1925,7 @@ sub menubuildold {
 			 [
 			   'command',
 			   'Export As Prep Text Files',
-			   -command => \&file_export
+			   -command => sub{file_export($textwindow,$top)}
 			 ],
 			 [ 'separator', '' ],
 			 [
@@ -2733,7 +2695,7 @@ sub menubuild {
 			 [
 			   'command',
 			   'Export As Prep Text Files',
-			   -command => \&file_export
+			   -command => sub{file_export($textwindow,$top)}
 			 ],
 			 [ 'separator', '' ],
 			 [ 'command', '~Close', -command => \&file_close ],
@@ -3488,7 +3450,7 @@ sub menubuildtwo {
 			 [
 			   'command',
 			   'Export As Prep Text Files',
-			   -command => \&file_export
+			   -command => sub{file_export($textwindow,$top)}
 			 ],
 			 [ 'separator', '' ],
 			# include cascading page marker section

@@ -3,7 +3,7 @@ package Guiguts::FileMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&file_open &file_saveas &file_include &file_import &file_close &_exit )
+	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &file_close &_exit )
 }
 
 sub file_open {    # Find a text file to open
@@ -139,6 +139,45 @@ sub file_import {
 	$main::lglobal{prepfile} = 1;
 	&main::file_mark_pages();
 	$main::pngspath = '';
+	$top->Unbusy( -recurse => 1 );
+	return;
+}
+
+sub file_export {
+	my ($textwindow,$top)=@_;
+	my $directory = $top->chooseDirectory(
+			   -title => 'Choose the directory to export the text files to.', );
+	return 0 unless ( defined $directory and $directory ne '' );
+	unless ( -e $directory ) {
+		mkdir $directory or warn "Could not make directory $!\n" and return;
+	}
+	$top->Busy( -recurse => 1 );
+	my @marks = $textwindow->markNames;
+	my @pages = sort grep ( /^Pg\S+$/, @marks );
+	my $unicode =
+	  $textwindow->search( '-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0',
+						   'end' );
+	while (@pages) {
+		my $page = shift @pages;
+		my ($filename) = $page =~ /Pg(\S+)/;
+		$filename .= '.txt';
+		my $next;
+		if (@pages) {
+			$next = $pages[0];
+		} else {
+			$next = 'end';
+		}
+		my $file = $textwindow->get( $page, $next );
+		$file =~ s/-*\s?File:\s?(\S+)\.(png|jpg)---[^\n]*\n//;
+		$file =~ s/\n+$//;
+		open my $fh, '>', "$directory/$filename";
+		if ($unicode) {
+
+			#$file = "\x{FEFF}" . $file;    # Add the BOM to beginning of file.
+			utf8::encode($file);
+		}
+		print $fh $file;
+	}
 	$top->Unbusy( -recurse => 1 );
 	return;
 }
