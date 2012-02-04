@@ -6919,61 +6919,6 @@ sub linkpopulate {
 	$linklistbox->yviewScroll( -1, 'units' );
 }
 
-sub thumbnailbrowse {
-	my $types =
-	  [ [ 'Image Files', [ '.gif', '.jpg', '.png' ] ], [ 'All Files', ['*'] ],
-	  ];
-	my $name =
-	  $lglobal{htmlimpop}->getOpenFile(
-										-filetypes  => $types,
-										-title      => 'File Load',
-										-initialdir => $globalimagepath
-	  );
-	return unless ($name);
-	my $xythumb = 200;
-
-	if ( $lglobal{ImageSize} ) {
-		my ( $sizex, $sizey ) = Image::Size::imgsize($name);
-		$lglobal{widthent}->delete( 0, 'end' );
-		$lglobal{heightent}->delete( 0, 'end' );
-		$lglobal{widthent}->insert( 'end', $sizex );
-		$lglobal{heightent}->insert( 'end', $sizey );
-		$lglobal{htmlimggeom}
-		  ->configure( -text => "Actual image size: $sizex x $sizey pixels" );
-	} else {
-		$lglobal{htmlimggeom}
-		  ->configure( -text => "Actual image size: unknown" );
-	}
-	$lglobal{htmlorig}->blank;
-	$lglobal{htmlthumb}->blank;
-	$lglobal{imgname}->delete( '0', 'end' );
-	$lglobal{imgname}->insert( 'end', $name );
-	my ( $fn, $ext );
-	( $fn, $globalimagepath, $ext ) = fileparse( $name, '(?<=\.)[^\.]*$' );
-	$globalimagepath = os_normal($globalimagepath);
-	$ext =~ s/jpg/jpeg/;
-
-	if ( lc($ext) eq 'gif' ) {
-		$lglobal{htmlorig}->read( $name, -shrink );
-	} else {
-		$lglobal{htmlorig}->read( $name, -format => $ext, -shrink );
-	}
-	my $sw = int( ( $lglobal{htmlorig}->width ) / $xythumb );
-	my $sh = int( ( $lglobal{htmlorig}->height ) / $xythumb );
-	if ( $sh > $sw ) {
-		$sw = $sh;
-	}
-	if ( $sw < 2 ) { $sw += 1 }
-	$lglobal{htmlthumb}
-	  ->copy( $lglobal{htmlorig}, -subsample => ($sw), -shrink )
-	  ;    #hkm changed textcopy to copy
-	$lglobal{imagelbl}->configure(
-								   -image   => $lglobal{htmlthumb},
-								   -text    => 'Thumbnail',
-								   -justify => 'center',
-	);
-}
-
 sub hyperlinkpagenums {
 	searchpopup();
 	searchoptset(qw/0 x x 1/);

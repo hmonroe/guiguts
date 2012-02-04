@@ -1608,7 +1608,7 @@ sub htmlimage {
 										-justify    => 'center',
 										-background => $main::bkgcolor,
 		)->grid( -row => 1, -column => 1 );
-		$main::lglobal{imagelbl}->bind( $main::lglobal{imagelbl}, '<1>', \&main::thumbnailbrowse );
+		$main::lglobal{imagelbl}->bind( $main::lglobal{imagelbl}, '<1>', \&thumbnailbrowse );
 		$main::lglobal{htmlimpop}->protocol(
 			'WM_DELETE_WINDOW' => sub {
 				$main::lglobal{htmlthumb}->delete  if $main::lglobal{htmlthumb};
@@ -1633,7 +1633,7 @@ sub htmlimage {
 	$main::lglobal{alttext}->delete( 0, 'end' ) if $main::lglobal{alttext};
 	$main::lglobal{titltext}->delete( 0, 'end' ) if $main::lglobal{titltext};
 	$main::lglobal{captiontext}->insert( 'end', $selection );
-	&main::thumbnailbrowse();
+	&thumbnailbrowse();
 }
 
 sub htmlimages {
@@ -1715,6 +1715,61 @@ sub htmlautoconvert {
 	html_wrapup( $textwindow, $headertext, $main::lglobal{leave_utf},
 				 $main::lglobal{autofraction}, $main::lglobal{classhash} );
 	$textwindow->ResetUndo;
+}
+
+sub thumbnailbrowse {
+	my $types =
+	  [ [ 'Image Files', [ '.gif', '.jpg', '.png' ] ], [ 'All Files', ['*'] ],
+	  ];
+	my $name =
+	  $main::lglobal{htmlimpop}->getOpenFile(
+										-filetypes  => $types,
+										-title      => 'File Load',
+										-initialdir => $main::globalimagepath
+	  );
+	return unless ($name);
+	my $xythumb = 200;
+
+	if ( $main::lglobal{ImageSize} ) {
+		my ( $sizex, $sizey ) = Image::Size::imgsize($name);
+		$main::lglobal{widthent}->delete( 0, 'end' );
+		$main::lglobal{heightent}->delete( 0, 'end' );
+		$main::lglobal{widthent}->insert( 'end', $sizex );
+		$main::lglobal{heightent}->insert( 'end', $sizey );
+		$main::lglobal{htmlimggeom}
+		  ->configure( -text => "Actual image size: $sizex x $sizey pixels" );
+	} else {
+		$main::lglobal{htmlimggeom}
+		  ->configure( -text => "Actual image size: unknown" );
+	}
+	$main::lglobal{htmlorig}->blank;
+	$main::lglobal{htmlthumb}->blank;
+	$main::lglobal{imgname}->delete( '0', 'end' );
+	$main::lglobal{imgname}->insert( 'end', $name );
+	my ( $fn, $ext );
+	( $fn, $globalimagepath, $ext ) = fileparse( $name, '(?<=\.)[^\.]*$' );
+	$main::globalimagepath = os_normal($main::globalimagepath);
+	$ext =~ s/jpg/jpeg/;
+
+	if ( lc($ext) eq 'gif' ) {
+		$main::lglobal{htmlorig}->read( $name, -shrink );
+	} else {
+		$main::lglobal{htmlorig}->read( $name, -format => $ext, -shrink );
+	}
+	my $sw = int( ( $main::lglobal{htmlorig}->width ) / $xythumb );
+	my $sh = int( ( $main::lglobal{htmlorig}->height ) / $xythumb );
+	if ( $sh > $sw ) {
+		$sw = $sh;
+	}
+	if ( $sw < 2 ) { $sw += 1 }
+	$main::lglobal{htmlthumb}
+	  ->copy( $main::lglobal{htmlorig}, -subsample => ($sw), -shrink )
+	  ;    #hkm changed textcopy to copy
+	$main::lglobal{imagelbl}->configure(
+								   -image   => $main::lglobal{htmlthumb},
+								   -text    => 'Thumbnail',
+								   -justify => 'center',
+	);
 }
 
 
