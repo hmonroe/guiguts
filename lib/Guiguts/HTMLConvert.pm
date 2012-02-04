@@ -9,7 +9,7 @@ BEGIN {
 	  &html_convert_ampersands &html_convert_emdashes &html_convert_latin1 &html_convert_codepage &html_convert_utf
 	  &html_cleanup_markers &html_convert_footnotes &html_convert_body &html_convert_body2 &html_convert_underscoresmallcaps
 	  &html_convert_sidenotes &html_convert_pageanchors &html_parse_header &html_wrapup &htmlbackup
-	  &insert_paragraph_close &insert_paragraph_open &htmlimage &htmlimages &htmlautoconvert);
+	  &insert_paragraph_close &insert_paragraph_open &htmlimage &htmlimages &htmlautoconvert &htmlpopup);
 }
 
 sub html_convert_tb {
@@ -1770,6 +1770,448 @@ sub thumbnailbrowse {
 								   -text    => 'Thumbnail',
 								   -justify => 'center',
 	);
+}
+
+sub htmlpopup {
+	my ($textwindow,$top)=@_;
+	
+	push @operations, ( localtime() . ' - HTML Markup' );
+	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
+	if ( defined( $main::lglobal{markpop} ) ) {
+		$main::lglobal{markpop}->deiconify;
+		$main::lglobal{markpop}->raise;
+		$main::lglobal{markpop}->focus;
+	} else {
+		my $blockmarkup;
+		$main::lglobal{markpop} = $top->Toplevel;
+		$main::lglobal{markpop}->title('HTML Markup');
+		my $tableformat;
+		my $f0 =
+		  $main::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f0->Button(
+					 -activebackground => $main::activecolor,
+					 -command          => sub { htmlautoconvert($textwindow,$top) },
+					 -text             => 'Autogenerate HTML',
+					 -width            => 16
+		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 1 );
+		$f0->Button(
+					 -text    => 'Custom Page Labels',
+					 -command => sub { pageadjust() },
+		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 1 );
+		$f0->Button(
+					 -activebackground => $main::activecolor,
+					 -command          => sub { htmlimages($textwindow,$top); },
+					 -text             => 'Auto Illus Search',
+					 -width            => 16,
+		)->grid( -row => 1, -column => 3, -padx => 1, -pady => 1 );
+		$f0->Button(    #hkm added
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				&main::runner( &main::cmdinterp("$main::extops[0]{command}") );
+			},
+			-text  => 'View in Browser',
+			-width => 16,
+		)->grid( -row => 1, -column => 4, -padx => 1, -pady => 1 );
+		my $pagecomments =
+		  $f0->Checkbutton(
+							-variable    => \$main::lglobal{pagecmt},
+							-selectcolor => $main::lglobal{checkcolor},
+							-text        => 'Pg #s as comments',
+							-anchor      => 'w',
+		  )->grid(
+				   -row    => 2,
+				   -column => 1,
+				   -padx   => 1,
+				   -pady   => 2,
+				   -sticky => 'w'
+		  );
+		my $pageanchors =
+		  $f0->Checkbutton(
+							-variable    => \$main::lglobal{pageanch},
+							-selectcolor => $main::lglobal{checkcolor},
+							-text        => 'Insert Anchors at Pg #s',
+							-anchor      => 'w',
+		  )->grid(
+				   -row    => 2,
+				   -column => 2,
+				   -padx   => 1,
+				   -pady   => 2,
+				   -sticky => 'w'
+		  );
+		$pageanchors->select;
+		my $fractions =
+		  $f0->Checkbutton(
+							-variable    => \$main::lglobal{autofraction},
+							-selectcolor => $main::lglobal{checkcolor},
+							-text        => 'Convert Fractions',
+							-anchor      => 'w',
+		  )->grid(
+				   -row    => 2,
+				   -column => 3,
+				   -padx   => 1,
+				   -pady   => 2,
+				   -sticky => 'w'
+		  );
+
+		my $utfconvert =
+		  $f0->Checkbutton(
+							-variable    => \$main::lglobal{leave_utf},
+							-selectcolor => $main::lglobal{checkcolor},
+							-text        => 'Keep UTF-8 Chars',
+							-anchor      => 'w',
+		  )->grid(
+				   -row    => 3,
+				   -column => 1,
+				   -padx   => 1,
+				   -pady   => 2,
+				   -sticky => 'w'
+		  );
+
+		my $latin1_convert =
+		  $f0->Checkbutton(
+							-variable    => \$main::lglobal{keep_latin1},
+							-selectcolor => $main::lglobal{checkcolor},
+							-text        => 'Keep Latin-1 Chars',
+							-anchor      => 'w',
+		  )->grid(
+				   -row    => 3,
+				   -column => 2,
+				   -padx   => 1,
+				   -pady   => 2,
+				   -sticky => 'w'
+		  );
+
+		$blockmarkup = $f0->Checkbutton(
+			-variable    => \$main::lglobal{cssblockmarkup},
+			-selectcolor => $main::lglobal{checkcolor},
+			-command     => sub {
+
+				if ( $main::lglobal{cssblockmarkup} ) {
+					$blockmarkup->configure( '-text' => 'CSS blockquote' );
+				} else {
+					$blockmarkup->configure( '-text' => 'Std. <blockquote>' );
+				}
+			},
+			-text   => 'CSS blockquote',
+			-anchor => 'w',
+		  )->grid(
+				   -row    => 3,
+				   -column => 3,
+				   -padx   => 1,
+				   -pady   => 2,
+				   -sticky => 'w'
+		  );
+		my $f1 =
+		  $main::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		my ( $inc, $row, $col ) = ( 0, 0, 0 );
+
+	   # Warning: if you add tags to the list below move nbsp and poetry buttons
+		for (
+			qw/i b h1 h2 h3 h4 h5 h6 p hr br big small ol ul li sup sub table tr td blockquote code /
+		  )
+		{
+			$col = $inc % 5;
+			$row = int $inc / 5;
+			$f1->Button(
+						 -activebackground => $main::activecolor,
+						 -command          => [ sub { &main::markup( $_[0] ) }, $_ ],
+						 -text             => "<$_>",
+						 -width            => 10
+			  )->grid(
+					   -row    => $row,
+					   -column => $col,
+					   -padx   => 1,
+					   -pady   => 2
+			  );
+			++$inc;
+		}
+
+		$f1->Button(
+					 -activebackground => $main::activecolor,
+					 -command          => sub { &main::markup('&nbsp;') },
+					 -text             => 'nb space',
+					 -width            => 10
+		)->grid( -row => 4, -column => 3, -padx => 1, -pady => 2 );
+		$f1->Button(
+					 -activebackground => $main::activecolor,
+					 -command          => \&main::poetryhtml,
+					 -text             => 'Poetry',
+					 -width            => 10
+		)->grid( -row => 4, -column => 4, -padx => 1, -pady => 2 );
+
+		my $f2 =
+		  $main::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		my %hbuttons = (
+						 'anchor', 'Named anchor',  'img',   'Image',
+						 'elink',  'External Link', 'ilink', 'Internal Link'
+		);
+		( $row, $col ) = ( 0, 0 );
+		for ( keys %hbuttons ) {
+			$f2->Button(
+						 -activebackground => $main::activecolor,
+						 -command          => [ sub { &main::markup( $_[0] ) }, $_ ],
+						 -text             => "$hbuttons{$_}",
+						 -width            => 13
+			  )->grid(
+					   -row    => $row,
+					   -column => $col,
+					   -padx   => 1,
+					   -pady   => 2
+			  );
+			++$col;
+		}
+
+		my $f3 =
+		  $main::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f3->Button(
+					 -activebackground => $main::activecolor,
+					 -command          => sub { &main::markup('del') },
+					 -text             => 'Remove markup from selection',
+					 -width            => 28
+		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+		$f3->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				for my $orphan (
+								 'b',   'i',   'center', 'u',
+								 'sub', 'sup', 'sc',     'h1',
+								 'h2',  'h3',  'h4',     'h5',
+								 'h6',  'p',   'span'
+				  )
+				{
+					&main::working( 'Checking <' . $orphan . '>' );
+					last if &main::orphans($orphan);
+				}
+				&main::working();
+			},
+			-text  => 'Find orphaned markup',
+			-width => 28
+		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+		my $f4 =
+		  $main::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		my $unorderselect =
+		  $f4->Radiobutton(
+							-text        => 'unordered',
+							-selectcolor => $main::lglobal{checkcolor},
+							-variable    => \$main::lglobal{liststyle},
+							-value       => 'ul',
+		  )->grid( -row => 1, -column => 1 );
+		my $orderselect =
+		  $f4->Radiobutton(
+							-text        => 'ordered',
+							-selectcolor => $main::lglobal{checkcolor},
+							-variable    => \$main::lglobal{liststyle},
+							-value       => 'ol',
+		  )->grid( -row => 1, -column => 2 );
+		my $autolbutton =
+		  $f4->Button(
+					   -activebackground => $main::activecolor,
+					   -command => sub { &main::autolist(); $textwindow->focus },
+					   -text    => 'Auto List',
+					   -width   => 16
+		  )->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
+		$f4->Checkbutton(
+						  -text     => 'ML',
+						  -variable => \$main::lglobal{list_multiline},
+						  -onvalue  => 1,
+						  -offvalue => 0
+		)->grid( -row => 1, -column => 5 );
+		my $leftselect =
+		  $f4->Radiobutton(
+							-text        => 'left',
+							-selectcolor => $main::lglobal{checkcolor},
+							-variable    => \$main::lglobal{tablecellalign},
+							-value       => ' align="left"',
+		  )->grid( -row => 2, -column => 1 );
+		my $censelect =
+		  $f4->Radiobutton(
+							-text        => 'center',
+							-selectcolor => $main::lglobal{checkcolor},
+							-variable    => \$main::lglobal{tablecellalign},
+							-value       => ' align="center"',
+		  )->grid( -row => 2, -column => 2 );
+		my $rghtselect =
+		  $f4->Radiobutton(
+							-text        => 'right',
+							-selectcolor => $main::lglobal{checkcolor},
+							-variable    => \$main::lglobal{tablecellalign},
+							-value       => ' align="right"',
+		  )->grid( -row => 2, -column => 3 );
+		$leftselect->select;
+		$unorderselect->select;
+		$f4->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				&main::autotable( $tableformat->get );
+				$textwindow->focus;
+			},
+			-text  => 'Auto Table',
+			-width => 16
+		)->grid( -row => 2, -column => 4, -padx => 1, -pady => 2 );
+		$f4->Checkbutton(
+						  -text     => 'ML',
+						  -variable => \$main::lglobal{tbl_multiline},
+						  -onvalue  => 1,
+						  -offvalue => 0
+		)->grid( -row => 2, -column => 5 );
+		my $f5 =
+		  $main::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		$tableformat = $f5->Entry(
+								   -width      => 40,
+								   -background => $main::bkgcolor,
+								   -relief     => 'sunken',
+		)->grid( -row => 0, -column => 1, -pady => 2 );
+		$f5->Label( -text => 'Column Fmt', )
+		  ->grid( -row => 0, -column => 2, -padx => 2, -pady => 2 );
+		my $diventry = $f5->Entry(
+								   -width      => 40,
+								   -background => $main::bkgcolor,
+								   -relief     => 'sunken',
+		)->grid( -row => 1, -column => 1, -pady => 2 );
+		$f5->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				&main::markup( 'div', $diventry->get );
+				$textwindow->focus;
+			},
+			-text  => 'div',
+			-width => 8
+		)->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
+		my $f6 =
+		  $main::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		my $spanentry = $f6->Entry(
+									-width      => 40,
+									-background => $main::bkgcolor,
+									-relief     => 'sunken',
+		)->grid( -row => 1, -column => 1, -pady => 2 );
+		$f6->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				&main::markup( 'span', $spanentry->get );
+				$textwindow->focus;
+			},
+			-text  => 'span',
+			-width => 8
+		)->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
+		my $f7 =
+		  $main::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f7->Checkbutton(
+						  -variable    => \$main::lglobal{poetrynumbers},
+						  -selectcolor => $main::lglobal{checkcolor},
+						  -text        => 'Find and Format Poetry Line Numbers'
+		)->grid( -row => 1, -column => 1, -pady => 2 );
+		$f7->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				open my $infile, '<', 'header.txt'
+				  or warn "Could not open header file. $!\n";
+				my $headertext;
+				while (<$infile>) {
+					$_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
+					#$_ = eol_convert($_);
+					$headertext .= $_;
+				}
+				$textwindow->insert( '1.0', $headertext );
+				close $infile;
+				$textwindow->insert( 'end', "<\/body>\n<\/html>" );
+			},
+			-text  => 'Header',
+			-width => 16
+		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+		my $f8 =
+		  $main::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f8->Button(
+					 -activebackground => $main::activecolor,
+					 -command          => \&main::hyperlinkpagenums,
+					 -text             => 'Hyperlink Page Nums',
+					 -width            => 16
+		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+		unless ($useppwizardmenus and not $usemenutwo) {
+		$f8->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				&main::errorcheckpop_up('Link Check');
+				unlink 'null' if ( -e 'null' )
+			},
+			-text  => 'Link Check',
+			-width => 16
+		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+		$f8->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				&main::errorcheckpop_up('HTML Tidy');
+				unlink 'null' if ( -e 'null' );
+			},
+			-text  => 'HTML Tidy',
+			-width => 16
+		)->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
+		$f8->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				if   ($main::w3cremote) { &main::errorcheckpop_up('W3C Validate Remote') }
+				else              { &main::errorcheckpop_up('W3C Validate'); }
+				unlink 'null' if ( -e 'null' );
+			},
+			-text  => 'W3C Validate',
+			-width => 16
+		)->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
+		$f8->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				&main::errorcheckpop_up('W3C Validate CSS');    #validatecssrun('');
+				unlink 'null' if ( -e 'null' );
+			},
+			-text  => 'W3C Validate CSS',
+			-width => 16
+		)->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
+		$f8->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				&main::errorcheckpop_up('pphtml');
+				unlink 'null' if ( -e 'null' );
+			},
+			-text  => 'pphtml',
+			-width => 16
+		)->grid( -row => 2, -column => 3, -padx => 1, -pady => 2 );
+		$f8->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				&main::errorcheckpop_up('Image Check');
+				unlink 'null' if ( -e 'null' );
+			},
+			-text  => 'Image Check',
+			-width => 16
+		)->grid( -row => 3, -column => 1, -padx => 1, -pady => 2 );
+		$f8->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				&main::errorcheckpop_up('Epub Friendly');
+				unlink 'null' if ( -e 'null' );
+			},
+			-text  => 'Epub Friendly',
+			-width => 16
+		)->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
+		$f8->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				&main::errorcheckpop_up('Check All');
+				unlink 'null' if ( -e 'null' );
+			},
+			-text  => 'Check All',
+			-width => 16
+		)->grid( -row => 3, -column => 3, -padx => 1, -pady => 2 );}
+		$diventry->insert( 'end', ' class="i2"' );
+		$spanentry->insert( 'end', ' class="i2"' );
+		$main::lglobal{markpop}->protocol(
+			'WM_DELETE_WINDOW' => sub {
+				$main::lglobal{markpop}->destroy;
+				undef $main::lglobal{markpop};
+			}
+		);
+		$main::lglobal{markpop}->Icon( -image => $main::icon );
+		$main::lglobal{markpop}->transient($top) if $main::stayontop;
+	}
 }
 
 
