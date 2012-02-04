@@ -105,6 +105,7 @@ use Guiguts::TextProcessingMenu;
 use Guiguts::HTMLConvert;
 use Guiguts::StatusBar;
 use Guiguts::WordFrequency;
+use Guiguts::MultiLingual;
 
 # Ignore any watchdog timer alarms. Subroutines that take a long time to
 # complete can trip it
