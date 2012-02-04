@@ -7191,61 +7191,6 @@ sub makeanchor {
 	return $linkname;
 }
 
-sub htmlautoconvert {
-	viewpagenums() if ( $lglobal{seepagenums} );
-	my $headertext;
-	if ( $lglobal{global_filename} =~ /No File Loaded/ ) {
-		$top->messageBox(
-						  -icon    => 'warning',
-						  -type    => 'OK',
-						  -message => 'File must be saved first.'
-		);
-		return;
-	}
-
-	# Backup file
-	$textwindow->Busy;
-	my $savefn = $lglobal{global_filename};
-	$lglobal{global_filename} =~ s/\.[^\.]*?$//;
-	my $newfn = $lglobal{global_filename} . '-htmlbak.txt';
-	working("Saving backup of file\nto $newfn");
-	$textwindow->SaveUTF($newfn);
-	$lglobal{global_filename} = $newfn;
-	_bin_save();
-	$lglobal{global_filename} = $savefn;
-	$textwindow->FileName($savefn);
-
-	html_convert_codepage();
-
-	html_convert_ampersands($textwindow);
-
-	$headertext = html_parse_header( $textwindow, $headertext );
-
-	html_convert_emdashes();
-
-	$lglobal{fnsecondpass}  = 0;
-	$lglobal{fnsearchlimit} = 1;
-	html_convert_footnotes( $textwindow, $lglobal{fnarray} );
-
-	html_convert_body( $textwindow, $headertext, $lglobal{cssblockmarkup},
-					   $lglobal{poetrynumbers}, $lglobal{classhash} );
-
-	html_cleanup_markers($textwindow);
-
-	html_convert_underscoresmallcaps($textwindow);
-
-	html_convert_sidenotes($textwindow);
-
-	html_convert_pageanchors( $textwindow, $lglobal{pageanch},
-							  $lglobal{pagecmt} );
-
-	html_convert_utf( $textwindow, $lglobal{leave_utf}, $lglobal{keep_latin1} );
-
-	html_wrapup( $textwindow, $headertext, $lglobal{leave_utf},
-				 $lglobal{autofraction}, $lglobal{classhash} );
-	$textwindow->ResetUndo;
-}
-
 sub entity {
 	my $char = shift;
 	my %markuphash = (
@@ -16114,7 +16059,7 @@ sub htmlpopup {
 		  $lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f0->Button(
 					 -activebackground => $activecolor,
-					 -command          => sub { htmlautoconvert() },
+					 -command          => sub { htmlautoconvert($textwindow,$top) },
 					 -text             => 'Autogenerate HTML',
 					 -width            => 16
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 1 );
@@ -19547,7 +19492,7 @@ sub runtests {
 	# Test 1 of HTML generation
 	ok( 1 == do { openfile("tests/testhtml1.txt"); 1 },
 		"openfile on tests/testhtml1.txt" );
-	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml1.txt" );
+	ok( 1 == do { htmlautoconvert($textwindow,$top); 1 }, "openfile on tests/testhtml1.txt" );
 	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml1.html'); 1 },
 		"test of file save as tests/testfilewrapped" );
 	ok( -e 'tests/testhtml1.html', "tests/testhtml1.html was saved" );
@@ -19585,7 +19530,7 @@ sub runtests {
 	# Test 2 of HTML generation
 	ok( 1 == do { openfile("tests/testhtml2.txt"); 1 },
 		"openfile on tests/testhtml2.txt" );
-	ok( 1 == do { htmlautoconvert(); 1 }, "openfile on tests/testhtml2.txt" );
+	ok( 1 == do { htmlautoconvert($textwindow,$top); 1 }, "openfile on tests/testhtml2.txt" );
 	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml2.html'); 1 },
 		"test of file save as tests/testfilewrapped" );
 	ok( -e 'tests/testhtml2.html', "tests/testhtml2.html was saved" );

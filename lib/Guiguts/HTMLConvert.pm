@@ -9,7 +9,7 @@ BEGIN {
 	  &html_convert_ampersands &html_convert_emdashes &html_convert_latin1 &html_convert_codepage &html_convert_utf
 	  &html_cleanup_markers &html_convert_footnotes &html_convert_body &html_convert_body2 &html_convert_underscoresmallcaps
 	  &html_convert_sidenotes &html_convert_pageanchors &html_parse_header &html_wrapup &htmlbackup
-	  &insert_paragraph_close &insert_paragraph_open &htmlimage &htmlimages);
+	  &insert_paragraph_close &insert_paragraph_open &htmlimage &htmlimages &htmlautoconvert);
 }
 
 sub html_convert_tb {
@@ -1659,6 +1659,65 @@ sub htmlimages {
 	&main::update_indicators();
 	htmlimage($textwindow,$top, $start, $end );
 }
+
+sub htmlautoconvert {
+	my ($textwindow,$top)=@_;
+	
+	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
+	my $headertext;
+	if ( $main::lglobal{global_filename} =~ /No File Loaded/ ) {
+		$top->messageBox(
+						  -icon    => 'warning',
+						  -type    => 'OK',
+						  -message => 'File must be saved first.'
+		);
+		return;
+	}
+
+	# Backup file
+	$textwindow->Busy;
+	my $savefn = $main::lglobal{global_filename};
+	$main::lglobal{global_filename} =~ s/\.[^\.]*?$//;
+	my $newfn = $main::lglobal{global_filename} . '-htmlbak.txt';
+	&main::working("Saving backup of file\nto $newfn");
+	$textwindow->SaveUTF($newfn);
+	$main::lglobal{global_filename} = $newfn;
+	&main::_bin_save();
+	$main::lglobal{global_filename} = $savefn;
+	$textwindow->FileName($savefn);
+
+	html_convert_codepage();
+
+	html_convert_ampersands($textwindow);
+
+	$headertext = html_parse_header( $textwindow, $headertext );
+
+	html_convert_emdashes();
+
+	$main::lglobal{fnsecondpass}  = 0;
+	$main::lglobal{fnsearchlimit} = 1;
+	html_convert_footnotes( $textwindow, $main::lglobal{fnarray} );
+
+	html_convert_body( $textwindow, $headertext, $main::lglobal{cssblockmarkup},
+					   $main::lglobal{poetrynumbers}, $main::lglobal{classhash} );
+
+	html_cleanup_markers($textwindow);
+
+	html_convert_underscoresmallcaps($textwindow);
+
+	html_convert_sidenotes($textwindow);
+
+	html_convert_pageanchors( $textwindow, $main::lglobal{pageanch},
+							  $main::lglobal{pagecmt} );
+
+	html_convert_utf( $textwindow, $main::lglobal{leave_utf}, $main::lglobal{keep_latin1} );
+
+	html_wrapup( $textwindow, $headertext, $main::lglobal{leave_utf},
+				 $main::lglobal{autofraction}, $main::lglobal{classhash} );
+	$textwindow->ResetUndo;
+}
+
+
 
 1;
 
