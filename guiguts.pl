@@ -3942,8 +3942,7 @@ sub menubuildtwo {
 			[ Button => 'Run ~Jeebies...',     -command => \&jeebiespop_up ],
 			[ Button => 'Run ~Gutcheck...',    -command => \&gutcheck ],
 			[ Button => 'Gutcheck options...', -command => \&gutopts ],
-			[
-			   Button   => 'pptxt...',
+			[ Button   => 'pptxt...',
 			   -command => sub {
 				   errorcheckpop_up('pptxt');
 				   unlink 'null' if ( -e 'null' );
@@ -3951,10 +3950,16 @@ sub menubuildtwo {
 			],
 			[ 'separator', '' ],
 			[ Button => '~HTML Fixup...',     -command => sub{htmlpopup($textwindow,$top)} ],
+			[ Button => 'View in Browser',
+				-command          => sub {
+					runner( cmdinterp("$extops[0]{command}") );
+				},
+			],
 			[ Button => 'HTML Check All', -command => sub {
 				errorcheckpop_up('Check All');
 				unlink 'null' if ( -e 'null' );
 			} ],
+			[ 'separator', '' ],
 			[ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
 			[
 			   Cascade    => 'HTML to Epub',
