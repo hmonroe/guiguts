@@ -6919,7 +6919,7 @@ sub linkpopulate {
 	$linklistbox->yviewScroll( -1, 'units' );
 }
 
-sub tnbrowse {
+sub thumbnailbrowse {
 	my $types =
 	  [ [ 'Image Files', [ '.gif', '.jpg', '.png' ] ], [ 'All Files', ['*'] ],
 	  ];

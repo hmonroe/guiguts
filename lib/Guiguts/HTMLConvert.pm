@@ -1608,7 +1608,7 @@ sub htmlimage {
 										-justify    => 'center',
 										-background => $main::bkgcolor,
 		)->grid( -row => 1, -column => 1 );
-		$main::lglobal{imagelbl}->bind( $main::lglobal{imagelbl}, '<1>', \&tnbrowse );
+		$main::lglobal{imagelbl}->bind( $main::lglobal{imagelbl}, '<1>', \&main::thumbnailbrowse );
 		$main::lglobal{htmlimpop}->protocol(
 			'WM_DELETE_WINDOW' => sub {
 				$main::lglobal{htmlthumb}->delete  if $main::lglobal{htmlthumb};
@@ -1633,7 +1633,7 @@ sub htmlimage {
 	$main::lglobal{alttext}->delete( 0, 'end' ) if $main::lglobal{alttext};
 	$main::lglobal{titltext}->delete( 0, 'end' ) if $main::lglobal{titltext};
 	$main::lglobal{captiontext}->insert( 'end', $selection );
-	&main::tnbrowse();
+	&main::thumbnailbrowse();
 }
 
 sub htmlimages {
