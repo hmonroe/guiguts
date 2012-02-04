@@ -9,7 +9,7 @@ BEGIN {
 	  &html_convert_ampersands &html_convert_emdashes &html_convert_latin1 &html_convert_codepage &html_convert_utf
 	  &html_cleanup_markers &html_convert_footnotes &html_convert_body &html_convert_body2 &html_convert_underscoresmallcaps
 	  &html_convert_sidenotes &html_convert_pageanchors &html_parse_header &html_wrapup &htmlbackup
-	  &insert_paragraph_close &insert_paragraph_open );
+	  &insert_paragraph_close &insert_paragraph_open &htmlimage);
 }
 
 sub html_convert_tb {
@@ -1402,6 +1402,240 @@ sub insert_paragraph_open {
 	}
 	return 0;
 }
+
+sub htmlimage {
+	my ($textwindow,$top, $thisblockstart, $thisblockend ) = @_;
+	$thisblockstart = 'insert'        unless $thisblockstart;
+	$thisblockend   = $thisblockstart unless $thisblockend;
+	$textwindow->markSet( 'thisblockstart', $thisblockstart );
+	$textwindow->markSet( 'thisblockend',   $thisblockend );
+	my $selection;
+	$selection = $textwindow->get( $thisblockstart, $thisblockend ) if @_;
+	$selection = '' unless $selection;
+	my $preservep = '';
+	$preservep = '<p>' if $selection !~ /<\/p>$/;
+	$selection =~ s/<p>\[Illustration:/[Illustration:/;
+	$selection =~ s/\[Illustration:?\s*(\.*)/$1/;
+	$selection =~ s/\]<\/p>$/]/;
+	$selection =~ s/(\.*)\]$/$1/;
+	my ( $fname, $extension );
+	my $xpad = 0;
+	$main::globalimagepath = $main::globallastpath unless $main::globalimagepath;
+	my ($alignment);
+	$main::lglobal{htmlorig}  = $top->Photo;
+	$main::lglobal{htmlthumb} = $top->Photo;
+	if ( defined( $main::lglobal{htmlimpop} ) ) {
+		$main::lglobal{htmlimpop}->deiconify;
+		$main::lglobal{htmlimpop}->raise;
+		$main::lglobal{htmlimpop}->focus;
+	} else {
+		$main::lglobal{htmlimpop} = $top->Toplevel;
+		$main::lglobal{htmlimpop}->title('Image');
+		&main::initialize_popup_without_deletebinding('htmlimpop');
+		my $f1 =
+		  $main::lglobal{htmlimpop}->LabFrame( -label => 'File Name' )
+		  ->pack( -side => 'top', -anchor => 'n', -padx => 2 );
+		$main::lglobal{imgname} =
+		  $f1->Entry( -width => 45, )->pack( -side => 'left' );
+		my $f3 =
+		  $main::lglobal{htmlimpop}->LabFrame( -label => 'Alt text' )
+		  ->pack( -side => 'top', -anchor => 'n' );
+		$main::lglobal{alttext} =
+		  $f3->Entry( -width => 45, )->pack( -side => 'left' );
+		my $f4a =
+		  $main::lglobal{htmlimpop}->LabFrame( -label => 'Caption text' )
+		  ->pack( -side => 'top', -anchor => 'n' );
+		$main::lglobal{captiontext} =
+		  $f4a->Entry( -width => 45, )->pack( -side => 'left' );
+		my $f4 =
+		  $main::lglobal{htmlimpop}->LabFrame( -label => 'Title text' )
+		  ->pack( -side => 'top', -anchor => 'n' );
+		$main::lglobal{titltext} =
+		  $f4->Entry( -width => 45, )->pack( -side => 'left' );
+		my $f5 =
+		  $main::lglobal{htmlimpop}->LabFrame( -label => 'Geometry' )
+		  ->pack( -side => 'top', -anchor => 'n' );
+		my $f51 = $f5->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f51->Label( -text => 'Width' )->pack( -side => 'left' );
+		$main::lglobal{widthent} = $f51->Entry(
+			-width    => 10,
+			-validate => 'all',
+			-vcmd     => sub {
+				return 1 if ( !$main::lglobal{ImageSize} );
+				return 1 unless $main::lglobal{htmlimgar};
+				return 1 unless ( $_[0] && $_[2] );
+				return 0 unless ( defined $_[1] && $_[1] =~ /\d/ );
+				my ( $sizex, $sizey ) =
+				  Image::Size::imgsize( $main::lglobal{imgname}->get );
+				$main::lglobal{heightent}->delete( 0, 'end' );
+				$main::lglobal{heightent}
+				  ->insert( 'end', ( int( $sizey * ( $_[0] / $sizex ) ) ) );
+				return 1;
+			}
+		)->pack( -side => 'left' );
+		$f51->Label( -text => 'Height' )->pack( -side => 'left' );
+		$main::lglobal{heightent} = $f51->Entry(
+			-width    => 10,
+			-validate => 'all',
+			-vcmd     => sub {
+				return 1 if ( !$main::lglobal{ImageSize} );
+				return 1 unless $main::lglobal{htmlimgar};
+				return 1 unless ( $_[0] && $_[2] );
+				return 0 unless ( defined $_[1] && $_[1] =~ /\d/ );
+				my ( $sizex, $sizey ) =
+				  Image::Size::imgsize( $main::lglobal{imgname}->get );
+				$main::lglobal{widthent}->delete( 0, 'end' );
+				$main::lglobal{widthent}
+				  ->insert( 'end', ( int( $sizex * ( $_[0] / $sizey ) ) ) );
+				return 1;
+			}
+		)->pack( -side => 'left' );
+		my $ar = $f51->Checkbutton(
+									-text     => 'Maintain AR',
+									-variable => \$main::lglobal{htmlimgar},
+									-onvalue  => 1,
+									-offvalue => 0
+		)->pack( -side => 'left' );
+		$ar->select;
+		my $f52 = $f5->Frame->pack( -side => 'top', -anchor => 'n' );
+		$main::lglobal{htmlimggeom} =
+		  $f52->Label( -text => '' )->pack( -side => 'left' );
+		my $f2 =
+		  $main::lglobal{htmlimpop}->LabFrame( -label => 'Alignment' )
+		  ->pack( -side => 'top', -anchor => 'n' );
+		$f2->Radiobutton(
+						  -variable    => \$alignment,
+						  -text        => 'Left',
+						  -selectcolor => $main::lglobal{checkcolor},
+						  -value       => 'left',
+		)->grid( -row => 1, -column => 1 );
+		my $censel = $f2->Radiobutton(
+									   -variable    => \$alignment,
+									   -text        => 'Center',
+									   -selectcolor => $main::lglobal{checkcolor},
+									   -value       => 'center',
+		)->grid( -row => 1, -column => 2 );
+		$f2->Radiobutton(
+						  -variable    => \$alignment,
+						  -text        => 'Right',
+						  -selectcolor => $main::lglobal{checkcolor},
+						  -value       => 'right',
+		)->grid( -row => 1, -column => 3 );
+		$censel->select;
+		my $f8 =
+		  $main::lglobal{htmlimpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f8->Button(
+			-text    => 'Ok',
+			-width   => 10,
+			-command => sub {
+				my $name = $main::lglobal{imgname}->get;
+				if ($name) {
+					my $sizexy =
+					    'width="'
+					  . $main::lglobal{widthent}->get
+					  . '" height="'
+					  . $main::lglobal{heightent}->get . '"';
+					my $width = $main::lglobal{widthent}->get;
+					return unless $name;
+					( $fname, $globalimagepath, $extension ) = &main::fileparse($name);
+					$main::globalimagepath = &main::os_normal($main::globalimagepath);
+					$name =~ s/[\/\\]/\;/g;
+					my $tempname = $main::globallastpath;
+					$tempname =~ s/[\/\\]/\;/g;
+					$name     =~ s/$tempname//;
+					$name     =~ s/;/\//g;
+					$alignment = 'center' unless $alignment;
+					$selection = $main::lglobal{captiontext}->get;
+					$selection ||= '';
+					$selection =~ s/"/&quot;/g;
+					$selection =~ s/'/&#39;/g;
+					my $alt = $main::lglobal{alttext}->get;
+					$alt       = " alt=\"$alt\"";
+					$selection = "<span class=\"caption\">$selection</span>\n"
+					  if $selection;
+					$preservep = '' unless $selection;
+					my $title = $main::lglobal{titltext}->get || '';
+					$title =~ s/"/&quot;/g;
+					$title =~ s/'/&#39;/g;
+					$title = " title=\"$title\"" if $title;
+					$textwindow->addGlobStart;
+					my $closeimg = "px;\">\n<img src=\"$name\" $sizexy$alt$title />\n$selection</div>$preservep";
+
+					if ( $alignment eq 'center' ) {
+						$textwindow->delete( 'thisblockstart', 'thisblockend' );
+						$textwindow->insert( 'thisblockstart',
+							    "<div class=\"figcenter\" style=\"width: " 
+							  . $width
+							  . $closeimg
+						);
+					} elsif ( $alignment eq 'left' ) {
+						$textwindow->delete( 'thisblockstart', 'thisblockend' );
+						$textwindow->insert( 'thisblockstart',
+							    "<div class=\"figleft\" style=\"width: " 
+							  . $width
+							  . $closeimg
+						);
+					} elsif ( $alignment eq 'right' ) {
+						$textwindow->delete( 'thisblockstart', 'thisblockend' );
+						$textwindow->insert( 'thisblockstart',
+							    "<div class=\"figright\" style=\"width: " 
+							  . $width
+							  . $closeimg
+						);
+					}
+					$textwindow->addGlobEnd;
+					$main::lglobal{htmlthumb}->delete  if $main::lglobal{htmlthumb};
+					$main::lglobal{htmlthumb}->destroy if $main::lglobal{htmlthumb};
+					$main::lglobal{htmlorig}->delete   if $main::lglobal{htmlorig};
+					$main::lglobal{htmlorig}->destroy  if $main::lglobal{htmlorig};
+					for (
+						  $main::lglobal{alttext},  $main::lglobal{titltext},
+						  $main::lglobal{widthent}, $main::lglobal{heightent},
+						  $main::lglobal{imagelbl}, $main::lglobal{imgname}
+					  )
+					{
+						$_->destroy;
+					}
+					$textwindow->tagRemove( 'highlight', '1.0', 'end' );
+					$main::lglobal{htmlimpop}->destroy if $main::lglobal{htmlimpop};
+					undef $main::lglobal{htmlimpop} if $main::lglobal{htmlimpop};
+				}
+			}
+		)->pack;
+		my $f = $main::lglobal{htmlimpop}->Frame->pack;
+		$main::lglobal{imagelbl} = $f->Label(
+										-text       => 'Thumbnail',
+										-justify    => 'center',
+										-background => $main::bkgcolor,
+		)->grid( -row => 1, -column => 1 );
+		$main::lglobal{imagelbl}->bind( $main::lglobal{imagelbl}, '<1>', \&tnbrowse );
+		$main::lglobal{htmlimpop}->protocol(
+			'WM_DELETE_WINDOW' => sub {
+				$main::lglobal{htmlthumb}->delete  if $main::lglobal{htmlthumb};
+				$main::lglobal{htmlthumb}->destroy if $main::lglobal{htmlthumb};
+				$main::lglobal{htmlorig}->delete   if $main::lglobal{htmlorig};
+				$main::lglobal{htmlorig}->destroy  if $main::lglobal{htmlorig};
+				for (
+					  $main::lglobal{alttext},  $main::lglobal{titltext},
+					  $main::lglobal{widthent}, $main::lglobal{heightent},
+					  $main::lglobal{imagelbl}, $main::lglobal{imgname}
+				  )
+				{
+					$_->destroy;
+				}
+				$textwindow->tagRemove( 'highlight', '1.0', 'end' );
+				$main::lglobal{htmlimpop}->destroy;
+				undef $main::lglobal{htmlimpop};
+			}
+		);
+		$main::lglobal{htmlimpop}->transient($top);
+	}
+	$main::lglobal{alttext}->delete( 0, 'end' ) if $main::lglobal{alttext};
+	$main::lglobal{titltext}->delete( 0, 'end' ) if $main::lglobal{titltext};
+	$main::lglobal{captiontext}->insert( 'end', $selection );
+	&main::tnbrowse();
+}
+
 
 1;
 
