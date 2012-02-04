@@ -969,7 +969,7 @@ sub menurebuild {
 	return;
 }
 
-## Clear persistant variables before loading another file
+## Clear persistent variables before loading another file
 sub clearvars {
 	my @marks = $textwindow->markNames;
 	for (@marks) {
@@ -1243,51 +1243,6 @@ sub highlightscannos {
 	return;
 }
 
-## The main menu building code.
-
-sub file_import {
-	return if ( confirmempty() =~ /cancel/i );
-	my $directory = $top->chooseDirectory( -title =>
-			'Choose the directory containing the text files to be imported.', );
-	return 0
-	  unless ( -d $directory and defined $directory and $directory ne '' );
-	$top->Busy( -recurse => 1 );
-	my $pwd = getcwd();
-	chdir $directory;
-	my @files = glob "*.txt";
-	chdir $pwd;
-	$directory .= '/';
-	$directory      = os_normal($directory);
-	$globallastpath = $directory;
-
-	for my $file (sort {$a <=> $b} @files) {
-		if ( $file =~ /^(\w+)\.txt/ ) {
-			$textwindow->ntinsert( 'end', ( "\n" . '-' x 5 ) );
-			$textwindow->ntinsert( 'end', "File: $1.png" );
-			$textwindow->ntinsert( 'end', ( '-' x 45 ) . "\n" );
-			if ( open my $fh, '<', "$directory$file" ) {
-				local $/ = undef;
-				my $line = <$fh>;
-				utf8::decode($line);
-				$line =~ s/^\x{FEFF}?//;
-				$line =~ s/\cM\cJ|\cM|\cJ/\n/g;
-
-				#$line = eol_convert($line);
-				$line =~ s/[\t \xA0]+$//smg;
-				$textwindow->ntinsert( 'end', $line );
-				close $file;
-			}
-			$top->update;
-		}
-	}
-	$textwindow->markSet( 'insert', '1.0' );
-	$lglobal{prepfile} = 1;
-	file_mark_pages();
-	$pngspath = '';
-	$top->Unbusy( -recurse => 1 );
-	return;
-}
-
 sub file_export {
 	my $directory = $top->chooseDirectory(
 			   -title => 'Choose the directory to export the text files to.', );
@@ -1455,20 +1410,20 @@ sub file_guess_page_marks {
 }
 
 sub file_mark_pages {
+	
 	$top->Busy( -recurse => 1 );
 	viewpagenums() if ( $lglobal{seepagenums} );
 	my ( $line, $index, $page, $rnd1, $rnd2, $pagemark );
 	$searchstartindex = '1.0';
 	$searchendindex   = '1.0';
 	while ($searchstartindex) {
-		$searchstartindex =
-		  $textwindow->search( '-exact', '--',
-							   '--- File:',
+		#$searchstartindex =
+		#  $textwindow->search( '-exact', '--',
+		#					   '--- File:',
+		#					   $searchendindex, 'end' );
+ 		$searchstartindex =$textwindow->search( '-nocase', '-regexp', '--',
+							   '-*\s?File:\s?(\S+)\.(png|jpg)---.*$',
 							   $searchendindex, 'end' );
-#		$searchstartindex =  # The debugger chokes on this search; see revised version above
-		#  $textwindow->search( '-nocase', '-regexp', '--',
-			#				   '-*\s?File:\s?(\S+)\.(png|jpg)---.*$',
-							   #$searchendindex, 'end' );
 		last unless $searchstartindex;
 		my ( $row, $col ) = split /\./, $searchstartindex;
 		$line = $textwindow->get( "$row.0", "$row.end" );
@@ -2004,7 +1959,7 @@ sub menubuildold {
 			 ],
 			 [ 'command',   '~Close', -command => \&file_close ],
 			 [ 'separator', '' ],
-			 [ 'command', 'Import Prep Text Files', -command => \&file_import ],
+			 [ 'command', 'Import Prep Text Files', -command => sub{file_import($textwindow,$top)} ],
 			 [
 			   'command',
 			   'Export As Prep Text Files',
@@ -2774,7 +2729,7 @@ sub menubuild {
 			   '~Include File',
 			   -command => sub { file_include($textwindow) }
 			 ],
-			 [ 'command', 'Import Prep Text Files', -command => \&file_import ],
+			 [ 'command', 'Import Prep Text Files', -command => sub{file_import($textwindow,$top)}],
 			 [
 			   'command',
 			   'Export As Prep Text Files',
@@ -3529,7 +3484,7 @@ sub menubuildtwo {
 			   '~Include File',
 			   -command => sub { file_include($textwindow) }
 			 ],
-			 [ 'command', 'Import Prep Text Files', -command => \&file_import ],
+			 [ 'command', 'Import Prep Text Files', -command => sub{file_import($textwindow,$top)}],
 			 [
 			   'command',
 			   'Export As Prep Text Files',

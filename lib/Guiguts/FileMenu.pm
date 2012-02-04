@@ -3,7 +3,7 @@ package Guiguts::FileMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&file_open &file_saveas &file_include &file_close &_exit )
+	@EXPORT=qw(&file_open &file_saveas &file_include &file_import &file_close &_exit )
 }
 
 sub file_open {    # Find a text file to open
@@ -96,6 +96,50 @@ sub file_close {
 	return if ( &main::confirmempty() =~ m{cancel}i );
 	&main::clearvars();
 	&main::update_indicators();
+	return;
+}
+
+sub file_import {
+	my ($textwindow,$top)=@_;
+	return if ( &main::confirmempty() =~ /cancel/i );
+	my $directory = $top->chooseDirectory( -title =>
+			'Choose the directory containing the text files to be imported.', );
+	return 0
+	  unless ( -d $directory and defined $directory and $directory ne '' );
+	$top->Busy( -recurse => 1 );
+	my $pwd = &main::getcwd();
+	chdir $directory;
+	my @files = glob "*.txt";
+	chdir $pwd;
+	$directory .= '/';
+	$directory      = &main::os_normal($directory);
+	$main::globallastpath = $directory;
+
+	for my $file (sort {$a <=> $b} @files) {
+		if ( $file =~ /^(\w+)\.txt/ ) {
+			$textwindow->ntinsert( 'end', ( "\n" . '-' x 5 ) );
+			$textwindow->ntinsert( 'end', "File: $1.png" );
+			$textwindow->ntinsert( 'end', ( '-' x 45 ) . "\n" );
+			if ( open my $fh, '<', "$directory$file" ) {
+				local $/ = undef;
+				my $line = <$fh>;
+				utf8::decode($line);
+				$line =~ s/^\x{FEFF}?//;
+				$line =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
+				#$line = eol_convert($line);
+				$line =~ s/[\t \xA0]+$//smg;
+				$textwindow->ntinsert( 'end', $line );
+				close $file;
+			}
+			$top->update;
+		}
+	}
+	$textwindow->markSet( 'insert', '1.0' );
+	$main::lglobal{prepfile} = 1;
+	&main::file_mark_pages();
+	$main::pngspath = '';
+	$top->Unbusy( -recurse => 1 );
 	return;
 }
 
