@@ -9,7 +9,7 @@ BEGIN {
 	  &html_convert_ampersands &html_convert_emdashes &html_convert_latin1 &html_convert_codepage &html_convert_utf
 	  &html_cleanup_markers &html_convert_footnotes &html_convert_body &html_convert_body2 &html_convert_underscoresmallcaps
 	  &html_convert_sidenotes &html_convert_pageanchors &html_parse_header &html_wrapup &htmlbackup
-	  &insert_paragraph_close &insert_paragraph_open &htmlimage);
+	  &insert_paragraph_close &insert_paragraph_open &htmlimage &htmlimages);
 }
 
 sub html_convert_tb {
@@ -1636,6 +1636,29 @@ sub htmlimage {
 	&main::tnbrowse();
 }
 
+sub htmlimages {
+	my ($textwindow,$top)=@_;
+	my $length;
+	my $start =
+	  $textwindow->search(
+						   '-regexp',              '--',
+						   '(<p>)?\[Illustration', '1.0',
+						   'end'
+	  );
+	return unless $start;
+	$textwindow->see($start);
+	my $end = $textwindow->search(
+								   '-regexp',
+								   '-count' => \$length,
+								   '--', '\](<\/p>)?', $start, 'end'
+	);
+	$end = $textwindow->index( $end . ' +' . $length . 'c' );
+	return unless $end;
+	$textwindow->tagAdd( 'highlight', $start, $end );
+	$textwindow->markSet( 'insert', $start );
+	&main::update_indicators();
+	htmlimage($textwindow,$top, $start, $end );
+}
 
 1;
 

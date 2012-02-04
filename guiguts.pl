@@ -7148,29 +7148,6 @@ sub linkcheckrun {
 	close $logfile;
 }
 
-sub htmlimages {
-	my $length;
-	my $start =
-	  $textwindow->search(
-						   '-regexp',              '--',
-						   '(<p>)?\[Illustration', '1.0',
-						   'end'
-	  );
-	return unless $start;
-	$textwindow->see($start);
-	my $end = $textwindow->search(
-								   '-regexp',
-								   '-count' => \$length,
-								   '--', '\](<\/p>)?', $start, 'end'
-	);
-	$end = $textwindow->index( $end . ' +' . $length . 'c' );
-	return unless $end;
-	$textwindow->tagAdd( 'highlight', $start, $end );
-	$textwindow->markSet( 'insert', $start );
-	update_indicators();
-	htmlimage($textwindow,$top, $start, $end );
-}
-
 sub deaccent {
 	my $phrase = shift;
 	return $phrase unless ( $phrase =~ y/\xC0-\xFF// );
@@ -16147,7 +16124,7 @@ sub htmlpopup {
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 1 );
 		$f0->Button(
 					 -activebackground => $activecolor,
-					 -command          => sub { htmlimages(); },
+					 -command          => sub { htmlimages($textwindow,$top); },
 					 -text             => 'Auto Illus Search',
 					 -width            => 16,
 		)->grid( -row => 1, -column => 3, -padx => 1, -pady => 1 );
