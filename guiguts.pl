@@ -168,6 +168,7 @@ our $jeebiesmode         = 'p';
 our $lastversioncheck    = time();
 our $lmargin             = 1;
 our $markupthreshold     = 4;
+our @multidicts          = ();
 our $nobell              = 0;
 our $nohighlights        = 0;
 our $notoolbar           = 0;
@@ -3938,6 +3939,7 @@ sub menubuildtwo {
 			   Button   => 'Run ~Word Frequency Routine...',
 			   -command => sub{wordfrequency($textwindow,$top)}
 			],
+			[ Button => 'Select multiple languages', -command => sub{setmultiplelanguages($textwindow,$top)} ],
 			[ 'command', 'Spell ~Check...',      -command => \&spellchecker ],
 			[ 'separator', '' ],
 			[ Button => 'Run ~Jeebies...',     -command => \&jeebiespop_up ],
@@ -4192,8 +4194,6 @@ sub debug_dump {
 		
 	close $save;
 	};
-
-
 
 ## Toggle visible page markers. This is not line numbers but marks for pages.
 sub viewpagenums {
@@ -11436,6 +11436,12 @@ EOM
 		@array = @replace_history;
 		for my $index (@array) {
 			$index =~ s/([^A-Za-z0-9 ])/'\x{'.(sprintf "%x", ord $1).'}'/eg;
+			print $save_handle qq/\t"$index",\n/;
+		}
+		print $save_handle ");\n\n";
+
+		print $save_handle ("\@multidicts = (\n");
+		for my $index (@multidicts) {
 			print $save_handle qq/\t"$index",\n/;
 		}
 		print $save_handle ");\n\n1;\n";
