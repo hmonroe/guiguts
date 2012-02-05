@@ -438,114 +438,6 @@ $textwindow->CallNextGUICallback;
 
 $top->repeat( 200, sub { _updatesel($textwindow) } );
 
-## save the .bin file associated with the text file
-sub _bin_save {
-	push @operations, ( localtime() . ' - File Saved' );
-	oppopupdate() if $lglobal{oppop};
-	my $mark = '1.0';
-	while ( $textwindow->markPrevious($mark) ) {
-		$mark = $textwindow->markPrevious($mark);
-	}
-	my $markindex;
-	while ($mark) {
-		if ( $mark =~ m{Pg(\S+)} ) {
-			$markindex                  = $textwindow->index($mark);
-			$pagenumbers{$mark}{offset} = $markindex;
-			$mark                       = $textwindow->markNext($mark);
-		} else {
-			$mark = $textwindow->markNext($mark) if $mark;
-			next;
-		}
-	}
-	return if ( $lglobal{global_filename} =~ m{No File Loaded} );
-	my $binname = "$lglobal{global_filename}.bin";
-	if ( $textwindow->markExists('spellbkmk') ) {
-		$spellindexbkmrk = $textwindow->index('spellbkmk');
-	}    #else {
-
-	#		$spellindexbkmrk = q{};
-	#	}
-	#print $spellindexbkmrk."\n";
-	my $bak = "$binname.bak";
-	if ( -e $bak ) {
-		my $perms = ( stat($bak) )[2] & 7777;
-		unless ( $perms & 300 ) {
-			$perms = $perms | 300;
-			chmod $perms, $bak or warn "Can not back up .bin file: $!\n";
-		}
-		unlink $bak;
-	}
-	if ( -e $binname ) {
-		my $perms = ( stat($binname) )[2] & 7777;
-		unless ( $perms & 300 ) {
-			$perms = $perms | 300;
-			chmod $perms, $binname
-			  or warn "Can not save .bin file: $!\n" and return;
-		}
-		rename $binname, $bak or warn "Can not back up .bin file: $!\n";
-	}
-	my $fh = FileHandle->new("> $binname");
-	if ( defined $fh ) {
-		print $fh "\%pagenumbers = (\n";
-		for my $page ( sort { $a cmp $b } keys %pagenumbers ) {
-			no warnings 'uninitialized';
-			if ( $page eq "Pg" ) {
-				next;
-			}
-			print $fh " '$page' => {";
-			print $fh "'offset' => '$pagenumbers{$page}{offset}', ";
-			print $fh "'label' => '$pagenumbers{$page}{label}', ";
-			print $fh "'style' => '$pagenumbers{$page}{style}', ";
-			print $fh "'action' => '$pagenumbers{$page}{action}', ";
-			print $fh "'base' => '$pagenumbers{$page}{base}'},\n";
-		}
-		print $fh ");\n\n";
-
-		print $fh '$bookmarks[0] = \'' . $textwindow->index('insert') . "';\n";
-		for ( 1 .. 5 ) {
-			print $fh '$bookmarks[' 
-			  . $_ 
-			  . '] = \''
-			  . $textwindow->index( 'bkmk' . $_ ) . "';\n"
-			  if $bookmarks[$_];
-		}
-		if ($pngspath) {
-			print $fh "\n\$pngspath = '@{[escape_problems($pngspath)]}';\n\n";
-		}
-		my ($prfr);
-		delete $proofers{''};
-		foreach my $page ( sort keys %proofers ) {
-
-			no warnings 'uninitialized';
-			for my $round ( 1 .. $lglobal{numrounds} ) {
-				if ( defined $proofers{$page}->[$round] ) {
-					print $fh '$proofers{\'' 
-					  . $page . '\'}[' 
-					  . $round
-					  . '] = \''
-					  . $proofers{$page}->[$round] . '\';' . "\n";
-				}
-			}
-		}
-		print $fh "\n\n";
-		print $fh "\@operations = (\n";
-		for my $mark (@operations) {
-			$mark = escape_problems($mark);
-			print $fh "'$mark',\n";
-		}
-		print $fh ");\n\n";
-		print $fh "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
-		print $fh "\$projectid = '$projectid';\n\n";
-		print $fh "\$booklang = '$booklang';\n\n";
-		print $fh
-"\$scannoslistpath = '@{[escape_problems(os_normal($scannoslistpath))]}';\n\n";
-		print $fh '1;';
-		$fh->close;
-	} else {
-		$top->BackTrace("Cannot open $binname:$!");
-	}
-	return;
-}
 
 ## Track recently open files for the menu
 sub _recentupdate {    # FIXME: Seems to be choking.
@@ -12643,7 +12535,7 @@ sub savefile {    # Determine which save routine to use and then use it
 		$textwindow->SaveUTF;
 	}
 	$textwindow->ResetUndo;
-	_bin_save();
+	_bin_save($textwindow,$top);
 	set_autosave() if $autosave;
 	update_indicators();
 }
@@ -16380,7 +16272,7 @@ sub setpngspath {
 	$path .= '/';
 	$path     = os_normal($path);
 	$pngspath = $path;
-	_bin_save();
+	_bin_save($textwindow,$top);
 	openpng($pagenum) if defined $pagenum;
 }
 

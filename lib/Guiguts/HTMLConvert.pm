@@ -1678,7 +1678,7 @@ sub htmlautoconvert {
 	&main::working("Saving backup of file\nto $newfn");
 	$textwindow->SaveUTF($newfn);
 	$main::lglobal{global_filename} = $newfn;
-	&main::_bin_save();
+	&main::_bin_save($textwindow,$top);
 	$main::lglobal{global_filename} = $savefn;
 	$textwindow->FileName($savefn);
 
