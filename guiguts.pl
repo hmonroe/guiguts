@@ -316,10 +316,6 @@ utffontinit();
 
 # Set up Main window size
 unless ($geometry) {
-
-	#$top->FullScreen(1);
-	#$top->geometry(($top->maxsize())[0] .'x'.($top->maxsize())[1]);
-
 	my $height = $top->screenheight() - 90;
 	my $width  = $top->screenwidth() - 20;
 	$geometry = $width . "x" . $height . "+0+0";
@@ -345,8 +341,6 @@ my $counter_frame =
 # Frame to hold proofer names. Pack it when necessary.
 my $proofer_frame = $text_frame->Frame;
 
-# The actual text widget
-# FIXME: This ain't working for some reason
 our $text_font = $top->fontCreate(
 								   'courier',
 								   -family => "Courier New",
@@ -354,6 +348,7 @@ our $text_font = $top->fontCreate(
 								   -weight => 'normal',
 );
 
+# The actual text widget
 my $textwindow = $text_frame->LineNumberText(
 	-widget          => 'TextUnicode',
 	-exportselection => 'true',        # 'sel' tag is associated with selections
@@ -6449,69 +6444,6 @@ sub autotable {
 			   . "\n" )
 		  if $table;
 		$table = 1;
-	}
-}
-
-sub autolist {
-	viewpagenums() if ( $lglobal{seepagenums} );
-	my @ranges = $textwindow->tagRanges('sel');
-	unless (@ranges) {
-		push @ranges, $textwindow->index('insert');
-		push @ranges, $textwindow->index('insert');
-	}
-	my $range_total = @ranges;
-	if ( $range_total == 0 ) {
-		return;
-	} else {
-		$textwindow->addGlobStart;
-		my $end       = pop(@ranges);
-		my $start     = pop(@ranges);
-		my $paragraph = 0;
-		if ( $lglobal{list_multiline} ) {
-			my $selection = $textwindow->get( $start, $end );
-			$selection =~ s/\n +/\n/g;
-			$selection =~ s/\n\n+/\x{8A}/g;
-			my @lrows = split( /\x{8A}/, $selection );
-			for (@lrows) {
-				$_ = '<li>' . $_ . "</li>\n\n";
-			}
-			$selection = "<$lglobal{liststyle}>\n";
-			for my $lrow (@lrows) {
-				$selection .= $lrow;
-			}
-			$selection =~ s/\n$//;
-			$selection .= '</' . $lglobal{liststyle} . ">\n";
-
-			#$selection =~ s/ </</g; # why is this necessary; reported as a bug
-			$textwindow->delete( $start, $end );
-			$textwindow->insert( $start, $selection );
-		} else {
-			my ( $lsr, $lsc ) = split /\./, $start;
-			my ( $ler, $lec ) = split /\./, $end;
-			my $step = $lsr;
-			$step++ while ( $textwindow->get( "$step.0", "$step.end" ) eq '' );
-			while ( $step <= $ler ) {
-				my $selection = $textwindow->get( "$step.0", "$step.end" );
-				unless ($selection) { $step++; next }
-				if ( $selection =~ s/<br.*?>//g ) {
-					$selection = '<li>' . $selection . '</li>';
-				}
-				if ( $selection =~ s/<p>/<li>/g )     { $paragraph = 1 }
-				if ( $selection =~ s/<\/p>/<\/li>/g ) { $paragraph = 0 }
-				$textwindow->delete( "$step.0", "$step.end" );
-				unless ($paragraph) {
-					unless ( $selection =~ /<li>/ ) {
-						$selection = '<li>' . $selection . '</li>';
-					}
-				}
-				$selection =~ s/<li><\/li>//;
-				$textwindow->insert( "$step.0", $selection );
-				$step++;
-			}
-			$textwindow->insert( "$ler.end", "</$lglobal{liststyle}>\n" );
-			$textwindow->insert( $start,     "<$lglobal{liststyle}>" );
-		}
-		$textwindow->addGlobEnd;
 	}
 }
 

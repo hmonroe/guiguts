@@ -2001,7 +2001,7 @@ sub htmlpopup {
 		my $autolbutton =
 		  $f4->Button(
 					   -activebackground => $main::activecolor,
-					   -command => sub { &main::autolist(); $textwindow->focus },
+					   -command => sub { autolist($textwindow); $textwindow->focus },
 					   -text    => 'Auto List',
 					   -width   => 16
 		  )->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
@@ -2688,6 +2688,70 @@ sub autoindex {
 		}
 		$textwindow->insert( "$ler.end", "</ul>\n" );
 		$textwindow->insert( $start,     '<ul class="index">' );
+		$textwindow->addGlobEnd;
+	}
+}
+
+sub autolist {
+	my $textwindow = shift;
+	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
+	my @ranges = $textwindow->tagRanges('sel');
+	unless (@ranges) {
+		push @ranges, $textwindow->index('insert');
+		push @ranges, $textwindow->index('insert');
+	}
+	my $range_total = @ranges;
+	if ( $range_total == 0 ) {
+		return;
+	} else {
+		$textwindow->addGlobStart;
+		my $end       = pop(@ranges);
+		my $start     = pop(@ranges);
+		my $paragraph = 0;
+		if ( $main::lglobal{list_multiline} ) {
+			my $selection = $textwindow->get( $start, $end );
+			$selection =~ s/\n +/\n/g;
+			$selection =~ s/\n\n+/\x{8A}/g;
+			my @lrows = split( /\x{8A}/, $selection );
+			for (@lrows) {
+				$_ = '<li>' . $_ . "</li>\n\n";
+			}
+			$selection = "<$main::lglobal{liststyle}>\n";
+			for my $lrow (@lrows) {
+				$selection .= $lrow;
+			}
+			$selection =~ s/\n$//;
+			$selection .= '</' . $main::lglobal{liststyle} . ">\n";
+
+			#$selection =~ s/ </</g; # why is this necessary; reported as a bug
+			$textwindow->delete( $start, $end );
+			$textwindow->insert( $start, $selection );
+		} else {
+			my ( $lsr, $lsc ) = split /\./, $start;
+			my ( $ler, $lec ) = split /\./, $end;
+			my $step = $lsr;
+			$step++ while ( $textwindow->get( "$step.0", "$step.end" ) eq '' );
+			while ( $step <= $ler ) {
+				my $selection = $textwindow->get( "$step.0", "$step.end" );
+				unless ($selection) { $step++; next }
+				if ( $selection =~ s/<br.*?>//g ) {
+					$selection = '<li>' . $selection . '</li>';
+				}
+				if ( $selection =~ s/<p>/<li>/g )     { $paragraph = 1 }
+				if ( $selection =~ s/<\/p>/<\/li>/g ) { $paragraph = 0 }
+				$textwindow->delete( "$step.0", "$step.end" );
+				unless ($paragraph) {
+					unless ( $selection =~ /<li>/ ) {
+						$selection = '<li>' . $selection . '</li>';
+					}
+				}
+				$selection =~ s/<li><\/li>//;
+				$textwindow->insert( "$step.0", $selection );
+				$step++;
+			}
+			$textwindow->insert( "$ler.end", "</$main::lglobal{liststyle}>\n" );
+			$textwindow->insert( $start,     "<$main::lglobal{liststyle}>" );
+		}
 		$textwindow->addGlobEnd;
 	}
 }
