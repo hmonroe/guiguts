@@ -436,6 +436,7 @@ sub wordfrequency {
 										-initialdir  => $main::globallastpath,
 										-initialfile => 'wordfreq.txt'
 				  );
+	#FIXME not UTF-8 compatible
 				if ( defined($name) and length($name) ) {
 					open( my $save, ">", "$name" );
 					print $save join "\n",
@@ -452,6 +453,7 @@ sub wordfrequency {
 									  -initialdir  => $main::globallastpath,
 									  -initialfile => 'wordlist.txt'
 				  );
+	#FIXME not UTF-8 compatible
 				if ( defined($name) and length($name) ) {
 					my $count = $main::lglobal{wclistbox}->index('end');
 					open( my $save, ">", "$name" );

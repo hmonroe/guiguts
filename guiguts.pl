@@ -3806,7 +3806,7 @@ sub menubuildtwo {
 			   Button   => 'Run ~Word Frequency Routine...',
 			   -command => sub{wordfrequency($textwindow,$top)}
 			],
-			[ Button => 'Select multiple languages', -command => sub{setmultiplelanguages($textwindow,$top)} ],
+			[ Button => 'Spell in multiple languages', -command => sub{spellmultiplelanguages($textwindow,$top)} ],
 			[ 'command', 'Spell ~Check...',      -command => \&spellchecker ],
 			[ 'separator', '' ],
 			[ Button => 'Run ~Jeebies...',     -command => \&jeebiespop_up ],
@@ -4037,7 +4037,8 @@ sub debug_dump {
 	open my $save, '>', 'debug.txt';
 	print $save "\%lglobal values:\n";
 	for my $key (keys %lglobal) { 
-		print $save "$key => $lglobal{$key}\n";
+		if ($lglobal{$key}){ print $save "$key => $lglobal{$key}\n";}
+		else { print $save "$key x=>\n";}
 		};
 	print $save "\n\@ARGV command line arguments:\n";
 	for my $element (@ARGV) {
@@ -4045,8 +4046,10 @@ sub debug_dump {
 		};
 	print $save "\n\%SIG variables:\n";
 	for my $key (keys %SIG) { 
-		print $save "$key => $SIG{$key}\n";
-		};
+		if ($SIG{$key}){
+			print $save "$key => $SIG{$key}\n";
+		} else { print $save "$key x=>\n"; 	}
+	};
 	print $save "\n\%ENV environment variables:\n";
 	for my $key (keys %ENV) { 
 		print $save "$key => $ENV{$key}\n";
@@ -4060,10 +4063,31 @@ sub debug_dump {
 		print $save "$key => $INC{$key}\n";
 		};
 	close $save;
-	open $save, '>', 'words.txt';
+	my $section = "\%lglobal{seenwords}\n";
+	open $save, '>:bytes', 'words.txt';
 	for my $key (keys %{$lglobal{seenwords}}){
-		print $save "$key => $lglobal{seenwords}{$key}\n";
-		};
+		$section .= "$key => $lglobal{seenwords}{$key}\n";
+	};
+	utf8::encode($section);
+	print $save $section;
+	close $save;
+	$section = "\%lglobal{seenwordsland}\n";
+	open $save, '>:bytes', 'words2.txt';
+	for my $key (keys %{$lglobal{seenwords}}){
+		if ($lglobal{seenwordslang}{$key}) {
+			$section .= "$key => $lglobal{seenwordslang}{$key}\n";
+		} else {
+			$section .= "$key x=>\n";
+		}
+	};
+	utf8::encode($section);
+	print $save $section;
+	close $save;
+	open $save, '>', 'project.txt';
+	print $save "\%projectdict\n";
+	for my $key (keys %projectdict){
+		print $save "$key => $projectdict{$key}\n";
+	};
 	close $save;
 };
 
