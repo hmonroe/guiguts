@@ -3,7 +3,7 @@ package Guiguts::FileMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &file_close 
+	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close 
 	&_flash_save &_exit )
 }
 
