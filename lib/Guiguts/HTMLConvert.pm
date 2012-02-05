@@ -2596,6 +2596,13 @@ sub markup {
 	$textwindow->focus;
 }
 
+sub hyperlinkpagenums {
+	&main::searchpopup();
+	&main::searchoptset(qw/0 x x 1/);
+	$main::lglobal{searchentry}->insert( 'end', "(?<!\\d)(\\d{1,3})" );
+	$main::lglobal{replaceentry}->insert( 'end', "<a href=\"#Page_\$1\">\$1</a>" );
+}
+
 
 
 1;

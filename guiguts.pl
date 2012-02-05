@@ -6540,13 +6540,6 @@ sub linkpopulate {
 	$linklistbox->yviewScroll( -1, 'units' );
 }
 
-sub hyperlinkpagenums {
-	searchpopup();
-	searchoptset(qw/0 x x 1/);
-	$lglobal{searchentry}->insert( 'end', "(?<!\\d)(\\d{1,3})" );
-	$lglobal{replaceentry}->insert( 'end', "<a href=\"#Page_\$1\">\$1</a>" );
-}
-
 sub linkcheckrun {
 	open my $logfile, ">", "errors.err" || die "output file error\n";
 	my ( %anchor,  %id,  %link,   %image,  %badlink, $length, $upper );
