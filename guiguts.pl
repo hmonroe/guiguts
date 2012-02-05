@@ -438,26 +438,6 @@ $textwindow->CallNextGUICallback;
 
 $top->repeat( 200, sub { _updatesel($textwindow) } );
 
-sub _flash_save {
-	$lglobal{saveflashingid} = $top->repeat(
-		500,
-		sub {
-			if ( $lglobal{savetool}->cget('-background') eq 'yellow' ) {
-				$lglobal{savetool}->configure(
-											   -background       => 'green',
-											   -activebackground => 'green'
-				) unless $notoolbar;
-			} else {
-				$lglobal{savetool}->configure(
-											   -background       => 'yellow',
-											   -activebackground => 'yellow'
-				) if ($textwindow->numberChanges and (!$notoolbar));
-			}
-		}
-	);
-	return;
-}
-
 ## save the .bin file associated with the text file
 sub _bin_save {
 	push @operations, ( localtime() . ' - File Saved' );
@@ -16760,7 +16740,7 @@ sub set_autosave {
 	$lglobal{saveflashid} = $top->after(
 		( $autosaveinterval * 60000 - 10000 ),
 		sub {
-			_flash_save()
+			_flash_save($textwindow)
 			  if $lglobal{global_filename} !~ /No File Loaded/;
 		}
 	);

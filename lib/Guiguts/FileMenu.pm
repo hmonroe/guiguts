@@ -3,7 +3,8 @@ package Guiguts::FileMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &file_close &_exit )
+	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &file_close 
+	&_flash_save &_exit )
 }
 
 sub file_open {    # Find a text file to open
@@ -179,6 +180,26 @@ sub file_export {
 		print $fh $file;
 	}
 	$top->Unbusy( -recurse => 1 );
+	return;
+}
+
+sub _flash_save {
+	$main::lglobal{saveflashingid} = $top->repeat(
+		500,
+		sub {
+			if ( $main::lglobal{savetool}->cget('-background') eq 'yellow' ) {
+				$main::lglobal{savetool}->configure(
+											   -background       => 'green',
+											   -activebackground => 'green'
+				) unless $main::notoolbar;
+			} else {
+				$main::lglobal{savetool}->configure(
+											   -background       => 'yellow',
+											   -activebackground => 'yellow'
+				) if ($textwindow->numberChanges and (!$main::notoolbar));
+			}
+		}
+	);
 	return;
 }
 
