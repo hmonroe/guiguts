@@ -4032,6 +4032,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
 
 # just working out how to do things
 # prints everything I can think of to debug.txt
+# prints seenwords to words.txt
 sub debug_dump {
 	open my $save, '>', 'debug.txt';
 	print $save "\%lglobal values:\n";
@@ -4058,9 +4059,13 @@ sub debug_dump {
 	for my $key (keys %INC) { 
 		print $save "$key => $INC{$key}\n";
 		};
-		
 	close $save;
-	};
+	open $save, '>', 'words.txt';
+	for my $key (keys %{$lglobal{seenwords}}){
+		print $save "$key => $lglobal{seenwords}{$key}\n";
+		};
+	close $save;
+};
 
 ## Toggle visible page markers. This is not line numbers but marks for pages.
 sub viewpagenums {
