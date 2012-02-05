@@ -2383,7 +2383,7 @@ sub menubuildold {
 			   Button   => 'Convert Windows CP 1252 characters to Unicode',
 			   -command => \&cp1252toUni
 			],
-			[ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
+			[ Button => 'HTML Auto ~Index (List)', -command => sub{autoindex($textwindow)} ],
 			[
 			   Cascade    => 'PGTEI Tools',
 			   -tearoff   => 0,
@@ -3263,7 +3263,7 @@ $globalbrowserstart, "http://www.pgdp.net/c/tools/proofers/project_topic.php?pro
 		-tearoff   => 1,
 		-menuitems => [
 			[ Button => '~HTML Fixup',             -command => sub{htmlpopup($textwindow,$top)} ],
-			[ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
+			[ Button => 'HTML Auto ~Index (List)', -command => sub{autoindex($textwindow)}],
 			[
 			   Cascade    => 'HTML to Epub',
 			   -tearoff   => 0,
@@ -3963,7 +3963,7 @@ sub menubuildtwo {
 				unlink 'null' if ( -e 'null' );
 			} ],
 			[ 'separator', '' ],
-			[ Button => 'HTML Auto ~Index (List)', -command => \&autoindex ],
+			[ Button => 'HTML Auto ~Index (List)', -command => sub{autoindex($textwindow)} ],
 			[
 			   Cascade    => 'HTML to Epub',
 			   -tearoff   => 0,
@@ -6716,39 +6716,6 @@ tr/ÀÁÂÃÄÅàáâãäåÇçÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖØòóôõöøÑñÙÚÛÜùúûüİÿı/AAAAAAaaaaaaCcEEEEeee
 	my %trans = qw(Æ AE æ ae Ş TH ş th Ğ TH ğ th ß ss);
 	$phrase =~ s/([ÆæŞşĞğß])/$trans{$1}/g;
 	return $phrase;
-}
-
-sub makeanchor {
-	my $linkname = shift;
-	return unless $linkname;
-	$linkname =~ s/-/\x00/g;
-	$linkname =~ s/&amp;|&mdash;/\xFF/;
-	$linkname =~ s/<sup>.*?<\/sup>//g;
-	$linkname =~ s/<\/?[^>]+>//g;
-	$linkname =~ s/\p{Punct}//g;
-	$linkname =~ s/\x00/-/g;
-	$linkname =~ s/\s+/_/g;
-	while ( $linkname =~ m/([\x{100}-\x{ffef}])/ ) {
-		my $char     = "$1";
-		my $ord      = ord($char);
-		my $phrase   = charnames::viacode($ord);
-		my $case     = 'lc';
-		my $notlatin = 1;
-		$phrase = '-X-' unless ( $phrase =~ /(LETTER|DIGIT|LIGATURE)/ );
-		$case     = 'uc' if $phrase =~ /CAPITAL|^-X-$/;
-		$notlatin = 0    if $phrase =~ /LATIN/;
-		$phrase =~ s/.+(LETTER|DIGIT|LIGATURE) //;
-		$phrase =~ s/ WITH.+//;
-		$phrase = lc($phrase) if $case eq 'lc';
-		$phrase =~ s/ /_/g;
-		$phrase = "-$phrase-" if $notlatin;
-		$linkname =~ s/$char/$phrase/g;
-	}
-	$linkname =~ s/--+/-/g;
-	$linkname =~ s/[\x90-\xff\x20\x22]/_/g;
-	$linkname =~ s/__+/_/g;
-	$linkname =~ s/^[_-]+|[_-]+$//g;
-	return $linkname;
 }
 
 sub entity {
@@ -18428,61 +18395,6 @@ sub uchar {
 						 -command => sub { $stopit = 1; },
 		)->grid( -row => 1, -column => 4 );
 		$characteristics->bind( '<Return>' => sub { $doit->invoke } );
-	}
-}
-
-sub autoindex {
-	viewpagenums() if ( $lglobal{seepagenums} );
-	my @ranges = $textwindow->tagRanges('sel');
-	unless (@ranges) {
-		push @ranges, $textwindow->index('insert');
-		push @ranges, $textwindow->index('insert');
-	}
-	my $range_total = @ranges;
-	if ( $range_total == 0 ) {
-		return;
-	} else {
-		$textwindow->addGlobStart;
-		my $end       = pop(@ranges);
-		my $start     = pop(@ranges);
-		my $paragraph = 0;
-		my ( $lsr, $lsc ) = split /\./, $start;
-		my ( $ler, $lec ) = split /\./, $end;
-		my $step   = $lsr;
-		my $blanks = 0;
-		my $first  = 1;
-		my $indent = 0;
-
-		while ( $textwindow->get( "$step.0", "$step.end" ) eq '' ) {
-			$step++;
-		}
-		while ( $step <= $ler ) {
-			my $selection = $textwindow->get( "$step.0", "$step.end" );
-			unless ($selection) { $step++; $blanks++; next }
-			$selection = addpagelinks($selection);
-			if ( $first == 1 ) { $blanks = 2; $first = 0 }
-			if ( $blanks == 2 ) {
-				$selection = '<li class="ifrst">' . $selection . '</li>';
-				$first     = 0;
-			}
-			if ( $blanks == 1 ) {
-				$selection = '<li class="indx">' . $selection . '</li>';
-			}
-			if ( $selection =~ /^(\s+)/ ) {
-				$indent = ( int( ( length($1) + 1 ) / 2 ) );
-				$selection =~ s/^\s+//;
-				$selection =
-				  '<li class="isub' . $indent . '">' . $selection . '</li>';
-			}
-			$textwindow->delete( "$step.0", "$step.end" );
-			$selection =~ s/<li<\/li>//;
-			$textwindow->insert( "$step.0", $selection );
-			$blanks = 0;
-			$step++;
-		}
-		$textwindow->insert( "$ler.end", "</ul>\n" );
-		$textwindow->insert( $start,     '<ul class="index">' );
-		$textwindow->addGlobEnd;
 	}
 }
 
