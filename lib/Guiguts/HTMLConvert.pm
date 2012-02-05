@@ -2037,7 +2037,7 @@ sub htmlpopup {
 		$f4->Button(
 			-activebackground => $main::activecolor,
 			-command          => sub {
-				&main::autotable( $tableformat->get );
+				autotable($textwindow, $tableformat->get );
 				$textwindow->focus;
 			},
 			-text  => 'Auto Table',
@@ -2753,6 +2753,93 @@ sub autolist {
 			$textwindow->insert( $start,     "<$main::lglobal{liststyle}>" );
 		}
 		$textwindow->addGlobEnd;
+	}
+}
+
+sub autotable {
+	my ($textwindow,$format) = @_;
+	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
+	my @cformat;
+	if ($format) {
+		@cformat = split( //, $format );
+	}
+	my @ranges = $textwindow->tagRanges('sel');
+	unless (@ranges) {
+		push @ranges, $textwindow->index('insert');
+		push @ranges, $textwindow->index('insert');
+	}
+	my $range_total = @ranges;
+	if ( $range_total == 0 ) {
+		return;
+	} else {
+		my $table = 1;
+		my $end   = pop(@ranges);
+		my $start = pop(@ranges);
+		my ( @tbl, @trows, @tlines, @twords );
+		my $row = 0;
+		my $selection = $textwindow->get( $start, $end );
+		$selection =~ s/<br.*?>//g;
+		$selection =~ s/<\/?p>//g;
+		$selection =~ s/\n[\s|]+\n/\n\n/g;
+		$selection =~ s/^\n+//;
+		$selection =~ s/\n\n+/\x{8A}/g if $main::lglobal{tbl_multiline};
+		@trows = split( /\x{8A}/, $selection ) if $main::lglobal{tbl_multiline};
+		$selection =~ s/\n[\s|]*\n/\n/g unless $main::lglobal{tbl_multiline};
+		@trows = split( /\n/, $selection ) unless $main::lglobal{tbl_multiline};
+
+		for my $trow (@trows) {
+			@tlines = split( /\n/, $trow );
+			for my $tline (@tlines) {
+				if ( $selection =~ /\|/ ) {
+					@twords = split( /\|/, $tline );
+				} else {
+					@twords = split( /\s\s+/, $tline );
+				}
+				for ( 0 .. $#twords ) {
+					$tbl[$row][$_] .= "$twords[$_] ";
+				}
+			}
+			$row++;
+		}
+		$selection = '';
+		for my $row ( 0 .. $#tbl ) {
+			$selection .= '<tr>';
+			for ( $tbl[$row] ) {
+				my $cellcnt = 0;
+				my $cellalign;
+				while (@$_) {
+					if ( $cformat[$cellcnt] ) {
+						if ( $cformat[$cellcnt] eq '>' ) {
+							$cellalign = ' align="right"';
+						} elsif ( $cformat[$cellcnt] eq '|' ) {
+							$cellalign = ' align="center"';
+						} else {
+							$cellalign = ' align="left"';
+						}
+					} else {
+						$cellalign = $main::lglobal{tablecellalign};
+					}
+					++$cellcnt;
+					$selection .= '<td' . $cellalign . '>';
+					$selection .= shift @$_;
+					$selection .= '</td>';
+				}
+			}
+			$selection .= "</tr>\n";
+		}
+		$selection .= '</table></div>';
+		$selection =~ s/<td[^>]+><\/td>//g;
+		$selection =~ s/ +<\//<\//g;
+		$selection =~ s/d> +/d>/g;
+		$selection =~ s/ +/ /g;
+		$textwindow->delete( $start, $end );
+		$textwindow->insert( $start, $selection );
+		$textwindow->insert( $start,
+			     "\n<div class=\"center\">\n"
+			   . '<table border="0" cellpadding="4" cellspacing="0" summary="">'
+			   . "\n" )
+		  if $table;
+		$table = 1;
 	}
 }
 
