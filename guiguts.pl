@@ -99,6 +99,7 @@ use Guiguts::TextUnicode;
 use Guiguts::Greekgifs;
 use Guiguts::SearchReplaceMenu;
 use Guiguts::SelectionMenu;
+use Guiguts::Utilities;
 
 #use Guiguts::BookmarksMenu;
 use Guiguts::TextProcessingMenu;
@@ -888,25 +889,6 @@ sub tglprfbar {
 			}
 		}
 		$lglobal{proofbarvisible} = 1;
-	}
-	return;
-}
-
-# Routine to handle image viewer file requests
-sub openpng {
-	my $pagenum = shift;
-	if ( $pagenum eq 'Pg' ) {
-		return;
-	}
-	$lglobal{pageimageviewed} = $pagenum;
-	if ( not $globalviewerpath ) {
-		viewerpath();
-	}
-	my $imagefile = get_image_file($pagenum);
-	if ( $imagefile && $globalviewerpath ) {
-		runner( $globalviewerpath, $imagefile );
-	} else {
-		setpngspath($pagenum);
 	}
 	return;
 }
