@@ -4,7 +4,7 @@ BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close 
-	&_flash_save &_exit )
+	&_flash_save &clearvars &_exit )
 }
 
 sub file_open {    # Find a text file to open
@@ -27,8 +27,6 @@ sub file_open {    # Find a text file to open
 		&main::openfile($name);
 	}
 }
-
-
 
 sub file_include {    # FIXME: Should include even if no file loaded.
 	my $textwindow= shift;
@@ -95,7 +93,7 @@ sub file_saveas {
 
 sub file_close {
 	return if ( &main::confirmempty() =~ m{cancel}i );
-	&main::clearvars();
+	clearvars($textwindow);
 	&main::update_indicators();
 	return;
 }
@@ -308,6 +306,33 @@ sub _bin_save {
 	}
 	return;
 }
+
+
+## Clear persistent variables before loading another file
+sub clearvars {
+	my $textwindow = shift;
+	my @marks = $textwindow->markNames;
+	for (@marks) {
+		unless ( $_ =~ m{insert|current} ) {
+			$textwindow->markUnset($_);
+		}
+	}
+	%main::reghints = ();
+	%{ $main::lglobal{seenwordsdoublehyphen} } = ();
+	$main::lglobal{seenwords}     = ();
+	$main::lglobal{seenwordpairs} = ();
+	$main::lglobal{fnarray}       = ();
+	%main::proofers               = ();
+	%main::pagenumbers            = ();
+	@main::operations             = ();
+	@main::bookmarks              = ();
+	$main::pngspath               = q{};
+	$main::lglobal{seepagenums}   = 0;
+	@{ $main::lglobal{fnarray} } = ();
+	undef $main::lglobal{prepfile};
+	return;
+}
+
 
 
 ## Global Exit

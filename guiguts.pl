@@ -838,30 +838,6 @@ sub menurebuild {
 	return;
 }
 
-## Clear persistent variables before loading another file
-sub clearvars {
-	my @marks = $textwindow->markNames;
-	for (@marks) {
-		unless ( $_ =~ m{insert|current} ) {
-			$textwindow->markUnset($_);
-		}
-	}
-	%reghints = ();
-	%{ $lglobal{seenwordsdoublehyphen} } = ();
-	$lglobal{seenwords}     = ();
-	$lglobal{seenwordpairs} = ();
-	$lglobal{fnarray}       = ();
-	%proofers               = ();
-	%pagenumbers            = ();
-	@operations             = ();
-	@bookmarks              = ();
-	$pngspath               = q{};
-	$lglobal{seepagenums}   = 0;
-	@{ $lglobal{fnarray} } = ();
-	undef $lglobal{prepfile};
-	return;
-}
-
 ## Make toolbar visible if invisible and vice versa
 sub tglprfbar {
 	if ( $lglobal{proofbarvisible} ) {
@@ -12459,7 +12435,7 @@ sub openfile {    # and open it
 		$dbox->Show;
 		return;
 	}
-	clearvars();
+	clearvars($textwindow);
 	if ( $lglobal{img_num_label} ) {
 		$lglobal{img_num_label}->destroy;
 		undef $lglobal{img_num_label};
@@ -16342,7 +16318,7 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 			-image   => 'edittrash16',
 			-command => sub {
 				return if ( confirmempty() =~ /cancel/i );
-				clearvars();
+				clearvars($textwindow);
 				update_indicators();
 			},
 			-tip => 'Discard Edits'
