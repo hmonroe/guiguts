@@ -7805,6 +7805,7 @@ sub gcheckpop_up {
 				$lglobal{gcpop}->destroy;
 				undef $lglobal{gcpop};
 				$textwindow->markUnset($_) for values %gc;
+				unlink 'gutreslts.tmp';
 			}
 		);
 		$lglobal{gcpop}->Icon( -image => $icon );
@@ -8026,7 +8027,7 @@ sub gcheckpop_up {
 		}
 	}
 	close $results;
-	unlink 'gutreslts.tmp';
+	unlink 'gutrslts.tmp';
 	gutwindowpopulate( \@gclines );
 }
 
@@ -8220,6 +8221,8 @@ sub gcviewops {
 				$lglobal{viewpop}->destroy;
 				@{ $lglobal{gcarray} } = ();
 				undef $lglobal{viewpop};
+				unlink cat('gutreslts.tmp');
+;
 			}
 		);
 		$lglobal{viewpop}->resizable( 'no', 'no' );
@@ -9215,7 +9218,7 @@ sub initialize {
 		$validatecommand = setdefaultpath($validatecommand,catfile($lglobal{guigutsdirectory}, 'tools', 'W3C', 'onsgmls.exe') );
 		$validatecsscommand = setdefaultpath($validatecsscommand,catfile($lglobal{guigutsdirectory},'tools', 'W3C', 'css-validator.jar'));
 		$validatecsscommand = setdefaultpath($validatecsscommand,catfile($lglobal{guigutsdirectory},'tools', 'W3C', 'css-validator.jar'));
-		$validatecsscommand = setdefaultpath($gnutenbergdirectory,catfile($lglobal{guigutsdirectory}, 'tools', 'gnutenberg', '0.4' ));
+		$gnutenbergdirectory = setdefaultpath($gnutenbergdirectory,catfile($lglobal{guigutsdirectory}, 'tools', 'gnutenberg', '0.4' ));
 	} else {
 		$gutcommand = setdefaultpath($gutcommand,catfile( $lglobal{guigutsdirectory},'tools','gutcheck','gutcheck' ));
 		$jeebiescommand = setdefaultpath($jeebiescommand,catfile( $lglobal{guigutsdirectory},'tools', 'jeebies', 'jeebies' ));
