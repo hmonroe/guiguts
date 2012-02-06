@@ -114,12 +114,12 @@ $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { _exit() };
 
 ### Constants
-my $OS_WIN          = $^O =~ m{Win};
-my $OS_MAC   		= $^O =~ m{darwin}; 
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
 
 ### Application Globals
+our $OS_WIN          = $^O =~ m{Win};
+our $OS_MAC   		= $^O =~ m{darwin}; 
 our $activecolor      = '#24baec';    #'#f2f818';
 our $alpha_sort       = 'f';
 our $auto_page_marks  = 1;
@@ -1287,7 +1287,7 @@ sub menu_preferences {
 			  ],
 			  [
 				 Button   => 'Locate Image Viewer Executable',
-				 -command => \&viewerpath
+				 -command => sub{setviewerpath($textwindow)}
 			  ],
 			  [ 'separator', '' ],
 			  [
@@ -9208,34 +9208,18 @@ sub initialize {
          unless $scannospath;
 
 	if ($OS_WIN) {
-		$gutcommand = catfile( $lglobal{guigutsdirectory},
-							   'tools', 'gutcheck', 'gutcheck.exe' )
-		  unless $gutcommand;
-		$jeebiescommand = catfile( $lglobal{guigutsdirectory},
-								   'tools', 'jeebies', 'jeebies.exe' )
-		  unless $jeebiescommand;
-		$tidycommand =
-		  catfile( $lglobal{guigutsdirectory}, 'tools', 'tidy', 'tidy.exe' )
-		  unless $tidycommand;
-		$validatecommand =
-		  catfile( $lglobal{guigutsdirectory}, 'tools', 'W3C', 'onsgmls.exe' )
-		  unless $validatecommand;
-		$validatecsscommand =
-		  catfile( $lglobal{guigutsdirectory},
-				   'tools', 'W3C', 'css-validator.jar' )
-		  unless $validatecsscommand;
-		$gnutenbergdirectory =
-		  catfile( $lglobal{guigutsdirectory}, 'tools', 'gnutenberg', '0.4' )
-		  unless $gnutenbergdirectory;
+		$gutcommand =setdefaultpath($gutcommand,catfile($lglobal{guigutsdirectory},'tools', 'gutcheck', 'gutcheck.exe'));
+		$jeebiescommand =setdefaultpath($jeebiescommand,catfile( $lglobal{guigutsdirectory},'tools','jeebies','jeebies.exe' ));
+		$tidycommand =setdefaultpath($tidycommand,catfile( $lglobal{guigutsdirectory}, 'tools', 'tidy', 'tidy.exe' ));
+		$globalviewerpath=setdefaultpath($globalviewerpath,catfile('\Program Files', 'XnView', 'xnview.exe' ));
+		$validatecommand = setdefaultpath($validatecommand,catfile($lglobal{guigutsdirectory}, 'tools', 'W3C', 'onsgmls.exe') );
+		$validatecsscommand = setdefaultpath($validatecsscommand,catfile($lglobal{guigutsdirectory},'tools', 'W3C', 'css-validator.jar'));
+		$validatecsscommand = setdefaultpath($validatecsscommand,catfile($lglobal{guigutsdirectory},'tools', 'W3C', 'css-validator.jar'));
+		$validatecsscommand = setdefaultpath($gnutenbergdirectory,catfile($lglobal{guigutsdirectory}, 'tools', 'gnutenberg', '0.4' ));
 	} else {
-		$gutcommand = catfile( $lglobal{guigutsdirectory},
-							   'tools', 'gutcheck', 'gutcheck' )
-		  unless $gutcommand;
-		$jeebiescommand = catfile( $lglobal{guigutsdirectory},
-								   'tools', 'jeebies', 'jeebies' ) 
-								   unless $jeebiescommand;
+		$gutcommand = setdefaultpath($gutcommand,catfile( $lglobal{guigutsdirectory},'tools','gutcheck','gutcheck' ));
+		$jeebiescommand = setdefaultpath($jeebiescommand,catfile( $lglobal{guigutsdirectory},'tools', 'jeebies', 'jeebies' ));
 	}
-	
 	%{ $lglobal{utfblocks} } = (
 		'Alphabetic Presentation Forms' => [ 'FB00', 'FB4F' ],
 		'Arabic Presentation Forms-A'   => [ 'FB50', 'FDCF' ]
@@ -10397,7 +10381,7 @@ sub pageadjust {
 				-width   => 12,
 				-command => [
 					sub {
-						openpng($num);
+						openpng($textwindow,$num);
 					},
 				],
 			)->grid( -row => $row, -column => 0, -padx => 2 );
@@ -10852,7 +10836,7 @@ sub pgprevious {    #move focus to previous page marker
 	$textwindow->yview( $textwindow->index($mark) );
 	if ( $lglobal{showthispageimage} and ( $mark =~ /Pg(\S+)/ ) ) {
 		$textwindow->focus;
-		openpng($1);
+		openpng($textwindow,$1);
 		$lglobal{showthispageimage} = 0;
 	}
 	update_indicators();
@@ -10872,7 +10856,7 @@ sub pgnext {    #move focus to next page marker
 	$textwindow->yview( $textwindow->index($mark) );
 	if ( $lglobal{showthispageimage} and ( $mark =~ /Pg(\S+)/ ) ) {
 		$textwindow->focus;
-		openpng($1);
+		openpng($textwindow,$1);
 		$lglobal{showthispageimage} = 0;
 
 	}
@@ -11682,7 +11666,7 @@ sub update_see_img_button {
 					$lglobal{pagenumentry}->delete( '0', 'end' );
 					$lglobal{pagenumentry}->insert( 'end', "Pg" . $pagenum );
 				}
-				openpng($pagenum);
+				openpng($textwindow,$pagenum);
 			}
 		);
 		$lglobal{pagebutton}->bind( '<3>', sub { setpngspath() } );
@@ -11886,7 +11870,7 @@ sub update_indicators {
 				 or ( $pnum ne "$lglobal{pageimageviewed}" ) )
 			{
 				$lglobal{pageimageviewed} = $pnum;
-				openpng($pnum);
+				openpng($textwindow,$pnum);
 			}
 		}
 		update_img_button($pnum);
@@ -14828,7 +14812,7 @@ sub separatorpopup {
 	$lglobal{pagepop}->Tk::bind( '<r>' => \&convertfilnum );
 	$lglobal{pagepop}->Tk::bind(
 		'<v>' => sub {
-			openpng( get_page_number() );
+			openpng($textwindow, get_page_number() );
 			$lglobal{pagepop}->raise;
 		}
 	);
@@ -16229,24 +16213,6 @@ sub setbrowser {
 	$browsepop->Icon( -image => $icon );
 }
 
-sub viewerpath {    #Find your image viewer
-	my $types;
-	if ($OS_WIN) {
-		$types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
-	} else {
-		$types = [ [ 'All Files', ['*'] ] ];
-	}
-	$lglobal{pathtemp} =
-	  $textwindow->getOpenFile(
-								-filetypes  => $types,
-								-title      => 'Where is your image viewer?',
-								-initialdir => dirname($globalviewerpath)
-	  );
-	$globalviewerpath = $lglobal{pathtemp} if $lglobal{pathtemp};
-	$globalviewerpath = os_normal($globalviewerpath);
-	savesettings();
-}
-
 sub setpngspath {
 	my $pagenum = shift;
 
@@ -16260,7 +16226,7 @@ sub setpngspath {
 	$path     = os_normal($path);
 	$pngspath = $path;
 	_bin_save($textwindow,$top);
-	openpng($pagenum) if defined $pagenum;
+	openpng($textwindow,$pagenum) if defined $pagenum;
 }
 
 sub toolbar_toggle {    # Set up / remove the tool bar
