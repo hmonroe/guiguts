@@ -3,7 +3,7 @@ package Guiguts::TextProcessingMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&text_convert_italic &text_convert_bold &text_thought_break &text_convert_tb)
+	@EXPORT=qw(&text_convert_italic &text_convert_bold &text_thought_break &text_convert_tb &text_convert_options)
 }
 
 
@@ -34,6 +34,46 @@ sub text_convert_tb {
 	my $tb = '       *       *       *       *       *';
 	$textwindow->FindAndReplaceAll( '-exact', '-nocase', '<tb>', $tb );
 }
+
+sub text_convert_options {
+	my $top = shift;
+
+	my $options = $top->DialogBox( -title   => "Text Processing Options",
+								   -buttons => ["OK"], );
+
+	my $italic_frame =
+	  $options->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $italic_label =
+	  $italic_frame->Label(
+							-width => 25,
+							-text  => "Italic Replace Character"
+	  )->pack( -side => 'left' );
+	my $italic_entry =
+	  $italic_frame->Entry(
+							-width        => 6,
+							-background   => $main::bkgcolor,
+							-relief       => 'sunken',
+							-textvariable => \$main::italic_char,
+	  )->pack( -side => 'left' );
+
+	my $bold_frame =
+	  $options->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $bold_label =
+	  $bold_frame->Label(
+						  -width => 25,
+						  -text  => "Bold Replace Character"
+	  )->pack( -side => 'left' );
+	my $bold_entry =
+	  $bold_frame->Entry(
+						  -width        => 6,
+						  -background   => $main::bkgcolor,
+						  -relief       => 'sunken',
+						  -textvariable => \$main::bold_char,
+	  )->pack( -side => 'left' );
+	$options->Show;
+	&main::savesettings();
+}
+
 
 
 1;

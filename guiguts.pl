@@ -22,8 +22,8 @@ use strict;
 use warnings;
 #use criticism 'gentle'; 
 
-my $VERSION = '1.0.6';
-our $debug = 0; # turn on to report debug messages. Do not commit with $debug on
+my $VERSION = '1.0.7';
+our $debug = 1; # turn on to report debug messages. Do not commit with $debug on
 
 use FindBin;
 use lib $FindBin::Bin . "/lib";
@@ -2331,7 +2331,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 			   Button   => 'Remove small caps markup',
 			   -command => \&text_remove_smallcaps_markup
 			],
-			[ Button => "Options...", -command => \&text_convert_options ],
+			[ Button => "Options...", -command => sub{text_convert_options($top)} ],
 		  ]
 
 	);
@@ -3043,7 +3043,7 @@ $globalbrowserstart, "http://www.pgdp.net/c/tools/proofers/project_topic.php?pro
 			   Button   => 'Remove small caps markup',
 			   -command => \&text_remove_smallcaps_markup
 			],
-			[ Button => "Options...", -command => \&text_convert_options ],
+			[ Button => "Options...", -command => sub{text_convert_options($top)} ],
 			[ 'separator', '' ],
 			[ Button => 'ASCII ~Boxes...', -command => \&asciipopup ],
 			[ Button => 'ASCII Table Special Effects...', -command => \&tablefx ],
@@ -3899,7 +3899,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 				   $textwindow->addGlobEnd;
 				 }
 			],
-			[ Button => "Options...", -command => \&text_convert_options ],
+			[ Button => "Options...", -command => sub{text_convert_options($top)}],
 			[ 'separator', '' ],
 			[
 			   Button   => 'Small caps to all caps',
@@ -5299,14 +5299,14 @@ sub getnextscanno {
 	$scannosearch = 1;
 
 	findascanno();
-	unless ( searchtext() ) {
+	unless ( searchtext($textwindow,$top) ) {
 		if ( $lglobal{regaa} ) {
 			while (1) {
 				last
 				  if (
 					 $lglobal{scannosindex}++ >= $#{ $lglobal{scannosarray} } );
 				findascanno();
-				last if searchtext();
+				last if searchtext($textwindow,$top);
 			}
 		}
 	}
@@ -5343,7 +5343,7 @@ sub swapterms {
 	  ->insert( 'end', $lglobal{searchentry}->get( '1.0', '1.end' ) );
 	$lglobal{searchentry}->delete( '1.0', 'end' );
 	$lglobal{searchentry}->insert( 'end', $tempholder );
-	searchtext();
+	searchtext($textwindow,$top);
 }
 
 sub isvalid {
@@ -5375,246 +5375,6 @@ sub clearmarks {
 		}
 		$mark = $textwindow->markNext($mark) if $mark;
 	}
-}
-
-sub searchtext {
-	viewpagenums() if ( $lglobal{seepagenums} );
-
-	#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt\n";
-
-# $sopt[0] --> 0 = pattern search                       1 = whole word search
-# $sopt[1] --> 0 = case sensitive                     1 = case insensitive search
-# $sopt[2] --> 0 = search forwards    \                  1 = search backwards
-# $sopt[3] --> 0 = normal search term           1 = regex search term - 3 and 0 are mutually exclusive
-# $sopt[4] --> 0 = search from last index       1 = Start from beginning
-
-#	$searchstartindex--where the last search for this $searchterm ended
-#   replaced with the insertion point if the user has clicked someplace else
-
-	my $searchterm = shift;
-	#print $sopt[4]."from beginning\n";
-	$searchterm = '' unless defined $searchterm;
-	if ( length($searchterm) ) {    #and not ($searchterm =~ /\W/)
-		add_search_history( $searchterm, \@search_history, $history_size );
-	}
-	$lglobal{lastsearchterm} = 'stupid variable needs to be initialized'
-	  unless length( $lglobal{lastsearchterm} );
-	$textwindow->tagRemove( 'highlight', '1.0', 'end' ) if $searchstartindex;
-	my ( $start, $end );
-	my $foundone    = 1;
-	my @ranges      = $textwindow->tagRanges('sel');
-	my $range_total = @ranges;
-	$searchstartindex = $textwindow->index('insert') unless $searchstartindex;
-	my $searchstartingpoint = $textwindow->index('insert');
-	# this is a search within a selection
-	if ( $range_total == 0 && $lglobal{selectionsearch} ) {
-		$start = $textwindow->index('insert');
-		$end   = $lglobal{selectionsearch};
-		# this is a search through the end of the document
-	} elsif ( $range_total == 0 && !$lglobal{selectionsearch} ) {
-		$start = $textwindow->index('insert');
-		$end   = 'end';
-		$end   = '1.0' if ( $sopt[2] );
-	} else {
-		$end                      = pop(@ranges);
-		$start                    = pop(@ranges);
-		$lglobal{selectionsearch} = $end;
-	}
-	if ( $sopt[4] ) {
-		if ( $sopt[2] ) {
-
-			# search backwards and Start From Beginning so start from the end
-			$start = 'end';
-			$end   = '1.0';
-		} else {
-			# search forwards and Start From Beginning so start from the end
-			$start = '1.0';
-			$end   = 'end';
-		}
-		$lglobal{searchop4}->deselect if ( defined $lglobal{searchpop} );
-		$lglobal{lastsearchterm} = "resetresetreset";
-	}
-	#print "start:$start\n";
-	if ($start) {    # but start is always defined?
-		if ( $sopt[2] ) {    # if backwards
-			$searchstartindex = $start;
-		} else {
-			$searchendindex = "$start+1c";  #forwards. #unless ( $start eq '1.0' )
-		}
-		# forward search begin +1c or the next search would find the same match
-	}
-	{   # Turn off warnings temporarily since $searchterm is undefined on first
-		# search
-		no warnings;
-		unless ( length($searchterm) ) {
-			$searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
-			add_search_history( $searchterm, \@search_history, $history_size );
-		}
-	} # warnings back on; keep this bracket
-	return ('') unless length($searchterm);
-	if ( $sopt[3] ) {
-		unless ( isvalid($searchterm) ) {
-			badreg();
-			return;
-		}
-	}
-	# if this is a new searchterm
-	unless ( $searchterm eq $lglobal{lastsearchterm} ) {
-		if ( $sopt[2] ) {
-			( $range_total == 0 )
-			  ? ( $searchstartindex = 'end' )
-			  : ( $searchstartindex = $end );
-		}
-		$lglobal{lastsearchterm} = $searchterm
-		  unless ( ( $searchterm =~ m/\\n/ ) && ( $sopt[3] ) );
-		clearmarks() if ( ( $searchterm =~ m/\\n/ ) && ( $sopt[3] ) );
-	}
-	$textwindow->tagRemove( 'sel', '1.0', 'end' );
-	my $length = '0';
-	my ($tempindex);
-
-	# Search across line boundaries with regexp "this\nand"
-	if ( ( $searchterm =~ m/\\n/ ) && ( $sopt[3] ) ) {
-		unless ( $searchterm eq $lglobal{lastsearchterm} ) {
-			{
-				$top->Busy;
-
-				# have to search on the whole file
-				my $wholefile = $textwindow->get( '1.0', $end );
-
-				# search is case sensitive if $sopt[1] is set
-				if ( $sopt[1] ) {
-					while ( $wholefile =~ m/$searchterm/smgi ) {
-						push @{ $lglobal{nlmatches} },
-						  [ $-[0], ( $+[0] - $-[0] ) ];
-					}
-				} else {
-					while ( $wholefile =~ m/$searchterm/smg ) {
-						push @{ $lglobal{nlmatches} },
-						  [ $-[0], ( $+[0] - $-[0] ) ];
-					}
-				}
-				$top->Unbusy;
-			}
-			my $matchidx = 0;
-			my $lineidx  = 1;
-			my $matchacc = 0;
-			foreach my $match ( @{ $lglobal{nlmatches} } ) {
-				while (1) {
-					my $linelen =
-					  length( $textwindow->get( "$lineidx.0", "$lineidx.end" ) )
-					  + 1;
-					last if ( ( $matchacc + $linelen ) > $match->[0] );
-					$matchacc += $linelen;
-					$lineidx++;
-				}
-				$matchidx++;
-				my $offset = $match->[0] - $matchacc;
-				$textwindow->markSet( "nls${matchidx}q" . $match->[1],
-									  "$lineidx.$offset" );
-			}
-			$lglobal{lastsearchterm} = $searchterm;
-		}
-		my $mark;
-		if ( $sopt[2] ) {
-			$mark = getmark($searchstartindex);
-		} else {
-			$mark = getmark($searchendindex);
-		}
-		while ($mark) {
-			if ( $mark =~ /nls\d+q(\d+)/ ) {
-				$length           = $1;
-				$searchstartindex = $textwindow->index($mark);
-				last;
-			} else {
-				$mark = getmark($mark) if $mark;
-				next;
-			}
-		}
-
-		$searchstartindex = 0 unless $mark;
-		$lglobal{lastsearchterm} = 'reset' unless $mark;
-	} else {    # not a search across line boundaries
-		my $exactsearch = $searchterm;
-		$exactsearch = escape_regexmetacharacters($exactsearch);
-		$searchterm  = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
-		  if $sopt[0];
-		my ( $direction, $searchstart, $mode );
-		if   ( $sopt[2] ) { $searchstart = $searchstartindex }
-		else              { $searchstart = $searchendindex }
-		if   ( $sopt[2] ) { $direction = '-backwards' }
-		else              { $direction = '-forwards' }
-		if   ( $sopt[0] or $sopt[3] ) { $mode = '-regexp' }
-		else                          { $mode = '-exact' }
-
-		if ($debug) {print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";}
-
-		#finally we actually do some searching
-		if ( $sopt[1] ) {
-			$searchstartindex =
-			  $textwindow->search(
-								   $mode, $direction, '-nocase',
-								   '-count' => \$length,
-								   '--', $searchterm, $searchstart, $end
-			  );
-		} else {
-			$searchstartindex =
-			  $textwindow->search(
-								   $mode, $direction,
-								   '-count' => \$length,
-								   '--', $searchterm, $searchstart, $end
-			  );
-		}
-	}
-	if ($searchstartindex) {
-		$tempindex = $searchstartindex;
-		my ( $row, $col ) = split /\./, $tempindex;
-		$col += $length;
-		$searchendindex = "$row.$col" if $length;
-		$searchendindex = $textwindow->index("$searchstartindex +${length}c")
-		  if ( $searchterm =~ m/\\n/ );
-		$searchendindex = $textwindow->index("$searchstartindex +1c")
-		  unless $length;
-		$textwindow->markSet( 'insert', $searchstartindex )
-		  if $searchstartindex;    # position the cursor at the index
-		$textwindow->tagAdd( 'highlight', $searchstartindex, $searchendindex )
-		  if $searchstartindex;    # highlight the text
-		$textwindow->yviewMoveto(1);
-		$textwindow->see($searchstartindex)
-		  if ( $searchendindex && $sopt[2] )
-		  ;    # scroll text box, if necessary, to make found text visible
-		$textwindow->see($searchendindex) if ( $searchendindex && !$sopt[2] );
-		$searchendindex = $searchstartindex unless $length;
-	}
-	unless ($searchstartindex) {
-		$foundone = 0;
-		unless ( $lglobal{selectionsearch} ) { $start = '1.0'; $end = 'end' }
-		if ( $sopt[2] ) {
-			$searchstartindex = $end;
-			$textwindow->markSet( 'insert', $searchstartindex );
-			$textwindow->see($searchendindex);
-		} else {
-			$searchendindex = $start;
-			$textwindow->markSet( 'insert', $start );
-			$textwindow->see($start);
-		}
-		$lglobal{selectionsearch} = 0;
-		unless ( $lglobal{regaa} ) {
-			$textwindow->bell unless $nobell;
-			$lglobal{searchbutton}->flash if defined $lglobal{searchpop};
-			$lglobal{searchbutton}->flash if defined $lglobal{searchpop};
-
-			# If nothing found, return cursor to starting point
-			if ($failedsearch) {
-				$searchendindex = $searchstartingpoint;
-				$textwindow->markSet( 'insert', $searchstartingpoint );
-				$textwindow->see($searchstartingpoint);
-			}
-		}
-	}
-	updatesearchlabels();
-	update_indicators();
-	return $foundone;    # return index of where found text started
 }
 
 sub getmark {
@@ -5991,7 +5751,7 @@ sub replaceall {
 	#print "repl:$replacement:ranges:@ranges:\n";
 	$textwindow->focus;
 	opstop();
-	while ( searchtext() )
+	while ( searchtext($textwindow,$top) )
 	{    # keep calling search() and replace() until you return undef
 		last unless replace($replacement);
 		last if $operationinterrupt;
@@ -7281,7 +7041,7 @@ sub errorcheckpop_up {
 					my @savesets = @sopt;
 					searchoptset(qw/0 x x 0/);
 					searchfromstartifnew($1);
-					searchtext($1);
+					searchtext($textwindow,$top,$1);
 					searchoptset(@savesets);
 					$top->raise;
 				}
@@ -9829,7 +9589,7 @@ sub textbindings {
 		sub {
 			if ( $lglobal{searchpop} ) {
 				my $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
-				searchtext($searchterm);
+				searchtext($textwindow,$top,$searchterm);
 			} else {
 				searchpopup();
 			}
@@ -12618,7 +12378,7 @@ sub searchpopup {
 				add_search_history(
 								   $lglobal{searchentry}->get( '1.0', '1.end' ),
 								   \@search_history, $history_size );
-				searchtext('');
+				searchtext($textwindow,$top,'');
 			},
 			-text  => 'Search',
 			-width => 6
@@ -12777,7 +12537,7 @@ sub searchpopup {
 				add_search_history(
 								   $lglobal{searchentry}->get( '1.0', '1.end' ),
 								   \@search_history, $history_size );
-				searchtext('');
+				searchtext($textwindow,$top,'');
 			},
 			-text  => 'R & S',
 			-width => 5
@@ -12845,7 +12605,7 @@ sub searchpopup {
 			-activebackground => $activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry1}->get( '1.0', '1.end' ) );
-				searchtext('');
+				searchtext($textwindow,$top,'');
 			},
 			-text  => 'R & S',
 			-width => 5
@@ -12913,7 +12673,7 @@ sub searchpopup {
 			-activebackground => $activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry2}->get( '1.0', '1.end' ) );
-				searchtext('');
+				searchtext($textwindow,$top,'');
 			},
 			-text  => 'R & S',
 			-width => 5
@@ -12996,7 +12756,7 @@ sub searchpopup {
 			my $nextoccurrencebutton = $sf5->Button(
 				-activebackground => $activecolor,
 				-command          => sub {
-					searchtext('');
+					searchtext($textwindow,$top,'');
 				},
 				-text  => 'Next Occurrence',
 				-width => 15
@@ -13101,7 +12861,7 @@ sub searchpopup {
 				$lglobal{replaceentry}->see('1.0');
 				$lglobal{replaceentry}->delete('1.end');
 				$lglobal{replaceentry}->delete( '2.0', 'end' );
-				searchtext();
+				searchtext($textwindow,$top);
 				$top->raise;
 			}
 		);
@@ -13111,7 +12871,7 @@ sub searchpopup {
 				$lglobal{searchentry}->delete( '2.0', 'end' );
 				$lglobal{replaceentry}->see('1.0');
 				$lglobal{replaceentry}->delete( '2.0', 'end' );
-				searchtext();
+				searchtext($textwindow,$top);
 				$top->raise;
 			}
 		);
@@ -13121,7 +12881,7 @@ sub searchpopup {
 				$lglobal{searchentry}->delete( '2.0', 'end' );
 				$lglobal{replaceentry}->see('1.0');
 				$lglobal{replaceentry}->delete( '2.0', 'end' );
-				searchtext();
+				searchtext($textwindow,$top);
 				$top->raise;
 			}
 		);
@@ -13133,7 +12893,7 @@ sub searchpopup {
 			sub {
 				$lglobal{searchentry}->delete('insert -1c')
 				  if ( $lglobal{searchentry}->get('insert -1c') eq "\cG" );
-				searchtext( $lglobal{searchentry}->get( '1.0', '1.end' ) );
+				searchtext($textwindow,$top, $lglobal{searchentry}->get( '1.0', '1.end' ) );
 				$textwindow->focus;
 			}
 		);
@@ -13177,7 +12937,7 @@ sub searchpopup {
 				$lglobal{replaceentry}->delete('1.end');
 				$lglobal{replaceentry}->delete( '2.0', 'end' );
 				replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
-				searchtext();
+				searchtext($textwindow,$top);
 				$top->raise;
 			}
 		);
@@ -13210,7 +12970,7 @@ sub searchpopup {
 		$lglobal{searchentry}->delete( '1.0', 'end' );
 		$lglobal{searchentry}->insert( 'end', $searchterm );
 		$lglobal{searchentry}->tagAdd( 'sel', '1.0', 'end -1c' );
-		searchtext('');
+		searchtext($textwindow,$top,'');
 	}
 }
 
@@ -13224,7 +12984,7 @@ sub stealthscanno {
 		savesettings();
 		searchpopup();
 		getnextscanno();
-		searchtext();
+		searchtext($textwindow,$top);
 	}
 	$lglobal{doscannos} = 0;
 }
@@ -18046,44 +17806,6 @@ sub text_remove_smallcaps_markup {
 }
 
 # Popup for choosing replacement characters, etc.
-sub text_convert_options {
-
-	my $options = $top->DialogBox( -title   => "Text Processing Options",
-								   -buttons => ["OK"], );
-
-	my $italic_frame =
-	  $options->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
-	my $italic_label =
-	  $italic_frame->Label(
-							-width => 25,
-							-text  => "Italic Replace Character"
-	  )->pack( -side => 'left' );
-	my $italic_entry =
-	  $italic_frame->Entry(
-							-width        => 6,
-							-background   => $bkgcolor,
-							-relief       => 'sunken',
-							-textvariable => \$italic_char,
-	  )->pack( -side => 'left' );
-
-	my $bold_frame =
-	  $options->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
-	my $bold_label =
-	  $bold_frame->Label(
-						  -width => 25,
-						  -text  => "Bold Replace Character"
-	  )->pack( -side => 'left' );
-	my $bold_entry =
-	  $bold_frame->Entry(
-						  -width        => 6,
-						  -background   => $bkgcolor,
-						  -relief       => 'sunken',
-						  -textvariable => \$bold_char,
-	  )->pack( -side => 'left' );
-	$options->Show;
-	savesettings();
-}
-
 sub runtests {
 
 	# From the command line run "guiguts.pl runtests"

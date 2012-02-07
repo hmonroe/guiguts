@@ -3,7 +3,7 @@ package Guiguts::SearchReplaceMenu;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&add_search_history)
+	@EXPORT=qw(&add_search_history &searchtext)
 }
 
 sub add_search_history {
@@ -20,6 +20,266 @@ sub add_search_history {
 		last if @$history_array_ref >= $history_size;
 	}
 }
+
+sub searchtext {
+	my ($textwindow,$top,$searchterm)=@_;
+	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
+
+	#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt\n";
+
+# $sopt[0] --> 0 = pattern search                       1 = whole word search
+# $sopt[1] --> 0 = case sensitive                     1 = case insensitive search
+# $sopt[2] --> 0 = search forwards    \                  1 = search backwards
+# $sopt[3] --> 0 = normal search term           1 = regex search term - 3 and 0 are mutually exclusive
+# $sopt[4] --> 0 = search from last index       1 = Start from beginning
+
+#	$searchstartindex--where the last search for this $searchterm ended
+#   replaced with the insertion point if the user has clicked someplace else
+
+	#print $sopt[4]."from beginning\n";
+	$searchterm = '' unless defined $searchterm;
+	if ( length($searchterm) ) {    #and not ($searchterm =~ /\W/)
+		&main::add_search_history( $searchterm, \@main::search_history, $main::history_size );
+	}
+	$main::lglobal{lastsearchterm} = 'stupid variable needs to be initialized'
+	  unless length( $main::lglobal{lastsearchterm} );
+	$textwindow->tagRemove( 'highlight', '1.0', 'end' ) if $main::searchstartindex;
+	my ( $start, $end );
+	my $foundone    = 1;
+	my @ranges      = $textwindow->tagRanges('sel');
+	my $range_total = @ranges;
+	$main::searchstartindex = $textwindow->index('insert') unless $main::searchstartindex;
+	my $searchstartingpoint = $textwindow->index('insert');
+	# this is a search within a selection
+	if ( $range_total == 0 && $main::lglobal{selectionsearch} ) {
+		$start = $textwindow->index('insert');
+		$end   = $main::lglobal{selectionsearch};
+		# this is a search through the end of the document
+	} elsif ( $range_total == 0 && !$main::lglobal{selectionsearch} ) {
+		$start = $textwindow->index('insert');
+		$end   = 'end';
+		$end   = '1.0' if ( $sopt[2] );
+	} else {
+		$end                      = pop(@ranges);
+		$start                    = pop(@ranges);
+		$main::lglobal{selectionsearch} = $end;
+	}
+	if ( $main::sopt[4] ) {
+		if ( $main::sopt[2] ) {
+
+			# search backwards and Start From Beginning so start from the end
+			$start = 'end';
+			$end   = '1.0';
+		} else {
+			# search forwards and Start From Beginning so start from the end
+			$start = '1.0';
+			$end   = 'end';
+		}
+		$main::lglobal{searchop4}->deselect if ( defined $main::lglobal{searchpop} );
+		$main::lglobal{lastsearchterm} = "resetresetreset";
+	}
+	#print "start:$start\n";
+	if ($start) {    # but start is always defined?
+		if ( $main::sopt[2] ) {    # if backwards
+			$main::searchstartindex = $start;
+		} else {
+			$main::searchendindex = "$start+1c";  #forwards. #unless ( $start eq '1.0' )
+		  #print $main::searchstartindex.":".$main::searchendindex."4\n";
+			
+		}
+		# forward search begin +1c or the next search would find the same match
+	}
+	{   # Turn off warnings temporarily since $searchterm is undefined on first
+		# search
+		no warnings;
+		unless ( length($searchterm) ) {
+			$searchterm = $main::lglobal{searchentry}->get( '1.0', '1.end' );
+			&main::add_search_history( $searchterm, \@main::search_history, $main::history_size );
+		}
+	} # warnings back on; keep this bracket
+	return ('') unless length($searchterm);
+	if ( $main::sopt[3] ) {
+		unless ( &main::isvalid($searchterm) ) {
+			&main::badreg();
+			return;
+		}
+	}
+	# if this is a new searchterm
+	unless ( $searchterm eq $main::lglobal{lastsearchterm} ) {
+		if ( $main::sopt[2] ) {
+			( $range_total == 0 )
+			  ? ( $main::searchstartindex = 'end' )
+			  : ( $main::searchstartindex = $end );
+		}
+		$main::lglobal{lastsearchterm} = $searchterm
+		  unless ( ( $searchterm =~ m/\\n/ ) && ( $main::sopt[3] ) );
+		&main::clearmarks() if ( ( $searchterm =~ m/\\n/ ) && ( $main::sopt[3] ) );
+	}
+	$textwindow->tagRemove( 'sel', '1.0', 'end' );
+	my $length = '0';
+	my ($tempindex);
+
+	# Search across line boundaries with regexp "this\nand"
+	if ( ( $searchterm =~ m/\\n/ ) && ( $main::sopt[3] ) ) {
+		unless ( $searchterm eq $main::lglobal{lastsearchterm} ) {
+			{
+				$top->Busy;
+
+				# have to search on the whole file
+				my $wholefile = $textwindow->get( '1.0', $end );
+
+				# search is case sensitive if $sopt[1] is set
+				if ( $main::sopt[1] ) {
+					while ( $wholefile =~ m/$searchterm/smgi ) {
+						push @{ $main::lglobal{nlmatches} },
+						  [ $-[0], ( $+[0] - $-[0] ) ];
+					}
+				} else {
+					while ( $wholefile =~ m/$searchterm/smg ) {
+						push @{ $main::lglobal{nlmatches} },
+						  [ $-[0], ( $+[0] - $-[0] ) ];
+					}
+				}
+				$top->Unbusy;
+			}
+			my $matchidx = 0;
+			my $lineidx  = 1;
+			my $matchacc = 0;
+			foreach my $match ( @{ $main::lglobal{nlmatches} } ) {
+				while (1) {
+					my $linelen =
+					  length( $textwindow->get( "$lineidx.0", "$lineidx.end" ) )
+					  + 1;
+					last if ( ( $matchacc + $linelen ) > $match->[0] );
+					$matchacc += $linelen;
+					$lineidx++;
+				}
+				$matchidx++;
+				my $offset = $match->[0] - $matchacc;
+				$textwindow->markSet( "nls${matchidx}q" . $match->[1],
+									  "$lineidx.$offset" );
+			}
+			$main::lglobal{lastsearchterm} = $searchterm;
+		}
+		my $mark;
+		if ( $main::sopt[2] ) {
+			$mark = &main::getmark($main::searchstartindex);
+		} else {
+			$mark = &main::getmark($main::searchendindex);
+		}
+		while ($mark) {
+			if ( $mark =~ /nls\d+q(\d+)/ ) {
+				$length           = $1;
+				#print $length."1\n";
+				$main::searchstartindex = $textwindow->index($mark);
+				last;
+			} else {
+				$mark = &main::getmark($mark) if $mark;
+				next;
+			}
+		}
+
+		$main::searchstartindex = 0 unless $mark;
+		$main::lglobal{lastsearchterm} = 'reset' unless $mark;
+	} else {    # not a search across line boundaries
+		my $exactsearch = $searchterm;
+		$exactsearch = &main::escape_regexmetacharacters($exactsearch);
+		$searchterm  = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
+		  if $main::sopt[0];
+		my ( $direction, $searchstart, $mode );
+		if   ( $main::sopt[2] ) { $searchstart = $main::searchstartindex }
+		else              { $searchstart = $main::searchendindex }
+		if   ( $main::sopt[2] ) { $direction = '-backwards' }
+		else              { $direction = '-forwards' }
+		if   ( $main::sopt[0] or $main::sopt[3] ) { $mode = '-regexp' }
+		else                          { $mode = '-exact' }
+
+		if ($debug) {print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";}
+				#print $length."2\n";
+		
+
+		#finally we actually do some searching
+		if ( $main::sopt[1] ) {
+			$main::searchstartindex =
+			  $textwindow->search(
+								   $mode, $direction, '-nocase',
+								   '-count' => \$length,
+								   '--', $searchterm, $searchstart, $end
+			  );
+			  				#print $length."3\n";
+			  
+		} else {
+			$main::searchstartindex =
+			  $textwindow->search(
+								   $mode, $direction,
+								   '-count' => \$length,
+								   '--', $searchterm, $searchstart, $end
+			  );
+			  				#print $length."4\n";
+		}
+	}
+	if ($main::searchstartindex) {
+		$tempindex = $main::searchstartindex;
+		  #print $main::searchstartindex.":".$main::searchendindex."7\n";
+		my ( $row, $col ) = split /\./, $tempindex;
+			  				print "$row:$col:$length 5\n";
+		
+		$col += $length;
+		$main::searchendindex = "$row.$col" if $length;
+		  #print $main::searchstartindex.":".$main::searchendindex."3\n";
+		$main::searchendindex = $textwindow->index("$main::searchstartindex +${length}c")
+		  if ( $searchterm =~ m/\\n/ );
+		  #print $main::searchstartindex.":".$main::searchendindex."2\n";
+		$main::searchendindex = $textwindow->index("$main::searchstartindex +1c")
+		  unless $length;
+		  #print $main::searchstartindex.":".$main::searchendindex."1\n";
+		$textwindow->markSet( 'insert', $main::searchstartindex )
+		  if $main::searchstartindex;    # position the cursor at the index
+		  #print $main::searchstartindex.":".$main::searchendindex."\n";
+		$textwindow->tagAdd( 'highlight', $main::searchstartindex, $main::searchendindex )
+		  if $main::searchstartindex;    # highlight the text
+		$textwindow->yviewMoveto(1);
+		$textwindow->see($main::searchstartindex)
+		  if ( $main::searchendindex && $main::sopt[2] )
+		  ;    # scroll text box, if necessary, to make found text visible
+		$textwindow->see($main::searchendindex) if ( $main::searchendindex && !$main::sopt[2] );
+		$main::searchendindex = $main::searchstartindex unless $length;
+		  #print $main::searchstartindex.":".$main::searchendindex.":10\n";
+	}
+	unless ($main::searchstartindex) {
+		  #print $main::searchstartindex.":".$main::searchendindex.":11\n";
+		$foundone = 0;
+		unless ( $main::lglobal{selectionsearch} ) { $start = '1.0'; $end = 'end' }
+		if ( $main::sopt[2] ) {
+			$main::searchstartindex = $end;
+		  #print $main::searchstartindex.":".$main::searchendindex.":12\n";
+			$textwindow->markSet( 'insert', $main::searchstartindex );
+			$textwindow->see($main::searchendindex);
+		} else {
+			$main::searchendindex = $start;
+		   #print $main::searchstartindex.":".$main::searchendindex.":13\n";
+			$textwindow->markSet( 'insert', $start );
+			$textwindow->see($start);
+		}
+		$main::lglobal{selectionsearch} = 0;
+		unless ( $main::lglobal{regaa} ) {
+			$textwindow->bell unless $main::nobell;
+			$main::lglobal{searchbutton}->flash if defined $main::lglobal{searchpop};
+			$main::lglobal{searchbutton}->flash if defined $main::lglobal{searchpop};
+
+			# If nothing found, return cursor to starting point
+			if ($failedsearch) {
+				$main::searchendindex = $searchstartingpoint;
+				$textwindow->markSet( 'insert', $searchstartingpoint );
+				$textwindow->see($searchstartingpoint);
+			}
+		}
+	}
+	&main::updatesearchlabels();
+	&main::update_indicators();
+	return $foundone;    # return index of where found text started
+}
+
 
 
 

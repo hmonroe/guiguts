@@ -392,7 +392,7 @@ sub wordfrequency {
 
 				#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt\n";
 				&main::searchfromstartifnew($sword);
-				&main::searchtext($sword);
+				&main::searchtext($textwindow,$top,$sword);
 				&main::searchoptset(@savesets);
 				$top->raise;
 			}
@@ -1124,7 +1124,7 @@ sub harmonicspop {
 					$sword = "(?<=-)$sword|$sword(?=-)";
 				}
 				&main::searchfromstartifnew($sword);
-				&main::searchtext($sword);
+				&main::searchtext($textwindow,$top,$sword);
 				&main::searchoptset(@savesets);
 				$top->Unbusy( -recurse => 1 );
 			}

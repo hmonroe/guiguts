@@ -31,7 +31,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-Guiguts 1.0 prepared by Hunter Monroe.
+Guiguts 1.0 prepared by Hunter Monroe and many others.
 Original guiguts written by Stephen Schulze.
 Partially based on the Gedi editor - Gregs editor.
 Redistributable on the same terms as Perl.
