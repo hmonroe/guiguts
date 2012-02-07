@@ -94,6 +94,7 @@ our $icondata = '
 
 ### Custom Guiguts modules
 use Guiguts::FileMenu;
+use Guiguts::HelpMenu;
 use Guiguts::LineNumberText;
 use Guiguts::TextUnicode;
 use Guiguts::Greekgifs;
@@ -1746,7 +1747,7 @@ sub menubuildold {
 			   '~Include File',
 			   -command => sub { file_include($textwindow) }
 			 ],
-			 [ 'command',   '~Close', -command => \&file_close ],
+			 [ 'command',   '~Close', -command => sub {file_close($textwindow)} ],
 			 [ 'separator', '' ],
 			 [ 'command', 'Import Prep Text Files', -command => sub{file_import($textwindow,$top)} ],
 			 [
@@ -2354,7 +2355,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 		-label     => '~Help',
 		-tearoff   => 1,
 		-menuitems => [
-			[ Button => '~About',    -command => \&about_pop_up ],
+			[ Button => '~About',    -command => sub{about_pop_up($top)} ],
 			[ Button => '~Versions', -command => [ \&showversion, $top ] ],
 			[
 			   Button   => '~Manual',
@@ -2525,7 +2526,7 @@ sub menubuild {
 			   -command => sub{file_export($textwindow,$top)}
 			 ],
 			 [ 'separator', '' ],
-			 [ 'command', '~Close', -command => \&file_close ],
+			 [ 'command', '~Close', -command => sub {file_close($textwindow)} ],
 			 [ 'command', 'E~xit',  -command => \&_exit ],
 		  ]
 
@@ -3215,7 +3216,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 		-label     => '~Help',
 		-tearoff   => 1,
 		-menuitems => [
-			[ Button => '~About',    -command => \&about_pop_up ],
+			[ Button => '~About',    -command => sub{about_pop_up($top)}],
 			[ Button => '~Versions', -command => [ \&showversion, $top ] ],
 			[
 			   Button   => '~Manual',
@@ -3325,7 +3326,7 @@ sub menubuildtwo {
 			# end of copy
 			 [ 'separator', '' ],
 			 [ 'command', 'Debug', -command => \&debug_dump ],
-			 [ 'command',   '~Close', -command => \&file_close ],
+			 [ 'command',   '~Close', -command => sub {file_close($textwindow)} ],
 			 [ 'command', 'E~xit', -command => \&_exit ],
 		  ]
 
@@ -3974,7 +3975,7 @@ $globalbrowserstart, "http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
 			[ Button => '~UTF Character entry',   -command => \&utford ],
 			[ Button => '~UTF Character Search',  -command => \&uchar ],
 			[ 'separator', '' ],
-			[ Button => '~About',    -command => \&about_pop_up ],
+			[ Button => '~About',    -command => sub{about_pop_up($top)}],
 			[ Button => '~Versions', -command => [ \&showversion, $top ] ],
 
 			# FIXME: Disable update check until it works
@@ -16658,60 +16659,6 @@ sub searchsize {  # Pop up a window where you can adjust the search history size
 
 ### Help
 # FIXME: generalize about, version, etc. into one function.
-sub about_pop_up {
-	my $about_text = <<EOM;
-Guiguts.pl post processing toolkit/interface to gutcheck.
-
-Provides easy to use interface to gutcheck and an array of
-other useful postprocessing functions.
-
-This version produced by a number of volunteers.
-See the Thanks.txt file for details.
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-Guiguts $VERSION prepared by Hunter Monroe.
-Original guiguts written by Stephen Schulze.
-Partially based on the Gedi editor - Gregs editor.
-Redistributable on the same terms as Perl.
-EOM
-
-	if ( defined( $lglobal{aboutpop} ) ) {
-		$lglobal{aboutpop}->deiconify;
-		$lglobal{aboutpop}->raise;
-		$lglobal{aboutpop}->focus;
-	} else {
-		$lglobal{aboutpop} = $top->Toplevel;
-		initialize_popup_with_deletebinding('aboutpop');
-		$lglobal{aboutpop}->title('About');
-		$lglobal{aboutpop}->Label(
-								   -justify => "left",
-								   -text    => $about_text
-		)->pack;
-		my $button_ok = $lglobal{aboutpop}->Button(
-			-activebackground => $activecolor,
-			-text             => 'OK',
-			-command          => sub {
-				$lglobal{aboutpop}->destroy;
-				undef $lglobal{aboutpop};
-			}
-		)->pack( -pady => 6 );
-		$lglobal{aboutpop}->resizable( 'no', 'no' );
-	}
-}
-
 sub showversion {
 	my ($top) = @_;
 	my $os = $^O;
@@ -18155,7 +18102,7 @@ sub runtests {
 	ok( -e "readme.txt", "readme.txt exists" );
 	ok( 1 == do { openfile("readme.txt"); 1 }, "openfile on readme.txt" );
 	ok( "readme.txt" eq $textwindow->FileName, "File is named readme.txt" );
-	ok( 1 == do { file_close(); 1 }, "close readme.txt" );
+	ok( 1 == do { file_close($textwindow); 1 }, "close readme.txt" );
 
 	# Test of rewrapping
 	ok( -e "tests/testfile.txt", "tests/testfile.txt exists" );

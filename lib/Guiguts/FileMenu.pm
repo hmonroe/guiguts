@@ -92,6 +92,7 @@ sub file_saveas {
 
 
 sub file_close {
+	my $textwindow = shift;
 	return if ( &main::confirmempty() =~ m{cancel}i );
 	clearvars($textwindow);
 	&main::update_indicators();
