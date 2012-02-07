@@ -5,58 +5,22 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&spellmultiplelanguages)
 }
+use strict;
+use warnings;
 
-our $debug = 1; # debug set for now
+
+our $debug = 0; # debug set for now
 
 use Guiguts::WordFrequency;
 
-#explanation of WordFrequency
-# called as wordfrequency($textwindow,$top);
-#$main::lglobal{wfpop} = $top->Toplevel;
-#		my $wordfreqseframe =  $main::lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' ); # topline
-#		my $wordfreqseframe1 = $main::lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' ); # next
-#		my @wfbuttons = ( # all buttons in $wordfreqseframe1
-#		my $wcframe = $main::lglobal{wfpop}->Frame->pack( -fill => 'both', -expand => 'both', );
-#		$main::lglobal{wclistbox} = $wcframe->Scrolled( # everything displayed here
-#		&main::BindMouseWheel( $main::lglobal{wclistbox} ); # binds mouse to this window
-#	$main::lglobal{saveheader} = "$wc total words. " .  # the topline in wclistbox
-#	  keys( %{ $main::lglobal{seenwords} } ) . " distinct words in file."; # distinct words
-#	sortwords( \%{ $main::lglobal{seenwords} } );
-#sortwords( $main::lglobal{seenwords} ); displays 'seenwords'
-#sortwords( \%{ $main::lglobal{seenwords} } ); is used more
-#sortwords( \%display ); displays whatever
-#$main::lglobal{seenwords} where all the words are
-#$wc total words
-#$index linenumber.position
-#$wc = wordfrequencybuildwordlist($textwindow); build a word list and returns total word count
-#in sub wordfrequencybuildwordlist
-#  uses tempfile.tmp if no file loaded
-#  utf8::decode($line); read stuff in UTF-8
-#  $match = ( $main::lglobal{ignore_case} ) ? lc($word) : $word; # sets $match to $word
-#  $main::lglobal{seenwordsdoublehyphen}->{$match}++; # updates emdash list
-#  $main::lglobal{seenwords}->{$match}++; # updates seenwords after a lot of processing
-#  print "the: $main::lglobal{seenwords}{'the'}\n"; # prints the number of 'the' found
-#sub wordfrequencyspellcheck
-#	my $wordw = wordfrequencygetmisspelled(); # get misspellings
-#	$main::lglobal{saveheader} = "$wordw words not recognised by the spellchecker.";
-#	sortwords( \%{ $main::lglobal{spellsort} } ); # into spellsort
-#	$main::lglobal{misspelledlist}= ();
-#sub wordfrequencygetmisspelled {
-#		my ( $words ); # gets checked
-#		my $wordw = 0; misspelt words
-#		foreach ( sort ( keys %{ $main::lglobal{seenwords} } ) ) { $words .= "$_\n";} # words sorted into $words
-#		if ($words) {&main::getmisspelledwords($words);} # and spelt
-#		if ($main::lglobal{misspelledlist}){ # misspellt words
-#			foreach ( sort @{ $main::lglobal{misspelledlist} } ) {
-#				$main::lglobal{spellsort}->{$_} = $main::lglobal{seenwords}->{$_} || '0'; # put here number of each word
-#				$wordw++;	}		}		return $wordw; # number misspellings
-
-
+our @seenwords = ();
+our $distinctwordcount = 0;
+our %seenwordslc = () ;
+our %seenwordslang = ();
 
 sub spellmultiplelanguages {
 	my ($textwindow,$top) = @_;
-	print "\$main::debug $main::debug\n";
-#	push @main::operations, ( localtime() . ' - multilingual spelling' );
+	push @main::operations, ( localtime() . ' - multilingual spelling' );
 	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
 	&main::oppopupdate()  if $main::lglobal{oppop};
 	# find Aspell and base language if necessary
@@ -65,9 +29,11 @@ sub spellmultiplelanguages {
 	return unless $main::globalspelldictopt;
 	setmultiplelanguages($textwindow,$top);
 	my $wc = createseenwordslang($textwindow,$top);
-	if ($debug) { print "Total words: $wc\n"; };
+#	if ($debug) { print "Total words: $wc\n"; };
 	my $wordw = multilingualgetmisspelled();
-	if ($debug) {print "Mis-spelt words: $wordw\n"; };
+#	if ($debug)
+	{print "Mis-spelt words remaining: $wordw\n"; };
+	if ($debug) { saveLangDebugFiles() ;};
 }
 
 # clear array of languages
@@ -79,8 +45,8 @@ sub clearmultilanguages {
 # set multiple languages in array @multidicts
 sub setmultiplelanguages {
 	my ($textwindow,$top) = @_;
-	if ($globalspellpath) {
-		aspellstart() unless $lglobal{spellpid};
+	if ($main::globalspellpath) {
+		main::aspellstart() unless $main::lglobal{spellpid};
 	}
 	my $dicts;
 	$main::multidicts[0] = $main::globalspelldictopt;
@@ -161,16 +127,122 @@ sub setmultiplelanguages {
 	$spellop->Show;
 };
 
-# create hash lglobal{seenwordslang}
+# outputs various arrays to files
+sub saveLangDebugFiles {
+	my $section ;
+	my $save ;
+	my $i;
+
+	print "\$globalspellpath ", $main::globalspellpath, "\n";
+
+	print "saving lglobal_seenwords.txt - distinct words and frequencies\n";	
+	$section = "\%lglobal{seenwords}\n";
+	open $save, '>:bytes', 'lglobal_seenwords.txt';
+	for my $key (keys %{$main::lglobal{seenwords}}){
+		$section .= "$key => $main::lglobal{seenwords}{$key}\n";
+	};
+	utf8::encode($section);
+	print $save $section;
+	close $save;
+
+	print "saving lglobal_misspelledlist.txt - global misspelledlist\n";	
+	$section = "\@lglobal{misspelledlist}\n";
+	open $save, '>:bytes', 'lglobal_misspelledlist.txt';
+	foreach ( sort @{ $main::lglobal{misspelledlist} } ) {
+		$section .= "$_\n";
+	};
+	utf8::encode($section);
+	print $save $section;
+	close $save;
+
+	#debugging
+#	$section = "\@seenwords\n";
+#	open $save, '>:bytes', 'seenwords.txt';
+#	for my $element (@seenwords) { $section .= "$element\n"; };
+#	utf8::encode($section);
+#	print $save $section;
+#	close $save;
+
+	#debugging
+#	$section = "\%seenwordslc\n";
+#	open $save, '>:bytes', 'seenwordslc.txt';
+#	for my $key (keys %seenwordslc){
+#		$section .= "$key => $seenwordslc{$key}\n";
+#	};
+#	utf8::encode($section);
+#	print $save $section;
+#	close $save;
+	
+	print "saving seenwordslang.txt - distinct words and spelt language\n";	
+	$section = "\%seenwordslang\n";
+	open $save, '>:bytes', 'seenwordslang.txt';
+	for my $key (sort (keys %{$main::lglobal{seenwords}})){
+		if ($seenwordslang{$key}) {
+			$section .= "$key => $seenwordslang{$key}\n";
+		} else { $section .= "$key x=>\n"; }
+	};
+	utf8::encode($section);
+	print $save $section;
+	close $save;
+
+	print "saving seenwordslang_unspelt.txt - distinct unspelt words\n";	
+	$section = "\%seenwordslang unspelt\n";
+	$i = 0;
+	open $save, '>:bytes', 'seenwordslang_unspelt.txt';
+	for my $key (sort (keys %{$main::lglobal{seenwords}})){
+		unless ($seenwordslang{$key}) {
+			$section .= "$key x=>\n" unless ($seenwordslang{$key});
+			$i++;
+		}
+	};
+	utf8::encode($section);
+	print $save $section;
+	close $save;
+
+	print "saving seenwordslang_spelt.txt - distinct spelt words\n";	
+	$section = "\%seenwordslang spelt\n";
+	$i = 0;
+	open $save, '>:bytes', 'seenwordlang_spelt.txt';
+	for my $key (sort (keys %{$main::lglobal{seenwords}})){
+		if ($seenwordslang{$key}) {
+			$section .= "$key => $seenwordslang{$key}\n";
+			$i++;
+		}
+	};
+	utf8::encode($section);
+	print $save $section;
+	close $save;
+
+}
+
+# create hash %seenwordslang
+# and hash lglobal{seenwords}
+# and @seenwords
+# and hash %seenwordslc
 sub createseenwordslang {
 	my ($textwindow,$top) = @_;
 	my $wc    = 0;
-	$main::lglobal{seenwordslang} = ();
+	@seenwords = ();
+	$distinctwordcount = 0;
+	%seenwordslang = ();
+	%seenwordslc = () ;
 	$top->Busy( -recurse => 1 );
-	$wc = wordfrequencybuildwordlist($textwindow);
-	for my $key (keys %{$lglobal{seenwords}}){
-		$lglobal{seenwordslang}{$key} = undef;
+	$wc = buildwordlist($textwindow);
+	
+	for my $key (keys %{$main::lglobal{seenwords}}){
+		$seenwordslang{$key} = undef;
 	};
+	
+	my $i = 0;
+	# ordered list of all words
+	foreach ( sort ( keys %{ $main::lglobal{seenwords} } ) ) { $seenwords[$i++] = $_ ;	}
+	$distinctwordcount = $i;
+#	if ($debug)
+	{ print "Total words: $wc, Distinct words: $distinctwordcount\n"; }
+
+	# hash of all words -> lc (word)
+	foreach ( keys %{ $main::lglobal{seenwords} } ) { $seenwordslc{$_}  = lc($_) ;	}
+
 	$top->Unbusy;
 	return $wc;
 }
@@ -182,6 +254,7 @@ sub getmisspelledwordstwo {
 	my $dict = shift;
 	my $section = shift;
 	my $word;
+	my @templist = ();
 
 	open my $save, '>:bytes', 'checkfil.txt';
 	utf8::encode($section);
@@ -193,18 +266,8 @@ sub getmisspelledwordstwo {
 	my $runner = runner::withfiles('checkfil.txt', 'temp.txt');
 	$runner->run($main::globalspellpath, @spellopt);
 
-	if ($debug) {
-#		print "\$globalspellpath ", $main::globalspellpath, "\n";
-#		print "\@spellopt\n";
-#		for my $element (@spellopt) {
-#		print "$element\n";
-#		};
-#		print "checkfil.txt retained\n";
-	} else {
-	unlink 'checkfil.txt';
-	};
+	unlink 'checkfil.txt'  unless ($debug) ;  # input file for Aspell
 
-	my @templist = ();
 	open my $infile,'<', 'temp.txt';
 	my ( $ln, $tmp );
 	while ( $ln = <$infile> ) {
@@ -215,11 +278,7 @@ sub getmisspelledwordstwo {
 	}
 	close $infile;
 	
-	if ($debug) {
-#		print "temp.txt retained\n";
-	} else {
-	unlink 'temp.txt';
-	}
+	unlink 'temp.txt' unless ($debug) ;  # output file of unspelt words from Aspell
 
 	processmisspelledwords ($dict, @templist);	
 	
@@ -231,82 +290,47 @@ sub getmisspelledwordstwo {
 }
 
 #update lglobal{seenwordslang} depending on spelling
+#update %seenwordslang depending on spelling
 #input $dict, @templist
 sub processmisspelledwords {
 	my $dict = shift;
 	my @templist = @_;
-	my @tempseenwords =();
-	my @tempunspelt = ();
-	my $i = 0;
+	my @startunspelt = ();
+	my @endunspelt = ();
 	my $j = 0;
-	# ordered list of all words
-	foreach ( sort ( keys %{ $main::lglobal{seenwords} } ) ) { @tempseenwords[$i++] = $_ ;	}
-	my $imax = $i;
+	my $i = 0;
+	my $compare;
+	
 	# ordered list of all unspelt words
-	foreach ( sort (@templist)) { @tempunspelt[$j++] = $_; }
+	foreach ( sort (@templist)) { $startunspelt[$j++] = $_; }
 	my $jmax = $j;
 
-	#debugging
-	my $section = "\@tempseenwords\n";
-	open my $save, '>:bytes', 'tempseenwords.txt';
-	for my $element (@tempseenwords) { $section .= "$element\n"; };
-	utf8::encode($section);
-	print $save $section;
-	close $save;
+	if ($debug) {print "$jmax unspelt words, ";}
 
-	#debugging
-	$section = "\@tempunspelt\n";
-	open $save, '>:bytes', 'tempunspelt.txt';
-	for my $element (@tempunspelt) { $section .= "$element\n"; };
-	utf8::encode($section);
-	print $save $section;
-	close $save;
-	
 	#match words and update
 	$i = 0; $j = 0;
-	while ($i < $imax) {
-		while ($j < $jmax) {
-			if ($tempseenwords[$i] != $tempunspelt[$j]) {
-				$main::lglobal{seenwordslang}{$tempseenwords[$i]} = $dict unless ($main::lglobal{seenwordslang}{$tempseenwords[$i]});
+	while ($i < $distinctwordcount) {   # $distinctwordcount
+		while ($j < $jmax) {         # $jmax
+			$compare = ($seenwords[$i] cmp $startunspelt[$j]);
+			if ($compare == -1){  # spelt word
+				$seenwordslang{$seenwords[$i]} = $dict unless ($seenwordslang{$seenwords[$i]});
 				$i++;
-			} else {
-				if ($tempseenwords[$i] == $tempunspelt[$j]) {
-					$i++; $j++;
-				} else {
-					print "error in processmisspelledwords\n";
-					print "\$i $i, \$j $j\n";
-					print "$tempseenwords[$i], $tempunspelt[$j]\n";
-					$i = $imax;
-				}
-			}
+			} elsif ($compare == 0){ # unspelt word
+				$i++; $j++;
+			} elsif ($compare == 1){ # new word not in seenwords
+#				print "$startunspelt[$j] returned by Aspell but not in book!\n";
+				$j++;
+			} else { print "How did I get here!!! Multilingual failure\n"; };
 		}
-		$main::lglobal{seenwordslang}{$tempseenwords[$i]} = $dict;
+		$seenwordslang{$seenwords[$i]} = $dict;
 		$i++;
 	}
 	
-	#debugging
-	$section = "\%lglobal{seenwordslang}\n";
-	open my $save, '>:bytes', 'words2.txt';
-	for my $key (keys %{$main::lglobal{seenwords}}){
-		if ($main::lglobal{seenwordslang}{$key}) {
-			$section .= "$key => $main::lglobal{seenwordslang}{$key}\n";
-		} else {
-			$section .= "$key x=>\n";
-		}
+	$i = 0;
+	for my $key (sort (keys %{$main::lglobal{seenwords}})){
+		if ($seenwordslang{$key}) { $i++; }
 	};
-	utf8::encode($section);
-	print $save $section;
-	close $save;
-
-	#debugging
-	$section = "\%lglobal{seenwordslang} unspelt\n";
-	open $save, '>:bytes', 'words3.txt';
-	for my $key (keys %{$main::lglobal{seenwords}}){
-		$section .= "$key x=>\n" unless ($main::lglobal{seenwordslang}{$key});
-	};
-	utf8::encode($section);
-	print $save $section;
-	close $save;
+	if ($debug) {print "Total words spelt: $i\n";}
 }
 
 #copied from wordfrequency
@@ -315,20 +339,20 @@ sub multilingualgetmisspelled {
 	my $words;
 	my $wordw = 0;
 	for my $dict (@main::multidicts) {
+		$words = '';
 		my $i = 0;
 		# only include words with undef language
 		foreach ( sort ( keys %{ $main::lglobal{seenwords} } ) ) { 
-			unless ($main::lglobal{seenwordslang}{$_}) {
+			unless ($seenwordslang{$_}) {
 				$words .= "$_\n";
 				$i++;
 			}
 		}
-		print "\$dict $dict, words $i\n";
+		if ($debug) {print "\$dict $dict, words to spell $i, ";}
 		#spellcheck
 		if ($words) { getmisspelledwordstwo($dict, $words); }
 	}
-	
-	
+
 	if ($main::lglobal{misspelledlist}){
 		foreach ( sort @{ $main::lglobal{misspelledlist} } ) {
 			$main::lglobal{spellsort}->{$_} = $main::lglobal{seenwords}->{$_} || '0';
@@ -336,6 +360,68 @@ sub multilingualgetmisspelled {
 		}
 	}
 	return $wordw;
+}
+
+#copied from wordfrequency
+# build lists of words lower case and proper
+sub buildwordlist {
+	my $textwindow = shift;
+	my ( @words, $match, @savesets );
+	my $index = '1.0';
+	my $wc    = 0;
+	my $end   = $textwindow->index('end');
+	$main::lglobal{seenwordsdoublehyphen} = ();
+	$main::lglobal{seenwords} = ();
+	$main::lglobal{seenwordpairs} = ();
+	my $filename = $textwindow->FileName;
+	unless ($filename) {
+		$filename = 'tempfile.tmp';
+		open( my $file, ">", "$filename" );
+		my ($lines) = $textwindow->index('end - 1 chars') =~ /^(\d+)\./;
+		while ( $textwindow->compare( $index, '<', 'end' ) ) {
+			my $end = $textwindow->index("$index  lineend +1c");
+			my $line = $textwindow->get( $index, $end );
+			print $file $line;
+			$index = $end;
+		}
+	}
+	&main::savefile()
+	  if (    ( $textwindow->FileName )
+		   && ( $textwindow->numberChanges != 0 ) );
+	open my $fh, '<', $filename;
+	my $lastwordseen = '';
+	
+	# starts here
+	while ( my $line = <$fh> ) {
+		utf8::decode($line);
+		next if $line =~ m/^-----*\s?File:\s?\S+\.(png|jpg)---/;
+		$line =~ s/_/ /g;  # underscores to spaces
+		$line =~ s/<!--//g; # remove comment starts
+		$line =~ s/-->//g; # remove comment ends
+#		$line =~ s/[^'\.,\p{Alnum}-\*]/ /g;    # get rid of nonalphanumeric
+		$line =~ s/['^\.,\*-]/ /g;    # get rid of nonalphanumeric
+		$line =~ s/\P{Alnum}/ /g;
+		$line =~ s/--/ /g;                   # get rid of --
+		$line =~ s/—/ /g;    # trying to catch words with real em-dashes, from dp2rst
+		$line =~ s/(\D),/$1 /g;    # throw away comma after non-digit
+		$line =~ s/,(\D)/ $1/g;    # and before
+		@words = split( /\s+/, $line );
+		for my $word (@words) {
+			$word =~s/ //g;
+			if (length($word)==0) {next;}
+			$word =~ s/[\.',-]+$//;    # throw away punctuation at end
+			$word =~ s/^[\.,'-]+//;    #and at the beginning
+			next if ( $word eq '' );
+			$wc++;
+			$main::lglobal{seenwords}->{$word}++;
+		}
+		$index++;
+		$index .= '.0';
+		$textwindow->update;
+	}
+	close $fh;
+	unlink 'tempfile.tmp' if ( -e 'tempfile.tmp' );
+	return $wc;
 }
 
 
@@ -359,7 +445,7 @@ __END__
 		   additional_lang eg 'fr', 'la'
 	array wordlist => word, (distinct words in book) - already keys in hash lglobal{seenwords}
 	  => frequency, (count of words in book) - already values in hash lglobal{seenwords}
-	  => language, (language spelt in, eg en, or user, or undef) - new hash lglobal{seenwordslang}
+	  => language, (language spelt in, eg en, or user, or undef) - new hash %seenwordslang
 
 	A: set languages - DONE
 	B: Process  file as per word frequency into array wordlist
