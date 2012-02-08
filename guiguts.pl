@@ -23,7 +23,7 @@ use warnings;
 #use criticism 'gentle'; 
 
 my $VERSION = '1.0.7';
-our $debug = 1; # turn on to report debug messages. Do not commit with $debug on
+our $debug = 0; # turn on to report debug messages. Do not commit with $debug on
 
 use FindBin;
 use lib $FindBin::Bin . "/lib";
@@ -332,7 +332,7 @@ my $text_frame = $top->Frame->pack(
 									-fill   => 'both'
 );
 
-my $counter_frame =
+our $counter_frame =
   $text_frame->Frame->pack(
 							-side   => 'bottom',
 							-anchor => 'sw',
@@ -400,7 +400,7 @@ menubuild();
 # Set up the key bindings for the text widget
 textbindings();
 
-buildstatusbar();
+buildstatusbar($textwindow,$top);
 
 # Load the icon into the window bar. Needs to happen late in the process
 $top->Icon( -image => $icon );
@@ -11069,179 +11069,6 @@ sub natural_sort_freq {
 
 
 ### Internal Routines
-## Status Bar
-sub buildstatusbar {
-	$lglobal{current_line_label} =
-	  $counter_frame->Label(
-							 -text       => 'Ln: 1/1 - Col: 0',
-							 -width      => 20,
-							 -relief     => 'ridge',
-							 -background => 'gray',
-	  )->grid( -row => 1, -column => 0, -sticky => 'nw' );
-	$lglobal{current_line_label}->bind(
-		'<1>',
-		sub {
-			$lglobal{current_line_label}->configure( -relief => 'sunken' );
-			gotoline();
-			update_indicators();
-		}
-	);
-	$lglobal{current_line_label}->bind(
-		'<3>',
-		sub {
-			if   ($vislnnm) { $vislnnm = 0 }
-			else            { $vislnnm = 1 }
-			$textwindow->showlinenum if $vislnnm;
-			$textwindow->hidelinenum unless $vislnnm;
-			savesettings();
-		}
-	);
-	$lglobal{selectionlabel} =
-	  $counter_frame->Label(
-							 -text       => ' No Selection ',
-							 -relief     => 'ridge',
-							 -background => 'gray',
-	  )->grid( -row => 1, -column => 10, -sticky => 'nw' );
-	$lglobal{selectionlabel}->bind(
-		'<1>',
-		sub {
-			if ( $lglobal{showblocksize} ) {
-				$lglobal{showblocksize} = 0;
-			} else {
-				$lglobal{showblocksize} = 1;
-			}
-		}
-	);
-	$lglobal{selectionlabel}->bind( '<Double-1>', sub { selection() } );
-	$lglobal{selectionlabel}->bind(
-		'<3>',
-		sub {
-			if ( $textwindow->markExists('selstart') ) {
-				$textwindow->tagAdd( 'sel', 'selstart', 'selend' );
-			}
-		}
-	);
-	$lglobal{selectionlabel}->bind(
-		'<Shift-3>',
-		sub {
-			$textwindow->tagRemove( 'sel', '1.0', 'end' );
-			if ( $textwindow->markExists('selstart') ) {
-				my ( $srow, $scol ) = split /\./,
-				  $textwindow->index('selstart');
-				my ( $erow, $ecol ) = split /\./, $textwindow->index('selend');
-				for ( $srow .. $erow ) {
-					$textwindow->tagAdd( 'sel', "$_.$scol", "$_.$ecol" );
-				}
-			}
-		}
-	);
-
-	$lglobal{highlightlabel} =
-	  $counter_frame->Label(
-							 -text       => 'H',
-							 -width      => 2,
-							 -relief     => 'ridge',
-							 -background => 'gray',
-	  )->grid( -row => 1, -column => 1 );
-
-	$lglobal{highlightlabel}->bind(
-		'<1>',
-		sub {
-			if ( $scannos_highlighted ) {
-				$scannos_highlighted          = 0;
-				$lglobal{highlighttempcolor} = 'gray';
-			} else {
-				scannosfile() unless $scannoslist;
-				return unless $scannoslist;
-				$scannos_highlighted          = 1;
-				$lglobal{highlighttempcolor} = $highlightcolor;
-			}
-			highlight_scannos();
-		}
-	);
-	$lglobal{highlightlabel}->bind( '<3>', sub { scannosfile() } );
-	$lglobal{highlightlabel}->bind(
-		'<Enter>',
-		sub {
-			$lglobal{highlighttempcolor} =
-			  $lglobal{highlightlabel}->cget( -background );
-			$lglobal{highlightlabel}->configure( -background => $activecolor );
-			$lglobal{highlightlabel}->configure( -relief     => 'raised' );
-		}
-	);
-	$lglobal{highlightlabel}->bind(
-		'<Leave>',
-		sub {
-			$lglobal{highlightlabel}
-			  ->configure( -background => $lglobal{highlighttempcolor} );
-			$lglobal{highlightlabel}->configure( -relief => 'ridge' );
-		}
-	);
-	$lglobal{highlightlabel}->bind(
-		'<ButtonRelease-1>',
-		sub {
-			$lglobal{highlightlabel}->configure( -relief => 'raised' );
-		}
-	);
-	$lglobal{insert_overstrike_mode_label} =
-	  $counter_frame->Label(
-							 -text       => '',
-							 -relief     => 'ridge',
-							 -background => 'gray',
-							 -width      => 2,
-	  )->grid( -row => 1, -column => 9, -sticky => 'nw' );
-	$lglobal{insert_overstrike_mode_label}->bind(
-		'<1>',
-		sub {
-			$lglobal{insert_overstrike_mode_label}
-			  ->configure( -relief => 'sunken' );
-			if ( $textwindow->OverstrikeMode ) {
-				$textwindow->OverstrikeMode(0);
-			} else {
-				$textwindow->OverstrikeMode(1);
-			}
-		}
-	);
-	$lglobal{ordinallabel} =
-	  $counter_frame->Label(
-							 -text       => '',
-							 -relief     => 'ridge',
-							 -background => 'gray',
-							 -anchor     => 'w',
-	  )->grid( -row => 1, -column => 11 );
-
-	$lglobal{ordinallabel}->bind(
-		'<1>',
-		sub {
-			$lglobal{ordinallabel}->configure( -relief => 'sunken' );
-			$lglobal{longordlabel} = $lglobal{longordlabel} ? 0 : 1;
-			update_indicators();
-		}
-	);
-	_butbind($_)
-	  for ( $lglobal{insert_overstrike_mode_label},
-			$lglobal{current_line_label},
-			$lglobal{selectionlabel},
-			$lglobal{ordinallabel} );
-	$lglobal{statushelp} = $top->Balloon( -initwait => 1000 );
-	$lglobal{statushelp}->attach( $lglobal{current_line_label},
-			 -balloonmsg =>
-			   "Line number out of total lines\nand column number of cursor." );
-	$lglobal{statushelp}->attach( $lglobal{insert_overstrike_mode_label},
-						  -balloonmsg => 'Typeover Mode. (Insert/Overstrike)' );
-	$lglobal{statushelp}->attach( $lglobal{ordinallabel},
-		-balloonmsg =>
-"Decimal & Hexadecimal ordinal of the\ncharacter to the right of the cursor."
-	);
-	$lglobal{statushelp}->attach( $lglobal{highlightlabel},
-					-balloonmsg =>
-					  "Highlight words from list. Right click to select list" );
-	$lglobal{statushelp}->attach( $lglobal{selectionlabel},
-		-balloonmsg =>
-"Start and end points of selection -- Or, total lines.columns of selection"
-	);
-}
-
 # New subroutine "update_img_button" extracted - Mon Mar 21 21:56:01 2011.
 #
 sub update_img_button {
@@ -11661,6 +11488,7 @@ sub getprojectdic {
 	return unless $lglobal{global_filename};
 	my $fname = $lglobal{global_filename};
 	$fname = Win32::GetLongPathName($fname) if $OS_WIN;
+	return unless $fname;
 	$lglobal{projectdictname} = $fname;
 	$lglobal{projectdictname} =~ s/\.[^\.]*?$/\.dic/;
 	if ( $lglobal{projectdictname} eq $fname ) {
