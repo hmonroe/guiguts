@@ -11071,40 +11071,6 @@ sub natural_sort_freq {
 ### Internal Routines
 # New subroutine "update_img_button" extracted - Mon Mar 21 21:56:01 2011.
 #
-sub update_img_button {
-	my $pnum = shift;
-	unless ( defined( $lglobal{img_num_label} ) ) {
-		$lglobal{img_num_label} =
-		  $counter_frame->Label(
-								 -text       => "Img:$pnum",
-								 -width      => 7,
-								 -background => 'gray',
-								 -relief     => 'ridge',
-		  )->grid( -row => 1, -column => 2, -sticky => 'nw' );
-		$lglobal{img_num_label}->bind(
-			'<1>',
-			sub {
-				$lglobal{img_num_label}->configure( -relief => 'sunken' );
-				gotopage();
-				update_indicators();
-			}
-		);
-		$lglobal{img_num_label}->bind(
-			'<3>',
-			sub {
-				$lglobal{img_num_label}->configure( -relief => 'sunken' );
-				viewpagenums();
-				update_indicators();
-			}
-		);
-		_butbind( $lglobal{img_num_label} );
-		$lglobal{statushelp}->attach( $lglobal{img_num_label},
-						   -balloonmsg => "Image/Page name for current page." );
-	}
-
-	return ();
-}
-
 # New subroutine "update_label_button" extracted - Mon Mar 21 22:18:18 2011.
 #
 sub update_label_button {

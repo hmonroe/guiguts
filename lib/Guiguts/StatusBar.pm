@@ -3,7 +3,7 @@ package Guiguts::StatusBar;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&_updatesel &_butbind &buildstatusbar )
+	@EXPORT=qw(&_updatesel &_butbind &buildstatusbar &update_img_button)
 }
 
 ## Bindings to make label in status bar act like buttons
@@ -236,6 +236,40 @@ sub buildstatusbar {
 		-balloonmsg =>
 "Start and end points of selection -- Or, total lines.columns of selection"
 	);
+}
+
+sub update_img_button {
+	my $pnum = shift;
+	unless ( defined( $main::lglobal{img_num_label} ) ) {
+		$main::lglobal{img_num_label} =
+		  $main::counter_frame->Label(
+								 -text       => "Img:$pnum",
+								 -width      => 7,
+								 -background => 'gray',
+								 -relief     => 'ridge',
+		  )->grid( -row => 1, -column => 2, -sticky => 'nw' );
+		$main::lglobal{img_num_label}->bind(
+			'<1>',
+			sub {
+				$main::lglobal{img_num_label}->configure( -relief => 'sunken' );
+				&main::gotopage();
+				&main::update_indicators();
+			}
+		);
+		$main::lglobal{img_num_label}->bind(
+			'<3>',
+			sub {
+				$main::lglobal{img_num_label}->configure( -relief => 'sunken' );
+				&main::viewpagenums();
+				&main::update_indicators();
+			}
+		);
+		_butbind( $main::lglobal{img_num_label} );
+		$main::lglobal{statushelp}->attach( $main::lglobal{img_num_label},
+						   -balloonmsg => "Image/Page name for current page." );
+	}
+
+	return ();
 }
 
 
