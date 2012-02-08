@@ -9356,38 +9356,6 @@ sub initialize {
 				   -format => 'gif', );
 }
 
-#
-# New subroutine "readsettings" extracted - Fri Sep 23 12:07:27 2011.
-#
-sub readsettings {
-	if ( -e 'setting.rc' ) {
-		unless ( my $return = do 'setting.rc' ) {
-
-			# For some reason this works for winguts.exe
-			open my $file, "<", "setting.rc"
-			  or warn "Could not open setting file\n";
-			my @file = <$file>;
-			close $file;
-			my $settings = '';
-			for (@file) {
-				$settings .= $_;
-			}
-			unless ( my $return = eval($settings) ) {
-				if ( -e 'setting.rc' ) {
-					open my $file, "<", "setting.rc"
-					  or warn "Could not open setting file\n";
-					my @file = <$file>;
-					close $file;
-					open $file, ">", "setting.err";
-					print $file @file;
-					close $file;
-					print length($file);
-				}
-			}
-		}
-	}
-}
-
 sub textbindings {
 
 	# Set up a bunch of events and key bindings for the widget
@@ -11099,21 +11067,6 @@ sub natural_sort_freq {
 	map { $_->[1] } sort { $b->[0] <=> $a->[0] or $a->[2] cmp $b->[2] } @x;
 }
 
-## FIXME: These are barfing on Unix systems, apparently.
-# Normalize line endings
-#sub eol_convert {
-#    my $regex = qr{\cM\cJ|\cM|\cJ}; # Windows/Mac/Unix
-#    my $line = shift(@_);
-#    $line =~ s/$regex/\n/g;
-#    return $line;
-#}
-
-#sub eol_whitespace {
-#    my $line = shift(@_);
-#    my $regex = qr{[\t \xA0]+$}; #tab space no-break space
-#    $line =~ s/$regex//;
-#    return $line;
-#}
 
 ### Internal Routines
 ## Status Bar

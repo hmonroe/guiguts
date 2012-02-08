@@ -33,6 +33,9 @@ sub setviewerpath {    #Find your image viewer
 	} else {
 		$types = [ [ 'All Files', ['*'] ] ];
 	}
+	print $main::globalviewerpath."aa\n";
+	print &main::dirname($main::globalviewerpath)."aa\n";
+	
 	$main::lglobal{pathtemp} =
 	  $textwindow->getOpenFile(
 								-filetypes  => $types,
@@ -45,7 +48,8 @@ sub setviewerpath {    #Find your image viewer
 }
 sub setdefaultpath {
 	my ($pathname,$path) = @_;
-	if ((!$pathname) && (-e $path)) {return $path;}
+	if ((!$pathname) && (-e $path)) {return $path;} else {
+	return ''}
 }
 
 1;
