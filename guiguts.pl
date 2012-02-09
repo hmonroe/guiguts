@@ -10828,6 +10828,35 @@ EOM
 	}
 }
 
+sub readsettings {
+	if ( -e 'setting.rc' ) {
+		unless ( my $return = do 'setting.rc' ) {
+			open my $file, "<", "setting.rc"
+			  or warn "Could not open setting file\n";
+			my @file = <$file>;
+			close $file;
+			my $settings = '';
+			for (@file) {
+				$settings .= $_;
+			}
+			unless ( my $return = eval($settings) ) {
+				if ( -e 'setting.rc' ) {
+					open my $file, "<", "setting.rc"
+					  or warn "Could not open setting file\n";
+					my @file = <$file>;
+					close $file;
+					open $file, ">", "setting.err";
+					print $file @file;
+					close $file;
+					print length($file);
+				}
+			}
+		}
+	}
+}
+
+
+
 sub os_normal {
 	$_[0] =~ s|/|\\|g if $OS_WIN && $_[0];
 	return $_[0];
@@ -17674,7 +17703,7 @@ sub runtests {
 	system "diff tests/testhtml2baseline.html tests/testhtml2temp.html";
 	print "end diff\n";
 
-	unlink 'tests/testhtml2.html';
+	#unlink 'tests/testhtml2.html';
 	unlink 'tests/testhtml2temp.html';
 	unlink 'tests/testhtml2-htmlbak.txt';
 	unlink 'tests/testhtml2-htmlbak.txt.bin';

@@ -4,7 +4,7 @@ BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close 
-	&_flash_save &clearvars &readsettings &_exit )
+	&_flash_save &clearvars &_exit )
 }
 
 sub file_open {    # Find a text file to open
@@ -332,35 +332,6 @@ sub clearvars {
 	undef $main::lglobal{prepfile};
 	return;
 }
-
-sub readsettings {
-	if ( -e 'setting.rc' ) {
-		unless ( my $return = do 'setting.rc' ) {
-			open my $file, "<", "setting.rc"
-			  or warn "Could not open setting file\n";
-			my @file = <$file>;
-			close $file;
-			my $settings = '';
-			for (@file) {
-				$settings .= $_;
-			}
-			unless ( my $return = eval($settings) ) {
-				if ( -e 'setting.rc' ) {
-					open my $file, "<", "setting.rc"
-					  or warn "Could not open setting file\n";
-					my @file = <$file>;
-					close $file;
-					open $file, ">", "setting.err";
-					print $file @file;
-					close $file;
-					print length($file);
-				}
-			}
-		}
-	}
-}
-
-
 
 ## Global Exit
 sub _exit {

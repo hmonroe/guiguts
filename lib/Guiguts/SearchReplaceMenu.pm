@@ -222,7 +222,7 @@ sub searchtext {
 		$tempindex = $main::searchstartindex;
 		  #print $main::searchstartindex.":".$main::searchendindex."7\n";
 		my ( $row, $col ) = split /\./, $tempindex;
-			  				print "$row:$col:$length 5\n";
+		#print "$row:$col:$length 5\n";
 		
 		$col += $length;
 		$main::searchendindex = "$row.$col" if $length;
