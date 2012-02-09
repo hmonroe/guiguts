@@ -195,8 +195,8 @@
  'Pg194' => {'offset' => '7204.44', 'label' => 'Pg 182', 'style' => '"', 'action' => '+1', 'base' => ''},
  'Pg195' => {'offset' => '7386.12', 'label' => 'Pg 183', 'style' => '"', 'action' => '+1', 'base' => ''},
  'Pg196' => {'offset' => '7532.19', 'label' => 'Pg 184', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg777' => {'offset' => '2327.34', 'label' => 'Pg 185', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg999' => {'offset' => '2327.34', 'label' => 'Pg 186', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg197' => {'offset' => '7532.19', 'label' => 'Pg 185', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg198' => {'offset' => '7532.19', 'label' => 'Pg 186', 'style' => '"', 'action' => '+1', 'base' => ''},
 );
 
 $bookmarks[0] = '5855.14';

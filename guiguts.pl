@@ -23,6 +23,7 @@ use warnings;
 #use criticism 'gentle'; 
 
 my $VERSION = '1.0.7';
+# To debug use Devel::ptkdb perl -d:ptkdb guiguts.pl
 our $debug = 0; # turn on to report debug messages. Do not commit with $debug on
 
 use FindBin;
@@ -17703,7 +17704,7 @@ sub runtests {
 	system "diff tests/testhtml2baseline.html tests/testhtml2temp.html";
 	print "end diff\n";
 
-	#unlink 'tests/testhtml2.html';
+	unlink 'tests/testhtml2.html';
 	unlink 'tests/testhtml2temp.html';
 	unlink 'tests/testhtml2-htmlbak.txt';
 	unlink 'tests/testhtml2-htmlbak.txt.bin';
