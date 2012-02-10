@@ -6,6 +6,9 @@ BEGIN {
 	@EXPORT=qw(&wordfrequencybuildwordlist &wordfrequency)
 }
 
+use strict;
+use warnings;
+
 # build lists of words, word pairs, and double hyphenated words
 sub wordfrequencybuildwordlist {
 	my $textwindow = shift;
@@ -52,7 +55,7 @@ sub wordfrequencybuildwordlist {
 			$match = ( $main::lglobal{ignore_case} ) ? lc($word) : $word;
 			$main::lglobal{seenwordsdoublehyphen}->{$match}++;
 		}
-		$line =~ s/[^'\.,\p{Alnum}-\*]/ /g;    # get rid of nonalphanumeric
+		$line =~ s/[^'\.,\p{Alnum}\*-]/ /g;    # get rid of nonalphanumeric
 		$line =~ s/--/ /g;                   # get rid of --
 		$line =~
 		  s/—/ /g;    # trying to catch words with real em-dashes, from dp2rst
@@ -349,7 +352,7 @@ sub wordfrequency {
 				my ($sword) =
 				  $main::lglobal{wclistbox}->get( $main::lglobal{wclistbox}->curselection );
 				return unless length $sword;
-				@savesets = @sopt;
+				@savesets = @main::sopt;
 				$sword =~ s/(\d+)\s+(\S)/$2/;
 				my $snum = $1;
 				$sword =~ s/\s+\*\*\*\*$//;
@@ -738,7 +741,7 @@ s/([\.\?\!]['"]*[\n\s]['"]*\p{Upper}\p{Alnum}*),([\n\s]['"]*\p{Upper})/$1 $2/g;
 	{
 		my $word = $1;
 		next
-		  if $intelligentWF
+		  if $main::intelligentWF
 			  && $2
 			  && $2 ne '';    # ignore if word followed by period, !, or ?
 		$wordw++;
@@ -1117,14 +1120,14 @@ sub harmonicspop {
 				$sword =~ s/(\d+)\s+([\w'-]*)/$2/;
 				$snum = $1;
 				$sword =~ s/\s+\*\*\*\*$//;
-				@savesets = @sopt;
+				@savesets = @main::sopt;
 
 				unless ($snum) {
 					&main::searchoptset(qw/0 x x 1/);
 					$sword = "(?<=-)$sword|$sword(?=-)";
 				}
 				&main::searchfromstartifnew($sword);
-				&main::searchtext($textwindow,$top,$sword);
+				&main::searchtext($main::textwindow,$top,$sword);
 				&main::searchoptset(@savesets);
 				$top->Unbusy( -recurse => 1 );
 			}
