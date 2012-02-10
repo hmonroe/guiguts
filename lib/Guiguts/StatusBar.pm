@@ -6,6 +6,9 @@ BEGIN {
 	@EXPORT=qw(&_updatesel &_butbind &buildstatusbar &update_img_button)
 }
 
+use strict;
+use warnings;
+
 ## Bindings to make label in status bar act like buttons
 sub _butbind {
 	my $widget = shift;

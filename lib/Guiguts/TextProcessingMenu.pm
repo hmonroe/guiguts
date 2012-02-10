@@ -6,6 +6,8 @@ BEGIN {
 	@EXPORT=qw(&text_convert_italic &text_convert_bold &text_thought_break &text_convert_tb &text_convert_options)
 }
 
+use strict;
+use warnings;
 
 sub text_convert_italic {
 	my ($textwindow ,$italic_char) = @_;

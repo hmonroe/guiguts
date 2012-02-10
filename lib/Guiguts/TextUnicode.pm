@@ -2,6 +2,9 @@
 
 package TextUnicode;
 
+use strict;
+use warnings;
+
 use base qw(Tk::TextEdit);
 use File::Temp qw/tempfile/;
 use File::Basename;

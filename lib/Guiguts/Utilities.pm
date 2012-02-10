@@ -6,6 +6,9 @@ BEGIN {
 	@EXPORT=qw(&openpng &setviewerpath &setdefaultpath)
 }
 
+use strict;
+use warnings;
+
 # Routine to handle image viewer file requests
 sub openpng {
 	my ($textwindow,$pagenum) = @_;

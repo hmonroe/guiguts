@@ -7,6 +7,9 @@ BEGIN {
 	&selectrewrap &wrapper)
 }
 
+use strict;
+use warnings;
+
 sub wrapper {
 	my @words       = ();
 	my $word        = '';
@@ -168,7 +171,7 @@ sub selectrewrap {
 		while (1) {
 			$indent = $main::defaultindent;
 			my $length =5;
-			$searchstartindex =
+			$main::searchstartindex =
 			  $textwindow->search(
 								   '-regex', '-forwards',
 								   '-count' => \$length,
@@ -591,13 +594,13 @@ sub asciibox {
 		$textwindow->markSet( 'asciistart', $start );
 		$textwindow->markSet( 'asciiend',   $end );
 		my $saveleft  = $main::lmargin;
-		my $saveright = $rmargin;
+		my $saveright = $main::rmargin;
 		$textwindow->addGlobStart;
 		$main::lmargin = 0;
-		$rmargin = ( $asciiwidth - 4 );
+		$main::rmargin = ( $asciiwidth - 4 );
 		&main::selectrewrap unless $asciiwrap;
 		$main::lmargin = $saveleft;
-		$rmargin = $saveright;
+		$main::rmargin = $saveright;
 		$textwindow->insert(
 							 'asciistart',
 							 ${ $ascii }[0]
