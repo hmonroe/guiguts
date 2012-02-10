@@ -7,6 +7,9 @@ BEGIN {
 	&_flash_save &clearvars &_exit )
 }
 
+use strict;
+use warnings;
+
 sub file_open {    # Find a text file to open
 	my $textwindow = shift;
 	my ($name);
@@ -61,7 +64,7 @@ sub file_saveas {
 		$binname =~ s/\.[^\.]*?$/\.bin/;
 		if ( $binname eq $name ) { $binname .= '.bin' }
 		if ( -e $binname ) {
-			my $warning = $top->Dialog(    # FIXME: heredoc
+			my $warning = $main::top->Dialog(    # FIXME: heredoc
 				-text =>
 "WARNING! A file already exists that will use the same .bin filename.\n"
 				  . "It is highly recommended that a different file name is chosen to avoid\n"
@@ -81,7 +84,7 @@ sub file_saveas {
 		$name           = &main::os_normal($name);
 		$textwindow->FileName($name);
 		$main::lglobal{global_filename} = $name;
-		_bin_save($textwindow,$top);
+		_bin_save($textwindow,$main::top);
 		&main::_recentupdate($name);
 	} else {
 		return;
@@ -182,7 +185,7 @@ sub file_export {
 }
 
 sub _flash_save {
-	$main::lglobal{saveflashingid} = $top->repeat(
+	$main::lglobal{saveflashingid} = $main::top->repeat(
 		500,
 		sub {
 			if ( $main::lglobal{savetool}->cget('-background') eq 'yellow' ) {
@@ -194,7 +197,7 @@ sub _flash_save {
 				$main::lglobal{savetool}->configure(
 											   -background       => 'yellow',
 											   -activebackground => 'yellow'
-				) if ($textwindow->numberChanges and (!$main::notoolbar));
+				) if ($main::textwindow->numberChanges and (!$main::notoolbar));
 			}
 		}
 	);
@@ -204,7 +207,7 @@ sub _flash_save {
 ## save the .bin file associated with the text file
 sub _bin_save {
 	my ($textwindow,$top)=@_;
-	push @operations, ( localtime() . ' - File Saved' );
+	push @main::operations, ( localtime() . ' - File Saved' );
 	&main::oppopupdate() if $main::lglobal{oppop};
 	my $mark = '1.0';
 	while ( $textwindow->markPrevious($mark) ) {
@@ -214,7 +217,7 @@ sub _bin_save {
 	while ($mark) {
 		if ( $mark =~ m{Pg(\S+)} ) {
 			$markindex                  = $textwindow->index($mark);
-			$pagenumbers{$mark}{offset} = $markindex;
+			$main::pagenumbers{$mark}{offset} = $markindex;
 			$mark                       = $textwindow->markNext($mark);
 		} else {
 			$mark = $textwindow->markNext($mark) if $mark;
@@ -224,7 +227,7 @@ sub _bin_save {
 	return if ( $main::lglobal{global_filename} =~ m{No File Loaded} );
 	my $binname = "$main::lglobal{global_filename}.bin";
 	if ( $textwindow->markExists('spellbkmk') ) {
-		$spellindexbkmrk = $textwindow->index('spellbkmk');
+		$main::spellindexbkmrk = $textwindow->index('spellbkmk');
 	}
 	my $bak = "$binname.bak";
 	if ( -e $bak ) {
@@ -247,17 +250,17 @@ sub _bin_save {
 	my $fh = FileHandle->new("> $binname");
 	if ( defined $fh ) {
 		print $fh "\%pagenumbers = (\n";
-		for my $page ( sort { $a cmp $b } keys %pagenumbers ) {
+		for my $page ( sort { $a cmp $b } keys %main::pagenumbers ) {
 			no warnings 'uninitialized';
 			if ( $page eq "Pg" ) {
 				next;
 			}
 			print $fh " '$page' => {";
-			print $fh "'offset' => '$pagenumbers{$page}{offset}', ";
-			print $fh "'label' => '$pagenumbers{$page}{label}', ";
-			print $fh "'style' => '$pagenumbers{$page}{style}', ";
-			print $fh "'action' => '$pagenumbers{$page}{action}', ";
-			print $fh "'base' => '$pagenumbers{$page}{base}'},\n";
+			print $fh "'offset' => '$main::pagenumbers{$page}{offset}', ";
+			print $fh "'label' => '$main::pagenumbers{$page}{label}', ";
+			print $fh "'style' => '$main::pagenumbers{$page}{style}', ";
+			print $fh "'action' => '$main::pagenumbers{$page}{action}', ";
+			print $fh "'base' => '$main::pagenumbers{$page}{base}'},\n";
 		}
 		print $fh ");\n\n";
 
@@ -267,14 +270,14 @@ sub _bin_save {
 			  . $_ 
 			  . '] = \''
 			  . $textwindow->index( 'bkmk' . $_ ) . "';\n"
-			  if $bookmarks[$_];
+			  if $main::bookmarks[$_];
 		}
 		if ($main::pngspath) {
 			print $fh "\n\$main::pngspath = '@{[&main::escape_problems($main::pngspath)]}';\n\n";
 		}
 		my ($prfr);
 		delete $main::proofers{''};
-		foreach my $page ( sort keys %proofers ) {
+		foreach my $page ( sort keys %main::proofers ) {
 
 			no warnings 'uninitialized';
 			for my $round ( 1 .. $main::lglobal{numrounds} ) {
@@ -289,12 +292,12 @@ sub _bin_save {
 		}
 		print $fh "\n\n";
 		print $fh "\@operations = (\n";
-		for my $mark (@operations) {
+		for my $mark (@main::operations) {
 			$mark = &main::escape_problems($mark);
 			print $fh "'$mark',\n";
 		}
 		print $fh ");\n\n";
-		print $fh "\$spellindexbkmrk = '$spellindexbkmrk';\n\n";
+		print $fh "\$spellindexbkmrk = '$main::spellindexbkmrk';\n\n";
 		print $fh "\$projectid = '$main::projectid';\n\n";
 		print $fh "\$booklang = '$main::booklang';\n\n";
 		print $fh
