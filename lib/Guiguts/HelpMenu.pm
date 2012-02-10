@@ -6,6 +6,9 @@ BEGIN {
 	@EXPORT=qw(&about_pop_up )
 }
 
+use strict;
+use warnings;
+
 sub about_pop_up {
 	my $top = shift;
 	my $about_text = <<EOM;

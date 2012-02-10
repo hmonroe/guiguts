@@ -7,6 +7,9 @@ BEGIN {
 	@EXPORT = qw(&htmlautoconvert &htmlpopup &makeanchor &autoindex);
 }
 
+use strict;
+use warnings;
+
 sub html_convert_tb {
 	my ( $textwindow, $selection, $step ) = @_;
 	no warnings;    # FIXME: Warning-- Exiting subroutine via next
@@ -149,24 +152,24 @@ sub html_cleanup_markers {
 	my $thisend        = q{};
 	my ( $ler, $lec );
 	&main::working("Cleaning up\nblock Markers");
-	while ( $blockstart =
+	while ( $main::blockstart =
 		   $textwindow->search( '-regexp', '--', '^\/[\*\$\#]', '1.0', 'end' ) )
 	{
-		( $xler, $xlec ) = split /\./, $blockstart;
-		$blockend = "$xler.end";
-		$textwindow->ntdelete( "$blockstart-1c", $blockend );
+		( $main::xler, $main::xlec ) = split /\./, $main::blockstart;
+		$main::blockend = "$main::xler.end";
+		$textwindow->ntdelete( "$main::blockstart-1c", $main::blockend );
 	}
-	while ( $blockstart =
+	while ( $main::blockstart =
 		   $textwindow->search( '-regexp', '--', '^[\*\$\#]\/', '1.0', 'end' ) )
 	{
-		( $xler, $xlec ) = split /\./, $blockstart;
-		$blockend = "$xler.end";
-		$textwindow->ntdelete( "$blockstart-1c", $blockend );
+		( $main::xler, $main::xlec ) = split /\./, $main::blockstart;
+		$main::blockend = "$main::xler.end";
+		$textwindow->ntdelete( "$main::blockstart-1c", $main::blockend );
 	}
-	while ( $blockstart =
+	while ( $main::blockstart =
 		 $textwindow->search( '-regexp', '--', '<\/h\d><br />', '1.0', 'end' ) )
 	{
-		$textwindow->ntdelete( "$blockstart+5c", "$blockstart+9c" );
+		$textwindow->ntdelete( "$main::blockstart+5c", "$main::blockstart+9c" );
 	}
 	return;
 }
@@ -1096,7 +1099,7 @@ sub html_convert_pageanchors {
 
 			# comment only
 			$textwindow->ntinsert( $markindex, '<!-- Page ' . $num . ' -->' )
-			  if ( $pagecmt and $num );
+			  if ( $main::pagecmt and $num );
 
 			#print $pagereference."3\n";
 			if ($pagereference) {
@@ -1512,7 +1515,7 @@ sub htmlimage {
 					  . $main::lglobal{heightent}->get . '"';
 					my $width = $main::lglobal{widthent}->get;
 					return unless $name;
-					( $fname, $globalimagepath, $extension ) =
+					( $fname, $main::globalimagepath, $extension ) =
 					  &main::fileparse($name);
 					$main::globalimagepath =
 					  &main::os_normal($main::globalimagepath);
@@ -1725,7 +1728,7 @@ sub thumbnailbrowse {
 	$main::lglobal{imgname}->delete( '0', 'end' );
 	$main::lglobal{imgname}->insert( 'end', $name );
 	my ( $fn, $ext );
-	( $fn, $globalimagepath, $ext ) = fileparse( $name, '(?<=\.)[^\.]*$' );
+	( $fn, $main::globalimagepath, $ext ) = fileparse( $name, '(?<=\.)[^\.]*$' );
 	$main::globalimagepath = os_normal($main::globalimagepath);
 	$ext =~ s/jpg/jpeg/;
 
@@ -1752,7 +1755,7 @@ sub thumbnailbrowse {
 
 sub htmlpopup {
 	my ( $textwindow, $top ) = @_;
-	push @operations, ( localtime() . ' - HTML Markup' );
+	push @main::operations, ( localtime() . ' - HTML Markup' );
 	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
 	if ( defined( $main::lglobal{markpop} ) ) {
 		$main::lglobal{markpop}->deiconify;
@@ -2116,7 +2119,7 @@ sub htmlpopup {
 					 -text             => 'Hyperlink Page Nums',
 					 -width            => 16
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-		unless ( $useppwizardmenus and not $usemenutwo ) {
+		unless ( $main::useppwizardmenus and not $main::usemenutwo ) {
 			$f8->Button(
 				-activebackground => $main::activecolor,
 				-command          => sub {
@@ -2312,13 +2315,13 @@ sub markup {
 				  ->Frame->pack( -side => 'top', -anchor => 'n' );
 				my $linklabel = $linkf1->Label( -text => 'Link name' )->pack;
 				$main::lglobal{linkentry} =
-				  $linkf1->Entry( -width => 60, -background => $bkgcolor )
+				  $linkf1->Entry( -width => 60, -background => $main::bkgcolor )
 				  ->pack;
 				my $linkf2 =
 				  $main::lglobal{elinkpop}
 				  ->Frame->pack( -side => 'top', -anchor => 'n' );
 				my $extbrowse = $linkf2->Button(
-					-activebackground => $activecolor,
+					-activebackground => $main::activecolor,
 					-text             => 'Browse',
 					-width            => 16,
 					-command          => sub {
@@ -2335,14 +2338,14 @@ sub markup {
 				  $main::lglobal{elinkpop}
 				  ->Frame->pack( -side => 'top', -anchor => 'n' );
 				my $okbut = $linkf3->Button(
-					-activebackground => $activecolor,
+					-activebackground => $main::activecolor,
 					-text             => 'Ok',
 					-width            => 16,
 					-command          => sub {
 						$name = $main::lglobal{linkentry}->get;
 						if ($name) {
 							$name =~ s/[\/\\]/;/g;
-							$tempname = $globallastpath;
+							$tempname = $main::globallastpath;
 							$tempname =~ s/[\/\\]/;/g;
 							$name     =~ s/$tempname//;
 							$name     =~ s/;/\//g;
@@ -2361,7 +2364,7 @@ sub markup {
 						undef $main::lglobal{elinkpop};
 					}
 				);
-				$main::lglobal{elinkpop}->Icon( -image => $icon );
+				$main::lglobal{elinkpop}->Icon( -image => $main::icon );
 				$main::lglobal{elinkpop}->transient( $main::lglobal{markpop} );
 				$main::lglobal{linkentry}->focus;
 			}
@@ -2396,7 +2399,7 @@ sub markup {
 					$textwindow->tagAdd( 'highlight', $anchorstartindex,
 										 $anchorendindex );
 					$textwindow->see($anchorstartindex);
-					$textwindow->bell unless $nobell;
+					$textwindow->bell unless $main::nobell;
 					$top->messageBox(
 						-icon => 'error',
 						-message =>
@@ -2419,8 +2422,8 @@ sub markup {
 				return unless length($selection);
 				$main::lglobal{linkpop} = $top->Toplevel;
 				$main::lglobal{linkpop}->title('Internal Links');
-				$main::lglobal{linkpop}->geometry($geometry2) if $geometry2;
-				$main::lglobal{linkpop}->transient($top)      if $stayontop;
+				$main::lglobal{linkpop}->geometry($main::geometry2) if $main::geometry2;
+				$main::lglobal{linkpop}->transient($top)      if $main::stayontop;
 				$main::lglobal{fnlinks} = 1;
 				my $tframe = $main::lglobal{linkpop}->Frame->pack;
 				$tframe->Checkbutton(
@@ -2472,7 +2475,7 @@ sub markup {
 				  $pframe->Scrolled(
 									 'Listbox',
 									 -scrollbars  => 'se',
-									 -background  => $bkgcolor,
+									 -background  => $main::bkgcolor,
 									 -selectmode  => 'single',
 									 -activestyle => 'none',
 				  )->pack(
@@ -2497,7 +2500,7 @@ sub markup {
 					'<<trans>>',
 					sub {
 						$name      = $linklistbox->get('active');
-						$geometry2 = $main::lglobal{linkpop}->geometry;
+						$main::geometry2 = $main::lglobal{linkpop}->geometry;
 						$done      = '</a>';
 						$textwindow->insert( $thisblockend, $done );
 						$done = "<a href=\"" . $name . "\">";
