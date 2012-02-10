@@ -6,6 +6,9 @@ BEGIN {
 	@EXPORT=qw(&add_search_history &searchtext)
 }
 
+use strict;
+use warnings;
+
 sub add_search_history {
 	if ($main::scannosearch) {
 		return; # do not add to search history during a scannos check		
@@ -58,7 +61,7 @@ sub searchtext {
 	} elsif ( $range_total == 0 && !$main::lglobal{selectionsearch} ) {
 		$start = $textwindow->index('insert');
 		$end   = 'end';
-		$end   = '1.0' if ( $sopt[2] );
+		$end   = '1.0' if ( $main::sopt[2] );
 	} else {
 		$end                      = pop(@ranges);
 		$start                    = pop(@ranges);
@@ -194,7 +197,7 @@ sub searchtext {
 		if   ( $main::sopt[0] or $main::sopt[3] ) { $mode = '-regexp' }
 		else                          { $mode = '-exact' }
 
-		if ($debug) {print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";}
+		if ($main::debug) {print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";}
 				#print $length."2\n";
 		
 
@@ -268,7 +271,7 @@ sub searchtext {
 			$main::lglobal{searchbutton}->flash if defined $main::lglobal{searchpop};
 
 			# If nothing found, return cursor to starting point
-			if ($failedsearch) {
+			if ($main::failedsearch) {
 				$main::searchendindex = $searchstartingpoint;
 				$textwindow->markSet( 'insert', $searchstartingpoint );
 				$textwindow->see($searchstartingpoint);

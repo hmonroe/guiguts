@@ -2,6 +2,9 @@
 
 package Guiguts::LineNumberText;
 
+use strict;
+use warnings;
+
 use Tk;
 use Tk::widgets qw(ROText);
 use base qw(Tk::Frame);
