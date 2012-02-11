@@ -1,14 +1,15 @@
 package Guiguts::HTMLConvert;
 
+use strict;
+use warnings;
+
 BEGIN {
 	use Exporter();
 	use List::Util qw[min max];
+	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
 	@EXPORT = qw(&htmlautoconvert &htmlpopup &makeanchor &autoindex);
 }
-
-use strict;
-use warnings;
 
 sub html_convert_tb {
 	my ( $textwindow, $selection, $step ) = @_;

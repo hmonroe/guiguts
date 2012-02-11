@@ -1,13 +1,14 @@
 package Guiguts::StatusBar;
 
+use strict;
+use warnings;
+
 BEGIN {
 	use Exporter();
+	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&update_indicators &_updatesel &buildstatusbar)
 }
-
-use strict;
-use warnings;
 
 # Routine to update the status bar when something has changed.
 #
@@ -140,6 +141,7 @@ sub _updatesel {
 	}
 	my $msgln = length($msg);
 
+	#FIXME
 	no warnings 'uninitialized';
 	$main::lglobal{selmaxlength} = $msgln if ( $msgln > $main::lglobal{selmaxlength} );
 	$main::lglobal{selectionlabel}

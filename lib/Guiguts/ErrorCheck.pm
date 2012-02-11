@@ -1,13 +1,14 @@
 package Guiguts::ErrorCheck;
 
+use strict;
+use warnings;
+
 BEGIN {
 	use Exporter();
+	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
 	@EXPORT = qw(&errorcheckpop_up &errorcheckrun);
 }
-
-use strict;
-use warnings;
 
 sub errorcheckpop_up {
 	my ( $textwindow, $top, $errorchecktype ) = @_;

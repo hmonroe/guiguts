@@ -1,13 +1,15 @@
 package Guiguts::MenuStructure;
 
-BEGIN {
-	use Exporter();
-	@ISA=qw(Exporter);
-	@EXPORT=qw(&menu_preferences &menu_bookmarks &menu_external &menubuildold &menubuild &menubuildtwo)
-}
-
 use strict;
 use warnings;
+
+BEGIN {
+	use Exporter();
+	our (@ISA, @EXPORT);
+	@ISA=qw(Exporter);
+	@EXPORT=qw(&menu_preferences &menu_bookmarks &menu_external &menubuildold &menubuild &menubuildtwo);
+}
+
 
 sub menu_preferences {
 	my $textwindow = $main::textwindow;

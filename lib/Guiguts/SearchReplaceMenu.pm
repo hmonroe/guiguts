@@ -1,13 +1,14 @@
 package Guiguts::SearchReplaceMenu;
 
+use strict;
+use warnings;
+
 BEGIN {
 	use Exporter();
+	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&add_search_history &searchtext)
 }
-
-use strict;
-use warnings;
 
 sub add_search_history {
 	if ($main::scannosearch) {

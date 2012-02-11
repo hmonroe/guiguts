@@ -1,14 +1,15 @@
 package Guiguts::Utilities;
 
+use strict;
+use warnings;
+
 BEGIN {
 	use Exporter();
+	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&openpng &get_image_file &setviewerpath &setdefaultpath &arabic &roman
 	&textbindings)
 }
-
-use strict;
-use warnings;
 
 sub get_image_file {
 	my $pagenum = shift;

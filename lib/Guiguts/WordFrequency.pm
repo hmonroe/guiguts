@@ -1,13 +1,14 @@
 package Guiguts::WordFrequency;
 
+use strict;
+use warnings;
+
 BEGIN {
 	use Exporter();
+	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&wordfrequencybuildwordlist &wordfrequency)
 }
-
-use strict;
-use warnings;
 
 # build lists of words, word pairs, and double hyphenated words
 sub wordfrequencybuildwordlist {

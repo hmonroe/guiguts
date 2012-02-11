@@ -1,14 +1,19 @@
 package Guiguts::MultiLingual;
 
-BEGIN {
-	use Exporter();
-	@ISA=qw(Exporter);
-	@EXPORT=qw(&spellmultiplelanguages)
-}
 use strict;
 use warnings;
 
-our $debug = 0; # debug set for now
+BEGIN {
+	use Exporter();
+	our ($VERSION, @ISA, @EXPORT);
+	
+	$VERSION = 0.1;
+	
+	@ISA=qw(Exporter);
+	@EXPORT=qw(&spellmultiplelanguages);
+}
+
+our $debug = 1; # debug set for now
 
 use Guiguts::WordFrequency;
 

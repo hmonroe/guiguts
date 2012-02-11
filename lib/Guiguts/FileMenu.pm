@@ -1,14 +1,15 @@
 package Guiguts::FileMenu;
 
+use strict;
+use warnings;
+
 BEGIN {
 	use Exporter();
+	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close 
 	&_flash_save &clearvars &savefile &_exit )
 }
-
-use strict;
-use warnings;
 
 sub file_open {    # Find a text file to open
 	my $textwindow = shift;

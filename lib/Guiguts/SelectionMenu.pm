@@ -1,14 +1,15 @@
 package Guiguts::SelectionMenu;
 
+use strict;
+use warnings;
+
 BEGIN {
 	use Exporter();
+	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&case &surround &surroundit &flood &indent &asciibox &aligntext &tonamed &fromnamed &fracconv
 	&selectrewrap &wrapper)
 }
-
-use strict;
-use warnings;
 
 sub wrapper {
 	my @words       = ();

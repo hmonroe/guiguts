@@ -1,13 +1,14 @@
 package Guiguts::HelpMenu;
 
+use strict;
+use warnings;
+
 BEGIN {
 	use Exporter();
+	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&about_pop_up )
 }
-
-use strict;
-use warnings;
 
 sub about_pop_up {
 	my $top = shift;

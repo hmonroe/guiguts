@@ -1,13 +1,14 @@
 package Guiguts::Footnotes;
 
+use strict;
+use warnings;
+
 BEGIN {
 	use Exporter();
+	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&footnotepop &footnoteshow &fninsertmarkers)
 }
-
-use strict;
-use warnings;
 
 ## Pop up a window where footnotes can be found, fixed and formatted. (heh)
 sub footnotepop {
