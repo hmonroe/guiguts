@@ -8,11 +8,15 @@ BEGIN {
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close 
-	&_flash_save &clearvars &savefile &_exit )
+	&_flash_save &clearvars &savefile &_exit &file_mark_pages &_recentupdate)
 }
 
 sub file_open {    # Find a text file to open
 	my $textwindow = shift;
+	#my %lglobal;
+	#%lglobal = %{\%main::lglobal};
+	#$lglobal{test}="abcd";	
+	
 	my ($name);
 	return if ( &main::confirmempty() =~ /cancel/i );
 	my $types = [
@@ -265,9 +269,9 @@ sub _bin_save {
 		}
 		print $fh ");\n\n";
 
-		print $fh '$bookmarks[0] = \'' . $textwindow->index('insert') . "';\n";
+		print $fh '$main::bookmarks[0] = \'' . $textwindow->index('insert') . "';\n";
 		for ( 1 .. 5 ) {
-			print $fh '$bookmarks[' 
+			print $fh '$main::bookmarks[' 
 			  . $_ 
 			  . '] = \''
 			  . $textwindow->index( 'bkmk' . $_ ) . "';\n"
@@ -298,7 +302,7 @@ sub _bin_save {
 			print $fh "'$mark',\n";
 		}
 		print $fh ");\n\n";
-		print $fh "\$spellindexbkmrk = '$main::spellindexbkmrk';\n\n";
+		print $fh "\$main::spellindexbkmrk = '$main::spellindexbkmrk';\n\n";
 		print $fh "\$projectid = '$main::projectid';\n\n";
 		print $fh "\$booklang = '$main::booklang';\n\n";
 		print $fh
@@ -376,6 +380,80 @@ sub savefile {    # Determine which save routine to use and then use it
 	&main::set_autosave() if $main::autosave;
 	&main::update_indicators();
 }
+
+sub file_mark_pages {
+	my $top =$main::top;
+	my $textwindow = $main::textwindow;
+	
+	$top->Busy( -recurse => 1 );
+	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
+	my ( $line, $index, $page, $rnd1, $rnd2, $pagemark );
+	$main::searchstartindex = '1.0';
+	$main::searchendindex   = '1.0';
+	while ($main::searchstartindex) {
+		#$main::searchstartindex =
+		#  $textwindow->search( '-exact', '--',
+		#					   '--- File:',
+		#					   $main::searchendindex, 'end' );
+ 		$main::searchstartindex =$textwindow->search( '-nocase', '-regexp', '--',
+							   '-*\s?File:\s?(\S+)\.(png|jpg)---.*$',
+							   $main::searchendindex, 'end' );
+		last unless $main::searchstartindex;
+		my ( $row, $col ) = split /\./, $main::searchstartindex;
+		$line = $textwindow->get( "$row.0", "$row.end" );
+		$main::searchendindex = $textwindow->index("$main::searchstartindex lineend");
+		#$line = $textwindow->get( $main::searchstartindex, $main::searchendindex );
+
+		# get the page name - we do this separate from pulling the
+		# proofer names in case we did an Import Test Prep Files
+		# which does not include proofer names
+		#  look for one or more dashes followed by File: followed
+		#  by zero or more spaces, then non-greedily capture everything
+		#  up to the first period
+		if ( $line =~ /-+File:\s*(.*?)\./ ) {
+			$page = $1;
+		}
+
+		# get list of proofers:
+		#  look for one or more dashes followed by File:, then
+		#  non-greedily ignore everything up to the
+		#  string of dashes, ignore the dashes, then capture
+		#  everything until the dashes begin again (proofer string)
+		#		if ( $line =~ /-+File:.*?-+([^-]+)-+/ ) {
+		if ( $line =~ /^-----*\s?File:\s?\S+\.(png|jpg)---(.*)$/ ) {
+			my $prftrim = $2;
+			$prftrim =~ s/-*$//g;
+
+			# split the proofer string into parts
+			@{ $main::proofers{$page} } = split( "\Q\\\E", $prftrim );
+		}
+
+		$pagemark = 'Pg' . $page;
+		$main::pagenumbers{$pagemark}{offset} = 1;
+		$textwindow->markSet( $pagemark, $main::searchstartindex );
+		$textwindow->markGravity( $pagemark, 'left' );
+	}
+	delete $main::proofers{''};
+	$top->Unbusy( -recurse => 1 );
+	return;
+}
+
+## Track recently open files for the menu
+sub _recentupdate {    # FIXME: Seems to be choking.
+	my $name = shift;
+
+	# remove $name or any *empty* values from the list
+	@main::recentfile = grep( !/(?: \Q$name\E | \Q*empty*\E )/x, @main::recentfile );
+
+	# place $name at the top
+	unshift @main::recentfile, $name;
+
+	# limit the list to 10 entries
+	pop @main::recentfile while ( $#main::recentfile > 10 );
+	&main::menurebuild();
+	return;
+}
+
 
 
 ## Global Exit

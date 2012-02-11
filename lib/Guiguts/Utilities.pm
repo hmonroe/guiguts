@@ -8,7 +8,7 @@ BEGIN {
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&openpng &get_image_file &setviewerpath &setdefaultpath &arabic &roman
-	&textbindings)
+	&textbindings &cmdinterp)
 }
 
 sub get_image_file {
@@ -406,6 +406,61 @@ sub popscroll {
 									  '11'   => 'bottom_right_corner',
 	);
 	$main::lglobal{scroll_id} = $main::top->repeat( $main::scrollupdatespd, \&main::b2scroll );
+}
+
+# Command parsing for External command routine
+sub cmdinterp {
+	# Allow basic quoting, in case anyone specifies paths with spaces.
+	# Don't support paths with quotes.  The standard \" and \\ escapes
+	# would not be friendly on Windows-style paths.
+	my $textwindow = $main::textwindow;
+	my @args = shift =~ m/"[^"]+"|\S+/g;
+
+	my ( $fname, $pagenum, $number, $pname );
+	my ( $selection, $ranges );
+
+	foreach my $arg (@args) {
+		$arg =~ s/^"(.*)"$/$1/;
+
+		# Replace $t with selected text for instance for a dictionary search
+		if ( $arg =~ m/\$t/ ) {
+			my @ranges = $textwindow->tagRanges('sel');
+			return ' ' unless @ranges;
+			my $end   = pop(@ranges);
+			my $start = pop(@ranges);
+			$selection = $textwindow->get( $start, $end );
+			$arg =~ s/\$t/$selection/;
+			$arg = &main::encode( "utf-8", $arg );
+		}
+
+# Pass file to default file handler, $f $d $e give the fully specified path/filename
+		if ( $arg =~ m/\$f|\$d|\$e/ ) {
+			return if nofileloadedwarning();
+			$fname = $main::lglobal{global_filename};
+			my ( $f, $d, $e ) = fileparse( $fname, qr{\.[^\.]*$} );
+			$arg =~ s/\$f/$f/ if $f;
+			$arg =~ s/\$d/$d/ if $d;
+			$arg =~ s/\$e/$e/ if $e;
+			if ( $arg =~ m/project_comments.html/ ) {
+				$arg =~ s/project/$projectid/;
+			}
+		}
+
+		# Pass image file to default file handler
+		if ( $arg =~ m/\$p/ ) {
+			return unless $main::lglobal{img_num_label};
+			$number = $main::lglobal{img_num_label}->cget( -text );
+			$number =~ s/.+?(\d+).*/$1/;
+			$pagenum = $number;
+			return ' ' unless $pagenum;
+			$arg =~ s/\$p/$number/;
+		}
+		if ( $arg =~ m/\$i/ ) {
+			return ' ' unless $pngspath;
+			$arg =~ s/\$i/$pngspath/;
+		}
+	}
+	return @args;
 }
 
 

@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&update_indicators &_updatesel &buildstatusbar)
+	@EXPORT=qw(&update_indicators &_updatesel &buildstatusbar &selection)
 }
 
 # Routine to update the status bar when something has changed.
@@ -889,5 +889,100 @@ sub prfrby {
 		  ->insert( 'end', sprintf( " %8s\n", $proofersort{$prfr}[0] ) );
 	}
 }
+
+# Pop up window allowing tracking and auto reselection of last selection
+sub selection {
+	my $top = $main::top;
+	my $textwindow = $main::textwindow;
+	my ( $start, $end );
+	if ( $main::lglobal{selectionpop} ) {
+		$main::lglobal{selectionpop}->deiconify;
+		$main::lglobal{selectionpop}->raise;
+	} else {
+		$main::lglobal{selectionpop} = $top->Toplevel;
+		$main::lglobal{selectionpop}->title('Select Line.Col');
+		&main::initialize_popup_without_deletebinding('selectionpop');
+
+		$main::lglobal{selectionpop}->resizable( 'no', 'no' );
+		my $frame =
+		  $main::lglobal{selectionpop}
+		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+		$frame->Label( -text => 'Start Line.Col' )
+		  ->grid( -row => 1, -column => 1 );
+		$main::lglobal{selsentry} = $frame->Entry(
+			-background   => $main::bkgcolor,
+			-width        => 15,
+			-textvariable => \$start,
+			-validate     => 'focusout',
+			-vcmd         => sub {
+				return 0 unless ( $_[0] =~ m{^\d+\.\d+$} );
+				return 1;
+			},
+		)->grid( -row => 1, -column => 2 );
+		$frame->Label( -text => 'End Line.Col' )
+		  ->grid( -row => 2, -column => 1 );
+		$main::lglobal{seleentry} = $frame->Entry(
+			-background   => $main::bkgcolor,
+			-width        => 15,
+			-textvariable => \$end,
+			-validate     => 'focusout',
+			-vcmd         => sub {
+				return 0 unless ( $_[0] =~ m{^\d+\.\d+$} );
+				return 1;
+			},
+		)->grid( -row => 2, -column => 2 );
+		my $frame1 =
+		  $main::lglobal{selectionpop}
+		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+		my $button = $frame1->Button(
+			-text    => 'OK',
+			-width   => 8,
+			-command => sub {
+				return
+				  unless (    ( $start =~ m{^\d+\.\d+$} )
+						   && ( $end =~ m{^\d+\.\d+$} ) );
+				$textwindow->tagRemove( 'sel', '1.0', 'end' );
+				$textwindow->tagAdd( 'sel', $start, $end );
+				$textwindow->markSet( 'selstart', $start );
+				$textwindow->markSet( 'selend',   $end );
+				$textwindow->focus;
+			},
+		)->grid( -row => 1, -column => 1 );
+		$frame1->Button(
+			-text    => 'Close',
+			-width   => 8,
+			-command => sub {
+				$main::lglobal{selectionpop}->destroy;
+				undef $main::lglobal{selectionpop};
+				undef $main::lglobal{selsentry};
+				undef $main::lglobal{seleentry};
+			},
+		)->grid( -row => 1, -column => 2 );
+		$main::lglobal{selectionpop}->protocol(
+			'WM_DELETE_WINDOW' => sub {
+				$main::lglobal{selectionpop}->destroy;
+				undef $main::lglobal{selectionpop};
+				undef $main::lglobal{selsentry};
+				undef $main::lglobal{seleentry};
+			}
+		);
+	}
+	my @ranges = $textwindow->tagRanges('sel');
+	if (@ranges) {
+		$main::lglobal{selsentry}->delete( '0', 'end' );
+		$main::lglobal{selsentry}->insert( 'end', $ranges[0] );
+		$main::lglobal{seleentry}->delete( '0', 'end' );
+		$main::lglobal{seleentry}->insert( 'end', $ranges[-1] );
+	} elsif ( $textwindow->markExists('selstart') ) {
+		$main::lglobal{selsentry}->delete( '0', 'end' );
+		$main::lglobal{selsentry}->insert( 'end', $textwindow->index('selstart') );
+		$main::lglobal{seleentry}->delete( '0', 'end' );
+		$main::lglobal{seleentry}->insert( 'end', $textwindow->index('selend') );
+	}
+	$main::lglobal{selsentry}->selectionRange( 0, 'end' );
+	return
+}
+
+
 
 1;
