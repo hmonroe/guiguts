@@ -8,7 +8,8 @@ BEGIN {
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close 
-	&_flash_save &clearvars &savefile &_exit &file_mark_pages &_recentupdate &file_guess_page_marks)
+	&_flash_save &clearvars &savefile &_exit &file_mark_pages &_recentupdate &file_guess_page_marks
+	&oppopupdate &opspop_up)
 }
 
 sub file_open {    # Find a text file to open
@@ -592,6 +593,50 @@ sub file_guess_page_marks {
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
 	}
 	return;
+}
+
+## Update the Operations history
+sub oppopupdate {
+	$main::lglobal{oplistbox}->delete( '0', 'end' );
+	$main::lglobal{oplistbox}->insert( 'end', @main::operations );
+}
+
+# Pop up an "Operation" history. Track which functions have already been
+# run.
+sub opspop_up {
+	my $top = $main::top;
+	if ( $main::lglobal{oppop} ) {
+		$main::lglobal{oppop}->deiconify;
+		$main::lglobal{oppop}->raise;
+	} else {
+		$main::lglobal{oppop} = $top->Toplevel;
+		$main::lglobal{oppop}->title('Function history');
+		&main::initialize_popup_with_deletebinding('oppop');
+		my $frame =
+		  $main::lglobal{oppop}->Frame->pack(
+										-anchor => 'nw',
+										-fill   => 'both',
+										-expand => 'both',
+										-padx   => 2,
+										-pady   => 2
+		  );
+		$main::lglobal{oplistbox} =
+		  $frame->Scrolled(
+							'Listbox',
+							-scrollbars  => 'se',
+							-background  => $main::bkgcolor,
+							-selectmode  => 'single',
+							-activestyle => 'none',
+		  )->pack(
+				   -anchor => 'nw',
+				   -fill   => 'both',
+				   -expand => 'both',
+				   -padx   => 2,
+				   -pady   => 2
+		  );
+		&main::drag( $main::lglobal{oplistbox} );
+	}
+	&main::oppopupdate();
 }
 
 

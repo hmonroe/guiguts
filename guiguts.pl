@@ -104,6 +104,7 @@ use Guiguts::HTMLConvert;
 use Guiguts::LineNumberText;
 use Guiguts::MenuStructure;
 use Guiguts::MultiLingual;
+use Guiguts::PageNumbers;
 use Guiguts::SearchReplaceMenu;
 use Guiguts::SelectionMenu;
 use Guiguts::StatusBar;
@@ -442,138 +443,6 @@ set_autosave() if $autosave;
 $textwindow->CallNextGUICallback;
 
 $top->repeat( 200, sub { _updatesel($textwindow) } );
-
-## Toggle visible page markers. This is not line numbers but marks for pages.
-sub viewpagenums {
-	if ( $lglobal{seepagenums} ) {
-		$lglobal{seepagenums} = 0;
-		my @marks = $textwindow->markNames;
-		for ( sort @marks ) {
-			if ( $_ =~ m{Pg(\S+)} ) {
-				my $pagenum = " Pg$1 ";
-				$textwindow->ntdelete( $_, "$_ +@{[length $pagenum]}c" );
-			}
-		}
-		$textwindow->tagRemove( 'pagenum', '1.0', 'end' );
-		if ( $lglobal{pnumpop} ) {
-			$geometryhash{pnumpop} = $lglobal{pnumpop}->geometry;
-			$lglobal{pnumpop}->destroy;
-			undef $lglobal{pnumpop};
-		}
-	} else {
-		$lglobal{seepagenums} = 1;
-		my @marks = $textwindow->markNames;
-		for ( sort @marks ) {
-			if ( $_ =~ m{Pg(\S+)} ) {
-				my $pagenum = " Pg$1 ";
-				$textwindow->ntinsert( $_, $pagenum );
-				$textwindow->tagAdd( 'pagenum', $_,
-									 "$_ +@{[length $pagenum]}c" );
-			}
-		}
-		pnumadjust();
-	}
-}
-
-## Pop up a window which will allow jumping directly to a specified page
-sub gotolabel {
-	unless ( defined( $lglobal{gotolabpop} ) ) {
-		return unless %pagenumbers;
-		for ( keys(%pagenumbers) ) {
-			$lglobal{pagedigits} = ( length($_) - 2 );
-			last;
-		}
-		$lglobal{gotolabpop} = $top->DialogBox(
-			-buttons => [qw[Ok Cancel]],
-			-title   => 'Goto Page Label',
-			-popover => $top,
-			-command => sub {
-				if ( $_[0] eq 'Ok' ) {
-					my $mark;
-					for ( keys %pagenumbers ) {
-						if (    $pagenumbers{$_}{label}
-							 && $pagenumbers{$_}{label} eq $lglobal{lastlabel} )
-						{
-							$mark = $_;
-							last;
-						}
-					}
-					unless ($mark) {
-						$lglobal{gotolabpop}->bell;
-						$lglobal{gotolabpop}->destroy;
-						undef $lglobal{gotolabpop};
-						return;
-					}
-					my $index = $textwindow->index($mark);
-					$textwindow->markSet( 'insert', "$index +1l linestart" );
-					$textwindow->see('insert');
-					$textwindow->focus;
-					update_indicators();
-					$lglobal{gotolabpop}->destroy;
-					undef $lglobal{gotolabpop};
-				} else {
-					$lglobal{gotolabpop}->destroy;
-					undef $lglobal{gotolabpop};
-				}
-			}
-		);
-		$lglobal{gotolabpop}->resizable( 'no', 'no' );
-		my $frame = $lglobal{gotolabpop}->Frame->pack( -fill => 'x' );
-		$frame->Label( -text => 'Enter Label: ' )->pack( -side => 'left' );
-		$lglobal{lastlabel} = 'Pg ' unless $lglobal{lastlabel};
-		my $entry = $frame->Entry(
-								   -background   => $bkgcolor,
-								   -width        => 25,
-								   -textvariable => \$lglobal{lastlabel}
-		)->pack( -side => 'left', -fill => 'x' );
-		$lglobal{gotolabpop}->Advertise( entry => $entry );
-		$lglobal{gotolabpop}->Popup;
-		$lglobal{gotolabpop}->Subwidget('entry')->focus;
-		$lglobal{gotolabpop}->Subwidget('entry')->selectionRange( 0, 'end' );
-		$lglobal{gotolabpop}->Wait;
-	}
-}
-
-## Update the Operations history
-sub oppopupdate {
-	$lglobal{oplistbox}->delete( '0', 'end' );
-	$lglobal{oplistbox}->insert( 'end', @operations );
-}
-
-sub search_history {
-	my ( $widget, $history_array_ref ) = @_;
-	my $menu = $widget->Menu( -title => 'History', -tearoff => 0 );
-	$menu->command( -label   => 'Clear History',
-					-command => sub { @$history_array_ref = (); savesettings(); }, );
-	$menu->separator;
-	for my $item (@$history_array_ref) {
-		$menu->command(
-				-label   => $item,
-				-command => [ sub { load_hist_term( $widget, $_[0] ) }, $item ],
-		);
-	}
-	my $x = $widget->rootx;
-	my $y = $widget->rooty + $widget->height;
-	$menu->post( $x, $y );
-}
-
-sub load_hist_term {
-	my ( $widget, $term ) = @_;
-	$widget->delete( '1.0', 'end' );
-	$widget->insert( 'end', $term );
-}
-
-sub reg_check {
-	$lglobal{searchentry}->tagConfigure( 'reg', -foreground => 'black' );
-	$lglobal{searchentry}->tagRemove( 'reg', '1.0', 'end' );
-	return unless $sopt[3];
-	$lglobal{searchentry}->tagAdd( 'reg', '1.0', 'end' );
-	my $term = $lglobal{searchentry}->get( '1.0', 'end' );
-	return if ( $term eq '^' or $term eq '$' );
-	return if isvalid($term);
-	$lglobal{searchentry}->tagConfigure( 'reg', -foreground => 'red' );
-	return;
-}
 
 sub regedit {
 	my $editor = $top->DialogBox( -title   => 'Regex editor',
@@ -10327,43 +10196,6 @@ EOF
 			}
 		)->pack( -pady => 8 );
 	}
-}
-
-# Pop up an "Operation" history. Track which functions have already been
-# run.
-sub opspop_up {
-	if ( $lglobal{oppop} ) {
-		$lglobal{oppop}->deiconify;
-		$lglobal{oppop}->raise;
-	} else {
-		$lglobal{oppop} = $top->Toplevel;
-		$lglobal{oppop}->title('Function history');
-		initialize_popup_with_deletebinding('oppop');
-		my $frame =
-		  $lglobal{oppop}->Frame->pack(
-										-anchor => 'nw',
-										-fill   => 'both',
-										-expand => 'both',
-										-padx   => 2,
-										-pady   => 2
-		  );
-		$lglobal{oplistbox} =
-		  $frame->Scrolled(
-							'Listbox',
-							-scrollbars  => 'se',
-							-background  => $bkgcolor,
-							-selectmode  => 'single',
-							-activestyle => 'none',
-		  )->pack(
-				   -anchor => 'nw',
-				   -fill   => 'both',
-				   -expand => 'both',
-				   -padx   => 2,
-				   -pady   => 2
-		  );
-		drag( $lglobal{oplistbox} );
-	}
-	oppopupdate();
 }
 
 sub greekpopup {

@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&add_search_history &searchtext)
+	@EXPORT=qw(&add_search_history &searchtext &search_history &reg_check)
 }
 
 sub add_search_history {
@@ -284,7 +284,40 @@ sub searchtext {
 	return $foundone;    # return index of where found text started
 }
 
+sub search_history {
+	my ( $widget, $history_array_ref ) = @_;
+	my $menu = $widget->Menu( -title => 'History', -tearoff => 0 );
+	$menu->command( -label   => 'Clear History',
+					-command => sub { @$history_array_ref = (); &main::savesettings(); }, );
+	$menu->separator;
+	for my $item (@$history_array_ref) {
+		$menu->command(
+				-label   => $item,
+				-command => [ sub {load_hist_term( $widget, $_[0] ) }, $item ],
+		);
+	}
+	my $x = $widget->rootx;
+	my $y = $widget->rooty + $widget->height;
+	$menu->post( $x, $y );
+}
 
+sub load_hist_term {
+	my ( $widget, $term ) = @_;
+	$widget->delete( '1.0', 'end' );
+	$widget->insert( 'end', $term );
+}
+
+sub reg_check {
+	$main::lglobal{searchentry}->tagConfigure( 'reg', -foreground => 'black' );
+	$main::lglobal{searchentry}->tagRemove( 'reg', '1.0', 'end' );
+	return unless $main::sopt[3];
+	$main::lglobal{searchentry}->tagAdd( 'reg', '1.0', 'end' );
+	my $term = $main::lglobal{searchentry}->get( '1.0', 'end' );
+	return if ( $term eq '^' or $term eq '$' );
+	return if &main::isvalid($term);
+	$main::lglobal{searchentry}->tagConfigure( 'reg', -foreground => 'red' );
+	return;
+}
 
 
 1;
