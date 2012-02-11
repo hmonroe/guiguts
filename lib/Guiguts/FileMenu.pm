@@ -4,7 +4,7 @@ BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close 
-	&_flash_save &clearvars &_exit )
+	&_flash_save &clearvars &savefile &_exit )
 }
 
 use strict;
@@ -335,6 +335,47 @@ sub clearvars {
 	undef $main::lglobal{prepfile};
 	return;
 }
+
+sub savefile {    # Determine which save routine to use and then use it
+	my ($textwindow,$top)=($main::textwindow,$main::top);
+	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
+	if ( $main::lglobal{global_filename} =~ /No File Loaded/ ) {
+		if ( $textwindow->numberChanges == 0 ) {
+			return;
+		}
+		my ($name);
+		$name =
+		  $textwindow->getSaveFile( -title      => 'Save As',
+									-initialdir => $main::globallastpath );
+		if ( defined($name) and length($name) ) {
+			$textwindow->SaveUTF($name);
+			$name = &main::os_normal($name);
+			&main::_recentupdate($name);
+		} else {
+			return;
+		}
+	} else {
+		if ($main::autobackup) {
+			if ( -e $main::lglobal{global_filename} ) {
+				if ( -e "$main::lglobal{global_filename}.bk2" ) {
+					unlink "$main::lglobal{global_filename}.bk2";
+				}
+				if ( -e "$main::lglobal{global_filename}.bk1" ) {
+					rename( "$main::lglobal{global_filename}.bk1",
+							"$main::lglobal{global_filename}.bk2" );
+				}
+				rename( $main::lglobal{global_filename},
+						"$main::lglobal{global_filename}.bk1" );
+			}
+		}
+		$textwindow->SaveUTF;
+	}
+	$textwindow->ResetUndo;
+	&main::_bin_save($textwindow,$top);
+	&main::set_autosave() if $main::autosave;
+	&main::update_indicators();
+}
+
 
 ## Global Exit
 sub _exit {

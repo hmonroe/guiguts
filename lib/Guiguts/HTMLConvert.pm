@@ -2123,7 +2123,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $main::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up('Link Check');
+					&main::errorcheckpop_up($textwindow,$top,'Link Check');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Link Check',
@@ -2132,7 +2132,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $main::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up('HTML Tidy');
+					&main::errorcheckpop_up($textwindow,$top,'HTML Tidy');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'HTML Tidy',
@@ -2142,9 +2142,9 @@ sub htmlpopup {
 				-activebackground => $main::activecolor,
 				-command          => sub {
 					if ($main::w3cremote) {
-						&main::errorcheckpop_up('W3C Validate Remote');
+						&main::errorcheckpop_up($textwindow,$top,'W3C Validate Remote');
 					} else {
-						&main::errorcheckpop_up('W3C Validate');
+						&main::errorcheckpop_up($textwindow,$top,'W3C Validate');
 					}
 					unlink 'null' if ( -e 'null' );
 				},
@@ -2154,7 +2154,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $main::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up('W3C Validate CSS')
+					&main::errorcheckpop_up($textwindow,$top,'W3C Validate CSS')
 					  ;    #validatecssrun('');
 					unlink 'null' if ( -e 'null' );
 				},
@@ -2164,7 +2164,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $main::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up('pphtml');
+					&main::errorcheckpop_up($textwindow,$top,'pphtml');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'pphtml',
@@ -2173,7 +2173,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $main::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up('Image Check');
+					&main::errorcheckpop_up($textwindow,$top,'Image Check');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Image Check',
@@ -2182,7 +2182,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $main::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up('Epub Friendly');
+					&main::errorcheckpop_up($textwindow,$top,'Epub Friendly');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Epub Friendly',
@@ -2191,7 +2191,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $main::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up('Check All');
+					&main::errorcheckpop_up($textwindow,$top,'Check All');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Check All',
