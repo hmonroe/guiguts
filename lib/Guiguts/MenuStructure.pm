@@ -1921,7 +1921,7 @@ sub menubuildtwo {
 			   'command',
 			   '~Save',
 			   -accelerator => 'Ctrl+s',
-			   -command     => \&main::savefile
+			   -command     => sub { main::savefile }
 			 ],
 			 [ 'command', 'Save ~As', -command => sub{&main::file_saveas($textwindow)} ],
 			 [ 'separator', '' ],
@@ -1987,9 +1987,9 @@ sub menubuildtwo {
 			],
 			# end of copy
 			 [ 'separator', '' ],
-			 [ 'command', 'Debug', -command => \&main::debug_dump ],
-			 [ 'command',   '~Close', -command => sub {&main::file_close($textwindow)} ],
-			 [ 'command', 'E~xit', -command => \&main::_exit ],
+			 [ 'command', 'Debug', -command => sub { &main::debug_dump } ],
+			 [ 'command',   '~Close', -command => sub { &main::file_close($textwindow) } ],
+			 [ 'command', 'E~xit', -command => sub { &main::_exit } ],
 		  ]
 
 	);
@@ -2062,92 +2062,87 @@ sub menubuildtwo {
 		-label     => 'Search & ~Replace',
 		-tearoff   => 1,
 		-menuitems => [
-			[ 'command', 'Search & ~Replace...', -command => \&searchpopup ],
-			[ 'command', '~Stealth Scannos...',  -command => \&stealthscanno ],
+			[ 'command', 'Search & ~Replace...', -command => \&main::searchpopup ],
+			[ 'command', '~Stealth Scannos...',  -command => \&main::stealthscanno ],
 			[ 'separator', '' ],
 			[
 			   'command',
 			   'Goto ~Line...',
 			   -command => sub {
-				   gotoline();
-				   update_indicators();
+				   main::gotoline();
+				   main::update_indicators();
 				 }
 			],
 			[
 			   'command',
 			   'Goto ~Page...',
 			   -command => sub {
-				   gotopage();
-				   update_indicators();
+				   main::gotopage();
+				   main::update_indicators();
 				 }
 			],
-# no need - on status bar
-#			[
-#			   'command', '~Which Line?',
-#			   -command => sub { $textwindow->WhatLineNumberPopUp }
-#			],
 			[ 'separator', '' ],
 			[
 			   'command',
 			   'Find Proofer Comments',
-			   -command => \&find_proofer_comment
+			   -command => \&main::find_proofer_comment
 			],
 			[
 			   'command',
 			   'Find ~Orphaned Brackets...',
-			   -command => \&orphanedbrackets
+			   -command => \&main::orphanedbrackets
 			],
-			[ 'command', 'Find Orphaned Markup...', -command => \&orphanedmarkup ],
+			[ 'command', 'Find Orphaned Markup...', -command => \&main::orphanedmarkup ],
 			[ 'separator', '' ],
 			[
 			   'command',
 			   'Find next /*..*/ block',
-			   -command => [ \&nextblock, 'default', 'forward' ]
+			   -command => [ \&main::nextblock, 'default', 'forward' ]
 			],
 			[
 			   'command',
 			   'Find previous /*..*/ block',
-			   -command => [ \&nextblock, 'default', 'reverse' ]
+			   -command => [ \&main::nextblock, 'default', 'reverse' ]
 			],
 			[
 			   'command',
 			   'Find next /#..#/ block',
-			   -command => [ \&nextblock, 'block', 'forward' ]
+			   -command => [ \&main::nextblock, 'block', 'forward' ]
 			],
 			[
 			   'command',
 			   'Find previous /#..#/ block',
-			   -command => [ \&nextblock, 'block', 'reverse' ]
+			   -command => [ \&main::nextblock, 'block', 'reverse' ]
 			],
 			[
 			   'command',
 			   'Find next /$..$/ block',
-			   -command => [ \&nextblock, 'stet', 'forward' ]
+			   -command => [ \&main::nextblock, 'stet', 'forward' ]
 			],
 			[
 			   'command',
 			   'Find previous /$..$/ block',
-			   -command => [ \&nextblock, 'stet', 'reverse' ]
+			   -command => [ \&main::nextblock, 'stet', 'reverse' ]
 			],
 			[
 			   'command',
 			   'Find next /p..p/ block',
-			   -command => [ \&nextblock, 'poetry', 'forward' ]
+			   -command => [ \&main::nextblock, 'poetry', 'forward' ]
 			],
 			[
 			   'command',
 			   'Find previous /p..p/ block',
-			   -command => [ \&nextblock, 'poetry', 'reverse' ]
+			   -command => [ \&main::nextblock, 'poetry', 'reverse' ]
 			],
 			[
 			   'command',
 			   'Find next indented block',
-			   -command => [ \&nextblock, 'indent', 'forward' ]
+			   -command => [ \&main::nextblock, 'indent', 'forward' ]
 			],
 			[
 			   'command',
 			   'Find previous indented block',
-			   -command => [ \&nextblock, 'indent', 'reverse' ]
+			   -command => [ \&main::nextblock, 'indent', 'reverse' ]
 			],
 		]
 	);
@@ -2165,20 +2160,20 @@ sub menubuildtwo {
 			[
 			   Button   => '~lowercase Selection',
 			   -command => sub {
-				   case ( $textwindow, 'lc' );
+				   main::case ( $textwindow, 'lc' );
 				 }
 			],
 			[
 			   Button   => '~Sentence case Selection',
-			   -command => sub { case ( $textwindow, 'sc' ); }
+			   -command => sub { main::case ( $textwindow, 'sc' ); }
 			],
 			[
 			   Button   => '~Title Case Selection',
-			   -command => sub { case ( $textwindow, 'tc' ); }
+			   -command => sub { main::case ( $textwindow, 'tc' ); }
 			],
 			[
 			   Button   => '~UPPERCASE Selection',
-			   -command => sub { case ( $textwindow, 'uc' ); }
+			   -command => sub { main::case ( $textwindow, 'uc' ); }
 			],
 			[ 'separator', '' ],
 			[
@@ -2236,7 +2231,7 @@ sub menubuildtwo {
 					   my $gobut = $f2->Button(
 						   -activebackground => $main::activecolor,
 						   -command          => sub {
-							   surroundit( $surstrt->get, $surend->get,
+							   main::surroundit( $surstrt->get, $surend->get,
 										   $textwindow );
 						   },
 						   -text  => 'OK',
@@ -2264,7 +2259,7 @@ sub menubuildtwo {
 			   -command => sub {
 				   $textwindow->addGlobStart;
 				   $main::lglobal{floodpop} =
-					 flood( $textwindow, $top, $main::lglobal{floodpop},
+					 main::flood( $textwindow, $top, $main::lglobal{floodpop},
 							$main::lglobal{font}, $main::activecolor, $main::icon );
 				   $textwindow->addGlobEnd;
 				 }
@@ -2598,7 +2593,7 @@ $main::globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 	my $external = $menubar->cascade(
 									  -label     => 'External',
 									  -tearoff   => 1,
-									  -menuitems => &main::menu_external,
+									  -menuitems => &menu_external,
 	);
 	
 	&main::unicodemenu();
