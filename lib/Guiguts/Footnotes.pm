@@ -6,6 +6,9 @@ BEGIN {
 	@EXPORT=qw(&footnotepop &footnoteshow &fninsertmarkers)
 }
 
+use strict;
+use warnings;
+
 ## Pop up a window where footnotes can be found, fixed and formatted. (heh)
 sub footnotepop {
 	my $textwindow = $main::textwindow;

@@ -7,15 +7,18 @@ BEGIN {
 	&textbindings)
 }
 
+use strict;
+use warnings;
+
 sub get_image_file {
 	my $pagenum = shift;
 	my $number;
 	my $imagefile;
 	unless ($main::pngspath) {
 		if ($main::OS_WIN) {
-			$main::pngspath = "${globallastpath}pngs\\";
+			$main::pngspath = "${main::globallastpath}pngs\\";
 		} else {
-			$main::pngspath = "${globallastpath}pngs/";
+			$main::pngspath = "${main::globallastpath}pngs/";
 		}
 		&main::setpngspath($pagenum) unless ( -e "$main::pngspath$pagenum.png" );
 	}
@@ -341,7 +344,7 @@ sub textbindings {
 			'TextUnicode',
 			'<3>' => sub {
 				&main::scrolldismiss();
-				$menubar->Popup( -popover => 'cursor' );
+				$main::menubar->Popup( -popover => 'cursor' );
 			}
 		);
 	} else {
@@ -373,10 +376,10 @@ sub popscroll {
 		&main::scrolldismiss();
 		return;
 	}
-	my $x = $top->pointerx - $top->rootx;
-	my $y = $top->pointery - $top->rooty - 8;
-	$main::lglobal{scroller} = $top->Label(
-									  -background  => $textwindow->cget( -bg ),
+	my $x = $main::top->pointerx - $main::top->rootx;
+	my $y = $main::top->pointery - $main::top->rooty - 8;
+	$main::lglobal{scroller} = $main::top->Label(
+									  -background  => $main::textwindow->cget( -bg ),
 									  -image       => $main::lglobal{scrollgif},
 									  -cursor      => 'double_arrow',
 									  -borderwidth => 0,
@@ -389,7 +392,7 @@ sub popscroll {
 	  ->bind( 'current', '<<ScrollDismiss>>', sub { &main::scrolldismiss(); } );
 	$main::lglobal{scroll_y}  = $y;
 	$main::lglobal{scroll_x}  = $x;
-	$main::lglobal{oldcursor} = $textwindow->cget( -cursor );
+	$main::lglobal{oldcursor} = $main::textwindow->cget( -cursor );
 	%{ $main::lglobal{scroll_cursors} } = (
 									  '-1-1' => 'top_left_corner',
 									  '-10'  => 'top_side',
@@ -401,7 +404,7 @@ sub popscroll {
 									  '10'   => 'bottom_side',
 									  '11'   => 'bottom_right_corner',
 	);
-	$main::lglobal{scroll_id} = $top->repeat( $scrollupdatespd, \&main::b2scroll );
+	$main::lglobal{scroll_id} = $main::top->repeat( $main::scrollupdatespd, \&main::b2scroll );
 }
 
 

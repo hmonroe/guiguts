@@ -6,6 +6,9 @@ BEGIN {
 	@EXPORT = qw(&errorcheckpop_up &errorcheckrun);
 }
 
+use strict;
+use warnings;
+
 sub errorcheckpop_up {
 	my ( $textwindow, $top, $errorchecktype ) = @_;
 	my ( %errors,     @errorchecklines );
@@ -18,7 +21,7 @@ sub errorcheckpop_up {
 	$main::lglobal{errorcheckpop} = $top->Toplevel;
 	$main::lglobal{errorcheckpop}->title($errorchecktype);
 	&main::initialize_popup_with_deletebinding('errorcheckpop');
-	$main::lglobal{errorcheckpop}->transient($top) if $stayontop;
+	$main::lglobal{errorcheckpop}->transient($top) if $main::stayontop;
 	my $ptopframe = $main::lglobal{errorcheckpop}->Frame->pack;
 	my $opsbutton = $ptopframe->Button(
 		-activebackground => $main::activecolor,
@@ -174,7 +177,7 @@ sub errorcheckpop_up {
 
 				# Skip rest of CSS
 				if (
-					     ( not $verboseerrorchecks )
+					     ( not $main::verboseerrorchecks )
 					 and ( $thiserrorchecktype eq 'W3C Validate CSS' )
 					 and (    ( $line =~ /^To show your readers/i )
 						   or ( $line =~ /^Valid CSS Information/i ) )
@@ -199,7 +202,7 @@ sub errorcheckpop_up {
 				}
 
 				# Skip verbose informational warnngs in Link Check
-				if (     ( not $verboseerrorchecks )
+				if (     ( not $main::verboseerrorchecks )
 					 and ( $thiserrorchecktype eq 'Link Check' )
 					 and ( $line =~ /^Link statistics/i ) )
 				{
@@ -209,7 +212,7 @@ sub errorcheckpop_up {
 					if ( $line =~ /^-/i ) {    # skip lines beginning with '-'
 						next;
 					}
-					if ( ( not $verboseerrorchecks )
+					if ( ( not $main::verboseerrorchecks )
 						 and $line =~ /^Verbose checks/i )
 					{    # stop with verbose specials check
 						last;
@@ -399,7 +402,7 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		&main::run( $main::tidycommand, "-f", "errors.err", "-o", "null",
 					$name );
 	} elsif ( $errorchecktype eq 'W3C Validate' ) {
-		if ( $w3cremote == 0 ) {
+		if ( $main::w3cremote == 0 ) {
 			my $validatepath = &main::dirname($main::validatecommand);
 			&main::run(
 						$main::validatecommand, "--directory=$validatepath",

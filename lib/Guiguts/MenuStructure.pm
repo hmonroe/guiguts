@@ -3,8 +3,11 @@ package Guiguts::MenuStructure;
 BEGIN {
 	use Exporter();
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&menu_preferences &menu_bookmarks &menu_external &menubuildold &menubuild)
+	@EXPORT=qw(&menu_preferences &menu_bookmarks &menu_external &menubuildold &menubuild &menubuildtwo)
 }
+
+use strict;
+use warnings;
 
 sub menu_preferences {
 	my $textwindow = $main::textwindow;
@@ -1519,7 +1522,7 @@ sub menubuild {
 			   -command => sub {
 				   return if &main::nofileloadedwarning();
 				   &main::runner(
-$main::globalbrowserstart, "http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$projectid"
+$main::globalbrowserstart, "http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$main::projectid"
 				   ) if $main::projectid;
 				 }
 			],
@@ -1766,7 +1769,7 @@ $main::globalbrowserstart, "http://www.pgdp.net/c/tools/proofers/project_topic.p
 			[ Button => 'Link Check', -command => sub { &main::errorcheckpop_up($textwindow,$top,'Link Check') } ],
 			[ Button => 'HTML Tidy', -command => sub { &main::errorcheckpop_up($textwindow,$top,'HTML Tidy') } ],
 			[ Button => 'W3C Validate', -command => sub {
-				if   ($w3cremote) { &main::errorcheckpop_up($textwindow,$top,'W3C Validate Remote') }
+				if   ($main::w3cremote) { &main::errorcheckpop_up($textwindow,$top,'W3C Validate Remote') }
 				else              { &main::errorcheckpop_up($textwindow,$top,'W3C Validate'); }
 				unlink 'null' if ( -e 'null' );
 			} ],
@@ -1913,31 +1916,31 @@ sub menubuildtwo {
 		-label     => '~File v2',
 		-tearoff   => 1,
 		-menuitems => [
-			 [ 'command',   '~Open', -command => sub {file_open($textwindow)} ],
+			 [ 'command',   '~Open', -command => sub {&main::file_open($textwindow)} ],
 			 [
 			   'command',
 			   '~Save',
 			   -accelerator => 'Ctrl+s',
-			   -command     => \&savefile
+			   -command     => \&main::savefile
 			 ],
-			 [ 'command', 'Save ~As', -command => sub{file_saveas($textwindow)} ],
+			 [ 'command', 'Save ~As', -command => sub{&main::file_saveas($textwindow)} ],
 			 [ 'separator', '' ],
 			 map ( [
-					 Button   => "$recentfile[$_]",
-					 -command => [ \&openfile, $recentfile[$_] ]
+					 Button   => "$main::recentfile[$_]",
+					 -command => [ \&main::openfile, $main::recentfile[$_] ]
 				   ],
-				   ( 0 .. scalar(@recentfile) - 1 ) ),
+				   ( 0 .. scalar(@main::recentfile) - 1 ) ),
 			 [ 'separator', '' ],
 			 [
 			   'command',
 			   '~Include File',
-			   -command => sub { file_include($textwindow) }
+			   -command => sub { &main::file_include($textwindow) }
 			 ],
-			 [ 'command', 'Import Prep Text Files', -command => sub{file_import($textwindow,$top)}],
+			 [ 'command', 'Import Prep Text Files', -command => sub{&main::file_import($textwindow,$top)}],
 			 [
 			   'command',
 			   'Export As Prep Text Files',
-			   -command => sub{file_export($textwindow,$top)}
+			   -command => sub{&main::file_export($textwindow,$top)}
 			 ],
 			 [ 'separator', '' ],
 			# include cascading page marker section
@@ -1948,17 +1951,17 @@ sub menubuildtwo {
 				   [
 					  'command',
 					  '~Guess Page Markers...',
-					  -command => \&file_guess_page_marks
+					  -command => \&main::file_guess_page_marks
 				   ],
 				   [
 					  'command',
 					  'Set Page ~Markers...',
-					  -command => \&file_mark_pages
+					  -command => \&main::file_mark_pages
 				   ],
 				   [
 					  'command',
 					  '~Adjust Page Markers',
-					  -command => \&viewpagenums
+					  -command => \&main::viewpagenums
 				   ],
 				 ]
 			],
@@ -1967,26 +1970,26 @@ sub menubuildtwo {
 			   'command',
 			   'View Project Comments',
 			   -command => sub {
-				   my $defaulthandler = $extops[0]{command};
+				   my $defaulthandler = $main::extops[0]{command};
 				   $defaulthandler =~ s/\$f\$e/project_comments.html/;
-				   runner( cmdinterp($defaulthandler) );
+				   runner( &main::cmdinterp($defaulthandler) );
 				 }
 			],
 			[
 			   'command',
 			   'View Project Discussion',
 			   -command => sub {
-				   return if nofileloadedwarning();
+				   return if &main::nofileloadedwarning();
 				   runner(
-"$main::globalbrowserstart http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$projectid"
-				   ) if $projectid;
+"$main::globalbrowserstart http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$main::projectid"
+				   ) if $main::projectid;
 				 }
 			],
 			# end of copy
 			 [ 'separator', '' ],
-			 [ 'command', 'Debug', -command => \&debug_dump ],
-			 [ 'command',   '~Close', -command => sub {file_close($textwindow)} ],
-			 [ 'command', 'E~xit', -command => \&_exit ],
+			 [ 'command', 'Debug', -command => \&main::debug_dump ],
+			 [ 'command',   '~Close', -command => sub {&main::file_close($textwindow)} ],
+			 [ 'command', 'E~xit', -command => \&main::_exit ],
 		  ]
 
 	);
@@ -2010,19 +2013,19 @@ sub menubuildtwo {
 
 			[
 			   'command', 'Cut',
-			   -command     => sub { cut() },
+			   -command     => sub { &main::cut() },
 			   -accelerator => 'Ctrl+x'
 			],
 
 			[ 'separator', '' ],
 			[
 			   'command', 'Copy',
-			   -command     => sub { textcopy() },
+			   -command     => sub { &main::textcopy() },
 			   -accelerator => 'Ctrl+c'
 			],
 			[
 			   'command', 'Paste',
-			   -command     => sub { paste() },
+			   -command     => sub { &main::paste() },
 			   -accelerator => 'Ctrl+v'
 			],
 			[
@@ -2279,7 +2282,7 @@ sub menubuildtwo {
 			   Button   => 'Indent Selection -1',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &main::indent( $textwindow, 'out', $operationinterrupt );
+				   &main::indent( $textwindow, 'out', $main::operationinterrupt );
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -2303,7 +2306,7 @@ sub menubuildtwo {
 			],
 			[
 			   Button   => 'Interrupt Rewrap',
-			   -command => sub { $operationinterrupt = 1 }
+			   -command => sub { $main::operationinterrupt = 1 }
 			],
 			[ 'separator', '' ],
 			[ Button => '~Align text on string...', -command => \&main::alignpopup ],

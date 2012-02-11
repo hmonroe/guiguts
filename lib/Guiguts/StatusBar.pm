@@ -6,6 +6,9 @@ BEGIN {
 	@EXPORT=qw(&update_indicators &_updatesel &buildstatusbar)
 }
 
+use strict;
+use warnings;
+
 # Routine to update the status bar when something has changed.
 #
 sub update_indicators {
@@ -26,8 +29,8 @@ sub update_indicators {
 	  if ( $main::lglobal{insert_overstrike_mode_label} );
 	my $filename = $textwindow->FileName;
 	$filename = 'No File Loaded' unless ( defined($filename) );
-	$main::lglobal{highlightlabel}->configure( -background => $highlightcolor )
-	  if ( $scannos_highlighted );
+	$main::lglobal{highlightlabel}->configure( -background => $main::highlightcolor )
+	  if ( $main::scannos_highlighted );
 	if ( $main::lglobal{highlightlabel} ) {
 		$main::lglobal{highlightlabel}->configure( -background => 'gray' )
 		  unless ( $main::scannos_highlighted );
@@ -43,9 +46,9 @@ sub update_indicators {
 	# window label format: GG-version - [edited] - [file name]
 	if ($edit_flag) {
 		$top->configure(
-			 -title => $window_title . " - " . $edit_flag . " - " . $filename );
+			 -title => $main::window_title . " - " . $edit_flag . " - " . $filename );
 	} else {
-		$top->configure( -title => $window_title . " - " . $filename );
+		$top->configure( -title => $main::window_title . " - " . $filename );
 	}
 
 	update_ordinal_button();
@@ -554,7 +557,7 @@ sub update_img_lbl_values {
 		$main::lglobal{img_num_label}->configure( -text  => "Img:$pnum" );
 		$main::lglobal{img_num_label}->configure( -width => ( length($pnum) + 5 ) );
 	}
-	my $label = $pagenumbers{"Pg$pnum"}{label};
+	my $label = $main::pagenumbers{"Pg$pnum"}{label};
 	if ( defined $label && length $label ) {
 		$main::lglobal{page_label}->configure( -text => ("Lbl: $label ") );
 	} else {
@@ -626,7 +629,7 @@ sub tglprfbar {
 	} else {
 		my $pnum = $main::lglobal{img_num_label}->cget( -text );
 		$pnum =~ s/\D+//g;
-		$proofer_frame->pack(
+		$main::proofer_frame->pack(
 							  -before => $main::counter_frame,
 							  -side   => 'bottom',
 							  -anchor => 'sw',
@@ -743,7 +746,7 @@ sub showproofers {
 							-height     => 40,
 							-wrap       => 'none',
 		  )->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
-		delete $proofers{''};
+		delete $main::proofers{''};
 		&main::drag( $main::lglobal{prfrrotextbox} );
 		prfrbypage();
 	}
@@ -752,9 +755,9 @@ sub showproofers {
 sub prfrmessage {
 	my $proofer = shift;
 	if ( $proofer eq '' ) {
-		runner($main::globalbrowserstart, $no_proofer_url);
+		runner($main::globalbrowserstart, $main::no_proofer_url);
 	} else {
-		runner($main::globalbrowserstart, "$yes_proofer_url$proofer");
+		runner($main::globalbrowserstart, "$main::yes_proofer_url$proofer");
 	}
 }
 
@@ -818,7 +821,7 @@ sub prfrbyname {
 	foreach my $page ( keys %main::proofers ) {
 		for ( 1 .. $main::lglobal{numrounds} ) {
 			$proofersort{ $main::proofers{$page}->[$_] }[$_]++
-			  if $proofers{$page}->[$_];
+			  if $main::proofers{$page}->[$_];
 			$proofersort{ $main::proofers{$page}->[$_] }[0]++
 			  if $main::proofers{$page}->[$_];
 		}
@@ -858,7 +861,7 @@ sub prfrby {
 		for ( 1 .. $main::lglobal{numrounds} ) {
 			$proofersort{ $main::proofers{$page}->[$_] }[$_]++
 			  if $main::proofers{$page}->[$_];
-			$proofersort{ $proofers{$page}->[$_] }[0]++
+			$proofersort{ $main::proofers{$page}->[$_] }[0]++
 			  if $main::proofers{$page}->[$_];
 		}
 	}

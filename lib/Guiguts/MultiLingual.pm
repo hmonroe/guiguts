@@ -8,7 +8,6 @@ BEGIN {
 use strict;
 use warnings;
 
-
 our $debug = 0; # debug set for now
 
 use Guiguts::WordFrequency;
