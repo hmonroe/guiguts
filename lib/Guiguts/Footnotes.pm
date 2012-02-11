@@ -1010,7 +1010,7 @@ sub footnoteadjust {
 	  if $main::lglobal{footpop};
 
 	if ( $end eq "$start+10c" ) {
-		$textwindow->bell unless $nobell;
+		$textwindow->bell unless $main::nobell;
 		return;
 	}
 	$main::lglobal{fnarray}->[ $main::lglobal{fnindex} ][0] = $start if $start;
@@ -1041,8 +1041,8 @@ sub footnotetidy {
 		$end = $textwindow->index( 'fne' . $main::lglobal{fnindex} );
 		$textwindow->delete("$end-1c");
 		$textwindow->tagAdd( 'sel', 'fns' . $main::lglobal{fnindex}, "$end+1c" );
-		&main::selectrewrap( $textwindow, $main::lglobal{seepagenums}, $scannos_highlighted,
-					  $rwhyphenspace );
+		&main::selectrewrap( $textwindow, $main::lglobal{seepagenums}, $MAIN::scannos_highlighted,
+					  $main::rwhyphenspace );
 		$main::lglobal{fnindex}++;
 		last if $main::lglobal{fnindex} > $main::lglobal{fntotal};
 	}

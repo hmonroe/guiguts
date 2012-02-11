@@ -8,7 +8,8 @@ BEGIN {
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&openpng &get_image_file &setviewerpath &setdefaultpath &arabic &roman
-	&textbindings &cmdinterp)
+	&textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_cmdline &win32_start &win32_is_exe
+	&win32_create_process &runner &debug_dump)
 }
 
 sub get_image_file {
@@ -442,7 +443,7 @@ sub cmdinterp {
 			$arg =~ s/\$d/$d/ if $d;
 			$arg =~ s/\$e/$e/ if $e;
 			if ( $arg =~ m/project_comments.html/ ) {
-				$arg =~ s/project/$projectid/;
+				$arg =~ s/project/$main::projectid/;
 			}
 		}
 
@@ -456,15 +457,302 @@ sub cmdinterp {
 			$arg =~ s/\$p/$number/;
 		}
 		if ( $arg =~ m/\$i/ ) {
-			return ' ' unless $pngspath;
-			$arg =~ s/\$i/$pngspath/;
+			return ' ' unless $main::pngspath;
+			$arg =~ s/\$i/$main::pngspath/;
 		}
 	}
 	return @args;
 }
 
+sub nofileloadedwarning {
+	my $top = $main::top;
+	if ( $main::lglobal{global_filename} =~ m/No File Loaded/ ) {
+		my $dialog = $top->Dialog(
+								   -text    => "No File Loaded",
+								   -bitmap  => 'warning',
+								   -title   => "No File Loaded",
+								   -buttons => ['OK']
+		);
+		my $answer = $dialog->Show;
+		return 1;
+	}
+}
+
+#FIXME: doesnt work quite right if multiple volumes held in same directory!
+sub getprojectid {
+	my $fname = $main::lglobal{global_filename};
+	my ( $f, $d, $e ) = &main::fileparse( $fname, qr{\.[^\.]*$} );
+	opendir( DIR, "$d" );
+	for ( readdir(DIR) ) {
+		if ( $_ =~ m/(project.*)_comments.html/ ) {
+			$main::projectid = $1;
+		}
+	}
+	closedir(DIR);
+	return;
+}
+
+sub win32_cmdline {
+	my @args = @_;
+
+	# <http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/
+	#  everyone-quotes-arguments-the-wrong-way.aspx>
+	#
+	# which includes perl's system(LIST).  So we do our own quoting.
+	#
+	foreach ( @args ) {
+		s/(\\*)\"/$!$!\\\"/g;
+		s/^(.*)(\\*)$/\"$1$2$2\"/ if m/[ "]/;
+	}
+	return join " ", @args;
+}
+
+sub win32_start {
+	my @args = @_;
+
+	# Windows command to open a file (or URL) using the default program
+
+	# start command must be run through CMD.EXE
+	# (we don't have Win32:Gui, or we could use ShellExecute())
+	#
+	# <http://www.autohotkey.net/~deleyd/parameters/parameters.htm>
+	#
+	# Other external commands can go through win32_create_process(),
+	# which doesn't have this limitation.
+	#
+	foreach ( @args ) {
+		if ( m/["<>|&()!%^]/ ) {
+			warn 'Refusing to run "start" command with unsafe characters ("<>|&()!%^): '
+			     . join(" ", @args);
+			return -1;
+		}
+	}
+
+	# <http://stackoverflow.com/questions/72671/
+	#  how-to-create-batch-file-in-windows-using-start-with-a-path-and-command-with-s
+	#
+	# Users never need to create a titled DOS window,
+	# but they may need to run the 'start' command on files with spaces.
+	#
+	@args = ( 'start', '', @args );
+
+	my $cmdline = win32_cmdline( @args );
+	system $cmdline;
+}
+
+sub win32_is_exe {
+	my ( $exe ) = @_;
+	return -x $exe && ! -d $exe;
+}
+
+sub win32_find_exe {
+	my ( $exe ) = @_;
+
+	return $exe if win32_is_exe($exe);
+
+	foreach my $ext ( split ';', $main::ENV{PATHEXT} )
+	{
+		my $p = $exe . $ext;
+		return $p if win32_is_exe($p);
+	}
+
+	if ( ! File::Spec->file_name_is_absolute($exe) )
+	{
+		foreach my $path ( split ';', $main::ENV{PATH} )
+		{
+			my $stem = &main::catfile($path, $exe);
+			return $stem if win32_is_exe($stem);
+
+			foreach my $ext ( split ';', $main::ENV{PATHEXT} ) {
+				my $p = $stem . $ext;
+				return $p if win32_is_exe($p);
+			}
+		}
+	}
+
+	# No such program; caller will find out :).
+	return $exe;
+}
+
+sub win32_create_process {
+	require Win32;
+	require Win32::Process;
+
+	my @args = @_;
+
+	my $exe = win32_find_exe( $args[0] );
+	my $cmdline = win32_cmdline( @args );
+
+	my $proc;
+	if ( Win32::Process::Create( $proc, $exe, $cmdline, 1, 0, '.' ) ) {
+		return $proc;
+	} else {
+		print STDERR "Failed to run $args[0]: ";
+		print STDERR Win32::FormatMessage( Win32::GetLastError() );
+		return undef;
+	}
+	return;
+}
+
+# system(LIST)
+# (but slightly more robust, particularly on Windows).
+sub run {
+	my @args = @_;
+
+	if ( ! $main::OS_WIN ) {
+		system { $args[0] } @args;
+	} else {
+		require Win32;
+		require Win32::Process;
+
+		my $proc = win32_create_process( @args );
+		return -1 unless defined $proc;
+		$proc->Wait( Win32::Process::INFINITE() );
+		$proc->GetExitCode( my $exitcode );
+		$? = $exitcode << 8;
+	}
+	return;
+}
+
+# Start an external program
+sub runner {
+	my @args = @_;
+	unless ( @args ) {
+		warn "Tried to run an empty command";
+		return -1;
+	}
+
+	if ( ! $main::OS_WIN ) {
+		# We can't call perl fork() in the main GUI process, because Tk crashes
+		system( "perl", "$main::lglobal{guigutsdirectory}/spawn.pl", @args );
+	} else {
+		if ( $args[0] eq 'start') {
+			win32_start( @args[1 .. $#args] );
+		} else {
+			my $proc = win32_create_process( @args );
+			return (defined $proc) ? 0 : -1;
+		}
+	}
+	return;
+}
+
+# Run external program, with stdin and/or stdout redirected to temporary files
+{
+	package runner;
+
+	sub tofile {
+		my ($outfile) = @_;
+		withfiles(undef, $outfile);
+	}
+	sub withfiles {
+		my ($infile, $outfile) = @_;
+		bless {
+			infile => $infile,
+			outfile => $outfile,
+		}, 'runner';
+	}
+	sub run {
+		my ($self, @args) = @_;
+
+		my ($oldstdout, $oldstdin);
+		unless ( open $oldstdin, '<&', \*STDIN ) {
+			warn "Failed to save stdin: $!";
+			return -1;
+		}
+		unless ( open $oldstdout, '>&', \*STDOUT ) {
+			warn "Failed to save stdout: $!";
+			return -1;
+		}
+
+		if ( defined $self->{infile} ) {
+			unless ( open STDIN, '<', $self->{infile} ) {
+				warn "Failed to open '$self->{infile}': $!";
+				return -1;
+			}
+		}
+		if ( defined $self->{outfile} ) {
+			unless ( open STDOUT, '>', $self->{outfile} ) {
+				warn "Failed to open '$self->{outfile}' for writing: $!";
+				# Don't bother to restore STDIN here.
+				return -1;
+			}
+		}
+		main::run( @args );
+
+		unless ( open STDOUT, '>&', $oldstdout ) {
+			warn "Failed to restore stdout: $!";
+		}
+
+		# We restore STDIN here, just because perl warns about it otherwise.
+		unless ( open STDIN, '<&', $oldstdin ) {
+			warn "Failed to restore stdin: $!";
+		}
+
+		return $?;
+	}
+}
+
+# just working out how to do things
+# prints everything I can think of to debug.txt
+# prints seenwords to words.txt
+sub debug_dump {
+	open my $save, '>', 'debug.txt';
+	print $save "\%lglobal values:\n";
+	for my $key (keys %main::lglobal) { 
+		if ($main::lglobal{$key}){ print $save "$key => $main::lglobal{$key}\n";}
+		else { print $save "$key x=>\n";}
+		};
+	print $save "\n\@ARGV command line arguments:\n";
+	for my $element (@ARGV) {
+		print $save "$element\n";
+		};
+	print $save "\n\%SIG variables:\n";
+	for my $key (keys %SIG) { 
+		if ($SIG{$key}){
+			print $save "$key => $SIG{$key}\n";
+		} else { print $save "$key x=>\n"; 	}
+	};
+	print $save "\n\%ENV environment variables:\n";
+	for my $key (keys %ENV) { 
+		print $save "$key => $ENV{$key}\n";
+		};
+	print $save "\n\@INC include path:\n";
+	for my $element (@INC) {
+		print $save "$element\n";
+		};
+	print $save "\n\%INC included filenames:\n";
+	for my $key (keys %INC) { 
+		print $save "$key => $INC{$key}\n";
+		};
+	close $save;
+	my $section = "\%lglobal{seenwords}\n";
+	open $save, '>:bytes', 'words.txt';
+	for my $key (keys %{$main::lglobal{seenwords}}){
+		$section .= "$key => $main::lglobal{seenwords}{$key}\n";
+	};
+	utf8::encode($section);
+	print $save $section;
+	close $save;
+	$section = "\%lglobal{seenwordsland}\n";
+	open $save, '>:bytes', 'words2.txt';
+	for my $key (keys %{$main::lglobal{seenwords}}){
+		if ($main::lglobal{seenwordslang}{$key}) {
+			$section .= "$key => $main::lglobal{seenwordslang}{$key}\n";
+		} else {
+			$section .= "$key x=>\n";
+		}
+	};
+	utf8::encode($section);
+	print $save $section;
+	close $save;
+	open $save, '>', 'project.txt';
+	print $save "\%projectdict\n";
+	for my $key (keys %main::projectdict){
+		print $save "$key => $main::projectdict{$key}\n";
+	};
+	close $save;
+};
+
 
 
 1;
-
-

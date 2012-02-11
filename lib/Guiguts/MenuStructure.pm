@@ -7,7 +7,8 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&menu_preferences &menu_bookmarks &menu_external &menubuildold &menubuild &menubuildtwo);
+	@EXPORT=qw(&menu_preferences &menu_bookmarks &menu_external &menubuildold &menubuild &menubuildtwo
+	&menurebuild &unicodemenu);
 }
 
 
@@ -1923,7 +1924,7 @@ sub menubuildtwo {
 			   'command',
 			   '~Save',
 			   -accelerator => 'Ctrl+s',
-			   -command     => sub { main::savefile }
+			   -command     => sub { &main::savefile }
 			 ],
 			 [ 'command', 'Save ~As', -command => sub{&main::file_saveas($textwindow)} ],
 			 [ 'separator', '' ],
@@ -2646,6 +2647,120 @@ $main::globalbrowserstart, "http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklis
 			[ Button => '~Function History',      -command => \&main::opspop_up ],
 		]
 	);
+}
+
+# Menus are not easily modifiable in place. Easier to just destroy and
+## rebuild every time it is modified
+sub menurebuild {
+	for ( 0 .. 12 ) {
+		$main::menubar->delete('last');
+	}
+	menubuild();
+	return;
+}
+
+sub unicodemenu {
+	# FIXME: We'll leave this alone for now.
+	
+	if ( $Tk::VERSION =~ m{804} ) {
+		my %utfsorthash;
+		for ( keys %{ $main::lglobal{utfblocks} } ) {
+			$utfsorthash{ $main::lglobal{utfblocks}{$_}->[0] } = $_;
+		}
+		if ( $main::lglobal{utfrangesort} ) {
+			$main::menubar->Cascade(
+				qw/-label ~Unicode -tearoff 1 -menuitems/ => [
+					[
+					   Radiobutton => 'Sort by Name',
+					   -variable   => \$main::lglobal{utfrangesort},
+					   -command    => \&menurebuild,
+					   -value      => 0,
+					],
+					[
+					   Cascade  => 'More',
+					   -tearoff => 0,
+					   -menuitems =>
+						 [ # FIXME: sub this and generalize for all occurences in menu code.
+						   map ( [
+								  Button   => "$utfsorthash{$_}",
+								  -command => [
+									  \&utfpopup,
+									  $utfsorthash{$_},
+									  $main::lglobal{utfblocks}{ $utfsorthash{$_} }
+										[0],
+									  $main::lglobal{utfblocks}{ $utfsorthash{$_} }[1]
+								  ],
+								  -accelerator =>
+									$main::lglobal{utfblocks}{ $utfsorthash{$_} }[0]
+									. ' - '
+									. $main::lglobal{utfblocks}{ $utfsorthash{$_} }[1]
+							   ],
+							   ( sort ( keys %utfsorthash ) )[ 34 .. 67 ] ),
+						 ]
+					],
+					map ( [
+							Button   => "$utfsorthash{$_}",
+							-command => [
+									 \&utfpopup,
+									 $utfsorthash{$_},
+									 $main::lglobal{utfblocks}{ $utfsorthash{$_} }[0],
+									 $main::lglobal{utfblocks}{ $utfsorthash{$_} }[1]
+							],
+							-accelerator =>
+							  $main::lglobal{utfblocks}{ $utfsorthash{$_} }[0] . ' - '
+							  . $main::lglobal{utfblocks}{ $utfsorthash{$_} }[1]
+						 ],
+						 ( sort ( keys %utfsorthash ) )[ 0 .. 33 ] ),
+				],
+			);
+		} else {
+			$main::menubar->Cascade(
+				qw/-label ~Unicode -tearoff 1 -menuitems/ => [
+					[
+					   Radiobutton => 'Sort by Range',
+					   -variable   => \$main::lglobal{utfrangesort},
+					   -command    => \&menurebuild,
+					   -value      => 1,
+					],
+					[
+					   Cascade  => 'More',
+					   -tearoff => 0,
+					   -menuitems =>
+						 [ # FIXME: sub this and generalize for all occurences in menu code.
+						   map ( [
+								   Button   => "$_",
+								   -command => [
+												 \&utfpopup,
+												 $_,
+												 $main::lglobal{utfblocks}{$_}[0],
+												 $main::lglobal{utfblocks}{$_}[1]
+								   ],
+								   -accelerator => $main::lglobal{utfblocks}{$_}[0]
+									 . ' - '
+									 . $main::lglobal{utfblocks}{$_}[1]
+								 ],
+								 ( sort ( keys %{ $main::lglobal{utfblocks} } ) )
+								   [ 34 .. 67 ] ),
+						 ]
+					],
+					map ( [
+							 Button   => "$_",
+							 -command => [
+										   \&utfpopup,
+										   $_,
+										   $main::lglobal{utfblocks}{$_}[0],
+										   $main::lglobal{utfblocks}{$_}[1]
+							 ],
+							 -accelerator => $main::lglobal{utfblocks}{$_}[0] . ' - '
+							   . $main::lglobal{utfblocks}{$_}[1]
+						  ],
+						  ( sort ( keys %{ $main::lglobal{utfblocks} } ) )[ 1 .. 33 ]
+					),
+				],
+			);
+		}
+	}
+	
 }
 
 

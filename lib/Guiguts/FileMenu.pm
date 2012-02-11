@@ -8,14 +8,14 @@ BEGIN {
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close 
-	&_flash_save &clearvars &savefile &_exit &file_mark_pages &_recentupdate)
+	&_flash_save &clearvars &savefile &_exit &file_mark_pages &_recentupdate &file_guess_page_marks)
 }
 
 sub file_open {    # Find a text file to open
 	my $textwindow = shift;
 	#my %lglobal;
 	#%lglobal = %{\%main::lglobal};
-	#$lglobal{test}="abcd";	
+	#$main::lglobal{test}="abcd";	
 	
 	my ($name);
 	return if ( &main::confirmempty() =~ /cancel/i );
@@ -462,6 +462,136 @@ sub _exit {
 		&main::aspellstop() if $main::lglobal{spellpid};
 		exit;
 	}
+}
+
+sub file_guess_page_marks {
+	my $top = $main::top;
+	my $textwindow = $main::textwindow;
+	my ( $totpages, $line25, $linex );
+	if ( $main::lglobal{pgpop} ) {
+		$main::lglobal{pgpop}->deiconify;
+	} else {
+		$main::lglobal{pgpop} = $top->Toplevel;
+		$main::lglobal{pgpop}->title('Guess Page Numbers');
+		&main::initialize_popup_with_deletebinding('pgpop');
+		my $f0 = $main::lglobal{pgpop}->Frame->pack;
+		$f0->Label( -text =>
+'This function should only be used if you have the page images but no page markers in the text.',
+		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+		my $f1 = $main::lglobal{pgpop}->Frame->pack;
+		$f1->Label( -text => 'How many pages are there total?', )
+		  ->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+		my $tpages = $f1->Entry(
+								 -background => $main::bkgcolor,
+								 -width      => 8,
+		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+		$f1->Label( -text => 'What line # does page 25 start with?', )
+		  ->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
+		my $page25 = $f1->Entry(
+								 -background => $main::bkgcolor,
+								 -width      => 8,
+		)->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
+		my $f3 = $main::lglobal{pgpop}->Frame->pack;
+		$f3->Label(
+			 -text => 'Select a page near the back, before the index starts.', )
+		  ->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
+		my $f4 = $main::lglobal{pgpop}->Frame->pack;
+		$f4->Label( -text => 'Page #?.', )
+		  ->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+		$f4->Label( -text => 'Line #?.', )
+		  ->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
+		my $pagexe = $f4->Entry(
+								 -background => $main::bkgcolor,
+								 -width      => 8,
+		)->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
+		my $linexe = $f4->Entry(
+								 -background => $main::bkgcolor,
+								 -width      => 8,
+		)->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
+		my $f2 = $main::lglobal{pgpop}->Frame->pack;
+		my $calcbutton = $f2->Button(
+			-activebackground => $main::activecolor,
+			-command          => sub {
+				my ( $pnum, $lnum, $pagex, $linex, $number );
+				$totpages = $tpages->get;
+				$line25   = $page25->get;
+				$pagex    = $pagexe->get;
+				$linex    = $linexe->get;
+				unless ( $totpages && $line25 && $line25 && $linex ) {
+					$top->messageBox(
+									  -icon    => 'error',
+									  -message => 'Need all values filled in.',
+									  -title   => 'Missing values',
+									  -type    => 'Ok',
+					);
+					return;
+				}
+				if ( $totpages <= $pagex ) {
+					$top->messageBox(
+							   -icon => 'error',
+							   -message =>
+								 'Selected page must be lower than total pages',
+							   -title => 'Bad value',
+							   -type  => 'Ok',
+					);
+					return;
+				}
+				if ( $linex <= $line25 ) {
+					$top->messageBox(
+						  -icon    => 'error',
+						  -message => "Line number for selected page must be \n"
+							. "higher than that of page 25",
+						  -title => 'Bad value',
+						  -type  => 'Ok',
+					);
+					return;
+				}
+				my $end = $textwindow->index('end');
+				$end = int( $end + .5 );
+				my $average = ( int( $line25 + .5 ) / 25 );
+				for my $pnum ( 1 .. 24 ) {
+					$lnum = int( ( $pnum - 1 ) * $average ) + 1;
+					if ( $totpages > 999 ) {
+						$number = sprintf '%04s', $pnum;
+					} else {
+						$number = sprintf '%03s', $pnum;
+					}
+					$textwindow->markSet( 'Pg' . $number, "$lnum.0" );
+					$textwindow->markGravity( "Pg$number", 'left' );
+				}
+				$average =
+				  ( ( int( $linex + .5 ) ) - ( int( $line25 + .5 ) ) ) /
+				  ( $pagex - 25 );
+				for my $pnum ( 1 .. $pagex - 26 ) {
+					$lnum = int( ( $pnum - 1 ) * $average ) + 1 + $line25;
+					if ( $totpages > 999 ) {
+						$number = sprintf '%04s', $pnum + 25;
+					} else {
+						$number = sprintf '%03s', $pnum + 25;
+					}
+					$textwindow->markSet( "Pg$number", "$lnum.0" );
+					$textwindow->markGravity( "Pg$number", 'left' );
+				}
+				$average =
+				  ( $end - int( $linex + .5 ) ) / ( $totpages - $pagex );
+				for my $pnum ( 1 .. ( $totpages - $pagex ) ) {
+					$lnum = int( ( $pnum - 1 ) * $average ) + 1 + $linex;
+					if ( $totpages > 999 ) {
+						$number = sprintf '%04s', $pnum + $pagex;
+					} else {
+						$number = sprintf '%03s', $pnum + $pagex;
+					}
+					$textwindow->markSet( "Pg$number", "$lnum.0" );
+					$textwindow->markGravity( "Pg$number", 'left' );
+				}
+				$main::lglobal{pgpop}->destroy;
+				undef $main::lglobal{pgpop};
+			},
+			-text  => 'Guess Page #s',
+			-width => 18
+		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
+	}
+	return;
 }
 
 
