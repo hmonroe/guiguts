@@ -498,34 +498,6 @@ sub loadscannos {
 	}
 }
 
-sub opstop {
-	if ( defined( $lglobal{stoppop} ) ) {
-		$lglobal{stoppop}->deiconify;
-		$lglobal{stoppop}->raise;
-		$lglobal{stoppop}->focus;
-	} else {
-		$lglobal{stoppop} = $top->Toplevel;
-		$lglobal{stoppop}->title('Interrupt');
-		initialize_popup_with_deletebinding('stoppop');
-
-		my $frame = $lglobal{stoppop}->Frame->pack;
-		my $stopbutton = $frame->Button(
-									-activebackground => $activecolor,
-									-command => sub { $operationinterrupt = 1 },
-									-text    => 'Interrupt Operation',
-									-width   => 16
-		)->grid( -row => 1, -column => 1, -padx => 10, -pady => 10 );
-	}
-}
-
-sub killstoppop {
-	if ( $lglobal{stoppop} ) {
-		$lglobal{stoppop}->destroy;
-		undef $lglobal{stoppop};
-	}
-	;    #destroy interrupt popup
-}
-
 sub escape_regexmetacharacters {
 	my $inputstring = shift;
 	$inputstring =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;
