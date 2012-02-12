@@ -4724,14 +4724,18 @@ sub natural_sort_freq {
 
 ## Spell Check
 
+#needed elsewhere - load projectdict
+sub spellloadprojectdict {
+	getprojectdic();
+	do "$lglobal{projectdictname}"
+	  if $lglobal{projectdictname};    
+}
+
 # Initialize spellchecker
 sub spellcheckfirst {
 	@{ $lglobal{misspelledlist} } = ();
 	viewpagenums() if ( $lglobal{seepagenums} );
-	getprojectdic();
-
-	do "$lglobal{projectdictname}"
-	  if $lglobal{projectdictname};    # this does not seem to do anything
+	spellloadprojectdict();
 	$lglobal{lastmatchindex} = '1.0';
 
 	# get list of misspelled words in selection (or file if nothing selected)

@@ -13,7 +13,7 @@ BEGIN {
 	@EXPORT=qw(&spellmultiplelanguages);
 }
 
-my $debug = 1; # debug set for now
+my $debug = 0; # debug set for now
 
 #uses 
 # $::lglobal{seenwords}
@@ -30,7 +30,6 @@ my %seenwordslang = ();
 my $savedHeader ;
 my $multidictentry ;
 my $multiwclistbox;
-my %projectdict =();
 
 sub showAllWords {
 	my $lang;
@@ -100,46 +99,18 @@ sub showmisspelledlist {
 	$multiwclistbox->yview( 'scroll', -1, 'units' );
 }
 
-#a hash
+#show project dictionary
 sub showprojectdict {
-	my ($file, $return);
 	$savedHeader = "Project Dictionary:";
 	$multiwclistbox->delete( '0', 'end' );
 	$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
 	$multiwclistbox->update;
-	&main::getprojectdic();
+	&main::spellloadprojectdict();
 	if ($debug) {print "$::lglobal{projectdictname}\n";};
-print "111\n";
-%projectdict = (
-'Aillaud' => '',
-'Antiochus' => '',
-);
-print %projectdict;
-print "113\n";
-	for $file ($::lglobal{projectdictname}) {
-print $file;
-		unless ( $return = do $file) {
-			warn "couldn't parse $file: $@" if $@;
-			warn "couldn't do $file: $!" unless defined $return;
-			warn "couldn't run $file" unless $return;
-		}
-	}
-print "01\n";
-print %projectdict;
-
-print "02\n";
-
-	  my $i = 0;
-	for my $key (sort (keys %projectdict)) {
-		$i++;
-print "$i\n";
-		my $line = sprintf ( "%-8s %-6s %s", $projectdict{$key}, $i, $key);
-		$multiwclistbox->insert( 'end', $line );
-	}
+	my $i = 0;
 	for my $key (sort (keys %main::projectdict)) {
 		$i++;
-print "$i\n";
-		my $line = sprintf ( "%-8d %-6s %s", $::projectdict{$key}, $i, $key);
+		my $line = sprintf ( "%-8s %-6s %s", $::projectdict{$key}, '', $key);
 		$multiwclistbox->insert( 'end', $line );
 	}
 	$savedHeader = "Project Dictionary: $i words";
@@ -191,7 +162,7 @@ sub multilangpopup {
 					updateMultiDictEntry();
 				},
 				-text    => 'Set Languages',
-				-width   => 16
+				-width   => 18
 				)->grid( -row => 1, -column => 2, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
@@ -200,49 +171,49 @@ sub multilangpopup {
 							updateMultiDictEntry();
 							},
 						 -text    => 'Set Base Language',	
-						 -width   => 16
+						 -width   => 18
 			)->grid( -row => 1, -column => 1, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { createseenwordslang($textwindow,$top) },
 						 -text    => 'Create Wordlist',
-						 -width   => 16
+						 -width   => 18
 			)->grid( -row => 2, -column => 1, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { multilingualgetmisspelled($textwindow,$top) },
 						 -text    => 'Check spelling',
-						 -width   => 16
+						 -width   => 18
 			)->grid( -row => 2, -column => 2, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { saveLangDebugFiles() },
 						 -text    => 'Save Debug Files',
-						 -width   => 16
+						 -width   => 18
 			)->grid( -row => 1, -column => 3, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { showAllWords() },
 						 -text    => 'Show all words',
-						 -width   => 16
+						 -width   => 18
 			)->grid( -row => 3, -column => 1, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { showUnspeltWords() },
 						 -text    => 'Show unspelt words',
-						 -width   => 16
+						 -width   => 18
 			)->grid( -row => 3, -column => 2, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { showmisspelledlist() },
 						 -text    => 'Show misspelt words',
-						 -width   => 16
+						 -width   => 18
 			)->grid( -row => 3, -column => 3, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { showprojectdict() },
-						 -text    => 'Show projectdict',
-						 -width   => 16
+						 -text    => 'Show project dictionary',
+						 -width   => 18
 			)->grid( -row => 4, -column => 1, -padx => 1, -pady => 1 );
 		my $f1 =
 			$::lglobal{multispellpop}->Frame->pack( -fill => 'both', -expand => 'both', );
