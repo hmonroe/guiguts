@@ -7,7 +7,8 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&add_search_history &searchtext &search_history &reg_check)
+	@EXPORT=qw(&add_search_history &searchtext &search_history &reg_check &regedit 
+	&getnextscanno)
 }
 
 sub add_search_history {
@@ -319,7 +320,254 @@ sub reg_check {
 	return;
 }
 
+sub regedit {
+	my $top = $main::top;
+	my $editor = $top->DialogBox( -title   => 'Regex editor',
+								  -buttons => [ 'Save', 'Cancel' ] );
+	my $regsearchlabel = $editor->add( 'Label', -text => 'Search Term' )->pack;
+	$main::lglobal{regsearch} = $editor->add(
+										'Text',
+										-background => $main::bkgcolor,
+										-width      => 40,
+										-height     => 1,
+	)->pack;
+	my $regreplacelabel =
+	  $editor->add( 'Label', -text => 'Replacement Term' )->pack;
+	$main::lglobal{regreplace} = $editor->add(
+										 'Text',
+										 -background => $main::bkgcolor,
+										 -width      => 40,
+										 -height     => 1,
+	)->pack;
+	my $reghintlabel = $editor->add( 'Label', -text => 'Hint Text' )->pack;
+	$main::lglobal{reghinted} = $editor->add(
+										'Text',
+										-background => $main::bkgcolor,
+										-width      => 40,
+										-height     => 8,
+										-wrap       => 'word',
+	)->pack;
+	my $buttonframe = $editor->add('Frame')->pack;
+	$buttonframe->Button(
+		-activebackground => $main::activecolor,
+		-text             => '<--',
+		-command          => sub {
+			$main::lglobal{scannosindex}-- if $main::lglobal{scannosindex};
+			regload();
+		},
+	)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'w' );
+	$buttonframe->Button(
+		-activebackground => $main::activecolor,
+		-text             => '-->',
+		-command          => sub {
+			$main::lglobal{scannosindex}++
+			  if $main::lglobal{scannosarray}[ $main::lglobal{scannosindex} ];
+			regload();
+		},
+	)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'w' );
+	$buttonframe->Button(
+						  -activebackground => $main::activecolor,
+						  -text             => 'Add',
+						  -command          => \&regadd,
+	)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'w' );
+	$buttonframe->Button(
+						  -activebackground => $main::activecolor,
+						  -text             => 'Del',
+						  -command          => \&regdel,
+	)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'w' );
+	$main::lglobal{regsearch}->insert(
+								 'end',
+								 (
+									$main::lglobal{searchentry}->get( '1.0', '1.end' )
+								 )
+	) if $main::lglobal{searchentry}->get( '1.0', '1.end' );
+	$main::lglobal{regreplace}->insert(
+								  'end',
+								  (
+									 $main::lglobal{replaceentry}
+									   ->get( '1.0', '1.end' )
+								  )
+	) if $main::lglobal{replaceentry}->get( '1.0', '1.end' );
+	$main::lglobal{reghinted}->insert(
+								 'end',
+								 (
+									$main::reghints{
+										$main::lglobal{searchentry}
+										  ->get( '1.0', '1.end' )
+									  }
+								 )
+	) if $main::reghints{ $main::lglobal{searchentry}->get( '1.0', '1.end' ) };
+	my $button = $editor->Show;
+	if ( $button =~ /save/i ) {
+		open my $reg, ">", "$main::lglobal{scannosfilename}";
+		print $reg "\%main::scannoslist = (\n";
+		foreach my $word ( sort ( keys %main::scannoslist ) ) {
+			my $srch = $word;
+			$srch =~ s/'/\\'/;
+			my $repl = $main::scannoslist{$word};
+			$repl =~ s/'/\\'/;
+			print $reg "'$srch' => '$repl',\n";
+		}
+		print $reg ");\n\n";
+		print $reg <<'EOF';
+# For a hint, use the regex expression EXACTLY as it appears in the %main::scannoslist hash
+# but replace the replacement term (heh) with the hint text. Note: if a single quote
+# appears anywhere in the hint text, you'll need to escape it with a backslash. I.E. isn't
+# I could have made this more compact by converting the scannoslist hash into a two dimensional
+# hash, but would have sacrificed backward compatibility.
+
+EOF
+		print $reg '%reghints = (' . "\n";
+
+		foreach my $word ( sort ( keys %main::reghints ) ) {
+			my $srch = $word;
+			$srch =~ s/'/\\'/;
+			my $repl = $main::reghints{$word};
+			$repl =~ s/([\\'])/\\$1/;
+			print $reg "'$srch' => '$repl'\n";
+		}
+		print $reg ");\n\n";
+		close $reg;
+	}
+}
+
+sub regload {
+	my $word = '';
+	$word = $main::lglobal{scannosarray}[ $main::lglobal{scannosindex} ];
+	$main::lglobal{regsearch}->delete( '1.0', 'end' );
+	$main::lglobal{regreplace}->delete( '1.0', 'end' );
+	$main::lglobal{reghinted}->delete( '1.0', 'end' );
+	$main::lglobal{regsearch}->insert( 'end', $word ) if defined $word;
+	$main::lglobal{regreplace}->insert( 'end', $main::scannoslist{$word} )
+	  if defined $word;
+	$main::lglobal{reghinted}->insert( 'end', $main::reghints{$word} ) if defined $word;
+}
+
+sub regadd {
+	my $st = $main::lglobal{regsearch}->get( '1.0', '1.end' );
+	unless ( isvalid($st) ) {
+		badreg();
+		return;
+	}
+	my $rt = $main::lglobal{regsearch}->get( '1.0', '1.end' );
+	my $rh = $main::lglobal{reghinted}->get( '1.0', 'end' );
+	$rh =~ s/(?!<\\)'/\\'/;
+	$rh =~ s/\n/ /;
+	$rh =~ s/  / /;
+	$rh =~ s/\s+$//;
+	$main::reghints{$st} = $rh;
+
+	unless ( defined $main::scannoslist{$st} ) {
+		$main::scannoslist{$st} = $rt;
+		$main::lglobal{scannosindex} = 0;
+		@{ $main::lglobal{scannosarray} } = ();
+		foreach ( sort ( keys %main::scannoslist ) ) {
+			push @{ $main::lglobal{scannosarray} }, $_;
+		}
+		foreach ( @{ $main::lglobal{scannosarray} } ) {
+			$main::lglobal{scannosindex}++ unless ( $_ eq $st );
+			next unless ( $_ eq $st );
+			last;
+		}
+	} else {
+		$main::scannoslist{$st} = $rt;
+	}
+	regload();
+}
+
+sub regdel {
+	my $word = '';
+	my $st = $main::lglobal{regsearch}->get( '1.0', '1.end' );
+	delete $main::reghints{$st};
+	delete $main::scannoslist{$st};
+	$main::lglobal{scannosindex}--;
+	@{ $main::lglobal{scannosarray} } = ();
+	foreach my $word ( sort ( keys %main::scannoslist ) ) {
+		push @{ $main::lglobal{scannosarray} }, $word;
+	}
+	regload();
+}
+
+sub reghint {
+	my $message = 'No hints for this entry.';
+	my $reg = $main::lglobal{searchentry}->get( '1.0', '1.end' );
+	if ( $main::reghints{$reg} ) { $message = $main::reghints{$reg} }
+	if ( defined( $main::lglobal{hintpop} ) ) {
+		$main::lglobal{hintpop}->deiconify;
+		$main::lglobal{hintpop}->raise;
+		$main::lglobal{hintpop}->focus;
+		$main::lglobal{hintmessage}->delete( '1.0', 'end' );
+		$main::lglobal{hintmessage}->insert( 'end', $message );
+	} else {
+		$main::lglobal{hintpop} = $main::lglobal{searchpop}->Toplevel;
+		initialize_popup_with_deletebinding('hintpop');
+		$main::lglobal{hintpop}->title('Search Term Hint');
+		my $frame =
+		  $main::lglobal{hintpop}->Frame->pack(
+										  -anchor => 'nw',
+										  -expand => 'yes',
+										  -fill   => 'both'
+		  );
+		$main::lglobal{hintmessage} =
+		  $frame->ROText(
+						  -width      => 40,
+						  -height     => 6,
+						  -background => $main::bkgcolor,
+						  -wrap       => 'word',
+		  )->pack(
+				   -anchor => 'nw',
+				   -expand => 'yes',
+				   -fill   => 'both',
+				   -padx   => 4,
+				   -pady   => 4
+		  );
+		$main::lglobal{hintmessage}->insert( 'end', $message );
+	}
+}
+
+sub getnextscanno {
+	my $textwindow = $main::textwindow;
+	my $top = $main::top;
+	$main::scannosearch = 1;
+
+	findascanno();
+	unless ( &main::searchtext($textwindow,$top) ) {
+		if ( $main::lglobal{regaa} ) {
+			while (1) {
+				last
+				  if (
+					 $main::lglobal{scannosindex}++ >= $#{ $main::lglobal{scannosarray} } );
+				findascanno();
+				last if &main::searchtext($textwindow,$top);
+			}
+		}
+	}
+}
+
+sub findascanno {
+	my $textwindow = $main::textwindow;
+	$main::searchendindex = '1.0';
+	my $word = '';
+	$word = $main::lglobal{scannosarray}[ $main::lglobal{scannosindex} ];
+	$main::lglobal{searchentry}->delete( '1.0', 'end' );
+	$main::lglobal{replaceentry}->delete( '1.0', 'end' );
+	$textwindow->bell unless ( $word || $main::nobell || $main::lglobal{regaa} );
+	$main::lglobal{searchbutton}->flash unless ( $word || $main::lglobal{regaa} );
+	$main::lglobal{regtracker}
+	  ->configure( -text => ( $main::lglobal{scannosindex} + 1 ) . '/'
+				   . scalar( @{ $main::lglobal{scannosarray} } ) );
+	$main::lglobal{hintmessage}->delete( '1.0', 'end' )
+	  if ( defined( $main::lglobal{hintpop} ) );
+	return 0 unless $word;
+	$main::lglobal{searchentry}->insert( 'end', $word );
+	$main::lglobal{replaceentry}->insert( 'end', ( $main::scannoslist{$word} ) );
+	$main::sopt[2]
+	  ? $textwindow->markSet( 'insert', 'end' )
+	  : $textwindow->markSet( 'insert', '1.0' );
+	&main::reghint() if ( defined( $main::lglobal{hintpop} ) );
+	$textwindow->update;
+	return 1;
+}
+
 
 1;
-
-
