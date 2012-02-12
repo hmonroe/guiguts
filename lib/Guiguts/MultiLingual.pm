@@ -13,14 +13,273 @@ BEGIN {
 	@EXPORT=qw(&spellmultiplelanguages);
 }
 
-our $debug = 1; # debug set for now
+my $debug = 1; # debug set for now
 
-use Guiguts::WordFrequency;
+#uses 
+# $::lglobal{seenwords}
+# $::lglobal{misspelledlist}
+# $::lglobal{spellsort}
 
-our @seenwords = ();
-our $distinctwordcount = 0;
-our %seenwordslc = () ;
-our %seenwordslang = ();
+my @seenwords = ();
+my $totalwordcount = 0;
+my $distinctwordcount = 0;
+my $speltwordcount = 0;
+my $unspeltwordcount;
+my %seenwordslc = () ;
+my %seenwordslang = ();
+my $savedHeader ;
+my $multidictentry ;
+my $multiwclistbox;
+my %projectdict =();
+
+sub showAllWords {
+	my $lang;
+	$savedHeader = "Total words: $totalwordcount, Distinct words: $distinctwordcount\n";
+	$multiwclistbox->delete( '0', 'end' );
+	$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
+	$multiwclistbox->update;
+	for my $key (sort (keys %{$::lglobal{seenwords}})) {
+		if ($seenwordslang{$key}) { $lang = $seenwordslang{$key} } else { $lang = '' };
+		my $line = sprintf ( "%-8d %-6s %s", $::lglobal{seenwords}{$key}, $lang, $key);
+		$multiwclistbox->insert( 'end', $line );
+	}
+	$multiwclistbox->delete('0');
+	$multiwclistbox->insert( '0', $savedHeader );
+	$multiwclistbox->update;
+	$multiwclistbox->yview( 'scroll', 1, 'units' );
+	$multiwclistbox->update;
+	$multiwclistbox->yview( 'scroll', -1, 'units' );
+}
+
+sub showUnspeltWords {
+	if ($unspeltwordcount) {
+		$savedHeader = "Spelt words: $speltwordcount, Unspelt words: $unspeltwordcount\n";
+	} else {
+		$savedHeader = "No spelling undertaken!";
+	}
+	$multiwclistbox->delete( '0', 'end' );
+	$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
+	$multiwclistbox->update;
+
+	for my $key (sort (keys %{$::lglobal{seenwords}})){
+		unless ($seenwordslang{$key}) {
+			my $line = sprintf ( "%-8d %-6s %s", $::lglobal{seenwords}{$key}, '', $key);
+			$multiwclistbox->insert( 'end', $line );
+		}
+	};
+	$multiwclistbox->delete('0');
+	$multiwclistbox->insert( '0', $savedHeader );
+	$multiwclistbox->update;
+	$multiwclistbox->yview( 'scroll', 1, 'units' );
+	$multiwclistbox->update;
+	$multiwclistbox->yview( 'scroll', -1, 'units' );
+}
+
+sub showmisspelledlist {
+	if ($unspeltwordcount) {
+		$savedHeader = "Spelt words: $speltwordcount, Unspelt words: $unspeltwordcount\n";
+		$multiwclistbox->delete( '0', 'end' );
+		$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
+		$multiwclistbox->update;
+		if ($::lglobal{misspelledlist}){
+			foreach ( sort @{ $::lglobal{misspelledlist} } ) {
+				my $line = sprintf ( "%-8d %-6s %s", $::lglobal{seenwords}{$_}, '', $_);
+				$multiwclistbox->insert( 'end', $line );
+			};
+		} else {
+			$savedHeader = "No spelling undertaken";
+		}
+	} else {
+		$savedHeader = "No spelling undertaken!";
+	}
+	$multiwclistbox->delete('0');
+	$multiwclistbox->insert( '0', $savedHeader );
+	$multiwclistbox->update;
+	$multiwclistbox->yview( 'scroll', 1, 'units' );
+	$multiwclistbox->update;
+	$multiwclistbox->yview( 'scroll', -1, 'units' );
+}
+
+#a hash
+sub showprojectdict {
+	my ($file, $return);
+	$savedHeader = "Project Dictionary:";
+	$multiwclistbox->delete( '0', 'end' );
+	$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
+	$multiwclistbox->update;
+	&main::getprojectdic();
+	if ($debug) {print "$::lglobal{projectdictname}\n";};
+print "111\n";
+%projectdict = (
+'Aillaud' => '',
+'Antiochus' => '',
+);
+print %projectdict;
+print "113\n";
+	for $file ($::lglobal{projectdictname}) {
+print $file;
+		unless ( $return = do $file) {
+			warn "couldn't parse $file: $@" if $@;
+			warn "couldn't do $file: $!" unless defined $return;
+			warn "couldn't run $file" unless $return;
+		}
+	}
+print "01\n";
+print %projectdict;
+
+print "02\n";
+
+	  my $i = 0;
+	for my $key (sort (keys %projectdict)) {
+		$i++;
+print "$i\n";
+		my $line = sprintf ( "%-8s %-6s %s", $projectdict{$key}, $i, $key);
+		$multiwclistbox->insert( 'end', $line );
+	}
+	for my $key (sort (keys %main::projectdict)) {
+		$i++;
+print "$i\n";
+		my $line = sprintf ( "%-8d %-6s %s", $::projectdict{$key}, $i, $key);
+		$multiwclistbox->insert( 'end', $line );
+	}
+	$savedHeader = "Project Dictionary: $i words";
+	$multiwclistbox->delete('0');
+	$multiwclistbox->insert( '0', $savedHeader );
+	$multiwclistbox->update;
+	$multiwclistbox->yview( 'scroll', 1, 'units' );
+	$multiwclistbox->update;
+	$multiwclistbox->yview( 'scroll', -1, 'units' );
+}
+
+sub multilangpopup {
+	my ( $textwindow, $top ) = @_;
+	push @main::operations, ( localtime() . ' - Multilingual Spelling' );
+	&main::viewpagenums() if ( $::lglobal{seepagenums} );
+	&main::oppopupdate()  if $::lglobal{oppop};
+# setup variables here
+# open popup if necessary	
+	if ( defined( $::lglobal{multispellpop} ) ) {
+		$::lglobal{multispellpop}->deiconify;
+		$::lglobal{multispellpop}->raise;
+		$::lglobal{multispellpop}->focus;
+	} else {
+		$::lglobal{multispellpop} = $top->Toplevel;
+		$::lglobal{multispellpop}->title('Multilingual Spelling');
+		$::lglobal{multispellpop}->Icon( -image => $::icon );
+#new frame
+		my $f2 = 
+			$::lglobal{multispellpop}
+			->Frame->pack( -side => 'top', -anchor => 'n' );
+#new label
+			my $labelone =
+				$f2->Label( -text => 'Dictionaries selected:' )
+				->grid( -row => 1, -column => 1, -padx => 1, -pady => 1 );
+#new entry
+			$multidictentry =
+				$f2->Entry(
+					-background => $::bkgcolor,
+					-width      => 40,
+					-font       => $::lglobal{font},
+					)->grid( -row => 1, -column => 2, -padx => 1, -pady => 1 );
+		my $f0 = 
+			$::lglobal{multispellpop}
+			->Frame->pack( -side => 'top', -anchor => 'n' );
+#new button
+			$f0->Button(
+				-activebackground => $::activecolor,
+				-command => sub { setmultiplelanguages($textwindow,$top) ;
+					updateMultiDictEntry();
+				},
+				-text    => 'Set Languages',
+				-width   => 16
+				)->grid( -row => 1, -column => 2, -padx => 1, -pady => 1 );
+			$f0->Button(
+						 -activebackground => $::activecolor,
+						 -command => sub { main::spelloptions();
+							clearmultilanguages();
+							updateMultiDictEntry();
+							},
+						 -text    => 'Set Base Language',	
+						 -width   => 16
+			)->grid( -row => 1, -column => 1, -padx => 1, -pady => 1 );
+			$f0->Button(
+						 -activebackground => $::activecolor,
+						 -command => sub { createseenwordslang($textwindow,$top) },
+						 -text    => 'Create Wordlist',
+						 -width   => 16
+			)->grid( -row => 2, -column => 1, -padx => 1, -pady => 1 );
+			$f0->Button(
+						 -activebackground => $::activecolor,
+						 -command => sub { multilingualgetmisspelled($textwindow,$top) },
+						 -text    => 'Check spelling',
+						 -width   => 16
+			)->grid( -row => 2, -column => 2, -padx => 1, -pady => 1 );
+			$f0->Button(
+						 -activebackground => $::activecolor,
+						 -command => sub { saveLangDebugFiles() },
+						 -text    => 'Save Debug Files',
+						 -width   => 16
+			)->grid( -row => 1, -column => 3, -padx => 1, -pady => 1 );
+			$f0->Button(
+						 -activebackground => $::activecolor,
+						 -command => sub { showAllWords() },
+						 -text    => 'Show all words',
+						 -width   => 16
+			)->grid( -row => 3, -column => 1, -padx => 1, -pady => 1 );
+			$f0->Button(
+						 -activebackground => $::activecolor,
+						 -command => sub { showUnspeltWords() },
+						 -text    => 'Show unspelt words',
+						 -width   => 16
+			)->grid( -row => 3, -column => 2, -padx => 1, -pady => 1 );
+			$f0->Button(
+						 -activebackground => $::activecolor,
+						 -command => sub { showmisspelledlist() },
+						 -text    => 'Show misspelt words',
+						 -width   => 16
+			)->grid( -row => 3, -column => 3, -padx => 1, -pady => 1 );
+			$f0->Button(
+						 -activebackground => $::activecolor,
+						 -command => sub { showprojectdict() },
+						 -text    => 'Show projectdict',
+						 -width   => 16
+			)->grid( -row => 4, -column => 1, -padx => 1, -pady => 1 );
+		my $f1 =
+			$::lglobal{multispellpop}->Frame->pack( -fill => 'both', -expand => 'both', );
+				$multiwclistbox =
+				  $f1->Scrolled(
+									  'Listbox',
+									  -scrollbars  => 'se',
+									  -background  => $::bkgcolor,
+									  -font        => $::lglobal{font},
+									  -selectmode  => 'single',
+									  -activestyle => 'none',
+				  )->pack(
+						   -anchor => 'nw',
+						   -fill   => 'both',
+						   -expand => 'both',
+						   -padx   => 2,
+						   -pady   => 2
+				  );
+		&main::drag( $multiwclistbox );
+		$::lglobal{multispellpop}->protocol(
+			'WM_DELETE_WINDOW' => sub {
+				$::lglobal{multispellpop}->destroy;
+				undef $::lglobal{multispellpop};
+				undef $multiwclistbox;
+			}
+		);
+	}
+	updateMultiDictEntry();
+}
+
+sub updateMultiDictEntry{
+	$multidictentry->delete( '0', 'end' );
+	for my $element (@main::multidicts) {
+		$multidictentry->insert( 'end', $element );
+		$multidictentry->insert( 'end', ' ' );
+	}
+}
 
 sub spellmultiplelanguages {
 	my ($textwindow,$top) = @_;
@@ -28,49 +287,50 @@ sub spellmultiplelanguages {
 	&main::viewpagenums() if ( $::lglobal{seepagenums} );
 	&main::oppopupdate()  if $::lglobal{oppop};
 	# find Aspell and base language if necessary
-	&main::spelloptions() unless $main::globalspellpath;
-	return unless $main::globalspellpath;
-	return unless $main::globalspelldictopt;
-	setmultiplelanguages($textwindow,$top);
-	my $wc = createseenwordslang($textwindow,$top);
-#	if ($debug) { print "Total words: $wc\n"; };
-	my $wordw = multilingualgetmisspelled();
-#	if ($debug)
-	{print "Mis-spelt words remaining: $wordw\n"; };
-	if ($debug) { saveLangDebugFiles() ;};
+	&main::spelloptions() unless $::globalspellpath;
+	return unless $::globalspellpath;
+	&main::spelloptions() unless $::globalspelldictopt;
+	return unless $::globalspelldictopt;
+	multilangpopup($textwindow,$top);
+#	setmultiplelanguages($textwindow,$top);
+#	my $wc = createseenwordslang($textwindow,$top);
+#	my $wordw = multilingualgetmisspelled();
+#	print "Mis-spelt words remaining: $wordw\n";
+#	if ($debug) { saveLangDebugFiles() ;};
 }
 
 # clear array of languages
 sub clearmultilanguages {
 	@main::multidicts = ();
-	$main::multidicts[0] = $main::globalspelldictopt;
+	$::multidicts[0] = $::globalspelldictopt;
 }
 
 # set multiple languages in array @multidicts
 sub setmultiplelanguages {
 	my ($textwindow,$top) = @_;
-	if ($main::globalspellpath) {
+	if ($::globalspellpath) {
 		main::aspellstart() unless $::lglobal{spellpid};
 	}
+	$::multidicts[0] = $::globalspelldictopt;
 	my $dicts;
-	$main::multidicts[0] = $main::globalspelldictopt;
 	my $spellop = $top->DialogBox( -title   => 'Multiple language selection',
-								   -buttons => ['Continue'] );
+								   -buttons => ['Close'] );
+		$spellop->Icon( -image => $::icon );
 	my $baselanglabel = $spellop->add('Label', -text => 'Base language' ) ->pack;
 	my $baselang = $spellop->add(
 									 'ROText',
 									 -width      => 40,
 									 -height     => 1,
-									 -background => $main::bkgcolor
+									 -background => $::bkgcolor
 	)->pack( -pady => 4 );
 	$baselang->delete( '1.0', 'end' );
-	$baselang->insert( '1.0', $main::globalspelldictopt );
+	$baselang->insert( '1.0', $::globalspelldictopt );
 	my $dictlabel = $spellop->add( 'Label', -text => 'Dictionary files' )->pack;
 	my $dictlist = $spellop->add(
 							   'ScrlListbox',
 							   -scrollbars => 'oe',
 							   -selectmode => 'browse',
-							   -background => $main::bkgcolor,
+							   -background => $::bkgcolor,
 							   -height     => 10,
 							   -width      => 40,
 	)->pack( -pady => 4 );
@@ -80,7 +340,7 @@ sub setmultiplelanguages {
 									 'ROText',
 									 -width      => 40,
 									 -height     => 1,
-									 -background => $main::bkgcolor
+									 -background => $::bkgcolor
 	)->pack( -pady => 4 );
 	$multidictxt->delete( '1.0', 'end' );
 	for my $element (@main::multidicts) {
@@ -89,7 +349,7 @@ sub setmultiplelanguages {
 	}
 	
 
-	if ($main::globalspellpath) {
+	if ($::globalspellpath) {
 		my $runner = runner::tofile('aspell.tmp');
 		$runner->run($main::globalspellpath, 'dump', 'dicts');
 		warn "Unable to access dictionaries.\n" if $?;
@@ -137,7 +397,7 @@ sub saveLangDebugFiles {
 	my $save ;
 	my $i;
 
-	print "\$globalspellpath ", $main::globalspellpath, "\n";
+	print "\$globalspellpath ", $::globalspellpath, "\n";
 
 	print "saving lglobal_seenwords.txt - distinct words and frequencies\n";	
 	$section = "\%lglobal{seenwords}\n";
@@ -225,13 +485,16 @@ sub saveLangDebugFiles {
 # and hash %seenwordslc
 sub createseenwordslang {
 	my ($textwindow,$top) = @_;
-	my $wc    = 0;
 	@seenwords = ();
 	$distinctwordcount = 0;
+	$speltwordcount = 0;
 	%seenwordslang = ();
 	%seenwordslc = () ;
 	$top->Busy( -recurse => 1 );
-	$wc = buildwordlist($textwindow);
+	$multiwclistbox->focus;
+	$multiwclistbox->delete( '0', 'end' );
+	$multiwclistbox->insert( 'end', 'Please wait, building word list....' );
+	$totalwordcount = buildwordlist($textwindow);
 	
 	for my $key (keys %{$::lglobal{seenwords}}){
 		$seenwordslang{$key} = undef;
@@ -241,14 +504,20 @@ sub createseenwordslang {
 	# ordered list of all words
 	foreach ( sort ( keys %{ $::lglobal{seenwords} } ) ) { $seenwords[$i++] = $_ ;	}
 	$distinctwordcount = $i;
-#	if ($debug)
-	{ print "Total words: $wc, Distinct words: $distinctwordcount\n"; }
+	$unspeltwordcount = $distinctwordcount;
+	
+	if ($debug)
+		{ print "Total words: $totalwordcount, Distinct words: $distinctwordcount\n"; }
 
 	# hash of all words -> lc (word)
 	foreach ( keys %{ $::lglobal{seenwords} } ) { $seenwordslc{$_}  = lc($_) ;	}
 
+	$multiwclistbox->delete( '0');
+	$savedHeader = "Total words: $totalwordcount, Distinct words: $distinctwordcount\n";
+	$multiwclistbox->insert( '0', $savedHeader );
+	$multiwclistbox->update;
+	
 	$top->Unbusy;
-	return $wc;
 }
 
 #copied from main
@@ -287,7 +556,7 @@ sub getmisspelledwordstwo {
 	processmisspelledwords ($dict, @templist);	
 	
 	foreach my $word (@templist) {
-		next if ( exists( $main::projectdict{$word} ) );
+		next if ( exists( $::projectdict{$word} ) );
 		push @{ $::lglobal{misspelledlist} },
 		  $word;    # filter out project dictionary word list.
 	}
@@ -304,17 +573,20 @@ sub processmisspelledwords {
 	my $j = 0;
 	my $i = 0;
 	my $compare;
+	my $line;
 	
 	# ordered list of all unspelt words
 	foreach ( sort (@templist)) { $startunspelt[$j++] = $_; }
-	my $jmax = $j;
+	$unspeltwordcount = $j;
+	$line = "Unspelt words from Aspell: $unspeltwordcount";
+	$multiwclistbox->insert( 'end', $line );
 
-	if ($debug) {print "$jmax unspelt words, ";}
+	if ($debug) {print "$unspeltwordcount unspelt words, ";}
 
 	#match words and update
 	$i = 0; $j = 0;
 	while ($i < $distinctwordcount) {   # $distinctwordcount
-		while ($j < $jmax) {         # $jmax
+		while ($j < $unspeltwordcount) {         # $unspeltwordcount
 			$compare = ($seenwords[$i] cmp $startunspelt[$j]);
 			if ($compare == -1){  # spelt word
 				$seenwordslang{$seenwords[$i]} = $dict unless ($seenwordslang{$seenwords[$i]});
@@ -334,14 +606,24 @@ sub processmisspelledwords {
 	for my $key (sort (keys %{$::lglobal{seenwords}})){
 		if ($seenwordslang{$key}) { $i++; }
 	};
-	if ($debug) {print "Total words spelt: $i\n";}
+	$speltwordcount = $i;
+	$unspeltwordcount = $distinctwordcount - $speltwordcount;
+	$line = "Total words spelt: $speltwordcount";
+	$multiwclistbox->insert( 'end', $line );
+	$multiwclistbox->update;
+	
+	if ($debug) {print "Total words spelt: $speltwordcount\n";}
 }
 
 #copied from wordfrequency
 sub multilingualgetmisspelled {
+	my ($textwindow,$top) = @_;
 	$::lglobal{misspelledlist}= ();
 	my $words;
 	my $wordw = 0;
+	my $line;
+	$top->Busy( -recurse => 1 );
+
 	for my $dict (@main::multidicts) {
 		$words = '';
 		my $i = 0;
@@ -352,7 +634,12 @@ sub multilingualgetmisspelled {
 				$i++;
 			}
 		}
-		if ($debug) {print "\$dict $dict, words to spell $i, ";}
+		$unspeltwordcount = $i;
+		$speltwordcount = $distinctwordcount - $unspeltwordcount;
+		$line = "Dictionary: $dict, Words to spell: $unspeltwordcount";
+		$multiwclistbox->insert( 'end', $line );
+		
+		if ($debug) {print "\$dict $dict, words to spell $unspeltwordcount, ";}
 		#spellcheck
 		if ($words) { getmisspelledwordstwo($dict, $words); }
 	}
@@ -363,6 +650,7 @@ sub multilingualgetmisspelled {
 			$wordw++;
 		}
 	}
+	$top->Unbusy;
 	return $wordw;
 }
 
@@ -374,9 +662,7 @@ sub buildwordlist {
 	my $index = '1.0';
 	my $wc    = 0;
 	my $end   = $textwindow->index('end');
-	$::lglobal{seenwordsdoublehyphen} = ();
 	$::lglobal{seenwords} = ();
-	$::lglobal{seenwordpairs} = ();
 	my $filename = $textwindow->FileName;
 	unless ($filename) {
 		$filename = 'tempfile.tmp';
@@ -427,8 +713,6 @@ sub buildwordlist {
 	unlink 'tempfile.tmp' if ( -e 'tempfile.tmp' );
 	return $wc;
 }
-
-
 
 1;
 __END__
