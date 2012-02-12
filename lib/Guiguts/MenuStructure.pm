@@ -11,6 +11,29 @@ BEGIN {
 	&menurebuild &unicodemenu);
 }
 
+sub locateAspellExe {
+	my $textwindow = shift;
+	 my $types;
+	 if ($main::OS_WIN) {
+		 $types = [
+					[ 'Executable', [ '.exe', ] ],
+					[ 'All Files',  ['*'] ],
+		 ];
+	 } else {
+		 $types = [ [ 'All Files', ['*'] ] ];
+	 }
+	 $::lglobal{pathtemp} =
+	   $textwindow->getOpenFile(
+					-filetypes => $types,
+					-title => 'Where is the Aspell executable?',
+					-initialdir => &main::dirname($main::globalspellpath)
+	   );
+	 $main::globalspellpath = $::lglobal{pathtemp}
+	   if $::lglobal{pathtemp};
+	 return unless $main::globalspellpath;
+	 $main::globalspellpath = &main::os_normal($main::globalspellpath);
+	 &main::savesettings();
+}
 
 sub menu_preferences {
 	my $textwindow = $main::textwindow;
@@ -22,28 +45,7 @@ sub menu_preferences {
 			[  # FIXME: sub this and generalize for all occurences in menu code.
 			  [
 				 Button   => 'Locate Aspell Executable',
-				 -command => sub {
-					 my $types;
-					 if ($main::OS_WIN) {
-						 $types = [
-									[ 'Executable', [ '.exe', ] ],
-									[ 'All Files',  ['*'] ],
-						 ];
-					 } else {
-						 $types = [ [ 'All Files', ['*'] ] ];
-					 }
-					 $::lglobal{pathtemp} =
-					   $textwindow->getOpenFile(
-									-filetypes => $types,
-									-title => 'Where is the Aspell executable?',
-									-initialdir => &main::dirname($main::globalspellpath)
-					   );
-					 $main::globalspellpath = $::lglobal{pathtemp}
-					   if $::lglobal{pathtemp};
-					 return unless $main::globalspellpath;
-					 $main::globalspellpath = &main::os_normal($main::globalspellpath);
-					 &main::savesettings();
-				   }
+				 -command => sub { locateAspellExe($textwindow); }
 			  ],
 			  [
 				 Button   => 'Locate Image Viewer Executable',
