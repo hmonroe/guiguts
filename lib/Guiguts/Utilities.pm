@@ -9,7 +9,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&openpng &get_image_file &setviewerpath &setdefaultpath &arabic &roman
 	&textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_cmdline &win32_start &win32_is_exe
-	&win32_create_process &runner &debug_dump &run)
+	&win32_create_process &runner &debug_dump &run &escape_regexmetacharacters)
 }
 
 sub get_image_file {
@@ -752,6 +752,13 @@ sub debug_dump {
 	};
 	close $save;
 };
+
+sub escape_regexmetacharacters {
+	my $inputstring = shift;
+	$inputstring =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;
+	$inputstring =~ s/\\\\(['-])/\\$1/g;
+	return $inputstring;
+}
 
 
 

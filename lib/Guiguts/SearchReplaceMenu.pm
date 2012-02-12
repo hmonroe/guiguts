@@ -8,7 +8,7 @@ BEGIN {
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&add_search_history &searchtext &search_history &reg_check &getnextscanno &updatesearchlabels
-	&isvalid &swapterms &findascanno &reghint &replaceeval &replace &opstop)
+	&isvalid &swapterms &findascanno &reghint &replaceeval &replace &opstop &replaceall)
 }
 
 sub add_search_history {
@@ -30,18 +30,18 @@ sub searchtext {
 	my ($textwindow,$top,$searchterm)=@_;
 	&main::viewpagenums() if ( $::lglobal{seepagenums} );
 
-	#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt\n";
+	#print $::sopt[0],$::sopt[1],$::sopt[2],$::sopt[3],$::sopt[4].":sopt\n";
 
-# $sopt[0] --> 0 = pattern search                       1 = whole word search
-# $sopt[1] --> 0 = case sensitive                     1 = case insensitive search
-# $sopt[2] --> 0 = search forwards    \                  1 = search backwards
-# $sopt[3] --> 0 = normal search term           1 = regex search term - 3 and 0 are mutually exclusive
-# $sopt[4] --> 0 = search from last index       1 = Start from beginning
+# $::sopt[0] --> 0 = pattern search                       1 = whole word search
+# $::sopt[1] --> 0 = case sensitive                     1 = case insensitive search
+# $::sopt[2] --> 0 = search forwards    \                  1 = search backwards
+# $::sopt[3] --> 0 = normal search term           1 = regex search term - 3 and 0 are mutually exclusive
+# $::sopt[4] --> 0 = search from last index       1 = Start from beginning
 
 #	$::searchstartindex--where the last search for this $searchterm ended
 #   replaced with the insertion point if the user has clicked someplace else
 
-	#print $sopt[4]."from beginning\n";
+	#print $::sopt[4]."from beginning\n";
 	$searchterm = '' unless defined $searchterm;
 	if ( length($searchterm) ) {    #and not ($searchterm =~ /\W/)
 		&::add_search_history( $searchterm, \@main::search_history, $main::history_size );
@@ -133,7 +133,7 @@ sub searchtext {
 				# have to search on the whole file
 				my $wholefile = $textwindow->get( '1.0', $end );
 
-				# search is case sensitive if $sopt[1] is set
+				# search is case sensitive if $::sopt[1] is set
 				if ( $main::sopt[1] ) {
 					while ( $wholefile =~ m/$searchterm/smgi ) {
 						push @{ $::lglobal{nlmatches} },
@@ -931,6 +931,65 @@ sub killstoppop {
 	}
 	;    #destroy interrupt popup
 }
+
+sub replaceall {
+	my $replacement = shift;
+	$replacement = '' unless $replacement;
+	my $textwindow =$::textwindow;
+	my $top =$::top;
+
+	# Check if replaceall applies only to a selection
+	my @ranges = $textwindow->tagRanges('sel');
+	if (@ranges) {
+		$::lglobal{lastsearchterm} =
+		  $::lglobal{replaceentry}->get( '1.0', '1.end' );
+		$::searchstartindex = pop @ranges;
+		$::searchendindex   = pop @ranges;
+	} else {
+		my $searchterm = $::lglobal{searchentry}->get( '1.0', '1.end' );
+		$::lglobal{lastsearchterm} = '';
+
+		# if not a search across line boundary
+		# and not a search within a selection do a speedy FindAndReplaceAll
+		unless ( ( $::sopt[3] ) or ( $replacement =~ $searchterm ) )
+		{    #( $searchterm =~ m/\\n/ ) &&
+			my $exactsearch = $searchterm;
+
+			# escape metacharacters for whole word matching
+			$exactsearch = escape_regexmetacharacters($exactsearch)
+			  ;    # this is a whole word search
+			$searchterm = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
+			  if $::sopt[0];
+			my ( $searchstart, $mode );
+			if   ( $::sopt[0] or $::sopt[3] ) { $mode = '-regexp' }
+			else                          { $mode = '-exact' }
+			working("Replace All");
+			if ( $::sopt[1] ) {
+				$textwindow->FindAndReplaceAll( $mode, '-nocase', $searchterm,
+												$replacement );
+			} else {
+				$textwindow->FindAndReplaceAll( $mode, '-case', $searchterm,
+												$replacement );
+			}
+			working();
+			return;
+		}
+	}
+
+	#print "repl:$replacement:ranges:@ranges:\n";
+	$textwindow->focus;
+	opstop();
+	while ( searchtext($textwindow,$top) )
+	{    # keep calling search() and replace() until you return undef
+		last unless replace($replacement);
+		last if $::operationinterrupt;
+		$textwindow->update;
+	}
+	$::operationinterrupt = 0;
+	$::lglobal{stoppop}->destroy;
+	undef $::lglobal{stoppop};
+}
+
 
 
 1;

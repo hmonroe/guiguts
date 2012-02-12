@@ -498,69 +498,6 @@ sub loadscannos {
 	}
 }
 
-sub escape_regexmetacharacters {
-	my $inputstring = shift;
-	$inputstring =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;
-	$inputstring =~ s/\\\\(['-])/\\$1/g;
-	return $inputstring;
-}
-
-sub replaceall {
-	my $replacement = shift;
-	$replacement = '' unless $replacement;
-
-	# Check if replaceall applies only to a selection
-	my @ranges = $textwindow->tagRanges('sel');
-	if (@ranges) {
-		$lglobal{lastsearchterm} =
-		  $lglobal{replaceentry}->get( '1.0', '1.end' );
-		$searchstartindex = pop @ranges;
-		$searchendindex   = pop @ranges;
-	} else {
-		my $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
-		$lglobal{lastsearchterm} = '';
-
-		# if not a search across line boundary
-		# and not a search within a selection do a speedy FindAndReplaceAll
-		unless ( ( $sopt[3] ) or ( $replacement =~ $searchterm ) )
-		{    #( $searchterm =~ m/\\n/ ) &&
-			my $exactsearch = $searchterm;
-
-			# escape metacharacters for whole word matching
-			$exactsearch = escape_regexmetacharacters($exactsearch)
-			  ;    # this is a whole word search
-			$searchterm = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
-			  if $sopt[0];
-			my ( $searchstart, $mode );
-			if   ( $sopt[0] or $sopt[3] ) { $mode = '-regexp' }
-			else                          { $mode = '-exact' }
-			working("Replace All");
-			if ( $sopt[1] ) {
-				$textwindow->FindAndReplaceAll( $mode, '-nocase', $searchterm,
-												$replacement );
-			} else {
-				$textwindow->FindAndReplaceAll( $mode, '-case', $searchterm,
-												$replacement );
-			}
-			working();
-			return;
-		}
-	}
-
-	#print "repl:$replacement:ranges:@ranges:\n";
-	$textwindow->focus;
-	opstop();
-	while ( searchtext($textwindow,$top) )
-	{    # keep calling search() and replace() until you return undef
-		last unless replace($replacement);
-		last if $operationinterrupt;
-		$textwindow->update;
-	}
-	$operationinterrupt = 0;
-	$lglobal{stoppop}->destroy;
-	undef $lglobal{stoppop};
-}
-
 sub orphans {
 	viewpagenums() if ( $lglobal{seepagenums} );
 	my $br = shift;
