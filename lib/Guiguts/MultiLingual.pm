@@ -20,11 +20,12 @@ my $debug = 0; # debug set for now
 # $::lglobal{misspelledlist}
 # $::lglobal{spellsort}
 
-my @seenwords = ();
+my @orderedwords = ();
 my $totalwordcount = 0;
 my $distinctwordcount = 0;
 my $speltwordcount = 0;
 my $unspeltwordcount;
+my %distinctwords = ();
 my %seenwordslc = () ;
 my %seenwordslang = ();
 my $savedHeader ;
@@ -100,7 +101,7 @@ sub multilangpopup {
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { createseenwordslang($textwindow,$top) },
-						 -text    => 'Create Wordlist',
+						 -text    => '(Re)create Wordlist',
 						 -width   => 18
 			)->grid( -row => 2, -column => 1, -padx => 1, -pady => 1 );
 			$f0->Button(
@@ -188,9 +189,9 @@ sub showAllWords {
 	$multiwclistbox->delete( '0', 'end' );
 	$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
 	$multiwclistbox->update;
-	for my $key (sort (keys %{$::lglobal{seenwords}})) {
+	for my $key (sort (keys %distinctwords)) {
 		if ($seenwordslang{$key}) { $lang = $seenwordslang{$key} } else { $lang = '' };
-		my $line = sprintf ( "%-8d %-6s %s", $::lglobal{seenwords}{$key}, $lang, $key);
+		my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$key}, $lang, $key);
 		$multiwclistbox->insert( 'end', $line );
 	}
 	$multiwclistbox->delete('0');
@@ -211,9 +212,9 @@ sub showUnspeltWords {
 	$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
 	$multiwclistbox->update;
 
-	for my $key (sort (keys %{$::lglobal{seenwords}})){
+	for my $key (sort (keys %distinctwords)){
 		unless ($seenwordslang{$key}) {
-			my $line = sprintf ( "%-8d %-6s %s", $::lglobal{seenwords}{$key}, '', $key);
+			my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$key}, '', $key);
 			$multiwclistbox->insert( 'end', $line );
 		}
 	};
@@ -225,10 +226,12 @@ sub showUnspeltWords {
 	$multiwclistbox->yview( 'scroll', -1, 'units' );
 }
 
-sub updatemisspelledlist {
-	$::lglobal{misspelledlist}= ();
-	$::lglobal{spellsort}= ();
-	for my $key (sort (keys %{$::lglobal{seenwords}})){
+sub updategloballists {
+	$::lglobal{seenwords} = ();
+	$::lglobal{misspelledlist} = ();
+	$::lglobal{spellsort} = ();
+	for my $key (sort (keys %distinctwords)){
+		$::lglobal{seenwords}{$key} = $distinctwords{$key};
 		unless ($seenwordslang{$key}) {
 			push @{ $::lglobal{misspelledlist} }, $key;
 			push @{ $::lglobal{spellsort} }, $key;
@@ -244,7 +247,7 @@ sub showmisspelledlist {
 		$multiwclistbox->update;
 		if ($::lglobal{misspelledlist}){
 			foreach ( sort @{ $::lglobal{misspelledlist} } ) {
-				my $line = sprintf ( "%-8d %-6s %s", $::lglobal{seenwords}{$_}, '', $_);
+				my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, '', $_);
 				$multiwclistbox->insert( 'end', $line );
 			};
 		} else {
@@ -295,8 +298,8 @@ sub saveLangDebugFiles {
 	print "saving lglobal_seenwords.txt - distinct words and frequencies\n";	
 	$section = "\%lglobal{seenwords}\n";
 	open $save, '>:bytes', 'lglobal_seenwords.txt';
-	for my $key (keys %{$::lglobal{seenwords}}){
-		$section .= "$key => $::lglobal{seenwords}{$key}\n";
+	for my $key (keys %distinctwords){
+		$section .= "$key => $distinctwords{$key}\n";
 	};
 	utf8::encode($section);
 	print $save $section;
@@ -305,9 +308,11 @@ sub saveLangDebugFiles {
 	print "saving lglobal_misspelledlist.txt - global misspelledlist\n";	
 	$section = "\@lglobal{misspelledlist}\n";
 	open $save, '>:bytes', 'lglobal_misspelledlist.txt';
-	foreach ( sort @{ $::lglobal{misspelledlist} } ) {
-		$section .= "$_\n";
-	};
+	if ($::lglobal{misspelledlist}){
+		foreach ( sort @{ $::lglobal{misspelledlist} } ) {
+			$section .= "$_\n";
+		};
+	}
 	utf8::encode($section);
 	print $save $section;
 	close $save;
@@ -325,7 +330,7 @@ sub saveLangDebugFiles {
 	print "saving seenwordslang.txt - distinct words and spelt language\n";	
 	$section = "\%seenwordslang\n";
 	open $save, '>:bytes', 'seenwordslang.txt';
-	for my $key (sort (keys %{$::lglobal{seenwords}})){
+	for my $key (sort (keys %distinctwords)){
 		if ($seenwordslang{$key}) {
 			$section .= "$key => $seenwordslang{$key}\n";
 		} else { $section .= "$key x=>\n"; }
@@ -338,7 +343,7 @@ sub saveLangDebugFiles {
 	$section = "\%seenwordslang unspelt\n";
 	$i = 0;
 	open $save, '>:bytes', 'seenwordslang_unspelt.txt';
-	for my $key (sort (keys %{$::lglobal{seenwords}})){
+	for my $key (sort (keys %distinctwords)){
 		unless ($seenwordslang{$key}) {
 			$section .= "$key x=>\n" unless ($seenwordslang{$key});
 			$i++;
@@ -352,7 +357,7 @@ sub saveLangDebugFiles {
 	$section = "\%seenwordslang spelt\n";
 	$i = 0;
 	open $save, '>:bytes', 'seenwordlang_spelt.txt';
-	for my $key (sort (keys %{$::lglobal{seenwords}})){
+	for my $key (sort (keys %distinctwords)){
 		if ($seenwordslang{$key}) {
 			$section .= "$key => $seenwordslang{$key}\n";
 			$i++;
@@ -366,23 +371,29 @@ sub saveLangDebugFiles {
 
 #update all counts
 sub getwordcounts {
-	my ($i, $j, $k, $l, $m) = 0;
-	for my $key (keys %{$::lglobal{seenwords}}) {
-		$i++;
-		$j += $::lglobal{seenwords}{$key};
+	my $i =0; my $j = 0; my $k =0; my $l =0; my $m = 0;
+	if (%distinctwords){
+		for my $key (keys %distinctwords) {
+			$i++;
+			$j += $distinctwords{$key};
+		}
 	}
 	$distinctwordcount = $i;
 	$totalwordcount = $j;
-	for my $key (keys %seenwordslang) {
-		if ($seenwordslang{$key}) { $k++; };
-	}	
+	if (%seenwordslang){
+		for my $key (keys %seenwordslang) {
+			if ($seenwordslang{$key}) { $k++; };
+		}	
+	}
 	$speltwordcount = $k;
 	$unspeltwordcount = $i - $k;
-	foreach (@{ $::lglobal{misspelledlist} }) {
-		$m++;
+	if ($::lglobal{misspelledlist}){
+		foreach (@{ $::lglobal{misspelledlist} }) {
+			$m++;
+		}
 	}
-print "Total $totalwordcount\nDistinct $distinctwordcount\n";
-print "Spelt $speltwordcount\nUnspelt $unspeltwordcount\nMisspelt $m\n";
+	if ($debug) { print "Total $totalwordcount\nDistinct $distinctwordcount\n";
+		print "Spelt $speltwordcount\nUnspelt $unspeltwordcount\nMisspelt $m\n";}
 }
 
 #updates the dictionary display
@@ -489,7 +500,7 @@ sub clearmultilanguages {
 # create hash %seenwordslang
 sub createseenwordslang {
 	my ($textwindow,$top) = @_;
-	@seenwords = ();
+	@orderedwords = ();
 	$distinctwordcount = 0;
 	$speltwordcount = 0;
 	%seenwordslang = ();
@@ -500,13 +511,13 @@ sub createseenwordslang {
 	$multiwclistbox->insert( 'end', 'Please wait, building word list....' );
 	$totalwordcount = buildwordlist($textwindow);
 	
-	for my $key (keys %{$::lglobal{seenwords}}){
+	for my $key (keys %distinctwords){
 		$seenwordslang{$key} = undef;
 	};
 	
 	my $i = 0;
 	# ordered list of all words
-	foreach ( sort ( keys %{ $::lglobal{seenwords} } ) ) { $seenwords[$i++] = $_ ;	}
+	foreach ( sort ( keys %distinctwords ) ) { $orderedwords[$i++] = $_ ;	}
 	$distinctwordcount = $i;
 	$unspeltwordcount = $distinctwordcount;
 	
@@ -514,7 +525,7 @@ sub createseenwordslang {
 		{ print "Total words: $totalwordcount, Distinct words: $distinctwordcount\n"; }
 
 	# hash of all words -> lc (word)
-	foreach ( keys %{ $::lglobal{seenwords} } ) { $seenwordslc{$_}  = lc($_) ;	}
+	foreach ( keys %distinctwords  ) { $seenwordslc{$_}  = lc($_) ;	}
 
 	$multiwclistbox->delete( '0');
 	$savedHeader = "Total words: $totalwordcount, Distinct words: $distinctwordcount\n";
@@ -531,7 +542,7 @@ sub buildwordlist {
 	my $index = '1.0';
 	my $wc    = 0;
 	my $end   = $textwindow->index('end');
-	$::lglobal{seenwords} = ();
+	%distinctwords = ();
 	my $filename = $textwindow->FileName;
 	unless ($filename) {
 		$filename = 'tempfile.tmp';
@@ -572,7 +583,7 @@ sub buildwordlist {
 			$word =~ s/^[\.,'-]+//;    #and at the beginning
 			next if ( $word eq '' );
 			$wc++;
-			$::lglobal{seenwords}->{$word}++;
+			$distinctwords{$word}++;
 		}
 		$index++;
 		$index .= '.0';
@@ -597,7 +608,7 @@ sub multilingualgetmisspelled {
 		$words = '';
 		my $i = 0;
 		# only include words with undef language
-		foreach ( sort ( keys %{ $::lglobal{seenwords} } ) ) { 
+		foreach ( sort ( keys %distinctwords  ) ) { 
 			unless ($seenwordslang{$_}) {
 				$words .= "$_\n";
 				$i++;
@@ -612,7 +623,7 @@ sub multilingualgetmisspelled {
 		#spellcheck
 		if ($words) { getmisspelledwordstwo($dict, $words); }
 		#update global spelllists
-		updatemisspelledlist();
+		updategloballists();
 	}
 
 	$top->Unbusy;
@@ -681,9 +692,9 @@ sub processmisspelledwords {
 	$i = 0; $j = 0;
 	while ($i < $distinctwordcount) {   # $distinctwordcount
 		while ($j < $unspeltwordcount) {         # $unspeltwordcount
-			$compare = ($seenwords[$i] cmp $startunspelt[$j]);
+			$compare = ($orderedwords[$i] cmp $startunspelt[$j]);
 			if ($compare == -1){  # spelt word
-				$seenwordslang{$seenwords[$i]} = $dict unless ($seenwordslang{$seenwords[$i]});
+				$seenwordslang{$orderedwords[$i]} = $dict unless ($seenwordslang{$orderedwords[$i]});
 				$i++;
 			} elsif ($compare == 0){ # unspelt word
 				$i++; $j++;
@@ -692,12 +703,12 @@ sub processmisspelledwords {
 				$j++;
 			} else { print "How did I get here!!! Multilingual failure\n"; };
 		}
-		$seenwordslang{$seenwords[$i]} = $dict;
+		$seenwordslang{$orderedwords[$i]} = $dict;
 		$i++;
 	}
 	
 	$i = 0;
-	for my $key (sort (keys %{$::lglobal{seenwords}})){
+	for my $key (sort (keys %distinctwords)){
 		if ($seenwordslang{$key}) { $i++; }
 	};
 	$speltwordcount = $i;
@@ -716,7 +727,7 @@ sub includeprojectdict {
 	&main::spellloadprojectdict();
 	if ($debug) {print "$::lglobal{projectdictname}\n";};
 	for my $key (keys %main::projectdict) { $seenwordslang{$key} = 'user'; };
-	updatemisspelledlist();
+	updategloballists();
 	getwordcounts();
 	$top->Unbusy;
 }
