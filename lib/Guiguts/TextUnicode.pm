@@ -26,10 +26,10 @@ sub Load {
         utf8::decode($line);
         $line =~ s/^\x{FEFF}?//;
 
-        #$line = ::eol_convert($line);
+        #$line = main::eol_convert($line);
         $line =~ s/\cM\cJ|\cM|\cJ/\n/g;
 
-        #$line = ::eol_whitespace($line);
+        #$line = main::eol_whitespace($line);
 
         $w->ntinsert( 'end', $line );
 
@@ -37,10 +37,10 @@ sub Load {
             utf8::decode($_);
             $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
 
-            #$_ = ::eol_convert($_);
+            #$_ = main::eol_convert($_);
             $_ =~ s/[\t \xA0]+$//;
 
-            #$_ = ::eol_whitespace($_);
+            #$_ = main::eol_whitespace($_);
             $w->ntinsert( 'end', $_ );
             if ( ( $count++ % 1000 ) == 0 ) {
                 $progress = $w->TextUndoFileProgress(
@@ -93,7 +93,7 @@ sub SaveUTF {
         my $line = $w->get( $index, $end );
         $line =~ s/[\t \xA0]+$//;
 
-        #$line = ::eol_whitespace($line);
+        #$line = main::eol_whitespace($line);
         $line =~ s/\cM\cJ|\cM|\cJ/\cM\cJ/g if (OS_Win);
         utf8::encode($line) if $unicode;
         $w->BackTrace("Cannot write to temp file:$!\n") and return
@@ -142,20 +142,20 @@ sub IncludeFile {
         $line =~ s/^\x{FFEF}?//;
         $line =~ s/\cM\cJ|\cM|\cJ/\n/g;
 
-        #$line = ::eol_convert($line);
+        #$line = main::eol_convert($line);
         $line =~ s/[\t \xA0]+$//;
 
-        #$line = ::eol_whitespace($line);
+        #$line = main::eol_whitespace($line);
         $w->insert( 'insert', $line );
 
         while (<$fh>) {
             utf8::decode($_);
             $_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
 
-            #$_ = ::eol_convert($_);
+            #$_ = main::eol_convert($_);
             $_ =~ s/[\t \xA0]+$//;
 
-            #$_ = ::eol_whitespace($_);
+            #$_ = main::eol_whitespace($_);
             $w->insert( 'insert', $_ );
             if ( ( $count++ % 1000 ) == 0 ) {
                 $progress = $w->TextUndoFileProgress(

@@ -54,9 +54,9 @@ sub text_convert_options {
 	my $italic_entry =
 	  $italic_frame->Entry(
 							-width        => 6,
-							-background   => $::bkgcolor,
+							-background   => $main::bkgcolor,
 							-relief       => 'sunken',
-							-textvariable => \$::italic_char,
+							-textvariable => \$main::italic_char,
 	  )->pack( -side => 'left' );
 
 	my $bold_frame =
@@ -69,12 +69,12 @@ sub text_convert_options {
 	my $bold_entry =
 	  $bold_frame->Entry(
 						  -width        => 6,
-						  -background   => $::bkgcolor,
+						  -background   => $main::bkgcolor,
 						  -relief       => 'sunken',
-						  -textvariable => \$::bold_char,
+						  -textvariable => \$main::bold_char,
 	  )->pack( -side => 'left' );
 	$options->Show;
-	&::savesettings();
+	&main::savesettings();
 }
 
 

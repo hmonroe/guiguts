@@ -14,18 +14,18 @@ sub errorcheckpop_up {
 	my ( $textwindow, $top, $errorchecktype ) = @_;
 	my ( %errors,     @errorchecklines );
 	my ( $line,       $lincol );
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	&main::viewpagenums() if ( $::lglobal{seepagenums} );
 	if ( $::lglobal{errorcheckpop} ) {
 		$::lglobal{errorcheckpop}->destroy;
 		undef $::lglobal{errorcheckpop};
 	}
 	$::lglobal{errorcheckpop} = $top->Toplevel;
 	$::lglobal{errorcheckpop}->title($errorchecktype);
-	&::initialize_popup_with_deletebinding('errorcheckpop');
-	$::lglobal{errorcheckpop}->transient($top) if $::stayontop;
+	&main::initialize_popup_with_deletebinding('errorcheckpop');
+	$::lglobal{errorcheckpop}->transient($top) if $main::stayontop;
 	my $ptopframe = $::lglobal{errorcheckpop}->Frame->pack;
 	my $opsbutton = $ptopframe->Button(
-		-activebackground => $::activecolor,
+		-activebackground => $main::activecolor,
 		-command          => sub {
 			errorcheckpop_up( $textwindow, $top, $errorchecktype );
 			unlink 'null' if ( -e 'null' );
@@ -46,7 +46,7 @@ sub errorcheckpop_up {
 		 or ( $errorchecktype eq 'pphtml' ) )
 	{
 		$ptopframe->Checkbutton(
-								 -variable    => \$::verboseerrorchecks,
+								 -variable    => \$main::verboseerrorchecks,
 								 -selectcolor => $::lglobal{checkcolor},
 								 -text        => 'Verbose'
 		  )->pack(
@@ -63,7 +63,7 @@ sub errorcheckpop_up {
 	  $pframe->Scrolled(
 						 'Listbox',
 						 -scrollbars  => 'se',
-						 -background  => $::bkgcolor,
+						 -background  => $main::bkgcolor,
 						 -font        => $::lglobal{font},
 						 -selectmode  => 'single',
 						 -activestyle => 'none',
@@ -74,8 +74,8 @@ sub errorcheckpop_up {
 			   -padx   => 2,
 			   -pady   => 2
 	  );
-	&::drag( $::lglobal{errorchecklistbox} );
-	&::BindMouseWheel( $::lglobal{errorchecklistbox} );
+	&main::drag( $::lglobal{errorchecklistbox} );
+	&main::BindMouseWheel( $::lglobal{errorchecklistbox} );
 	$::lglobal{errorchecklistbox}
 	  ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
 	$::lglobal{errorchecklistbox}->bind(
@@ -84,16 +84,16 @@ sub errorcheckpop_up {
 			$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 			my $line = $::lglobal{errorchecklistbox}->get('active');
 			if ( $line =~ /^line/ ) {
-				$textwindow->see( $::errors{$line} );
-				$textwindow->markSet( 'insert', $::errors{$line} );
-				&::update_indicators();
+				$textwindow->see( $main::errors{$line} );
+				$textwindow->markSet( 'insert', $main::errors{$line} );
+				&main::update_indicators();
 			} else {
 				if ( $line =~ /^\+(.*):/ ) {    # search on text between + and :
-					my @savesets = @::sopt;
-					&::searchoptset(qw/0 x x 0/);
-					&::searchfromstartifnew($1);
-					&::searchtext( $textwindow, $top, $1 );
-					&::searchoptset(@savesets);
+					my @savesets = @main::sopt;
+					&main::searchoptset(qw/0 x x 0/);
+					&main::searchfromstartifnew($1);
+					&main::searchtext( $textwindow, $top, $1 );
+					&main::searchoptset(@savesets);
 					$top->raise;
 				}
 			}
@@ -155,9 +155,9 @@ sub errorcheckpop_up {
 		}
 	}
 	foreach my $thiserrorchecktype (@errorchecktypes) {
-		&::working($thiserrorchecktype);
+		&main::working($thiserrorchecktype);
 		push @errorchecklines, "Beginning check: " . $thiserrorchecktype;
-		if ( &::errorcheckrun( $thiserrorchecktype ) ) {
+		if ( &main::errorcheckrun( $thiserrorchecktype ) ) {
 			push @errorchecklines, "Failed to run: " . $thiserrorchecktype;
 		}
 		my $fh = FileHandle->new("< errors.err");
@@ -178,7 +178,7 @@ sub errorcheckpop_up {
 
 				# Skip rest of CSS
 				if (
-					     ( not $::verboseerrorchecks )
+					     ( not $main::verboseerrorchecks )
 					 and ( $thiserrorchecktype eq 'W3C Validate CSS' )
 					 and (    ( $line =~ /^To show your readers/i )
 						   or ( $line =~ /^Valid CSS Information/i ) )
@@ -203,7 +203,7 @@ sub errorcheckpop_up {
 				}
 
 				# Skip verbose informational warnngs in Link Check
-				if (     ( not $::verboseerrorchecks )
+				if (     ( not $main::verboseerrorchecks )
 					 and ( $thiserrorchecktype eq 'Link Check' )
 					 and ( $line =~ /^Link statistics/i ) )
 				{
@@ -213,7 +213,7 @@ sub errorcheckpop_up {
 					if ( $line =~ /^-/i ) {    # skip lines beginning with '-'
 						next;
 					}
-					if ( ( not $::verboseerrorchecks )
+					if ( ( not $main::verboseerrorchecks )
 						 and $line =~ /^Verbose checks/i )
 					{    # stop with verbose specials check
 						last;
@@ -225,13 +225,13 @@ sub errorcheckpop_up {
 						 and ( $line ne $errorchecklines[-1] ) )
 					{
 						push @errorchecklines, $line;
-						$::errors{$line} = '';
+						$main::errors{$line} = '';
 						$lincol = '';
 						if ( $line =~ /^line (\d+) column (\d+)/i ) {
 							$lincol = "$1.$2";
 							$mark++;
 							$textwindow->markSet( "t$mark", $lincol );
-							$::errors{$line} = "t$mark";
+							$main::errors{$line} = "t$mark";
 						}
 					}
 				} elsif (    ( $thiserrorchecktype eq "W3C Validate" )
@@ -242,7 +242,7 @@ sub errorcheckpop_up {
 				{
 					$line =~ s/^.*:(\d+:\d+)/line $1/;
 					$line =~ s/^(\d+:\d+)/line $1/;
-					$::errors{$line} = '';
+					$main::errors{$line} = '';
 					$lincol = '';
 					if ( $line =~ /line (\d+):(\d+)/ ) {
 						push @errorchecklines, $line;
@@ -250,7 +250,7 @@ sub errorcheckpop_up {
 						$lincol =~ s/\.0/\.1/;  # change column zero to column 1
 						$mark++;
 						$textwindow->markSet( "t$mark", $lincol );
-						$::errors{$line} = "t$mark";
+						$main::errors{$line} = "t$mark";
 					}
 					if ( $line =~ /^\+/ ) {
 						push @errorchecklines, $line;
@@ -261,14 +261,14 @@ sub errorcheckpop_up {
 				{
 					$line =~ s/Line : (\d+)/line $1:1/;
 					push @errorchecklines, $line;
-					$::errors{$line} = '';
+					$main::errors{$line} = '';
 					$lincol = '';
 					if ( $line =~ /line (\d+):(\d+)/ ) {
 						my $plusone = $1 + 1;
 						$lincol = "$plusone.$2";
 						$mark++;
 						$textwindow->markSet( "t$mark", $lincol );
-						$::errors{$line} = "t$mark";
+						$main::errors{$line} = "t$mark";
 					}
 				}
 			}
@@ -292,7 +292,7 @@ sub errorcheckpop_up {
 			}
 			push @errorchecklines, "";
 		}
-		&::working();
+		&main::working();
 	}
 	$::lglobal{errorchecklistbox}->insert( 'end', @errorchecklines );
 	$::lglobal{errorchecklistbox}->yview( 'scroll', 1, 'units' );
@@ -304,8 +304,8 @@ sub errorcheckpop_up {
 sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 	#my ( $textwindow, $top, $errorchecktype ) = @_;
 	my $errorchecktype  = shift;
-	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $textwindow = $main::textwindow;
+	my $top = $main::top;
 	if ( $errorchecktype eq 'W3C Validate Remote' ) {
 		unless ( eval { require WebService::Validator::HTML::W3C } ) {
 			print
@@ -313,55 +313,55 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 			$errorchecktype = 'W3C Validate';
 		}
 	}
-	push @::operations, ( localtime() . ' - $errorchecktype' );
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	push @main::operations, ( localtime() . ' - $errorchecktype' );
+	&main::viewpagenums() if ( $::lglobal{seepagenums} );
 	if ( $::lglobal{errorcheckpop} ) {
 		$::lglobal{errorchecklistbox}->delete( '0', 'end' );
 	}
 	my ( $name, $fname, $path, $extension, @path );
 	$textwindow->focus;
-	&::update_indicators();
+	&main::update_indicators();
 	my $title = $top->cget('title');
-	if ( $title =~ /No File Loaded/ ) { &::savefile($textwindow,$top) }
+	if ( $title =~ /No File Loaded/ ) { &main::savefile($textwindow,$top) }
 	my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
 	if ( $errorchecktype eq 'W3C Validate CSS' ) {
 		$types = [ [ 'JAR file', [ '.jar', ] ], [ 'All Files', ['*'] ], ];
 	}
 	if ( $errorchecktype eq 'HTML Tidy' ) {
-		unless ($::tidycommand) {
-			$::tidycommand =
+		unless ($main::tidycommand) {
+			$main::tidycommand =
 			  $textwindow->getOpenFile(
 					-filetypes => $types,
 					-title => "Where is the " . $errorchecktype . " executable?"
 			  );
 		}
-		return 1 unless $::tidycommand;
-		$::tidycommand = &::os_normal($::tidycommand);
+		return 1 unless $main::tidycommand;
+		$main::tidycommand = &main::os_normal($main::tidycommand);
 	} elsif (     ( $errorchecktype eq "W3C Validate" )
-			  and ( $::w3cremote == 0 ) )
+			  and ( $main::w3cremote == 0 ) )
 	{
-		unless ($::validatecommand) {
-			$::validatecommand =
+		unless ($main::validatecommand) {
+			$main::validatecommand =
 			  $textwindow->getOpenFile(
 					 -filetypes => $types,
 					 -title => 'Where is the W3C Validate (onsgmls) executable?'
 			  );
 		}
-		return 1 unless $::validatecommand;
-		$::validatecommand = &::os_normal($::validatecommand);
+		return 1 unless $main::validatecommand;
+		$main::validatecommand = &main::os_normal($main::validatecommand);
 	} elsif ( $errorchecktype eq 'W3C CSS Validate' ) {
-		unless ($::validatecsscommand) {
-			$::validatecsscommand =
+		unless ($main::validatecsscommand) {
+			$main::validatecsscommand =
 			  $textwindow->getOpenFile(
 				-filetypes => $types,
 				-title =>
 				  'Where is the W3C Validate CSS (css-validate.jar) executable?'
 			  );
 		}
-		return 1 unless $::validatecsscommand;
-		$::validatecsscommand = &::os_normal($::validatecsscommand);
+		return 1 unless $main::validatecsscommand;
+		$main::validatecsscommand = &main::os_normal($main::validatecsscommand);
 	}
-	&::savesettings();
+	&main::savesettings();
 	$top->Busy( -recurse => 1 );
 	if (    ( $errorchecktype eq 'W3C Validate Remote' )
 		 or ( $errorchecktype eq 'W3C Validate CSS' ) )
@@ -400,13 +400,13 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		$::lglobal{errorchecklistbox}->delete( '0', 'end' );
 	}
 	if ( $errorchecktype eq 'HTML Tidy' ) {
-		&::run( $::tidycommand, "-f", "errors.err", "-o", "null",
+		&main::run( $main::tidycommand, "-f", "errors.err", "-o", "null",
 					$name );
 	} elsif ( $errorchecktype eq 'W3C Validate' ) {
-		if ( $::w3cremote == 0 ) {
-			my $validatepath = &::dirname($::validatecommand);
-			&::run(
-						$::validatecommand, "--directory=$validatepath",
+		if ( $main::w3cremote == 0 ) {
+			my $validatepath = &main::dirname($main::validatecommand);
+			&main::run(
+						$main::validatecommand, "--directory=$validatepath",
 						"--catalog=xhtml.soc",  "--no-output",
 						"--open-entities",      "--error-file=errors.err",
 						$name
@@ -436,23 +436,23 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 			}
 		}
 	} elsif ( $errorchecktype eq 'W3C Validate CSS' ) {
-		my $runner = &::runner::tofile("errors.err");
-		$runner->run( "java", "-jar", $::validatecsscommand, "file:$name" );
+		my $runner = &main::runner::tofile("errors.err");
+		$runner->run( "java", "-jar", $main::validatecsscommand, "file:$name" );
 	} elsif ( $errorchecktype eq 'pphtml' ) {
-		&::run( "perl", "lib/ppvchecks/pphtml.pl", "-i", $name, "-o",
+		&main::run( "perl", "lib/ppvchecks/pphtml.pl", "-i", $name, "-o",
 					"errors.err" );
 	} elsif ( $errorchecktype eq 'Link Check' ) {
-		&::linkcheckrun;
+		&main::linkcheckrun;
 	}
 	elsif ( $errorchecktype eq 'Image Check' ) {
 		my ( $f, $d, $e ) =
-		  &::fileparse( $::lglobal{global_filename}, qr{\.[^\.]*$} );
-		&::run( "perl", "lib/ppvchecks/ppvimage.pl", $name, $d );
+		  &main::fileparse( $::lglobal{global_filename}, qr{\.[^\.]*$} );
+		&main::run( "perl", "lib/ppvchecks/ppvimage.pl", $name, $d );
 	} elsif ( $errorchecktype eq 'pptxt' ) {
-		&::run( "perl", "lib/ppvchecks/pptxt.pl", "-i", $name, "-o",
+		&main::run( "perl", "lib/ppvchecks/pptxt.pl", "-i", $name, "-o",
 					"errors.err" );
 	} elsif ( $errorchecktype eq 'Epub Friendly' ) {
-		&::run( "perl", "lib/ppvchecks/epubfriendly.pl",
+		&main::run( "perl", "lib/ppvchecks/epubfriendly.pl",
 					"-i", $name, "-o", "errors.err" );
 	}
 	$top->Unbusy;

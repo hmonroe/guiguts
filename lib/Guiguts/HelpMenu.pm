@@ -47,14 +47,14 @@ EOM
 		$::lglobal{aboutpop}->focus;
 	} else {
 		$::lglobal{aboutpop} = $top->Toplevel;
-		&::initialize_popup_with_deletebinding('aboutpop');
+		&main::initialize_popup_with_deletebinding('aboutpop');
 		$::lglobal{aboutpop}->title('About');
 		$::lglobal{aboutpop}->Label(
 								   -justify => "left",
 								   -text    => $about_text
 		)->pack;
 		my $button_ok = $::lglobal{aboutpop}->Button(
-			-activebackground => $::activecolor,
+			-activebackground => $main::activecolor,
 			-text             => 'OK',
 			-command          => sub {
 				$::lglobal{aboutpop}->destroy;

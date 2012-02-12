@@ -12,7 +12,7 @@ BEGIN {
 
 ## Toggle visible page markers. This is not line numbers but marks for pages.
 sub viewpagenums {
-	my $textwindow = $::textwindow;
+	my $textwindow = $main::textwindow;
 	if ( $::lglobal{seepagenums} ) {
 		$::lglobal{seepagenums} = 0;
 		my @marks = $textwindow->markNames;
@@ -24,7 +24,7 @@ sub viewpagenums {
 		}
 		$textwindow->tagRemove( 'pagenum', '1.0', 'end' );
 		if ( $::lglobal{pnumpop} ) {
-			$::geometryhash{pnumpop} = $::lglobal{pnumpop}->geometry;
+			$main::geometryhash{pnumpop} = $::lglobal{pnumpop}->geometry;
 			$::lglobal{pnumpop}->destroy;
 			undef $::lglobal{pnumpop};
 		}
@@ -39,17 +39,17 @@ sub viewpagenums {
 									 "$_ +@{[length $pagenum]}c" );
 			}
 		}
-		&::pnumadjust();
+		&main::pnumadjust();
 	}
 }
 
 ## Pop up a window which will allow jumping directly to a specified page
 sub gotolabel {
-	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $textwindow = $main::textwindow;
+	my $top = $main::top;
 	unless ( defined( $::lglobal{gotolabpop} ) ) {
-		return unless %::pagenumbers;
-		for ( keys(%::pagenumbers) ) {
+		return unless %main::pagenumbers;
+		for ( keys(%main::pagenumbers) ) {
 			$::lglobal{pagedigits} = ( length($_) - 2 );
 			last;
 		}
@@ -60,9 +60,9 @@ sub gotolabel {
 			-command => sub {
 				if ( $_[0] eq 'Ok' ) {
 					my $mark;
-					for ( keys %::pagenumbers ) {
-						if (    $::pagenumbers{$_}{label}
-							 && $::pagenumbers{$_}{label} eq $::lglobal{lastlabel} )
+					for ( keys %main::pagenumbers ) {
+						if (    $main::pagenumbers{$_}{label}
+							 && $main::pagenumbers{$_}{label} eq $::lglobal{lastlabel} )
 						{
 							$mark = $_;
 							last;
@@ -92,7 +92,7 @@ sub gotolabel {
 		$frame->Label( -text => 'Enter Label: ' )->pack( -side => 'left' );
 		$::lglobal{lastlabel} = 'Pg ' unless $::lglobal{lastlabel};
 		my $entry = $frame->Entry(
-								   -background   => $::bkgcolor,
+								   -background   => $main::bkgcolor,
 								   -width        => 25,
 								   -textvariable => \$::lglobal{lastlabel}
 		)->pack( -side => 'left', -fill => 'x' );
