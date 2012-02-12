@@ -29,18 +29,18 @@ sub searchtext {
 	my ($textwindow,$top,$searchterm)=@_;
 	&main::viewpagenums() if ( $::lglobal{seepagenums} );
 
-	#print $::sopt[0],$::sopt[1],$::sopt[2],$::sopt[3],$::sopt[4].":sopt\n";
+	#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt\n";
 
-# $::sopt[0] --> 0 = pattern search                       1 = whole word search
-# $::sopt[1] --> 0 = case sensitive                     1 = case insensitive search
-# $::sopt[2] --> 0 = search forwards    \                  1 = search backwards
-# $::sopt[3] --> 0 = normal search term           1 = regex search term - 3 and 0 are mutually exclusive
-# $::sopt[4] --> 0 = search from last index       1 = Start from beginning
+# $sopt[0] --> 0 = pattern search                       1 = whole word search
+# $sopt[1] --> 0 = case sensitive                     1 = case insensitive search
+# $sopt[2] --> 0 = search forwards    \                  1 = search backwards
+# $sopt[3] --> 0 = normal search term           1 = regex search term - 3 and 0 are mutually exclusive
+# $sopt[4] --> 0 = search from last index       1 = Start from beginning
 
-#	$::searchstartindex--where the last search for this $searchterm ended
+#	$searchstartindex--where the last search for this $searchterm ended
 #   replaced with the insertion point if the user has clicked someplace else
 
-	#print $::sopt[4]."from beginning\n";
+	#print $sopt[4]."from beginning\n";
 	$searchterm = '' unless defined $searchterm;
 	if ( length($searchterm) ) {    #and not ($searchterm =~ /\W/)
 		&::add_search_history( $searchterm, \@main::search_history, $main::history_size );
@@ -132,7 +132,7 @@ sub searchtext {
 				# have to search on the whole file
 				my $wholefile = $textwindow->get( '1.0', $end );
 
-				# search is case sensitive if $::sopt[1] is set
+				# search is case sensitive if $sopt[1] is set
 				if ( $main::sopt[1] ) {
 					while ( $wholefile =~ m/$searchterm/smgi ) {
 						push @{ $::lglobal{nlmatches} },
@@ -522,137 +522,6 @@ sub reghint {
 		  );
 		$::lglobal{hintmessage}->insert( 'end', $message );
 	}
-}
-
-sub getnextscanno {
-	my $textwindow = $::textwindow;
-	my $top = $::top;
-	$::scannosearch = 1;
-
-	&main::findascanno();
-	unless ( &main::searchtext($textwindow,$top) ) {
-		if ( $::lglobal{regaa} ) {
-			while (1) {
-				last
-				  if (
-					 $::lglobal{scannosindex}++ >= $#{ $::lglobal{scannosarray} } );
-				findascanno();
-				last if searchtext($textwindow,$top);
-			}
-		}
-	}
-}
-
-sub findascanno {
-	my $textwindow = $::textwindow;
-	$::asearchendindex = '1.0';
-	my $word = '';
-	$word = $::lglobal{scannosarray}[ $::lglobal{scannosindex} ];
-	$::lglobal{searchentry}->delete( '1.0', 'end' );
-	$::lglobal{replaceentry}->delete( '1.0', 'end' );
-	$textwindow->bell unless ( $word || $::nobell || $::lglobal{regaa} );
-	$::lglobal{searchbutton}->flash unless ( $word || $::lglobal{regaa} );
-	$::lglobal{regtracker}
-	  ->configure( -text => ( $::lglobal{scannosindex} + 1 ) . '/'
-				   . scalar( @{ $::lglobal{scannosarray} } ) );
-	$::lglobal{hintmessage}->delete( '1.0', 'end' )
-	  if ( defined( $::lglobal{hintpop} ) );
-	return 0 unless $word;
-	$::lglobal{searchentry}->insert( 'end', $word );
-	$::lglobal{replaceentry}->insert( 'end', ( $::scannoslist{$word} ) );
-	$::sopt[2]
-	  ? $textwindow->markSet( 'insert', 'end' )
-	  : $textwindow->markSet( 'insert', '1.0' );
-	reghint() if ( defined( $::lglobal{hintpop} ) );
-	$textwindow->update;
-	return 1;
-}
-
-sub swapterms {
-	my $textwindow=$::textwindow;
-	my $top = $::top;
-	my $tempholder = $::lglobal{replaceentry}->get( '1.0', '1.end' );
-	$::lglobal{replaceentry}->delete( '1.0', 'end' );
-	$::lglobal{replaceentry}
-	  ->insert( 'end', $::lglobal{searchentry}->get( '1.0', '1.end' ) );
-	$::lglobal{searchentry}->delete( '1.0', 'end' );
-	$::lglobal{searchentry}->insert( 'end', $tempholder );
-	searchtext($textwindow,$top);
-}
-
-sub isvalid {
-	my $term = shift;
-	return eval { '' =~ m/$term/; 1 } || 0;
-}
-
-sub badreg {
-	my $top = $::top;
-	my $warning = $top->Dialog(
-		-text =>
-"Invalid Regex search term.\nDo you have mismatched\nbrackets or parenthesis?",
-		-title   => 'Invalid Regex',
-		-bitmap  => 'warning',
-		-buttons => ['Ok'],
-	);
-	$warning->Icon( -image => $::icon );
-	$warning->Show;
-}
-
-sub clearmarks {
-	my $textwindow=$::textwindow;
-	@{ $::lglobal{nlmatches} } = ();
-	my ( $mark, $mindex );
-	$mark = $textwindow->markNext($::asearchendindex);
-	while ($mark) {
-		if ( $mark =~ /nls\d+q(\d+)/ ) {
-			$mindex = $textwindow->index($mark);
-			$textwindow->markUnset($mark);
-			$mark = $mindex;
-		}
-		$mark = $textwindow->markNext($mark) if $mark;
-	}
-}
-
-sub getmark {
-	my $textwindow=$::textwindow;
-	my $start = shift;
-	if ( $::sopt[2] ) {    # search reverse
-		return $textwindow->markPrevious($start);
-	} else {             # search forward
-		return $textwindow->markNext($start);
-	}
-}
-
-sub updatesearchlabels {
-	if ( $::lglobal{seenwords} && $::lglobal{searchpop} ) {
-		my $replaceterm = $::lglobal{replaceentry}->get( '1.0', '1.end' );
-		my $searchterm1 = $::lglobal{searchentry}->get( '1.0', '1.end' );
-		if ( ( $::lglobal{seenwords}->{$searchterm1} ) && ( $::sopt[0] ) ) {
-			$::lglobal{searchnumlabel}->configure(
-				  -text => "Found $::lglobal{seenwords}->{$searchterm1} times." );
-		} elsif ( ( $searchterm1 eq '' ) || ( !$::sopt[0] ) ) {
-			$::lglobal{searchnumlabel}->configure( -text => '' );
-		} else {
-			$::lglobal{searchnumlabel}->configure( -text => 'Not Found.' );
-		}
-	}
-}
-
-# calls the replacewith command after calling replaceeval
-# to allow arbitrary perl code to be included in the replace entry
-sub replace {
-	my $textwindow=$::textwindow;
-	viewpagenums() if ( $::lglobal{seepagenums} );
-	my $replaceterm = shift;
-	$replaceterm = '' unless length $replaceterm;
-	return unless $::searchstartindex;
-	my $searchterm = $::lglobal{searchentry}->get( '1.0', '1.end' );
-	$replaceterm = replaceeval( $searchterm, $replaceterm ) if ( $::sopt[3] );
-	if ($::searchstartindex) {
-		$textwindow->replacewith( $::searchstartindex, $::asearchendindex,
-								  $replaceterm );
-	}
-	return 1;
 }
 
 

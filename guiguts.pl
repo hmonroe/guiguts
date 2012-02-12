@@ -444,7 +444,6 @@ $textwindow->CallNextGUICallback;
 
 $top->repeat( 200, sub { _updatesel($textwindow) } );
 
-# Do not move from guiguts.pl. The do must be executed in main::
 sub loadscannos {
 	$lglobal{scannosfilename} = '';
 	%scannoslist = ();
@@ -495,6 +494,128 @@ sub loadscannos {
 		}
 		return 1;
 	}
+}
+
+sub getnextscanno {
+	$scannosearch = 1;
+
+	findascanno();
+	unless ( searchtext($textwindow,$top) ) {
+		if ( $lglobal{regaa} ) {
+			while (1) {
+				last
+				  if (
+					 $lglobal{scannosindex}++ >= $#{ $lglobal{scannosarray} } );
+				findascanno();
+				last if searchtext($textwindow,$top);
+			}
+		}
+	}
+}
+
+sub findascanno {
+	$searchendindex = '1.0';
+	my $word = '';
+	$word = $lglobal{scannosarray}[ $lglobal{scannosindex} ];
+	$lglobal{searchentry}->delete( '1.0', 'end' );
+	$lglobal{replaceentry}->delete( '1.0', 'end' );
+	$textwindow->bell unless ( $word || $nobell || $lglobal{regaa} );
+	$lglobal{searchbutton}->flash unless ( $word || $lglobal{regaa} );
+	$lglobal{regtracker}
+	  ->configure( -text => ( $lglobal{scannosindex} + 1 ) . '/'
+				   . scalar( @{ $lglobal{scannosarray} } ) );
+	$lglobal{hintmessage}->delete( '1.0', 'end' )
+	  if ( defined( $lglobal{hintpop} ) );
+	return 0 unless $word;
+	$lglobal{searchentry}->insert( 'end', $word );
+	$lglobal{replaceentry}->insert( 'end', ( $scannoslist{$word} ) );
+	$sopt[2]
+	  ? $textwindow->markSet( 'insert', 'end' )
+	  : $textwindow->markSet( 'insert', '1.0' );
+	reghint() if ( defined( $lglobal{hintpop} ) );
+	$textwindow->update;
+	return 1;
+}
+
+sub swapterms {
+	my $tempholder = $lglobal{replaceentry}->get( '1.0', '1.end' );
+	$lglobal{replaceentry}->delete( '1.0', 'end' );
+	$lglobal{replaceentry}
+	  ->insert( 'end', $lglobal{searchentry}->get( '1.0', '1.end' ) );
+	$lglobal{searchentry}->delete( '1.0', 'end' );
+	$lglobal{searchentry}->insert( 'end', $tempholder );
+	searchtext($textwindow,$top);
+}
+
+sub isvalid {
+	my $term = shift;
+	return eval { '' =~ m/$term/; 1 } || 0;
+}
+
+sub badreg {
+	my $warning = $top->Dialog(
+		-text =>
+"Invalid Regex search term.\nDo you have mismatched\nbrackets or parenthesis?",
+		-title   => 'Invalid Regex',
+		-bitmap  => 'warning',
+		-buttons => ['Ok'],
+	);
+	$warning->Icon( -image => $icon );
+	$warning->Show;
+}
+
+sub clearmarks {
+	@{ $lglobal{nlmatches} } = ();
+	my ( $mark, $mindex );
+	$mark = $textwindow->markNext($searchendindex);
+	while ($mark) {
+		if ( $mark =~ /nls\d+q(\d+)/ ) {
+			$mindex = $textwindow->index($mark);
+			$textwindow->markUnset($mark);
+			$mark = $mindex;
+		}
+		$mark = $textwindow->markNext($mark) if $mark;
+	}
+}
+
+sub getmark {
+	my $start = shift;
+	if ( $sopt[2] ) {    # search reverse
+		return $textwindow->markPrevious($start);
+	} else {             # search forward
+		return $textwindow->markNext($start);
+	}
+}
+
+sub updatesearchlabels {
+	if ( $lglobal{seenwords} && $lglobal{searchpop} ) {
+		my $replaceterm = $lglobal{replaceentry}->get( '1.0', '1.end' );
+		my $searchterm1 = $lglobal{searchentry}->get( '1.0', '1.end' );
+		if ( ( $lglobal{seenwords}->{$searchterm1} ) && ( $sopt[0] ) ) {
+			$lglobal{searchnumlabel}->configure(
+				  -text => "Found $lglobal{seenwords}->{$searchterm1} times." );
+		} elsif ( ( $searchterm1 eq '' ) || ( !$sopt[0] ) ) {
+			$lglobal{searchnumlabel}->configure( -text => '' );
+		} else {
+			$lglobal{searchnumlabel}->configure( -text => 'Not Found.' );
+		}
+	}
+}
+
+# calls the replacewith command after calling replaceeval
+# to allow arbitrary perl code to be included in the replace entry
+sub replace {
+	viewpagenums() if ( $lglobal{seepagenums} );
+	my $replaceterm = shift;
+	$replaceterm = '' unless length $replaceterm;
+	return unless $searchstartindex;
+	my $searchterm = $lglobal{searchentry}->get( '1.0', '1.end' );
+	$replaceterm = replaceeval( $searchterm, $replaceterm ) if ( $sopt[3] );
+	if ($searchstartindex) {
+		$textwindow->replacewith( $searchstartindex, $searchendindex,
+								  $replaceterm );
+	}
+	return 1;
 }
 
 # allow the replacment term to contain arbitrary perl code
