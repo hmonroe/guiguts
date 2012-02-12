@@ -8,7 +8,7 @@ BEGIN {
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&add_search_history &searchtext &search_history &reg_check &getnextscanno &updatesearchlabels
-	&isvalid &swapterms)
+	&isvalid &swapterms &findascanno &reghint)
 }
 
 sub add_search_history {
@@ -500,7 +500,7 @@ sub reghint {
 		$::lglobal{hintmessage}->insert( 'end', $message );
 	} else {
 		$::lglobal{hintpop} = $::lglobal{searchpop}->Toplevel;
-		initialize_popup_with_deletebinding('hintpop');
+		::initialize_popup_with_deletebinding('hintpop');
 		$::lglobal{hintpop}->title('Search Term Hint');
 		my $frame =
 		  $::lglobal{hintpop}->Frame->pack(
@@ -620,6 +620,31 @@ sub replace {
 		$::textwindow->replacewith( $::searchstartindex, $::searchendindex,
 								  $replaceterm );
 	}
+	return 1;
+}
+
+sub findascanno {
+	my $textwindow = $::textwindow;
+	$::searchendindex = '1.0';
+	my $word = '';
+	$word = $::lglobal{scannosarray}[ $::lglobal{scannosindex} ];
+	$::lglobal{searchentry}->delete( '1.0', 'end' );
+	$::lglobal{replaceentry}->delete( '1.0', 'end' );
+	$textwindow->bell unless ( $word || $::nobell || $::lglobal{regaa} );
+	$::lglobal{searchbutton}->flash unless ( $word || $::lglobal{regaa} );
+	$::lglobal{regtracker}
+	  ->configure( -text => ( $::lglobal{scannosindex} + 1 ) . '/'
+				   . scalar( @{ $::lglobal{scannosarray} } ) );
+	$::lglobal{hintmessage}->delete( '1.0', 'end' )
+	  if ( defined( $::lglobal{hintpop} ) );
+	return 0 unless $word;
+	$::lglobal{searchentry}->insert( 'end', $word );
+	$::lglobal{replaceentry}->insert( 'end', ( $::scannoslist{$word} ) );
+	$::sopt[2]
+	  ? $textwindow->markSet( 'insert', 'end' )
+	  : $textwindow->markSet( 'insert', '1.0' );
+	reghint() if ( defined( $::lglobal{hintpop} ) );
+	$textwindow->update;
 	return 1;
 }
 

@@ -498,31 +498,6 @@ sub loadscannos {
 	}
 }
 
-sub findascanno {
-	$searchendindex = '1.0';
-	my $word = '';
-	$word = $lglobal{scannosarray}[ $lglobal{scannosindex} ];
-	$lglobal{searchentry}->delete( '1.0', 'end' );
-	$lglobal{replaceentry}->delete( '1.0', 'end' );
-	$textwindow->bell unless ( $word || $nobell || $lglobal{regaa} );
-	$lglobal{searchbutton}->flash unless ( $word || $lglobal{regaa} );
-	$lglobal{regtracker}
-	  ->configure( -text => ( $lglobal{scannosindex} + 1 ) . '/'
-				   . scalar( @{ $lglobal{scannosarray} } ) );
-	$lglobal{hintmessage}->delete( '1.0', 'end' )
-	  if ( defined( $lglobal{hintpop} ) );
-	return 0 unless $word;
-	$lglobal{searchentry}->insert( 'end', $word );
-	$lglobal{replaceentry}->insert( 'end', ( $scannoslist{$word} ) );
-	$sopt[2]
-	  ? $textwindow->markSet( 'insert', 'end' )
-	  : $textwindow->markSet( 'insert', '1.0' );
-	reghint() if ( defined( $lglobal{hintpop} ) );
-	$textwindow->update;
-	return 1;
-}
-
-
 # allow the replacment term to contain arbitrary perl code
 # called only from replace()
 sub replaceeval {
