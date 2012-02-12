@@ -444,6 +444,7 @@ $textwindow->CallNextGUICallback;
 
 $top->repeat( 200, sub { _updatesel($textwindow) } );
 
+# Do not move from guiguts.pl; do command must be run in ::main
 sub loadscannos {
 	$lglobal{scannosfilename} = '';
 	%scannoslist = ();
@@ -493,23 +494,6 @@ sub loadscannos {
 			searchoptset(qw/x x x 0/);
 		}
 		return 1;
-	}
-}
-
-sub getnextscanno {
-	$scannosearch = 1;
-
-	findascanno();
-	unless ( searchtext($textwindow,$top) ) {
-		if ( $lglobal{regaa} ) {
-			while (1) {
-				last
-				  if (
-					 $lglobal{scannosindex}++ >= $#{ $lglobal{scannosarray} } );
-				findascanno();
-				last if searchtext($textwindow,$top);
-			}
-		}
 	}
 }
 

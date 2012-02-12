@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&add_search_history &searchtext &search_history &reg_check)
+	@EXPORT=qw(&add_search_history &searchtext &search_history &reg_check &getnextscanno)
 }
 
 sub add_search_history {
@@ -521,6 +521,23 @@ sub reghint {
 				   -pady   => 4
 		  );
 		$::lglobal{hintmessage}->insert( 'end', $message );
+	}
+}
+
+sub getnextscanno {
+	$::scannosearch = 1;
+
+	::findascanno();
+	unless ( searchtext($::textwindow,$::top) ) {
+		if ( $::lglobal{regaa} ) {
+			while (1) {
+				last
+				  if (
+					 $::lglobal{scannosindex}++ >= $#{ $::lglobal{scannosarray} } );
+				::findascanno();
+				last if searchtext($::textwindow,$::top);
+			}
+		}
 	}
 }
 
