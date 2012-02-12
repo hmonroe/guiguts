@@ -16,18 +16,18 @@ sub get_image_file {
 	my $pagenum = shift;
 	my $number;
 	my $imagefile;
-	unless ($main::pngspath) {
+	unless ($::pngspath) {
 		if ($main::OS_WIN) {
-			$main::pngspath = "${main::globallastpath}pngs\\";
+			$::pngspath = "${main::globallastpath}pngs\\";
 		} else {
-			$main::pngspath = "${main::globallastpath}pngs/";
+			$::pngspath = "${main::globallastpath}pngs/";
 		}
-		&main::setpngspath($pagenum) unless ( -e "$main::pngspath$pagenum.png" );
+		&main::setpngspath($pagenum) unless ( -e "$::pngspath$pagenum.png" );
 	}
-	if ($main::pngspath) {
-		$imagefile = "$main::pngspath$pagenum.png";
+	if ($::pngspath) {
+		$imagefile = "$::pngspath$pagenum.png";
 		unless ( -e $imagefile ) {
-			$imagefile = "$main::pngspath$pagenum.jpg";
+			$imagefile = "$::pngspath$pagenum.jpg";
 		}
 	}
 	return $imagefile;
@@ -134,7 +134,7 @@ sub arabic {
 
 sub textbindings {
 	my $textwindow = $main::textwindow;
-	my $top = $main::top;
+	my $top = $::top;
 
 	# Set up a bunch of events and key bindings for the widget
 	$textwindow->tagConfigure( 'footnote', -background => 'cyan' );
@@ -378,9 +378,9 @@ sub popscroll {
 		&main::scrolldismiss();
 		return;
 	}
-	my $x = $main::top->pointerx - $main::top->rootx;
-	my $y = $main::top->pointery - $main::top->rooty - 8;
-	$::lglobal{scroller} = $main::top->Label(
+	my $x = $::top->pointerx - $::top->rootx;
+	my $y = $::top->pointery - $::top->rooty - 8;
+	$::lglobal{scroller} = $::top->Label(
 									  -background  => $main::textwindow->cget( -bg ),
 									  -image       => $::lglobal{scrollgif},
 									  -cursor      => 'double_arrow',
@@ -406,7 +406,7 @@ sub popscroll {
 									  '10'   => 'bottom_side',
 									  '11'   => 'bottom_right_corner',
 	);
-	$::lglobal{scroll_id} = $main::top->repeat( $main::scrollupdatespd, \&main::b2scroll );
+	$::lglobal{scroll_id} = $::top->repeat( $main::scrollupdatespd, \&main::b2scroll );
 }
 
 # Command parsing for External command routine
@@ -457,15 +457,15 @@ sub cmdinterp {
 			$arg =~ s/\$p/$number/;
 		}
 		if ( $arg =~ m/\$i/ ) {
-			return ' ' unless $main::pngspath;
-			$arg =~ s/\$i/$main::pngspath/;
+			return ' ' unless $::pngspath;
+			$arg =~ s/\$i/$::pngspath/;
 		}
 	}
 	return @args;
 }
 
 sub nofileloadedwarning {
-	my $top = $main::top;
+	my $top = $::top;
 	if ( $::lglobal{global_filename} =~ m/No File Loaded/ ) {
 		my $dialog = $top->Dialog(
 								   -text    => "No File Loaded",
