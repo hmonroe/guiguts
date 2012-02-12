@@ -24,13 +24,13 @@ our %seenwordslang = ();
 
 sub spellmultiplelanguages {
 	my ($textwindow,$top) = @_;
-	push @main::operations, ( localtime() . ' - multilingual spelling' );
-	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
-	&main::oppopupdate()  if $main::lglobal{oppop};
+	push @::operations, ( localtime() . ' - multilingual spelling' );
+	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	&::oppopupdate()  if $::lglobal{oppop};
 	# find Aspell and base language if necessary
-	&main::spelloptions() unless $main::globalspellpath;
-	return unless $main::globalspellpath;
-	return unless $main::globalspelldictopt;
+	&::spelloptions() unless $::globalspellpath;
+	return unless $::globalspellpath;
+	return unless $::globalspelldictopt;
 	setmultiplelanguages($textwindow,$top);
 	my $wc = createseenwordslang($textwindow,$top);
 #	if ($debug) { print "Total words: $wc\n"; };
@@ -42,18 +42,18 @@ sub spellmultiplelanguages {
 
 # clear array of languages
 sub clearmultilanguages {
-	@main::multidicts = ();
-	$main::multidicts[0] = $main::globalspelldictopt;
+	@::multidicts = ();
+	$::multidicts[0] = $::globalspelldictopt;
 }
 
 # set multiple languages in array @multidicts
 sub setmultiplelanguages {
 	my ($textwindow,$top) = @_;
-	if ($main::globalspellpath) {
-		main::aspellstart() unless $main::lglobal{spellpid};
+	if ($::globalspellpath) {
+		::aspellstart() unless $::lglobal{spellpid};
 	}
 	my $dicts;
-	$main::multidicts[0] = $main::globalspelldictopt;
+	$::multidicts[0] = $::globalspelldictopt;
 	my $spellop = $top->DialogBox( -title   => 'Multiple language selection',
 								   -buttons => ['Continue'] );
 	my $baselanglabel = $spellop->add('Label', -text => 'Base language' ) ->pack;
@@ -61,16 +61,16 @@ sub setmultiplelanguages {
 									 'ROText',
 									 -width      => 40,
 									 -height     => 1,
-									 -background => $main::bkgcolor
+									 -background => $::bkgcolor
 	)->pack( -pady => 4 );
 	$baselang->delete( '1.0', 'end' );
-	$baselang->insert( '1.0', $main::globalspelldictopt );
+	$baselang->insert( '1.0', $::globalspelldictopt );
 	my $dictlabel = $spellop->add( 'Label', -text => 'Dictionary files' )->pack;
 	my $dictlist = $spellop->add(
 							   'ScrlListbox',
 							   -scrollbars => 'oe',
 							   -selectmode => 'browse',
-							   -background => $main::bkgcolor,
+							   -background => $::bkgcolor,
 							   -height     => 10,
 							   -width      => 40,
 	)->pack( -pady => 4 );
@@ -80,18 +80,18 @@ sub setmultiplelanguages {
 									 'ROText',
 									 -width      => 40,
 									 -height     => 1,
-									 -background => $main::bkgcolor
+									 -background => $::bkgcolor
 	)->pack( -pady => 4 );
 	$multidictxt->delete( '1.0', 'end' );
-	for my $element (@main::multidicts) {
+	for my $element (@::multidicts) {
 		$multidictxt->insert( 'end', $element );
 		$multidictxt->insert( 'end', ' ' );
 	}
 	
 
-	if ($main::globalspellpath) {
+	if ($::globalspellpath) {
 		my $runner = runner::tofile('aspell.tmp');
-		$runner->run($main::globalspellpath, 'dump', 'dicts');
+		$runner->run($::globalspellpath, 'dump', 'dicts');
 		warn "Unable to access dictionaries.\n" if $?;
 
 		open my $infile,'<', 'aspell.tmp';
@@ -108,13 +108,13 @@ sub setmultiplelanguages {
 		'<<dictsel>>',
 		sub {
 			my $selection = $dictlist->get('active');
-			push @main::multidicts, $selection;
+			push @::multidicts, $selection;
 			$multidictxt->delete( '1.0', 'end' );
-			for my $element (@main::multidicts) {
+			for my $element (@::multidicts) {
 				$multidictxt->insert( 'end', $element );
 				$multidictxt->insert( 'end', ' ' );
 			}
-			main::savesettings();
+			::savesettings();
 		}
 	);
 	my $clearmulti = $spellop->add ('Button', -text => 'Clear dictionaries',
@@ -122,7 +122,7 @@ sub setmultiplelanguages {
 		-command => sub {
 			clearmultilanguages;
 			$multidictxt->delete( '1.0', 'end' );
-			for my $element (@main::multidicts) {
+			for my $element (@::multidicts) {
 				$multidictxt->insert( 'end', $element );
 				$multidictxt->insert( 'end', ' ' );
 			}
@@ -137,13 +137,13 @@ sub saveLangDebugFiles {
 	my $save ;
 	my $i;
 
-	print "\$globalspellpath ", $main::globalspellpath, "\n";
+	print "\$globalspellpath ", $::globalspellpath, "\n";
 
 	print "saving lglobal_seenwords.txt - distinct words and frequencies\n";	
 	$section = "\%lglobal{seenwords}\n";
 	open $save, '>:bytes', 'lglobal_seenwords.txt';
-	for my $key (keys %{$main::lglobal{seenwords}}){
-		$section .= "$key => $main::lglobal{seenwords}{$key}\n";
+	for my $key (keys %{$::lglobal{seenwords}}){
+		$section .= "$key => $::lglobal{seenwords}{$key}\n";
 	};
 	utf8::encode($section);
 	print $save $section;
@@ -152,7 +152,7 @@ sub saveLangDebugFiles {
 	print "saving lglobal_misspelledlist.txt - global misspelledlist\n";	
 	$section = "\@lglobal{misspelledlist}\n";
 	open $save, '>:bytes', 'lglobal_misspelledlist.txt';
-	foreach ( sort @{ $main::lglobal{misspelledlist} } ) {
+	foreach ( sort @{ $::lglobal{misspelledlist} } ) {
 		$section .= "$_\n";
 	};
 	utf8::encode($section);
@@ -180,7 +180,7 @@ sub saveLangDebugFiles {
 	print "saving seenwordslang.txt - distinct words and spelt language\n";	
 	$section = "\%seenwordslang\n";
 	open $save, '>:bytes', 'seenwordslang.txt';
-	for my $key (sort (keys %{$main::lglobal{seenwords}})){
+	for my $key (sort (keys %{$::lglobal{seenwords}})){
 		if ($seenwordslang{$key}) {
 			$section .= "$key => $seenwordslang{$key}\n";
 		} else { $section .= "$key x=>\n"; }
@@ -193,7 +193,7 @@ sub saveLangDebugFiles {
 	$section = "\%seenwordslang unspelt\n";
 	$i = 0;
 	open $save, '>:bytes', 'seenwordslang_unspelt.txt';
-	for my $key (sort (keys %{$main::lglobal{seenwords}})){
+	for my $key (sort (keys %{$::lglobal{seenwords}})){
 		unless ($seenwordslang{$key}) {
 			$section .= "$key x=>\n" unless ($seenwordslang{$key});
 			$i++;
@@ -207,7 +207,7 @@ sub saveLangDebugFiles {
 	$section = "\%seenwordslang spelt\n";
 	$i = 0;
 	open $save, '>:bytes', 'seenwordlang_spelt.txt';
-	for my $key (sort (keys %{$main::lglobal{seenwords}})){
+	for my $key (sort (keys %{$::lglobal{seenwords}})){
 		if ($seenwordslang{$key}) {
 			$section .= "$key => $seenwordslang{$key}\n";
 			$i++;
@@ -233,19 +233,19 @@ sub createseenwordslang {
 	$top->Busy( -recurse => 1 );
 	$wc = buildwordlist($textwindow);
 	
-	for my $key (keys %{$main::lglobal{seenwords}}){
+	for my $key (keys %{$::lglobal{seenwords}}){
 		$seenwordslang{$key} = undef;
 	};
 	
 	my $i = 0;
 	# ordered list of all words
-	foreach ( sort ( keys %{ $main::lglobal{seenwords} } ) ) { $seenwords[$i++] = $_ ;	}
+	foreach ( sort ( keys %{ $::lglobal{seenwords} } ) ) { $seenwords[$i++] = $_ ;	}
 	$distinctwordcount = $i;
 #	if ($debug)
 	{ print "Total words: $wc, Distinct words: $distinctwordcount\n"; }
 
 	# hash of all words -> lc (word)
-	foreach ( keys %{ $main::lglobal{seenwords} } ) { $seenwordslc{$_}  = lc($_) ;	}
+	foreach ( keys %{ $::lglobal{seenwords} } ) { $seenwordslc{$_}  = lc($_) ;	}
 
 	$top->Unbusy;
 	return $wc;
@@ -254,7 +254,7 @@ sub createseenwordslang {
 #copied from main
 #input $dict, $section
 sub getmisspelledwordstwo {
-    $main::lglobal{misspelledlist}=();	
+    $::lglobal{misspelledlist}=();	
 	my $dict = shift;
 	my $section = shift;
 	my $word;
@@ -268,7 +268,7 @@ sub getmisspelledwordstwo {
 	push @spellopt, "-d", $dict;
 
 	my $runner = runner::withfiles('checkfil.txt', 'temp.txt');
-	$runner->run($main::globalspellpath, @spellopt);
+	$runner->run($::globalspellpath, @spellopt);
 
 	unlink 'checkfil.txt'  unless ($debug) ;  # input file for Aspell
 
@@ -287,8 +287,8 @@ sub getmisspelledwordstwo {
 	processmisspelledwords ($dict, @templist);	
 	
 	foreach my $word (@templist) {
-		next if ( exists( $main::projectdict{$word} ) );
-		push @{ $main::lglobal{misspelledlist} },
+		next if ( exists( $::projectdict{$word} ) );
+		push @{ $::lglobal{misspelledlist} },
 		  $word;    # filter out project dictionary word list.
 	}
 }
@@ -331,7 +331,7 @@ sub processmisspelledwords {
 	}
 	
 	$i = 0;
-	for my $key (sort (keys %{$main::lglobal{seenwords}})){
+	for my $key (sort (keys %{$::lglobal{seenwords}})){
 		if ($seenwordslang{$key}) { $i++; }
 	};
 	if ($debug) {print "Total words spelt: $i\n";}
@@ -339,14 +339,14 @@ sub processmisspelledwords {
 
 #copied from wordfrequency
 sub multilingualgetmisspelled {
-	$main::lglobal{misspelledlist}= ();
+	$::lglobal{misspelledlist}= ();
 	my $words;
 	my $wordw = 0;
-	for my $dict (@main::multidicts) {
+	for my $dict (@::multidicts) {
 		$words = '';
 		my $i = 0;
 		# only include words with undef language
-		foreach ( sort ( keys %{ $main::lglobal{seenwords} } ) ) { 
+		foreach ( sort ( keys %{ $::lglobal{seenwords} } ) ) { 
 			unless ($seenwordslang{$_}) {
 				$words .= "$_\n";
 				$i++;
@@ -357,9 +357,9 @@ sub multilingualgetmisspelled {
 		if ($words) { getmisspelledwordstwo($dict, $words); }
 	}
 
-	if ($main::lglobal{misspelledlist}){
-		foreach ( sort @{ $main::lglobal{misspelledlist} } ) {
-			$main::lglobal{spellsort}->{$_} = $main::lglobal{seenwords}->{$_} || '0';
+	if ($::lglobal{misspelledlist}){
+		foreach ( sort @{ $::lglobal{misspelledlist} } ) {
+			$::lglobal{spellsort}->{$_} = $::lglobal{seenwords}->{$_} || '0';
 			$wordw++;
 		}
 	}
@@ -374,9 +374,9 @@ sub buildwordlist {
 	my $index = '1.0';
 	my $wc    = 0;
 	my $end   = $textwindow->index('end');
-	$main::lglobal{seenwordsdoublehyphen} = ();
-	$main::lglobal{seenwords} = ();
-	$main::lglobal{seenwordpairs} = ();
+	$::lglobal{seenwordsdoublehyphen} = ();
+	$::lglobal{seenwords} = ();
+	$::lglobal{seenwordpairs} = ();
 	my $filename = $textwindow->FileName;
 	unless ($filename) {
 		$filename = 'tempfile.tmp';
@@ -389,7 +389,7 @@ sub buildwordlist {
 			$index = $end;
 		}
 	}
-	&main::savefile()
+	&::savefile()
 	  if (    ( $textwindow->FileName )
 		   && ( $textwindow->numberChanges != 0 ) );
 	open my $fh, '<', $filename;
@@ -417,7 +417,7 @@ sub buildwordlist {
 			$word =~ s/^[\.,'-]+//;    #and at the beginning
 			next if ( $word eq '' );
 			$wc++;
-			$main::lglobal{seenwords}->{$word}++;
+			$::lglobal{seenwords}->{$word}++;
 		}
 		$index++;
 		$index .= '.0';

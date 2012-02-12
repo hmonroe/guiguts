@@ -15,11 +15,11 @@ BEGIN {
 sub file_open {    # Find a text file to open
 	my $textwindow = shift;
 	#my %lglobal;
-	#%lglobal = %{\%main::lglobal};
-	#$main::lglobal{test}="abcd";	
+	#%lglobal = %{\%::lglobal};
+	#$::lglobal{test}="abcd";	
 	
 	my ($name);
-	return if ( &main::confirmempty() =~ /cancel/i );
+	return if ( &::confirmempty() =~ /cancel/i );
 	my $types = [
 				  [
 					'Text Files',
@@ -30,10 +30,10 @@ sub file_open {    # Find a text file to open
 	$name = $textwindow->getOpenFile(
 									  -filetypes  => $types,
 									  -title      => 'Open File',
-									  -initialdir => $main::globallastpath
+									  -initialdir => $::globallastpath
 	);
 	if ( defined($name) and length($name) ) {
-		&main::openfile($name);
+		&::openfile($name);
 	}
 }
 
@@ -47,16 +47,16 @@ sub file_include {    # FIXME: Should include even if no file loaded.
 				  ],
 				  [ 'All Files', ['*'] ],
 	];
-	return if $main::lglobal{global_filename} =~ m{No File Loaded};
+	return if $::lglobal{global_filename} =~ m{No File Loaded};
 	$name = $textwindow->getOpenFile(
 									  -filetypes  => $types,
 									  -title      => 'File Include',
-									  -initialdir => $main::globallastpath
+									  -initialdir => $::globallastpath
 	);
 	$textwindow->IncludeFile($name)
 	  if defined($name)
 		  and length($name);
-	&main::update_indicators();
+	&::update_indicators();
 	return;
 }
 
@@ -64,13 +64,13 @@ sub file_saveas {
 	my $textwindow = shift;
 	my ($name);
 	$name = $textwindow->getSaveFile( -title      => 'Save As',
-									  -initialdir => $main::globallastpath );
+									  -initialdir => $::globallastpath );
 	if ( defined($name) and length($name) ) {
 		my $binname = $name;
 		$binname =~ s/\.[^\.]*?$/\.bin/;
 		if ( $binname eq $name ) { $binname .= '.bin' }
 		if ( -e $binname ) {
-			my $warning = $main::top->Dialog(    # FIXME: heredoc
+			my $warning = $::top->Dialog(    # FIXME: heredoc
 				-text =>
 "WARNING! A file already exists that will use the same .bin filename.\n"
 				  . "It is highly recommended that a different file name is chosen to avoid\n"
@@ -85,43 +85,43 @@ sub file_saveas {
 		}
 		$textwindow->SaveUTF($name);
 		my ( $fname, $extension, $filevar );
-		( $fname, $main::globallastpath, $extension ) = &main::fileparse($name);
-		$main::globallastpath = &main::os_normal($main::globallastpath);
-		$name           = &main::os_normal($name);
+		( $fname, $::globallastpath, $extension ) = &::fileparse($name);
+		$::globallastpath = &::os_normal($::globallastpath);
+		$name           = &::os_normal($name);
 		$textwindow->FileName($name);
-		$main::lglobal{global_filename} = $name;
-		_bin_save($textwindow,$main::top);
-		&main::_recentupdate($name);
+		$::lglobal{global_filename} = $name;
+		_bin_save($textwindow,$::top);
+		&::_recentupdate($name);
 	} else {
 		return;
 	}
-	&main::update_indicators();
+	&::update_indicators();
 	return;
 }
 
 sub file_close {
 	my $textwindow = shift;
-	return if ( &main::confirmempty() =~ m{cancel}i );
+	return if ( &::confirmempty() =~ m{cancel}i );
 	clearvars($textwindow);
-	&main::update_indicators();
+	&::update_indicators();
 	return;
 }
 
 sub file_import {
 	my ($textwindow,$top)=@_;
-	return if ( &main::confirmempty() =~ /cancel/i );
+	return if ( &::confirmempty() =~ /cancel/i );
 	my $directory = $top->chooseDirectory( -title =>
 			'Choose the directory containing the text files to be imported.', );
 	return 0
 	  unless ( -d $directory and defined $directory and $directory ne '' );
 	$top->Busy( -recurse => 1 );
-	my $pwd = &main::getcwd();
+	my $pwd = &::getcwd();
 	chdir $directory;
 	my @files = glob "*.txt";
 	chdir $pwd;
 	$directory .= '/';
-	$directory      = &main::os_normal($directory);
-	$main::globallastpath = $directory;
+	$directory      = &::os_normal($directory);
+	$::globallastpath = $directory;
 
 	for my $file (sort {$a <=> $b} @files) {
 		if ( $file =~ /^(\w+)\.txt/ ) {
@@ -144,9 +144,9 @@ sub file_import {
 		}
 	}
 	$textwindow->markSet( 'insert', '1.0' );
-	$main::lglobal{prepfile} = 1;
-	&main::file_mark_pages();
-	$main::pngspath = '';
+	$::lglobal{prepfile} = 1;
+	&::file_mark_pages();
+	$::pngspath = '';
 	$top->Unbusy( -recurse => 1 );
 	return;
 }
@@ -191,19 +191,19 @@ sub file_export {
 }
 
 sub _flash_save {
-	$main::lglobal{saveflashingid} = $main::top->repeat(
+	$::lglobal{saveflashingid} = $::top->repeat(
 		500,
 		sub {
-			if ( $main::lglobal{savetool}->cget('-background') eq 'yellow' ) {
-				$main::lglobal{savetool}->configure(
+			if ( $::lglobal{savetool}->cget('-background') eq 'yellow' ) {
+				$::lglobal{savetool}->configure(
 											   -background       => 'green',
 											   -activebackground => 'green'
-				) unless $main::notoolbar;
+				) unless $::notoolbar;
 			} else {
-				$main::lglobal{savetool}->configure(
+				$::lglobal{savetool}->configure(
 											   -background       => 'yellow',
 											   -activebackground => 'yellow'
-				) if ($main::textwindow->numberChanges and (!$main::notoolbar));
+				) if ($::textwindow->numberChanges and (!$::notoolbar));
 			}
 		}
 	);
@@ -213,8 +213,8 @@ sub _flash_save {
 ## save the .bin file associated with the text file
 sub _bin_save {
 	my ($textwindow,$top)=@_;
-	push @main::operations, ( localtime() . ' - File Saved' );
-	&main::oppopupdate() if $main::lglobal{oppop};
+	push @::operations, ( localtime() . ' - File Saved' );
+	&::oppopupdate() if $::lglobal{oppop};
 	my $mark = '1.0';
 	while ( $textwindow->markPrevious($mark) ) {
 		$mark = $textwindow->markPrevious($mark);
@@ -223,17 +223,17 @@ sub _bin_save {
 	while ($mark) {
 		if ( $mark =~ m{Pg(\S+)} ) {
 			$markindex                  = $textwindow->index($mark);
-			$main::pagenumbers{$mark}{offset} = $markindex;
+			$::pagenumbers{$mark}{offset} = $markindex;
 			$mark                       = $textwindow->markNext($mark);
 		} else {
 			$mark = $textwindow->markNext($mark) if $mark;
 			next;
 		}
 	}
-	return if ( $main::lglobal{global_filename} =~ m{No File Loaded} );
-	my $binname = "$main::lglobal{global_filename}.bin";
+	return if ( $::lglobal{global_filename} =~ m{No File Loaded} );
+	my $binname = "$::lglobal{global_filename}.bin";
 	if ( $textwindow->markExists('spellbkmk') ) {
-		$main::spellindexbkmrk = $textwindow->index('spellbkmk');
+		$::spellindexbkmrk = $textwindow->index('spellbkmk');
 	}
 	my $bak = "$binname.bak";
 	if ( -e $bak ) {
@@ -256,58 +256,58 @@ sub _bin_save {
 	my $fh = FileHandle->new("> $binname");
 	if ( defined $fh ) {
 		print $fh "\%pagenumbers = (\n";
-		for my $page ( sort { $a cmp $b } keys %main::pagenumbers ) {
+		for my $page ( sort { $a cmp $b } keys %::pagenumbers ) {
 			no warnings 'uninitialized';
 			if ( $page eq "Pg" ) {
 				next;
 			}
 			print $fh " '$page' => {";
-			print $fh "'offset' => '$main::pagenumbers{$page}{offset}', ";
-			print $fh "'label' => '$main::pagenumbers{$page}{label}', ";
-			print $fh "'style' => '$main::pagenumbers{$page}{style}', ";
-			print $fh "'action' => '$main::pagenumbers{$page}{action}', ";
-			print $fh "'base' => '$main::pagenumbers{$page}{base}'},\n";
+			print $fh "'offset' => '$::pagenumbers{$page}{offset}', ";
+			print $fh "'label' => '$::pagenumbers{$page}{label}', ";
+			print $fh "'style' => '$::pagenumbers{$page}{style}', ";
+			print $fh "'action' => '$::pagenumbers{$page}{action}', ";
+			print $fh "'base' => '$::pagenumbers{$page}{base}'},\n";
 		}
 		print $fh ");\n\n";
 
-		print $fh '$main::bookmarks[0] = \'' . $textwindow->index('insert') . "';\n";
+		print $fh '$::bookmarks[0] = \'' . $textwindow->index('insert') . "';\n";
 		for ( 1 .. 5 ) {
-			print $fh '$main::bookmarks[' 
+			print $fh '$::bookmarks[' 
 			  . $_ 
 			  . '] = \''
 			  . $textwindow->index( 'bkmk' . $_ ) . "';\n"
-			  if $main::bookmarks[$_];
+			  if $::bookmarks[$_];
 		}
-		if ($main::pngspath) {
-			print $fh "\n\$main::pngspath = '@{[&main::escape_problems($main::pngspath)]}';\n\n";
+		if ($::pngspath) {
+			print $fh "\n\$::pngspath = '@{[&::escape_problems($::pngspath)]}';\n\n";
 		}
 		my ($prfr);
-		delete $main::proofers{''};
-		foreach my $page ( sort keys %main::proofers ) {
+		delete $::proofers{''};
+		foreach my $page ( sort keys %::proofers ) {
 
 			no warnings 'uninitialized';
-			for my $round ( 1 .. $main::lglobal{numrounds} ) {
-				if ( defined $main::proofers{$page}->[$round] ) {
-					print $fh '$main::proofers{\'' 
+			for my $round ( 1 .. $::lglobal{numrounds} ) {
+				if ( defined $::proofers{$page}->[$round] ) {
+					print $fh '$::proofers{\'' 
 					  . $page . '\'}[' 
 					  . $round
 					  . '] = \''
-					  . $main::proofers{$page}->[$round] . '\';' . "\n";
+					  . $::proofers{$page}->[$round] . '\';' . "\n";
 				}
 			}
 		}
 		print $fh "\n\n";
 		print $fh "\@operations = (\n";
-		for my $mark (@main::operations) {
-			$mark = &main::escape_problems($mark);
+		for my $mark (@::operations) {
+			$mark = &::escape_problems($mark);
 			print $fh "'$mark',\n";
 		}
 		print $fh ");\n\n";
-		print $fh "\$main::spellindexbkmrk = '$main::spellindexbkmrk';\n\n";
-		print $fh "\$projectid = '$main::projectid';\n\n";
-		print $fh "\$booklang = '$main::booklang';\n\n";
+		print $fh "\$::spellindexbkmrk = '$::spellindexbkmrk';\n\n";
+		print $fh "\$projectid = '$::projectid';\n\n";
+		print $fh "\$booklang = '$::booklang';\n\n";
 		print $fh
-"\$scannoslistpath = '@{[&main::escape_problems(&main::os_normal($main::scannoslistpath))]}';\n\n";
+"\$scannoslistpath = '@{[&::escape_problems(&::os_normal($::scannoslistpath))]}';\n\n";
 		print $fh '1;';
 		$fh->close;
 	} else {
@@ -326,84 +326,84 @@ sub clearvars {
 			$textwindow->markUnset($_);
 		}
 	}
-	%main::reghints = ();
-	%{ $main::lglobal{seenwordsdoublehyphen} } = ();
-	$main::lglobal{seenwords}     = ();
-	$main::lglobal{seenwordpairs} = ();
-	$main::lglobal{fnarray}       = ();
-	%main::proofers               = ();
-	%main::pagenumbers            = ();
-	@main::operations             = ();
-	@main::bookmarks              = ();
-	$main::pngspath               = q{};
-	$main::lglobal{seepagenums}   = 0;
-	@{ $main::lglobal{fnarray} } = ();
-	undef $main::lglobal{prepfile};
+	%::reghints = ();
+	%{ $::lglobal{seenwordsdoublehyphen} } = ();
+	$::lglobal{seenwords}     = ();
+	$::lglobal{seenwordpairs} = ();
+	$::lglobal{fnarray}       = ();
+	%::proofers               = ();
+	%::pagenumbers            = ();
+	@::operations             = ();
+	@::bookmarks              = ();
+	$::pngspath               = q{};
+	$::lglobal{seepagenums}   = 0;
+	@{ $::lglobal{fnarray} } = ();
+	undef $::lglobal{prepfile};
 	return;
 }
 
 sub savefile {    # Determine which save routine to use and then use it
-	my ($textwindow,$top)=($main::textwindow,$main::top);
-	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
-	if ( $main::lglobal{global_filename} =~ /No File Loaded/ ) {
+	my ($textwindow,$top)=($::textwindow,$::top);
+	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	if ( $::lglobal{global_filename} =~ /No File Loaded/ ) {
 		if ( $textwindow->numberChanges == 0 ) {
 			return;
 		}
 		my ($name);
 		$name =
 		  $textwindow->getSaveFile( -title      => 'Save As',
-									-initialdir => $main::globallastpath );
+									-initialdir => $::globallastpath );
 		if ( defined($name) and length($name) ) {
 			$textwindow->SaveUTF($name);
-			$name = &main::os_normal($name);
-			&main::_recentupdate($name);
+			$name = &::os_normal($name);
+			&::_recentupdate($name);
 		} else {
 			return;
 		}
 	} else {
-		if ($main::autobackup) {
-			if ( -e $main::lglobal{global_filename} ) {
-				if ( -e "$main::lglobal{global_filename}.bk2" ) {
-					unlink "$main::lglobal{global_filename}.bk2";
+		if ($::autobackup) {
+			if ( -e $::lglobal{global_filename} ) {
+				if ( -e "$::lglobal{global_filename}.bk2" ) {
+					unlink "$::lglobal{global_filename}.bk2";
 				}
-				if ( -e "$main::lglobal{global_filename}.bk1" ) {
-					rename( "$main::lglobal{global_filename}.bk1",
-							"$main::lglobal{global_filename}.bk2" );
+				if ( -e "$::lglobal{global_filename}.bk1" ) {
+					rename( "$::lglobal{global_filename}.bk1",
+							"$::lglobal{global_filename}.bk2" );
 				}
-				rename( $main::lglobal{global_filename},
-						"$main::lglobal{global_filename}.bk1" );
+				rename( $::lglobal{global_filename},
+						"$::lglobal{global_filename}.bk1" );
 			}
 		}
 		$textwindow->SaveUTF;
 	}
 	$textwindow->ResetUndo;
-	&main::_bin_save($textwindow,$top);
-	&main::set_autosave() if $main::autosave;
-	&main::update_indicators();
+	&::_bin_save($textwindow,$top);
+	&::set_autosave() if $::autosave;
+	&::update_indicators();
 }
 
 sub file_mark_pages {
-	my $top =$main::top;
-	my $textwindow = $main::textwindow;
+	my $top =$::top;
+	my $textwindow = $::textwindow;
 	
 	$top->Busy( -recurse => 1 );
-	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
+	&::viewpagenums() if ( $::lglobal{seepagenums} );
 	my ( $line, $index, $page, $rnd1, $rnd2, $pagemark );
-	$main::searchstartindex = '1.0';
-	$main::searchendindex   = '1.0';
-	while ($main::searchstartindex) {
-		#$main::searchstartindex =
+	$::searchstartindex = '1.0';
+	$::searchendindex   = '1.0';
+	while ($::searchstartindex) {
+		#$::searchstartindex =
 		#  $textwindow->search( '-exact', '--',
 		#					   '--- File:',
-		#					   $main::searchendindex, 'end' );
- 		$main::searchstartindex =$textwindow->search( '-nocase', '-regexp', '--',
+		#					   $::searchendindex, 'end' );
+ 		$::searchstartindex =$textwindow->search( '-nocase', '-regexp', '--',
 							   '-*\s?File:\s?(\S+)\.(png|jpg)---.*$',
-							   $main::searchendindex, 'end' );
-		last unless $main::searchstartindex;
-		my ( $row, $col ) = split /\./, $main::searchstartindex;
+							   $::searchendindex, 'end' );
+		last unless $::searchstartindex;
+		my ( $row, $col ) = split /\./, $::searchstartindex;
 		$line = $textwindow->get( "$row.0", "$row.end" );
-		$main::searchendindex = $textwindow->index("$main::searchstartindex lineend");
-		#$line = $textwindow->get( $main::searchstartindex, $main::searchendindex );
+		$::searchendindex = $textwindow->index("$::searchstartindex lineend");
+		#$line = $textwindow->get( $::searchstartindex, $::searchendindex );
 
 		# get the page name - we do this separate from pulling the
 		# proofer names in case we did an Import Test Prep Files
@@ -426,15 +426,15 @@ sub file_mark_pages {
 			$prftrim =~ s/-*$//g;
 
 			# split the proofer string into parts
-			@{ $main::proofers{$page} } = split( "\Q\\\E", $prftrim );
+			@{ $::proofers{$page} } = split( "\Q\\\E", $prftrim );
 		}
 
 		$pagemark = 'Pg' . $page;
-		$main::pagenumbers{$pagemark}{offset} = 1;
-		$textwindow->markSet( $pagemark, $main::searchstartindex );
+		$::pagenumbers{$pagemark}{offset} = 1;
+		$textwindow->markSet( $pagemark, $::searchstartindex );
 		$textwindow->markGravity( $pagemark, 'left' );
 	}
-	delete $main::proofers{''};
+	delete $::proofers{''};
 	$top->Unbusy( -recurse => 1 );
 	return;
 }
@@ -444,14 +444,14 @@ sub _recentupdate {    # FIXME: Seems to be choking.
 	my $name = shift;
 
 	# remove $name or any *empty* values from the list
-	@main::recentfile = grep( !/(?: \Q$name\E | \Q*empty*\E )/x, @main::recentfile );
+	@::recentfile = grep( !/(?: \Q$name\E | \Q*empty*\E )/x, @::recentfile );
 
 	# place $name at the top
-	unshift @main::recentfile, $name;
+	unshift @::recentfile, $name;
 
 	# limit the list to 10 entries
-	pop @main::recentfile while ( $#main::recentfile > 10 );
-	&main::menurebuild();
+	pop @::recentfile while ( $#::recentfile > 10 );
+	&::menurebuild();
 	return;
 }
 
@@ -459,59 +459,59 @@ sub _recentupdate {    # FIXME: Seems to be choking.
 
 ## Global Exit
 sub _exit {
-	if ( &main::confirmdiscard() =~ m{no}i ) {
-		&main::aspellstop() if $main::lglobal{spellpid};
+	if ( &::confirmdiscard() =~ m{no}i ) {
+		&::aspellstop() if $::lglobal{spellpid};
 		exit;
 	}
 }
 
 sub file_guess_page_marks {
-	my $top = $main::top;
-	my $textwindow = $main::textwindow;
+	my $top = $::top;
+	my $textwindow = $::textwindow;
 	my ( $totpages, $line25, $linex );
-	if ( $main::lglobal{pgpop} ) {
-		$main::lglobal{pgpop}->deiconify;
+	if ( $::lglobal{pgpop} ) {
+		$::lglobal{pgpop}->deiconify;
 	} else {
-		$main::lglobal{pgpop} = $top->Toplevel;
-		$main::lglobal{pgpop}->title('Guess Page Numbers');
-		&main::initialize_popup_with_deletebinding('pgpop');
-		my $f0 = $main::lglobal{pgpop}->Frame->pack;
+		$::lglobal{pgpop} = $top->Toplevel;
+		$::lglobal{pgpop}->title('Guess Page Numbers');
+		&::initialize_popup_with_deletebinding('pgpop');
+		my $f0 = $::lglobal{pgpop}->Frame->pack;
 		$f0->Label( -text =>
 'This function should only be used if you have the page images but no page markers in the text.',
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-		my $f1 = $main::lglobal{pgpop}->Frame->pack;
+		my $f1 = $::lglobal{pgpop}->Frame->pack;
 		$f1->Label( -text => 'How many pages are there total?', )
 		  ->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
 		my $tpages = $f1->Entry(
-								 -background => $main::bkgcolor,
+								 -background => $::bkgcolor,
 								 -width      => 8,
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
 		$f1->Label( -text => 'What line # does page 25 start with?', )
 		  ->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
 		my $page25 = $f1->Entry(
-								 -background => $main::bkgcolor,
+								 -background => $::bkgcolor,
 								 -width      => 8,
 		)->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
-		my $f3 = $main::lglobal{pgpop}->Frame->pack;
+		my $f3 = $::lglobal{pgpop}->Frame->pack;
 		$f3->Label(
 			 -text => 'Select a page near the back, before the index starts.', )
 		  ->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
-		my $f4 = $main::lglobal{pgpop}->Frame->pack;
+		my $f4 = $::lglobal{pgpop}->Frame->pack;
 		$f4->Label( -text => 'Page #?.', )
 		  ->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
 		$f4->Label( -text => 'Line #?.', )
 		  ->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
 		my $pagexe = $f4->Entry(
-								 -background => $main::bkgcolor,
+								 -background => $::bkgcolor,
 								 -width      => 8,
 		)->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
 		my $linexe = $f4->Entry(
-								 -background => $main::bkgcolor,
+								 -background => $::bkgcolor,
 								 -width      => 8,
 		)->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
-		my $f2 = $main::lglobal{pgpop}->Frame->pack;
+		my $f2 = $::lglobal{pgpop}->Frame->pack;
 		my $calcbutton = $f2->Button(
-			-activebackground => $main::activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				my ( $pnum, $lnum, $pagex, $linex, $number );
 				$totpages = $tpages->get;
@@ -585,8 +585,8 @@ sub file_guess_page_marks {
 					$textwindow->markSet( "Pg$number", "$lnum.0" );
 					$textwindow->markGravity( "Pg$number", 'left' );
 				}
-				$main::lglobal{pgpop}->destroy;
-				undef $main::lglobal{pgpop};
+				$::lglobal{pgpop}->destroy;
+				undef $::lglobal{pgpop};
 			},
 			-text  => 'Guess Page #s',
 			-width => 18
@@ -597,34 +597,34 @@ sub file_guess_page_marks {
 
 ## Update the Operations history
 sub oppopupdate {
-	$main::lglobal{oplistbox}->delete( '0', 'end' );
-	$main::lglobal{oplistbox}->insert( 'end', @main::operations );
+	$::lglobal{oplistbox}->delete( '0', 'end' );
+	$::lglobal{oplistbox}->insert( 'end', @::operations );
 }
 
 # Pop up an "Operation" history. Track which functions have already been
 # run.
 sub opspop_up {
-	my $top = $main::top;
-	if ( $main::lglobal{oppop} ) {
-		$main::lglobal{oppop}->deiconify;
-		$main::lglobal{oppop}->raise;
+	my $top = $::top;
+	if ( $::lglobal{oppop} ) {
+		$::lglobal{oppop}->deiconify;
+		$::lglobal{oppop}->raise;
 	} else {
-		$main::lglobal{oppop} = $top->Toplevel;
-		$main::lglobal{oppop}->title('Function history');
-		&main::initialize_popup_with_deletebinding('oppop');
+		$::lglobal{oppop} = $top->Toplevel;
+		$::lglobal{oppop}->title('Function history');
+		&::initialize_popup_with_deletebinding('oppop');
 		my $frame =
-		  $main::lglobal{oppop}->Frame->pack(
+		  $::lglobal{oppop}->Frame->pack(
 										-anchor => 'nw',
 										-fill   => 'both',
 										-expand => 'both',
 										-padx   => 2,
 										-pady   => 2
 		  );
-		$main::lglobal{oplistbox} =
+		$::lglobal{oplistbox} =
 		  $frame->Scrolled(
 							'Listbox',
 							-scrollbars  => 'se',
-							-background  => $main::bkgcolor,
+							-background  => $::bkgcolor,
 							-selectmode  => 'single',
 							-activestyle => 'none',
 		  )->pack(
@@ -634,9 +634,9 @@ sub opspop_up {
 				   -padx   => 2,
 				   -pady   => 2
 		  );
-		&main::drag( $main::lglobal{oplistbox} );
+		&::drag( $::lglobal{oplistbox} );
 	}
-	&main::oppopupdate();
+	&::oppopupdate();
 }
 
 

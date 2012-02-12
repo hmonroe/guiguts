@@ -13,31 +13,31 @@ BEGIN {
 # Routine to update the status bar when something has changed.
 #
 sub update_indicators {
-	my $textwindow = $main::textwindow;
-	my $top = $main::top;
+	my $textwindow = $::textwindow;
+	my $top = $::top;
 	my ( $last_line, $last_col ) = split( /\./, $textwindow->index('end') );
 	my ( $line,      $column )   = split( /\./, $textwindow->index('insert') );
-	$main::lglobal{current_line_label}
+	$::lglobal{current_line_label}
 	  ->configure( -text => "Ln:$line/" . ( $last_line - 1 ) . " Col:$column" )
-	  if ( $main::lglobal{current_line_label} );
+	  if ( $::lglobal{current_line_label} );
 	my $mode             = $textwindow->OverstrikeMode;
 	my $overstrke_insert = ' I ';
 	if ($mode) {
 		$overstrke_insert = ' O ';
 	}
-	$main::lglobal{insert_overstrike_mode_label}
+	$::lglobal{insert_overstrike_mode_label}
 	  ->configure( -text => " $overstrke_insert " )
-	  if ( $main::lglobal{insert_overstrike_mode_label} );
+	  if ( $::lglobal{insert_overstrike_mode_label} );
 	my $filename = $textwindow->FileName;
 	$filename = 'No File Loaded' unless ( defined($filename) );
-	$main::lglobal{highlightlabel}->configure( -background => $main::highlightcolor )
-	  if ( $main::scannos_highlighted );
-	if ( $main::lglobal{highlightlabel} ) {
-		$main::lglobal{highlightlabel}->configure( -background => 'gray' )
-		  unless ( $main::scannos_highlighted );
+	$::lglobal{highlightlabel}->configure( -background => $::highlightcolor )
+	  if ( $::scannos_highlighted );
+	if ( $::lglobal{highlightlabel} ) {
+		$::lglobal{highlightlabel}->configure( -background => 'gray' )
+		  unless ( $::scannos_highlighted );
 	}
-	$filename = &main::os_normal($filename);
-	$main::lglobal{global_filename} = $filename;
+	$filename = &::os_normal($filename);
+	$::lglobal{global_filename} = $filename;
 
 	my $edit_flag = '';
 	if ( $textwindow->numberChanges ) {
@@ -47,9 +47,9 @@ sub update_indicators {
 	# window label format: GG-version - [edited] - [file name]
 	if ($edit_flag) {
 		$top->configure(
-			 -title => $main::window_title . " - " . $edit_flag . " - " . $filename );
+			 -title => $::window_title . " - " . $edit_flag . " - " . $filename );
 	} else {
-		$top->configure( -title => $main::window_title . " - " . $filename );
+		$top->configure( -title => $::window_title . " - " . $filename );
 	}
 
 	update_ordinal_button();
@@ -57,21 +57,21 @@ sub update_indicators {
 	#FIXME: need some logic behind this
 	$textwindow->idletasks;
 	my ( $mark, $pnum );
-	$pnum = &main::get_page_number();
+	$pnum = &::get_page_number();
 	my $markindex = $textwindow->index('insert');
-	if ( $filename ne 'No File Loaded' or defined $main::lglobal{prepfile} ) {
-		$main::lglobal{img_num_label}->configure( -text => 'Img:001' )
-		  if defined $main::lglobal{img_num_label};
-		$main::lglobal{page_label}->configure( -text => ("Lbl: None ") )
-		  if defined $main::lglobal{page_label};
-		if (    $main::auto_show_images
+	if ( $filename ne 'No File Loaded' or defined $::lglobal{prepfile} ) {
+		$::lglobal{img_num_label}->configure( -text => 'Img:001' )
+		  if defined $::lglobal{img_num_label};
+		$::lglobal{page_label}->configure( -text => ("Lbl: None ") )
+		  if defined $::lglobal{page_label};
+		if (    $::auto_show_images
 			 && $pnum )
 		{
-			if (    ( not defined $main::lglobal{pageimageviewed} )
-				 or ( $pnum ne "$main::lglobal{pageimageviewed}" ) )
+			if (    ( not defined $::lglobal{pageimageviewed} )
+				 or ( $pnum ne "$::lglobal{pageimageviewed}" ) )
 			{
-				$main::lglobal{pageimageviewed} = $pnum;
-				&main::openpng($textwindow,$pnum);
+				$::lglobal{pageimageviewed} = $pnum;
+				&::openpng($textwindow,$pnum);
 			}
 		}
 		update_img_button($pnum);
@@ -83,10 +83,10 @@ sub update_indicators {
 		update_img_lbl_values($pnum);
 		update_proofers_button($pnum);
 	}
-	$textwindow->tagRemove( 'bkmk', '1.0', 'end' ) unless $main::bkmkhl;
-	if ( $main::lglobal{geometryupdate} ) {
-		&main::savesettings();
-		$main::lglobal{geometryupdate} = 0;
+	$textwindow->tagRemove( 'bkmk', '1.0', 'end' ) unless $::bkmkhl;
+	if ( $::lglobal{geometryupdate} ) {
+		&::savesettings();
+		$::lglobal{geometryupdate} = 0;
 	}
 }
 
@@ -98,7 +98,7 @@ sub _butbind {
 	$widget->bind(
 		'<Enter>',
 		sub {
-			$widget->configure( -background => $main::activecolor );
+			$widget->configure( -background => $::activecolor );
 			$widget->configure( -relief     => 'raised' );
 		}
 	);
@@ -121,7 +121,7 @@ sub _updatesel {
 	my @ranges = $textwindow->tagRanges('sel');
 	my $msg;
 	if (@ranges) {
-		if ( $main::lglobal{showblocksize} && ( @ranges > 2 ) ) {
+		if ( $::lglobal{showblocksize} && ( @ranges > 2 ) ) {
 			my ( $srow, $scol ) = split /\./, $ranges[0];
 			my ( $erow, $ecol ) = split /\./, $ranges[-1];
 			$msg = ' R:'
@@ -129,11 +129,11 @@ sub _updatesel {
 			  . abs( $ecol - $scol ) . ' ';
 		} else {
 			$msg = " $ranges[0]--$ranges[-1] ";
-			if ( $main::lglobal{selectionpop} ) {
-				$main::lglobal{selsentry}->delete( '0', 'end' );
-				$main::lglobal{selsentry}->insert( 'end', $ranges[0] );
-				$main::lglobal{seleentry}->delete( '0', 'end' );
-				$main::lglobal{seleentry}->insert( 'end', $ranges[-1] );
+			if ( $::lglobal{selectionpop} ) {
+				$::lglobal{selsentry}->delete( '0', 'end' );
+				$::lglobal{selsentry}->insert( 'end', $ranges[0] );
+				$::lglobal{seleentry}->delete( '0', 'end' );
+				$::lglobal{seleentry}->insert( 'end', $ranges[-1] );
 			}
 		}
 	} else {
@@ -143,10 +143,10 @@ sub _updatesel {
 
 	#FIXME
 	no warnings 'uninitialized';
-	$main::lglobal{selmaxlength} = $msgln if ( $msgln > $main::lglobal{selmaxlength} );
-	$main::lglobal{selectionlabel}
-	  ->configure( -text => $msg, -width => $main::lglobal{selmaxlength} );
-	&main::update_indicators();
+	$::lglobal{selmaxlength} = $msgln if ( $msgln > $::lglobal{selmaxlength} );
+	$::lglobal{selectionlabel}
+	  ->configure( -text => $msg, -width => $::lglobal{selmaxlength} );
+	&::update_indicators();
 	$textwindow->_lineupdate;
 }
 
@@ -154,49 +154,49 @@ sub _updatesel {
 sub buildstatusbar {
 	my ($textwindow,$top)=@_;
 	
-	$main::lglobal{current_line_label} =
-	  $main::counter_frame->Label(
+	$::lglobal{current_line_label} =
+	  $::counter_frame->Label(
 							 -text       => 'Ln: 1/1 - Col: 0',
 							 -width      => 20,
 							 -relief     => 'ridge',
 							 -background => 'gray',
 	  )->grid( -row => 1, -column => 0, -sticky => 'nw' );
-	$main::lglobal{current_line_label}->bind(
+	$::lglobal{current_line_label}->bind(
 		'<1>',
 		sub {
-			$main::lglobal{current_line_label}->configure( -relief => 'sunken' );
-			&main::gotoline();
-			&main::update_indicators();
+			$::lglobal{current_line_label}->configure( -relief => 'sunken' );
+			&::gotoline();
+			&::update_indicators();
 		}
 	);
-	$main::lglobal{current_line_label}->bind(
+	$::lglobal{current_line_label}->bind(
 		'<3>',
 		sub {
-			if   ($main::vislnnm) { $main::vislnnm = 0 }
-			else            { $main::vislnnm = 1 }
-			$textwindow->showlinenum if $main::vislnnm;
-			$textwindow->hidelinenum unless $main::vislnnm;
-			&main::savesettings();
+			if   ($::vislnnm) { $::vislnnm = 0 }
+			else            { $::vislnnm = 1 }
+			$textwindow->showlinenum if $::vislnnm;
+			$textwindow->hidelinenum unless $::vislnnm;
+			&::savesettings();
 		}
 	);
-	$main::lglobal{selectionlabel} =
-	  $main::counter_frame->Label(
+	$::lglobal{selectionlabel} =
+	  $::counter_frame->Label(
 							 -text       => ' No Selection ',
 							 -relief     => 'ridge',
 							 -background => 'gray',
 	  )->grid( -row => 1, -column => 10, -sticky => 'nw' );
-	$main::lglobal{selectionlabel}->bind(
+	$::lglobal{selectionlabel}->bind(
 		'<1>',
 		sub {
-			if ( $main::lglobal{showblocksize} ) {
-				$main::lglobal{showblocksize} = 0;
+			if ( $::lglobal{showblocksize} ) {
+				$::lglobal{showblocksize} = 0;
 			} else {
-				$main::lglobal{showblocksize} = 1;
+				$::lglobal{showblocksize} = 1;
 			}
 		}
 	);
-	$main::lglobal{selectionlabel}->bind( '<Double-1>', sub { &main::selection() } );
-	$main::lglobal{selectionlabel}->bind(
+	$::lglobal{selectionlabel}->bind( '<Double-1>', sub { &::selection() } );
+	$::lglobal{selectionlabel}->bind(
 		'<3>',
 		sub {
 			if ( $textwindow->markExists('selstart') ) {
@@ -204,7 +204,7 @@ sub buildstatusbar {
 			}
 		}
 	);
-	$main::lglobal{selectionlabel}->bind(
+	$::lglobal{selectionlabel}->bind(
 		'<Shift-3>',
 		sub {
 			$textwindow->tagRemove( 'sel', '1.0', 'end' );
@@ -219,64 +219,64 @@ sub buildstatusbar {
 		}
 	);
 
-	$main::lglobal{highlightlabel} =
-	  $main::counter_frame->Label(
+	$::lglobal{highlightlabel} =
+	  $::counter_frame->Label(
 							 -text       => 'H',
 							 -width      => 2,
 							 -relief     => 'ridge',
 							 -background => 'gray',
 	  )->grid( -row => 1, -column => 1 );
 
-	$main::lglobal{highlightlabel}->bind(
+	$::lglobal{highlightlabel}->bind(
 		'<1>',
 		sub {
-			if ( $main::scannos_highlighted ) {
-				$main::scannos_highlighted          = 0;
-				$main::lglobal{highlighttempcolor} = 'gray';
+			if ( $::scannos_highlighted ) {
+				$::scannos_highlighted          = 0;
+				$::lglobal{highlighttempcolor} = 'gray';
 			} else {
-				&main::scannosfile() unless $main::scannoslist;
-				return unless $main::scannoslist;
-				$main::scannos_highlighted          = 1;
-				$main::lglobal{highlighttempcolor} = $main::highlightcolor;
+				&::scannosfile() unless $::scannoslist;
+				return unless $::scannoslist;
+				$::scannos_highlighted          = 1;
+				$::lglobal{highlighttempcolor} = $::highlightcolor;
 			}
-			&main::highlight_scannos();
+			&::highlight_scannos();
 		}
 	);
-	$main::lglobal{highlightlabel}->bind( '<3>', sub { &main::scannosfile() } );
-	$main::lglobal{highlightlabel}->bind(
+	$::lglobal{highlightlabel}->bind( '<3>', sub { &::scannosfile() } );
+	$::lglobal{highlightlabel}->bind(
 		'<Enter>',
 		sub {
-			$main::lglobal{highlighttempcolor} =
-			  $main::lglobal{highlightlabel}->cget( -background );
-			$main::lglobal{highlightlabel}->configure( -background => $main::activecolor );
-			$main::lglobal{highlightlabel}->configure( -relief     => 'raised' );
+			$::lglobal{highlighttempcolor} =
+			  $::lglobal{highlightlabel}->cget( -background );
+			$::lglobal{highlightlabel}->configure( -background => $::activecolor );
+			$::lglobal{highlightlabel}->configure( -relief     => 'raised' );
 		}
 	);
-	$main::lglobal{highlightlabel}->bind(
+	$::lglobal{highlightlabel}->bind(
 		'<Leave>',
 		sub {
-			$main::lglobal{highlightlabel}
-			  ->configure( -background => $main::lglobal{highlighttempcolor} );
-			$main::lglobal{highlightlabel}->configure( -relief => 'ridge' );
+			$::lglobal{highlightlabel}
+			  ->configure( -background => $::lglobal{highlighttempcolor} );
+			$::lglobal{highlightlabel}->configure( -relief => 'ridge' );
 		}
 	);
-	$main::lglobal{highlightlabel}->bind(
+	$::lglobal{highlightlabel}->bind(
 		'<ButtonRelease-1>',
 		sub {
-			$main::lglobal{highlightlabel}->configure( -relief => 'raised' );
+			$::lglobal{highlightlabel}->configure( -relief => 'raised' );
 		}
 	);
-	$main::lglobal{insert_overstrike_mode_label} =
-	  $main::counter_frame->Label(
+	$::lglobal{insert_overstrike_mode_label} =
+	  $::counter_frame->Label(
 							 -text       => '',
 							 -relief     => 'ridge',
 							 -background => 'gray',
 							 -width      => 2,
 	  )->grid( -row => 1, -column => 9, -sticky => 'nw' );
-	$main::lglobal{insert_overstrike_mode_label}->bind(
+	$::lglobal{insert_overstrike_mode_label}->bind(
 		'<1>',
 		sub {
-			$main::lglobal{insert_overstrike_mode_label}
+			$::lglobal{insert_overstrike_mode_label}
 			  ->configure( -relief => 'sunken' );
 			if ( $textwindow->OverstrikeMode ) {
 				$textwindow->OverstrikeMode(0);
@@ -285,41 +285,41 @@ sub buildstatusbar {
 			}
 		}
 	);
-	$main::lglobal{ordinallabel} =
-	  $main::counter_frame->Label(
+	$::lglobal{ordinallabel} =
+	  $::counter_frame->Label(
 							 -text       => '',
 							 -relief     => 'ridge',
 							 -background => 'gray',
 							 -anchor     => 'w',
 	  )->grid( -row => 1, -column => 11 );
 
-	$main::lglobal{ordinallabel}->bind(
+	$::lglobal{ordinallabel}->bind(
 		'<1>',
 		sub {
-			$main::lglobal{ordinallabel}->configure( -relief => 'sunken' );
-			$main::lglobal{longordlabel} = $main::lglobal{longordlabel} ? 0 : 1;
-			&main::update_indicators();
+			$::lglobal{ordinallabel}->configure( -relief => 'sunken' );
+			$::lglobal{longordlabel} = $::lglobal{longordlabel} ? 0 : 1;
+			&::update_indicators();
 		}
 	);
 	_butbind($_)
-	  for ( $main::lglobal{insert_overstrike_mode_label},
-			$main::lglobal{current_line_label},
-			$main::lglobal{selectionlabel},
-			$main::lglobal{ordinallabel} );
-	$main::lglobal{statushelp} = $top->Balloon( -initwait => 1000 );
-	$main::lglobal{statushelp}->attach( $main::lglobal{current_line_label},
+	  for ( $::lglobal{insert_overstrike_mode_label},
+			$::lglobal{current_line_label},
+			$::lglobal{selectionlabel},
+			$::lglobal{ordinallabel} );
+	$::lglobal{statushelp} = $top->Balloon( -initwait => 1000 );
+	$::lglobal{statushelp}->attach( $::lglobal{current_line_label},
 			 -balloonmsg =>
 			   "Line number out of total lines\nand column number of cursor." );
-	$main::lglobal{statushelp}->attach( $main::lglobal{insert_overstrike_mode_label},
+	$::lglobal{statushelp}->attach( $::lglobal{insert_overstrike_mode_label},
 						  -balloonmsg => 'Typeover Mode. (Insert/Overstrike)' );
-	$main::lglobal{statushelp}->attach( $main::lglobal{ordinallabel},
+	$::lglobal{statushelp}->attach( $::lglobal{ordinallabel},
 		-balloonmsg =>
 "Decimal & Hexadecimal ordinal of the\ncharacter to the right of the cursor."
 	);
-	$main::lglobal{statushelp}->attach( $main::lglobal{highlightlabel},
+	$::lglobal{statushelp}->attach( $::lglobal{highlightlabel},
 					-balloonmsg =>
 					  "Highlight words from list. Right click to select list" );
-	$main::lglobal{statushelp}->attach( $main::lglobal{selectionlabel},
+	$::lglobal{statushelp}->attach( $::lglobal{selectionlabel},
 		-balloonmsg =>
 "Start and end points of selection -- Or, total lines.columns of selection"
 	);
@@ -327,33 +327,33 @@ sub buildstatusbar {
 
 sub update_img_button {
 	my $pnum = shift;
-	my $textwindow = $main::textwindow;
-	unless ( defined( $main::lglobal{img_num_label} ) ) {
-		$main::lglobal{img_num_label} =
-		  $main::counter_frame->Label(
+	my $textwindow = $::textwindow;
+	unless ( defined( $::lglobal{img_num_label} ) ) {
+		$::lglobal{img_num_label} =
+		  $::counter_frame->Label(
 								 -text       => "Img:$pnum",
 								 -width      => 7,
 								 -background => 'gray',
 								 -relief     => 'ridge',
 		  )->grid( -row => 1, -column => 2, -sticky => 'nw' );
-		$main::lglobal{img_num_label}->bind(
+		$::lglobal{img_num_label}->bind(
 			'<1>',
 			sub {
-				$main::lglobal{img_num_label}->configure( -relief => 'sunken' );
-				&main::gotopage();
-				&main::update_indicators();
+				$::lglobal{img_num_label}->configure( -relief => 'sunken' );
+				&::gotopage();
+				&::update_indicators();
 			}
 		);
-		$main::lglobal{img_num_label}->bind(
+		$::lglobal{img_num_label}->bind(
 			'<3>',
 			sub {
-				$main::lglobal{img_num_label}->configure( -relief => 'sunken' );
-				&main::viewpagenums();
-				&main::update_indicators();
+				$::lglobal{img_num_label}->configure( -relief => 'sunken' );
+				&::viewpagenums();
+				&::update_indicators();
 			}
 		);
-		_butbind( $main::lglobal{img_num_label} );
-		$main::lglobal{statushelp}->attach( $main::lglobal{img_num_label},
+		_butbind( $::lglobal{img_num_label} );
+		$::lglobal{statushelp}->attach( $::lglobal{img_num_label},
 						   -balloonmsg => "Image/Page name for current page." );
 	}
 
@@ -361,30 +361,30 @@ sub update_img_button {
 }
 
 sub update_label_button {
-	my $textwindow = $main::textwindow;
-	unless ( $main::lglobal{page_label} ) {
-		$main::lglobal{page_label} =
-		  $main::counter_frame->Label(
+	my $textwindow = $::textwindow;
+	unless ( $::lglobal{page_label} ) {
+		$::lglobal{page_label} =
+		  $::counter_frame->Label(
 								 -text       => 'Lbl: None ',
 								 -background => 'gray',
 								 -relief     => 'ridge',
 		  )->grid( -row => 1, -column => 7 );
-		_butbind( $main::lglobal{page_label} );
-		$main::lglobal{page_label}->bind(
+		_butbind( $::lglobal{page_label} );
+		$::lglobal{page_label}->bind(
 			'<1>',
 			sub {
-				$main::lglobal{page_label}->configure( -relief => 'sunken' );
-				&main::gotolabel();
+				$::lglobal{page_label}->configure( -relief => 'sunken' );
+				&::gotolabel();
 			}
 		);
-		$main::lglobal{page_label}->bind(
+		$::lglobal{page_label}->bind(
 			'<3>',
 			sub {
-				$main::lglobal{page_label}->configure( -relief => 'sunken' );
-				&main::pageadjust();
+				$::lglobal{page_label}->configure( -relief => 'sunken' );
+				&::pageadjust();
 			}
 		);
-		$main::lglobal{statushelp}->attach( $main::lglobal{page_label},
+		$::lglobal{statushelp}->attach( $::lglobal{page_label},
 						-balloonmsg => "Page label assigned to current page." );
 	}
 	return ();
@@ -393,53 +393,53 @@ sub update_label_button {
 # New subroutine "update_ordinal_button" extracted - Mon Mar 21 22:53:33 2011.
 #
 sub update_ordinal_button {
-	my $textwindow = $main::textwindow;
+	my $textwindow = $::textwindow;
 	my $ordinal = ord( $textwindow->get('insert') );
 	my $hexi = uc sprintf( "%04x", $ordinal );
-	if ( $main::lglobal{longordlabel} ) {
+	if ( $::lglobal{longordlabel} ) {
 		my $msg = charnames::viacode($ordinal) || '';
 		my $msgln = length(" Dec $ordinal : Hex $hexi : $msg ");
 
 		no warnings 'uninitialized';
-		$main::lglobal{ordmaxlength} = $msgln
-		  if ( $msgln > $main::lglobal{ordmaxlength} );
-		$main::lglobal{ordinallabel}->configure(
+		$::lglobal{ordmaxlength} = $msgln
+		  if ( $msgln > $::lglobal{ordmaxlength} );
+		$::lglobal{ordinallabel}->configure(
 								   -text => " Dec $ordinal : Hex $hexi : $msg ",
-								   -width   => $main::lglobal{ordmaxlength},
+								   -width   => $::lglobal{ordmaxlength},
 								   -justify => 'left'
 		);
 
 	} else {
-		$main::lglobal{ordinallabel}->configure(
+		$::lglobal{ordinallabel}->configure(
 										  -text => " Dec $ordinal : Hex $hexi ",
 										  -width => 18
-		) if ( $main::lglobal{ordinallabel} );
+		) if ( $::lglobal{ordinallabel} );
 	}
 }
 
 sub update_prev_img_button {
-	my $textwindow = $main::textwindow;
-	unless ( defined( $main::lglobal{previmagebutton} ) ) {
-		$main::lglobal{previmagebutton} =
-		  $main::counter_frame->Label(
+	my $textwindow = $::textwindow;
+	unless ( defined( $::lglobal{previmagebutton} ) ) {
+		$::lglobal{previmagebutton} =
+		  $::counter_frame->Label(
 								 -text       => '<',
 								 -width      => 1,
 								 -relief     => 'ridge',
 								 -background => 'gray',
 		  )->grid( -row => 1, -column => 3 );
-		$main::lglobal{previmagebutton}->bind(
+		$::lglobal{previmagebutton}->bind(
 			'<1>',
 			sub {
-				$main::lglobal{previmagebutton}->configure( -relief => 'sunken' );
-				$main::lglobal{showthispageimage} = 1;
-				&main::viewpagenums() unless $main::lglobal{pnumpop};
+				$::lglobal{previmagebutton}->configure( -relief => 'sunken' );
+				$::lglobal{showthispageimage} = 1;
+				&::viewpagenums() unless $::lglobal{pnumpop};
 				$textwindow->focus;
-				&main::pgprevious();
+				&::pgprevious();
 
 			}
 		);
-		_butbind( $main::lglobal{previmagebutton} );
-		$main::lglobal{statushelp}->attach( $main::lglobal{previmagebutton},
+		_butbind( $::lglobal{previmagebutton} );
+		$::lglobal{statushelp}->attach( $::lglobal{previmagebutton},
 			-balloonmsg =>
 "Move to previous page in text and open image corresponding to previous current page in an external viewer."
 		);
@@ -449,30 +449,30 @@ sub update_prev_img_button {
 # New subroutine "update_see_img_button" extracted - Mon Mar 21 23:23:36 2011.
 #
 sub update_see_img_button {
-	my $textwindow = $main::textwindow;
-	unless ( defined( $main::lglobal{pagebutton} ) ) {
-		$main::lglobal{pagebutton} =
-		  $main::counter_frame->Label(
+	my $textwindow = $::textwindow;
+	unless ( defined( $::lglobal{pagebutton} ) ) {
+		$::lglobal{pagebutton} =
+		  $::counter_frame->Label(
 								 -text       => 'See Img',
 								 -width      => 7,
 								 -relief     => 'ridge',
 								 -background => 'gray',
 		  )->grid( -row => 1, -column => 4 );
-		$main::lglobal{pagebutton}->bind(
+		$::lglobal{pagebutton}->bind(
 			'<1>',
 			sub {
-				$main::lglobal{pagebutton}->configure( -relief => 'sunken' );
-				my $pagenum = &main::get_page_number();
-				if ( defined $main::lglobal{pnumpop} ) {
-					$main::lglobal{pagenumentry}->delete( '0', 'end' );
-					$main::lglobal{pagenumentry}->insert( 'end', "Pg" . $pagenum );
+				$::lglobal{pagebutton}->configure( -relief => 'sunken' );
+				my $pagenum = &::get_page_number();
+				if ( defined $::lglobal{pnumpop} ) {
+					$::lglobal{pagenumentry}->delete( '0', 'end' );
+					$::lglobal{pagenumentry}->insert( 'end', "Pg" . $pagenum );
 				}
-				&main::openpng($textwindow,$pagenum);
+				&::openpng($textwindow,$pagenum);
 			}
 		);
-		$main::lglobal{pagebutton}->bind( '<3>', sub { setpngspath() } );
-		_butbind( $main::lglobal{pagebutton} );
-		$main::lglobal{statushelp}->attach( $main::lglobal{pagebutton},
+		$::lglobal{pagebutton}->bind( '<3>', sub { setpngspath() } );
+		_butbind( $::lglobal{pagebutton} );
+		$::lglobal{statushelp}->attach( $::lglobal{pagebutton},
 			 -balloonmsg =>
 			   "Open Image corresponding to current page in an external viewer."
 		);
@@ -480,27 +480,27 @@ sub update_see_img_button {
 }
 
 sub update_next_img_button {
-	my $textwindow = $main::textwindow;
-	unless ( defined( $main::lglobal{nextimagebutton} ) ) {
-		$main::lglobal{nextimagebutton} =
-		  $main::counter_frame->Label(
+	my $textwindow = $::textwindow;
+	unless ( defined( $::lglobal{nextimagebutton} ) ) {
+		$::lglobal{nextimagebutton} =
+		  $::counter_frame->Label(
 								 -text       => '>',
 								 -width      => 1,
 								 -relief     => 'ridge',
 								 -background => 'gray',
 		  )->grid( -row => 1, -column => 5 );
-		$main::lglobal{nextimagebutton}->bind(
+		$::lglobal{nextimagebutton}->bind(
 			'<1>',
 			sub {
-				$main::lglobal{nextimagebutton}->configure( -relief => 'sunken' );
-				$main::lglobal{showthispageimage} = 1;
-				&main::viewpagenums() unless $main::lglobal{pnumpop};
+				$::lglobal{nextimagebutton}->configure( -relief => 'sunken' );
+				$::lglobal{showthispageimage} = 1;
+				&::viewpagenums() unless $::lglobal{pnumpop};
 				$textwindow->focus;
-				&main::pgnext();
+				&::pgnext();
 			}
 		);
-		_butbind( $main::lglobal{nextimagebutton} );
-		$main::lglobal{statushelp}->attach( $main::lglobal{nextimagebutton},
+		_butbind( $::lglobal{nextimagebutton} );
+		$::lglobal{statushelp}->attach( $::lglobal{nextimagebutton},
 			-balloonmsg =>
 "Move to next page in text and open image corresponding to next current page in an external viewer."
 		);
@@ -508,42 +508,42 @@ sub update_next_img_button {
 }
 
 sub update_auto_img_button {
-	my $textwindow = $main::textwindow;
-	unless ( defined( $main::lglobal{autoimagebutton} ) ) {
-		$main::lglobal{autoimagebutton} =
-		  $main::counter_frame->Label(
+	my $textwindow = $::textwindow;
+	unless ( defined( $::lglobal{autoimagebutton} ) ) {
+		$::lglobal{autoimagebutton} =
+		  $::counter_frame->Label(
 								 -text       => 'Auto Img',
 								 -width      => 9,
 								 -relief     => 'ridge',
 								 -background => 'gray',
 		  )->grid( -row => 1, -column => 6 );
-		if ($main::auto_show_images) {
-			$main::lglobal{autoimagebutton}->configure( -text => 'No Img' );
+		if ($::auto_show_images) {
+			$::lglobal{autoimagebutton}->configure( -text => 'No Img' );
 		}
-		$main::lglobal{autoimagebutton}->bind(
+		$::lglobal{autoimagebutton}->bind(
 			'<1>',
 			sub {
-				$main::auto_show_images = 1 - $main::auto_show_images;
-				if ($main::auto_show_images) {
-					$main::lglobal{autoimagebutton}->configure( -relief => 'sunken' );
-					$main::lglobal{autoimagebutton}->configure( -text   => 'No Img' );
-					$main::lglobal{statushelp}->attach( $main::lglobal{autoimagebutton},
+				$::auto_show_images = 1 - $::auto_show_images;
+				if ($::auto_show_images) {
+					$::lglobal{autoimagebutton}->configure( -relief => 'sunken' );
+					$::lglobal{autoimagebutton}->configure( -text   => 'No Img' );
+					$::lglobal{statushelp}->attach( $::lglobal{autoimagebutton},
 						-balloonmsg =>
 "Stop automatically showing the image for the current page."
 					);
 
 				} else {
-					$main::lglobal{autoimagebutton}->configure( -relief => 'sunken' );
-					$main::lglobal{autoimagebutton}->configure( -text => 'Auto Img' );
-					$main::lglobal{statushelp}->attach( $main::lglobal{autoimagebutton},
+					$::lglobal{autoimagebutton}->configure( -relief => 'sunken' );
+					$::lglobal{autoimagebutton}->configure( -text => 'Auto Img' );
+					$::lglobal{statushelp}->attach( $::lglobal{autoimagebutton},
 						-balloonmsg =>
 "Automatically show the image for the current page (focus shifts to image window)."
 					);
 				}
 			}
 		);
-		_butbind( $main::lglobal{autoimagebutton} );
-		$main::lglobal{statushelp}->attach( $main::lglobal{autoimagebutton},
+		_butbind( $::lglobal{autoimagebutton} );
+		$::lglobal{statushelp}->attach( $::lglobal{autoimagebutton},
 			-balloonmsg =>
 "Automatically show the image for the current page (focus shifts to image window)."
 		);
@@ -554,16 +554,16 @@ sub update_auto_img_button {
 #
 sub update_img_lbl_values {
 	my $pnum = shift;
-	my $textwindow = $main::textwindow;
-	if ( defined $main::lglobal{img_num_label} ) {
-		$main::lglobal{img_num_label}->configure( -text  => "Img:$pnum" );
-		$main::lglobal{img_num_label}->configure( -width => ( length($pnum) + 5 ) );
+	my $textwindow = $::textwindow;
+	if ( defined $::lglobal{img_num_label} ) {
+		$::lglobal{img_num_label}->configure( -text  => "Img:$pnum" );
+		$::lglobal{img_num_label}->configure( -width => ( length($pnum) + 5 ) );
 	}
-	my $label = $main::pagenumbers{"Pg$pnum"}{label};
+	my $label = $::pagenumbers{"Pg$pnum"}{label};
 	if ( defined $label && length $label ) {
-		$main::lglobal{page_label}->configure( -text => ("Lbl: $label ") );
+		$::lglobal{page_label}->configure( -text => ("Lbl: $label ") );
 	} else {
-		$main::lglobal{page_label}->configure( -text => ("Lbl: None ") );
+		$::lglobal{page_label}->configure( -text => ("Lbl: None ") );
 	}
 }
 
@@ -572,44 +572,44 @@ sub update_img_lbl_values {
 #
 sub update_proofers_button {
 	my $pnum = shift;
-	my $textwindow = $main::textwindow;
-	if ( ( scalar %main::proofers ) && ( defined( $main::lglobal{pagebutton} ) ) ) {
-		unless ( defined( $main::lglobal{proofbutton} ) ) {
-			$main::lglobal{proofbutton} =
-			  $main::counter_frame->Label(
+	my $textwindow = $::textwindow;
+	if ( ( scalar %::proofers ) && ( defined( $::lglobal{pagebutton} ) ) ) {
+		unless ( defined( $::lglobal{proofbutton} ) ) {
+			$::lglobal{proofbutton} =
+			  $::counter_frame->Label(
 									 -text       => 'See Proofers',
 									 -width      => 11,
 									 -relief     => 'ridge',
 									 -background => 'gray',
 			  )->grid( -row => 1, -column => 8 );
-			$main::lglobal{proofbutton}->bind(
+			$::lglobal{proofbutton}->bind(
 				'<1>',
 				sub {
-					$main::lglobal{proofbutton}->configure( -relief => 'sunken' );
+					$::lglobal{proofbutton}->configure( -relief => 'sunken' );
 					showproofers();
 				}
 			);
-			$main::lglobal{proofbutton}->bind(
+			$::lglobal{proofbutton}->bind(
 				'<3>',
 				sub {
-					$main::lglobal{proofbutton}->configure( -relief => 'sunken' );
-					&main::tglprfbar();
+					$::lglobal{proofbutton}->configure( -relief => 'sunken' );
+					&::tglprfbar();
 				}
 			);
-			_butbind( $main::lglobal{proofbutton} );
-			$main::lglobal{statushelp}->attach( $main::lglobal{proofbutton},
+			_butbind( $::lglobal{proofbutton} );
+			$::lglobal{statushelp}->attach( $::lglobal{proofbutton},
 							  -balloonmsg => "Proofers for the current page." );
 		}
 		{
 
 			no warnings 'uninitialized';
-			my ( $pg, undef ) = each %main::proofers;
+			my ( $pg, undef ) = each %::proofers;
 			for my $round ( 1 .. 8 ) {
-				last unless defined $main::proofers{$pg}->[$round];
-				$main::lglobal{numrounds} = $round;
-				$main::lglobal{proofbar}[$round]->configure(
-					   -text => "  Round $round  $main::proofers{$pnum}->[$round]  " )
-				  if $main::lglobal{proofbarvisible};
+				last unless defined $::proofers{$pg}->[$round];
+				$::lglobal{numrounds} = $round;
+				$::lglobal{proofbar}[$round]->configure(
+					   -text => "  Round $round  $::proofers{$pnum}->[$round]  " )
+				  if $::lglobal{proofbarvisible};
 			}
 		}
 	}
@@ -617,111 +617,111 @@ sub update_proofers_button {
 
 ## Make toolbar visible if invisible and vice versa
 sub tglprfbar {
-	my $textwindow = $main::textwindow;
-	my $top = $main::top;
-	if ( $main::lglobal{proofbarvisible} ) {
-		for ( @{ $main::lglobal{proofbar} } ) {
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	if ( $::lglobal{proofbarvisible} ) {
+		for ( @{ $::lglobal{proofbar} } ) {
 			$_->gridForget if defined $_;
 		}
-		$main::proofer_frame->packForget;
+		$::proofer_frame->packForget;
 		my @geom = split /[x+]/, $top->geometry;
-		$geom[1] -= $main::counter_frame->height;
+		$geom[1] -= $::counter_frame->height;
 		$top->geometry("$geom[0]x$geom[1]+$geom[2]+$geom[3]");
-		$main::lglobal{proofbarvisible} = 0;
+		$::lglobal{proofbarvisible} = 0;
 	} else {
-		my $pnum = $main::lglobal{img_num_label}->cget( -text );
+		my $pnum = $::lglobal{img_num_label}->cget( -text );
 		$pnum =~ s/\D+//g;
-		$main::proofer_frame->pack(
-							  -before => $main::counter_frame,
+		$::proofer_frame->pack(
+							  -before => $::counter_frame,
 							  -side   => 'bottom',
 							  -anchor => 'sw',
 							  -expand => 0
 		);
 		my @geom = split /[x+]/, $top->geometry;
-		$geom[1] += $main::counter_frame->height;
+		$geom[1] += $::counter_frame->height;
 		$top->geometry("$geom[0]x$geom[1]+$geom[2]+$geom[3]");
 		{
 
 			no warnings 'uninitialized';
-			my ( $pg, undef ) = each %main::proofers;
+			my ( $pg, undef ) = each %::proofers;
 			for my $round ( 1 .. 8 ) {
-				last unless defined $main::proofers{$pg}->[$round];
-				$main::lglobal{numrounds} = $round;
-				$main::lglobal{proofbar}[$round] =
-				  $main::proofer_frame->Label(
+				last unless defined $::proofers{$pg}->[$round];
+				$::lglobal{numrounds} = $round;
+				$::lglobal{proofbar}[$round] =
+				  $::proofer_frame->Label(
 										 -text       => '',
 										 -relief     => 'ridge',
 										 -background => 'gray',
 				  )->grid( -row => 1, -column => $round, -sticky => 'nw' );
-				_butbind( $main::lglobal{proofbar}[$round] );
-				$main::lglobal{proofbar}[$round]->bind(
+				_butbind( $::lglobal{proofbar}[$round] );
+				$::lglobal{proofbar}[$round]->bind(
 					'<1>' => sub {
-						$main::lglobal{proofbar}[$round]
+						$::lglobal{proofbar}[$round]
 						  ->configure( -relief => 'sunken' );
-						my $proofer = $main::lglobal{proofbar}[$round]->cget( -text );
+						my $proofer = $::lglobal{proofbar}[$round]->cget( -text );
 						$proofer =~ s/\s+Round \d\s+|\s+$//g;
 						$proofer =~ s/\s/%20/g;
-						&main::prfrmessage($proofer);
+						&::prfrmessage($proofer);
 					}
 				);
 			}
 		}
-		$main::lglobal{proofbarvisible} = 1;
+		$::lglobal{proofbarvisible} = 1;
 	}
 	return;
 }
 
 sub showproofers {
-	my $top = $main::top;
-	if ( defined( $main::lglobal{prooferpop} ) ) {
-		$main::lglobal{prooferpop}->deiconify;
-		$main::lglobal{prooferpop}->raise;
-		$main::lglobal{prooferpop}->focus;
+	my $top = $::top;
+	if ( defined( $::lglobal{prooferpop} ) ) {
+		$::lglobal{prooferpop}->deiconify;
+		$::lglobal{prooferpop}->raise;
+		$::lglobal{prooferpop}->focus;
 	} else {
-		$main::lglobal{prooferpop} = $top->Toplevel;
-		$main::lglobal{prooferpop}->title('Proofers For This File');
-		&main::initialize_popup_with_deletebinding('prooferpop');
-		my $bframe = $main::lglobal{prooferpop}->Frame->pack;
+		$::lglobal{prooferpop} = $top->Toplevel;
+		$::lglobal{prooferpop}->title('Proofers For This File');
+		&::initialize_popup_with_deletebinding('prooferpop');
+		my $bframe = $::lglobal{prooferpop}->Frame->pack;
 
 		$bframe->Button(
-			-activebackground => $main::activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
-				my @ranges      = $main::lglobal{prfrrotextbox}->tagRanges('sel');
+				my @ranges      = $::lglobal{prfrrotextbox}->tagRanges('sel');
 				my $range_total = @ranges;
 				my $proofer     = '';
 				if ($range_total) {
 					$proofer =
-					  $main::lglobal{prfrrotextbox}->get( $ranges[0], $ranges[1] );
+					  $::lglobal{prfrrotextbox}->get( $ranges[0], $ranges[1] );
 					$proofer =~ s/^\s+//;
 					$proofer =~ s/\s\s.*//s;
 					$proofer =~ s/\s/%20/g;
 				}
-				&main::prfrmessage($proofer);
+				&::prfrmessage($proofer);
 			},
 			-text  => 'Send Message',
 			-width => 12
 		)->grid( -row => 1, -column => 1, -padx => 3, -pady => 3 );
 		$bframe->Button(
-						 -activebackground => $main::activecolor,
+						 -activebackground => $::activecolor,
 						 -command          => \&prfrbypage,
 						 -text             => 'Page',
 						 -width            => 12
 		)->grid( -row => 2, -column => 1, -padx => 3, -pady => 3 );
 		$bframe->Button(
-						 -activebackground => $main::activecolor,
+						 -activebackground => $::activecolor,
 						 -command          => \&prfrbyname,
 						 -text             => 'Name',
 						 -width            => 12
 		)->grid( -row => 1, -column => 2, -padx => 3, -pady => 3 );
 		$bframe->Button(
-						 -activebackground => $main::activecolor,
+						 -activebackground => $::activecolor,
 						 -command          => sub { prfrby(0) },
 						 -text             => 'Total',
 						 -width            => 12
 		)->grid( -row => 2, -column => 2, -padx => 3, -pady => 3 );
-		for my $round ( 1 .. $main::lglobal{numrounds} ) {
+		for my $round ( 1 .. $::lglobal{numrounds} ) {
 			$bframe->Button(
-							 -activebackground => $main::activecolor,
+							 -activebackground => $::activecolor,
 							 -command => [ sub { prfrby( $_[0] ) }, $round ],
 							 -text    => "Round $round",
 							 -width   => 12
@@ -733,23 +733,23 @@ sub showproofers {
 			  );
 		}
 		my $frame =
-		  $main::lglobal{prooferpop}->Frame->pack(
+		  $::lglobal{prooferpop}->Frame->pack(
 											 -anchor => 'nw',
 											 -expand => 'yes',
 											 -fill   => 'both'
 		  );
-		$main::lglobal{prfrrotextbox} =
+		$::lglobal{prfrrotextbox} =
 		  $frame->Scrolled(
 							'ROText',
 							-scrollbars => 'se',
-							-background => $main::bkgcolor,
+							-background => $::bkgcolor,
 							-font       => '{Courier} 10',
 							-width      => 80,
 							-height     => 40,
 							-wrap       => 'none',
 		  )->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
-		delete $main::proofers{''};
-		&main::drag( $main::lglobal{prfrrotextbox} );
+		delete $::proofers{''};
+		&::drag( $::lglobal{prfrrotextbox} );
 		prfrbypage();
 	}
 }
@@ -757,75 +757,75 @@ sub showproofers {
 sub prfrmessage {
 	my $proofer = shift;
 	if ( $proofer eq '' ) {
-		runner($main::globalbrowserstart, $main::no_proofer_url);
+		runner($::globalbrowserstart, $::no_proofer_url);
 	} else {
-		runner($main::globalbrowserstart, "$main::yes_proofer_url$proofer");
+		runner($::globalbrowserstart, "$::yes_proofer_url$proofer");
 	}
 }
 
 sub prfrhdr {
 	my ($max) = @_;
-	$main::lglobal{prfrrotextbox}->insert(
+	$::lglobal{prfrrotextbox}->insert(
 									 'end',
 									 sprintf(
 											  "%*s     ", ( -$max ), '   Name'
 									 )
 	);
-	for ( 1 .. $main::lglobal{numrounds} ) {
-		$main::lglobal{prfrrotextbox}
+	for ( 1 .. $::lglobal{numrounds} ) {
+		$::lglobal{prfrrotextbox}
 		  ->insert( 'end', sprintf( " %-8s", "Round $_" ) );
 	}
-	$main::lglobal{prfrrotextbox}->insert( 'end', sprintf( " %-8s\n", 'Total' ) );
+	$::lglobal{prfrrotextbox}->insert( 'end', sprintf( " %-8s\n", 'Total' ) );
 }
 
 sub prfrbypage {
-	my @max = split //, ( '8' x ( $main::lglobal{numrounds} + 1 ) );
-	for my $page ( keys %main::proofers ) {
-		for my $round ( 1 .. $main::lglobal{numrounds} ) {
-			my $name = $main::proofers{$page}->[$round];
+	my @max = split //, ( '8' x ( $::lglobal{numrounds} + 1 ) );
+	for my $page ( keys %::proofers ) {
+		for my $round ( 1 .. $::lglobal{numrounds} ) {
+			my $name = $::proofers{$page}->[$round];
 			next unless defined $name;
 			$max[$round] = length $name if length $name > $max[$round];
 		}
 	}
-	$main::lglobal{prfrrotextbox}->delete( '1.0', 'end' );
-	$main::lglobal{prfrrotextbox}->insert( 'end', sprintf( "%-8s", 'Page' ) );
-	for my $round ( 1 .. $main::lglobal{numrounds} ) {
-		$main::lglobal{prfrrotextbox}->insert( 'end',
+	$::lglobal{prfrrotextbox}->delete( '1.0', 'end' );
+	$::lglobal{prfrrotextbox}->insert( 'end', sprintf( "%-8s", 'Page' ) );
+	for my $round ( 1 .. $::lglobal{numrounds} ) {
+		$::lglobal{prfrrotextbox}->insert( 'end',
 					 sprintf( " %*s", ( -$max[$round] - 2 ), "Round $round" ) );
 	}
-	$main::lglobal{prfrrotextbox}->insert( 'end', "\n" );
-	delete $main::proofers{''};
-	for my $page ( sort keys %main::proofers ) {
-		$main::lglobal{prfrrotextbox}->insert( 'end', sprintf( "%-8s", $page ) );
-		for my $round ( 1 .. $main::lglobal{numrounds} ) {
-			$main::lglobal{prfrrotextbox}->insert(
+	$::lglobal{prfrrotextbox}->insert( 'end', "\n" );
+	delete $::proofers{''};
+	for my $page ( sort keys %::proofers ) {
+		$::lglobal{prfrrotextbox}->insert( 'end', sprintf( "%-8s", $page ) );
+		for my $round ( 1 .. $::lglobal{numrounds} ) {
+			$::lglobal{prfrrotextbox}->insert(
 							   'end',
 							   sprintf( " %*s",
 										( -$max[$round] - 2 ),
-										$main::proofers{$page}->[$round] || '<none>' )
+										$::proofers{$page}->[$round] || '<none>' )
 			);
 		}
-		$main::lglobal{prfrrotextbox}->insert( 'end', "\n" );
+		$::lglobal{prfrrotextbox}->insert( 'end', "\n" );
 	}
 }
 
 sub prfrbyname {
 	my ( $page, $prfr, %proofersort );
 	my $max = 8;
-	for my $page ( keys %main::proofers ) {
-		for ( 1 .. $main::lglobal{numrounds} ) {
-			$max = length $main::proofers{$page}->[$_]
-			  if ( $main::proofers{$page}->[$_]
-				   and length $main::proofers{$page}->[$_] > $max );
+	for my $page ( keys %::proofers ) {
+		for ( 1 .. $::lglobal{numrounds} ) {
+			$max = length $::proofers{$page}->[$_]
+			  if ( $::proofers{$page}->[$_]
+				   and length $::proofers{$page}->[$_] > $max );
 		}
 	}
-	$main::lglobal{prfrrotextbox}->delete( '1.0', 'end' );
-	foreach my $page ( keys %main::proofers ) {
-		for ( 1 .. $main::lglobal{numrounds} ) {
-			$proofersort{ $main::proofers{$page}->[$_] }[$_]++
-			  if $main::proofers{$page}->[$_];
-			$proofersort{ $main::proofers{$page}->[$_] }[0]++
-			  if $main::proofers{$page}->[$_];
+	$::lglobal{prfrrotextbox}->delete( '1.0', 'end' );
+	foreach my $page ( keys %::proofers ) {
+		for ( 1 .. $::lglobal{numrounds} ) {
+			$proofersort{ $::proofers{$page}->[$_] }[$_]++
+			  if $::proofers{$page}->[$_];
+			$proofersort{ $::proofers{$page}->[$_] }[0]++
+			  if $::proofers{$page}->[$_];
 		}
 	}
 	prfrhdr($max);
@@ -833,16 +833,16 @@ sub prfrbyname {
 	foreach my $prfr ( sort { deaccent( lc($a) ) cmp deaccent( lc($b) ) }
 					   ( keys %proofersort ) )
 	{
-		for ( 1 .. $main::lglobal{numrounds} ) {
+		for ( 1 .. $::lglobal{numrounds} ) {
 			$proofersort{$prfr}[$_] = "0" unless $proofersort{$prfr}[$_];
 		}
-		$main::lglobal{prfrrotextbox}
+		$::lglobal{prfrrotextbox}
 		  ->insert( 'end', sprintf( "%*s", ( -$max - 2 ), $prfr ) );
-		for ( 1 .. $main::lglobal{numrounds} ) {
-			$main::lglobal{prfrrotextbox}
+		for ( 1 .. $::lglobal{numrounds} ) {
+			$::lglobal{prfrrotextbox}
 			  ->insert( 'end', sprintf( " %8s", $proofersort{$prfr}[$_] ) );
 		}
-		$main::lglobal{prfrrotextbox}
+		$::lglobal{prfrrotextbox}
 		  ->insert( 'end', sprintf( " %8s\n", $proofersort{$prfr}[0] ) );
 	}
 }
@@ -851,20 +851,20 @@ sub prfrby {
 	my $which = shift;
 	my ( $page, $prfr, %proofersort, %ptemp );
 	my $max = 8;
-	for my $page ( keys %main::proofers ) {
-		for ( 1 .. $main::lglobal{numrounds} ) {
-			$max = length $main::proofers{$page}->[$_]
-			  if ( $main::proofers{$page}->[$_]
-				   and length $main::proofers{$page}->[$_] > $max );
+	for my $page ( keys %::proofers ) {
+		for ( 1 .. $::lglobal{numrounds} ) {
+			$max = length $::proofers{$page}->[$_]
+			  if ( $::proofers{$page}->[$_]
+				   and length $::proofers{$page}->[$_] > $max );
 		}
 	}
-	$main::lglobal{prfrrotextbox}->delete( '1.0', 'end' );
-	foreach my $page ( keys %main::proofers ) {
-		for ( 1 .. $main::lglobal{numrounds} ) {
-			$proofersort{ $main::proofers{$page}->[$_] }[$_]++
-			  if $main::proofers{$page}->[$_];
-			$proofersort{ $main::proofers{$page}->[$_] }[0]++
-			  if $main::proofers{$page}->[$_];
+	$::lglobal{prfrrotextbox}->delete( '1.0', 'end' );
+	foreach my $page ( keys %::proofers ) {
+		for ( 1 .. $::lglobal{numrounds} ) {
+			$proofersort{ $::proofers{$page}->[$_] }[$_]++
+			  if $::proofers{$page}->[$_];
+			$proofersort{ $::proofers{$page}->[$_] }[0]++
+			  if $::proofers{$page}->[$_];
 		}
 	}
 	foreach my $prfr ( keys(%proofersort) ) {
@@ -879,38 +879,38 @@ sub prfrby {
 		} keys %ptemp
 	  )
 	{
-		$main::lglobal{prfrrotextbox}
+		$::lglobal{prfrrotextbox}
 		  ->insert( 'end', sprintf( "%*s", ( -$max - 2 ), $prfr ) );
-		for ( 1 .. $main::lglobal{numrounds} ) {
-			$main::lglobal{prfrrotextbox}->insert( 'end',
+		for ( 1 .. $::lglobal{numrounds} ) {
+			$::lglobal{prfrrotextbox}->insert( 'end',
 							sprintf( " %8s", $proofersort{$prfr}[$_] || '0' ) );
 		}
-		$main::lglobal{prfrrotextbox}
+		$::lglobal{prfrrotextbox}
 		  ->insert( 'end', sprintf( " %8s\n", $proofersort{$prfr}[0] ) );
 	}
 }
 
 # Pop up window allowing tracking and auto reselection of last selection
 sub selection {
-	my $top = $main::top;
-	my $textwindow = $main::textwindow;
+	my $top = $::top;
+	my $textwindow = $::textwindow;
 	my ( $start, $end );
-	if ( $main::lglobal{selectionpop} ) {
-		$main::lglobal{selectionpop}->deiconify;
-		$main::lglobal{selectionpop}->raise;
+	if ( $::lglobal{selectionpop} ) {
+		$::lglobal{selectionpop}->deiconify;
+		$::lglobal{selectionpop}->raise;
 	} else {
-		$main::lglobal{selectionpop} = $top->Toplevel;
-		$main::lglobal{selectionpop}->title('Select Line.Col');
-		&main::initialize_popup_without_deletebinding('selectionpop');
+		$::lglobal{selectionpop} = $top->Toplevel;
+		$::lglobal{selectionpop}->title('Select Line.Col');
+		&::initialize_popup_without_deletebinding('selectionpop');
 
-		$main::lglobal{selectionpop}->resizable( 'no', 'no' );
+		$::lglobal{selectionpop}->resizable( 'no', 'no' );
 		my $frame =
-		  $main::lglobal{selectionpop}
+		  $::lglobal{selectionpop}
 		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
 		$frame->Label( -text => 'Start Line.Col' )
 		  ->grid( -row => 1, -column => 1 );
-		$main::lglobal{selsentry} = $frame->Entry(
-			-background   => $main::bkgcolor,
+		$::lglobal{selsentry} = $frame->Entry(
+			-background   => $::bkgcolor,
 			-width        => 15,
 			-textvariable => \$start,
 			-validate     => 'focusout',
@@ -921,8 +921,8 @@ sub selection {
 		)->grid( -row => 1, -column => 2 );
 		$frame->Label( -text => 'End Line.Col' )
 		  ->grid( -row => 2, -column => 1 );
-		$main::lglobal{seleentry} = $frame->Entry(
-			-background   => $main::bkgcolor,
+		$::lglobal{seleentry} = $frame->Entry(
+			-background   => $::bkgcolor,
 			-width        => 15,
 			-textvariable => \$end,
 			-validate     => 'focusout',
@@ -932,7 +932,7 @@ sub selection {
 			},
 		)->grid( -row => 2, -column => 2 );
 		my $frame1 =
-		  $main::lglobal{selectionpop}
+		  $::lglobal{selectionpop}
 		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
 		my $button = $frame1->Button(
 			-text    => 'OK',
@@ -952,34 +952,34 @@ sub selection {
 			-text    => 'Close',
 			-width   => 8,
 			-command => sub {
-				$main::lglobal{selectionpop}->destroy;
-				undef $main::lglobal{selectionpop};
-				undef $main::lglobal{selsentry};
-				undef $main::lglobal{seleentry};
+				$::lglobal{selectionpop}->destroy;
+				undef $::lglobal{selectionpop};
+				undef $::lglobal{selsentry};
+				undef $::lglobal{seleentry};
 			},
 		)->grid( -row => 1, -column => 2 );
-		$main::lglobal{selectionpop}->protocol(
+		$::lglobal{selectionpop}->protocol(
 			'WM_DELETE_WINDOW' => sub {
-				$main::lglobal{selectionpop}->destroy;
-				undef $main::lglobal{selectionpop};
-				undef $main::lglobal{selsentry};
-				undef $main::lglobal{seleentry};
+				$::lglobal{selectionpop}->destroy;
+				undef $::lglobal{selectionpop};
+				undef $::lglobal{selsentry};
+				undef $::lglobal{seleentry};
 			}
 		);
 	}
 	my @ranges = $textwindow->tagRanges('sel');
 	if (@ranges) {
-		$main::lglobal{selsentry}->delete( '0', 'end' );
-		$main::lglobal{selsentry}->insert( 'end', $ranges[0] );
-		$main::lglobal{seleentry}->delete( '0', 'end' );
-		$main::lglobal{seleentry}->insert( 'end', $ranges[-1] );
+		$::lglobal{selsentry}->delete( '0', 'end' );
+		$::lglobal{selsentry}->insert( 'end', $ranges[0] );
+		$::lglobal{seleentry}->delete( '0', 'end' );
+		$::lglobal{seleentry}->insert( 'end', $ranges[-1] );
 	} elsif ( $textwindow->markExists('selstart') ) {
-		$main::lglobal{selsentry}->delete( '0', 'end' );
-		$main::lglobal{selsentry}->insert( 'end', $textwindow->index('selstart') );
-		$main::lglobal{seleentry}->delete( '0', 'end' );
-		$main::lglobal{seleentry}->insert( 'end', $textwindow->index('selend') );
+		$::lglobal{selsentry}->delete( '0', 'end' );
+		$::lglobal{selsentry}->insert( 'end', $textwindow->index('selstart') );
+		$::lglobal{seleentry}->delete( '0', 'end' );
+		$::lglobal{seleentry}->insert( 'end', $textwindow->index('selend') );
 	}
-	$main::lglobal{selsentry}->selectionRange( 0, 'end' );
+	$::lglobal{selsentry}->selectionRange( 0, 'end' );
 	return
 }
 

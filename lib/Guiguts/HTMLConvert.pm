@@ -64,13 +64,13 @@ sub html_convert_superscripts {
 
 sub html_convert_ampersands {
 	my $textwindow = shift;
-	&main::working("Converting Ampersands");
-	&main::named( '&(?![\w#])', '&amp;' );
-	&main::named( '&$',         '&amp;' );
-	&main::named( '& ',         '&amp; ' );
-	&main::named( '&c\.',       '&amp;c.' );
-	&main::named( '&c,',        '&amp;c.,' );
-	&main::named( '&c ',        '&amp;c. ' );
+	&::working("Converting Ampersands");
+	&::named( '&(?![\w#])', '&amp;' );
+	&::named( '&$',         '&amp;' );
+	&::named( '& ',         '&amp; ' );
+	&::named( '&c\.',       '&amp;c.' );
+	&::named( '&c,',        '&amp;c.,' );
+	&::named( '&c ',        '&amp;c. ' );
 	$textwindow->FindAndReplaceAll( '-regexp',                 '-nocase',
 									"(?<![a-zA-Z0-9/\\-\"])>", "&gt;" );
 	$textwindow->FindAndReplaceAll( '-regexp', '-nocase',
@@ -81,29 +81,29 @@ sub html_convert_ampersands {
 
 # double hyphens go to character entity ref. FIXME: Add option for real emdash.
 sub html_convert_emdashes {
-	&main::working("Converting Emdashes");
-	&main::named( '(?<=[^-!])--(?=[^>])', '&mdash;' );
-	&main::named( '(?<=[^<])!--(?=[^>])', '!&mdash;' );
-	&main::named( '(?<=[^-])--$',         '&mdash;' );
-	&main::named( '^--(?=[^-])',          '&mdash;' );
-	&main::named( '^--$',                 '&mdash;' );
-	&main::named( "\x{A0}",               '&nbsp;' );
+	&::working("Converting Emdashes");
+	&::named( '(?<=[^-!])--(?=[^>])', '&mdash;' );
+	&::named( '(?<=[^<])!--(?=[^>])', '!&mdash;' );
+	&::named( '(?<=[^-])--$',         '&mdash;' );
+	&::named( '^--(?=[^-])',          '&mdash;' );
+	&::named( '^--$',                 '&mdash;' );
+	&::named( "\x{A0}",               '&nbsp;' );
 	return;
 }
 
 # convert latin1 and utf charactes to HTML Character Entity Reference's.
 sub html_convert_latin1 {
-	&main::working("Converting Latin-1 Characters...");
+	&::working("Converting Latin-1 Characters...");
 	for ( 128 .. 255 ) {
 		my $from = lc sprintf( "%x", $_ );
-		&main::named( '\x' . $from, &main::entity( '\x' . $from ) );
+		&::named( '\x' . $from, &::entity( '\x' . $from ) );
 	}
 	return;
 }
 
 sub html_convert_codepage {
-	&main::working("Converting Windows Codepage 1252\ncharacters to Unicode");
-	&main::cp1252toUni();
+	&::working("Converting Windows Codepage 1252\ncharacters to Unicode");
+	&::cp1252toUni();
 	return;
 }
 
@@ -123,7 +123,7 @@ sub html_convert_utf {
 		}
 	}
 	unless ($leave_utf) {
-		&main::working("Converting UTF-8...");
+		&::working("Converting UTF-8...");
 		while (
 				$blockstart =
 				$textwindow->search(
@@ -138,10 +138,10 @@ sub html_convert_utf {
 			$textwindow->ntinsert( $blockstart, "&#$xchar;" );
 		}
 	}
-	&main::working("Converting Named\n and Numeric Characters");
-	&main::named( ' >', ' &gt;' )
+	&::working("Converting Named\n and Numeric Characters");
+	&::named( ' >', ' &gt;' )
 	  ;    # see html_convert_ampersands -- probably no effect
-	&main::named( '< ', '&lt; ' );
+	&::named( '< ', '&lt; ' );
 	if ( !$keep_latin1 ) { html_convert_latin1(); }
 	return;
 }
@@ -152,25 +152,25 @@ sub html_cleanup_markers {
 	my $thisblockstart = '1.0';
 	my $thisend        = q{};
 	my ( $ler, $lec );
-	&main::working("Cleaning up\nblock Markers");
-	while ( $main::blockstart =
+	&::working("Cleaning up\nblock Markers");
+	while ( $::blockstart =
 		   $textwindow->search( '-regexp', '--', '^\/[\*\$\#]', '1.0', 'end' ) )
 	{
-		( $main::xler, $main::xlec ) = split /\./, $main::blockstart;
-		$main::blockend = "$main::xler.end";
-		$textwindow->ntdelete( "$main::blockstart-1c", $main::blockend );
+		( $::xler, $::xlec ) = split /\./, $::blockstart;
+		$::blockend = "$::xler.end";
+		$textwindow->ntdelete( "$::blockstart-1c", $::blockend );
 	}
-	while ( $main::blockstart =
+	while ( $::blockstart =
 		   $textwindow->search( '-regexp', '--', '^[\*\$\#]\/', '1.0', 'end' ) )
 	{
-		( $main::xler, $main::xlec ) = split /\./, $main::blockstart;
-		$main::blockend = "$main::xler.end";
-		$textwindow->ntdelete( "$main::blockstart-1c", $main::blockend );
+		( $::xler, $::xlec ) = split /\./, $::blockstart;
+		$::blockend = "$::xler.end";
+		$textwindow->ntdelete( "$::blockstart-1c", $::blockend );
 	}
-	while ( $main::blockstart =
+	while ( $::blockstart =
 		 $textwindow->search( '-regexp', '--', '<\/h\d><br />', '1.0', 'end' ) )
 	{
-		$textwindow->ntdelete( "$main::blockstart+5c", "$main::blockstart+9c" );
+		$textwindow->ntdelete( "$::blockstart+5c", "$::blockstart+9c" );
 	}
 	return;
 }
@@ -179,9 +179,9 @@ sub html_convert_footnotes {
 	my ( $textwindow, $fnarray ) = @_;
 	my $thisblank = q{};
 	my $step      = 0;
-	&main::working('Converting Footnotes');
-	&main::footnotefixup();
-	&main::getlz();
+	&::working('Converting Footnotes');
+	&::footnotefixup();
+	&::getlz();
 	$textwindow->tagRemove( 'footnote',  '1.0', 'end' );
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 	$textwindow->see('1.0');
@@ -295,7 +295,7 @@ sub html_convert_body {
 #open with para if blank line then two nonblank lines
 #open with para if blank line then three nonblank lines
 #
-	&main::working('Converting Body');
+	&::working('Converting Body');
 	my @contents = ("\n");
 	my $aname    = q{};
 	my $author;
@@ -847,7 +847,7 @@ sub html_convert_body {
 
 			# make an anchor for autogenerate TOC
 			$aname =~ s/<\/?[hscalup].*?>//g;
-			$aname = makeanchor( &main::deaccent($selection) );
+			$aname = makeanchor( &::deaccent($selection) );
 			my $completeheader = $selection;
 
 			# insert chapter heading unless already a para or heading open
@@ -938,7 +938,7 @@ sub html_convert_body {
 sub html_convert_underscoresmallcaps {
 	my ($textwindow) = @_;
 	my $thisblockstart = '1.0';
-	&main::working("Converting underscore and small caps markup");
+	&::working("Converting underscore and small caps markup");
 	while ( $thisblockstart =
 			$textwindow->search( '-exact', '--', '<u>', '1.0', 'end' ) )
 	{
@@ -995,7 +995,7 @@ sub html_convert_underscoresmallcaps {
 
 sub html_convert_sidenotes {
 	my ($textwindow) = @_;
-	&main::working("Converting\nSidenotes");
+	&::working("Converting\nSidenotes");
 	my $thisnoteend;
 	my $length;
 	my $thisblockstart = '1.0';
@@ -1032,7 +1032,7 @@ sub html_convert_sidenotes {
 
 sub html_convert_pageanchors {
 	my ($textwindow) = @_;
-	&main::working("Inserting Page Number Markup");
+	&::working("Inserting Page Number Markup");
 	$|++;
 	my $markindex;
 	my @pagerefs;   # keep track of first/last page markers at the same position
@@ -1045,9 +1045,9 @@ sub html_convert_pageanchors {
 
 		#print "mark:$mark\n";
 		if ( $mark =~ m{Pg(\S+)} ) {
-			my $num = $main::pagenumbers{$mark}{label};
+			my $num = $::pagenumbers{$mark}{label};
 			$num =~ s/Pg // if defined $num;
-			$num = $1 unless $main::pagenumbers{$mark}{action};
+			$num = $1 unless $::pagenumbers{$mark}{action};
 			next unless length $num;
 			$num =~ s/^0+(\d)/$1/;
 			$markindex = $textwindow->index($mark);
@@ -1100,7 +1100,7 @@ sub html_convert_pageanchors {
 
 			# comment only
 			$textwindow->ntinsert( $markindex, '<!-- Page ' . $num . ' -->' )
-			  if ( $main::pagecmt and $num );
+			  if ( $::pagecmt and $num );
 
 			#print $pagereference."3\n";
 			if ($pagereference) {
@@ -1172,7 +1172,7 @@ sub html_convert_pageanchors {
 					$insertpoint = $spanend . '+7c';
 				}
 				$textwindow->ntinsert( $insertpoint, $inserttext )
-				  if $main::lglobal{pageanch};
+				  if $::lglobal{pageanch};
 			}
 		} else {
 			if ( $mark =~ m{HRULE} )
@@ -1205,7 +1205,7 @@ sub html_parse_header {
 	my $step;
 	my $title;
 	my $author;
-	&main::working('Parsing Header');
+	&::working('Parsing Header');
 	$selection = $textwindow->get( '1.0', '1.end' );
 	if ( $selection =~ /DOCTYPE/ ) {
 		$step = 1;
@@ -1220,7 +1220,7 @@ sub html_parse_header {
 		$textwindow->ntdelete( '1.0', "$step.0 +1c" );
 	} else {
 		unless ( -e 'header.txt' ) {
-			&main::copy( 'headerdefault.txt', 'header.txt' );
+			&::copy( 'headerdefault.txt', 'header.txt' );
 		}
 		open my $infile, '<', 'header.txt'
 		  or warn "Could not open header file. $!\n";
@@ -1314,7 +1314,7 @@ sub html_parse_header {
 sub html_wrapup {
 	my ( $textwindow, $headertext, $leave_utf, $autofraction, $classhash ) = @_;
 	my $thisblockstart;
-	&main::fracconv( $textwindow, '1.0', 'end' ) if $autofraction;
+	&::fracconv( $textwindow, '1.0', 'end' ) if $autofraction;
 	$textwindow->ntinsert( '1.0', $headertext );
 	if ($leave_utf) {
 		$thisblockstart =
@@ -1339,7 +1339,7 @@ sub html_wrapup {
 		  if keys %{$classhash};
 	}
 	%{$classhash} = ();
-	&main::working();
+	&::working();
 	$textwindow->Unbusy;
 	$textwindow->see('1.0');
 	return;
@@ -1396,146 +1396,146 @@ sub htmlimage {
 	$selection =~ s/(\.*)\]$/$1/;
 	my ( $fname, $extension );
 	my $xpad = 0;
-	$main::globalimagepath = $main::globallastpath
-	  unless $main::globalimagepath;
+	$::globalimagepath = $::globallastpath
+	  unless $::globalimagepath;
 	my ($alignment);
-	$main::lglobal{htmlorig}  = $top->Photo;
-	$main::lglobal{htmlthumb} = $top->Photo;
+	$::lglobal{htmlorig}  = $top->Photo;
+	$::lglobal{htmlthumb} = $top->Photo;
 
-	if ( defined( $main::lglobal{htmlimpop} ) ) {
-		$main::lglobal{htmlimpop}->deiconify;
-		$main::lglobal{htmlimpop}->raise;
-		$main::lglobal{htmlimpop}->focus;
+	if ( defined( $::lglobal{htmlimpop} ) ) {
+		$::lglobal{htmlimpop}->deiconify;
+		$::lglobal{htmlimpop}->raise;
+		$::lglobal{htmlimpop}->focus;
 	} else {
-		$main::lglobal{htmlimpop} = $top->Toplevel;
-		$main::lglobal{htmlimpop}->title('Image');
-		&main::initialize_popup_without_deletebinding('htmlimpop');
+		$::lglobal{htmlimpop} = $top->Toplevel;
+		$::lglobal{htmlimpop}->title('Image');
+		&::initialize_popup_without_deletebinding('htmlimpop');
 		my $f1 =
-		  $main::lglobal{htmlimpop}->LabFrame( -label => 'File Name' )
+		  $::lglobal{htmlimpop}->LabFrame( -label => 'File Name' )
 		  ->pack( -side => 'top', -anchor => 'n', -padx => 2 );
-		$main::lglobal{imgname} =
+		$::lglobal{imgname} =
 		  $f1->Entry( -width => 45, )->pack( -side => 'left' );
 		my $f3 =
-		  $main::lglobal{htmlimpop}->LabFrame( -label => 'Alt text' )
+		  $::lglobal{htmlimpop}->LabFrame( -label => 'Alt text' )
 		  ->pack( -side => 'top', -anchor => 'n' );
-		$main::lglobal{alttext} =
+		$::lglobal{alttext} =
 		  $f3->Entry( -width => 45, )->pack( -side => 'left' );
 		my $f4a =
-		  $main::lglobal{htmlimpop}->LabFrame( -label => 'Caption text' )
+		  $::lglobal{htmlimpop}->LabFrame( -label => 'Caption text' )
 		  ->pack( -side => 'top', -anchor => 'n' );
-		$main::lglobal{captiontext} =
+		$::lglobal{captiontext} =
 		  $f4a->Entry( -width => 45, )->pack( -side => 'left' );
 		my $f4 =
-		  $main::lglobal{htmlimpop}->LabFrame( -label => 'Title text' )
+		  $::lglobal{htmlimpop}->LabFrame( -label => 'Title text' )
 		  ->pack( -side => 'top', -anchor => 'n' );
-		$main::lglobal{titltext} =
+		$::lglobal{titltext} =
 		  $f4->Entry( -width => 45, )->pack( -side => 'left' );
 		my $f5 =
-		  $main::lglobal{htmlimpop}->LabFrame( -label => 'Geometry' )
+		  $::lglobal{htmlimpop}->LabFrame( -label => 'Geometry' )
 		  ->pack( -side => 'top', -anchor => 'n' );
 		my $f51 = $f5->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f51->Label( -text => 'Width' )->pack( -side => 'left' );
-		$main::lglobal{widthent} = $f51->Entry(
+		$::lglobal{widthent} = $f51->Entry(
 			-width    => 10,
 			-validate => 'all',
 			-vcmd     => sub {
-				return 1 if ( !$main::lglobal{ImageSize} );
-				return 1 unless $main::lglobal{htmlimgar};
+				return 1 if ( !$::lglobal{ImageSize} );
+				return 1 unless $::lglobal{htmlimgar};
 				return 1 unless ( $_[0] && $_[2] );
 				return 0 unless ( defined $_[1] && $_[1] =~ /\d/ );
 				my ( $sizex, $sizey ) =
-				  Image::Size::imgsize( $main::lglobal{imgname}->get );
-				$main::lglobal{heightent}->delete( 0, 'end' );
-				$main::lglobal{heightent}
+				  Image::Size::imgsize( $::lglobal{imgname}->get );
+				$::lglobal{heightent}->delete( 0, 'end' );
+				$::lglobal{heightent}
 				  ->insert( 'end', ( int( $sizey * ( $_[0] / $sizex ) ) ) );
 				return 1;
 			}
 		)->pack( -side => 'left' );
 		$f51->Label( -text => 'Height' )->pack( -side => 'left' );
-		$main::lglobal{heightent} = $f51->Entry(
+		$::lglobal{heightent} = $f51->Entry(
 			-width    => 10,
 			-validate => 'all',
 			-vcmd     => sub {
-				return 1 if ( !$main::lglobal{ImageSize} );
-				return 1 unless $main::lglobal{htmlimgar};
+				return 1 if ( !$::lglobal{ImageSize} );
+				return 1 unless $::lglobal{htmlimgar};
 				return 1 unless ( $_[0] && $_[2] );
 				return 0 unless ( defined $_[1] && $_[1] =~ /\d/ );
 				my ( $sizex, $sizey ) =
-				  Image::Size::imgsize( $main::lglobal{imgname}->get );
-				$main::lglobal{widthent}->delete( 0, 'end' );
-				$main::lglobal{widthent}
+				  Image::Size::imgsize( $::lglobal{imgname}->get );
+				$::lglobal{widthent}->delete( 0, 'end' );
+				$::lglobal{widthent}
 				  ->insert( 'end', ( int( $sizex * ( $_[0] / $sizey ) ) ) );
 				return 1;
 			}
 		)->pack( -side => 'left' );
 		my $ar = $f51->Checkbutton(
 									-text     => 'Maintain AR',
-									-variable => \$main::lglobal{htmlimgar},
+									-variable => \$::lglobal{htmlimgar},
 									-onvalue  => 1,
 									-offvalue => 0
 		)->pack( -side => 'left' );
 		$ar->select;
 		my $f52 = $f5->Frame->pack( -side => 'top', -anchor => 'n' );
-		$main::lglobal{htmlimggeom} =
+		$::lglobal{htmlimggeom} =
 		  $f52->Label( -text => '' )->pack( -side => 'left' );
 		my $f2 =
-		  $main::lglobal{htmlimpop}->LabFrame( -label => 'Alignment' )
+		  $::lglobal{htmlimpop}->LabFrame( -label => 'Alignment' )
 		  ->pack( -side => 'top', -anchor => 'n' );
 		$f2->Radiobutton(
 						  -variable    => \$alignment,
 						  -text        => 'Left',
-						  -selectcolor => $main::lglobal{checkcolor},
+						  -selectcolor => $::lglobal{checkcolor},
 						  -value       => 'left',
 		)->grid( -row => 1, -column => 1 );
 		my $censel = $f2->Radiobutton(
 									 -variable    => \$alignment,
 									 -text        => 'Center',
-									 -selectcolor => $main::lglobal{checkcolor},
+									 -selectcolor => $::lglobal{checkcolor},
 									 -value       => 'center',
 		)->grid( -row => 1, -column => 2 );
 		$f2->Radiobutton(
 						  -variable    => \$alignment,
 						  -text        => 'Right',
-						  -selectcolor => $main::lglobal{checkcolor},
+						  -selectcolor => $::lglobal{checkcolor},
 						  -value       => 'right',
 		)->grid( -row => 1, -column => 3 );
 		$censel->select;
 		my $f8 =
-		  $main::lglobal{htmlimpop}
+		  $::lglobal{htmlimpop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f8->Button(
 			-text    => 'Ok',
 			-width   => 10,
 			-command => sub {
-				my $name = $main::lglobal{imgname}->get;
+				my $name = $::lglobal{imgname}->get;
 				if ($name) {
 					my $sizexy =
 					    'width="'
-					  . $main::lglobal{widthent}->get
+					  . $::lglobal{widthent}->get
 					  . '" height="'
-					  . $main::lglobal{heightent}->get . '"';
-					my $width = $main::lglobal{widthent}->get;
+					  . $::lglobal{heightent}->get . '"';
+					my $width = $::lglobal{widthent}->get;
 					return unless $name;
-					( $fname, $main::globalimagepath, $extension ) =
-					  &main::fileparse($name);
-					$main::globalimagepath =
-					  &main::os_normal($main::globalimagepath);
+					( $fname, $::globalimagepath, $extension ) =
+					  &::fileparse($name);
+					$::globalimagepath =
+					  &::os_normal($::globalimagepath);
 					$name =~ s/[\/\\]/\;/g;
-					my $tempname = $main::globallastpath;
+					my $tempname = $::globallastpath;
 					$tempname =~ s/[\/\\]/\;/g;
 					$name     =~ s/$tempname//;
 					$name     =~ s/;/\//g;
 					$alignment = 'center' unless $alignment;
-					$selection = $main::lglobal{captiontext}->get;
+					$selection = $::lglobal{captiontext}->get;
 					$selection ||= '';
 					$selection =~ s/"/&quot;/g;
 					$selection =~ s/'/&#39;/g;
-					my $alt = $main::lglobal{alttext}->get;
+					my $alt = $::lglobal{alttext}->get;
 					$alt       = " alt=\"$alt\"";
 					$selection = "<span class=\"caption\">$selection</span>\n"
 					  if $selection;
 					$preservep = '' unless $selection;
-					my $title = $main::lglobal{titltext}->get || '';
+					my $title = $::lglobal{titltext}->get || '';
 					$title =~ s/"/&quot;/g;
 					$title =~ s/'/&#39;/g;
 					$title = " title=\"$title\"" if $title;
@@ -1563,63 +1563,63 @@ sub htmlimage {
 										. $closeimg );
 					}
 					$textwindow->addGlobEnd;
-					$main::lglobal{htmlthumb}->delete
-					  if $main::lglobal{htmlthumb};
-					$main::lglobal{htmlthumb}->destroy
-					  if $main::lglobal{htmlthumb};
-					$main::lglobal{htmlorig}->delete
-					  if $main::lglobal{htmlorig};
-					$main::lglobal{htmlorig}->destroy
-					  if $main::lglobal{htmlorig};
+					$::lglobal{htmlthumb}->delete
+					  if $::lglobal{htmlthumb};
+					$::lglobal{htmlthumb}->destroy
+					  if $::lglobal{htmlthumb};
+					$::lglobal{htmlorig}->delete
+					  if $::lglobal{htmlorig};
+					$::lglobal{htmlorig}->destroy
+					  if $::lglobal{htmlorig};
 					for (
-						  $main::lglobal{alttext},  $main::lglobal{titltext},
-						  $main::lglobal{widthent}, $main::lglobal{heightent},
-						  $main::lglobal{imagelbl}, $main::lglobal{imgname}
+						  $::lglobal{alttext},  $::lglobal{titltext},
+						  $::lglobal{widthent}, $::lglobal{heightent},
+						  $::lglobal{imagelbl}, $::lglobal{imgname}
 					  )
 					{
 						$_->destroy;
 					}
 					$textwindow->tagRemove( 'highlight', '1.0', 'end' );
-					$main::lglobal{htmlimpop}->destroy
-					  if $main::lglobal{htmlimpop};
-					undef $main::lglobal{htmlimpop}
-					  if $main::lglobal{htmlimpop};
+					$::lglobal{htmlimpop}->destroy
+					  if $::lglobal{htmlimpop};
+					undef $::lglobal{htmlimpop}
+					  if $::lglobal{htmlimpop};
 				}
 			}
 		)->pack;
-		my $f = $main::lglobal{htmlimpop}->Frame->pack;
-		$main::lglobal{imagelbl} =
+		my $f = $::lglobal{htmlimpop}->Frame->pack;
+		$::lglobal{imagelbl} =
 		  $f->Label(
 					 -text       => 'Thumbnail',
 					 -justify    => 'center',
-					 -background => $main::bkgcolor,
+					 -background => $::bkgcolor,
 		  )->grid( -row => 1, -column => 1 );
-		$main::lglobal{imagelbl}
-		  ->bind( $main::lglobal{imagelbl}, '<1>', \&thumbnailbrowse );
-		$main::lglobal{htmlimpop}->protocol(
+		$::lglobal{imagelbl}
+		  ->bind( $::lglobal{imagelbl}, '<1>', \&thumbnailbrowse );
+		$::lglobal{htmlimpop}->protocol(
 			'WM_DELETE_WINDOW' => sub {
-				$main::lglobal{htmlthumb}->delete  if $main::lglobal{htmlthumb};
-				$main::lglobal{htmlthumb}->destroy if $main::lglobal{htmlthumb};
-				$main::lglobal{htmlorig}->delete   if $main::lglobal{htmlorig};
-				$main::lglobal{htmlorig}->destroy  if $main::lglobal{htmlorig};
+				$::lglobal{htmlthumb}->delete  if $::lglobal{htmlthumb};
+				$::lglobal{htmlthumb}->destroy if $::lglobal{htmlthumb};
+				$::lglobal{htmlorig}->delete   if $::lglobal{htmlorig};
+				$::lglobal{htmlorig}->destroy  if $::lglobal{htmlorig};
 				for (
-					  $main::lglobal{alttext},  $main::lglobal{titltext},
-					  $main::lglobal{widthent}, $main::lglobal{heightent},
-					  $main::lglobal{imagelbl}, $main::lglobal{imgname}
+					  $::lglobal{alttext},  $::lglobal{titltext},
+					  $::lglobal{widthent}, $::lglobal{heightent},
+					  $::lglobal{imagelbl}, $::lglobal{imgname}
 				  )
 				{
 					$_->destroy;
 				}
 				$textwindow->tagRemove( 'highlight', '1.0', 'end' );
-				$main::lglobal{htmlimpop}->destroy;
-				undef $main::lglobal{htmlimpop};
+				$::lglobal{htmlimpop}->destroy;
+				undef $::lglobal{htmlimpop};
 			}
 		);
-		$main::lglobal{htmlimpop}->transient($top);
+		$::lglobal{htmlimpop}->transient($top);
 	}
-	$main::lglobal{alttext}->delete( 0, 'end' ) if $main::lglobal{alttext};
-	$main::lglobal{titltext}->delete( 0, 'end' ) if $main::lglobal{titltext};
-	$main::lglobal{captiontext}->insert( 'end', $selection );
+	$::lglobal{alttext}->delete( 0, 'end' ) if $::lglobal{alttext};
+	$::lglobal{titltext}->delete( 0, 'end' ) if $::lglobal{titltext};
+	$::lglobal{captiontext}->insert( 'end', $selection );
 	&thumbnailbrowse();
 }
 
@@ -1643,15 +1643,15 @@ sub htmlimages {
 	return unless $end;
 	$textwindow->tagAdd( 'highlight', $start, $end );
 	$textwindow->markSet( 'insert', $start );
-	&main::update_indicators();
+	&::update_indicators();
 	htmlimage( $textwindow, $top, $start, $end );
 }
 
 sub htmlautoconvert {
 	my ( $textwindow, $top ) = @_;
-	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
+	&::viewpagenums() if ( $::lglobal{seepagenums} );
 	my $headertext;
-	if ( $main::lglobal{global_filename} =~ /No File Loaded/ ) {
+	if ( $::lglobal{global_filename} =~ /No File Loaded/ ) {
 		$top->messageBox(
 						  -icon    => 'warning',
 						  -type    => 'OK',
@@ -1662,41 +1662,41 @@ sub htmlautoconvert {
 
 	# Backup file
 	$textwindow->Busy;
-	my $savefn = $main::lglobal{global_filename};
-	$main::lglobal{global_filename} =~ s/\.[^\.]*?$//;
-	my $newfn = $main::lglobal{global_filename} . '-htmlbak.txt';
-	&main::working("Saving backup of file\nto $newfn");
+	my $savefn = $::lglobal{global_filename};
+	$::lglobal{global_filename} =~ s/\.[^\.]*?$//;
+	my $newfn = $::lglobal{global_filename} . '-htmlbak.txt';
+	&::working("Saving backup of file\nto $newfn");
 	$textwindow->SaveUTF($newfn);
-	$main::lglobal{global_filename} = $newfn;
-	&main::_bin_save( $textwindow, $top );
-	$main::lglobal{global_filename} = $savefn;
+	$::lglobal{global_filename} = $newfn;
+	&::_bin_save( $textwindow, $top );
+	$::lglobal{global_filename} = $savefn;
 	$textwindow->FileName($savefn);
 	html_convert_codepage();
 	html_convert_ampersands($textwindow);
 	$headertext = html_parse_header( $textwindow, $headertext );
 	html_convert_emdashes();
-	$main::lglobal{fnsecondpass}  = 0;
-	$main::lglobal{fnsearchlimit} = 1;
-	html_convert_footnotes( $textwindow, $main::lglobal{fnarray} );
+	$::lglobal{fnsecondpass}  = 0;
+	$::lglobal{fnsearchlimit} = 1;
+	html_convert_footnotes( $textwindow, $::lglobal{fnarray} );
 	html_convert_body(
 					   $textwindow,
 					   $headertext,
-					   $main::lglobal{cssblockmarkup},
-					   $main::lglobal{poetrynumbers},
-					   $main::lglobal{classhash}
+					   $::lglobal{cssblockmarkup},
+					   $::lglobal{poetrynumbers},
+					   $::lglobal{classhash}
 	);
 	html_cleanup_markers($textwindow);
 	html_convert_underscoresmallcaps($textwindow);
 	html_convert_sidenotes($textwindow);
-	html_convert_pageanchors( $textwindow, $main::lglobal{pageanch},
-							  $main::lglobal{pagecmt} );
+	html_convert_pageanchors( $textwindow, $::lglobal{pageanch},
+							  $::lglobal{pagecmt} );
 	html_convert_utf( $textwindow,
-					  $main::lglobal{leave_utf},
-					  $main::lglobal{keep_latin1} );
+					  $::lglobal{leave_utf},
+					  $::lglobal{keep_latin1} );
 	html_wrapup( $textwindow, $headertext,
-				 $main::lglobal{leave_utf},
-				 $main::lglobal{autofraction},
-				 $main::lglobal{classhash} );
+				 $::lglobal{leave_utf},
+				 $::lglobal{autofraction},
+				 $::lglobal{classhash} );
 	$textwindow->ResetUndo;
 }
 
@@ -1705,50 +1705,50 @@ sub thumbnailbrowse {
 	  [ [ 'Image Files', [ '.gif', '.jpg', '.png' ] ], [ 'All Files', ['*'] ],
 	  ];
 	my $name =
-	  $main::lglobal{htmlimpop}->getOpenFile(
+	  $::lglobal{htmlimpop}->getOpenFile(
 										   -filetypes  => $types,
 										   -title      => 'File Load',
-										   -initialdir => $main::globalimagepath
+										   -initialdir => $::globalimagepath
 	  );
 	return unless ($name);
 	my $xythumb = 200;
-	if ( $main::lglobal{ImageSize} ) {
+	if ( $::lglobal{ImageSize} ) {
 		my ( $sizex, $sizey ) = Image::Size::imgsize($name);
-		$main::lglobal{widthent}->delete( 0, 'end' );
-		$main::lglobal{heightent}->delete( 0, 'end' );
-		$main::lglobal{widthent}->insert( 'end', $sizex );
-		$main::lglobal{heightent}->insert( 'end', $sizey );
-		$main::lglobal{htmlimggeom}
+		$::lglobal{widthent}->delete( 0, 'end' );
+		$::lglobal{heightent}->delete( 0, 'end' );
+		$::lglobal{widthent}->insert( 'end', $sizex );
+		$::lglobal{heightent}->insert( 'end', $sizey );
+		$::lglobal{htmlimggeom}
 		  ->configure( -text => "Actual image size: $sizex x $sizey pixels" );
 	} else {
-		$main::lglobal{htmlimggeom}
+		$::lglobal{htmlimggeom}
 		  ->configure( -text => "Actual image size: unknown" );
 	}
-	$main::lglobal{htmlorig}->blank;
-	$main::lglobal{htmlthumb}->blank;
-	$main::lglobal{imgname}->delete( '0', 'end' );
-	$main::lglobal{imgname}->insert( 'end', $name );
+	$::lglobal{htmlorig}->blank;
+	$::lglobal{htmlthumb}->blank;
+	$::lglobal{imgname}->delete( '0', 'end' );
+	$::lglobal{imgname}->insert( 'end', $name );
 	my ( $fn, $ext );
-	( $fn, $main::globalimagepath, $ext ) = fileparse( $name, '(?<=\.)[^\.]*$' );
-	$main::globalimagepath = os_normal($main::globalimagepath);
+	( $fn, $::globalimagepath, $ext ) = fileparse( $name, '(?<=\.)[^\.]*$' );
+	$::globalimagepath = os_normal($::globalimagepath);
 	$ext =~ s/jpg/jpeg/;
 
 	if ( lc($ext) eq 'gif' ) {
-		$main::lglobal{htmlorig}->read( $name, -shrink );
+		$::lglobal{htmlorig}->read( $name, -shrink );
 	} else {
-		$main::lglobal{htmlorig}->read( $name, -format => $ext, -shrink );
+		$::lglobal{htmlorig}->read( $name, -format => $ext, -shrink );
 	}
-	my $sw = int( ( $main::lglobal{htmlorig}->width ) / $xythumb );
-	my $sh = int( ( $main::lglobal{htmlorig}->height ) / $xythumb );
+	my $sw = int( ( $::lglobal{htmlorig}->width ) / $xythumb );
+	my $sh = int( ( $::lglobal{htmlorig}->height ) / $xythumb );
 	if ( $sh > $sw ) {
 		$sw = $sh;
 	}
 	if ( $sw < 2 ) { $sw += 1 }
-	$main::lglobal{htmlthumb}
-	  ->copy( $main::lglobal{htmlorig}, -subsample => ($sw), -shrink )
+	$::lglobal{htmlthumb}
+	  ->copy( $::lglobal{htmlorig}, -subsample => ($sw), -shrink )
 	  ;    #hkm changed textcopy to copy
-	$main::lglobal{imagelbl}->configure(
-										 -image   => $main::lglobal{htmlthumb},
+	$::lglobal{imagelbl}->configure(
+										 -image   => $::lglobal{htmlthumb},
 										 -text    => 'Thumbnail',
 										 -justify => 'center',
 	);
@@ -1756,22 +1756,22 @@ sub thumbnailbrowse {
 
 sub htmlpopup {
 	my ( $textwindow, $top ) = @_;
-	push @main::operations, ( localtime() . ' - HTML Markup' );
-	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
-	if ( defined( $main::lglobal{markpop} ) ) {
-		$main::lglobal{markpop}->deiconify;
-		$main::lglobal{markpop}->raise;
-		$main::lglobal{markpop}->focus;
+	push @::operations, ( localtime() . ' - HTML Markup' );
+	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	if ( defined( $::lglobal{markpop} ) ) {
+		$::lglobal{markpop}->deiconify;
+		$::lglobal{markpop}->raise;
+		$::lglobal{markpop}->focus;
 	} else {
 		my $blockmarkup;
-		$main::lglobal{markpop} = $top->Toplevel;
-		$main::lglobal{markpop}->title('HTML Markup');
+		$::lglobal{markpop} = $top->Toplevel;
+		$::lglobal{markpop}->title('HTML Markup');
 		my $tableformat;
 		my $f0 =
-		  $main::lglobal{markpop}
+		  $::lglobal{markpop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f0->Button(
-					 -activebackground => $main::activecolor,
+					 -activebackground => $::activecolor,
 					 -command => sub { htmlautoconvert( $textwindow, $top ) },
 					 -text    => 'Autogenerate HTML',
 					 -width   => 16
@@ -1781,23 +1781,23 @@ sub htmlpopup {
 					 -command => sub { pageadjust() },
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 1 );
 		$f0->Button(
-					 -activebackground => $main::activecolor,
+					 -activebackground => $::activecolor,
 					 -command => sub { htmlimages( $textwindow, $top ); },
 					 -text    => 'Auto Illus Search',
 					 -width   => 16,
 		)->grid( -row => 1, -column => 3, -padx => 1, -pady => 1 );
 		$f0->Button(    #hkm added
-			-activebackground => $main::activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
-				&main::runner( &main::cmdinterp("$main::extops[0]{command}") );
+				&::runner( &::cmdinterp("$::extops[0]{command}") );
 			},
 			-text  => 'View in Browser',
 			-width => 16,
 		)->grid( -row => 1, -column => 4, -padx => 1, -pady => 1 );
 		my $pagecomments =
 		  $f0->Checkbutton(
-							-variable    => \$main::lglobal{pagecmt},
-							-selectcolor => $main::lglobal{checkcolor},
+							-variable    => \$::lglobal{pagecmt},
+							-selectcolor => $::lglobal{checkcolor},
 							-text        => 'Pg #s as comments',
 							-anchor      => 'w',
 		  )->grid(
@@ -1809,8 +1809,8 @@ sub htmlpopup {
 		  );
 		my $pageanchors =
 		  $f0->Checkbutton(
-							-variable    => \$main::lglobal{pageanch},
-							-selectcolor => $main::lglobal{checkcolor},
+							-variable    => \$::lglobal{pageanch},
+							-selectcolor => $::lglobal{checkcolor},
 							-text        => 'Insert Anchors at Pg #s',
 							-anchor      => 'w',
 		  )->grid(
@@ -1823,8 +1823,8 @@ sub htmlpopup {
 		$pageanchors->select;
 		my $fractions =
 		  $f0->Checkbutton(
-							-variable    => \$main::lglobal{autofraction},
-							-selectcolor => $main::lglobal{checkcolor},
+							-variable    => \$::lglobal{autofraction},
+							-selectcolor => $::lglobal{checkcolor},
 							-text        => 'Convert Fractions',
 							-anchor      => 'w',
 		  )->grid(
@@ -1836,8 +1836,8 @@ sub htmlpopup {
 		  );
 		my $utfconvert =
 		  $f0->Checkbutton(
-							-variable    => \$main::lglobal{leave_utf},
-							-selectcolor => $main::lglobal{checkcolor},
+							-variable    => \$::lglobal{leave_utf},
+							-selectcolor => $::lglobal{checkcolor},
 							-text        => 'Keep UTF-8 Chars',
 							-anchor      => 'w',
 		  )->grid(
@@ -1849,8 +1849,8 @@ sub htmlpopup {
 		  );
 		my $latin1_convert =
 		  $f0->Checkbutton(
-							-variable    => \$main::lglobal{keep_latin1},
-							-selectcolor => $main::lglobal{checkcolor},
+							-variable    => \$::lglobal{keep_latin1},
+							-selectcolor => $::lglobal{checkcolor},
 							-text        => 'Keep Latin-1 Chars',
 							-anchor      => 'w',
 		  )->grid(
@@ -1861,10 +1861,10 @@ sub htmlpopup {
 				   -sticky => 'w'
 		  );
 		$blockmarkup = $f0->Checkbutton(
-			-variable    => \$main::lglobal{cssblockmarkup},
-			-selectcolor => $main::lglobal{checkcolor},
+			-variable    => \$::lglobal{cssblockmarkup},
+			-selectcolor => $::lglobal{checkcolor},
 			-command     => sub {
-				if ( $main::lglobal{cssblockmarkup} ) {
+				if ( $::lglobal{cssblockmarkup} ) {
 					$blockmarkup->configure( '-text' => 'CSS blockquote' );
 				} else {
 					$blockmarkup->configure( '-text' => 'Std. <blockquote>' );
@@ -1880,7 +1880,7 @@ sub htmlpopup {
 				   -sticky => 'w'
 		  );
 		my $f1 =
-		  $main::lglobal{markpop}
+		  $::lglobal{markpop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n' );
 		my ( $inc, $row, $col ) = ( 0, 0, 0 );
 
@@ -1892,7 +1892,7 @@ sub htmlpopup {
 			$col = $inc % 5;
 			$row = int $inc / 5;
 			$f1->Button(
-				-activebackground => $main::activecolor,
+				-activebackground => $::activecolor,
 				-command          => [
 					sub {
 						markup( $textwindow, $top, $_[0] );
@@ -1910,19 +1910,19 @@ sub htmlpopup {
 			++$inc;
 		}
 		$f1->Button(
-					 -activebackground => $main::activecolor,
+					 -activebackground => $::activecolor,
 					 -command => sub { markup( $textwindow, $top, '&nbsp;' ) },
 					 -text    => 'nb space',
 					 -width   => 10
 		)->grid( -row => 4, -column => 3, -padx => 1, -pady => 2 );
 		$f1->Button(
-					 -activebackground => $main::activecolor,
-					 -command          => \&main::poetryhtml,
+					 -activebackground => $::activecolor,
+					 -command          => \&::poetryhtml,
 					 -text             => 'Poetry',
 					 -width            => 10
 		)->grid( -row => 4, -column => 4, -padx => 1, -pady => 2 );
 		my $f2 =
-		  $main::lglobal{markpop}
+		  $::lglobal{markpop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n' );
 		my %hbuttons = (
 						 'anchor', 'Named anchor',  'img',   'Image',
@@ -1931,7 +1931,7 @@ sub htmlpopup {
 		( $row, $col ) = ( 0, 0 );
 		for ( keys %hbuttons ) {
 			$f2->Button(
-				-activebackground => $main::activecolor,
+				-activebackground => $::activecolor,
 				-command          => [
 					sub {
 						markup( $textwindow, $top, $_[0] );
@@ -1949,16 +1949,16 @@ sub htmlpopup {
 			++$col;
 		}
 		my $f3 =
-		  $main::lglobal{markpop}
+		  $::lglobal{markpop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f3->Button(
-					 -activebackground => $main::activecolor,
+					 -activebackground => $::activecolor,
 					 -command => sub { markup( $textwindow, $top, 'del' ) },
 					 -text    => 'Remove markup from selection',
 					 -width   => 28
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
 		$f3->Button(
-			-activebackground => $main::activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				for my $orphan (
 								 'b',   'i',   'center', 'u',
@@ -1967,69 +1967,69 @@ sub htmlpopup {
 								 'h6',  'p',   'span'
 				  )
 				{
-					&main::working( 'Checking <' . $orphan . '>' );
-					last if &main::orphans($orphan);
+					&::working( 'Checking <' . $orphan . '>' );
+					last if &::orphans($orphan);
 				}
-				&main::working();
+				&::working();
 			},
 			-text  => 'Find orphaned markup',
 			-width => 28
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
 		my $f4 =
-		  $main::lglobal{markpop}
+		  $::lglobal{markpop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $unorderselect =
 		  $f4->Radiobutton(
 							-text        => 'unordered',
-							-selectcolor => $main::lglobal{checkcolor},
-							-variable    => \$main::lglobal{liststyle},
+							-selectcolor => $::lglobal{checkcolor},
+							-variable    => \$::lglobal{liststyle},
 							-value       => 'ul',
 		  )->grid( -row => 1, -column => 1 );
 		my $orderselect =
 		  $f4->Radiobutton(
 							-text        => 'ordered',
-							-selectcolor => $main::lglobal{checkcolor},
-							-variable    => \$main::lglobal{liststyle},
+							-selectcolor => $::lglobal{checkcolor},
+							-variable    => \$::lglobal{liststyle},
 							-value       => 'ol',
 		  )->grid( -row => 1, -column => 2 );
 		my $autolbutton =
 		  $f4->Button(
-				  -activebackground => $main::activecolor,
+				  -activebackground => $::activecolor,
 				  -command => sub { autolist($textwindow); $textwindow->focus },
 				  -text    => 'Auto List',
 				  -width   => 16
 		  )->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
 		$f4->Checkbutton(
 						  -text     => 'ML',
-						  -variable => \$main::lglobal{list_multiline},
+						  -variable => \$::lglobal{list_multiline},
 						  -onvalue  => 1,
 						  -offvalue => 0
 		)->grid( -row => 1, -column => 5 );
 		my $leftselect =
 		  $f4->Radiobutton(
 							-text        => 'left',
-							-selectcolor => $main::lglobal{checkcolor},
-							-variable    => \$main::lglobal{tablecellalign},
+							-selectcolor => $::lglobal{checkcolor},
+							-variable    => \$::lglobal{tablecellalign},
 							-value       => ' align="left"',
 		  )->grid( -row => 2, -column => 1 );
 		my $censelect =
 		  $f4->Radiobutton(
 							-text        => 'center',
-							-selectcolor => $main::lglobal{checkcolor},
-							-variable    => \$main::lglobal{tablecellalign},
+							-selectcolor => $::lglobal{checkcolor},
+							-variable    => \$::lglobal{tablecellalign},
 							-value       => ' align="center"',
 		  )->grid( -row => 2, -column => 2 );
 		my $rghtselect =
 		  $f4->Radiobutton(
 							-text        => 'right',
-							-selectcolor => $main::lglobal{checkcolor},
-							-variable    => \$main::lglobal{tablecellalign},
+							-selectcolor => $::lglobal{checkcolor},
+							-variable    => \$::lglobal{tablecellalign},
 							-value       => ' align="right"',
 		  )->grid( -row => 2, -column => 3 );
 		$leftselect->select;
 		$unorderselect->select;
 		$f4->Button(
-			-activebackground => $main::activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				autotable( $textwindow, $tableformat->get );
 				$textwindow->focus;
@@ -2039,27 +2039,27 @@ sub htmlpopup {
 		)->grid( -row => 2, -column => 4, -padx => 1, -pady => 2 );
 		$f4->Checkbutton(
 						  -text     => 'ML',
-						  -variable => \$main::lglobal{tbl_multiline},
+						  -variable => \$::lglobal{tbl_multiline},
 						  -onvalue  => 1,
 						  -offvalue => 0
 		)->grid( -row => 2, -column => 5 );
 		my $f5 =
-		  $main::lglobal{markpop}
+		  $::lglobal{markpop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n' );
 		$tableformat = $f5->Entry(
 								   -width      => 40,
-								   -background => $main::bkgcolor,
+								   -background => $::bkgcolor,
 								   -relief     => 'sunken',
 		)->grid( -row => 0, -column => 1, -pady => 2 );
 		$f5->Label( -text => 'Column Fmt', )
 		  ->grid( -row => 0, -column => 2, -padx => 2, -pady => 2 );
 		my $diventry = $f5->Entry(
 								   -width      => 40,
-								   -background => $main::bkgcolor,
+								   -background => $::bkgcolor,
 								   -relief     => 'sunken',
 		)->grid( -row => 1, -column => 1, -pady => 2 );
 		$f5->Button(
-			-activebackground => $main::activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				markup( $textwindow, $top, 'div', $diventry->get );
 				$textwindow->focus;
@@ -2068,15 +2068,15 @@ sub htmlpopup {
 			-width => 8
 		)->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
 		my $f6 =
-		  $main::lglobal{markpop}
+		  $::lglobal{markpop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $spanentry = $f6->Entry(
 									-width      => 40,
-									-background => $main::bkgcolor,
+									-background => $::bkgcolor,
 									-relief     => 'sunken',
 		)->grid( -row => 1, -column => 1, -pady => 2 );
 		$f6->Button(
-			-activebackground => $main::activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				markup( $textwindow, $top, 'span', $spanentry->get );
 				$textwindow->focus;
@@ -2085,15 +2085,15 @@ sub htmlpopup {
 			-width => 8
 		)->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
 		my $f7 =
-		  $main::lglobal{markpop}
+		  $::lglobal{markpop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f7->Checkbutton(
-						  -variable    => \$main::lglobal{poetrynumbers},
-						  -selectcolor => $main::lglobal{checkcolor},
+						  -variable    => \$::lglobal{poetrynumbers},
+						  -selectcolor => $::lglobal{checkcolor},
 						  -text        => 'Find and Format Poetry Line Numbers'
 		)->grid( -row => 1, -column => 1, -pady => 2 );
 		$f7->Button(
-			-activebackground => $main::activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				open my $infile, '<', 'header.txt'
 				  or warn "Could not open header file. $!\n";
@@ -2112,40 +2112,40 @@ sub htmlpopup {
 			-width => 16
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
 		my $f8 =
-		  $main::lglobal{markpop}
+		  $::lglobal{markpop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f8->Button(
-					 -activebackground => $main::activecolor,
-					 -command          => \&main::hyperlinkpagenums,
+					 -activebackground => $::activecolor,
+					 -command          => \&::hyperlinkpagenums,
 					 -text             => 'Hyperlink Page Nums',
 					 -width            => 16
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
-		unless ( $main::useppwizardmenus and not $main::usemenutwo ) {
+		unless ( $::useppwizardmenus and not $::usemenutwo ) {
 			$f8->Button(
-				-activebackground => $main::activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up($textwindow,$top,'Link Check');
+					&::errorcheckpop_up($textwindow,$top,'Link Check');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Link Check',
 				-width => 16
 			)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
 			$f8->Button(
-				-activebackground => $main::activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up($textwindow,$top,'HTML Tidy');
+					&::errorcheckpop_up($textwindow,$top,'HTML Tidy');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'HTML Tidy',
 				-width => 16
 			)->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
 			$f8->Button(
-				-activebackground => $main::activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
-					if ($main::w3cremote) {
-						&main::errorcheckpop_up($textwindow,$top,'W3C Validate Remote');
+					if ($::w3cremote) {
+						&::errorcheckpop_up($textwindow,$top,'W3C Validate Remote');
 					} else {
-						&main::errorcheckpop_up($textwindow,$top,'W3C Validate');
+						&::errorcheckpop_up($textwindow,$top,'W3C Validate');
 					}
 					unlink 'null' if ( -e 'null' );
 				},
@@ -2153,9 +2153,9 @@ sub htmlpopup {
 				-width => 16
 			)->grid( -row => 2, -column => 1, -padx => 1, -pady => 2 );
 			$f8->Button(
-				-activebackground => $main::activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up($textwindow,$top,'W3C Validate CSS')
+					&::errorcheckpop_up($textwindow,$top,'W3C Validate CSS')
 					  ;    #validatecssrun('');
 					unlink 'null' if ( -e 'null' );
 				},
@@ -2163,36 +2163,36 @@ sub htmlpopup {
 				-width => 16
 			)->grid( -row => 2, -column => 2, -padx => 1, -pady => 2 );
 			$f8->Button(
-				-activebackground => $main::activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up($textwindow,$top,'pphtml');
+					&::errorcheckpop_up($textwindow,$top,'pphtml');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'pphtml',
 				-width => 16
 			)->grid( -row => 2, -column => 3, -padx => 1, -pady => 2 );
 			$f8->Button(
-				-activebackground => $main::activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up($textwindow,$top,'Image Check');
+					&::errorcheckpop_up($textwindow,$top,'Image Check');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Image Check',
 				-width => 16
 			)->grid( -row => 3, -column => 1, -padx => 1, -pady => 2 );
 			$f8->Button(
-				-activebackground => $main::activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up($textwindow,$top,'Epub Friendly');
+					&::errorcheckpop_up($textwindow,$top,'Epub Friendly');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Epub Friendly',
 				-width => 16
 			)->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
 			$f8->Button(
-				-activebackground => $main::activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
-					&main::errorcheckpop_up($textwindow,$top,'Check All');
+					&::errorcheckpop_up($textwindow,$top,'Check All');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Check All',
@@ -2201,14 +2201,14 @@ sub htmlpopup {
 		}
 		$diventry->insert( 'end', ' class="i2"' );
 		$spanentry->insert( 'end', ' class="i2"' );
-		$main::lglobal{markpop}->protocol(
+		$::lglobal{markpop}->protocol(
 			'WM_DELETE_WINDOW' => sub {
-				$main::lglobal{markpop}->destroy;
-				undef $main::lglobal{markpop};
+				$::lglobal{markpop}->destroy;
+				undef $::lglobal{markpop};
 			}
 		);
-		$main::lglobal{markpop}->Icon( -image => $main::icon );
-		$main::lglobal{markpop}->transient($top) if $main::stayontop;
+		$::lglobal{markpop}->Icon( -image => $::icon );
+		$::lglobal{markpop}->transient($top) if $::stayontop;
 	}
 }
 
@@ -2218,8 +2218,8 @@ sub markup {
 	my $mark       = shift;
 	my $mark1;
 	$mark1 = shift if @_;
-	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
-	&main::savesettings();
+	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	&::savesettings();
 	my @ranges = $textwindow->tagRanges('sel');
 
 	unless (@ranges) {
@@ -2306,47 +2306,47 @@ sub markup {
 		} elsif ( $mark eq 'elink' ) {
 			my ( $name, $tempname );
 			$name = '';
-			if ( $main::lglobal{elinkpop} ) {
-				$main::lglobal{elinkpop}->raise;
+			if ( $::lglobal{elinkpop} ) {
+				$::lglobal{elinkpop}->raise;
 			} else {
-				$main::lglobal{elinkpop} = $top->Toplevel;
-				$main::lglobal{elinkpop}->title('Link Name');
+				$::lglobal{elinkpop} = $top->Toplevel;
+				$::lglobal{elinkpop}->title('Link Name');
 				my $linkf1 =
-				  $main::lglobal{elinkpop}
+				  $::lglobal{elinkpop}
 				  ->Frame->pack( -side => 'top', -anchor => 'n' );
 				my $linklabel = $linkf1->Label( -text => 'Link name' )->pack;
-				$main::lglobal{linkentry} =
-				  $linkf1->Entry( -width => 60, -background => $main::bkgcolor )
+				$::lglobal{linkentry} =
+				  $linkf1->Entry( -width => 60, -background => $::bkgcolor )
 				  ->pack;
 				my $linkf2 =
-				  $main::lglobal{elinkpop}
+				  $::lglobal{elinkpop}
 				  ->Frame->pack( -side => 'top', -anchor => 'n' );
 				my $extbrowse = $linkf2->Button(
-					-activebackground => $main::activecolor,
+					-activebackground => $::activecolor,
 					-text             => 'Browse',
 					-width            => 16,
 					-command          => sub {
 						$name =
-						  $main::lglobal{elinkpop}
+						  $::lglobal{elinkpop}
 						  ->getOpenFile( -title => 'File Name?' );
 						if ($name) {
-							$main::lglobal{linkentry}->delete( 0, 'end' );
-							$main::lglobal{linkentry}->insert( 'end', $name );
+							$::lglobal{linkentry}->delete( 0, 'end' );
+							$::lglobal{linkentry}->insert( 'end', $name );
 						}
 					}
 				)->pack( -side => 'left', -pady => 4 );
 				my $linkf3 =
-				  $main::lglobal{elinkpop}
+				  $::lglobal{elinkpop}
 				  ->Frame->pack( -side => 'top', -anchor => 'n' );
 				my $okbut = $linkf3->Button(
-					-activebackground => $main::activecolor,
+					-activebackground => $::activecolor,
 					-text             => 'Ok',
 					-width            => 16,
 					-command          => sub {
-						$name = $main::lglobal{linkentry}->get;
+						$name = $::lglobal{linkentry}->get;
 						if ($name) {
 							$name =~ s/[\/\\]/;/g;
-							$tempname = $main::globallastpath;
+							$tempname = $::globallastpath;
 							$tempname =~ s/[\/\\]/;/g;
 							$name     =~ s/$tempname//;
 							$name     =~ s/;/\//g;
@@ -2355,19 +2355,19 @@ sub markup {
 							$done = '<a href="' . $name . "\">";
 							$textwindow->insert( $thisblockstart, $done );
 						}
-						$main::lglobal{elinkpop}->destroy;
-						undef $main::lglobal{elinkpop};
+						$::lglobal{elinkpop}->destroy;
+						undef $::lglobal{elinkpop};
 					}
 				)->pack( -pady => 4 );
-				$main::lglobal{elinkpop}->protocol(
+				$::lglobal{elinkpop}->protocol(
 					'WM_DELETE_WINDOW' => sub {
-						$main::lglobal{elinkpop}->destroy;
-						undef $main::lglobal{elinkpop};
+						$::lglobal{elinkpop}->destroy;
+						undef $::lglobal{elinkpop};
 					}
 				);
-				$main::lglobal{elinkpop}->Icon( -image => $main::icon );
-				$main::lglobal{elinkpop}->transient( $main::lglobal{markpop} );
-				$main::lglobal{linkentry}->focus;
+				$::lglobal{elinkpop}->Icon( -image => $::icon );
+				$::lglobal{elinkpop}->transient( $::lglobal{markpop} );
+				$::lglobal{linkentry}->focus;
 			}
 			$done = '';
 		} elsif ( $mark eq 'ilink' ) {
@@ -2400,7 +2400,7 @@ sub markup {
 					$textwindow->tagAdd( 'highlight', $anchorstartindex,
 										 $anchorendindex );
 					$textwindow->see($anchorstartindex);
-					$textwindow->bell unless $main::nobell;
+					$textwindow->bell unless $::nobell;
 					$top->messageBox(
 						-icon => 'error',
 						-message =>
@@ -2415,21 +2415,21 @@ sub markup {
 			}
 			my ( $name, $tempname );
 			$name = '';
-			if ( $main::lglobal{linkpop} ) {
-				$main::lglobal{linkpop}->deiconify;
+			if ( $::lglobal{linkpop} ) {
+				$::lglobal{linkpop}->deiconify;
 			} else {
 				my $linklistbox;
 				$selection = $textwindow->get( $thisblockstart, $thisblockend );
 				return unless length($selection);
-				$main::lglobal{linkpop} = $top->Toplevel;
-				$main::lglobal{linkpop}->title('Internal Links');
-				$main::lglobal{linkpop}->geometry($main::geometry2) if $main::geometry2;
-				$main::lglobal{linkpop}->transient($top)      if $main::stayontop;
-				$main::lglobal{fnlinks} = 1;
-				my $tframe = $main::lglobal{linkpop}->Frame->pack;
+				$::lglobal{linkpop} = $top->Toplevel;
+				$::lglobal{linkpop}->title('Internal Links');
+				$::lglobal{linkpop}->geometry($::geometry2) if $::geometry2;
+				$::lglobal{linkpop}->transient($top)      if $::stayontop;
+				$::lglobal{fnlinks} = 1;
+				my $tframe = $::lglobal{linkpop}->Frame->pack;
 				$tframe->Checkbutton(
-					-variable    => \$main::lglobal{ilinksrt},
-					-selectcolor => $main::lglobal{checkcolor},
+					-variable    => \$::lglobal{ilinksrt},
+					-selectcolor => $::lglobal{checkcolor},
 					-text        => 'Sort Alphabetically',
 					-command     => sub {
 						$linklistbox->delete( '0', 'end' );
@@ -2442,8 +2442,8 @@ sub markup {
 						   -anchor => 'n'
 				  );
 				$tframe->Checkbutton(
-					-variable    => \$main::lglobal{fnlinks},
-					-selectcolor => $main::lglobal{checkcolor},
+					-variable    => \$::lglobal{fnlinks},
+					-selectcolor => $::lglobal{checkcolor},
 					-text        => 'Hide Footnote Links',
 					-command     => sub {
 						$linklistbox->delete( '0', 'end' );
@@ -2456,8 +2456,8 @@ sub markup {
 						   -anchor => 'n'
 				  );
 				$tframe->Checkbutton(
-					-variable    => \$main::lglobal{pglinks},
-					-selectcolor => $main::lglobal{checkcolor},
+					-variable    => \$::lglobal{pglinks},
+					-selectcolor => $::lglobal{checkcolor},
 					-text        => 'Hide Page Links',
 					-command     => sub {
 						$linklistbox->delete( '0', 'end' );
@@ -2470,13 +2470,13 @@ sub markup {
 						   -anchor => 'n'
 				  );
 				my $pframe =
-				  $main::lglobal{linkpop}
+				  $::lglobal{linkpop}
 				  ->Frame->pack( -fill => 'both', -expand => 'both' );
 				$linklistbox =
 				  $pframe->Scrolled(
 									 'Listbox',
 									 -scrollbars  => 'se',
-									 -background  => $main::bkgcolor,
+									 -background  => $::bkgcolor,
 									 -selectmode  => 'single',
 									 -activestyle => 'none',
 				  )->pack(
@@ -2488,29 +2488,29 @@ sub markup {
 						   -pady   => 2
 				  );
 				drag($linklistbox);
-				$main::lglobal{linkpop}->protocol(
+				$::lglobal{linkpop}->protocol(
 					'WM_DELETE_WINDOW' => sub {
-						$main::lglobal{linkpop}->destroy;
-						undef $main::lglobal{linkpop};
+						$::lglobal{linkpop}->destroy;
+						undef $::lglobal{linkpop};
 					}
 				);
-				$main::lglobal{linkpop}->Icon( -image => $main::icon );
-				&main::BindMouseWheel($linklistbox);
+				$::lglobal{linkpop}->Icon( -image => $::icon );
+				&::BindMouseWheel($linklistbox);
 				$linklistbox->eventAdd( '<<trans>>' => '<Double-Button-1>' );
 				$linklistbox->bind(
 					'<<trans>>',
 					sub {
 						$name      = $linklistbox->get('active');
-						$main::geometry2 = $main::lglobal{linkpop}->geometry;
+						$::geometry2 = $::lglobal{linkpop}->geometry;
 						$done      = '</a>';
 						$textwindow->insert( $thisblockend, $done );
 						$done = "<a href=\"" . $name . "\">";
 						$textwindow->insert( $thisblockstart, $done );
-						$main::lglobal{linkpop}->destroy;
-						undef $main::lglobal{linkpop};
+						$::lglobal{linkpop}->destroy;
+						undef $::lglobal{linkpop};
 					}
 				);
-				my $tempvar   = lc( makeanchor( &main::deaccent($selection) ) );
+				my $tempvar   = lc( makeanchor( &::deaccent($selection) ) );
 				my $flag      = 0;
 				my @entrarray = split( /_/, $tempvar );
 				$entrarray[1] = '@' unless $entrarray[1];
@@ -2519,9 +2519,9 @@ sub markup {
 					last unless $tempvar;
 					next
 					  if ( ( ( $_ =~ /#Footnote/ ) || ( $_ =~ /#FNanchor/ ) )
-						   && $main::lglobal{fnlinks} );
+						   && $::lglobal{fnlinks} );
 					next
-					  if ( ( $_ =~ /#Page_\d+/ ) && $main::lglobal{pglinks} );
+					  if ( ( $_ =~ /#Page_\d+/ ) && $::lglobal{pglinks} );
 					next unless ( lc($_) eq '#' . $tempvar );
 					$linklistbox->insert( 'end', $_ );
 					$flag++;
@@ -2540,9 +2540,9 @@ sub markup {
 				for ( sort (@intanchors) ) {
 					next
 					  if ( ( ( $_ =~ /#Footnote/ ) || ( $_ =~ /#FNanchor/ ) )
-						   && $main::lglobal{fnlinks} );
+						   && $::lglobal{fnlinks} );
 					next
-					  if ( ( $_ =~ /#Page_\d+/ ) && $main::lglobal{pglinks} );
+					  if ( ( $_ =~ /#Page_\d+/ ) && $::lglobal{pglinks} );
 					next
 					  unless (
 						 lc($_) =~
@@ -2553,14 +2553,14 @@ sub markup {
 				}
 				$linklistbox->insert( 'end', "  " );
 				$flag = 0;
-				&main::linkpopulate( $linklistbox, \@intanchors );
+				&::linkpopulate( $linklistbox, \@intanchors );
 				$linklistbox->focus;
 			}
 		} elsif ( $mark eq 'anchor' ) {
 			my $linkname;
 			$selection = $textwindow->get( $thisblockstart, $thisblockend )
 			  || '';
-			$linkname = makeanchor( &main::deaccent($selection) );
+			$linkname = makeanchor( &::deaccent($selection) );
 			$done     = "<a id=\"" . $linkname . "\"></a>";
 			$textwindow->insert( $thisblockstart, $done );
 		} elsif ( $mark =~ /h\d/ ) {
@@ -2603,10 +2603,10 @@ sub markup {
 }
 
 sub hyperlinkpagenums {
-	&main::searchpopup();
-	&main::searchoptset(qw/0 x x 1/);
-	$main::lglobal{searchentry}->insert( 'end', "(?<!\\d)(\\d{1,3})" );
-	$main::lglobal{replaceentry}
+	&::searchpopup();
+	&::searchoptset(qw/0 x x 1/);
+	$::lglobal{searchentry}->insert( 'end', "(?<!\\d)(\\d{1,3})" );
+	$::lglobal{replaceentry}
 	  ->insert( 'end', "<a href=\"#Page_\$1\">\$1</a>" );
 }
 
@@ -2645,7 +2645,7 @@ sub makeanchor {
 
 sub autoindex {
 	my $textwindow = shift;
-	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
+	&::viewpagenums() if ( $::lglobal{seepagenums} );
 	my @ranges = $textwindow->tagRanges('sel');
 	unless (@ranges) {
 		push @ranges, $textwindow->index('insert');
@@ -2672,7 +2672,7 @@ sub autoindex {
 		while ( $step <= $ler ) {
 			my $selection = $textwindow->get( "$step.0", "$step.end" );
 			unless ($selection) { $step++; $blanks++; next }
-			$selection = &main::addpagelinks($selection);
+			$selection = &::addpagelinks($selection);
 			if ( $first == 1 ) { $blanks = 2; $first = 0 }
 			if ( $blanks == 2 ) {
 				$selection = '<li class="ifrst">' . $selection . '</li>';
@@ -2701,7 +2701,7 @@ sub autoindex {
 
 sub autolist {
 	my $textwindow = shift;
-	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
+	&::viewpagenums() if ( $::lglobal{seepagenums} );
 	my @ranges = $textwindow->tagRanges('sel');
 	unless (@ranges) {
 		push @ranges, $textwindow->index('insert');
@@ -2715,7 +2715,7 @@ sub autolist {
 		my $end       = pop(@ranges);
 		my $start     = pop(@ranges);
 		my $paragraph = 0;
-		if ( $main::lglobal{list_multiline} ) {
+		if ( $::lglobal{list_multiline} ) {
 			my $selection = $textwindow->get( $start, $end );
 			$selection =~ s/\n +/\n/g;
 			$selection =~ s/\n\n+/\x{8A}/g;
@@ -2723,12 +2723,12 @@ sub autolist {
 			for (@lrows) {
 				$_ = '<li>' . $_ . "</li>\n\n";
 			}
-			$selection = "<$main::lglobal{liststyle}>\n";
+			$selection = "<$::lglobal{liststyle}>\n";
 			for my $lrow (@lrows) {
 				$selection .= $lrow;
 			}
 			$selection =~ s/\n$//;
-			$selection .= '</' . $main::lglobal{liststyle} . ">\n";
+			$selection .= '</' . $::lglobal{liststyle} . ">\n";
 
 			#$selection =~ s/ </</g; # why is this necessary; reported as a bug
 			$textwindow->delete( $start, $end );
@@ -2756,8 +2756,8 @@ sub autolist {
 				$textwindow->insert( "$step.0", $selection );
 				$step++;
 			}
-			$textwindow->insert( "$ler.end", "</$main::lglobal{liststyle}>\n" );
-			$textwindow->insert( $start,     "<$main::lglobal{liststyle}>" );
+			$textwindow->insert( "$ler.end", "</$::lglobal{liststyle}>\n" );
+			$textwindow->insert( $start,     "<$::lglobal{liststyle}>" );
 		}
 		$textwindow->addGlobEnd;
 	}
@@ -2765,7 +2765,7 @@ sub autolist {
 
 sub autotable {
 	my ( $textwindow, $format ) = @_;
-	&main::viewpagenums() if ( $main::lglobal{seepagenums} );
+	&::viewpagenums() if ( $::lglobal{seepagenums} );
 	my @cformat;
 	if ($format) {
 		@cformat = split( //, $format );
@@ -2789,10 +2789,10 @@ sub autotable {
 		$selection =~ s/<\/?p>//g;
 		$selection =~ s/\n[\s|]+\n/\n\n/g;
 		$selection =~ s/^\n+//;
-		$selection =~ s/\n\n+/\x{8A}/g if $main::lglobal{tbl_multiline};
-		@trows = split( /\x{8A}/, $selection ) if $main::lglobal{tbl_multiline};
-		$selection =~ s/\n[\s|]*\n/\n/g unless $main::lglobal{tbl_multiline};
-		@trows = split( /\n/, $selection ) unless $main::lglobal{tbl_multiline};
+		$selection =~ s/\n\n+/\x{8A}/g if $::lglobal{tbl_multiline};
+		@trows = split( /\x{8A}/, $selection ) if $::lglobal{tbl_multiline};
+		$selection =~ s/\n[\s|]*\n/\n/g unless $::lglobal{tbl_multiline};
+		@trows = split( /\n/, $selection ) unless $::lglobal{tbl_multiline};
 
 		for my $trow (@trows) {
 			@tlines = split( /\n/, $trow );
@@ -2824,7 +2824,7 @@ sub autotable {
 							$cellalign = ' align="left"';
 						}
 					} else {
-						$cellalign = $main::lglobal{tablecellalign};
+						$cellalign = $::lglobal{tablecellalign};
 					}
 					++$cellcnt;
 					$selection .= '<td' . $cellalign . '>';

@@ -12,9 +12,9 @@ BEGIN {
 
 ## Toggle visible page markers. This is not line numbers but marks for pages.
 sub viewpagenums {
-	my $textwindow = $main::textwindow;
-	if ( $main::lglobal{seepagenums} ) {
-		$main::lglobal{seepagenums} = 0;
+	my $textwindow = $::textwindow;
+	if ( $::lglobal{seepagenums} ) {
+		$::lglobal{seepagenums} = 0;
 		my @marks = $textwindow->markNames;
 		for ( sort @marks ) {
 			if ( $_ =~ m{Pg(\S+)} ) {
@@ -23,13 +23,13 @@ sub viewpagenums {
 			}
 		}
 		$textwindow->tagRemove( 'pagenum', '1.0', 'end' );
-		if ( $main::lglobal{pnumpop} ) {
-			$main::geometryhash{pnumpop} = $main::lglobal{pnumpop}->geometry;
-			$main::lglobal{pnumpop}->destroy;
-			undef $main::lglobal{pnumpop};
+		if ( $::lglobal{pnumpop} ) {
+			$::geometryhash{pnumpop} = $::lglobal{pnumpop}->geometry;
+			$::lglobal{pnumpop}->destroy;
+			undef $::lglobal{pnumpop};
 		}
 	} else {
-		$main::lglobal{seepagenums} = 1;
+		$::lglobal{seepagenums} = 1;
 		my @marks = $textwindow->markNames;
 		for ( sort @marks ) {
 			if ( $_ =~ m{Pg(\S+)} ) {
@@ -39,39 +39,39 @@ sub viewpagenums {
 									 "$_ +@{[length $pagenum]}c" );
 			}
 		}
-		&main::pnumadjust();
+		&::pnumadjust();
 	}
 }
 
 ## Pop up a window which will allow jumping directly to a specified page
 sub gotolabel {
-	my $textwindow = $main::textwindow;
-	my $top = $main::top;
-	unless ( defined( $main::lglobal{gotolabpop} ) ) {
-		return unless %main::pagenumbers;
-		for ( keys(%main::pagenumbers) ) {
-			$main::lglobal{pagedigits} = ( length($_) - 2 );
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	unless ( defined( $::lglobal{gotolabpop} ) ) {
+		return unless %::pagenumbers;
+		for ( keys(%::pagenumbers) ) {
+			$::lglobal{pagedigits} = ( length($_) - 2 );
 			last;
 		}
-		$main::lglobal{gotolabpop} = $top->DialogBox(
+		$::lglobal{gotolabpop} = $top->DialogBox(
 			-buttons => [qw[Ok Cancel]],
 			-title   => 'Goto Page Label',
 			-popover => $top,
 			-command => sub {
 				if ( $_[0] eq 'Ok' ) {
 					my $mark;
-					for ( keys %main::pagenumbers ) {
-						if (    $main::pagenumbers{$_}{label}
-							 && $main::pagenumbers{$_}{label} eq $main::lglobal{lastlabel} )
+					for ( keys %::pagenumbers ) {
+						if (    $::pagenumbers{$_}{label}
+							 && $::pagenumbers{$_}{label} eq $::lglobal{lastlabel} )
 						{
 							$mark = $_;
 							last;
 						}
 					}
 					unless ($mark) {
-						$main::lglobal{gotolabpop}->bell;
-						$main::lglobal{gotolabpop}->destroy;
-						undef $main::lglobal{gotolabpop};
+						$::lglobal{gotolabpop}->bell;
+						$::lglobal{gotolabpop}->destroy;
+						undef $::lglobal{gotolabpop};
 						return;
 					}
 					my $index = $textwindow->index($mark);
@@ -79,28 +79,28 @@ sub gotolabel {
 					$textwindow->see('insert');
 					$textwindow->focus;
 					update_indicators();
-					$main::lglobal{gotolabpop}->destroy;
-					undef $main::lglobal{gotolabpop};
+					$::lglobal{gotolabpop}->destroy;
+					undef $::lglobal{gotolabpop};
 				} else {
-					$main::lglobal{gotolabpop}->destroy;
-					undef $main::lglobal{gotolabpop};
+					$::lglobal{gotolabpop}->destroy;
+					undef $::lglobal{gotolabpop};
 				}
 			}
 		);
-		$main::lglobal{gotolabpop}->resizable( 'no', 'no' );
-		my $frame = $main::lglobal{gotolabpop}->Frame->pack( -fill => 'x' );
+		$::lglobal{gotolabpop}->resizable( 'no', 'no' );
+		my $frame = $::lglobal{gotolabpop}->Frame->pack( -fill => 'x' );
 		$frame->Label( -text => 'Enter Label: ' )->pack( -side => 'left' );
-		$main::lglobal{lastlabel} = 'Pg ' unless $main::lglobal{lastlabel};
+		$::lglobal{lastlabel} = 'Pg ' unless $::lglobal{lastlabel};
 		my $entry = $frame->Entry(
-								   -background   => $main::bkgcolor,
+								   -background   => $::bkgcolor,
 								   -width        => 25,
-								   -textvariable => \$main::lglobal{lastlabel}
+								   -textvariable => \$::lglobal{lastlabel}
 		)->pack( -side => 'left', -fill => 'x' );
-		$main::lglobal{gotolabpop}->Advertise( entry => $entry );
-		$main::lglobal{gotolabpop}->Popup;
-		$main::lglobal{gotolabpop}->Subwidget('entry')->focus;
-		$main::lglobal{gotolabpop}->Subwidget('entry')->selectionRange( 0, 'end' );
-		$main::lglobal{gotolabpop}->Wait;
+		$::lglobal{gotolabpop}->Advertise( entry => $entry );
+		$::lglobal{gotolabpop}->Popup;
+		$::lglobal{gotolabpop}->Subwidget('entry')->focus;
+		$::lglobal{gotolabpop}->Subwidget('entry')->selectionRange( 0, 'end' );
+		$::lglobal{gotolabpop}->Wait;
 	}
 }
 

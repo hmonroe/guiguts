@@ -497,56 +497,6 @@ sub loadscannos {
 	}
 }
 
-sub swapterms {
-	my $tempholder = $lglobal{replaceentry}->get( '1.0', '1.end' );
-	$lglobal{replaceentry}->delete( '1.0', 'end' );
-	$lglobal{replaceentry}
-	  ->insert( 'end', $lglobal{searchentry}->get( '1.0', '1.end' ) );
-	$lglobal{searchentry}->delete( '1.0', 'end' );
-	$lglobal{searchentry}->insert( 'end', $tempholder );
-	searchtext($textwindow,$top);
-}
-
-sub isvalid {
-	my $term = shift;
-	return eval { '' =~ m/$term/; 1 } || 0;
-}
-
-sub badreg {
-	my $warning = $top->Dialog(
-		-text =>
-"Invalid Regex search term.\nDo you have mismatched\nbrackets or parenthesis?",
-		-title   => 'Invalid Regex',
-		-bitmap  => 'warning',
-		-buttons => ['Ok'],
-	);
-	$warning->Icon( -image => $icon );
-	$warning->Show;
-}
-
-sub clearmarks {
-	@{ $lglobal{nlmatches} } = ();
-	my ( $mark, $mindex );
-	$mark = $textwindow->markNext($searchendindex);
-	while ($mark) {
-		if ( $mark =~ /nls\d+q(\d+)/ ) {
-			$mindex = $textwindow->index($mark);
-			$textwindow->markUnset($mark);
-			$mark = $mindex;
-		}
-		$mark = $textwindow->markNext($mark) if $mark;
-	}
-}
-
-sub getmark {
-	my $start = shift;
-	if ( $sopt[2] ) {    # search reverse
-		return $textwindow->markPrevious($start);
-	} else {             # search forward
-		return $textwindow->markNext($start);
-	}
-}
-
 sub updatesearchlabels {
 	if ( $lglobal{seenwords} && $lglobal{searchpop} ) {
 		my $replaceterm = $lglobal{replaceentry}->get( '1.0', '1.end' );

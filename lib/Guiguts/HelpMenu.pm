@@ -41,29 +41,29 @@ Partially based on the Gedi editor - Gregs editor.
 Redistributable on the same terms as Perl.
 EOM
 
-	if ( defined( $main::lglobal{aboutpop} ) ) {
-		$main::lglobal{aboutpop}->deiconify;
-		$main::lglobal{aboutpop}->raise;
-		$main::lglobal{aboutpop}->focus;
+	if ( defined( $::lglobal{aboutpop} ) ) {
+		$::lglobal{aboutpop}->deiconify;
+		$::lglobal{aboutpop}->raise;
+		$::lglobal{aboutpop}->focus;
 	} else {
-		$main::lglobal{aboutpop} = $top->Toplevel;
-		&main::initialize_popup_with_deletebinding('aboutpop');
-		$main::lglobal{aboutpop}->title('About');
-		$main::lglobal{aboutpop}->Label(
+		$::lglobal{aboutpop} = $top->Toplevel;
+		&::initialize_popup_with_deletebinding('aboutpop');
+		$::lglobal{aboutpop}->title('About');
+		$::lglobal{aboutpop}->Label(
 								   -justify => "left",
 								   -text    => $about_text
 		)->pack;
-		my $button_ok = $main::lglobal{aboutpop}->Button(
-			-activebackground => $main::activecolor,
+		my $button_ok = $::lglobal{aboutpop}->Button(
+			-activebackground => $::activecolor,
 			-text             => 'OK',
 			-command          => sub {
-				$main::lglobal{aboutpop}->destroy;
-				undef $main::lglobal{aboutpop};
+				$::lglobal{aboutpop}->destroy;
+				undef $::lglobal{aboutpop};
 			}
 		)->pack( -pady => 6 );
-		$main::lglobal{aboutpop}->resizable( 'no', 'no' );
-		$main::lglobal{aboutpop}->raise;
-		$main::lglobal{aboutpop}->focus;
+		$::lglobal{aboutpop}->resizable( 'no', 'no' );
+		$::lglobal{aboutpop}->raise;
+		$::lglobal{aboutpop}->focus;
 	}
 }
 

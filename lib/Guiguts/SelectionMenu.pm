@@ -34,7 +34,7 @@ sub wrapper {
 		$word = shift @words;
 		next unless defined $word and length $word;
 		if ( $word =~ /\/#/ ) {
-			$firstmargin = $leftmargin = $main::blocklmargin;
+			$firstmargin = $leftmargin = $::blocklmargin;
 			if ( $word =~ /^\x7f*\/#\x8A(\d+)/ )
 			{    #check for block rewrapping with parameter markup
 				if ( length $1 ) {
@@ -61,7 +61,7 @@ sub wrapper {
 			$line =~ s/ $//; # remove trailing space
 			$paragraph .= $line . "\n" if $line;
 			$paragraph .= $word . "\n";
-			$leftmargin = $main::lmargin - 1;
+			$leftmargin = $::lmargin - 1;
 			$line       = '';
 			next;
 		}
@@ -96,8 +96,8 @@ sub wrapper {
 sub selectrewrap {
 	my ($textwindow, $seepagenums,$scannos_highlighted ) = @_;
 	
-	&main::viewpagenums() if ( $seepagenums );
-	&main::savesettings();
+	&::viewpagenums() if ( $seepagenums );
+	&::savesettings();
 	my $marker      = shift @_;
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
@@ -105,7 +105,7 @@ sub selectrewrap {
 	my $start;
 	my $scannosave = $scannos_highlighted;
 	$scannos_highlighted = 0;
-	$main::operationinterrupt = 0;
+	$::operationinterrupt = 0;
 
 	if ( $range_total == 0 ) {
 		return;
@@ -142,9 +142,9 @@ sub selectrewrap {
 		my $infront        = 0;
 		my $enableindent;
 		my $fblock      = 0;
-		my $leftmargin  = $main::blocklmargin;
-		my $rightmargin = $main::blockrmargin;
-		my $firstmargin = $main::blocklmargin;
+		my $leftmargin  = $::blocklmargin;
+		my $rightmargin = $::blockrmargin;
+		my $firstmargin = $::blocklmargin;
 		my ( $rewrapped, $initial_tab, $subsequent_tab, $spaces );
 		my $indent = 0;
 		my $offset = 0;
@@ -166,13 +166,13 @@ sub selectrewrap {
 		{           #trap top line delete bug
 			$toplineblank = 1;
 		}
-		&main::opstop();
+		&::opstop();
 		$spaces = 0;
 		# main while loop
 		while (1) {
-			$indent = $main::defaultindent;
+			$indent = $::defaultindent;
 			my $length =5;
-			$main::searchstartindex =
+			$::searchstartindex =
 			  $textwindow->search(
 								   '-regex', '-forwards',
 								   '-count' => \$length,
@@ -202,7 +202,7 @@ sub selectrewrap {
 				$thisblockstart = $textwindow->index("$thisblockstart+1c");
 				last
 				  if ( $textwindow->compare( $thisblockstart, '>=', $end ) );
-				last if $main::operationinterrupt;
+				last if $::operationinterrupt;
 				next;
 			}
 			last
@@ -215,10 +215,10 @@ sub selectrewrap {
 			#$firstmargin = $leftmargin if $blockwrap;
 			# if selection begins with "/#"
 			if ( $selection =~ /^\x7f*\/\#/ ) {
-				$main::blockwrap   = 1;
-				$leftmargin  = $main::blocklmargin + 1;
-				$firstmargin = $main::blocklmargin + 1;
-				$rightmargin = $main::blockrmargin;
+				$::blockwrap   = 1;
+				$leftmargin  = $::blocklmargin + 1;
+				$firstmargin = $::blocklmargin + 1;
+				$rightmargin = $::blockrmargin;
 				# if there are any parameters /#[n...
 				if ( $selection =~ /^\x7f*\/#\[(\d+)/ )
 				{    #check for block rewrapping with parameter markup
@@ -246,7 +246,7 @@ sub selectrewrap {
 				$inblock      = 1;
 				$enableindent = 1;
 				$poem         = 1;
-				$indent       = $main::poetrylmargin;
+				$indent       = $::poetrylmargin;
 			}
 			# if selection begins /x or /X or /$
 			if ( $selection =~ /^\x7f*\/[Xx\$]/ ) { $inblock = 1 }
@@ -330,14 +330,14 @@ sub selectrewrap {
 					$selection =~ s/\]/\x9A/g;
 					$selection =~ s/\(/\x9d/g;
 					$selection =~ s/\)/\x98/g;
-					if ($main::blockwrap) {
+					if ($::blockwrap) {
 						$rewrapped =
 						  wrapper( $leftmargin,  $firstmargin,
-								   $rightmargin, $selection, $main::rwhyphenspace );
+								   $rightmargin, $selection, $::rwhyphenspace );
 					} else {    #rewrap the paragraph
 						$rewrapped =
-						  wrapper( $main::lmargin, $main::lmargin, $main::rmargin, $selection,  
-						  $main::rwhyphenspace);
+						  wrapper( $::lmargin, $::lmargin, $::rmargin, $selection,  
+						  $::rwhyphenspace);
 					}
 					$rewrapped =~ s/\x8d/<i>/g;     #convert the characters back
 					$rewrapped =~ s/\x8e/<\/i>/g;
@@ -361,7 +361,7 @@ sub selectrewrap {
 				$enableindent = 0;
 				$poem         = 0;
 			}
-			if ( $selection =~ /\x7f*#\// ) { $main::blockwrap = 0 }
+			if ( $selection =~ /\x7f*#\// ) { $::blockwrap = 0 }
 			last unless $end;
 			$thisblockstart =
 			  $textwindow->index('rewrapend');    #advance to the next paragraph
@@ -379,17 +379,17 @@ sub selectrewrap {
 				  );
 				last;
 			}
-			$main::blockwrap = 0
-			  if $main::operationinterrupt
+			$::blockwrap = 0
+			  if $::operationinterrupt
 			;       #reset blockwrap if rewrap routine is interrupted
-			last if $main::operationinterrupt;    #then quit
+			last if $::operationinterrupt;    #then quit
 			last
 			  if ( $thisblockstart eq $end )
 			  ;    #quit if next paragrapn starts at end of selection
-			&main::update_indicators();    # update line and page numbers
+			&::update_indicators();    # update line and page numbers
 		}
-		&main::killstoppop();
-		$main::operationinterrupt = 0;
+		&::killstoppop();
+		$::operationinterrupt = 0;
 		$textwindow->focus;
 		$textwindow->update;
 		$textwindow->Busy( -recurse => 1 );
@@ -460,16 +460,16 @@ sub fromnamed {
 			my $start = pop @ranges;
 			$textwindow->markSet( 'srchend', $end );
 			my ( $thisblockstart, $length );
-			&main::named( '&amp;',   '&',  $start, 'srchend' );
-			&main::named( '&quot;',  '"',  $start, 'srchend' );
-			&main::named( '&mdash;', '--', $start, 'srchend' );
-			&main::named( ' &gt;',   ' >', $start, 'srchend' );
-			&main::named( '&lt; ',   '< ', $start, 'srchend' );
+			&::named( '&amp;',   '&',  $start, 'srchend' );
+			&::named( '&quot;',  '"',  $start, 'srchend' );
+			&::named( '&mdash;', '--', $start, 'srchend' );
+			&::named( ' &gt;',   ' >', $start, 'srchend' );
+			&::named( '&lt; ',   '< ', $start, 'srchend' );
 			my $from;
 
 			for ( 160 .. 255 ) {
 				$from = lc sprintf( "%x", $_ );
-				&main::named( &main::entity( '\x' . $from ), chr($_), $start, 'srchend' );
+				&::named( &::entity( '\x' . $from ), chr($_), $start, 'srchend' );
 			}
 			while (
 					$thisblockstart =
@@ -505,21 +505,21 @@ sub tonamed {
 			my $start = pop @ranges;
 			$textwindow->markSet( 'srchend', $end );
 			my $thisblockstart;
-			&main::named( '&(?![\w#])',           '&amp;',   $start, 'srchend' );
-			&main::named( '&$',                   '&amp;',   $start, 'srchend' );
-			&main::named( '"',                    '&quot;',  $start, 'srchend' );
-			&main::named( '(?<=[^-!])--(?=[^>])', '&mdash;', $start, 'srchend' );
-			&main::named( '(?<=[^-])--$',         '&mdash;', $start, 'srchend' );
-			&main::named( '^--(?=[^-])',          '&mdash;', $start, 'srchend' );
-			&main::named( '& ',                   '&amp; ',  $start, 'srchend' );
-			&main::named( '&c\.',                 '&amp;c.', $start, 'srchend' );
-			&main::named( ' >',                   ' &gt;',   $start, 'srchend' );
-			&main::named( '< ',                   '&lt; ',   $start, 'srchend' );
+			&::named( '&(?![\w#])',           '&amp;',   $start, 'srchend' );
+			&::named( '&$',                   '&amp;',   $start, 'srchend' );
+			&::named( '"',                    '&quot;',  $start, 'srchend' );
+			&::named( '(?<=[^-!])--(?=[^>])', '&mdash;', $start, 'srchend' );
+			&::named( '(?<=[^-])--$',         '&mdash;', $start, 'srchend' );
+			&::named( '^--(?=[^-])',          '&mdash;', $start, 'srchend' );
+			&::named( '& ',                   '&amp; ',  $start, 'srchend' );
+			&::named( '&c\.',                 '&amp;c.', $start, 'srchend' );
+			&::named( ' >',                   ' &gt;',   $start, 'srchend' );
+			&::named( '< ',                   '&lt; ',   $start, 'srchend' );
 			my $from;
 
 			for ( 128 .. 255 ) {
 				$from = lc sprintf( "%x", $_ );
-				&main::named( '\x' . $from, &main::entity( '\x' . $from ), $start,
+				&::named( '\x' . $from, &::entity( '\x' . $from ), $start,
 					   'srchend' );
 			}
 			while (
@@ -594,14 +594,14 @@ sub asciibox {
 		my $start = pop(@ranges);
 		$textwindow->markSet( 'asciistart', $start );
 		$textwindow->markSet( 'asciiend',   $end );
-		my $saveleft  = $main::lmargin;
-		my $saveright = $main::rmargin;
+		my $saveleft  = $::lmargin;
+		my $saveright = $::rmargin;
 		$textwindow->addGlobStart;
-		$main::lmargin = 0;
-		$main::rmargin = ( $asciiwidth - 4 );
-		&main::selectrewrap unless $asciiwrap;
-		$main::lmargin = $saveleft;
-		$main::rmargin = $saveright;
+		$::lmargin = 0;
+		$::rmargin = ( $asciiwidth - 4 );
+		&::selectrewrap unless $asciiwrap;
+		$::lmargin = $saveleft;
+		$::rmargin = $saveright;
 		$textwindow->insert(
 							 'asciistart',
 							 ${ $ascii }[0]
@@ -660,7 +660,7 @@ sub asciibox {
 }
 
 sub case {
-	&main::savesettings();
+	&::savesettings();
 	my ($textwindow,$marker) = @_;
 	#my $marker      = shift;
 	my @ranges      = $textwindow->tagRanges('sel');
@@ -714,13 +714,13 @@ sub surround {
 		  $surpop->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $surstrt = $f1->Entry(
 								  -width      => 8,
-								  -background => $main::bkgcolor,
+								  -background => $::bkgcolor,
 								  -font       => $font,
 								  -relief     => 'sunken',
 		)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'n' );
 		my $surend = $f1->Entry(
 								 -width      => 8,
-								 -background => $main::bkgcolor,
+								 -background => $::bkgcolor,
 								 -font       => $font,
 								 -relief     => 'sunken',
 		)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'n' );
@@ -789,7 +789,7 @@ sub flood {
 										   -fill   => 'x'
 		  );
 		my $floodch = $f1->Entry(
-								  -background   => $main::bkgcolor,
+								  -background   => $::bkgcolor,
 								  -font         => $font,
 								  -relief       => 'sunken',
 								  -textvariable => \$ffchar,
@@ -856,12 +856,12 @@ sub floodfill {
 
 
 sub indent {
-	&main::savesettings();
+	&::savesettings();
 	my ($textwindow,$indent) = @_;
 	#my $indent      = shift;
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
-	$main::operationinterrupt = 0;
+	$::operationinterrupt = 0;
 	if ( $range_total == 0 ) {
 		return;
 	} else {
