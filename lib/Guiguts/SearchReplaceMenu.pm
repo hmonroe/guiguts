@@ -11,7 +11,7 @@ BEGIN {
 }
 
 sub add_search_history {
-	if ($main::scannosearch) {
+	if ($::scannosearch) {
 		return; # do not add to search history during a scannos check		
 	} 
 	my ( $term, $history_array_ref,$history_size ) = @_;
@@ -43,7 +43,7 @@ sub searchtext {
 	#print $sopt[4]."from beginning\n";
 	$searchterm = '' unless defined $searchterm;
 	if ( length($searchterm) ) {    #and not ($searchterm =~ /\W/)
-		&main::add_search_history( $searchterm, \@main::search_history, $main::history_size );
+		&::add_search_history( $searchterm, \@main::search_history, $main::history_size );
 	}
 	$::lglobal{lastsearchterm} = 'stupid variable needs to be initialized'
 	  unless length( $::lglobal{lastsearchterm} );
@@ -326,7 +326,7 @@ sub regedit {
 	my $regsearchlabel = $editor->add( 'Label', -text => 'Search Term' )->pack;
 	$::lglobal{regsearch} = $editor->add(
 										'Text',
-										-background => $main::bkgcolor,
+										-background => $::bkgcolor,
 										-width      => 40,
 										-height     => 1,
 	)->pack;
@@ -334,21 +334,21 @@ sub regedit {
 	  $editor->add( 'Label', -text => 'Replacement Term' )->pack;
 	$::lglobal{regreplace} = $editor->add(
 										 'Text',
-										 -background => $main::bkgcolor,
+										 -background => $::bkgcolor,
 										 -width      => 40,
 										 -height     => 1,
 	)->pack;
 	my $reghintlabel = $editor->add( 'Label', -text => 'Hint Text' )->pack;
 	$::lglobal{reghinted} = $editor->add(
 										'Text',
-										-background => $main::bkgcolor,
+										-background => $::bkgcolor,
 										-width      => 40,
 										-height     => 8,
 										-wrap       => 'word',
 	)->pack;
 	my $buttonframe = $editor->add('Frame')->pack;
 	$buttonframe->Button(
-		-activebackground => $main::activecolor,
+		-activebackground => $::activecolor,
 		-text             => '<--',
 		-command          => sub {
 			$::lglobal{scannosindex}-- if $::lglobal{scannosindex};
@@ -356,7 +356,7 @@ sub regedit {
 		},
 	)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'w' );
 	$buttonframe->Button(
-		-activebackground => $main::activecolor,
+		-activebackground => $::activecolor,
 		-text             => '-->',
 		-command          => sub {
 			$::lglobal{scannosindex}++
@@ -365,12 +365,12 @@ sub regedit {
 		},
 	)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'w' );
 	$buttonframe->Button(
-						  -activebackground => $main::activecolor,
+						  -activebackground => $::activecolor,
 						  -text             => 'Add',
 						  -command          => \&regadd,
 	)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'w' );
 	$buttonframe->Button(
-						  -activebackground => $main::activecolor,
+						  -activebackground => $::activecolor,
 						  -text             => 'Del',
 						  -command          => \&regdel,
 	)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'w' );
@@ -390,12 +390,12 @@ sub regedit {
 	$::lglobal{reghinted}->insert(
 								 'end',
 								 (
-									$main::reghints{
+									$::reghints{
 										$::lglobal{searchentry}
 										  ->get( '1.0', '1.end' )
 									  }
 								 )
-	) if $main::reghints{ $::lglobal{searchentry}->get( '1.0', '1.end' ) };
+	) if $::reghints{ $::lglobal{searchentry}->get( '1.0', '1.end' ) };
 	my $button = $editor->Show;
 	if ( $button =~ /save/i ) {
 		open my $reg, ">", "$::lglobal{scannosfilename}";
@@ -421,7 +421,7 @@ EOF
 		foreach my $word ( sort ( keys %main::reghints ) ) {
 			my $srch = $word;
 			$srch =~ s/'/\\'/;
-			my $repl = $main::reghints{$word};
+			my $repl = $::reghints{$word};
 			$repl =~ s/([\\'])/\\$1/;
 			print $reg "'$srch' => '$repl'\n";
 		}
@@ -439,7 +439,7 @@ sub regload {
 	$::lglobal{regsearch}->insert( 'end', $word ) if defined $word;
 	$::lglobal{regreplace}->insert( 'end', $main::scannoslist{$word} )
 	  if defined $word;
-	$::lglobal{reghinted}->insert( 'end', $main::reghints{$word} ) if defined $word;
+	$::lglobal{reghinted}->insert( 'end', $::reghints{$word} ) if defined $word;
 }
 
 sub regadd {
@@ -454,7 +454,7 @@ sub regadd {
 	$rh =~ s/\n/ /;
 	$rh =~ s/  / /;
 	$rh =~ s/\s+$//;
-	$main::reghints{$st} = $rh;
+	$::reghints{$st} = $rh;
 
 	unless ( defined $main::scannoslist{$st} ) {
 		$main::scannoslist{$st} = $rt;
@@ -477,7 +477,7 @@ sub regadd {
 sub regdel {
 	my $word = '';
 	my $st = $::lglobal{regsearch}->get( '1.0', '1.end' );
-	delete $main::reghints{$st};
+	delete $::reghints{$st};
 	delete $main::scannoslist{$st};
 	$::lglobal{scannosindex}--;
 	@{ $::lglobal{scannosarray} } = ();
@@ -490,7 +490,7 @@ sub regdel {
 sub reghint {
 	my $message = 'No hints for this entry.';
 	my $reg = $::lglobal{searchentry}->get( '1.0', '1.end' );
-	if ( $main::reghints{$reg} ) { $message = $main::reghints{$reg} }
+	if ( $::reghints{$reg} ) { $message = $::reghints{$reg} }
 	if ( defined( $::lglobal{hintpop} ) ) {
 		$::lglobal{hintpop}->deiconify;
 		$::lglobal{hintpop}->raise;
@@ -511,7 +511,7 @@ sub reghint {
 		  $frame->ROText(
 						  -width      => 40,
 						  -height     => 6,
-						  -background => $main::bkgcolor,
+						  -background => $::bkgcolor,
 						  -wrap       => 'word',
 		  )->pack(
 				   -anchor => 'nw',
