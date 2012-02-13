@@ -31,6 +31,7 @@ my %seenwordslang = ();
 my $savedHeader ;
 my $multidictentry ;
 my $multiwclistbox;
+my $sortorder = 'f';
 
 #startup routine
 sub spellmultiplelanguages {
@@ -52,7 +53,6 @@ sub multilangpopup {
 	push @main::operations, ( localtime() . ' - Multilingual Spelling' );
 	&main::viewpagenums() if ( $::lglobal{seepagenums} );
 	&main::oppopupdate()  if $::lglobal{oppop};
-# setup variables here
 # open popup if necessary	
 	if ( defined( $::lglobal{multispellpop} ) ) {
 		$::lglobal{multispellpop}->deiconify;
@@ -87,7 +87,7 @@ sub multilangpopup {
 					updateMultiDictEntry();
 				},
 				-text    => 'Set Languages',
-				-width   => 18
+				-width   => 20
 				)->grid( -row => 1, -column => 2, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
@@ -96,61 +96,61 @@ sub multilangpopup {
 							updateMultiDictEntry();
 							},
 						 -text    => 'Set Base Language',	
-						 -width   => 18
+						 -width   => 20
 			)->grid( -row => 1, -column => 1, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { createseenwordslang($textwindow,$top) },
 						 -text    => '(Re)create Wordlist',
-						 -width   => 18
+						 -width   => 20
 			)->grid( -row => 2, -column => 1, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { multilingualgetmisspelled($textwindow,$top) },
 						 -text    => 'Check spelling',
-						 -width   => 18
+						 -width   => 20
 			)->grid( -row => 2, -column => 2, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { includeprojectdict($textwindow,$top) },
 						 -text    => 'Include project words',
-						 -width   => 18
+						 -width   => 20
 			)->grid( -row => 2, -column => 3, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { saveLangDebugFiles() },
 						 -text    => 'Save Debug Files',
-						 -width   => 18
+						 -width   => 20
 			)->grid( -row => 1, -column => 3, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { showAllWords() },
 						 -text    => 'Show all words',
-						 -width   => 18
+						 -width   => 20
 			)->grid( -row => 3, -column => 1, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { showUnspeltWords() },
 						 -text    => 'Show unspelt words',
-						 -width   => 18
+						 -width   => 20
 			)->grid( -row => 3, -column => 2, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
-						 -command => sub { showmisspelledlist() },
-						 -text    => 'Show misspelt words',
-						 -width   => 18
+						 -command => sub { showspeltforeignwords() },
+						 -text    => 'Show spelt foreign words',
+						 -width   => 20
 			)->grid( -row => 3, -column => 3, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
 						 -command => sub { showprojectdict() },
 						 -text    => 'Show project dictionary',
-						 -width   => 18
+						 -width   => 20
 			)->grid( -row => 4, -column => 1, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
-						 -command => sub { getwordcounts() },
-						 -text    => 'Get word counts',
-						 -width   => 18
+						 -command => sub { addspeltforeignproject() },
+						 -text    => 'Add foreign to project',
+						 -width   => 20
 			)->grid( -row => 4, -column => 3, -padx => 1, -pady => 1 );
 		my $f1 =
 			$::lglobal{multispellpop}->Frame->pack( -fill => 'both', -expand => 'both', );
@@ -169,6 +169,36 @@ sub multilangpopup {
 						   -padx   => 2,
 						   -pady   => 2
 				  );
+		my $f3 = 
+			$::lglobal{multispellpop}
+			->Frame->pack( -side => 'top', -anchor => 'n' );
+
+		$f3->Radiobutton(
+									   -variable    => \$sortorder,
+									   -selectcolor => $::lglobal{checkcolor},
+									   -value       => 'a',
+									   -text        => 'Alph',
+		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
+		$f3->Radiobutton(
+									   -variable    => \$sortorder,
+									   -selectcolor => $::lglobal{checkcolor},
+									   -value       => 'f',
+									   -text        => 'Frq',
+		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
+		$f3->Radiobutton(
+									   -variable    => \$sortorder,
+									   -selectcolor => $::lglobal{checkcolor},
+									   -value       => 'l',
+									   -text        => 'Len',
+		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
+#		$f3->Radiobutton(
+#									   -variable    => \$sortorder,
+#									   -selectcolor => $::lglobal{checkcolor},
+#									   -value       => 'g',
+#									   -text        => 'Lang',
+#		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
+
+
 		&main::drag( $multiwclistbox );
 		$::lglobal{multispellpop}->protocol(
 			'WM_DELETE_WINDOW' => sub {
@@ -189,10 +219,25 @@ sub showAllWords {
 	$multiwclistbox->delete( '0', 'end' );
 	$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
 	$multiwclistbox->update;
-	for my $key (sort (keys %distinctwords)) {
-		if ($seenwordslang{$key}) { $lang = $seenwordslang{$key} } else { $lang = '' };
-		my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$key}, $lang, $key);
-		$multiwclistbox->insert( 'end', $line );
+	if($debug) { print $sortorder;};
+	if ($sortorder eq 'f') {
+		for ( &main::natural_sort_freq(\%distinctwords)){
+			if ($seenwordslang{$_}) { $lang = $seenwordslang{$_} } else { $lang = '' };
+			my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, $lang, $_);
+			$multiwclistbox->insert( 'end', $line );
+		}
+	} elsif ( $sortorder eq 'a' ) {
+		for ( &main::natural_sort_alpha( keys %distinctwords)) {
+			if ($seenwordslang{$_}) { $lang = $seenwordslang{$_} } else { $lang = '' };
+			my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, $lang, $_);
+			$multiwclistbox->insert( 'end', $line );
+		}
+	} elsif ( $sortorder eq 'l' ) {
+		for ( &main::natural_sort_length( keys %distinctwords)) {
+			if ($seenwordslang{$_}) { $lang = $seenwordslang{$_} } else { $lang = '' };
+			my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, $lang, $_);
+			$multiwclistbox->insert( 'end', $line );
+		}
 	}
 	$multiwclistbox->delete('0');
 	$multiwclistbox->insert( '0', $savedHeader );
@@ -211,13 +256,29 @@ sub showUnspeltWords {
 	$multiwclistbox->delete( '0', 'end' );
 	$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
 	$multiwclistbox->update;
-
-	for my $key (sort (keys %distinctwords)){
-		unless ($seenwordslang{$key}) {
-			my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$key}, '', $key);
-			$multiwclistbox->insert( 'end', $line );
+	if($debug) { print $sortorder;};
+	if ($sortorder eq 'f') {
+		for ( &main::natural_sort_freq(\%distinctwords)){
+			unless ($seenwordslang{$_}) {
+				my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, '', $_);
+				$multiwclistbox->insert( 'end', $line );
+			}
 		}
-	};
+	} elsif ( $sortorder eq 'a' ) {
+		for ( &main::natural_sort_alpha( keys %distinctwords)) {
+			unless ($seenwordslang{$_}) {
+				my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, '', $_);
+				$multiwclistbox->insert( 'end', $line );
+			}
+		}
+	} elsif ( $sortorder eq 'l' ) {
+		for ( &main::natural_sort_length( keys %distinctwords)) {
+			unless ($seenwordslang{$_}) {
+				my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, '', $_);
+				$multiwclistbox->insert( 'end', $line );
+			}
+		}
+	}
 	$multiwclistbox->delete('0');
 	$multiwclistbox->insert( '0', $savedHeader );
 	$multiwclistbox->update;
@@ -226,6 +287,61 @@ sub showUnspeltWords {
 	$multiwclistbox->yview( 'scroll', -1, 'units' );
 }
 
+sub showspeltforeignwords {
+	$multiwclistbox->delete( '0', 'end' );
+	$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
+	$multiwclistbox->update;
+	my $i = 0;
+	if($debug) { print $sortorder;};
+	if ($sortorder eq 'f') {
+		for ( &main::natural_sort_freq(\%distinctwords)){
+			if (($seenwordslang{$_}) && ($seenwordslang{$_} ne $main::multidicts[0])) {
+				my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, $seenwordslang{$_}, $_);
+				$multiwclistbox->insert( 'end', $line );
+				$i++;
+			}
+		}
+	} elsif ( $sortorder eq 'a' ) {
+		for ( &main::natural_sort_alpha( keys %distinctwords)) {
+			if (($seenwordslang{$_}) && ($seenwordslang{$_} ne $main::multidicts[0])) {
+				my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, $seenwordslang{$_}, $_);
+				$multiwclistbox->insert( 'end', $line );
+				$i++;
+			}
+		}
+	} elsif ( $sortorder eq 'l' ) {
+		for ( &main::natural_sort_length( keys %distinctwords)) {
+			if (($seenwordslang{$_}) && ($seenwordslang{$_} ne $main::multidicts[0])) {
+				my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, $seenwordslang{$_}, $_);
+				$multiwclistbox->insert( 'end', $line );
+				$i++;
+			}
+		}
+	}
+
+
+
+#	for my $key (sort (keys %distinctwords)){
+#		if (($seenwordslang{$key}) && ($seenwordslang{$key} ne $main::multidicts[0])) {
+#			my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$key}, $seenwordslang{$key}, $key);
+#			$multiwclistbox->insert( 'end', $line );
+#			$i++;
+#		}
+#	};
+	if ($unspeltwordcount) {
+		$savedHeader = "Spelt words: $speltwordcount, Spelt foreign words: $i\n";
+	} else {
+		$savedHeader = "No spelling undertaken!";
+	}
+	$multiwclistbox->delete('0');
+	$multiwclistbox->insert( '0', $savedHeader );
+	$multiwclistbox->update;
+	$multiwclistbox->yview( 'scroll', 1, 'units' );
+	$multiwclistbox->update;
+	$multiwclistbox->yview( 'scroll', -1, 'units' );
+}
+
+# update global lists
 sub updategloballists {
 	$::lglobal{seenwords} = ();
 	$::lglobal{misspelledlist} = ();
@@ -239,6 +355,7 @@ sub updategloballists {
 	};
 }
 
+#obsolete
 sub showmisspelledlist {
 	if ($unspeltwordcount) {
 		$savedHeader = "Spelt words: $speltwordcount, Unspelt words: $unspeltwordcount\n";
@@ -518,15 +635,11 @@ sub createseenwordslang {
 	my $i = 0;
 	# ordered list of all words
 	foreach ( sort ( keys %distinctwords ) ) { $orderedwords[$i++] = $_ ;	}
-	$distinctwordcount = $i;
-	$unspeltwordcount = $distinctwordcount;
-	
-	if ($debug)
-		{ print "Total words: $totalwordcount, Distinct words: $distinctwordcount\n"; }
-
 	# hash of all words -> lc (word)
 	foreach ( keys %distinctwords  ) { $seenwordslc{$_}  = lc($_) ;	}
 
+	updategloballists();
+	getwordcounts();
 	$multiwclistbox->delete( '0');
 	$savedHeader = "Total words: $totalwordcount, Distinct words: $distinctwordcount\n";
 	$multiwclistbox->insert( '0', $savedHeader );
@@ -623,9 +736,9 @@ sub multilingualgetmisspelled {
 		#spellcheck
 		if ($words) { getmisspelledwordstwo($dict, $words); }
 		#update global spelllists
-		updategloballists();
 	}
-
+	updategloballists();
+	getwordcounts();
 	$top->Unbusy;
 	return $wordw;
 }
@@ -726,11 +839,70 @@ sub includeprojectdict {
 	$top->Busy( -recurse => 1 );
 	&main::spellloadprojectdict();
 	if ($debug) {print "$::lglobal{projectdictname}\n";};
-	for my $key (keys %main::projectdict) { $seenwordslang{$key} = 'user'; };
+	for my $key (keys %main::projectdict) { 
+		unless ($seenwordslang{$key}) { $seenwordslang{$key} = 'user';} };
 	updategloballists();
 	getwordcounts();
 	$top->Unbusy;
 }
+
+#add all spelt foreign words to project dictionary
+sub addspeltforeignproject {
+	&main::spellloadprojectdict();
+	for my $key (sort (keys %distinctwords)){
+		if (($seenwordslang{$key}) && ($seenwordslang{$key} ne $main::multidicts[0])) {
+			$::projectdict{$key} = $seenwordslang{$key};
+		}
+	};
+
+	if ($debug) { print %main::projectdict;
+	print "\n$::lglobal{projectdictname}\n";}
+
+	my $section = "\%projectdict = (\n";
+	for my $key (sort keys %main::projectdict){
+		$key =~ s/'/\\'/g;
+		$section .= "'$key' => '',\n";
+	};
+	$section .= ");";
+	utf8::encode($section);
+
+	if ($debug) { print $section; };
+
+	open my $save, '>:bytes', $::lglobal{projectdictname};
+	print $save $section;
+	close $save;
+}
+
+#takes two hash references the first numeric, and second string
+#sub showsortwords {
+#	my $hrefone = shift;
+#	my $hreftwo = shift;
+#	$multiwclistbox->delete( '0', 'end' );
+#	$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
+#	$multiwclistbox->update;
+#	if ( $main::alpha_sort eq 'f' ) {    # Sorted by word frequency
+#		for ( &main::natural_sort_freq($href) ) {
+#			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
+#			$multiwclistbox->insert( 'end', $line );
+#		}
+#	} elsif ( $main::alpha_sort eq 'a' ) {    # Sorted alphabetically
+#		for ( &main::natural_sort_alpha( keys %$href ) ) {
+#			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
+#			$multiwclistbox->insert( 'end', $line );
+#		}
+#	} elsif ( $main::alpha_sort eq 'l' ) {    # Sorted by word length
+#		for ( &main::natural_sort_length( keys %$href ) ) {
+#			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
+#			$multiwclistbox->insert( 'end', $line );
+#		}
+#	}
+#	$multiwclistbox->delete('0');
+#	$multiwclistbox->insert( '0', $savedHeader );
+#	$multiwclistbox->update;
+#	$multiwclistbox->yview( 'scroll', 1, 'units' );
+#	$multiwclistbox->update;
+#	$multiwclistbox->yview( 'scroll', -1, 'units' );
+#}
 
 1;
 __END__
