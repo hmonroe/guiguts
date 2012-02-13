@@ -40,557 +40,557 @@
  'Pg039' => {'offset' => '864.0', 'label' => 'Pg 27', 'style' => '"', 'action' => '+1', 'base' => ''},
  'Pg040' => {'offset' => '914.2', 'label' => 'Pg 28', 'style' => '"', 'action' => '+1', 'base' => ''},
  'Pg041' => {'offset' => '963.58', 'label' => 'Pg 29', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg042' => {'offset' => '1002.64', 'label' => 'Pg 30', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg043' => {'offset' => '1044.71', 'label' => 'Pg 31', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg044' => {'offset' => '1093.61', 'label' => 'Pg 32', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg045' => {'offset' => '1093.61', 'label' => 'Pg 33', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg046' => {'offset' => '1137.59', 'label' => 'Pg 34', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg047' => {'offset' => '1165.26', 'label' => 'Pg 35', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg048' => {'offset' => '1168.72', 'label' => 'Pg 36', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg049' => {'offset' => '1212.0', 'label' => 'Pg 37', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg050' => {'offset' => '1231.71', 'label' => 'Pg 38', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg051' => {'offset' => '1278.72', 'label' => 'Pg 39', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg052' => {'offset' => '1323.61', 'label' => 'Pg 40', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg053' => {'offset' => '1365.0', 'label' => 'Pg 41', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg054' => {'offset' => '1369.48', 'label' => 'Pg 42', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg055' => {'offset' => '1393.68', 'label' => 'Pg 43', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg056' => {'offset' => '1437.61', 'label' => 'Pg 44', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg057' => {'offset' => '1456.64', 'label' => 'Pg 45', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg058' => {'offset' => '1500.0', 'label' => 'Pg 46', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg059' => {'offset' => '1502.32', 'label' => 'Pg 47', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg060' => {'offset' => '1547.0', 'label' => 'Pg 48', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg061' => {'offset' => '1548.52', 'label' => 'Pg 49', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg062' => {'offset' => '1591.0', 'label' => 'Pg 50', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg063' => {'offset' => '1591.14', 'label' => 'Pg 51', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg064' => {'offset' => '1619.65', 'label' => 'Pg 52', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg065' => {'offset' => '1619.65', 'label' => 'Pg 53', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg066' => {'offset' => '1663.0', 'label' => 'Pg 54', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg067' => {'offset' => '1707.0', 'label' => 'Pg 55', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg068' => {'offset' => '1725.0', 'label' => 'Pg 56', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg069' => {'offset' => '1729.42', 'label' => 'Pg 57', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg070' => {'offset' => '1753.54', 'label' => 'Pg 58', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg071' => {'offset' => '1800.0', 'label' => 'Pg 59', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg072' => {'offset' => '1833.0', 'label' => 'Pg 60', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg073' => {'offset' => '1880.63', 'label' => 'Pg 61', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg074' => {'offset' => '1911.60', 'label' => 'Pg 62', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg075' => {'offset' => '1954.66', 'label' => 'Pg 63', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg076' => {'offset' => '1994.65', 'label' => 'Pg 64', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg077' => {'offset' => '2004.49', 'label' => 'Pg 65', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg078' => {'offset' => '2046.51', 'label' => 'Pg 66', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg079' => {'offset' => '2097.63', 'label' => 'Pg 67', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg080' => {'offset' => '2136.66', 'label' => 'Pg 68', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg081' => {'offset' => '2183.67', 'label' => 'Pg 69', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg082' => {'offset' => '2227.58', 'label' => 'Pg 70', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg083' => {'offset' => '2246.14', 'label' => 'Pg 71', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg084' => {'offset' => '2251.67', 'label' => 'Pg 72', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg085' => {'offset' => '2297.58', 'label' => 'Pg 73', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg086' => {'offset' => '2327.34', 'label' => 'Pg 74', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg087' => {'offset' => '2331.25', 'label' => 'Pg 75', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg088' => {'offset' => '2378.65', 'label' => 'Pg 76', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg089' => {'offset' => '2405.60', 'label' => 'Pg 77', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg090' => {'offset' => '2405.60', 'label' => 'Pg 78', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg091' => {'offset' => '2453.0', 'label' => 'Pg 79', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg092' => {'offset' => '2456.48', 'label' => 'Pg 80', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg093' => {'offset' => '2500.66', 'label' => 'Pg 81', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg094' => {'offset' => '2528.63', 'label' => 'Pg 82', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg095' => {'offset' => '2574.55', 'label' => 'Pg 83', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg096' => {'offset' => '2574.55', 'label' => 'Pg 84', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg097' => {'offset' => '2618.62', 'label' => 'Pg 85', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg098' => {'offset' => '2647.56', 'label' => 'Pg 86', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg099' => {'offset' => '2690.74', 'label' => 'Pg 87', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg100' => {'offset' => '2744.67', 'label' => 'Pg 88', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg101' => {'offset' => '2770.58', 'label' => 'Pg 89', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg102' => {'offset' => '2790.0', 'label' => 'Pg 90', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg103' => {'offset' => '2813.60', 'label' => 'Pg 91', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg104' => {'offset' => '2822.0', 'label' => 'Pg 92', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg105' => {'offset' => '2831.55', 'label' => 'Pg 93', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg106' => {'offset' => '2859.0', 'label' => 'Pg 94', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg107' => {'offset' => '2899.58', 'label' => 'Pg 95', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg108' => {'offset' => '2899.58', 'label' => 'Pg 96', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg109' => {'offset' => '2945.59', 'label' => 'Pg 97', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg110' => {'offset' => '2974.65', 'label' => 'Pg 98', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg111' => {'offset' => '3017.65', 'label' => 'Pg 99', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg112' => {'offset' => '3040.66', 'label' => 'Pg 100', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg113' => {'offset' => '3040.66', 'label' => 'Pg 101', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg114' => {'offset' => '3059.0', 'label' => 'Pg 102', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg115' => {'offset' => '3072.0', 'label' => 'Pg 103', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg116' => {'offset' => '3076.15', 'label' => 'Pg 104', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg117' => {'offset' => '3094.62', 'label' => 'Pg 105', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg118' => {'offset' => '3128.61', 'label' => 'Pg 106', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg119' => {'offset' => '3161.0', 'label' => 'Pg 107', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg120' => {'offset' => '3202.0', 'label' => 'Pg 108', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg121' => {'offset' => '3205.50', 'label' => 'Pg 109', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg122' => {'offset' => '3253.57', 'label' => 'Pg 110', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg123' => {'offset' => '3302.0', 'label' => 'Pg 111', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg124' => {'offset' => '3304.112', 'label' => 'Pg 112', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg125' => {'offset' => '3319.57', 'label' => 'Pg 113', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg126' => {'offset' => '3366.0', 'label' => 'Pg 114', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg127' => {'offset' => '3398.69', 'label' => 'Pg 115', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg128' => {'offset' => '3421.64', 'label' => 'Pg 116', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg129' => {'offset' => '3469.65', 'label' => 'Pg 117', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg130' => {'offset' => '3493.60', 'label' => 'Pg 118', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg131' => {'offset' => '3533.60', 'label' => 'Pg 119', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg132' => {'offset' => '3533.60', 'label' => 'Pg 120', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg133' => {'offset' => '3580.54', 'label' => 'Pg 121', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg134' => {'offset' => '3585.60', 'label' => 'Pg 122', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg135' => {'offset' => '3605.72', 'label' => 'Pg 123', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg136' => {'offset' => '3622.64', 'label' => 'Pg 124', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg137' => {'offset' => '3666.69', 'label' => 'Pg 125', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg138' => {'offset' => '3710.65', 'label' => 'Pg 126', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg139' => {'offset' => '3741.0', 'label' => 'Pg 127', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg140' => {'offset' => '3745.11', 'label' => 'Pg 128', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg141' => {'offset' => '3747.14', 'label' => 'Pg 129', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg142' => {'offset' => '3773.0', 'label' => 'Pg 130', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg143' => {'offset' => '3812.0', 'label' => 'Pg 131', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg144' => {'offset' => '3850.67', 'label' => 'Pg 132', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg145' => {'offset' => '3850.67', 'label' => 'Pg 133', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg146' => {'offset' => '3850.67', 'label' => 'Pg 134', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg147' => {'offset' => '3907.7', 'label' => 'Pg 135', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg148' => {'offset' => '3920.63', 'label' => 'Pg 136', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg149' => {'offset' => '3971.45', 'label' => 'Pg 137', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg150' => {'offset' => '3998.6', 'label' => 'Pg 138', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg151' => {'offset' => '4017.2', 'label' => 'Pg 139', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg152' => {'offset' => '4066.21', 'label' => 'Pg 140', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg153' => {'offset' => '4094.63', 'label' => 'Pg 141', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg154' => {'offset' => '4094.63', 'label' => 'Pg 142', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg155' => {'offset' => '4167.61', 'label' => 'Pg 143', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg156' => {'offset' => '4167.61', 'label' => 'Pg 144', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg157' => {'offset' => '4194.43', 'label' => 'Pg 145', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg158' => {'offset' => '4228.14', 'label' => 'Pg 146', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg159' => {'offset' => '4282.74', 'label' => 'Pg 147', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg160' => {'offset' => '4282.74', 'label' => 'Pg 148', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg161' => {'offset' => '4314.66', 'label' => 'Pg 149', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg162' => {'offset' => '4354.56', 'label' => 'Pg 150', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg163' => {'offset' => '4397.32', 'label' => 'Pg 151', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg164' => {'offset' => '4400.54', 'label' => 'Pg 152', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg165' => {'offset' => '4413.62', 'label' => 'Pg 153', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg166' => {'offset' => '4468.7', 'label' => 'Pg 154', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg167' => {'offset' => '4524.2', 'label' => 'Pg 155', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg168' => {'offset' => '4600.74', 'label' => 'Pg 156', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg169' => {'offset' => '4677.14', 'label' => 'Pg 157', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg170' => {'offset' => '4759.42', 'label' => 'Pg 158', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg171' => {'offset' => '4833.14', 'label' => 'Pg 159', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg172' => {'offset' => '4911.2', 'label' => 'Pg 160', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg173' => {'offset' => '4978.42', 'label' => 'Pg 161', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg174' => {'offset' => '5066.67', 'label' => 'Pg 162', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg175' => {'offset' => '5148.31', 'label' => 'Pg 163', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg176' => {'offset' => '5223.48', 'label' => 'Pg 164', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg177' => {'offset' => '5302.58', 'label' => 'Pg 165', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg178' => {'offset' => '5364.2', 'label' => 'Pg 166', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg179' => {'offset' => '5453.28', 'label' => 'Pg 167', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg180' => {'offset' => '5527.74', 'label' => 'Pg 168', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg181' => {'offset' => '5594.82', 'label' => 'Pg 169', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg182' => {'offset' => '5661.2', 'label' => 'Pg 170', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg183' => {'offset' => '5737.92', 'label' => 'Pg 171', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg184' => {'offset' => '5789.2', 'label' => 'Pg 172', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg185' => {'offset' => '5828.110', 'label' => 'Pg 173', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg186' => {'offset' => '5871.100', 'label' => 'Pg 174', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg187' => {'offset' => '5919.76', 'label' => 'Pg 175', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg188' => {'offset' => '5965.116', 'label' => 'Pg 176', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg189' => {'offset' => '5988.2', 'label' => 'Pg 177', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg190' => {'offset' => '6498.20', 'label' => 'Pg 178', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg191' => {'offset' => '6678.20', 'label' => 'Pg 179', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg192' => {'offset' => '6854.20', 'label' => 'Pg 180', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg193' => {'offset' => '7030.72', 'label' => 'Pg 181', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg194' => {'offset' => '7204.44', 'label' => 'Pg 182', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg195' => {'offset' => '7386.12', 'label' => 'Pg 183', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg196' => {'offset' => '7532.19', 'label' => 'Pg 184', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg197' => {'offset' => '7532.19', 'label' => 'Pg 185', 'style' => '"', 'action' => '+1', 'base' => ''},
- 'Pg198' => {'offset' => '7532.19', 'label' => 'Pg 186', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg042' => {'offset' => '1010.64', 'label' => 'Pg 30', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg043' => {'offset' => '1052.60', 'label' => 'Pg 31', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg044' => {'offset' => '1076.0', 'label' => 'Pg 32', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg045' => {'offset' => '1076.0', 'label' => 'Pg 33', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg046' => {'offset' => '1076.0', 'label' => 'Pg 34', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg047' => {'offset' => '1076.0', 'label' => 'Pg 35', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg048' => {'offset' => '1076.0', 'label' => 'Pg 36', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg049' => {'offset' => '1076.0', 'label' => 'Pg 37', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg050' => {'offset' => '1076.0', 'label' => 'Pg 38', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg051' => {'offset' => '1076.0', 'label' => 'Pg 39', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg052' => {'offset' => '1076.0', 'label' => 'Pg 40', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg053' => {'offset' => '1076.0', 'label' => 'Pg 41', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg054' => {'offset' => '1076.0', 'label' => 'Pg 42', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg055' => {'offset' => '1076.0', 'label' => 'Pg 43', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg056' => {'offset' => '1076.0', 'label' => 'Pg 44', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg057' => {'offset' => '1076.0', 'label' => 'Pg 45', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg058' => {'offset' => '1076.0', 'label' => 'Pg 46', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg059' => {'offset' => '1076.0', 'label' => 'Pg 47', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg060' => {'offset' => '1076.0', 'label' => 'Pg 48', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg061' => {'offset' => '1076.0', 'label' => 'Pg 49', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg062' => {'offset' => '1076.0', 'label' => 'Pg 50', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg063' => {'offset' => '1076.0', 'label' => 'Pg 51', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg064' => {'offset' => '1076.0', 'label' => 'Pg 52', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg065' => {'offset' => '1076.0', 'label' => 'Pg 53', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg066' => {'offset' => '1076.0', 'label' => 'Pg 54', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg067' => {'offset' => '1076.0', 'label' => 'Pg 55', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg068' => {'offset' => '1076.0', 'label' => 'Pg 56', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg069' => {'offset' => '1076.0', 'label' => 'Pg 57', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg070' => {'offset' => '1076.0', 'label' => 'Pg 58', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg071' => {'offset' => '1076.0', 'label' => 'Pg 59', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg072' => {'offset' => '1076.0', 'label' => 'Pg 60', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg073' => {'offset' => '1076.0', 'label' => 'Pg 61', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg074' => {'offset' => '1076.0', 'label' => 'Pg 62', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg075' => {'offset' => '1076.0', 'label' => 'Pg 63', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg076' => {'offset' => '1076.0', 'label' => 'Pg 64', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg077' => {'offset' => '1076.0', 'label' => 'Pg 65', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg078' => {'offset' => '1076.0', 'label' => 'Pg 66', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg079' => {'offset' => '1076.0', 'label' => 'Pg 67', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg080' => {'offset' => '1076.0', 'label' => 'Pg 68', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg081' => {'offset' => '1076.0', 'label' => 'Pg 69', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg082' => {'offset' => '1076.0', 'label' => 'Pg 70', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg083' => {'offset' => '1076.0', 'label' => 'Pg 71', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg084' => {'offset' => '1076.0', 'label' => 'Pg 72', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg085' => {'offset' => '1076.0', 'label' => 'Pg 73', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg086' => {'offset' => '1076.0', 'label' => 'Pg 74', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg087' => {'offset' => '1076.0', 'label' => 'Pg 75', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg088' => {'offset' => '1076.0', 'label' => 'Pg 76', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg089' => {'offset' => '1076.0', 'label' => 'Pg 77', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg090' => {'offset' => '1076.0', 'label' => 'Pg 78', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg091' => {'offset' => '1076.0', 'label' => 'Pg 79', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg092' => {'offset' => '1076.0', 'label' => 'Pg 80', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg093' => {'offset' => '1076.0', 'label' => 'Pg 81', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg094' => {'offset' => '1076.0', 'label' => 'Pg 82', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg095' => {'offset' => '1076.0', 'label' => 'Pg 83', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg096' => {'offset' => '1076.0', 'label' => 'Pg 84', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg097' => {'offset' => '1076.0', 'label' => 'Pg 85', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg098' => {'offset' => '1076.0', 'label' => 'Pg 86', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg099' => {'offset' => '1076.0', 'label' => 'Pg 87', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg100' => {'offset' => '1076.0', 'label' => 'Pg 88', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg101' => {'offset' => '1076.0', 'label' => 'Pg 89', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg102' => {'offset' => '1076.0', 'label' => 'Pg 90', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg103' => {'offset' => '1076.0', 'label' => 'Pg 91', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg104' => {'offset' => '1076.0', 'label' => 'Pg 92', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg105' => {'offset' => '1076.0', 'label' => 'Pg 93', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg106' => {'offset' => '1076.0', 'label' => 'Pg 94', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg107' => {'offset' => '1076.0', 'label' => 'Pg 95', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg108' => {'offset' => '1076.0', 'label' => 'Pg 96', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg109' => {'offset' => '1076.0', 'label' => 'Pg 97', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg110' => {'offset' => '1076.0', 'label' => 'Pg 98', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg111' => {'offset' => '1076.0', 'label' => 'Pg 99', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg112' => {'offset' => '1076.0', 'label' => 'Pg 100', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg113' => {'offset' => '1076.0', 'label' => 'Pg 101', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg114' => {'offset' => '1076.0', 'label' => 'Pg 102', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg115' => {'offset' => '1076.0', 'label' => 'Pg 103', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg116' => {'offset' => '1076.0', 'label' => 'Pg 104', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg117' => {'offset' => '1076.0', 'label' => 'Pg 105', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg118' => {'offset' => '1076.0', 'label' => 'Pg 106', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg119' => {'offset' => '1076.0', 'label' => 'Pg 107', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg120' => {'offset' => '1076.0', 'label' => 'Pg 108', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg121' => {'offset' => '1076.0', 'label' => 'Pg 109', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg122' => {'offset' => '1076.0', 'label' => 'Pg 110', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg123' => {'offset' => '1076.0', 'label' => 'Pg 111', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg124' => {'offset' => '1076.0', 'label' => 'Pg 112', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg125' => {'offset' => '1076.0', 'label' => 'Pg 113', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg126' => {'offset' => '1076.0', 'label' => 'Pg 114', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg127' => {'offset' => '1076.0', 'label' => 'Pg 115', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg128' => {'offset' => '1076.0', 'label' => 'Pg 116', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg129' => {'offset' => '1076.0', 'label' => 'Pg 117', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg130' => {'offset' => '1076.0', 'label' => 'Pg 118', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg131' => {'offset' => '1076.0', 'label' => 'Pg 119', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg132' => {'offset' => '1076.0', 'label' => 'Pg 120', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg133' => {'offset' => '1076.0', 'label' => 'Pg 121', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg134' => {'offset' => '1076.0', 'label' => 'Pg 122', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg135' => {'offset' => '1076.0', 'label' => 'Pg 123', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg136' => {'offset' => '1076.0', 'label' => 'Pg 124', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg137' => {'offset' => '1076.0', 'label' => 'Pg 125', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg138' => {'offset' => '1076.0', 'label' => 'Pg 126', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg139' => {'offset' => '1076.0', 'label' => 'Pg 127', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg140' => {'offset' => '1076.0', 'label' => 'Pg 128', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg141' => {'offset' => '1076.0', 'label' => 'Pg 129', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg142' => {'offset' => '1076.0', 'label' => 'Pg 130', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg143' => {'offset' => '1076.0', 'label' => 'Pg 131', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg144' => {'offset' => '1076.0', 'label' => 'Pg 132', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg145' => {'offset' => '1076.0', 'label' => 'Pg 133', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg146' => {'offset' => '1076.0', 'label' => 'Pg 134', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg147' => {'offset' => '1076.0', 'label' => 'Pg 135', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg148' => {'offset' => '1076.0', 'label' => 'Pg 136', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg149' => {'offset' => '1076.0', 'label' => 'Pg 137', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg150' => {'offset' => '1076.0', 'label' => 'Pg 138', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg151' => {'offset' => '1076.0', 'label' => 'Pg 139', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg152' => {'offset' => '1076.0', 'label' => 'Pg 140', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg153' => {'offset' => '1076.0', 'label' => 'Pg 141', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg154' => {'offset' => '1076.0', 'label' => 'Pg 142', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg155' => {'offset' => '1076.0', 'label' => 'Pg 143', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg156' => {'offset' => '1076.0', 'label' => 'Pg 144', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg157' => {'offset' => '1076.0', 'label' => 'Pg 145', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg158' => {'offset' => '1076.0', 'label' => 'Pg 146', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg159' => {'offset' => '1076.0', 'label' => 'Pg 147', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg160' => {'offset' => '1076.0', 'label' => 'Pg 148', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg161' => {'offset' => '1076.0', 'label' => 'Pg 149', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg162' => {'offset' => '1076.0', 'label' => 'Pg 150', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg163' => {'offset' => '1076.0', 'label' => 'Pg 151', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg164' => {'offset' => '1076.0', 'label' => 'Pg 152', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg165' => {'offset' => '1076.0', 'label' => 'Pg 153', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg166' => {'offset' => '1076.0', 'label' => 'Pg 154', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg167' => {'offset' => '1076.0', 'label' => 'Pg 155', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg168' => {'offset' => '1076.0', 'label' => 'Pg 156', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg169' => {'offset' => '1076.0', 'label' => 'Pg 157', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg170' => {'offset' => '1076.0', 'label' => 'Pg 158', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg171' => {'offset' => '1076.0', 'label' => 'Pg 159', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg172' => {'offset' => '1076.0', 'label' => 'Pg 160', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg173' => {'offset' => '1076.0', 'label' => 'Pg 161', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg174' => {'offset' => '1076.0', 'label' => 'Pg 162', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg175' => {'offset' => '1076.0', 'label' => 'Pg 163', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg176' => {'offset' => '1076.0', 'label' => 'Pg 164', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg177' => {'offset' => '1076.0', 'label' => 'Pg 165', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg178' => {'offset' => '1076.0', 'label' => 'Pg 166', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg179' => {'offset' => '1076.0', 'label' => 'Pg 167', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg180' => {'offset' => '1076.0', 'label' => 'Pg 168', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg181' => {'offset' => '1076.0', 'label' => 'Pg 169', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg182' => {'offset' => '1076.0', 'label' => 'Pg 170', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg183' => {'offset' => '1076.0', 'label' => 'Pg 171', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg184' => {'offset' => '1076.0', 'label' => 'Pg 172', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg185' => {'offset' => '1076.0', 'label' => 'Pg 173', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg186' => {'offset' => '1076.0', 'label' => 'Pg 174', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg187' => {'offset' => '1076.0', 'label' => 'Pg 175', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg188' => {'offset' => '1076.0', 'label' => 'Pg 176', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg189' => {'offset' => '1076.0', 'label' => 'Pg 177', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg190' => {'offset' => '1076.0', 'label' => 'Pg 178', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg191' => {'offset' => '1076.0', 'label' => 'Pg 179', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg192' => {'offset' => '1076.0', 'label' => 'Pg 180', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg193' => {'offset' => '1076.0', 'label' => 'Pg 181', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg194' => {'offset' => '1076.0', 'label' => 'Pg 182', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg195' => {'offset' => '1076.0', 'label' => 'Pg 183', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg196' => {'offset' => '1076.0', 'label' => 'Pg 184', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg197' => {'offset' => '1076.0', 'label' => 'Pg 185', 'style' => '"', 'action' => '+1', 'base' => ''},
+ 'Pg198' => {'offset' => '1076.0', 'label' => 'Pg 186', 'style' => '"', 'action' => '+1', 'base' => ''},
 );
 
-$bookmarks[0] = '5855.14';
+$main::bookmarks[0] = '986.0';
 
-$pngspath = 'C:\dpold\pp\instruments\pngs\\';
+$main::pngspath = 'C:\dpold\pp\instruments\pngs\\';
 
-$proofers{'001'}[1] = 'jokata';
-$proofers{'001'}[2] = 'becky1166';
-$proofers{'002'}[1] = 'jokata';
-$proofers{'002'}[2] = 'becky1166';
-$proofers{'003'}[1] = 'jokata';
-$proofers{'003'}[2] = 'becky1166';
-$proofers{'004'}[1] = 'jokata';
-$proofers{'004'}[2] = 'becky1166';
-$proofers{'005'}[1] = 'jokata';
-$proofers{'005'}[2] = 'becky1166';
-$proofers{'006'}[1] = 'jokata';
-$proofers{'006'}[2] = 'becky1166';
-$proofers{'008'}[1] = 'rcfinn';
-$proofers{'008'}[2] = 'Joe Cooper';
-$proofers{'009'}[1] = 'rcfinn';
-$proofers{'009'}[2] = 'Joe Cooper';
-$proofers{'010'}[1] = 'dorts';
-$proofers{'010'}[2] = 'fiddlesalt';
-$proofers{'011'}[1] = 'Monicagd';
-$proofers{'011'}[2] = 'fiddlesalt';
-$proofers{'012'}[1] = 'Monicagd';
-$proofers{'012'}[2] = 'fiddlesalt';
-$proofers{'013'}[1] = 'Monicagd';
-$proofers{'013'}[2] = 'fiddlesalt';
-$proofers{'014'}[1] = 'Monicagd';
-$proofers{'014'}[2] = 'fiddlesalt';
-$proofers{'015'}[1] = 'Monicagd';
-$proofers{'015'}[2] = 'fiddlesalt';
-$proofers{'016'}[1] = 'Monicagd';
-$proofers{'016'}[2] = 'carlyon';
-$proofers{'017'}[1] = 'Monicagd';
-$proofers{'017'}[2] = 'carlyon';
-$proofers{'018'}[1] = 'Monicagd';
-$proofers{'018'}[2] = 'carlyon';
-$proofers{'019'}[1] = 'vood';
-$proofers{'019'}[2] = 'carlyon';
-$proofers{'020'}[1] = 'Monicagd';
-$proofers{'020'}[2] = 'carlyon';
-$proofers{'021'}[1] = 'Monicagd';
-$proofers{'021'}[2] = 'carlyon';
-$proofers{'022'}[1] = 'Monicagd';
-$proofers{'022'}[2] = 'carlyon';
-$proofers{'023'}[1] = 'Monicagd';
-$proofers{'023'}[2] = 'carlyon';
-$proofers{'024'}[1] = 'Monicagd';
-$proofers{'024'}[2] = 'dmc1423';
-$proofers{'025'}[1] = 'Monicagd';
-$proofers{'025'}[2] = 'becky1166';
-$proofers{'026'}[1] = 'Monicagd';
-$proofers{'026'}[2] = 'becky1166';
-$proofers{'027'}[1] = 'Monicagd';
-$proofers{'027'}[2] = 'becky1166';
-$proofers{'028'}[1] = 'Monicagd';
-$proofers{'028'}[2] = 'becky1166';
-$proofers{'029'}[1] = 'Monicagd';
-$proofers{'029'}[2] = 'becky1166';
-$proofers{'030'}[1] = 'Monicagd';
-$proofers{'030'}[2] = 'becky1166';
-$proofers{'031'}[1] = 'Monicagd';
-$proofers{'031'}[2] = 'Mawaki';
-$proofers{'032'}[1] = 'Monicagd';
-$proofers{'032'}[2] = 'madyh';
-$proofers{'033'}[1] = 'Monicagd';
-$proofers{'033'}[2] = 'madyh';
-$proofers{'034'}[1] = 'Monicagd';
-$proofers{'034'}[2] = 'madyh';
-$proofers{'035'}[1] = 'Monicagd';
-$proofers{'035'}[2] = 'madyh';
-$proofers{'036'}[1] = 'Monicagd';
-$proofers{'036'}[2] = 'madyh';
-$proofers{'037'}[1] = 'Monicagd';
-$proofers{'037'}[2] = 'madyh';
-$proofers{'038'}[1] = 'Monicagd';
-$proofers{'038'}[2] = 'Blue Berry';
-$proofers{'039'}[1] = 'LMQ1963';
-$proofers{'039'}[2] = 'Blue Berry';
-$proofers{'040'}[1] = 'coaster';
-$proofers{'040'}[2] = 'Blue Berry';
-$proofers{'041'}[1] = 'LMQ1963';
-$proofers{'041'}[2] = 'Blue Berry';
-$proofers{'042'}[1] = 'LMQ1963';
-$proofers{'042'}[2] = 'Blue Berry';
-$proofers{'043'}[1] = 'LMQ1963';
-$proofers{'043'}[2] = 'Blue Berry';
-$proofers{'044'}[1] = 'LMQ1963';
-$proofers{'044'}[2] = 'Blue Berry';
-$proofers{'045'}[1] = 'LMQ1963';
-$proofers{'045'}[2] = 'Blue Berry';
-$proofers{'046'}[1] = 'rcfinn';
-$proofers{'046'}[2] = 'Blue Berry';
-$proofers{'047'}[1] = 'Monicagd';
-$proofers{'047'}[2] = 'madyh';
-$proofers{'048'}[1] = 'Monicagd';
-$proofers{'048'}[2] = 'madyh';
-$proofers{'049'}[1] = 'Monicagd';
-$proofers{'049'}[2] = 'madyh';
-$proofers{'050'}[1] = 'Monicagd';
-$proofers{'050'}[2] = 'madyh';
-$proofers{'051'}[1] = 'Monicagd';
-$proofers{'051'}[2] = 'Blue Berry';
-$proofers{'052'}[1] = 'Monicagd';
-$proofers{'052'}[2] = 'Blue Berry';
-$proofers{'053'}[1] = 'Monicagd';
-$proofers{'053'}[2] = 'Blue Berry';
-$proofers{'054'}[1] = 'alalk33';
-$proofers{'054'}[2] = 'Blue Berry';
-$proofers{'055'}[1] = 'alalk33';
-$proofers{'055'}[2] = 'Blue Berry';
-$proofers{'056'}[1] = 'Monicagd';
-$proofers{'056'}[2] = 'carlyon';
-$proofers{'057'}[1] = 'Monicagd';
-$proofers{'057'}[2] = 'carlyon';
-$proofers{'058'}[1] = 'Monicagd';
-$proofers{'058'}[2] = 'carlyon';
-$proofers{'059'}[1] = 'Monicagd';
-$proofers{'059'}[2] = 'carlyon';
-$proofers{'060'}[1] = 'Monicagd';
-$proofers{'060'}[2] = 'carlyon';
-$proofers{'061'}[1] = 'Boosarah';
-$proofers{'061'}[2] = 'carlyon';
-$proofers{'062'}[1] = 'Boosarah';
-$proofers{'062'}[2] = 'carlyon';
-$proofers{'063'}[1] = 'Boosarah';
-$proofers{'063'}[2] = 'carlyon';
-$proofers{'064'}[1] = 'Boosarah';
-$proofers{'064'}[2] = 'carlyon';
-$proofers{'065'}[1] = 'Boosarah';
-$proofers{'065'}[2] = 'carlyon';
-$proofers{'066'}[1] = 'Monicagd';
-$proofers{'066'}[2] = 'carlyon';
-$proofers{'067'}[1] = 'Monicagd';
-$proofers{'067'}[2] = 'fiddlesalt';
-$proofers{'068'}[1] = 'Monicagd';
-$proofers{'068'}[2] = 'fiddlesalt';
-$proofers{'069'}[1] = 'Monicagd';
-$proofers{'069'}[2] = 'fiddlesalt';
-$proofers{'070'}[1] = 'Monicagd';
-$proofers{'070'}[2] = 'Blue Berry';
-$proofers{'071'}[1] = 'Monicagd';
-$proofers{'071'}[2] = 'Blue Berry';
-$proofers{'072'}[1] = 'Monicagd';
-$proofers{'072'}[2] = 'Blue Berry';
-$proofers{'073'}[1] = 'Monicagd';
-$proofers{'073'}[2] = 'Blue Berry';
-$proofers{'074'}[1] = 'Monicagd';
-$proofers{'074'}[2] = 'Blue Berry';
-$proofers{'075'}[1] = 'Monicagd';
-$proofers{'075'}[2] = 'Blue Berry';
-$proofers{'076'}[1] = 'Monicagd';
-$proofers{'076'}[2] = 'Blue Berry';
-$proofers{'077'}[1] = 'Monicagd';
-$proofers{'077'}[2] = 'Blue Berry';
-$proofers{'078'}[1] = 'Monicagd';
-$proofers{'078'}[2] = 'Blue Berry';
-$proofers{'079'}[1] = 'vood';
-$proofers{'079'}[2] = 'Blue Berry';
-$proofers{'080'}[1] = 'Boosarah';
-$proofers{'080'}[2] = 'Blue Berry';
-$proofers{'081'}[1] = 'Boosarah';
-$proofers{'081'}[2] = 'Blue Berry';
-$proofers{'082'}[1] = 'Boosarah';
-$proofers{'082'}[2] = 'revbeverly';
-$proofers{'083'}[1] = 'Boosarah';
-$proofers{'083'}[2] = 'revbeverly';
-$proofers{'084'}[1] = 'Boosarah';
-$proofers{'084'}[2] = 'revbeverly';
-$proofers{'085'}[1] = 'Monicagd';
-$proofers{'085'}[2] = 'carlyon';
-$proofers{'086'}[1] = 'alalk33';
-$proofers{'086'}[2] = 'carlyon';
-$proofers{'087'}[1] = 'alalk33';
-$proofers{'087'}[2] = 'carlyon';
-$proofers{'088'}[1] = 'ssnoyes';
-$proofers{'088'}[2] = 'carlyon';
-$proofers{'089'}[1] = 'windymilla';
-$proofers{'089'}[2] = 'carlyon';
-$proofers{'090'}[1] = 'windymilla';
-$proofers{'090'}[2] = 'carlyon';
-$proofers{'091'}[1] = 'windymilla';
-$proofers{'091'}[2] = 'carlyon';
-$proofers{'092'}[1] = 'windymilla';
-$proofers{'092'}[2] = 'carlyon';
-$proofers{'093'}[1] = 'windymilla';
-$proofers{'093'}[2] = 'carlyon';
-$proofers{'094'}[1] = 'windymilla';
-$proofers{'094'}[2] = 'carlyon';
-$proofers{'095'}[1] = 'Monicagd';
-$proofers{'095'}[2] = 'carlyon';
-$proofers{'096'}[1] = 'Monicagd';
-$proofers{'096'}[2] = 'carlyon';
-$proofers{'097'}[1] = 'Monicagd';
-$proofers{'097'}[2] = 'carlyon';
-$proofers{'098'}[1] = 'Monicagd';
-$proofers{'098'}[2] = 'carlyon';
-$proofers{'099'}[1] = 'Monicagd';
-$proofers{'099'}[2] = 'carlyon';
-$proofers{'100'}[1] = 'alalk33';
-$proofers{'100'}[2] = 'carlyon';
-$proofers{'101'}[1] = 'Monicagd';
-$proofers{'101'}[2] = 'carlyon';
-$proofers{'102'}[1] = 'Monicagd';
-$proofers{'102'}[2] = 'carlyon';
-$proofers{'103'}[1] = 'alalk33';
-$proofers{'103'}[2] = 'carlyon';
-$proofers{'104'}[1] = 'Joe Cooper';
-$proofers{'104'}[2] = 'carlyon';
-$proofers{'105'}[1] = 'Monicagd';
-$proofers{'105'}[2] = 'carlyon';
-$proofers{'106'}[1] = 'Monicagd';
-$proofers{'106'}[2] = 'carlyon';
-$proofers{'107'}[1] = 'Monicagd';
-$proofers{'107'}[2] = 'carlyon';
-$proofers{'108'}[1] = 'Monicagd';
-$proofers{'108'}[2] = 'carlyon';
-$proofers{'109'}[1] = 'Monicagd';
-$proofers{'109'}[2] = 'carlyon';
-$proofers{'110'}[1] = 'Monicagd';
-$proofers{'110'}[2] = 'carlyon';
-$proofers{'111'}[1] = 'Monicagd';
-$proofers{'111'}[2] = 'carlyon';
-$proofers{'112'}[1] = 'Monicagd';
-$proofers{'112'}[2] = 'carlyon';
-$proofers{'113'}[1] = 'Monicagd';
-$proofers{'113'}[2] = 'carlyon';
-$proofers{'114'}[1] = 'Monicagd';
-$proofers{'114'}[2] = 'carlyon';
-$proofers{'115'}[1] = 'Monicagd';
-$proofers{'115'}[2] = 'carlyon';
-$proofers{'116'}[1] = 'Monicagd';
-$proofers{'116'}[2] = 'carlyon';
-$proofers{'117'}[1] = 'Monicagd';
-$proofers{'117'}[2] = 'carlyon';
-$proofers{'118'}[1] = 'Monicagd';
-$proofers{'118'}[2] = 'carlyon';
-$proofers{'119'}[1] = 'Monicagd';
-$proofers{'119'}[2] = 'carlyon';
-$proofers{'120'}[1] = 'Monicagd';
-$proofers{'120'}[2] = 'carlyon';
-$proofers{'121'}[1] = 'Monicagd';
-$proofers{'121'}[2] = 'carlyon';
-$proofers{'122'}[1] = 'Monicagd';
-$proofers{'122'}[2] = 'carlyon';
-$proofers{'123'}[1] = 'Monicagd';
-$proofers{'123'}[2] = 'carlyon';
-$proofers{'124'}[1] = 'Monicagd';
-$proofers{'124'}[2] = 'carlyon';
-$proofers{'125'}[1] = 'Monicagd';
-$proofers{'125'}[2] = 'carlyon';
-$proofers{'126'}[1] = 'Monicagd';
-$proofers{'126'}[2] = 'carlyon';
-$proofers{'127'}[1] = 'pedantman';
-$proofers{'127'}[2] = 'carlyon';
-$proofers{'128'}[1] = 'pedantman';
-$proofers{'128'}[2] = 'carlyon';
-$proofers{'129'}[1] = 'pedantman';
-$proofers{'129'}[2] = 'Commonreader';
-$proofers{'130'}[1] = 'pedantman';
-$proofers{'130'}[2] = 'revbeverly';
-$proofers{'131'}[1] = 'Monicagd';
-$proofers{'131'}[2] = 'revbeverly';
-$proofers{'132'}[1] = 'Monicagd';
-$proofers{'132'}[2] = 'revbeverly';
-$proofers{'133'}[1] = 'Monicagd';
-$proofers{'133'}[2] = 'revbeverly';
-$proofers{'134'}[1] = 'Monicagd';
-$proofers{'134'}[2] = 'revbeverly';
-$proofers{'135'}[1] = 'Monicagd';
-$proofers{'135'}[2] = 'revbeverly';
-$proofers{'136'}[1] = 'Monicagd';
-$proofers{'136'}[2] = 'revbeverly';
-$proofers{'137'}[1] = 'Monicagd';
-$proofers{'137'}[2] = 'fiddlesalt';
-$proofers{'138'}[1] = 'Monicagd';
-$proofers{'138'}[2] = 'fiddlesalt';
-$proofers{'139'}[1] = 'Monicagd';
-$proofers{'139'}[2] = 'fiddlesalt';
-$proofers{'140'}[1] = 'Monicagd';
-$proofers{'140'}[2] = 'fiddlesalt';
-$proofers{'141'}[1] = 'Monicagd';
-$proofers{'141'}[2] = 'fiddlesalt';
-$proofers{'142'}[1] = 'Monicagd';
-$proofers{'142'}[2] = 'fiddlesalt';
-$proofers{'143'}[1] = 'vood';
-$proofers{'143'}[2] = 'Blue Berry';
-$proofers{'144'}[1] = 'alalk33';
-$proofers{'144'}[2] = 'Blue Berry';
-$proofers{'145'}[1] = 'alalk33';
-$proofers{'145'}[2] = 'Blue Berry';
-$proofers{'146'}[1] = 'alalk33';
-$proofers{'146'}[2] = 'Blue Berry';
-$proofers{'147'}[1] = 'alalk33';
-$proofers{'147'}[2] = 'Blue Berry';
-$proofers{'148'}[1] = 'alalk33';
-$proofers{'148'}[2] = 'Blue Berry';
-$proofers{'149'}[1] = 'Boosarah';
-$proofers{'149'}[2] = 'Blue Berry';
-$proofers{'150'}[1] = 'Boosarah';
-$proofers{'150'}[2] = 'Blue Berry';
-$proofers{'151'}[1] = 'Boosarah';
-$proofers{'151'}[2] = 'Blue Berry';
-$proofers{'152'}[1] = 'pedantman';
-$proofers{'152'}[2] = 'Blue Berry';
-$proofers{'153'}[1] = 'Boosarah';
-$proofers{'153'}[2] = 'Blue Berry';
-$proofers{'154'}[1] = 'Boosarah';
-$proofers{'154'}[2] = 'Blue Berry';
-$proofers{'156'}[1] = 'pedantman';
-$proofers{'156'}[2] = 'Blue Berry';
-$proofers{'157'}[1] = 'pedantman';
-$proofers{'157'}[2] = 'Blue Berry';
-$proofers{'158'}[1] = 'pedantman';
-$proofers{'158'}[2] = 'Blue Berry';
-$proofers{'159'}[1] = 'pedantman';
-$proofers{'159'}[2] = 'Blue Berry';
-$proofers{'160'}[1] = 'pedantman';
-$proofers{'160'}[2] = 'Blue Berry';
-$proofers{'161'}[1] = 'pedantman';
-$proofers{'161'}[2] = 'Blue Berry';
-$proofers{'162'}[1] = 'Boosarah';
-$proofers{'162'}[2] = 'Blue Berry';
-$proofers{'163'}[1] = 'Boosarah';
-$proofers{'163'}[2] = 'emrekeskin';
-$proofers{'164'}[1] = 'Boosarah';
-$proofers{'164'}[2] = 'emrekeskin';
-$proofers{'165'}[1] = 'Joe Cooper';
-$proofers{'165'}[2] = 'emrekeskin';
-$proofers{'166'}[1] = 'Joe Cooper';
-$proofers{'166'}[2] = 'emrekeskin';
-$proofers{'167'}[1] = 'Joe Cooper';
-$proofers{'167'}[2] = 'carlyon';
-$proofers{'168'}[1] = 'Monicagd';
-$proofers{'168'}[2] = 'carlyon';
-$proofers{'169'}[1] = 'pedantman';
-$proofers{'169'}[2] = 'carlyon';
-$proofers{'170'}[1] = 'pedantman';
-$proofers{'170'}[2] = 'Blue Berry';
-$proofers{'171'}[1] = 'ollie';
-$proofers{'171'}[2] = 'Blue Berry';
-$proofers{'172'}[1] = 'alalk33';
-$proofers{'172'}[2] = 'Mawaki';
-$proofers{'173'}[1] = 'alalk33';
-$proofers{'173'}[2] = 'Mawaki';
-$proofers{'174'}[1] = 'ELNHouse';
-$proofers{'174'}[2] = 'Mawaki';
-$proofers{'175'}[1] = 'jerzyp';
-$proofers{'175'}[2] = 'carlyon';
-$proofers{'176'}[1] = 'Joe Cooper';
-$proofers{'176'}[2] = 'carlyon';
-$proofers{'177'}[1] = 'CathyO';
-$proofers{'177'}[2] = 'carlyon';
-$proofers{'178'}[1] = 'CathyO';
-$proofers{'178'}[2] = 'carlyon';
-$proofers{'179'}[1] = 'dmc1423';
-$proofers{'179'}[2] = 'carlyon';
-$proofers{'180'}[1] = 'dmc1423';
-$proofers{'180'}[2] = 'carlyon';
-$proofers{'181'}[1] = 'dmc1423';
-$proofers{'181'}[2] = 'carlyon';
-$proofers{'182'}[1] = 'dmc1423';
-$proofers{'182'}[2] = 'Joe Cooper';
-$proofers{'183'}[1] = 'alalk33';
-$proofers{'183'}[2] = 'Mawaki';
-$proofers{'184'}[1] = 'alalk33';
-$proofers{'184'}[2] = 'Mawaki';
-$proofers{'185'}[1] = 'Joe Cooper';
-$proofers{'185'}[2] = 'carlyon';
-$proofers{'186'}[1] = 'Joe Cooper';
-$proofers{'186'}[2] = 'carlyon';
-$proofers{'187'}[1] = 'Joe Cooper';
-$proofers{'187'}[2] = 'carlyon';
-$proofers{'188'}[1] = 'dorts';
-$proofers{'188'}[2] = 'carlyon';
-$proofers{'189'}[1] = 'dorts';
-$proofers{'189'}[2] = 'carlyon';
-$proofers{'190'}[1] = 'dorts';
-$proofers{'190'}[2] = 'Blue Berry';
-$proofers{'191'}[1] = 'dorts';
-$proofers{'191'}[2] = 'Blue Berry';
-$proofers{'192'}[1] = 'dorts';
-$proofers{'192'}[2] = 'Blue Berry';
-$proofers{'193'}[1] = 'dorts';
-$proofers{'193'}[2] = 'Blue Berry';
-$proofers{'194'}[1] = 'dorts';
-$proofers{'194'}[2] = 'Blue Berry';
-$proofers{'195'}[1] = 'dorts';
-$proofers{'195'}[2] = 'Blue Berry';
-$proofers{'196'}[1] = 'dorts';
-$proofers{'196'}[2] = 'Blue Berry';
+$main::proofers{'001'}[1] = 'jokata';
+$main::proofers{'001'}[2] = 'becky1166';
+$main::proofers{'002'}[1] = 'jokata';
+$main::proofers{'002'}[2] = 'becky1166';
+$main::proofers{'003'}[1] = 'jokata';
+$main::proofers{'003'}[2] = 'becky1166';
+$main::proofers{'004'}[1] = 'jokata';
+$main::proofers{'004'}[2] = 'becky1166';
+$main::proofers{'005'}[1] = 'jokata';
+$main::proofers{'005'}[2] = 'becky1166';
+$main::proofers{'006'}[1] = 'jokata';
+$main::proofers{'006'}[2] = 'becky1166';
+$main::proofers{'008'}[1] = 'rcfinn';
+$main::proofers{'008'}[2] = 'Joe Cooper';
+$main::proofers{'009'}[1] = 'rcfinn';
+$main::proofers{'009'}[2] = 'Joe Cooper';
+$main::proofers{'010'}[1] = 'dorts';
+$main::proofers{'010'}[2] = 'fiddlesalt';
+$main::proofers{'011'}[1] = 'Monicagd';
+$main::proofers{'011'}[2] = 'fiddlesalt';
+$main::proofers{'012'}[1] = 'Monicagd';
+$main::proofers{'012'}[2] = 'fiddlesalt';
+$main::proofers{'013'}[1] = 'Monicagd';
+$main::proofers{'013'}[2] = 'fiddlesalt';
+$main::proofers{'014'}[1] = 'Monicagd';
+$main::proofers{'014'}[2] = 'fiddlesalt';
+$main::proofers{'015'}[1] = 'Monicagd';
+$main::proofers{'015'}[2] = 'fiddlesalt';
+$main::proofers{'016'}[1] = 'Monicagd';
+$main::proofers{'016'}[2] = 'carlyon';
+$main::proofers{'017'}[1] = 'Monicagd';
+$main::proofers{'017'}[2] = 'carlyon';
+$main::proofers{'018'}[1] = 'Monicagd';
+$main::proofers{'018'}[2] = 'carlyon';
+$main::proofers{'019'}[1] = 'vood';
+$main::proofers{'019'}[2] = 'carlyon';
+$main::proofers{'020'}[1] = 'Monicagd';
+$main::proofers{'020'}[2] = 'carlyon';
+$main::proofers{'021'}[1] = 'Monicagd';
+$main::proofers{'021'}[2] = 'carlyon';
+$main::proofers{'022'}[1] = 'Monicagd';
+$main::proofers{'022'}[2] = 'carlyon';
+$main::proofers{'023'}[1] = 'Monicagd';
+$main::proofers{'023'}[2] = 'carlyon';
+$main::proofers{'024'}[1] = 'Monicagd';
+$main::proofers{'024'}[2] = 'dmc1423';
+$main::proofers{'025'}[1] = 'Monicagd';
+$main::proofers{'025'}[2] = 'becky1166';
+$main::proofers{'026'}[1] = 'Monicagd';
+$main::proofers{'026'}[2] = 'becky1166';
+$main::proofers{'027'}[1] = 'Monicagd';
+$main::proofers{'027'}[2] = 'becky1166';
+$main::proofers{'028'}[1] = 'Monicagd';
+$main::proofers{'028'}[2] = 'becky1166';
+$main::proofers{'029'}[1] = 'Monicagd';
+$main::proofers{'029'}[2] = 'becky1166';
+$main::proofers{'030'}[1] = 'Monicagd';
+$main::proofers{'030'}[2] = 'becky1166';
+$main::proofers{'031'}[1] = 'Monicagd';
+$main::proofers{'031'}[2] = 'Mawaki';
+$main::proofers{'032'}[1] = 'Monicagd';
+$main::proofers{'032'}[2] = 'madyh';
+$main::proofers{'033'}[1] = 'Monicagd';
+$main::proofers{'033'}[2] = 'madyh';
+$main::proofers{'034'}[1] = 'Monicagd';
+$main::proofers{'034'}[2] = 'madyh';
+$main::proofers{'035'}[1] = 'Monicagd';
+$main::proofers{'035'}[2] = 'madyh';
+$main::proofers{'036'}[1] = 'Monicagd';
+$main::proofers{'036'}[2] = 'madyh';
+$main::proofers{'037'}[1] = 'Monicagd';
+$main::proofers{'037'}[2] = 'madyh';
+$main::proofers{'038'}[1] = 'Monicagd';
+$main::proofers{'038'}[2] = 'Blue Berry';
+$main::proofers{'039'}[1] = 'LMQ1963';
+$main::proofers{'039'}[2] = 'Blue Berry';
+$main::proofers{'040'}[1] = 'coaster';
+$main::proofers{'040'}[2] = 'Blue Berry';
+$main::proofers{'041'}[1] = 'LMQ1963';
+$main::proofers{'041'}[2] = 'Blue Berry';
+$main::proofers{'042'}[1] = 'LMQ1963';
+$main::proofers{'042'}[2] = 'Blue Berry';
+$main::proofers{'043'}[1] = 'LMQ1963';
+$main::proofers{'043'}[2] = 'Blue Berry';
+$main::proofers{'044'}[1] = 'LMQ1963';
+$main::proofers{'044'}[2] = 'Blue Berry';
+$main::proofers{'045'}[1] = 'LMQ1963';
+$main::proofers{'045'}[2] = 'Blue Berry';
+$main::proofers{'046'}[1] = 'rcfinn';
+$main::proofers{'046'}[2] = 'Blue Berry';
+$main::proofers{'047'}[1] = 'Monicagd';
+$main::proofers{'047'}[2] = 'madyh';
+$main::proofers{'048'}[1] = 'Monicagd';
+$main::proofers{'048'}[2] = 'madyh';
+$main::proofers{'049'}[1] = 'Monicagd';
+$main::proofers{'049'}[2] = 'madyh';
+$main::proofers{'050'}[1] = 'Monicagd';
+$main::proofers{'050'}[2] = 'madyh';
+$main::proofers{'051'}[1] = 'Monicagd';
+$main::proofers{'051'}[2] = 'Blue Berry';
+$main::proofers{'052'}[1] = 'Monicagd';
+$main::proofers{'052'}[2] = 'Blue Berry';
+$main::proofers{'053'}[1] = 'Monicagd';
+$main::proofers{'053'}[2] = 'Blue Berry';
+$main::proofers{'054'}[1] = 'alalk33';
+$main::proofers{'054'}[2] = 'Blue Berry';
+$main::proofers{'055'}[1] = 'alalk33';
+$main::proofers{'055'}[2] = 'Blue Berry';
+$main::proofers{'056'}[1] = 'Monicagd';
+$main::proofers{'056'}[2] = 'carlyon';
+$main::proofers{'057'}[1] = 'Monicagd';
+$main::proofers{'057'}[2] = 'carlyon';
+$main::proofers{'058'}[1] = 'Monicagd';
+$main::proofers{'058'}[2] = 'carlyon';
+$main::proofers{'059'}[1] = 'Monicagd';
+$main::proofers{'059'}[2] = 'carlyon';
+$main::proofers{'060'}[1] = 'Monicagd';
+$main::proofers{'060'}[2] = 'carlyon';
+$main::proofers{'061'}[1] = 'Boosarah';
+$main::proofers{'061'}[2] = 'carlyon';
+$main::proofers{'062'}[1] = 'Boosarah';
+$main::proofers{'062'}[2] = 'carlyon';
+$main::proofers{'063'}[1] = 'Boosarah';
+$main::proofers{'063'}[2] = 'carlyon';
+$main::proofers{'064'}[1] = 'Boosarah';
+$main::proofers{'064'}[2] = 'carlyon';
+$main::proofers{'065'}[1] = 'Boosarah';
+$main::proofers{'065'}[2] = 'carlyon';
+$main::proofers{'066'}[1] = 'Monicagd';
+$main::proofers{'066'}[2] = 'carlyon';
+$main::proofers{'067'}[1] = 'Monicagd';
+$main::proofers{'067'}[2] = 'fiddlesalt';
+$main::proofers{'068'}[1] = 'Monicagd';
+$main::proofers{'068'}[2] = 'fiddlesalt';
+$main::proofers{'069'}[1] = 'Monicagd';
+$main::proofers{'069'}[2] = 'fiddlesalt';
+$main::proofers{'070'}[1] = 'Monicagd';
+$main::proofers{'070'}[2] = 'Blue Berry';
+$main::proofers{'071'}[1] = 'Monicagd';
+$main::proofers{'071'}[2] = 'Blue Berry';
+$main::proofers{'072'}[1] = 'Monicagd';
+$main::proofers{'072'}[2] = 'Blue Berry';
+$main::proofers{'073'}[1] = 'Monicagd';
+$main::proofers{'073'}[2] = 'Blue Berry';
+$main::proofers{'074'}[1] = 'Monicagd';
+$main::proofers{'074'}[2] = 'Blue Berry';
+$main::proofers{'075'}[1] = 'Monicagd';
+$main::proofers{'075'}[2] = 'Blue Berry';
+$main::proofers{'076'}[1] = 'Monicagd';
+$main::proofers{'076'}[2] = 'Blue Berry';
+$main::proofers{'077'}[1] = 'Monicagd';
+$main::proofers{'077'}[2] = 'Blue Berry';
+$main::proofers{'078'}[1] = 'Monicagd';
+$main::proofers{'078'}[2] = 'Blue Berry';
+$main::proofers{'079'}[1] = 'vood';
+$main::proofers{'079'}[2] = 'Blue Berry';
+$main::proofers{'080'}[1] = 'Boosarah';
+$main::proofers{'080'}[2] = 'Blue Berry';
+$main::proofers{'081'}[1] = 'Boosarah';
+$main::proofers{'081'}[2] = 'Blue Berry';
+$main::proofers{'082'}[1] = 'Boosarah';
+$main::proofers{'082'}[2] = 'revbeverly';
+$main::proofers{'083'}[1] = 'Boosarah';
+$main::proofers{'083'}[2] = 'revbeverly';
+$main::proofers{'084'}[1] = 'Boosarah';
+$main::proofers{'084'}[2] = 'revbeverly';
+$main::proofers{'085'}[1] = 'Monicagd';
+$main::proofers{'085'}[2] = 'carlyon';
+$main::proofers{'086'}[1] = 'alalk33';
+$main::proofers{'086'}[2] = 'carlyon';
+$main::proofers{'087'}[1] = 'alalk33';
+$main::proofers{'087'}[2] = 'carlyon';
+$main::proofers{'088'}[1] = 'ssnoyes';
+$main::proofers{'088'}[2] = 'carlyon';
+$main::proofers{'089'}[1] = 'windymilla';
+$main::proofers{'089'}[2] = 'carlyon';
+$main::proofers{'090'}[1] = 'windymilla';
+$main::proofers{'090'}[2] = 'carlyon';
+$main::proofers{'091'}[1] = 'windymilla';
+$main::proofers{'091'}[2] = 'carlyon';
+$main::proofers{'092'}[1] = 'windymilla';
+$main::proofers{'092'}[2] = 'carlyon';
+$main::proofers{'093'}[1] = 'windymilla';
+$main::proofers{'093'}[2] = 'carlyon';
+$main::proofers{'094'}[1] = 'windymilla';
+$main::proofers{'094'}[2] = 'carlyon';
+$main::proofers{'095'}[1] = 'Monicagd';
+$main::proofers{'095'}[2] = 'carlyon';
+$main::proofers{'096'}[1] = 'Monicagd';
+$main::proofers{'096'}[2] = 'carlyon';
+$main::proofers{'097'}[1] = 'Monicagd';
+$main::proofers{'097'}[2] = 'carlyon';
+$main::proofers{'098'}[1] = 'Monicagd';
+$main::proofers{'098'}[2] = 'carlyon';
+$main::proofers{'099'}[1] = 'Monicagd';
+$main::proofers{'099'}[2] = 'carlyon';
+$main::proofers{'100'}[1] = 'alalk33';
+$main::proofers{'100'}[2] = 'carlyon';
+$main::proofers{'101'}[1] = 'Monicagd';
+$main::proofers{'101'}[2] = 'carlyon';
+$main::proofers{'102'}[1] = 'Monicagd';
+$main::proofers{'102'}[2] = 'carlyon';
+$main::proofers{'103'}[1] = 'alalk33';
+$main::proofers{'103'}[2] = 'carlyon';
+$main::proofers{'104'}[1] = 'Joe Cooper';
+$main::proofers{'104'}[2] = 'carlyon';
+$main::proofers{'105'}[1] = 'Monicagd';
+$main::proofers{'105'}[2] = 'carlyon';
+$main::proofers{'106'}[1] = 'Monicagd';
+$main::proofers{'106'}[2] = 'carlyon';
+$main::proofers{'107'}[1] = 'Monicagd';
+$main::proofers{'107'}[2] = 'carlyon';
+$main::proofers{'108'}[1] = 'Monicagd';
+$main::proofers{'108'}[2] = 'carlyon';
+$main::proofers{'109'}[1] = 'Monicagd';
+$main::proofers{'109'}[2] = 'carlyon';
+$main::proofers{'110'}[1] = 'Monicagd';
+$main::proofers{'110'}[2] = 'carlyon';
+$main::proofers{'111'}[1] = 'Monicagd';
+$main::proofers{'111'}[2] = 'carlyon';
+$main::proofers{'112'}[1] = 'Monicagd';
+$main::proofers{'112'}[2] = 'carlyon';
+$main::proofers{'113'}[1] = 'Monicagd';
+$main::proofers{'113'}[2] = 'carlyon';
+$main::proofers{'114'}[1] = 'Monicagd';
+$main::proofers{'114'}[2] = 'carlyon';
+$main::proofers{'115'}[1] = 'Monicagd';
+$main::proofers{'115'}[2] = 'carlyon';
+$main::proofers{'116'}[1] = 'Monicagd';
+$main::proofers{'116'}[2] = 'carlyon';
+$main::proofers{'117'}[1] = 'Monicagd';
+$main::proofers{'117'}[2] = 'carlyon';
+$main::proofers{'118'}[1] = 'Monicagd';
+$main::proofers{'118'}[2] = 'carlyon';
+$main::proofers{'119'}[1] = 'Monicagd';
+$main::proofers{'119'}[2] = 'carlyon';
+$main::proofers{'120'}[1] = 'Monicagd';
+$main::proofers{'120'}[2] = 'carlyon';
+$main::proofers{'121'}[1] = 'Monicagd';
+$main::proofers{'121'}[2] = 'carlyon';
+$main::proofers{'122'}[1] = 'Monicagd';
+$main::proofers{'122'}[2] = 'carlyon';
+$main::proofers{'123'}[1] = 'Monicagd';
+$main::proofers{'123'}[2] = 'carlyon';
+$main::proofers{'124'}[1] = 'Monicagd';
+$main::proofers{'124'}[2] = 'carlyon';
+$main::proofers{'125'}[1] = 'Monicagd';
+$main::proofers{'125'}[2] = 'carlyon';
+$main::proofers{'126'}[1] = 'Monicagd';
+$main::proofers{'126'}[2] = 'carlyon';
+$main::proofers{'127'}[1] = 'pedantman';
+$main::proofers{'127'}[2] = 'carlyon';
+$main::proofers{'128'}[1] = 'pedantman';
+$main::proofers{'128'}[2] = 'carlyon';
+$main::proofers{'129'}[1] = 'pedantman';
+$main::proofers{'129'}[2] = 'Commonreader';
+$main::proofers{'130'}[1] = 'pedantman';
+$main::proofers{'130'}[2] = 'revbeverly';
+$main::proofers{'131'}[1] = 'Monicagd';
+$main::proofers{'131'}[2] = 'revbeverly';
+$main::proofers{'132'}[1] = 'Monicagd';
+$main::proofers{'132'}[2] = 'revbeverly';
+$main::proofers{'133'}[1] = 'Monicagd';
+$main::proofers{'133'}[2] = 'revbeverly';
+$main::proofers{'134'}[1] = 'Monicagd';
+$main::proofers{'134'}[2] = 'revbeverly';
+$main::proofers{'135'}[1] = 'Monicagd';
+$main::proofers{'135'}[2] = 'revbeverly';
+$main::proofers{'136'}[1] = 'Monicagd';
+$main::proofers{'136'}[2] = 'revbeverly';
+$main::proofers{'137'}[1] = 'Monicagd';
+$main::proofers{'137'}[2] = 'fiddlesalt';
+$main::proofers{'138'}[1] = 'Monicagd';
+$main::proofers{'138'}[2] = 'fiddlesalt';
+$main::proofers{'139'}[1] = 'Monicagd';
+$main::proofers{'139'}[2] = 'fiddlesalt';
+$main::proofers{'140'}[1] = 'Monicagd';
+$main::proofers{'140'}[2] = 'fiddlesalt';
+$main::proofers{'141'}[1] = 'Monicagd';
+$main::proofers{'141'}[2] = 'fiddlesalt';
+$main::proofers{'142'}[1] = 'Monicagd';
+$main::proofers{'142'}[2] = 'fiddlesalt';
+$main::proofers{'143'}[1] = 'vood';
+$main::proofers{'143'}[2] = 'Blue Berry';
+$main::proofers{'144'}[1] = 'alalk33';
+$main::proofers{'144'}[2] = 'Blue Berry';
+$main::proofers{'145'}[1] = 'alalk33';
+$main::proofers{'145'}[2] = 'Blue Berry';
+$main::proofers{'146'}[1] = 'alalk33';
+$main::proofers{'146'}[2] = 'Blue Berry';
+$main::proofers{'147'}[1] = 'alalk33';
+$main::proofers{'147'}[2] = 'Blue Berry';
+$main::proofers{'148'}[1] = 'alalk33';
+$main::proofers{'148'}[2] = 'Blue Berry';
+$main::proofers{'149'}[1] = 'Boosarah';
+$main::proofers{'149'}[2] = 'Blue Berry';
+$main::proofers{'150'}[1] = 'Boosarah';
+$main::proofers{'150'}[2] = 'Blue Berry';
+$main::proofers{'151'}[1] = 'Boosarah';
+$main::proofers{'151'}[2] = 'Blue Berry';
+$main::proofers{'152'}[1] = 'pedantman';
+$main::proofers{'152'}[2] = 'Blue Berry';
+$main::proofers{'153'}[1] = 'Boosarah';
+$main::proofers{'153'}[2] = 'Blue Berry';
+$main::proofers{'154'}[1] = 'Boosarah';
+$main::proofers{'154'}[2] = 'Blue Berry';
+$main::proofers{'156'}[1] = 'pedantman';
+$main::proofers{'156'}[2] = 'Blue Berry';
+$main::proofers{'157'}[1] = 'pedantman';
+$main::proofers{'157'}[2] = 'Blue Berry';
+$main::proofers{'158'}[1] = 'pedantman';
+$main::proofers{'158'}[2] = 'Blue Berry';
+$main::proofers{'159'}[1] = 'pedantman';
+$main::proofers{'159'}[2] = 'Blue Berry';
+$main::proofers{'160'}[1] = 'pedantman';
+$main::proofers{'160'}[2] = 'Blue Berry';
+$main::proofers{'161'}[1] = 'pedantman';
+$main::proofers{'161'}[2] = 'Blue Berry';
+$main::proofers{'162'}[1] = 'Boosarah';
+$main::proofers{'162'}[2] = 'Blue Berry';
+$main::proofers{'163'}[1] = 'Boosarah';
+$main::proofers{'163'}[2] = 'emrekeskin';
+$main::proofers{'164'}[1] = 'Boosarah';
+$main::proofers{'164'}[2] = 'emrekeskin';
+$main::proofers{'165'}[1] = 'Joe Cooper';
+$main::proofers{'165'}[2] = 'emrekeskin';
+$main::proofers{'166'}[1] = 'Joe Cooper';
+$main::proofers{'166'}[2] = 'emrekeskin';
+$main::proofers{'167'}[1] = 'Joe Cooper';
+$main::proofers{'167'}[2] = 'carlyon';
+$main::proofers{'168'}[1] = 'Monicagd';
+$main::proofers{'168'}[2] = 'carlyon';
+$main::proofers{'169'}[1] = 'pedantman';
+$main::proofers{'169'}[2] = 'carlyon';
+$main::proofers{'170'}[1] = 'pedantman';
+$main::proofers{'170'}[2] = 'Blue Berry';
+$main::proofers{'171'}[1] = 'ollie';
+$main::proofers{'171'}[2] = 'Blue Berry';
+$main::proofers{'172'}[1] = 'alalk33';
+$main::proofers{'172'}[2] = 'Mawaki';
+$main::proofers{'173'}[1] = 'alalk33';
+$main::proofers{'173'}[2] = 'Mawaki';
+$main::proofers{'174'}[1] = 'ELNHouse';
+$main::proofers{'174'}[2] = 'Mawaki';
+$main::proofers{'175'}[1] = 'jerzyp';
+$main::proofers{'175'}[2] = 'carlyon';
+$main::proofers{'176'}[1] = 'Joe Cooper';
+$main::proofers{'176'}[2] = 'carlyon';
+$main::proofers{'177'}[1] = 'CathyO';
+$main::proofers{'177'}[2] = 'carlyon';
+$main::proofers{'178'}[1] = 'CathyO';
+$main::proofers{'178'}[2] = 'carlyon';
+$main::proofers{'179'}[1] = 'dmc1423';
+$main::proofers{'179'}[2] = 'carlyon';
+$main::proofers{'180'}[1] = 'dmc1423';
+$main::proofers{'180'}[2] = 'carlyon';
+$main::proofers{'181'}[1] = 'dmc1423';
+$main::proofers{'181'}[2] = 'carlyon';
+$main::proofers{'182'}[1] = 'dmc1423';
+$main::proofers{'182'}[2] = 'Joe Cooper';
+$main::proofers{'183'}[1] = 'alalk33';
+$main::proofers{'183'}[2] = 'Mawaki';
+$main::proofers{'184'}[1] = 'alalk33';
+$main::proofers{'184'}[2] = 'Mawaki';
+$main::proofers{'185'}[1] = 'Joe Cooper';
+$main::proofers{'185'}[2] = 'carlyon';
+$main::proofers{'186'}[1] = 'Joe Cooper';
+$main::proofers{'186'}[2] = 'carlyon';
+$main::proofers{'187'}[1] = 'Joe Cooper';
+$main::proofers{'187'}[2] = 'carlyon';
+$main::proofers{'188'}[1] = 'dorts';
+$main::proofers{'188'}[2] = 'carlyon';
+$main::proofers{'189'}[1] = 'dorts';
+$main::proofers{'189'}[2] = 'carlyon';
+$main::proofers{'190'}[1] = 'dorts';
+$main::proofers{'190'}[2] = 'Blue Berry';
+$main::proofers{'191'}[1] = 'dorts';
+$main::proofers{'191'}[2] = 'Blue Berry';
+$main::proofers{'192'}[1] = 'dorts';
+$main::proofers{'192'}[2] = 'Blue Berry';
+$main::proofers{'193'}[1] = 'dorts';
+$main::proofers{'193'}[2] = 'Blue Berry';
+$main::proofers{'194'}[1] = 'dorts';
+$main::proofers{'194'}[2] = 'Blue Berry';
+$main::proofers{'195'}[1] = 'dorts';
+$main::proofers{'195'}[2] = 'Blue Berry';
+$main::proofers{'196'}[1] = 'dorts';
+$main::proofers{'196'}[2] = 'Blue Berry';
 
 
 @operations = (
@@ -894,9 +894,21 @@ $proofers{'196'}[2] = 'Blue Berry';
 'Mon Sep  5 20:58:53 2011 - Open C:\dp\dp\tests\testhtml2.txt',
 'Mon Sep  5 20:58:53 2011 - Search & Replace',
 'Mon Sep  5 20:59:12 2011 - File Saved',
+'Sun Feb 12 15:18:52 2012 - Open tests\testhtml2.txt',
+'Sun Feb 12 15:18:54 2012 - Search & Replace',
+'Sun Feb 12 15:19:22 2012 - File Saved',
+'Sun Feb 12 15:19:45 2012 - Open tests\testhtml2.txt',
+'Sun Feb 12 15:19:47 2012 - File Saved',
+'Sun Feb 12 15:24:48 2012 - Open tests\testhtml2.txt',
+'Sun Feb 12 15:25:07 2012 - File Saved',
+'Sun Feb 12 15:25:09 2012 - File Saved',
 );
 
-$spellindexbkmrk = '';
+$main::spellindexbkmrk = '';
+
+$projectid = '';
+
+$booklang = 'en';
 
 $scannoslistpath = '';
 

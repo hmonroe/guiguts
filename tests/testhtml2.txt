@@ -977,6 +977,14 @@ Lamb's first advertisement in New York appeared on January 23,
 days later he was eulogized in <i>The New York Packet</i> where he was
 mentioned as "a steady friend to the liberties of America."
 
+/p
+This is poetry.
+This is more poetry.
+
+This is the second stanza.
+This is more of that stanza.
+p/
+
 John Lamb (1735-1800), Anthony's son, learned and practiced
 his father's craft for a time and worked as a partner in the firm of
 A. Lamb & Son. He subsequently became a wine and sugar

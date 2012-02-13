@@ -1917,7 +1917,7 @@ sub htmlpopup {
 		)->grid( -row => 4, -column => 3, -padx => 1, -pady => 2 );
 		$f1->Button(
 					 -activebackground => $main::activecolor,
-					 -command          => \&main::poetryhtml,
+					 -command          => \&poetryhtml,
 					 -text             => 'Poetry',
 					 -width            => 10
 		)->grid( -row => 4, -column => 4, -padx => 1, -pady => 2 );
@@ -1968,7 +1968,7 @@ sub htmlpopup {
 				  )
 				{
 					&main::working( 'Checking <' . $orphan . '>' );
-					last if &main::orphans($orphan);
+					last if orphans($orphan);
 				}
 				&main::working();
 			},
@@ -2487,7 +2487,7 @@ sub markup {
 						   -padx   => 2,
 						   -pady   => 2
 				  );
-				drag($linklistbox);
+				::drag($linklistbox);
 				$::lglobal{linkpop}->protocol(
 					'WM_DELETE_WINDOW' => sub {
 						$::lglobal{linkpop}->destroy;
@@ -2521,7 +2521,7 @@ sub markup {
 					  if ( ( ( $_ =~ /#Footnote/ ) || ( $_ =~ /#FNanchor/ ) )
 						   && $::lglobal{fnlinks} );
 					next
-					  if ( ( $_ =~ /#Page_\d+/ ) && $::lglobal{pglinks} );
+					  if ( ( $_ =~ /#Page_/ ) && $::lglobal{pglinks} );
 					next unless ( lc($_) eq '#' . $tempvar );
 					$linklistbox->insert( 'end', $_ );
 					$flag++;
@@ -2542,7 +2542,7 @@ sub markup {
 					  if ( ( ( $_ =~ /#Footnote/ ) || ( $_ =~ /#FNanchor/ ) )
 						   && $::lglobal{fnlinks} );
 					next
-					  if ( ( $_ =~ /#Page_\d+/ ) && $::lglobal{pglinks} );
+					  if ( ( $_ =~ /#Page_/ ) && $::lglobal{pglinks} );
 					next
 					  unless (
 						 lc($_) =~
@@ -2553,7 +2553,7 @@ sub markup {
 				}
 				$linklistbox->insert( 'end', "  " );
 				$flag = 0;
-				&main::linkpopulate( $linklistbox, \@intanchors );
+				linkpopulate( $linklistbox, \@intanchors );
 				$linklistbox->focus;
 			}
 		} elsif ( $mark eq 'anchor' ) {
@@ -2849,4 +2849,251 @@ sub autotable {
 		$table = 1;
 	}
 }
+
+sub orphans {
+	my $textwindow = $::textwindow;
+	viewpagenums() if ( $::lglobal{seepagenums} );
+	my $br = shift;
+	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
+	my ( $thisindex, $open, $close, $crow, $ccol, $orow, $ocol, @op );
+	$open  = '<' . $br . '>|<' . $br . ' [^>]*>';
+	$close = '<\/' . $br . '>';
+	my $end = $textwindow->index('end');
+	$thisindex = '1.0';
+	my ( $lengtho, $lengthc );
+	my $opindex = $textwindow->search(
+									   '-regexp',
+									   '-count' => \$lengtho,
+									   '--', $open, $thisindex, 'end'
+	);
+	push @op, $opindex;
+	my $clindex = $textwindow->search(
+									   '-regexp',
+									   '-count' => \$lengthc,
+									   '--', $close, $thisindex, 'end'
+	);
+	return unless ( $clindex || $opindex );
+	push @op, ( $clindex || $end );
+
+	while ($opindex) {
+		$opindex = $textwindow->search(
+										'-regexp',
+										'-count' => \$lengtho,
+										'--', $open, $op[0] . '+1c', 'end'
+		);
+		if ($opindex) {
+			push @op, $opindex;
+		} else {
+			push @op, $textwindow->index('end');
+		}
+		my $begin = $op[1];
+		$begin = 'end' unless $begin;
+		$clindex = $textwindow->search(
+										'-regexp',
+										'-count' => \$lengthc,
+										'--', $close, "$begin+1c", 'end'
+		);
+		if ($clindex) {
+			push @op, $clindex;
+		} else {
+			push @op, $textwindow->index('end');
+		}
+		if ( $textwindow->compare( $op[1], '==', $op[3] ) ) {
+			$textwindow->markSet( 'insert', $op[0] ) if $op[0];
+			$textwindow->see( $op[0] ) if $op[0];
+			$textwindow->tagAdd( 'highlight', $op[0],
+								 $op[0] . '+' . length($open) . 'c' );
+			return 1;
+		}
+		if (    ( $textwindow->compare( $op[0], '<', $op[1] ) )
+			 && ( $textwindow->compare( $op[1], '<', $op[2] ) )
+			 && ( $textwindow->compare( $op[2], '<', $op[3] ) )
+			 && ( $op[2] ne $end )
+			 && ( $op[3] ne $end ) )
+		{
+			$textwindow->update;
+			$textwindow->focus;
+			shift @op;
+			shift @op;
+			next;
+		} elsif (    ( $textwindow->compare( $op[0], '<', $op[1] ) )
+				  && ( $textwindow->compare( $op[1], '>', $op[2] ) ) )
+		{
+			$textwindow->markSet( 'insert', $op[2] ) if $op[2];
+			$textwindow->see( $op[2] ) if $op[2];
+			$textwindow->tagAdd( 'highlight', $op[2],
+								 $op[2] . ' +' . $lengtho . 'c' );
+			$textwindow->tagAdd( 'highlight', $op[0],
+								 $op[0] . ' +' . $lengtho . 'c' );
+			$textwindow->update;
+			$textwindow->focus;
+			return 1;
+		} elsif (    ( $textwindow->compare( $op[0], '<', $op[1] ) )
+				  && ( $textwindow->compare( $op[2], '>', $op[3] ) ) )
+		{
+			$textwindow->markSet( 'insert', $op[3] ) if $op[3];
+			$textwindow->see( $op[3] ) if $op[3];
+			$textwindow->tagAdd( 'highlight', $op[3],
+								 $op[3] . '+' . $lengthc . 'c' );
+			$textwindow->tagAdd( 'highlight', $op[1],
+								 $op[1] . '+' . $lengthc . 'c' );
+			$textwindow->update;
+			$textwindow->focus;
+			return 1;
+		} elsif (    ( $textwindow->compare( $op[0], '>', $op[1] ) )
+				  && ( $op[0] ne $end ) )
+		{
+			$textwindow->markSet( 'insert', $op[1] ) if $op[1];
+			$textwindow->see( $op[1] ) if $op[1];
+			$textwindow->tagAdd( 'highlight', $op[1],
+								 $op[1] . '+' . $lengthc . 'c' );
+			$textwindow->tagAdd( 'highlight', $op[3],
+								 $op[3] . '+' . $lengtho . 'c' );
+			$textwindow->update;
+			$textwindow->focus;
+			return 1;
+		} else {
+			if (    ( $op[3] eq $end )
+				 && ( $textwindow->compare( $op[2], '>', $op[0] ) ) )
+			{
+				$textwindow->markSet( 'insert', $op[2] ) if $op[2];
+				$textwindow->see( $op[2] ) if $op[2];
+				$textwindow->tagAdd( 'highlight', $op[2],
+									 $op[2] . '+' . $lengthc . 'c' );
+			}
+			if (    ( $op[2] eq $end )
+				 && ( $textwindow->compare( $op[3], '>', $op[1] ) ) )
+			{
+				$textwindow->markSet( 'insert', $op[3] ) if $op[3];
+				$textwindow->see( $op[3] ) if $op[3];
+				$textwindow->tagAdd( 'highlight', $op[3],
+									 $op[3] . '+' . $lengthc . 'c' );
+			}
+			if ( ( $op[1] eq $end ) && ( $op[2] eq $end ) ) {
+				$textwindow->markSet( 'insert', $op[0] ) if $op[0];
+				$textwindow->see( $op[0] ) if $op[0];
+				$textwindow->tagAdd( 'highlight', $op[0],
+									 $op[0] . '+' . $lengthc . 'c' );
+			}
+			::update_indicators();
+			return 0;
+		}
+	}
+	return 0;
+}
+
+sub poetryhtml {
+	my $textwindow = $::textwindow;
+	viewpagenums() if ( $::lglobal{seepagenums} );
+	my @ranges      = $textwindow->tagRanges('sel');
+	my $range_total = @ranges;
+	if ( $range_total == 0 ) {
+		return;
+	} else {
+		my $end   = pop(@ranges);
+		my $start = pop(@ranges);
+		my ( $lsr, $lsc, $ler, $lec, $step, $ital );
+		( $lsr, $lsc ) = split /\./, $start;
+		( $ler, $lec ) = split /\./, $end;
+		$step = $lsr;
+		my $selection = $textwindow->get( "$lsr.0", "$lsr.end" );
+		$selection =~ s/&nbsp;/ /g;
+		$selection =~ s/^(\s+)//;
+		my $indent;
+		$indent = length($1) if $1;
+		my $class = '';
+		$class = ( " class=\"i" . ( $indent - 4 ) . '"' ) if ( $indent - 4 );
+
+		if ( length $selection ) {
+			$selection = "<span$class>" . $selection . '<br /></span>';
+		} else {
+			$selection = '';
+		}
+		$textwindow->delete( "$lsr.0", "$lsr.end" );
+		$textwindow->insert( "$lsr.0", $selection );
+		$step++;
+		while ( $step <= $ler ) {
+			$selection = $textwindow->get( "$step.0", "$step.end" );
+			if ( $selection =~ /^$/ ) {
+				$textwindow->insert( "$step.0", '</div><div class="stanza">' );
+				while (1) {
+					$step++;
+					$selection = $textwindow->get( "$step.0", "$step.end" );
+					last if ( $step ge $ler );
+					next if ( $selection =~ /^$/ );
+					last;
+				}
+			}
+			$selection =~ s/&nbsp;/ /g;
+			$selection =~ s/^(\s+)//;
+			$indent = length($1) if $1;
+			$textwindow->delete( "$step.0", "$step.$indent" ) if $indent;
+			$indent -= 4;
+			$indent = 0 if ( $indent < 0 );
+			$selection =~ s/^(\s*)//;
+			$selection =~ /(<i>)/g;
+			my $op = $-[-1];
+			$selection =~ s/^(\s*)//;
+			$selection =~ /(<\/i>)/g;
+			my $cl = $-[-1];
+
+			if ( !$cl && $ital ) {
+				$textwindow->ntinsert( "$step.0 lineend", '</i>' );
+			}
+			if ( !$op && $ital ) {
+				$textwindow->ntinsert( "$step.0", '<i>' );
+			}
+			if ( $op && ( $cl < $op ) && !$ital ) {
+				$textwindow->ntinsert( "$step.end", '</i>' );
+				$ital = 1;
+			}
+			if ( $op && $cl && ( $cl < $op ) && $ital ) {
+				$textwindow->ntinsert( "$step.0", '<i>' );
+				$ital = 0;
+			}
+			if ( ( $op < $cl ) && $ital ) {
+				$textwindow->ntinsert( "$step.0", '<i>' );
+				$ital = 0;
+			}
+			if ($indent) {
+				$textwindow->insert( "$step.0", "<span class=\"i$indent\">" );
+			} else {
+				$textwindow->insert( "$step.0", '<span>' );
+			}
+			$textwindow->insert( "$step.end", '<br /></span>' );
+			$step++;
+		}
+		$selection = "\n</div></div>";
+		$textwindow->insert( "$ler.end", $selection );
+		$textwindow->insert( "$lsr.0",
+							 "<div class=\"poem\"><div class=\"stanza\">\n" );
+	}
+}
+
+sub linkpopulate {
+	my $linklistbox = shift;
+	my $anchorsref  = shift;
+	if ( $::lglobal{ilinksrt} ) {
+		for ( ::natural_sort_alpha( @{$anchorsref} ) ) {
+			next
+			  if ( ( ( $_ =~ /#Footnote/ ) || ( $_ =~ /#FNanchor/ ) )
+				   && $::lglobal{fnlinks} );
+			next if ( ( $_ =~ /#Page_/ ) && $::lglobal{pglinks} );
+			$linklistbox->insert( 'end', $_ );
+		}
+	} else {
+		foreach ( @{$anchorsref} ) {
+			next
+			  if ( ( ( $_ =~ /#Footnote/ ) || ( $_ =~ /#FNanchor/ ) )
+				   && $::lglobal{fnlinks} );
+			next if ( ( $_ =~ /#Page_/ ) && $::lglobal{pglinks} );
+			$linklistbox->insert( 'end', $_ );
+		}
+	}
+	$linklistbox->yviewScroll( 1, 'units' );
+	$linklistbox->update;
+	$linklistbox->yviewScroll( -1, 'units' );
+}
+
+
 1;

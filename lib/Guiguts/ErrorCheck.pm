@@ -442,7 +442,7 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		&main::run( "perl", "lib/ppvchecks/pphtml.pl", "-i", $name, "-o",
 					"errors.err" );
 	} elsif ( $errorchecktype eq 'Link Check' ) {
-		&main::linkcheckrun;
+		linkcheckrun();
 	}
 	elsif ( $errorchecktype eq 'Image Check' ) {
 		my ( $f, $d, $e ) =
@@ -459,4 +459,175 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 	unlink $name;
 	return;
 }
+
+sub linkcheckrun {
+	my $textwindow = $::textwindow;
+	open my $logfile, ">", "errors.err" || die "output file error\n";
+	my ( %anchor,  %id,  %link,   %image,  %badlink, $length, $upper );
+	my ( $anchors, $ids, $ilinks, $elinks, $images,  $count,  $css ) =
+	  ( 0, 0, 0, 0, 0, 0, 0 );
+	my @warning = ();
+	my $fname   = $::lglobal{global_filename};
+	if ( $fname =~ /(No File Loaded)/ ) {
+		print $logfile "You need to save your file first.";
+		return;
+	}
+	my ( $f, $d, $e ) = ::fileparse( $fname, qr{\.[^\.]*$} );
+	my %imagefiles;
+	my @ifiles   = ();
+	my $imagedir = '';
+	push @warning, '';
+	my ( $fh, $filename );
+
+	my @temp = split( /[\\\/]/, $textwindow->FileName );
+	my $tempfilename = $temp[-1];
+	if ( $tempfilename =~ /projectid/i ) {
+		print $logfile "Choose a human readable filename: $tempfilename\n";
+	}
+	if ( $tempfilename =~ /[A-Z]/ ) {
+		print $logfile "Use only lower case in filename: $tempfilename\n";
+	}
+	if ( $textwindow->numberChanges ) {
+		$filename = 'tempfile.tmp';
+		open( my $fh, ">", "$filename" );
+		my ($lines) = $textwindow->index('end - 1 chars') =~ /^(\d+)\./;
+		my $index = '1.0';
+		while ( $textwindow->compare( $index, '<', 'end' ) ) {
+			my $end = $textwindow->index("$index lineend +1c");
+			my $line = $textwindow->get( $index, $end );
+			print $fh $line;
+			$index = $end;
+		}
+		$fname = $filename;
+		close $fh;
+	}
+	my $parser = HTML::TokeParser->new($fname);
+	while ( my $token = $parser->get_token ) {
+		if ( $token->[0] eq 'S' and $token->[1] eq 'style' ) {
+			$token = $parser->get_token;
+			if ( $token->[0] eq 'T' and $token->[2] ) {
+				my @urls = $token->[1] =~ m/\burl\(['"](.+?)['"]\)/gs;
+				for my $img (@urls) {
+					if ($img) {
+						if ( !$imagedir ) {
+							$imagedir = $img;
+							$imagedir =~ s/\/.*?$/\//;
+							@ifiles = glob( $d . $imagedir . '*.*' );
+							for (@ifiles) { $_ =~ s/\Q$d\E// }
+							for (@ifiles) { $imagefiles{$_} = '' }
+						}
+						$image{$img}++;
+						$upper++ if ( $img ne lc($img) );
+						delete $imagefiles{$img}
+						  if (    ( defined $imagefiles{$img} )
+							   || ( defined $link{$img} ) );
+						push @warning, "+$img: contains uppercase characters!\n"
+						  if ( $img ne lc($img) );
+						push @warning, "+$img: not found!\n"
+						  unless ( -e $d . $img );
+						$css++;
+					}
+				}
+			}
+		}
+		next unless $token->[0] eq 'S';
+		my $url    = $token->[2]{href} || '';
+		my $anchor = $token->[2]{name} || '';
+		my $img    = $token->[2]{src}  || '';
+		my $id     = $token->[2]{id}   || '';
+		if ($anchor) {
+			$anchor{ '#' . $anchor } = $anchor;
+			$anchors++;
+		} elsif ($id) {
+			$id{ '#' . $id } = $id;
+			$ids++;
+		}
+		if ( $url =~ m/^(#?)(.+)$/ ) {
+			$link{ $1 . $2 } = $2;
+			$ilinks++ if $1;
+			$elinks++ unless $1;
+		}
+		if ($img) {
+			if ( !$imagedir ) {
+				$imagedir = $img;
+				$imagedir =~ s/\/.*?$/\//;
+				@ifiles = glob( $d . $imagedir . '*.*' );
+				for (@ifiles) { $_ =~ s/\Q$d\E// }
+				for (@ifiles) { $imagefiles{$_} = '' }
+			}
+			$image{$img}++;
+			$upper++ if ( $img ne lc($img) );
+			delete $imagefiles{$img}
+			  if (    ( defined $imagefiles{$img} )
+				   || ( defined $link{$img} ) );
+			push @warning, "+$img: contains uppercase characters!\n"
+			  if ( $img ne lc($img) );
+			push @warning, "+$img: not found!\n"
+			  unless ( -e $d . $img );
+			$images++;
+		}
+	}
+	for ( keys %link ) {
+		$badlink{$_} = $_ if ( $_ =~ m/\\|\%5C|\s|\%20/ );
+		delete $imagefiles{$_} if ( defined $imagefiles{$_} );
+	}
+	for ( ::natural_sort_alpha( keys %link ) ) {
+		unless (    ( defined $anchor{$_} )
+				 || ( defined $id{$_} )
+				 || ( $link{$_} eq $_ ) )
+		{
+			print $logfile "+#$link{$_}: Internal link without anchor\n";
+			$count++;
+		}
+	}
+	my $externflag;
+	for ( ::natural_sort_alpha( keys %link ) ) {
+		if ( $link{$_} eq $_ ) {
+			if ( $_ =~ /:\/\// ) {
+				print $logfile "+$link{$_}: External link\n";
+			} else {
+				my $temp = $_;
+				$temp =~ s/^([^#]+).*/$1/;
+				unless ( -e $d . $temp ) {
+					print $logfile "local file(s) not found!\n"
+					  unless $externflag;
+					print $logfile "+$link{$_}:\n";
+					$externflag++;
+				}
+			}
+		}
+	}
+	for ( ::natural_sort_alpha( keys %badlink ) ) {
+		print $logfile "+$badlink{$_}: Link with bad characters\n";
+	}
+	print $logfile @warning if @warning;
+	print $logfile "";
+	if ( keys %imagefiles ) {
+		for ( ::natural_sort_alpha( keys %imagefiles ) ) {
+			print $logfile "+" . $_ . ": File not used!\n"
+			  if ( $_ =~ /\.(png|jpg|gif|bmp)/ );
+		}
+		print $logfile "";
+	}
+	print $logfile "Link statistics:\n";
+	print $logfile "$anchors named anchors\n";
+	print $logfile "$ids unnamed anchors (tag with id attribute)\n";
+	print $logfile "$ilinks internal links\n";
+	print $logfile "$images image links\n";
+	print $logfile "$css CSS style image links\n";
+	print $logfile "$elinks external links\n";
+	print $logfile "ANCHORS WITHOUT LINKS. - (INFORMATIONAL)\n";
+
+	for ( ::natural_sort_alpha( keys %anchor ) ) {
+		unless ( exists $link{$_} ) {
+			print $logfile "$anchor{$_}\n";
+			$count++;
+		}
+	}
+	print $logfile "$count  anchors without links\n";
+	unlink $filename if $filename;
+	close $logfile;
+}
+
+
 1;

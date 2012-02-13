@@ -8,7 +8,7 @@ BEGIN {
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&add_search_history &searchtext &search_history &reg_check &getnextscanno &updatesearchlabels
-	&isvalid &swapterms &findascanno &reghint &replaceeval &replace &opstop &replaceall)
+	&isvalid &swapterms &findascanno &reghint &replaceeval &replace &opstop &replaceall &killstoppop)
 }
 
 sub add_search_history {
