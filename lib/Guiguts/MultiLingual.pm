@@ -320,7 +320,6 @@ sub showspeltforeignwords {
 	}
 
 
-
 #	for my $key (sort (keys %distinctwords)){
 #		if (($seenwordslang{$key}) && ($seenwordslang{$key} ne $main::multidicts[0])) {
 #			my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$key}, $seenwordslang{$key}, $key);
