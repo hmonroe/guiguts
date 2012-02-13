@@ -2686,7 +2686,7 @@ sub unicodemenu {
 						   map ( [
 								  Button   => "$utfsorthash{$_}",
 								  -command => [
-									  \&utfpopup,
+									  \&::utfpopup,
 									  $utfsorthash{$_},
 									  $::lglobal{utfblocks}{ $utfsorthash{$_} }
 										[0],
@@ -2703,7 +2703,7 @@ sub unicodemenu {
 					map ( [
 							Button   => "$utfsorthash{$_}",
 							-command => [
-									 \&utfpopup,
+									 \&::utfpopup,
 									 $utfsorthash{$_},
 									 $::lglobal{utfblocks}{ $utfsorthash{$_} }[0],
 									 $::lglobal{utfblocks}{ $utfsorthash{$_} }[1]
@@ -2732,7 +2732,7 @@ sub unicodemenu {
 						   map ( [
 								   Button   => "$_",
 								   -command => [
-												 \&utfpopup,
+												 \&::utfpopup,
 												 $_,
 												 $::lglobal{utfblocks}{$_}[0],
 												 $::lglobal{utfblocks}{$_}[1]
@@ -2748,7 +2748,7 @@ sub unicodemenu {
 					map ( [
 							 Button   => "$_",
 							 -command => [
-										   \&utfpopup,
+										   \&::utfpopup,
 										   $_,
 										   $::lglobal{utfblocks}{$_}[0],
 										   $::lglobal{utfblocks}{$_}[1]
