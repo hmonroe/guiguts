@@ -842,6 +842,9 @@ sub html_convert_body {
 # the header.
 				if ( $step - 5 <= $pagemarkline ) {
 					$textwindow->markSet( "HRULE$pagemarkline", $hmarkindex );
+					#print "HRULE$pagemarkline  $hmarkindex\n";
+				} else {
+					#print "NO HRULE\n";
 				}
 			}
 
@@ -1177,21 +1180,21 @@ sub html_convert_pageanchors {
 		} else {
 			if ( $mark =~ m{HRULE} )
 			{    #place the <hr> for a chapter before the page number
-				#print $mark. "xx\n";
 				my $hrulemarkindex = $textwindow->index($mark);
 				my $pgstart =
-				  $textwindow->search( '--', '<p><span',
-									   $hrulemarkindex . '-5c', 'end' )
-				  || 'end';
-				#print "hrule:$hrulemarkindex:pgstart:$pgstart\n";
+				  $textwindow->search('-backwards' ,'--', '<p><span',
+									   $hrulemarkindex . '+10c', '1.0' )
+				  || '1.0';
 				if (
 					 $textwindow->compare(
-										   $hrulemarkindex . '+100c',
+										   $hrulemarkindex . '+50c',
 										   '>', $pgstart
 					 )
 				  )
 				{
 					$textwindow->ntinsert( $pgstart, '<hr class="chap" />' );
+				} else {
+					$textwindow->ntinsert( $hrulemarkindex, '<hr class="chap" />' );
 				}
 			}
 		}
