@@ -10172,7 +10172,7 @@ sub runtests {
 	print "end diff\n";
 
 	unlink 'tests/testhtml2.html';
-	#unlink 'tests/testhtml2temp.html';
+	unlink 'tests/testhtml2temp.html';
 	unlink 'tests/testhtml2-htmlbak.txt';
 	unlink 'tests/testhtml2-htmlbak.txt.bin';
 	ok( not( -e "tests/testhtml2temp.html" ),
