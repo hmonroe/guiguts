@@ -498,16 +498,6 @@ sub loadscannos {
 	}
 }
 
-sub deaccent {
-	my $phrase = shift;
-	return $phrase unless ( $phrase =~ y/\xC0-\xFF// );
-	$phrase =~
-tr/ÀÁÂÃÄÅàáâãäåÇçÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖØòóôõöøÑñÙÚÛÜùúûüİÿı/AAAAAAaaaaaaCcEEEEeeeeIIIIiiiiOOOOOOooooooNnUUUUuuuuYyy/;
-	my %trans = qw(Æ AE æ ae Ş TH ş th Ğ TH ğ th ß ss);
-	$phrase =~ s/([ÆæŞşĞğß])/$trans{$1}/g;
-	return $phrase;
-}
-
 sub entity {
 	my $char = shift;
 	my %markuphash = (
@@ -10199,6 +10189,8 @@ sub runtests {
 	#opspop_up();
 	#greekpopup();
 	ok( $debug == 0, "Do not release with \$debug = 1" );
+	ok(deaccent('ÀÁÂÃÄÅàáâãäåÇçÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖØòóôõöøÑñÙÚÛÜùúûüİÿı') eq 'AAAAAAaaaaaaCcEEEEeeeeIIIIiiiiOOOOOOooooooNnUUUUuuuuYyy'
+	,"deaccent('ÀÁÂÃÄÅàáâãäåÇçÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖØòóôõöøÑñÙÚÛÜùúûüİÿı')");
 	ok( 1 == 1, "This is the last test" );
 	done_testing();
 	exit;

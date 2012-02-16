@@ -9,7 +9,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&openpng &get_image_file &setviewerpath &setdefaultpath &arabic &roman
 	&textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_cmdline &win32_start &win32_is_exe
-	&win32_create_process &runner &debug_dump &run &escape_regexmetacharacters)
+	&win32_create_process &runner &debug_dump &run &escape_regexmetacharacters &deaccent)
 }
 
 sub get_image_file {
@@ -758,6 +758,16 @@ sub escape_regexmetacharacters {
 	$inputstring =~ s/([\{\}\[\]\(\)\^\$\.\|\*\+\?\\])/\\$1/g;
 	$inputstring =~ s/\\\\(['-])/\\$1/g;
 	return $inputstring;
+}
+
+sub deaccent {
+	my $phrase = shift;
+	return $phrase unless ( $phrase =~ y/\xC0-\xFF// );
+	$phrase =~
+tr/ÀÁÂÃÄÅàáâãäåÇçÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖØòóôõöøÑñÙÚÛÜùúûüİÿı/AAAAAAaaaaaaCcEEEEeeeeIIIIiiiiOOOOOOooooooNnUUUUuuuuYyy/;
+	my %trans = qw(Æ AE æ ae Ş TH ş th Ğ TH ğ th ß ss);
+	$phrase =~ s/([ÆæŞşĞğß])/$trans{$1}/g;
+	return $phrase;
 }
 
 
