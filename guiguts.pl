@@ -499,38 +499,6 @@ sub loadscannos {
 	}
 }
 
-sub add_navigation_events {
-	my ($dialog_box) = @_;
-	$dialog_box->eventAdd( '<<pnext>>' => '<Next>',
-						   '<Prior>', '<Up>', '<Down>' );
-	$dialog_box->bind(
-		'<<pnext>>',
-		sub {
-			$dialog_box->selectionClear( 0, 'end' );
-			$dialog_box->selectionSet( $dialog_box->index('active') );
-		}
-	);
-
-	$dialog_box->bind(
-		'<Home>',
-		sub {
-			$dialog_box->selectionClear( 0, 'end' );
-			$dialog_box->see(0);
-			$dialog_box->selectionSet(1);
-			$dialog_box->activate(1);
-		}
-	);
-	$dialog_box->bind(
-		'<End>',
-		sub {
-			$dialog_box->selectionClear( 0, 'end' );
-			$dialog_box->see( $dialog_box->index('end') );
-			$dialog_box->selectionSet( $dialog_box->index('end') - 1 );
-			$dialog_box->activate( $dialog_box->index('end') - 1 );
-		}
-	);
-}
-
 my @gsopt;
 
 sub gcheckpop_up {
