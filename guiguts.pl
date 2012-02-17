@@ -580,7 +580,7 @@ sub gcheckpop_up {
 		$lglobal{gcpop}->Icon( -image => $icon );
 		BindMouseWheel( $lglobal{gclistbox} );
 		$lglobal{gclistbox}->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
-		$lglobal{gclistbox}->bind( '<<view>>', sub { gcview() } );
+		$lglobal{gclistbox}->bind( '<<view>>', sub { gutcheckview() } );
 		$lglobal{gcpop}->bind(
 			'<Configure>' => sub {
 				$lglobal{gcpop}->XEvent;
@@ -613,7 +613,7 @@ sub gcheckpop_up {
 				$lglobal{gclistbox}->delete('active');
 				$lglobal{gclistbox}->selectionClear( '0', 'end' );
 				$lglobal{gclistbox}->selectionSet('active');
-				gcview();
+				gutcheckview();
 				$lglobal{gclistbox}->after( $lglobal{delay} );
 			}
 		);

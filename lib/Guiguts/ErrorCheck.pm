@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
-	@EXPORT = qw(&errorcheckpop_up &errorcheckrun &gcview);
+	@EXPORT = qw(&errorcheckpop_up &errorcheckrun &gutcheckview);
 }
 
 sub errorcheckpop_up {
@@ -629,7 +629,7 @@ sub linkcheckrun {
 	close $logfile;
 }
 
-sub gcview {
+sub gutcheckview {
 	my $textwindow = $::textwindow;
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 	my $line = $::lglobal{gclistbox}->get('active');
