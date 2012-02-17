@@ -498,31 +498,6 @@ sub loadscannos {
 	}
 }
 
-sub named {
-	my ( $from, $to, $start, $end ) = @_;
-	my $length;
-
-	#print "from:$from:to:$to\n";
-	my $searchstartindex = $start;
-	$searchstartindex = '1.0' unless $searchstartindex;
-	$end              = 'end' unless $end;
-	$textwindow->markSet( 'srchend', $end );
-	while (
-			$searchstartindex =
-			$textwindow->search(
-								 '-regexp',
-								 '-count' => \$length,
-								 '--', $from, $searchstartindex, 'srchend'
-			)
-	  )
-	{
-		$textwindow->ntdelete( $searchstartindex,
-							   $searchstartindex . '+' . $length . 'c' );
-		$textwindow->ntinsert( $searchstartindex, $to );
-		$searchstartindex = $textwindow->index("$searchstartindex+1c");
-	}
-}
-
 sub pageseparatorhelppopup {
 	my $help_text = <<'EOM';
     Join Lines - join lines removing any spaces, asterisks and hyphens as necessary. - Hotkey j

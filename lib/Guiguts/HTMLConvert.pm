@@ -8,7 +8,7 @@ BEGIN {
 	use List::Util qw[min max];
 	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
-	@EXPORT = qw(&htmlautoconvert &htmlpopup &makeanchor &autoindex &entity);
+	@EXPORT = qw(&htmlautoconvert &htmlpopup &makeanchor &autoindex &entity &named &tonamed &fromnamed &fracconv);
 }
 
 sub html_convert_tb {
@@ -3234,6 +3234,150 @@ sub entity {
 	return $markuphash{$char} if $markuphash{$char};
 	return $pukramhash{$char} if $pukramhash{$char};
 	return $char;
+}
+
+sub named {
+	my ( $from, $to, $start, $end ) = @_;
+	my $length;
+	my $textwindow = $::textwindow;
+
+	#print "from:$from:to:$to\n";
+	my $searchstartindex = $start;
+	$searchstartindex = '1.0' unless $searchstartindex;
+	$end              = 'end' unless $end;
+	$textwindow->markSet( 'srchend', $end );
+	while (
+			$searchstartindex =
+			$textwindow->search(
+								 '-regexp',
+								 '-count' => \$length,
+								 '--', $from, $searchstartindex, 'srchend'
+			)
+	  )
+	{
+		$textwindow->ntdelete( $searchstartindex,
+							   $searchstartindex . '+' . $length . 'c' );
+		$textwindow->ntinsert( $searchstartindex, $to );
+		$searchstartindex = $textwindow->index("$searchstartindex+1c");
+	}
+}
+
+sub fromnamed {
+	my ($textwindow) = @_;
+	my @ranges      = $textwindow->tagRanges('sel');
+	my $range_total = @ranges;
+	if ( $range_total == 0 ) {
+		return;
+	} else {
+		while (@ranges) {
+			my $end   = pop @ranges;
+			my $start = pop @ranges;
+			$textwindow->markSet( 'srchend', $end );
+			my ( $thisblockstart, $length );
+			&main::named( '&amp;',   '&',  $start, 'srchend' );
+			&main::named( '&quot;',  '"',  $start, 'srchend' );
+			&main::named( '&mdash;', '--', $start, 'srchend' );
+			&main::named( ' &gt;',   ' >', $start, 'srchend' );
+			&main::named( '&lt; ',   '< ', $start, 'srchend' );
+			my $from;
+
+			for ( 160 .. 255 ) {
+				$from = lc sprintf( "%x", $_ );
+				&main::named( &main::entity( '\x' . $from ), chr($_), $start, 'srchend' );
+			}
+			while (
+					$thisblockstart =
+					$textwindow->search(
+										 '-regexp',
+										 '-count' => \$length,
+										 '--', '&#\d+;', $start, $end
+					)
+			  )
+			{
+				my $xchar =
+				  $textwindow->get( $thisblockstart,
+									$thisblockstart . '+' . $length . 'c' );
+				$textwindow->ntdelete( $thisblockstart,
+									   $thisblockstart . '+' . $length . 'c' );
+				$xchar =~ s/&#(\d+);/$1/;
+				$textwindow->ntinsert( $thisblockstart, chr($xchar) );
+			}
+			$textwindow->markUnset('srchend');
+		}
+	}
+}
+
+sub tonamed {
+	my ($textwindow) = @_;
+	my @ranges      = $textwindow->tagRanges('sel');
+	my $range_total = @ranges;
+	if ( $range_total == 0 ) {
+		return;
+	} else {
+		while (@ranges) {
+			my $end   = pop @ranges;
+			my $start = pop @ranges;
+			$textwindow->markSet( 'srchend', $end );
+			my $thisblockstart;
+			&main::named( '&(?![\w#])',           '&amp;',   $start, 'srchend' );
+			&main::named( '&$',                   '&amp;',   $start, 'srchend' );
+			&main::named( '"',                    '&quot;',  $start, 'srchend' );
+			&main::named( '(?<=[^-!])--(?=[^>])', '&mdash;', $start, 'srchend' );
+			&main::named( '(?<=[^-])--$',         '&mdash;', $start, 'srchend' );
+			&main::named( '^--(?=[^-])',          '&mdash;', $start, 'srchend' );
+			&main::named( '& ',                   '&amp; ',  $start, 'srchend' );
+			&main::named( '&c\.',                 '&amp;c.', $start, 'srchend' );
+			&main::named( ' >',                   ' &gt;',   $start, 'srchend' );
+			&main::named( '< ',                   '&lt; ',   $start, 'srchend' );
+			my $from;
+
+			for ( 128 .. 255 ) {
+				$from = lc sprintf( "%x", $_ );
+				&main::named( '\x' . $from, &main::entity( '\x' . $from ), $start,
+					   'srchend' );
+			}
+			while (
+					$thisblockstart =
+					$textwindow->search(
+										 '-regexp',             '--',
+										 '[\x{100}-\x{65535}]', $start,
+										 'srchend'
+					)
+			  )
+			{
+				my $xchar = ord( $textwindow->get($thisblockstart) );
+				$textwindow->ntdelete( $thisblockstart, "$thisblockstart+1c" );
+				$textwindow->ntinsert( $thisblockstart, "&#$xchar;" );
+			}
+			$textwindow->markUnset('srchend');
+		}
+	}
+}
+
+sub fracconv {
+	my ($textwindow, $start, $end ) = @_;
+	my %frachash = (
+					 '\b1\/2\b' => '&frac12;',
+					 '\b1\/4\b' => '&frac14;',
+					 '\b3\/4\b' => '&frac34;',
+	);
+	my ( $ascii, $html, $length );
+	my $thisblockstart = 1;
+	while ( ( $ascii, $html ) = each(%frachash) ) {
+		while (
+				$thisblockstart =
+				$textwindow->search(
+									 '-regexp',
+									 '-count' => \$length,
+									 '--', "-?$ascii", $start, $end
+				)
+		  )
+		{
+			$textwindow->replacewith( $thisblockstart,
+									  $thisblockstart . "+$length c", $html );
+		}
+	}
+
 }
 
 
