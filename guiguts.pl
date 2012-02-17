@@ -499,7 +499,9 @@ sub loadscannos {
 	}
 }
 
-sub convertfilnum {
+# Called by "Refresh" on Separator popup.
+# Search for page separator. If automatic, then process it. 
+sub findandhighlightpageseparator {
 	viewpagenums() if ( $lglobal{seepagenums} );
 
 	#$lglobal{joinundo} = 0;
@@ -792,7 +794,7 @@ sub joinlines {
 		$textwindow->delete("$index-1c");
 		$lglobal{joinundo}++;
 	}
-	convertfilnum() if ( $lglobal{jautomatic} || $lglobal{jsemiautomatic} );
+	findandhighlightpageseparator() if ( $lglobal{jautomatic} || $lglobal{jsemiautomatic} );
 	push @joinundolist, $lglobal{joinundo};
 }
 
@@ -805,7 +807,7 @@ sub undojoin {
 	my $joinundo = pop @joinundolist;
 	push @joinredolist, $joinundo;
 	$textwindow->undo for ( 0 .. $joinundo );
-	convertfilnum();
+	findandhighlightpageseparator();
 }
 
 sub redojoin {
@@ -818,7 +820,7 @@ sub redojoin {
 	push @joinundolist, $joinredo;
 	$textwindow->redo for ( 0 .. $joinredo );
 
-	#convertfilnum();
+	#findandhighlightpageseparator();
 }
 
 sub add_navigation_events {
@@ -6934,7 +6936,7 @@ sub separatorpopup {
 		my $refreshbutton =
 		  $sf4->Button(
 						-activebackground => $activecolor,
-						-command          => sub { convertfilnum() },
+						-command          => sub { findandhighlightpageseparator() },
 						-text             => 'Refresh',
 						-underline        => 0,
 						-width            => 8
@@ -6986,7 +6988,7 @@ sub separatorpopup {
 	$lglobal{pagepop}->Tk::bind( '<d>' => sub { joinlines('d') } );
 	$lglobal{pagepop}->Tk::bind( '<t>' => sub { joinlines('t') } );
 	$lglobal{pagepop}->Tk::bind( '<?>' => sub { pageseparatorhelppopup('?') } );
-	$lglobal{pagepop}->Tk::bind( '<r>' => \&convertfilnum );
+	$lglobal{pagepop}->Tk::bind( '<r>' => \&findandhighlightpageseparator );
 	$lglobal{pagepop}->Tk::bind(
 		'<v>' => sub {
 			openpng($textwindow, get_page_number() );
