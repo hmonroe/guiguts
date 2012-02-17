@@ -499,31 +499,6 @@ sub loadscannos {
 	}
 }
 
-sub undojoin {
-	if ( $lglobal{jautomatic} ) {
-		$textwindow->undo;
-		$textwindow->tagRemove( 'highlight', '1.0', 'end' );
-		return;
-	}
-	my $joinundo = pop @joinundolist;
-	push @joinredolist, $joinundo;
-	$textwindow->undo for ( 0 .. $joinundo );
-	findandhighlightpageseparator();
-}
-
-sub redojoin {
-	if ( $lglobal{jautomatic} ) {
-		$textwindow->redo;
-		$textwindow->tagRemove( 'highlight', '1.0', 'end' );
-		return;
-	}
-	my $joinredo = pop @joinredolist;
-	push @joinundolist, $joinredo;
-	$textwindow->redo for ( 0 .. $joinredo );
-
-	#findandhighlightpageseparator();
-}
-
 sub add_navigation_events {
 	my ($dialog_box) = @_;
 	$dialog_box->eventAdd( '<<pnext>>' => '<Next>',
