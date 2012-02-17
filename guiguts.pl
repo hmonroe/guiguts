@@ -6563,7 +6563,7 @@ sub separatorpopup {
 		my $joinbutton =
 		  $sf1->Button(
 						-activebackground => $activecolor,
-						-command          => sub { joinlines('j') },
+						-command          => sub { processpageseparator('j') },
 						-text             => 'Join Lines',
 						-underline        => 0,
 						-width            => 18
@@ -6571,7 +6571,7 @@ sub separatorpopup {
 		my $joinhybutton =
 		  $sf1->Button(
 						-activebackground => $activecolor,
-						-command          => sub { joinlines('k') },
+						-command          => sub { processpageseparator('k') },
 						-text             => 'Join, Keep Hyphen',
 						-underline        => 6,
 						-width            => 18
@@ -6583,7 +6583,7 @@ sub separatorpopup {
 		my $blankbutton =
 		  $sf2->Button(
 						-activebackground => $activecolor,
-						-command          => sub { joinlines('l') },
+						-command          => sub { processpageseparator('l') },
 						-text             => 'Blank Line',
 						-underline        => 6,
 						-width            => 12
@@ -6592,7 +6592,7 @@ sub separatorpopup {
 		my $sectjoinbutton =
 		  $sf2->Button(
 						-activebackground => $activecolor,
-						-command          => sub { joinlines('t') },
+						-command          => sub { processpageseparator('t') },
 						-text             => 'New Section',
 						-underline        => 7,
 						-width            => 12
@@ -6600,7 +6600,7 @@ sub separatorpopup {
 		my $chjoinbutton =
 		  $sf2->Button(
 						-activebackground => $activecolor,
-						-command          => sub { joinlines('h') },
+						-command          => sub { processpageseparator('h') },
 						-text             => 'New Chapter',
 						-underline        => 5,
 						-width            => 12
@@ -6661,7 +6661,7 @@ sub separatorpopup {
 		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
 		my $delbutton = $sf4->Button(
 									  -activebackground => $activecolor,
-									  -command   => sub { joinlines('d') },
+									  -command   => sub { processpageseparator('d') },
 									  -text      => 'Delete',
 									  -underline => 0,
 									  -width     => 8
@@ -6682,12 +6682,12 @@ sub separatorpopup {
 			$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 		}
 	);
-	$lglobal{pagepop}->Tk::bind( '<j>' => sub { joinlines('j') } );
-	$lglobal{pagepop}->Tk::bind( '<k>' => sub { joinlines('k') } );
-	$lglobal{pagepop}->Tk::bind( '<l>' => sub { joinlines('l') } );
-	$lglobal{pagepop}->Tk::bind( '<h>' => sub { joinlines('h') } );
-	$lglobal{pagepop}->Tk::bind( '<d>' => sub { joinlines('d') } );
-	$lglobal{pagepop}->Tk::bind( '<t>' => sub { joinlines('t') } );
+	$lglobal{pagepop}->Tk::bind( '<j>' => sub { processpageseparator('j') } );
+	$lglobal{pagepop}->Tk::bind( '<k>' => sub { processpageseparator('k') } );
+	$lglobal{pagepop}->Tk::bind( '<l>' => sub { processpageseparator('l') } );
+	$lglobal{pagepop}->Tk::bind( '<h>' => sub { processpageseparator('h') } );
+	$lglobal{pagepop}->Tk::bind( '<d>' => sub { processpageseparator('d') } );
+	$lglobal{pagepop}->Tk::bind( '<t>' => sub { processpageseparator('t') } );
 	$lglobal{pagepop}->Tk::bind( '<?>' => sub { pageseparatorhelppopup('?') } );
 	$lglobal{pagepop}->Tk::bind( '<r>' => \&findandhighlightpageseparator );
 	$lglobal{pagepop}->Tk::bind(
