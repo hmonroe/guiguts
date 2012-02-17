@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
-	@EXPORT = qw(&errorcheckpop_up &errorcheckrun &gutcheckview);
+	@EXPORT = qw(&errorcheckpop_up &errorcheckrun &gutcheckview &gutwindowpopulate);
 }
 
 sub errorcheckpop_up {
@@ -648,6 +648,33 @@ sub gutcheckview {
 	#don't focus    $textwindow->focus;
 	#leave main text on top    $::lglobal{gcpop}->raise;
 	$::geometry2 = $::lglobal{gcpop}->geometry;
+}
+
+sub gutwindowpopulate {
+	my $linesref = shift;
+	return unless defined $::lglobal{gcpop};
+	my ( $line, $flag, $count, $start );
+	$::lglobal{gclistbox}->delete( '0', 'end' );
+	foreach my $line ( @{$linesref} ) {
+		$flag = 0;
+		$start++ unless ( index( $line, 'Line', 0 ) > 0 );
+		next unless defined $::gc{$line};
+		for ( 0 .. $#{ $::lglobal{gcarray} } ) {
+			next unless ( index( $line, $::lglobal{gcarray}->[$_] ) > 0 );
+			$::gsopt[$_] = 0 unless defined $::gsopt[$_];
+			$flag = 1 if $::gsopt[$_];
+			last;
+		}
+		next if $flag;
+		$count++;
+		$::lglobal{gclistbox}->insert( 'end', $line );
+	}
+	$count -= $start;
+	$::lglobal{gclistbox}->insert( $start, '', "  --> $count queries.", '' );
+	$::lglobal{gclistbox}->update;
+
+	#$::lglobal{gclistbox}->yview( 'scroll', 1,  'units' );
+	#    $::lglobal{gclistbox}->yview( 'scroll', -1, 'units' );
 }
 
 
