@@ -470,7 +470,7 @@ sub update_see_img_button {
 				&main::openpng($textwindow,$pagenum);
 			}
 		);
-		$::lglobal{pagebutton}->bind( '<3>', sub { setpngspath() } );
+		$::lglobal{pagebutton}->bind( '<3>', sub { &main::setpngspath() } );
 		_butbind( $::lglobal{pagebutton} );
 		$::lglobal{statushelp}->attach( $::lglobal{pagebutton},
 			 -balloonmsg =>

@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
-	@EXPORT=qw( &highlightscannos)
+	@EXPORT=qw( &highlightscannos &scannosfile)
 }
 
 # Routine to find highlight word list

@@ -1,4 +1,4 @@
-package Guiguts::PageNumbers;
+package Guiguts::PageSeparators;
 
 use strict;
 use warnings;
@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
-	@EXPORT=qw( &viewpagenums)
+	@EXPORT=qw( &viewpagenums &gotolabel)
 }
 
 ## Toggle visible page markers. This is not line numbers but marks for pages.

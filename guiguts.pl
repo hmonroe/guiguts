@@ -106,6 +106,7 @@ use Guiguts::LineNumberText;
 use Guiguts::MenuStructure;
 use Guiguts::MultiLingual;
 use Guiguts::PageNumbers;
+use Guiguts::PageSeparators;
 use Guiguts::SearchReplaceMenu;
 use Guiguts::SelectionMenu;
 use Guiguts::StatusBar;
@@ -495,46 +496,6 @@ sub loadscannos {
 			searchoptset(qw/x x x 0/);
 		}
 		return 1;
-	}
-}
-
-sub pageseparatorhelppopup {
-	my $help_text = <<'EOM';
-    Join Lines - join lines removing any spaces, asterisks and hyphens as necessary. - Hotkey j
-    Join, Keep hyphen - join lines removing any spaces and asterisks as necessary. - Hotkey k
-    Blank line - remove spaces as necessary. Keep one blank line. (paragraph break). - Hotkey l
-    New Section - remove spaces as necessary. Keep two blank lines (section break). - Hotkey t
-    New Chapter - remove spaces as necessary. Keep four blank lines (chapter break). - Hotkey h
-    Refresh - search for and center next page separator. - Hotkey r
-    Undo - undo the previous page separator edit. - Hotkey u
-    Delete - delete the page separator. Make no other edits. - Hotkey d
-    Full Auto - automatically search for and convert if possible the next page separator. - Toggle - a
-    Semi Auto - automatically search for and center the next page separator after an edit. - Toggle - s
-    View page image - Hotkey v
-    View Page Separator help -Hotkey ?
-EOM
-
-	if ( defined( $lglobal{phelppop} ) ) {
-		$lglobal{phelppop}->deiconify;
-		$lglobal{phelppop}->raise;
-		$lglobal{phelppop}->focus;
-	} else {
-		$lglobal{phelppop} = $top->Toplevel;
-		$lglobal{phelppop}->title('Functions and Hotkeys');
-		initialize_popup_with_deletebinding('phelppop');
-		$lglobal{phelppop}->Label(
-								   -justify => "left",
-								   -text    => $help_text
-		)->pack;
-		my $button_ok = $lglobal{phelppop}->Button(
-			-activebackground => $activecolor,
-			-text             => 'OK',
-			-command          => sub {
-				$lglobal{phelppop}->destroy;
-				undef $lglobal{phelppop};
-			}
-		)->pack;
-		$lglobal{phelppop}->resizable( 'no', 'no' );
 	}
 }
 
