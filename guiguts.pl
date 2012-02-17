@@ -166,6 +166,7 @@ our $globalspelldictopt     = q{};
 our $globalspellpath        = q{};
 our $globalviewerpath       = q{};
 our $globalprojectdirectory = q{};
+our @gsopt;
 our $highlightcolor         = '#a08dfc';
 our $history_size           = 20;
 our $italic_char            = "_";
@@ -499,7 +500,6 @@ sub loadscannos {
 	}
 }
 
-my @gsopt;
 
 sub gcheckpop_up {
 	my @gclines;
@@ -798,26 +798,6 @@ sub gcheckpop_up {
 	close $results;
 	unlink 'gutrslts.tmp';
 	gutwindowpopulate( \@gclines );
-}
-
-sub gcview {
-	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
-	my $line = $lglobal{gclistbox}->get('active');
-	if ( $line and $gc{$line} and $line =~ /Line/ ) {
-		$textwindow->see('end');
-		$textwindow->see( $gc{$line} );
-		$textwindow->markSet( 'insert', $gc{$line} );
-
-# Highlight pretty close to GC error (2 chars before just in case error is at end of line)
-		$textwindow->tagAdd( 'highlight',
-							 $gc{$line} . "- 2c",
-							 $gc{$line} . " lineend" );
-		update_indicators();
-	}
-
-	#don't focus    $textwindow->focus;
-	#leave main text on top    $lglobal{gcpop}->raise;
-	$geometry2 = $lglobal{gcpop}->geometry;
 }
 
 sub gcviewops {

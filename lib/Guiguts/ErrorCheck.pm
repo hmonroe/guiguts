@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
-	@EXPORT = qw(&errorcheckpop_up &errorcheckrun);
+	@EXPORT = qw(&errorcheckpop_up &errorcheckrun &gcview);
 }
 
 sub errorcheckpop_up {
@@ -628,6 +628,28 @@ sub linkcheckrun {
 	unlink $filename if $filename;
 	close $logfile;
 }
+
+sub gcview {
+	my $textwindow = $::textwindow;
+	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
+	my $line = $::lglobal{gclistbox}->get('active');
+	if ( $line and $::gc{$line} and $line =~ /Line/ ) {
+		$textwindow->see('end');
+		$textwindow->see( $::gc{$line} );
+		$textwindow->markSet( 'insert', $::gc{$line} );
+
+# Highlight pretty close to GC error (2 chars before just in case error is at end of line)
+		$textwindow->tagAdd( 'highlight',
+							 $::gc{$line} . "- 2c",
+							 $::gc{$line} . " lineend" );
+		::update_indicators();
+	}
+
+	#don't focus    $textwindow->focus;
+	#leave main text on top    $::lglobal{gcpop}->raise;
+	$::geometry2 = $::lglobal{gcpop}->geometry;
+}
+
 
 
 1;
