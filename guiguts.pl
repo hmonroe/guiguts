@@ -619,77 +619,6 @@ sub readsettings {
 	}
 }
 
-sub drag {
-	my $scrolledwidget = shift;
-	my $corner         = $scrolledwidget->Subwidget('corner');
-	my $corner_label =
-	  $corner->Label( -image => $lglobal{drag_img} )
-	  ->pack( -side => 'bottom', -anchor => 'se' );
-	$corner_label->bind(
-		'<Enter>',
-		sub {
-			if ($::OS_WIN) {
-				$corner->configure( -cursor => 'size_nw_se' );
-			} else {
-				$corner->configure( -cursor => 'sizing' );
-			}
-		}
-	);
-	$corner_label->bind( '<Leave>',
-						 sub { $corner->configure( -cursor => 'arrow' ) } );
-	$corner_label->bind(
-		'<1>',
-		sub {
-			( $lglobal{x}, $lglobal{y} ) = (
-											$scrolledwidget->toplevel->pointerx,
-											$scrolledwidget->toplevel->pointery
-			);
-		}
-	);
-	$corner_label->bind(
-		'<B1-Motion>',
-		sub {
-			my $x =
-			  $scrolledwidget->toplevel->width -
-			  $lglobal{x} +
-			  $scrolledwidget->toplevel->pointerx;
-			my $y =
-			  $scrolledwidget->toplevel->height -
-			  $lglobal{y} +
-			  $scrolledwidget->toplevel->pointery;
-			( $lglobal{x}, $lglobal{y} ) = (
-											$scrolledwidget->toplevel->pointerx,
-											$scrolledwidget->toplevel->pointery
-			);
-			$scrolledwidget->toplevel->geometry( $x . 'x' . $y );
-		}
-	);
-}
-
-sub blocks_check {
-	return 1 if eval { require q(unicore/Blocks.pl) };
-	my $oops = $top->DialogBox(
-		-buttons => [qw[Yes No]],
-		-title   => 'Critical files missing.',
-		-popover => $top,
-		-command => sub {
-			if ( $_[0] eq 'Yes' ) {
-				system "perl update_unicore.pl";
-			}
-		}
-	);
-	my $message = <<END;
-Your Perl installation is missing some files\nthat are critical for some Unicode operations.
-Do you want to download/install them?\n(You need to have an active internet connection.)
-If running under Linux or OSX, you will probably need to run the command\n\"sudo perl /[pathto]/guiguts/update_unicore.pl\
-in a terminal window for the updates to be installed correctly.
-END
-
-	$oops->add( 'Label', -text => $message )->pack;
-	$oops->Show;
-	return 0;
-}
-
 ## No Asterisks
 sub noast {
 	local $/ = ' ****';
@@ -697,32 +626,6 @@ sub noast {
 	chomp $phrase;
 	return $phrase;
 }
-
-## Ultra fast natural sort - wants an array
-sub natural_sort_alpha {
-	my $i;
-	s/(\d+(,\d+)*)/pack 'aNa*', 0, length $1, $1/eg, $_ .= ' ' . $i++
-	  for ( my @x = map { lc deaccent $_} @_ );
-	@_[ map { (split)[-1] } sort @x ];
-}
-
-## Fast length sort with secondary natural sort - wants an array
-sub natural_sort_length {
-	$_->[2] =~ s/(\d+(,\d+)*)/pack 'aNa*', 0, length $1, $1/eg
-	  for ( my @x = map { [ length noast($_), $_, lc deaccent $_ ] } @_ );
-	map { $_->[1] } sort { $b->[0] <=> $a->[0] or $a->[2] cmp $b->[2] } @x;
-}
-
-## Fast freqency sort with secondary natural sort - wants a hash reference
-sub natural_sort_freq {
-	$_->[2] =~ s/(\d+(,\d+)*)/pack 'aNa*', 0, length $1, $1/eg
-	  for (
-			my @x =
-			map { [ $_[0]->{$_}, $_, lc deaccent $_ ] } keys %{ $_[0] }
-	  );
-	map { $_->[1] } sort { $b->[0] <=> $a->[0] or $a->[2] cmp $b->[2] } @x;
-}
-
 
 ## Spell Check
 
