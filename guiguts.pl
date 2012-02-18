@@ -501,38 +501,6 @@ sub loadscannos {
 }
 
 
-# Reset search from start of doc if new search term
-sub searchfromstartifnew {
-	my $new_term = shift;
-	if ( $new_term ne $lglobal{lastsearchterm} ) {
-		searchoptset(qw/x x x x 1/);
-	}
-}
-
-sub searchoptset {
-	my @opt       = @_;
-	my $opt_count = @opt;
-
-# $sopt[0] --> 0 = pattern search               1 = whole word search
-# $sopt[1] --> 0 = case sensitive             1 = case insensitive search
-# $sopt[2] --> 0 = search forwards              1 = search backwards
-# $sopt[3] --> 0 = normal search term   1 = regex search term - 3 and 0 are mutually exclusive
-# $sopt[4] --> 1 = start search at beginning
-	for ( 0 .. $opt_count - 1 ) {
-		if ( defined( $lglobal{searchpop} ) ) {
-			if ( $opt[$_] !~ /[a-zA-Z]/ ) {
-				$opt[$_]
-				  ? $lglobal{"searchop$_"}->select
-				  : $lglobal{"searchop$_"}->deselect;
-			}
-		} else {
-			if ( $opt[$_] !~ /[a-zA-Z]/ ) { $sopt[$_] = $opt[$_] }
-		}
-	}
-
-	#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt set\n";
-}
-
 sub slurpfile {
 	my $filename = $textwindow->FileName;
 	my $wholefile;
