@@ -459,7 +459,7 @@ sub _recentupdate {    # FIXME: Seems to be choking.
 
 ## Global Exit
 sub _exit {
-	if ( &main::confirmdiscard() =~ m{no}i ) {
+	if ( confirmdiscard() =~ m{no}i ) {
 		&main::aspellstop() if $::lglobal{spellpid};
 		exit;
 	}
@@ -467,7 +467,7 @@ sub _exit {
 
 sub file_guess_page_marks {
 	my $top = $::top;
-	my $textwindow = $main::textwindow;
+	my $textwindow = $::textwindow;
 	my ( $totpages, $line25, $linex );
 	if ( $::lglobal{pgpop} ) {
 		$::lglobal{pgpop}->deiconify;
