@@ -340,7 +340,7 @@ sub footnotepop {
 		}
 		$::lglobal{footnotenumber}->configure( -text => $::lglobal{fncount} );
 		$::lglobal{footnoteletter}
-		  ->configure( -text => &main::alpha( $::lglobal{fnalpha} ) );
+		  ->configure( -text => &alpha( $::lglobal{fnalpha} ) );
 		$::lglobal{footnoteroman}
 		  ->configure( -text => &main::roman( $::lglobal{fnroman} ) );
 		$::lglobal{footnotetotal}->configure(
@@ -422,7 +422,7 @@ sub fninsertmarkers {
 		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] = $style;
 		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] = $::lglobal{fncount}
 		  if $style eq 'n';
-		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] = &main::alpha( $::lglobal{fnalpha} )
+		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] = &alpha( $::lglobal{fnalpha} )
 		  if $style eq 'a';
 		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] = &main::roman( $::lglobal{fnroman} )
 		  if $style eq 'r';
@@ -614,7 +614,7 @@ sub footnotefixup {
 	$::lglobal{fnindexbrowse}->delete( '0', 'end' ) if $::lglobal{footpop};
 	$::lglobal{footnotenumber}->configure( -text => $::lglobal{fncount} )
 	  if $::lglobal{footpop};
-	$::lglobal{footnoteletter}->configure( -text => &main::alpha( $::lglobal{fnalpha} ) )
+	$::lglobal{footnoteletter}->configure( -text => &alpha( $::lglobal{fnalpha} ) )
 	  if $::lglobal{footpop};
 	$::lglobal{footnoteroman}->configure( -text => &main::roman( $::lglobal{fnroman} ) )
 	  if $::lglobal{footpop};
@@ -1004,7 +1004,7 @@ sub footnoteadjust {
 	$textwindow->markSet( 'insert', $start );
 	$::lglobal{footnotenumber}->configure( -text => $::lglobal{fncount} )
 	  if $::lglobal{footpop};
-	$::lglobal{footnoteletter}->configure( -text => &main::alpha( $::lglobal{fnalpha} ) )
+	$::lglobal{footnoteletter}->configure( -text => &alpha( $::lglobal{fnalpha} ) )
 	  if $::lglobal{footpop};
 	$::lglobal{footnoteroman}->configure( -text => &main::roman( $::lglobal{fnroman} ) )
 	  if $::lglobal{footpop};

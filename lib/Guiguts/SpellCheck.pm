@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
-	@EXPORT = qw(&spellcheckfirst &aspellstart &aspellstop &spellchecker &getprojectdic &spellloadprojectdict);
+	@EXPORT = qw(&spellcheckfirst &aspellstart &aspellstop &spellchecker &spellloadprojectdict);
 }
 
 # Initialize spellchecker
@@ -854,6 +854,9 @@ sub getprojectdic {
 	return unless $fname;
 	$::lglobal{projectdictname} = $fname;
 	$::lglobal{projectdictname} =~ s/\.[^\.]*?$/\.dic/;
+# adjustment for multi-volume projects
+# assumes multi-volumes in same directory and end in numbers
+	$::lglobal{projectdictname} =~ s/\d\.dic$/\.dic/;
 	if ( $::lglobal{projectdictname} eq $fname ) {
 		$::lglobal{projectdictname} .= '.dic';
 	}
