@@ -373,16 +373,6 @@ our $textwindow = $text_frame->LineNumberText(
 		   -fill   => 'both'
   );
 
-# Enable Drag & Drop. You can drag a text file into the open window and it
-# will auto load. Kind of gimicky, but fun to play with.
-$top->DropSite(
-			 -dropcommand => \&handleDND,
-			 -droptypes =>
-			   ( $OS_WIN or ( $^O eq 'cygwin' and $Tk::platform eq 'MSWin32' ) )
-			 ? ['Win32']
-			 : [qw/XDND Sun/]
-);
-
 $top->protocol( 'WM_DELETE_WINDOW' => \&_exit );
 
 $top->configure( -menu => our $menubar = $top->Menu );
@@ -500,23 +490,6 @@ sub loadscannos {
 	}
 }
 
-
-sub handleDND {
-	my ( $sel, $filename ) = shift;
-	eval {    # In case of an error, do the SelectionGet in an eval block
-		if ($OS_WIN) {
-			$filename =
-			  $textwindow->SelectionGet( -selection => $sel, 'STRING' );
-		} else {
-			$filename =
-			  $textwindow->SelectionGet( -selection => $sel,
-										 'FILE_NAME' );
-		}
-	};
-	if ( defined $filename && -T $filename ) {
-		openfile($filename);
-	}
-}
 
 sub pututf {
 	$lglobal{utfpop} = shift;
