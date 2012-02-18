@@ -1111,7 +1111,6 @@ sub html_convert_pageanchors {
 				my $inserted    = 0;
 
 				# logic move page ref if at end of paragraph
-				# TODO: move out of header, other markup
 				my $nextpstart =
 				  $textwindow->search( '--', '<p', $markindex, 'end' )
 				  || 'end';

@@ -7,7 +7,8 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&text_convert_italic &text_convert_bold &text_thought_break &text_convert_tb &text_convert_options)
+	@EXPORT=qw(&text_convert_italic &text_convert_bold &text_thought_break &text_convert_tb 
+	&text_convert_options &fixpopup)
 }
 
 sub text_convert_italic {
@@ -75,6 +76,77 @@ sub text_convert_options {
 	  )->pack( -side => 'left' );
 	$options->Show;
 	&main::savesettings();
+}
+
+sub fixpopup {
+	my $top = $::top;
+	::viewpagenums() if ( $::lglobal{seepagenums} );
+	if ( defined( $::lglobal{fixpop} ) ) {
+		$::lglobal{fixpop}->deiconify;
+		$::lglobal{fixpop}->raise;
+		$::lglobal{fixpop}->focus;
+	} else {
+		$::lglobal{fixpop} = $top->Toplevel;
+		$::lglobal{fixpop}->title('Fixup Options');
+		::initialize_popup_with_deletebinding('fixpop');
+		my $tframe = $::lglobal{fixpop}->Frame->pack;
+		$tframe->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				$::lglobal{fixpop}->UnmapWindow;
+				::fixup();
+				$::lglobal{fixpop}->destroy;
+				undef $::lglobal{fixpop};
+			},
+			-text  => 'Go!',
+			-width => 14
+		)->pack( -pady => 6 );
+		my $pframe = $::lglobal{fixpop}->Frame->pack;
+		$pframe->Label( -text => 'Select options for the fixup routine.', )
+		  ->pack;
+		my $pframe1 = $::lglobal{fixpop}->Frame->pack;
+		${ $::lglobal{fixopt} }[15] = 1;
+		my @rbuttons = (
+			'Skip /* */, /$ $/, and /X X/ marked blocks.',
+			'Fix up spaces around hyphens.',
+			'Convert multiple spaces to single spaces.',
+			'Remove spaces before periods.',
+			'Remove spaces before exclamation marks.',
+			'Remove spaces before question marks.',
+			'Remove spaces before semicolons.',
+			'Remove spaces before colons.',
+			'Remove spaces before commas.',
+			'Remove spaces after beginning and before ending double quote.',
+'Remove spaces after opening and before closing brackets, () [], {}.',
+'Mark up a line with 4 or more * and nothing else as <tb>.',
+			'Fix obvious l<->1 problems, lst, llth, etc.',
+			'Format ellipses correctly',
+'Remove spaces after beginning and before ending angle quotes « ».',
+
+		);
+		my $row = 0;
+		for (@rbuttons) {
+			$pframe1->Checkbutton(
+								   -variable    => \${ $::lglobal{fixopt} }[$row],
+								   -selectcolor => $::lglobal{checkcolor},
+								   -text        => $_,
+			)->grid( -row => $row, -column => 1, -sticky => 'nw' );
+			++$row;
+		}
+		$pframe1->Radiobutton(
+							-variable    => \${ $::lglobal{fixopt} }[15],
+							-selectcolor => $::lglobal{checkcolor},
+							-value       => 1,
+							-text => 'French style angle quotes «guillemots»',
+		)->grid( -row => $row, -column => 1 );
+		++$row;
+		$pframe1->Radiobutton(
+							-variable    => \${ $::lglobal{fixopt} }[15],
+							-selectcolor => $::lglobal{checkcolor},
+							-value       => 0,
+							-text => 'German style angle quotes »guillemots«',
+		)->grid( -row => $row, -column => 1 );
+	}
 }
 
 
