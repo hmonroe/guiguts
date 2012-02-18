@@ -7,7 +7,8 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
-	@EXPORT=qw( &viewpagenums &gotolabel &pnumadjust)
+	@EXPORT=qw( &viewpagenums &gotolabel &pnumadjust &pgnext &pgprevious &pgrenum &pmovedown
+	&pmoveup &pmoveleft &pmoveright &pageadd &pageremove	)
 }
 
 ## Toggle visible page markers. This is not line numbers but marks for pages.
@@ -108,7 +109,6 @@ sub gotolabel {
 sub pnumadjust {
 	my $textwindow = $main::textwindow;
 	my $top = $main::top;
-	
 	my $mark = $textwindow->index('current');
 	while ( $mark = $textwindow->markPrevious($mark) ) {
 		if ( $mark =~ /Pg(\S+)/ ) {
@@ -290,6 +290,313 @@ sub pnumadjust {
 	}
 }
 
+sub pageremove {    # Delete a page marker
+	my $textwindow = $main::textwindow;
+
+	my $num = $::lglobal{pagenumentry}->get;
+	$num = $textwindow->index('insert') unless $num;
+	viewpagenums() if $::lglobal{seepagenums};
+	$textwindow->markUnset($num);
+	%::pagenumbers = ();
+	my @marks = $textwindow->markNames;
+	for (@marks) {
+		$::pagenumbers{$_}{offset} = $textwindow->index($_) if $_ =~ /Pg\S+/;
+	}
+	viewpagenums();
+}
+
+sub pageadd {    # Add a page marker
+	my $textwindow = $main::textwindow;
+	my ( $prev, $next, $mark, $length );
+	my $insert = $textwindow->index('insert');
+	$textwindow->markSet( 'insert', '1.0' );
+	$prev = $insert;
+	while ( $prev = $textwindow->markPrevious($prev) ) {
+		if ( $prev =~ /Pg(\S+)/ ) {
+			$mark   = $1;
+			$length = length($1);
+			last;
+		}
+	}
+	unless ($prev) {
+		$prev = $insert;
+		while ( $prev = $textwindow->markNext($prev) ) {
+			if ( $prev =~ /Pg(\S+)/ ) {
+				$mark   = 0;
+				$length = length($1);
+				last;
+			}
+		}
+		$prev = '1.0';
+	}
+	$mark = sprintf( "%0" . $length . 'd', $mark + 1 );
+	$mark = "Pg$mark";
+	$textwindow->markSet( 'insert', $insert );
+	return 0 if ( $textwindow->markExists($mark) );
+	viewpagenums() if $::lglobal{seepagenums};
+	$textwindow->markSet( $mark, $insert );
+	$textwindow->markGravity( $mark, 'left' );
+	%::pagenumbers = ();
+	my @marks = $textwindow->markNames;
+
+	for (@marks) {
+		$::pagenumbers{$_}{offset} = $textwindow->index($_) if $_ =~ /Pg\S+/;
+	}
+	$::lglobal{seepagenums} = 0;
+	viewpagenums();
+	return 1;
+}
+
+sub pgrenum {    # Re sequence page markers
+	my $textwindow = $main::textwindow;
+	my ( $mark, $length, $num, $start, $end );
+	my $offset = $::lglobal{pagerenumoffset}->get;
+	return if $offset !~ m/-?\d+/;
+	my @marks;
+	if ( $offset < 0 ) {
+		@marks = ( sort( keys(%::pagenumbers) ) );
+		$num = $start = $::lglobal{pagenumentry}->get;
+		$start =~ s/Pg(\S+)/$1/;
+		while ( $num = $textwindow->markPrevious($num) ) {
+			if ( $num =~ /Pg\d+/ ) {
+				$mark = $num;
+				$mark =~ s/Pg(\S+)/$1/;
+				if ( ( $mark - $start ) le $offset ) {
+					$offset = ( $mark - $start + 1 );
+				}
+				last;
+			}
+		}
+		while ( !( $textwindow->markExists( $marks[$#marks] ) ) ) {
+			pop @marks;
+		}
+		$end   = $marks[$#marks];
+		$start = $::lglobal{pagenumentry}->get;
+		while ( $marks[0] ne $start ) { shift @marks }
+	} else {
+		@marks = reverse( sort( keys(%::pagenumbers) ) );
+		while ( !( $textwindow->markExists( $marks[0] ) ) ) { shift @marks }
+		$start = $textwindow->index('end');
+		$num   = $textwindow->index('insert');
+		while ( $num = $textwindow->markNext($num) ) {
+			if ( $num =~ /Pg\d+/ ) {
+				$end = $num;
+				last;
+			}
+		}
+		$end = $::lglobal{pagenumentry}->get unless $end;
+		while ( $marks[$#marks] ne $end ) { pop @marks }
+	}
+	$textwindow->bell unless $offset;
+	return unless $offset;
+	$::lglobal{seepagenums} = 1;
+	viewpagenums();
+	$textwindow->markSet( 'insert', '1.0' );
+	%::pagenumbers = ();
+	while (1) {
+		$start = shift @marks;
+		last unless $start;
+		$start =~ /Pg(\S+)/;
+		$mark   = $1;
+		$length = length($1);
+		$mark   = sprintf( "%0" . $length . 'd', $mark + $offset );
+		$mark   = "Pg$mark";
+		$num    = $start;
+		$start  = $textwindow->index($num);
+		$textwindow->markUnset($num);
+		$textwindow->markSet( $mark, $start );
+		$textwindow->markGravity( $mark, 'left' );
+		next if @marks;
+		last;
+	}
+	@marks = $textwindow->markNames;
+	for (@marks) {
+		$::pagenumbers{$_}{offset} = $textwindow->index($_) if $_ =~ /Pg\d+/;
+	}
+	$::lglobal{seepagenums} = 0;
+	viewpagenums();
+}
+
+sub pgprevious {    #move focus to previous page marker
+	my $textwindow = $::textwindow;
+	$::auto_show_images = 0;    # turn off so no interference
+	my $mark;
+	my $num = $::lglobal{pagenumentry}->get;
+	$num = $textwindow->index('insert') unless $num;
+	$mark = $num;
+	while ( $num = $textwindow->markPrevious($num) ) {
+		if ( $num =~ /Pg\S+/ ) { $mark = $num; last; }
+	}
+	$::lglobal{pagenumentry}->delete( '0', 'end' );
+	$::lglobal{pagenumentry}->insert( 'end', $mark );
+	$textwindow->yview( $textwindow->index($mark) );
+	if ( $::lglobal{showthispageimage} and ( $mark =~ /Pg(\S+)/ ) ) {
+		$textwindow->focus;
+		::openpng($textwindow,$1);
+		$::lglobal{showthispageimage} = 0;
+	}
+	update_indicators();
+}
+
+sub pgnext {    #move focus to next page marker
+	my $textwindow = $::textwindow;
+	my $mark;
+	my $num = $::lglobal{pagenumentry}->get;
+	$::auto_show_images = 0;    # turn off so no interference
+	$num  = $textwindow->index('insert') unless $num;
+	$mark = $num;
+	while ( $num = $textwindow->markNext($num) ) {
+		if ( $num =~ /Pg\S+/ ) { $mark = $num; last; }
+	}
+	$::lglobal{pagenumentry}->delete( '0', 'end' );
+	$::lglobal{pagenumentry}->insert( 'end', $mark );
+	$textwindow->yview( $textwindow->index($mark) );
+	if ( $::lglobal{showthispageimage} and ( $mark =~ /Pg(\S+)/ ) ) {
+		$textwindow->focus;
+		openpng($textwindow,$1);
+		$::lglobal{showthispageimage} = 0;
+
+	}
+	update_indicators();
+}
+
+sub pmoveup {    # move the page marker up a line
+	my $textwindow = $::textwindow;
+	my $mark;
+	my $num = $::lglobal{pagenumentry}->get;
+	$num = $textwindow->index('insert') unless $num;
+	$mark = $num;
+	if ( not $num =~ /Pg\S+/ ) {
+		while ( $num = $textwindow->markPrevious($num) ) {
+			last
+			  if $num =~ /Pg\S+/;
+		}
+	}
+	$num = '1.0' unless $num;
+	my $pagenum   = " $mark ";
+	my $markindex = $textwindow->index("$mark");
+	my $index     = $textwindow->index("$markindex-1 lines");
+	if ( $num eq '1.0' ) {
+		return if $textwindow->compare( $index, '<', '1.0' );
+	} else {
+
+		#		return
+		#		  if $textwindow->compare(
+		#								   $index, '<',
+		#								   (
+		#									  $textwindow->index(
+		#											 $num . '+' . length($pagenum) . 'c'
+		#									  )
+		#								   )
+		#		  );
+	}
+	$textwindow->ntdelete( $mark, $mark . ' +' . length($pagenum) . 'chars' );
+	$textwindow->markSet( $mark, $index );
+	$textwindow->markGravity( $mark, 'left' );
+	$textwindow->ntinsert( $mark, $pagenum );
+	$textwindow->tagAdd( 'pagenum', $mark,
+						 $mark . ' +' . length($pagenum) . ' chars' );
+	$textwindow->see($mark);
+}
+
+sub pmoveleft {    # move the page marker left a character
+	my $textwindow = $::textwindow;
+	my $mark;
+	my $num = $::lglobal{pagenumentry}->get;
+	$num = $textwindow->index('insert') unless $num;
+	$mark = $num;
+	while ( $num = $textwindow->markPrevious($num) ) {
+		last
+		  if $num =~ /Pg\S+/;
+	}
+	$num = '1.0' unless $num;
+	my $pagenum = " $mark ";
+	my $index   = $textwindow->index("$mark-1c");
+
+	if ( $num eq '1.0' ) {
+		return if $textwindow->compare( $index, '<', '1.0' );
+	} else {
+		return
+		  if $textwindow->compare(
+								   $index, '<',
+								   (
+									  $textwindow->index(
+											 $num . '+' . length($pagenum) . 'c'
+									  )
+								   )
+		  );
+	}
+	$textwindow->ntdelete( $mark, $mark . ' +' . length($pagenum) . 'c' );
+	$textwindow->markSet( $mark, $index );
+	$textwindow->markGravity( $mark, 'left' );
+	$textwindow->ntinsert( $mark, $pagenum );
+	$textwindow->tagAdd( 'pagenum', $mark,
+						 $mark . ' +' . length($pagenum) . 'c' );
+	$textwindow->see($mark);
+}
+
+sub pmoveright {    # move the page marker right a character
+	my $textwindow = $::textwindow;
+	my $mark;
+	my $num = $::lglobal{pagenumentry}->get;
+	$num = $textwindow->index('insert') unless $num;
+	$mark = $num;
+	while ( $num = $textwindow->markNext($num) ) { last if $num =~ /Pg\S+/ }
+	$num = $textwindow->index('end') unless $num;
+	my $pagenum = " $mark ";
+	my $index   = $textwindow->index("$mark+1c");
+
+	if (
+		 $textwindow->compare(
+				$index, '>=',
+				$textwindow->index($mark) . 'lineend -' . length($pagenum) . 'c'
+		 )
+	  )
+	{
+		$index =
+		  $textwindow->index( $textwindow->index($mark) . ' +1l linestart' );
+	}
+	if ( $textwindow->compare( $num, '==', 'end' ) ) {
+		return if $textwindow->compare( $index, '>=', 'end' );
+	} else {
+		return
+		  if $textwindow->compare( $index . '+' . length($pagenum) . 'c',
+								   '>=', $num );
+	}
+	$textwindow->ntdelete( $mark, $mark . ' +' . length($pagenum) . 'c' );
+	$textwindow->markSet( $mark, $index );
+	$textwindow->markGravity( $mark, 'left' );
+	$textwindow->ntinsert( $mark, $pagenum );
+	$textwindow->tagAdd( 'pagenum', $mark,
+						 $mark . ' +' . length($pagenum) . 'c' );
+	$textwindow->see($mark);
+}
+
+sub pmovedown {    # move the page marker down a line
+	my $textwindow = $::textwindow;
+	my $mark;
+	my $num = $::lglobal{pagenumentry}->get;
+	$num = $textwindow->index('insert') unless $num;
+	$mark = $num;
+	while ( $num = $textwindow->markNext($num) ) { last if $num =~ /Pg\S+/ }
+	$num = $textwindow->index('end') unless $num;
+	my $pagenum = " $mark ";
+	my $index   = $textwindow->index("$mark+1l");
+
+	if ( $textwindow->compare( $num, '==', 'end' ) ) {
+		return if $textwindow->compare( $index, '>=', 'end' );
+	} else {
+		return if $textwindow->compare( $index, '>', $num );
+	}
+	$textwindow->ntdelete( $mark, $mark . ' +' . length($pagenum) . 'c' );
+	$textwindow->markSet( $mark, $index );
+	$textwindow->markGravity( $mark, 'left' );
+	$textwindow->ntinsert( $mark, $pagenum );
+	$textwindow->tagAdd( 'pagenum', $mark,
+						 $mark . ' +' . length($pagenum) . 'c' );
+	$textwindow->see($mark);
+}
+## End Page Number Adjust
 
 
 1;
