@@ -1220,7 +1220,7 @@ sub jeebiesview {
 		$textwindow->see('end');
 		$textwindow->see( $::jeeb{$line} );
 		$textwindow->markSet( 'insert', $::jeeb{$line} );
-		update_indicators();
+		::update_indicators();
 	}
 	$textwindow->focus;
 	$::lglobal{jeepop}->raise;

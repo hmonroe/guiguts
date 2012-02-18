@@ -79,7 +79,7 @@ sub gotolabel {
 					$textwindow->markSet( 'insert', "$index +1l linestart" );
 					$textwindow->see('insert');
 					$textwindow->focus;
-					update_indicators();
+					::update_indicators();
 					$::lglobal{gotolabpop}->destroy;
 					undef $::lglobal{gotolabpop};
 				} else {
@@ -435,7 +435,7 @@ sub pgprevious {    #move focus to previous page marker
 		::openpng($textwindow,$1);
 		$::lglobal{showthispageimage} = 0;
 	}
-	update_indicators();
+	::update_indicators();
 }
 
 sub pgnext {    #move focus to next page marker
@@ -457,7 +457,7 @@ sub pgnext {    #move focus to next page marker
 		$::lglobal{showthispageimage} = 0;
 
 	}
-	update_indicators();
+	::update_indicators();
 }
 
 sub pmoveup {    # move the page marker up a line
