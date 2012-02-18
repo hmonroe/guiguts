@@ -11,7 +11,7 @@ BEGIN {
 	&textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_cmdline &win32_start 
 	&win32_is_exe &win32_create_process &runner &debug_dump &run &escape_regexmetacharacters 
 	&deaccent &BindMouseWheel &working &initialize &fontinit &initialize_popup_with_deletebinding 
-	&initialize_popup_without_deletebinding)
+	&initialize_popup_without_deletebinding &os_normal &escape_problems)
 }
 
 sub get_image_file {
@@ -1372,6 +1372,19 @@ sub initialize_popup_without_deletebinding {
 	if ( ($::wfstayontop) and ( $popupname eq "wfpop" ) ) {
 		$::lglobal{$popupname}->transient($top);
 	}
+}
+
+sub os_normal {
+	$_[0] =~ s|/|\\|g if $::OS_WIN && $_[0];
+	return $_[0];
+}
+
+sub escape_problems {
+	if ( $_[0] ) {
+		$_[0] =~ s/\\+$/\\\\/g;
+		$_[0] =~ s/(?!<\\)'/\\'/g;
+	}
+	return $_[0];
 }
 
 
