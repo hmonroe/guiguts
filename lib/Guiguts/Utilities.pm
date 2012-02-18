@@ -12,7 +12,7 @@ BEGIN {
 	&win32_is_exe &win32_create_process &runner &debug_dump &run &escape_regexmetacharacters 
 	&deaccent &BindMouseWheel &working &initialize &fontinit &initialize_popup_with_deletebinding 
 	&initialize_popup_without_deletebinding &os_normal &escape_problems &natural_sort_alpha
-	&natural_sort_length &natural_sort_freq)
+	&natural_sort_length &natural_sort_freq &drag)
 }
 
 sub get_image_file {
