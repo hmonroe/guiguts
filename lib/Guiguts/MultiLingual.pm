@@ -1,5 +1,6 @@
 package Guiguts::MultiLingual;
 
+
 use strict;
 use warnings;
 
@@ -32,6 +33,7 @@ my $savedHeader ;
 my $multidictentry ;
 my $multiwclistbox;
 my $sortorder = 'f';
+my @templist = ();
 
 #startup routine
 sub spellmultiplelanguages {
@@ -152,6 +154,12 @@ sub multilangpopup {
 						 -text    => 'Add foreign to project',
 						 -width   => 20
 			)->grid( -row => 4, -column => 3, -padx => 1, -pady => 1 );
+			$f0->Button(
+						 -activebackground => $::activecolor,
+						 -command => sub { lowergetmisspelled($textwindow,$top) },
+						 -text    => 'Lower case spellcheck',
+						 -width   => 20
+			)->grid( -row => 5, -column => 3, -padx => 1, -pady => 1 );
 		my $f1 =
 			$::lglobal{multispellpop}->Frame->pack( -fill => 'both', -expand => 'both', );
 				$multiwclistbox =
@@ -647,7 +655,7 @@ sub createseenwordslang {
 	$top->Unbusy;
 }
 
-# build lists of words lower case and proper
+# build lists of wordsn
 sub buildwordlist {
 	my $textwindow = shift;
 	my ( @words, $match, @savesets );
@@ -734,6 +742,8 @@ sub multilingualgetmisspelled {
 		if ($debug) {print "\$dict $dict, words to spell $unspeltwordcount, ";}
 		#spellcheck
 		if ($words) { getmisspelledwordstwo($dict, $words); }
+		processmisspelledwords ($dict, @templist);	
+	
 		#update global spelllists
 	}
 	updategloballists();
@@ -749,7 +759,7 @@ sub getmisspelledwordstwo {
 	my $dict = shift;
 	my $section = shift;
 	my $word;
-	my @templist = ();
+	@templist = ();
 
 	open my $save, '>:bytes', 'checkfil.txt';
 	utf8::encode($section);
@@ -775,8 +785,6 @@ sub getmisspelledwordstwo {
 	
 	unlink 'temp.txt' unless ($debug) ;  # output file of unspelt words from Aspell
 
-	processmisspelledwords ($dict, @templist);	
-	
 }
 
 #post Aspell routine
@@ -784,7 +792,6 @@ sub getmisspelledwordstwo {
 #input $dict, @templist
 sub processmisspelledwords {
 	my $dict = shift;
-	my @templist = @_;
 	my @startunspelt = ();
 	my @endunspelt = ();
 	my $j = 0;
@@ -872,36 +879,70 @@ sub addspeltforeignproject {
 	close $save;
 }
 
-#takes two hash references the first numeric, and second string
-#sub showsortwords {
-#	my $hrefone = shift;
-#	my $hreftwo = shift;
-#	$multiwclistbox->delete( '0', 'end' );
-#	$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
-#	$multiwclistbox->update;
-#	if ( $main::alpha_sort eq 'f' ) {    # Sorted by word frequency
-#		for ( &main::natural_sort_freq($href) ) {
-#			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
-#			$multiwclistbox->insert( 'end', $line );
-#		}
-#	} elsif ( $main::alpha_sort eq 'a' ) {    # Sorted alphabetically
-#		for ( &main::natural_sort_alpha( keys %$href ) ) {
-#			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
-#			$multiwclistbox->insert( 'end', $line );
-#		}
-#	} elsif ( $main::alpha_sort eq 'l' ) {    # Sorted by word length
-#		for ( &main::natural_sort_length( keys %$href ) ) {
-#			my $line = sprintf( "%-8d %s", $$href{$_}, $_ ); # Print to the file
-#			$multiwclistbox->insert( 'end', $line );
-#		}
-#	}
-#	$multiwclistbox->delete('0');
-#	$multiwclistbox->insert( '0', $savedHeader );
-#	$multiwclistbox->update;
-#	$multiwclistbox->yview( 'scroll', 1, 'units' );
-#	$multiwclistbox->update;
-#	$multiwclistbox->yview( 'scroll', -1, 'units' );
-#}
+#spelling control routine
+sub lowergetmisspelled {
+	my ($textwindow,$top) = @_;
+#	$::lglobal{misspelledlist}= ();
+	
+	$top->Busy( -recurse => 1 );
+
+	for my $dict (@main::multidicts) {
+		my $words = '';
+		my %unspelt = ();
+		my %lcunspelt = ();
+		my $i = 0;
+		foreach (keys %distinctwords) {
+			unless ($seenwordslang{$_}){
+				$unspelt{$_} = undef;
+				$lcunspelt{$_} = lc($_);
+				$words .= "$lcunspelt{$_}\n";
+				$i++;
+			}
+		}
+print "to spell $i, dict $dict\n";
+		if ($words) { getmisspelledwordstwo($dict, $words); }
+
+		my $j = 0;
+		my $k = 0;
+		$i = 0;
+		for my $keya ( @templist) {
+			$i++;
+			for my $keyb (keys %lcunspelt) {
+				$j++;
+				if ($keya eq $lcunspelt{$keyb}){
+					$unspelt{$keyb} = 'unspelt';
+					$k++;
+				}
+			}
+			
+		}
+print "returned words $i\n";
+print "iterations $j\n";
+print "unspelt $k\n";
+		$i = 0;
+		$j = 0;
+		$k = 0;
+		for my $key (%distinctwords){
+			$i++;
+			unless ($seenwordslang{$key}){
+				$j++;
+				unless ($unspelt{$key}) {
+					$seenwordslang{$key} = 'case';
+					$k++;
+				}
+			}
+		}
+print "distinct words $i\n";
+print "unspelt $j\n";
+print "new spelt words $k\n";
+	}
+	updategloballists();
+	getwordcounts();
+	
+	$top->Unbusy;
+}
+
+
 
 1;
 __END__
