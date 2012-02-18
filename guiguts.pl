@@ -112,6 +112,7 @@ use Guiguts::SelectionMenu;
 use Guiguts::StatusBar;
 use Guiguts::TextProcessingMenu;
 use Guiguts::TextUnicode;
+use Guiguts::UnicodeTools;
 use Guiguts::Utilities;
 use Guiguts::WordFrequency;
 
@@ -490,17 +491,6 @@ sub loadscannos {
 	}
 }
 
-
-sub pututf {
-	$lglobal{utfpop} = shift;
-	my @xy     = $lglobal{utfpop}->pointerxy;
-	my $widget = $lglobal{utfpop}->containing(@xy);
-	my $letter = $widget->cget( -text );
-	return unless $letter;
-	my $ord = ord($letter);
-	$letter = "&#$ord;" if ( $lglobal{uoutp} eq 'h' );
-	insertit($letter);
-}
 
 sub insertit {
 	my $letter  = shift;
