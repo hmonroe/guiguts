@@ -9,7 +9,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close 
 	&_flash_save &clearvars &savefile &_exit &file_mark_pages &_recentupdate &file_guess_page_marks
-	&oppopupdate &opspop_up)
+	&oppopupdate &opspop_up &confirmempty)
 }
 
 sub file_open {    # Find a text file to open
@@ -466,7 +466,7 @@ sub _exit {
 }
 
 sub file_guess_page_marks {
-	my $top = $main::top;
+	my $top = $::top;
 	my $textwindow = $main::textwindow;
 	my ( $totpages, $line25, $linex );
 	if ( $::lglobal{pgpop} ) {
@@ -637,6 +637,51 @@ sub opspop_up {
 		&main::drag( $::lglobal{oplistbox} );
 	}
 	&main::oppopupdate();
+}
+
+sub confirmdiscard {
+	my $textwindow = $main::textwindow;
+	my $top = $::top;
+	if ( $textwindow->numberChanges ) {
+		my $ans = $top->messageBox(
+				 -icon    => 'warning',
+				 -type    => 'YesNoCancel',
+				 -default => 'yes',
+				 -message =>
+				   'The text has been modified without being saved. Save edits?'
+		);
+		if ( $ans =~ /yes/i ) {
+			savefile();
+		} else {
+			return $ans;
+		}
+	}
+	return 'no';
+}
+
+sub confirmempty {
+	my $textwindow = $main::textwindow;
+	my $answer = confirmdiscard();
+	if ( $answer =~ /no/i ) {
+		if ( $::lglobal{img_num_label} ) {
+			$::lglobal{img_num_label}->destroy;
+			undef $::lglobal{img_num_label};
+		}
+		if ( $::lglobal{pagebutton} ) {
+			$::lglobal{pagebutton}->destroy;
+			undef $::lglobal{pagebutton};
+		}
+		if ( $::lglobal{previmagebutton} ) {
+			$::lglobal{previmagebutton}->destroy;
+			undef $::lglobal{previmagebutton};
+		}
+		if ( $::lglobal{proofbutton} ) {
+			$::lglobal{proofbutton}->destroy;
+			undef $::lglobal{proofbutton};
+		}
+		$textwindow->EmptyDocument;
+	}
+	return $answer;
 }
 
 

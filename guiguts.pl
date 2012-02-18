@@ -501,48 +501,6 @@ sub loadscannos {
 }
 
 
-sub confirmdiscard {
-	if ( $textwindow->numberChanges ) {
-		my $ans = $top->messageBox(
-				 -icon    => 'warning',
-				 -type    => 'YesNoCancel',
-				 -default => 'yes',
-				 -message =>
-				   'The text has been modified without being saved. Save edits?'
-		);
-		if ( $ans =~ /yes/i ) {
-			savefile();
-		} else {
-			return $ans;
-		}
-	}
-	return 'no';
-}
-
-sub confirmempty {
-	my $answer = confirmdiscard();
-	if ( $answer =~ /no/i ) {
-		if ( $lglobal{img_num_label} ) {
-			$lglobal{img_num_label}->destroy;
-			undef $lglobal{img_num_label};
-		}
-		if ( $lglobal{pagebutton} ) {
-			$lglobal{pagebutton}->destroy;
-			undef $lglobal{pagebutton};
-		}
-		if ( $lglobal{previmagebutton} ) {
-			$lglobal{previmagebutton}->destroy;
-			undef $lglobal{previmagebutton};
-		}
-		if ( $lglobal{proofbutton} ) {
-			$lglobal{proofbutton}->destroy;
-			undef $lglobal{proofbutton};
-		}
-		$textwindow->EmptyDocument;
-	}
-	return $answer;
-}
-
 sub BindMouseWheel {
 	my ($w) = @_;
 	if ($OS_WIN) {
