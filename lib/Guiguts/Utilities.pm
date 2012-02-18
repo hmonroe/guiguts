@@ -8,9 +8,10 @@ BEGIN {
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&openpng &get_image_file &setviewerpath &::setdefaultpath &arabic &roman
-	&textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_cmdline &win32_start &win32_is_exe
-	&win32_create_process &runner &debug_dump &run &escape_regexmetacharacters &deaccent &BindMouseWheel
-	&working &initialize &fontinit)
+	&textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_cmdline &win32_start 
+	&win32_is_exe &win32_create_process &runner &debug_dump &run &escape_regexmetacharacters 
+	&deaccent &BindMouseWheel &working &initialize &fontinit &initialize_popup_with_deletebinding 
+	&initialize_popup_without_deletebinding)
 }
 
 sub get_image_file {
@@ -33,8 +34,6 @@ sub get_image_file {
 	}
 	return $imagefile;
 }
-
-
 
 # Routine to handle image viewer file requests
 sub openpng {
@@ -1342,6 +1341,37 @@ sub b2scroll {
 
 sub fontinit {
 	$::lglobal{font} = "{$::fontname} $::fontsize $::fontweight";
+}
+
+sub initialize_popup_with_deletebinding {
+	my $popupname = shift;
+	initialize_popup_without_deletebinding($popupname);
+	$::lglobal{$popupname}->protocol(
+		'WM_DELETE_WINDOW' => sub {
+			$::lglobal{$popupname}->destroy;
+			undef $::lglobal{$popupname};
+		}
+	);
+}
+
+sub initialize_popup_without_deletebinding {
+	my $top = $::top;
+	my $popupname = shift;
+	$::lglobal{$popupname}->geometry( $::geometryhash{$popupname} )
+	  if $::geometryhash{$popupname};
+	$::lglobal{"$popupname"}->bind(
+		'<Configure>' => sub {
+			$::geometryhash{"$popupname"} = $::lglobal{"$popupname"}->geometry;
+			$::lglobal{geometryupdate} = 1;
+		}
+	);
+	$::lglobal{$popupname}->Icon( -image => $::icon );
+	if ( ($::stayontop) and ( not $popupname eq "wfpop" ) ) {
+		$::lglobal{$popupname}->transient($top);
+	}
+	if ( ($::wfstayontop) and ( $popupname eq "wfpop" ) ) {
+		$::lglobal{$popupname}->transient($top);
+	}
 }
 
 

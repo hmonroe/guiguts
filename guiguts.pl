@@ -493,36 +493,6 @@ sub loadscannos {
 }
 
 
-sub initialize_popup_with_deletebinding {
-	my $popupname = shift;
-	initialize_popup_without_deletebinding($popupname);
-	$lglobal{$popupname}->protocol(
-		'WM_DELETE_WINDOW' => sub {
-			$lglobal{$popupname}->destroy;
-			undef $lglobal{$popupname};
-		}
-	);
-}
-
-sub initialize_popup_without_deletebinding {
-	my $popupname = shift;
-	$lglobal{$popupname}->geometry( $geometryhash{$popupname} )
-	  if $geometryhash{$popupname};
-	$lglobal{"$popupname"}->bind(
-		'<Configure>' => sub {
-			$geometryhash{"$popupname"} = $lglobal{"$popupname"}->geometry;
-			$lglobal{geometryupdate} = 1;
-		}
-	);
-	$lglobal{$popupname}->Icon( -image => $icon );
-	if ( ($stayontop) and ( not $popupname eq "wfpop" ) ) {
-		$lglobal{$popupname}->transient($top);
-	}
-	if ( ($wfstayontop) and ( $popupname eq "wfpop" ) ) {
-		$lglobal{$popupname}->transient($top);
-	}
-}
-
 
 ## Save setting.rc file
 sub savesettings {
