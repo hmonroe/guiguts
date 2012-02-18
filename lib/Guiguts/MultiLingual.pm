@@ -863,12 +863,7 @@ sub includeprojectdict {
 
 #add all spelt foreign words to project dictionary
 sub addspeltforeignproject {
-print %main::projectdict;
-print "1\n";
 	&main::spellloadprojectdict();
-#print %main::projectdict;
-print "2\n";
-	
 	for my $key (sort (keys %distinctwords)){
 		if (($seenwordslang{$key}) && ($seenwordslang{$key} ne $main::multidicts[0])) {
 			$::projectdict{$key} = $seenwordslang{$key};

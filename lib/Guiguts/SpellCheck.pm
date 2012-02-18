@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
-	@EXPORT = qw(&spellcheckfirst &aspellstart &aspellstop &spellchecker &getprojectdic);
+	@EXPORT = qw(&spellcheckfirst &aspellstart &aspellstop &spellchecker &getprojectdic &spellloadprojectdict);
 }
 
 # Initialize spellchecker
@@ -16,7 +16,7 @@ sub spellcheckfirst {
 	my $top = $::top;
 	@{ $::lglobal{misspelledlist} } = ();
 	::viewpagenums() if ( $::lglobal{seepagenums} );
-	::spellloadprojectdict();
+	spellloadprojectdict();
 	$::lglobal{lastmatchindex} = '1.0';
 
 	# get list of misspelled words in selection (or file if nothing selected)
@@ -57,6 +57,24 @@ sub spellcheckfirst {
 		}
 	}
 	$::lglobal{nextmiss} = 0;
+}
+
+sub spellloadprojectdict {
+	getprojectdic();
+	if (-e $::lglobal{projectdictname}){
+		open( my $fh, "<:encoding(utf8)", $::lglobal{projectdictname});
+		while (my $line = <$fh>){
+			utf8::decode($line);
+			if ($line eq "%projectdict = (\n") { next; }
+			if ($line eq ");"){ next; }
+			$line =~ s/' => '',\n$//g;  # remove ending
+			$line =~ s/^'//g; # remove start
+			$line =~ s/\\'/'/g; # remove \'
+			$::projectdict{$line} = '';
+		}
+	}
+#	do "$::lglobal{projectdictname}"
+#	  if $::lglobal{projectdictname};    
 }
 
 sub spellchecknext {

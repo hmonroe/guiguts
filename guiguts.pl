@@ -621,25 +621,6 @@ sub readsettings {
 	}
 }
 
-# Do not move from guiguts.pl; do command must be run in main
-sub spellloadprojectdict {
-	getprojectdic();
-	if (-e $::lglobal{projectdictname}){
-		open( my $fh, "<:encoding(utf8)", $::lglobal{projectdictname});
-		while (my $line = <$fh>){
-			utf8::decode($line);
-			if ($line eq "%projectdict = (\n") { next; }
-			if ($line eq ");"){ next; }
-			$line =~ s/' => '',\n$//g;  # remove ending
-			$line =~ s/^'//g; # remove start
-			$line =~ s/\\'/'/g; # remove \'
-			$projectdict{$line} = '';
-		}
-	}
-#	do "$::lglobal{projectdictname}"
-#	  if $::lglobal{projectdictname};    
-}
-
 
 
 ### File Menu
