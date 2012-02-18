@@ -165,7 +165,7 @@ sub buildstatusbar {
 		'<1>',
 		sub {
 			$::lglobal{current_line_label}->configure( -relief => 'sunken' );
-			&main::gotoline();
+			gotoline();
 			&main::update_indicators();
 		}
 	);
@@ -340,7 +340,7 @@ sub update_img_button {
 			'<1>',
 			sub {
 				$::lglobal{img_num_label}->configure( -relief => 'sunken' );
-				&main::gotopage();
+				gotopage();
 				&main::update_indicators();
 			}
 		);
@@ -981,6 +981,128 @@ sub selection {
 	}
 	$::lglobal{selsentry}->selectionRange( 0, 'end' );
 	return
+}
+
+# Pop up a window which will allow jumping directly to a specified line
+sub gotoline {
+	my $textwindow = $main::textwindow;
+	my $top = $main::top;
+	unless ( defined( $::lglobal{gotolinepop} ) ) {
+		$::lglobal{gotolinepop} = $top->DialogBox(
+			-buttons => [qw[Ok Cancel]],
+			-title   => 'Go To Line Number',
+			-popover => $top,
+			-command => sub {
+
+				no warnings 'uninitialized';
+				if ( $_[0] eq 'Ok' ) {
+					$::lglobal{line_number} =~ s/[\D.]//g;
+					my ( $last_line, $junk ) =
+					  split( /\./, $textwindow->index('end') );
+					( $::lglobal{line_number}, $junk ) =
+					  split( /\./, $textwindow->index('insert') )
+					  unless $::lglobal{line_number};
+					$::lglobal{line_number} =~ s/^\s+|\s+$//g;
+					if ( $::lglobal{line_number} > $last_line ) {
+						$::lglobal{line_number} = $last_line;
+					}
+					$textwindow->markSet( 'insert', "$::lglobal{line_number}.0" );
+					$textwindow->see('insert');
+					update_indicators();
+					$::lglobal{gotolinepop}->destroy;
+					undef $::lglobal{gotolinepop};
+				} else {
+					$::lglobal{gotolinepop}->destroy;
+					undef $::lglobal{gotolinepop};
+				}
+			}
+		);
+		$::lglobal{gotolinepop}->Icon( -image => $::icon );
+		$::lglobal{gotolinepop}->resizable( 'no', 'no' );
+		my $frame = $::lglobal{gotolinepop}->Frame->pack( -fill => 'x' );
+		$frame->Label( -text => 'Enter Line number: ' )
+		  ->pack( -side => 'left' );
+		my $entry = $frame->Entry(
+								   -background   => $::bkgcolor,
+								   -width        => 25,
+								   -textvariable => \$::lglobal{line_number},
+		)->pack( -side => 'left', -fill => 'x' );
+		$::lglobal{gotolinepop}->Advertise( entry => $entry );
+		$::lglobal{gotolinepop}->Popup;
+		$::lglobal{gotolinepop}->Subwidget('entry')->focus;
+		$::lglobal{gotolinepop}->Subwidget('entry')->selectionRange( 0, 'end' );
+		$::lglobal{gotolinepop}->Wait;
+	}
+}
+
+# Pop up a window which will allow jumping directly to a specified page
+sub gotopage {
+	my $textwindow = $main::textwindow;
+	my $top = $main::top;
+	
+	unless ( defined( $::lglobal{gotopagpop} ) ) {
+		return unless %::pagenumbers;
+		for ( keys(%::pagenumbers) ) {
+			$::lglobal{pagedigits} = ( length($_) - 2 );
+			last;
+		}
+		$::lglobal{gotopagpop} = $top->DialogBox(
+			-buttons => [qw[Ok Cancel]],
+			-title   => 'Goto Page Number',
+			-popover => $top,
+			-command => sub {
+				if ( $_[0] eq 'Ok' ) {
+					unless ( $::lglobal{lastpage} ) {
+						$::lglobal{gotopagpop}->bell;
+						$::lglobal{gotopagpop}->destroy;
+						undef $::lglobal{gotopagpop};
+						return;
+					}
+					if ( $::lglobal{pagedigits} == 3 ) {
+						$::lglobal{lastpage} =
+						  sprintf( "%03s", $::lglobal{lastpage} );
+					} elsif ( $::lglobal{pagedigits} == 4 ) {
+						$::lglobal{lastpage} =
+						  sprintf( "%04s", $::lglobal{lastpage} );
+					}
+					unless ( exists $::pagenumbers{ 'Pg' . $::lglobal{lastpage} }
+						  && defined $::pagenumbers{ 'Pg' . $::lglobal{lastpage} } )
+					{
+						delete $::pagenumbers{ 'Pg' . $::lglobal{lastpage} };
+						$::lglobal{gotopagpop}->bell;
+						$::lglobal{gotopagpop}->destroy;
+						undef $::lglobal{gotopagpop};
+						return;
+					}
+					my $index = $textwindow->index( 'Pg' . $::lglobal{lastpage} );
+					$textwindow->markSet( 'insert', "$index +1l linestart" );
+					$textwindow->see('insert');
+					$textwindow->focus;
+					update_indicators();
+					$::lglobal{gotopagpop}->destroy;
+					undef $::lglobal{gotopagpop};
+				} else {
+					$::lglobal{gotopagpop}->destroy;
+					undef $::lglobal{gotopagpop};
+				}
+			}
+		);
+		$::lglobal{gotopagpop}->resizable( 'no', 'no' );
+		$::lglobal{gotopagpop}->Icon( -image => $::icon );
+		my $frame = $::lglobal{gotopagpop}->Frame->pack( -fill => 'x' );
+		$frame->Label( -text => 'Enter image number: ' )
+		  ->pack( -side => 'left' );
+		my $entry = $frame->Entry(
+								   -background   => $::bkgcolor,
+								   -width        => 25,
+								   -textvariable => \$::lglobal{lastpage}
+		)->pack( -side => 'left', -fill => 'x' );
+		$::lglobal{gotopagpop}->Advertise( entry => $entry );
+		$::lglobal{gotopagpop}->Popup;
+		$::lglobal{gotopagpop}->Subwidget('entry')->focus;
+		$::lglobal{gotopagpop}->Subwidget('entry')->selectionRange( 0, 'end' );
+		$::lglobal{gotopagpop}->Wait;
+	}
 }
 
 
