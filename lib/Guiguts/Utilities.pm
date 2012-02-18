@@ -9,7 +9,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&openpng &get_image_file &setviewerpath &setdefaultpath &arabic &roman
 	&textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_cmdline &win32_start &win32_is_exe
-	&win32_create_process &runner &debug_dump &run &escape_regexmetacharacters &deaccent)
+	&win32_create_process &runner &debug_dump &run &escape_regexmetacharacters &deaccent &BindMouseWheel)
 }
 
 sub get_image_file {
@@ -770,6 +770,33 @@ tr/ÀÁÂÃÄÅàáâãäåÇçÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖØòóôõöøÑñÙÚÛÜùúûüÝÿý/AAAAAAaaaaaaCcEEEEeee
 	return $phrase;
 }
 
+
+sub BindMouseWheel {
+	my ($w) = @_;
+	if ($::OS_WIN) {
+		$w->bind(
+			'<MouseWheel>' => [
+				sub {
+					$_[0]->yview( 'scroll', -( $_[1] / 120 ) * 3, 'units' );
+				},
+				::Ev('D')
+			]
+		);
+	} else {
+		$w->bind(
+			'<4>' => sub {
+				$_[0]->yview( 'scroll', -3, 'units' )
+				  unless $Tk::strictMotif;
+			}
+		);
+		$w->bind(
+			'<5>' => sub {
+				$_[0]->yview( 'scroll', +3, 'units' )
+				  unless $Tk::strictMotif;
+			}
+		);
+	}
+}
 
 
 1;

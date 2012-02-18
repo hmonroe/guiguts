@@ -501,33 +501,6 @@ sub loadscannos {
 }
 
 
-sub BindMouseWheel {
-	my ($w) = @_;
-	if ($OS_WIN) {
-		$w->bind(
-			'<MouseWheel>' => [
-				sub {
-					$_[0]->yview( 'scroll', -( $_[1] / 120 ) * 3, 'units' );
-				},
-				Ev('D')
-			]
-		);
-	} else {
-		$w->bind(
-			'<4>' => sub {
-				$_[0]->yview( 'scroll', -3, 'units' )
-				  unless $Tk::strictMotif;
-			}
-		);
-		$w->bind(
-			'<5>' => sub {
-				$_[0]->yview( 'scroll', +3, 'units' )
-				  unless $Tk::strictMotif;
-			}
-		);
-	}
-}
-
 sub working {
 	my $msg = shift;
 	if ( defined( $lglobal{workpop} ) && ( defined $msg ) ) {
