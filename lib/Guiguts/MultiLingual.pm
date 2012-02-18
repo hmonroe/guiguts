@@ -1,6 +1,5 @@
 package Guiguts::MultiLingual;
 
-
 use strict;
 use warnings;
 
@@ -491,6 +490,16 @@ sub saveLangDebugFiles {
 	print $save $section;
 	close $save;
 
+	print "saving projectdict.txt - internal project dictionary\n";	
+	$section = "\%projectdict\n";
+	open $save, '>:bytes', 'projectdict.txt';
+	for my $key (sort (keys %::projectdict)){
+		$section .= "$key => $::projectdict{$key}\n";
+	}
+	utf8::encode($section);
+	print $save $section;
+	close $save;
+
 }
 
 #update all counts
@@ -854,15 +863,20 @@ sub includeprojectdict {
 
 #add all spelt foreign words to project dictionary
 sub addspeltforeignproject {
+print %main::projectdict;
+print "1\n";
 	&main::spellloadprojectdict();
+#print %main::projectdict;
+print "2\n";
+	
 	for my $key (sort (keys %distinctwords)){
 		if (($seenwordslang{$key}) && ($seenwordslang{$key} ne $main::multidicts[0])) {
 			$::projectdict{$key} = $seenwordslang{$key};
 		}
 	};
 
-	if ($debug) { print %main::projectdict;
-	print "\n$::lglobal{projectdictname}\n";}
+#	if ($debug) { print %main::projectdict;
+#	print "\n$::lglobal{projectdictname}\n";}
 
 	my $section = "\%projectdict = (\n";
 	for my $key (sort keys %main::projectdict){
@@ -871,9 +885,6 @@ sub addspeltforeignproject {
 	};
 	$section .= ");";
 	utf8::encode($section);
-
-	if ($debug) { print $section; };
-
 	open my $save, '>:bytes', $::lglobal{projectdictname};
 	print $save $section;
 	close $save;

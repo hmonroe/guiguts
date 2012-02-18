@@ -258,8 +258,8 @@ sub spellmyaddword {
 	return unless $term;
 	getprojectdic();
 	$::projectdict{$term} = '';
-	open( my $dic, ">:bytes", "$::lglobal{projectdictname}" );
-	my $section = "\%::projectdict = (\n";
+	open( my $dic, '>:bytes', "$::lglobal{projectdictname}" );
+	my $section = "\%projectdict = (\n";
 	for my $term ( sort { $a cmp $b } keys %::projectdict ) {
 		$term =~ s/'/\\'/g;
 		$section .= "'$term' => '',\n";
