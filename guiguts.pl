@@ -155,7 +155,7 @@ our $globalaspellmode   = 'normal';
 
 our $globalbrowserstart = $ENV{BROWSER};
 if ( ! $globalbrowserstart ) { $globalbrowserstart = 'xdg-open'; }
-if ( $OS_WIN ) { $globalbrowserstart = 'start'; }
+if ( $::OS_WIN ) { $globalbrowserstart = 'start'; }
 if ( $OS_MAC ) { $globalbrowserstart = 'open'; }
 
 our $globalfirefoxstart = 'firefox';
@@ -366,7 +366,7 @@ our $textwindow = $text_frame->LineNumberText(
 	-relief          => 'sunken',
 	-font            => $lglobal{font},
 	-wrap            => 'none',
-	-curlinebg       => $activecolor,
+	-curlinebg       => $::activecolor,
   )->pack(
 		   -side   => 'bottom',
 		   -anchor => 'nw',
@@ -1596,189 +1596,6 @@ sub pageadjust {
 
 }
 
-## Page Number Adjust
-sub pnumadjust {
-	my $mark = $textwindow->index('current');
-	while ( $mark = $textwindow->markPrevious($mark) ) {
-		if ( $mark =~ /Pg(\S+)/ ) {
-			last;
-		}
-	}
-	if ( not defined $mark ) {
-		$mark = $textwindow->index('current');
-	}
-	if ( not defined $mark ) {
-		$mark = "1.0";
-	}
-	if ( not $mark =~ /Pg(\S+)/ ) {
-		while ( $mark = $textwindow->markNext($mark) ) {
-			if ( $mark =~ /Pg(\S+)/ ) {
-				last;
-			}
-		}
-
-	}
-	$textwindow->markSet( 'insert', $mark || '1.0' );
-	if ( $lglobal{pnumpop} ) {
-		$lglobal{pnumpop}->deiconify;
-		$lglobal{pnumpop}->raise;
-		$lglobal{pagenumentry}->configure( -text => $mark );
-	} else {
-		$lglobal{pnumpop} = $top->Toplevel;
-		initialize_popup_without_deletebinding('pnumpop');
-		$lglobal{pnumpop}->title('Adjust Page Markers');
-		my $frame2 = $lglobal{pnumpop}->Frame->pack( -pady => 5 );
-		my $upbutton =
-		  $frame2->Button(
-						   -activebackground => $activecolor,
-						   -command          => \&pmoveup,
-						   -text             => 'Move Up',
-						   -width            => 10
-		  )->grid( -row => 1, -column => 2 );
-		my $leftbutton =
-		  $frame2->Button(
-						   -activebackground => $activecolor,
-						   -command          => \&pmoveleft,
-						   -text             => 'Move Left',
-						   -width            => 10
-		  )->grid( -row => 2, -column => 1 );
-		$lglobal{pagenumentry} =
-		  $frame2->Entry(
-						  -background => 'yellow',
-						  -relief     => 'sunken',
-						  -text       => $mark,
-						  -width      => 10,
-						  -justify    => 'center',
-		  )->grid( -row => 2, -column => 2 );
-		my $rightbutton =
-		  $frame2->Button(
-						   -activebackground => $activecolor,
-						   -command          => \&pmoveright,
-						   -text             => 'Move Right',
-						   -width            => 10
-		  )->grid( -row => 2, -column => 3 );
-		my $downbutton =
-		  $frame2->Button(
-						   -activebackground => $activecolor,
-						   -command          => \&pmovedown,
-						   -text             => 'Move Down',
-						   -width            => 10
-		  )->grid( -row => 3, -column => 2 );
-		my $frame3 = $lglobal{pnumpop}->Frame->pack( -pady => 4 );
-		my $prevbutton =
-		  $frame3->Button(
-						   -activebackground => $activecolor,
-						   -command          => \&pgprevious,
-						   -text             => 'Previous Marker',
-						   -width            => 14
-		  )->grid( -row => 1, -column => 1 );
-		my $nextbutton =
-		  $frame3->Button(
-						   -activebackground => $activecolor,
-						   -command          => \&pgnext,
-						   -text             => 'Next Marker',
-						   -width            => 14
-		  )->grid( -row => 1, -column => 2 );
-		my $frame4 = $lglobal{pnumpop}->Frame->pack( -pady => 5 );
-		$frame4->Label( -text => 'Adjust Page Offset', )
-		  ->grid( -row => 1, -column => 1 );
-		$lglobal{pagerenumoffset} =
-		  $frame4->Spinbox(
-							-textvariable => 0,
-							-from         => -999,
-							-to           => 999,
-							-increment    => 1,
-							-width        => 6,
-		  )->grid( -row => 2, -column => 1 );
-		$frame4->Button(
-						 -activebackground => $activecolor,
-						 -command          => \&pgrenum,
-						 -text             => 'Renumber',
-						 -width            => 12
-		)->grid( -row => 3, -column => 1, -pady => 3 );
-		my $frame5 = $lglobal{pnumpop}->Frame->pack( -pady => 5 );
-		$frame5->Button(
-						 -activebackground => $activecolor,
-						 -command => sub { $textwindow->bell unless pageadd() },
-						 -text    => 'Add',
-						 -width   => 8
-		)->grid( -row => 1, -column => 1 );
-		$frame5->Button(
-			-activebackground => $activecolor,
-			-command          => sub {
-				my $insert = $textwindow->index('insert');
-				unless ( pageadd() ) {
-					;
-					$lglobal{pagerenumoffset}
-					  ->configure( -textvariable => '1' );
-					$textwindow->markSet( 'insert', $insert );
-					pgrenum();
-					$textwindow->markSet( 'insert', $insert );
-					pageadd();
-				}
-				$textwindow->markSet( 'insert', $insert );
-			},
-			-text  => 'Insert',
-			-width => 8
-		)->grid( -row => 1, -column => 2 );
-		$frame5->Button(
-						 -activebackground => $activecolor,
-						 -command          => \&pageremove,
-						 -text             => 'Remove',
-						 -width            => 8
-		)->grid( -row => 1, -column => 3 );
-		my $frame6 = $lglobal{pnumpop}->Frame->pack( -pady => 5 );
-		$frame6->Button(
-			-activebackground => $activecolor,
-			-command          => sub {
-				viewpagenums();
-				$textwindow->addGlobStart;
-				my @marks = $textwindow->markNames;
-				for ( sort @marks ) {
-					if ( $_ =~ /Pg(\S+)/ ) {
-						my $pagenum = '[Pg ' . $1 . ']';
-						$textwindow->insert( $_, $pagenum );
-					}
-				}
-				$textwindow->addGlobEnd;
-			},
-			-text  => 'Insert Page Markers',
-			-width => 20,
-		)->grid( -row => 1, -column => 1 );
-
-		$lglobal{pnumpop}->bind( $lglobal{pnumpop}, '<Up>'    => \&pmoveup );
-		$lglobal{pnumpop}->bind( $lglobal{pnumpop}, '<Left>'  => \&pmoveleft );
-		$lglobal{pnumpop}->bind( $lglobal{pnumpop}, '<Right>' => \&pmoveright );
-		$lglobal{pnumpop}->bind( $lglobal{pnumpop}, '<Down>'  => \&pmovedown );
-		$lglobal{pnumpop}->bind( $lglobal{pnumpop}, '<Prior>' => \&pgprevious );
-		$lglobal{pnumpop}->bind( $lglobal{pnumpop}, '<Next>'  => \&pgnext );
-		$lglobal{pnumpop}
-		  ->bind( $lglobal{pnumpop}, '<Delete>' => \&pageremove );
-		$lglobal{pnumpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-
-				#$geometryhash{pnumpop} = $lglobal{pnumpop}->geometry;
-				$lglobal{pnumpop}->destroy;
-				undef $lglobal{pnumpop};
-				viewpagenums() if ( $lglobal{seepagenums} );
-			}
-		);
-		if ($OS_WIN) {
-			$lglobal{pagerenumoffset}->bind(
-				$lglobal{pagerenumoffset},
-				'<MouseWheel>' => [
-					sub {
-						( $_[1] > 0 )
-						  ? $lglobal{pagerenumoffset}->invoke('buttonup')
-						  : $lglobal{pagerenumoffset}->invoke('buttondown');
-					},
-					Ev('D')
-				]
-			);
-		}
-	}
-}
-
 sub initialize_popup_with_deletebinding {
 	my $popupname = shift;
 	initialize_popup_without_deletebinding($popupname);
@@ -2233,7 +2050,7 @@ sub readsettings {
 }
 
 sub os_normal {
-	$_[0] =~ s|/|\\|g if $OS_WIN && $_[0];
+	$_[0] =~ s|/|\\|g if $::OS_WIN && $_[0];
 	return $_[0];
 }
 
@@ -2250,7 +2067,7 @@ sub utflabel_bind {
 	$widget->bind(
 		'<Enter>',
 		sub {
-			$widget->configure( -background => $activecolor );
+			$widget->configure( -background => $::activecolor );
 		}
 	);
 	$widget->bind( '<Leave>',
@@ -2268,7 +2085,7 @@ sub utfchar_bind {
 	$widget->bind(
 		'<Enter>',
 		sub {
-			$widget->configure( -background => $activecolor );
+			$widget->configure( -background => $::activecolor );
 		}
 	);
 	$widget->bind( '<Leave>',
@@ -2311,7 +2128,7 @@ sub drag {
 	$corner_label->bind(
 		'<Enter>',
 		sub {
-			if ($OS_WIN) {
+			if ($::OS_WIN) {
 				$corner->configure( -cursor => 'size_nw_se' );
 			} else {
 				$corner->configure( -cursor => 'sizing' );
@@ -2530,7 +2347,7 @@ sub spellcheckfirst {
 sub getprojectdic {
 	return unless $lglobal{global_filename};
 	my $fname = $lglobal{global_filename};
-	$fname = Win32::GetLongPathName($fname) if $OS_WIN;
+	$fname = Win32::GetLongPathName($fname) if $::OS_WIN;
 	return unless $fname;
 	$lglobal{projectdictname} = $fname;
 	$lglobal{projectdictname} =~ s/\.[^\.]*?$/\.dic/;
@@ -2780,7 +2597,7 @@ sub aspellstop {
 		close IN;
 		close OUT;
 		kill 9, $lglobal{spellpid}
-		  if $OS_WIN
+		  if $::OS_WIN
 		;    # Brute force kill the aspell process... seems to be necessary
 		     # under windows
 		waitpid( $lglobal{spellpid}, 0 );
@@ -3150,7 +2967,7 @@ sub searchpopup {
 		  );
 
 		$sf11->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				$textwindow->undo;
 				$textwindow->tagRemove( 'highlight', '1.0', 'end' );
@@ -3159,7 +2976,7 @@ sub searchpopup {
 			-width => 6
 		)->pack( -side => 'right', -anchor => 'w' );
 		$lglobal{searchbutton} = $sf11->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				add_search_history(
 								   $lglobal{searchentry}->get( '1.0', '1.end' ),
@@ -3188,7 +3005,7 @@ sub searchpopup {
 		  );
 
 		$sf11->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				search_history( $lglobal{searchentry}, \@search_history );
 			},
@@ -3302,7 +3119,7 @@ sub searchpopup {
 		  );
 
 		$sf12->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				my $temp = $lglobal{replaceentry}->get( '1.0', '1.end' );
 				replaceall( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
@@ -3317,7 +3134,7 @@ sub searchpopup {
 		  );
 
 		$sf12->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
 				add_search_history(
@@ -3334,7 +3151,7 @@ sub searchpopup {
 				   -anchor => 'nw'
 		  );
 		$sf12->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry}->get( '1.0', '1.end' ) );
 				add_search_history(
@@ -3363,7 +3180,7 @@ sub searchpopup {
 				   -fill   => 'x'
 		  );
 		$sf12->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				search_history( $lglobal{replaceentry}, \@replace_history );
 			},
@@ -3374,7 +3191,7 @@ sub searchpopup {
 		$sf13 = $lglobal{searchpop}->Frame;
 
 		$sf13->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				replaceall( $lglobal{replaceentry1}->get( '1.0', '1.end' ) );
 			},
@@ -3388,7 +3205,7 @@ sub searchpopup {
 		  );
 
 		$sf13->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry1}->get( '1.0', '1.end' ) );
 				searchtext($textwindow,$top,'');
@@ -3402,7 +3219,7 @@ sub searchpopup {
 				   -anchor => 'nw'
 		  );
 		$sf13->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry1}->get( '1.0', '1.end' ) );
 				add_search_history(
@@ -3431,7 +3248,7 @@ sub searchpopup {
 				   -fill   => 'x'
 		  );
 		$sf13->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				search_history( $lglobal{replaceentry1}, \@replace_history );
 			},
@@ -3442,7 +3259,7 @@ sub searchpopup {
 		$sf14 = $lglobal{searchpop}->Frame;
 
 		$sf14->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				replaceall( $lglobal{replaceentry2}->get( '1.0', '1.end' ) );
 			},
@@ -3456,7 +3273,7 @@ sub searchpopup {
 		  );
 
 		$sf14->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry2}->get( '1.0', '1.end' ) );
 				searchtext($textwindow,$top,'');
@@ -3470,7 +3287,7 @@ sub searchpopup {
 				   -anchor => 'nw'
 		  );
 		$sf14->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				replace( $lglobal{replaceentry2}->get( '1.0', '1.end' ) );
 				add_search_history(
@@ -3499,7 +3316,7 @@ sub searchpopup {
 				   -fill   => 'x'
 		  );
 		$sf14->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				search_history( $lglobal{replaceentry2}, \@replace_history );
 			},
@@ -3524,7 +3341,7 @@ sub searchpopup {
 			  $lglobal{searchpop}
 			  ->Frame->pack( -side => 'top', -anchor => 'n' );
 			my $nextbutton = $sf5->Button(
-				-activebackground => $activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
 					$lglobal{scannosindex}++
 					  unless ( $lglobal{scannosindex} >=
@@ -3540,7 +3357,7 @@ sub searchpopup {
 					   -anchor => 'w'
 			  );
 			my $nextoccurrencebutton = $sf5->Button(
-				-activebackground => $activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
 					searchtext($textwindow,$top,'');
 				},
@@ -3553,7 +3370,7 @@ sub searchpopup {
 					   -anchor => 'w'
 			  );
 			my $lastbutton = $sf5->Button(
-				-activebackground => $activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
 					$aacheck->deselect;
 					$lglobal{scannosindex}--
@@ -3570,7 +3387,7 @@ sub searchpopup {
 			  );
 			my $switchbutton =
 			  $sf5->Button(
-							-activebackground => $activecolor,
+							-activebackground => $::activecolor,
 							-command          => sub { swapterms() },
 							-text             => 'Swap Terms',
 							-width            => 15
@@ -3582,7 +3399,7 @@ sub searchpopup {
 			  );
 			my $hintbutton =
 			  $sf5->Button(
-							-activebackground => $activecolor,
+							-activebackground => $::activecolor,
 							-command          => sub { reghint() },
 							-text             => 'Hint',
 							-width            => 5
@@ -3594,7 +3411,7 @@ sub searchpopup {
 			  );
 			my $editbutton =
 			  $sf5->Button(
-							-activebackground => $activecolor,
+							-activebackground => $::activecolor,
 							-command          => sub { regedit() },
 							-text             => 'Edit',
 							-width            => 5
@@ -3830,7 +3647,7 @@ sub spellchecker {    # Set up spell check window
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
 		my $changebutton =
 		  $spf2->Button(
-						 -activebackground => $activecolor,
+						 -activebackground => $::activecolor,
 						 -command          => sub { spellreplace() },
 						 -text             => 'Change',
 						 -width            => 14
@@ -3841,7 +3658,7 @@ sub spellchecker {    # Set up spell check window
 				   -anchor => 'nw'
 		  );
 		my $ignorebutton = $spf2->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				shift @{ $lglobal{misspelledlist} };
 				spellchecknext();
@@ -3856,7 +3673,7 @@ sub spellchecker {    # Set up spell check window
 		  );
 		my $spelloptionsbutton =
 		  $spf2->Button(
-						 -activebackground => $activecolor,
+						 -activebackground => $::activecolor,
 						 -command          => sub { spelloptions() },
 						 -text             => 'Options',
 						 -width            => 14
@@ -3867,7 +3684,7 @@ sub spellchecker {    # Set up spell check window
 				   -anchor => 'nw'
 		  );
 		$spf2->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				$spellindexbkmrk =
 				  $textwindow->index( $lglobal{lastmatchindex} . '-1c' )
@@ -3888,7 +3705,7 @@ sub spellchecker {    # Set up spell check window
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
 		my $replaceallbutton =
 		  $spf3->Button(
-						-activebackground => $activecolor,
+						-activebackground => $::activecolor,
 						-command => sub { spellreplaceall(); spellchecknext() },
 						-text    => 'Change All',
 						-width   => 14,
@@ -3900,7 +3717,7 @@ sub spellchecker {    # Set up spell check window
 		  );
 		my $ignoreallbutton =
 		  $spf3->Button(
-						 -activebackground => $activecolor,
+						 -activebackground => $::activecolor,
 						 -command => sub { spellignoreall(); spellchecknext() },
 						 -text    => 'Skip All <Ctrl+i>',
 						 -width   => 14
@@ -3911,7 +3728,7 @@ sub spellchecker {    # Set up spell check window
 				   -anchor => 'nw'
 		  );
 		my $closebutton = $spf3->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				@{ $lglobal{misspelledlist} } = ();
 				$lglobal{spellpopup}->destroy;
@@ -3930,7 +3747,7 @@ sub spellchecker {    # Set up spell check window
 				   -anchor => 'nw'
 		  );
 		$spf3->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				return unless $spellindexbkmrk;
 				$textwindow->tagRemove( 'sel',       '1.0', 'end' );
@@ -3952,7 +3769,7 @@ sub spellchecker {    # Set up spell check window
 		  $lglobal{spellpopup}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
 		my $dictmybutton = $spf4->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				spelladdgoodwords();
 			},
@@ -3966,7 +3783,7 @@ sub spellchecker {    # Set up spell check window
 		  );
 		my $showimagebutton;
 		$showimagebutton = $spf4->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				$auto_show_images = 1 - $auto_show_images;
 				if ($auto_show_images) {
@@ -3987,7 +3804,7 @@ sub spellchecker {    # Set up spell check window
 		  $lglobal{spellpopup}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
 		my $dictaddbutton = $spf5->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				spelladdword();
 				spellignoreall();
@@ -4002,7 +3819,7 @@ sub spellchecker {    # Set up spell check window
 				   -anchor => 'nw'
 		  );
 		my $dictmyaddbutton = $spf5->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				spellmyaddword( $lglobal{misspelledentry}->get );
 				spellignoreall();
@@ -4413,13 +4230,13 @@ sub orphanedbrackets {
 		my $frame2 = $lglobal{brkpop}->Frame->pack;
 		my $brsearchbt =
 		  $frame2->Button(
-						   -activebackground => $activecolor,
+						   -activebackground => $::activecolor,
 						   -text             => 'Search',
 						   -command          => \&brsearch,
 						   -width            => 10,
 		  )->grid( -row => 1, -column => 2, -pady => 5 );
 		my $brnextbt = $frame2->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-text             => 'Next',
 			-command          => sub {
 				shift @{ $lglobal{brbrackets} }
@@ -4623,7 +4440,7 @@ sub hilitepopup {
 		my $f3 =
 		  $lglobal{hilitepop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f3->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 
 				if ( $textwindow->markExists('selstart') ) {
@@ -4635,19 +4452,19 @@ sub hilitepopup {
 		)->grid( -row => 1, -column => 1, -padx => 2, -pady => 2 );
 
 		$f3->Button(
-				 -activebackground => $activecolor,
+				 -activebackground => $::activecolor,
 				 -command => sub { $textwindow->tagAdd( 'sel', '1.0', 'end' ) },
 				 -text    => 'Select Whole File',
 				 -width   => 16,
 		)->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
 		$f3->Button(
-					 -activebackground => $activecolor,
+					 -activebackground => $::activecolor,
 					 -command          => sub { hilite( $entry->get ) },
 					 -text             => 'Apply Highlights',
 					 -width            => 16,
 		)->grid( -row => 2, -column => 1, -padx => 2, -pady => 2 );
 		$f3->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				$textwindow->tagRemove( 'quotemark', '1.0', 'end' );
 			},
@@ -4775,7 +4592,7 @@ sub asciipopup {
 							-text        => 'Don\'t Rewrap'
 		  )->grid( -row => 3, -column => 2, -padx => 1, -pady => 2 );
 		my $gobut = $f1->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				asciibox(
 						  $textwindow,          $lglobal{asciiwrap},
@@ -4818,7 +4635,7 @@ sub alignpopup {
 					-textvariable => \$lglobal{alignstring},
 		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
 		my $gobut = $f1->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => [
 				sub {
 					aligntext( $textwindow, $lglobal{alignstring} );
@@ -5003,7 +4820,7 @@ sub jeebiespop_up {
 			)->pack( -side => 'left', -padx => 2 );
 		}
 		$ptopframe->Button(
-						  -activebackground => $activecolor,
+						  -activebackground => $::activecolor,
 						  -command => sub { jeebiesrun( $lglobal{jelistbox} ) },
 						  -text    => 'Re-run Jeebies',
 						  -width   => 16
@@ -5392,7 +5209,7 @@ sub tablefx {
 			$row = int( $inc / 4 );
 			$col = $inc % 4;
 			$f0->Button(
-						 -activebackground => $activecolor,
+						 -activebackground => $::activecolor,
 						 -command          => $tb_buttons{$_},
 						 -text             => $_,
 						 -width            => 16
@@ -5449,13 +5266,13 @@ sub tablefx {
 					  -width => 8,
 		  )->grid( -row => 1, -column => 5, -padx => 1, -pady => 2 );
 		$f1->Button(
-					 -activebackground => $activecolor,
+					 -activebackground => $::activecolor,
 					 -command          => sub { coladjust(-1) },
 					 -text             => 'Move Left',
 					 -width            => 10
 		)->grid( -row => 1, -column => 6, -padx => 1, -pady => 2 );
 		$f1->Button(
-					 -activebackground => $activecolor,
+					 -activebackground => $::activecolor,
 					 -command          => sub { coladjust(1) },
 					 -text             => 'Move Right',
 					 -width            => 10
@@ -5470,7 +5287,7 @@ sub tablefx {
 					-textvariable => \$lglobal{stepmaxwidth},
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
 		$f3->Button(
-					 -activebackground => $activecolor,
+					 -activebackground => $::activecolor,
 					 -command          => sub { grid2step() },
 					 -text             => 'Convert Grid to Step',
 					 -width            => 16
@@ -5478,7 +5295,7 @@ sub tablefx {
 		my $f4 =
 		  $lglobal{tblfxpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f4->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				$textwindow->undo;
 				$textwindow->tagRemove( 'highlight', '1.0', 'end' );
@@ -5487,13 +5304,13 @@ sub tablefx {
 			-width => 10
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
 		$f4->Button(
-					 -activebackground => $activecolor,
+					 -activebackground => $::activecolor,
 					 -command          => sub { $textwindow->redo },
 					 -text             => 'Redo',
 					 -width            => 10
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
 		$f4->Button(
-					 -activebackground => $activecolor,
+					 -activebackground => $::activecolor,
 					 -command          => sub { step2grid() },
 					 -text             => 'Convert Step to Grid',
 					 -width            => 16
@@ -5650,7 +5467,7 @@ sub externalpopup {    # Set up the external commands menu
 		}
 		my $f2 = $lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $gobut = $f2->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				savesettings();
 				menurebuild();
@@ -5816,7 +5633,7 @@ sub fontsize {
 		$fontlist->insert( 'end', sort( $textwindow->fontFamilies ) );
 		my $mframe = $lglobal{fspop}->Frame->pack;
 		my $smallerbutton = $mframe->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				$fontsize++;
 				fontinit();
@@ -5830,7 +5647,7 @@ sub fontsize {
 		  $mframe->Label( -text => $fontsize )
 		  ->grid( -row => 1, -column => 2, -pady => 5 );
 		my $biggerbutton = $mframe->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				$fontsize--;
 				fontinit();
@@ -5844,7 +5661,7 @@ sub fontsize {
 			-variable    => \$fontweight,
 			-onvalue     => 'bold',
 			-offvalue    => '',
-			-selectcolor => $activecolor,
+			-selectcolor => $::activecolor,
 			-command     => sub {
 				fontinit();
 				$textwindow->configure( -font => $lglobal{font} );
@@ -5852,7 +5669,7 @@ sub fontsize {
 			-text => 'Bold'
 		)->grid( -row => 2, -column => 2, -pady => 5 );
 		my $button_ok = $mframe->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-text             => 'OK',
 			-command          => sub {
 				$lglobal{fspop}->destroy;
@@ -5881,7 +5698,7 @@ sub setbrowser {
 						 -textvariable => $globalbrowserstart,
 	  )->grid( -row => 1, -column => 1, -columnspan => 2, -pady => 3 );
 	my $button_ok = $browsepop->Button(
-		-activebackground => $activecolor,
+		-activebackground => $::activecolor,
 		-text             => 'OK',
 		-width            => 6,
 		-command          => sub {
@@ -5892,7 +5709,7 @@ sub setbrowser {
 		}
 	)->grid( -row => 2, -column => 1, -pady => 8 );
 	my $button_cancel = $browsepop->Button(
-		-activebackground => $activecolor,
+		-activebackground => $::activecolor,
 		-text             => 'Cancel',
 		-width            => 6,
 		-command          => sub {
@@ -6353,7 +6170,7 @@ sub showversion {
 	$os =~ s/^([^\[]+)\[.+/$1/;
 	my $perl = sprintf( "Perl v%vd", $^V );
 	my $winver;
-	if ($OS_WIN) {
+	if ($::OS_WIN) {
 		$winver = qx{ver};
 		$winver =~ s{\n}{}smg;
 	} else {
@@ -6692,7 +6509,7 @@ PAGE SEPARATOR POPUP
 '?' -- View hotkey help popup.
 EOF
 		my $button_ok = $frame->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-text             => 'OK',
 			-command          => sub {
 				$lglobal{hotpop}->destroy;
@@ -6864,7 +6681,7 @@ sub greekpopup {
 			)->grid( -row => 1, -column => 4 );
 		}
 		$tframe->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				my $spot = $lglobal{grtext}->index('insert');
 				$lglobal{grtext}->insert( 'insert', ' ' );
@@ -6875,12 +6692,12 @@ sub greekpopup {
 			-text => 'Space',
 		)->grid( -row => 1, -column => 5 );
 		$tframe->Button(
-						 -activebackground => $activecolor,
+						 -activebackground => $::activecolor,
 						 -command          => \&movegreek,
 						 -text             => 'Transfer',
 		)->grid( -row => 1, -column => 6 );
 		$tframe->Button(
-						-activebackground => $activecolor,
+						-activebackground => $::activecolor,
 						-command => sub { movegreek(); findandextractgreek(); },
 						-text    => 'Transfer and get next',
 		)->grid( -row => 1, -column => 7 );
@@ -6893,7 +6710,7 @@ sub greekpopup {
 											-pady   => 3
 			  );
 			$tframe2->Button(
-				-activebackground => $activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
 					my @ranges      = $lglobal{grtext}->tagRanges('sel');
 					my $range_total = @ranges;
@@ -6913,7 +6730,7 @@ sub greekpopup {
 				-text => 'ASCII->Greek',
 			)->grid( -row => 1, -column => 1, -padx => 2 );
 			$tframe2->Button(
-				-activebackground => $activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
 					my @ranges      = $lglobal{grtext}->tagRanges('sel');
 					my $range_total = @ranges;
@@ -6933,7 +6750,7 @@ sub greekpopup {
 				-text => 'Greek->ASCII',
 			)->grid( -row => 1, -column => 2, -padx => 2 );
 			$tframe2->Button(
-				-activebackground => $activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
 					my @ranges      = $lglobal{grtext}->tagRanges('sel');
 					my $range_total = @ranges;
@@ -6954,7 +6771,7 @@ sub greekpopup {
 				-text => 'Beta code->Unicode',
 			)->grid( -row => 1, -column => 3, -padx => 2 );
 			$tframe2->Button(
-				-activebackground => $activecolor,
+				-activebackground => $::activecolor,
 				-command          => sub {
 					my @ranges      = $lglobal{grtext}->tagRanges('sel');
 					my $range_total = @ranges;
@@ -6990,7 +6807,7 @@ sub greekpopup {
 			$row++;
 			$lglobal{buttons}->{ ${$column}[1] } =
 			  $frame->Button(
-				   -activebackground => $activecolor,
+				   -activebackground => $::activecolor,
 				   -image            => $lglobal{images}->{ ${$column}[1] },
 				   -relief           => 'flat',
 				   -borderwidth      => 0,
@@ -7001,7 +6818,7 @@ sub greekpopup {
 			$row++;
 			$lglobal{buttons}->{ ${$column}[2] } =
 			  $frame->Button(
-				   -activebackground => $activecolor,
+				   -activebackground => $::activecolor,
 				   -image            => $lglobal{images}->{ ${$column}[2] },
 				   -relief           => 'flat',
 				   -borderwidth      => 0,
@@ -7013,7 +6830,7 @@ sub greekpopup {
 			next unless ( ${$column}[3] );
 			$lglobal{buttons}->{ ${$column}[3] } =
 			  $frame->Button(
-				   -activebackground => $activecolor,
+				   -activebackground => $::activecolor,
 				   -image            => $lglobal{images}->{ ${$column}[3] },
 				   -relief           => 'flat',
 				   -borderwidth      => 0,
@@ -7025,7 +6842,7 @@ sub greekpopup {
 			next unless ( ${$column}[4] );
 			$lglobal{buttons}->{ ${$column}[4] } =
 			  $frame->Button(
-				   -activebackground => $activecolor,
+				   -activebackground => $::activecolor,
 				   -image            => $lglobal{images}->{ ${$column}[4] },
 				   -relief           => 'flat',
 				   -borderwidth      => 0,
@@ -7041,7 +6858,7 @@ sub greekpopup {
 		)->grid( -row => 4, -column => 16, -padx => 2 );
 		$lglobal{buttons}->{'oulig'} =
 		  $frame->Button(
-						  -activebackground => $activecolor,
+						  -activebackground => $::activecolor,
 						  -image            => $lglobal{images}->{'oulig'},
 						  -relief           => 'flat',
 						  -borderwidth      => 0,
@@ -7277,7 +7094,7 @@ sub greekpopup {
 			);
 			for (qw!( ) / \ | ~ + = _!) {
 				$bframe2->Button(
-								  -activebackground => $activecolor,
+								  -activebackground => $::activecolor,
 								  -text             => $_,
 								  -font             => $lglobal{utffont},
 								  -borderwidth      => 0,
@@ -7315,7 +7132,7 @@ sub regexref {
 		$lglobal{regexrefpop}->title('Regex Quick Reference');
 		initialize_popup_with_deletebinding('regexrefpop');
 		my $button_ok = $lglobal{regexrefpop}->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-text             => 'Close',
 			-command          => sub {
 				$lglobal{regexrefpop}->destroy;
@@ -7486,7 +7303,7 @@ sub uchar {
 		)->grid( -row => 1, -column => 1, -padx => 8, -pady => 2 );
 		$fontlist->insert( 'end', sort( $textwindow->fontFamilies ) );
 		my $bigger = $cframe->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-text             => 'Bigger',
 			-command          => sub {
 				$utffontsize++;
@@ -7501,7 +7318,7 @@ sub uchar {
 		  $cframe->Label( -text => $utffontsize )
 		  ->grid( -row => 1, -column => 3, -padx => 2, -pady => 2 );
 		my $smaller = $cframe->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-text             => 'Smaller',
 			-command          => sub {
 				$utffontsize--;

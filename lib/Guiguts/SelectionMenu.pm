@@ -579,7 +579,7 @@ sub case {
 }
 
 sub surround {
-	my ($textwindow,$surpop,$top,$font,$activecolor,$icon) = @_;
+	my ($textwindow,$surpop,$top,$font,$	activecolor,$icon) = @_;
 	if ( defined( $surpop ) ) {
 		$surpop->deiconify;
 		$surpop->raise;
@@ -609,7 +609,7 @@ sub surround {
 		my $f2 =
 		  $surpop->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $gobut = $f2->Button(
-			-activebackground => $activecolor,
+			-activebackground => $::activecolor,
 			-command          => sub {
 				surroundit( $surstrt->get, $surend->get ,$textwindow);
 			},
@@ -686,7 +686,7 @@ sub flood {
 		my $f2 =
 		  $floodpop->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $gobut = $f2->Button(
-								 -activebackground => $activecolor,
+								 -activebackground => $::activecolor,
 								 -command          => sub { floodfill($textwindow,$ffchar) },
 								 -text             => 'Flood Fill',
 								 -width            => 16
