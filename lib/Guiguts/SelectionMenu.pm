@@ -8,7 +8,7 @@ BEGIN {
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&case &surround &surroundit &flood &indent &asciibox &aligntext 
-	&selectrewrap &wrapper)
+	&selectrewrap &wrapper &alignpopup)
 }
 
 sub wrapper {
@@ -450,6 +450,7 @@ sub aligntext {
 			$indexpos[$linenum] = $c;
 		}
 		for my $linenum ( $sr .. $er ) {
+			$indexpos[$linenum] = 0 unless defined $indexpos[$linenum]; 
 			if ( $indexpos[$linenum] > (-1) ) {
 				$textwindow->insert(
 									 "$linenum.0",
@@ -875,6 +876,44 @@ sub indent {
 		}
 	}
 }
+
+sub alignpopup {
+	my $textwindow= $::textwindow;
+	my $top = $::top;
+	if ( defined( $::lglobal{alignpop} ) ) {
+		$::lglobal{alignpop}->deiconify;
+		$::lglobal{alignpop}->raise;
+		$::lglobal{alignpop}->focus;
+	} else {
+		$::lglobal{alignpop} = $top->Toplevel;
+		::initialize_popup_with_deletebinding('alignpop');
+		$::lglobal{alignpop}->title('Align text');
+		my $f =
+		  $::lglobal{alignpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f->Label( -text => 'String to align on (first occurence)', )
+		  ->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
+		my $f1 =
+		  $::lglobal{alignpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f1->Entry(
+					-width        => 8,
+					-background   => $::bkgcolor,
+					-font         => $::lglobal{font},
+					-relief       => 'sunken',
+					-textvariable => \$::lglobal{alignstring},
+		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
+		my $gobut = $f1->Button(
+			-activebackground => $::activecolor,
+			-command          => [
+				sub {
+					aligntext( $textwindow, $::lglobal{alignstring} );
+				  }
+			],
+			-text  => 'Align selected text',
+			-width => 16
+		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
+	}
+}
+
 
 
 1;

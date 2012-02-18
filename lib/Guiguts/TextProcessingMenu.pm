@@ -8,7 +8,8 @@ BEGIN {
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&text_convert_italic &text_convert_bold &text_thought_break &text_convert_tb 
-	&text_convert_options &fixpopup &text_convert_smallcaps &text_remove_smallcaps_markup)
+	&text_convert_options &fixpopup &text_convert_smallcaps &text_remove_smallcaps_markup
+	&endofline &cleanup)
 }
 
 sub text_convert_italic {
@@ -300,6 +301,43 @@ sub text_remove_smallcaps_markup {
 	$::lglobal{searchentry}->insert( 'end', "<sc>(\\n?[^<]+)</sc>" );
 	$::lglobal{replaceentry}->delete( '1.0', 'end' );
 	$::lglobal{replaceentry}->insert( 'end', "\$1" );
+}
+
+## End of Line Cleanup
+sub endofline {
+	my $textwindow= $::textwindow;
+	push @::operations, ( localtime() . ' - End-of-line Spaces' );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
+	::oppopupdate()  if $::lglobal{oppop};
+	my $start  = '1.0';
+	my $end    = $textwindow->index('end');
+	my @ranges = $textwindow->tagRanges('sel');
+	if (@ranges) {
+		$start = $ranges[0];
+		$end   = $ranges[-1];
+	}
+	$::operationinterrupt = 0;
+	$textwindow->FindAndReplaceAll( '-regex', '-nocase', '\s+$', '' );
+	::update_indicators();
+}
+
+## Clean Up Rewrap
+sub cleanup {
+	my $textwindow= $::textwindow;
+	my $top = $::top;
+	$top->Busy( -recurse => 1 );
+	$::searchstartindex = '1.0';
+	::viewpagenums() if ( $::lglobal{seepagenums} );
+	while (1) {
+		$::searchstartindex =
+		  $textwindow->search( '-regexp', '--',
+							   '^\/[\*\$#pPfFLlXx]|^[Pp\*\$#fFLlXx]\/',
+							   $::searchstartindex, 'end' );
+		last unless $::searchstartindex;
+		$textwindow->delete( "$::searchstartindex -1c",
+							 "$::searchstartindex lineend" );
+	}
+	$top->Unbusy( -recurse => 1 );
 }
 
 

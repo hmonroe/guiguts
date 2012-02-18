@@ -847,58 +847,6 @@ sub asciipopup {
 	}
 }
 
-sub alignpopup {
-	if ( defined( $lglobal{alignpop} ) ) {
-		$lglobal{alignpop}->deiconify;
-		$lglobal{alignpop}->raise;
-		$lglobal{alignpop}->focus;
-	} else {
-		$lglobal{alignpop} = $top->Toplevel;
-		initialize_popup_with_deletebinding('alignpop');
-		$lglobal{alignpop}->title('Align text');
-		my $f =
-		  $lglobal{alignpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-		$f->Label( -text => 'String to align on (first occurence)', )
-		  ->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
-		my $f1 =
-		  $lglobal{alignpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-		$f1->Entry(
-					-width        => 8,
-					-background   => $bkgcolor,
-					-font         => $lglobal{font},
-					-relief       => 'sunken',
-					-textvariable => \$lglobal{alignstring},
-		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
-		my $gobut = $f1->Button(
-			-activebackground => $::activecolor,
-			-command          => [
-				sub {
-					aligntext( $textwindow, $lglobal{alignstring} );
-				  }
-			],
-			-text  => 'Align selected text',
-			-width => 16
-		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
-	}
-}
-
-## End of Line Cleanup
-sub endofline {
-	push @operations, ( localtime() . ' - End-of-line Spaces' );
-	viewpagenums() if ( $lglobal{seepagenums} );
-	oppopupdate()  if $lglobal{oppop};
-	my $start  = '1.0';
-	my $end    = $textwindow->index('end');
-	my @ranges = $textwindow->tagRanges('sel');
-	if (@ranges) {
-		$start = $ranges[0];
-		$end   = $ranges[-1];
-	}
-	$operationinterrupt = 0;
-	$textwindow->FindAndReplaceAll( '-regex', '-nocase', '\s+$', '' );
-	update_indicators();
-}
-
 sub epubmaker {
 	my $format = shift;
 	if ( $lglobal{global_filename} =~ /(\w+.(rst|htm|html))$/ ) {
@@ -1131,23 +1079,6 @@ sub cp1252toUni {
 	update_indicators();
 }
 
-
-## Clean Up Rewrap
-sub cleanup {
-	$top->Busy( -recurse => 1 );
-	$searchstartindex = '1.0';
-	viewpagenums() if ( $lglobal{seepagenums} );
-	while (1) {
-		$searchstartindex =
-		  $textwindow->search( '-regexp', '--',
-							   '^\/[\*\$#pPfFLlXx]|^[Pp\*\$#fFLlXx]\/',
-							   $searchstartindex, 'end' );
-		last unless $searchstartindex;
-		$textwindow->delete( "$searchstartindex -1c",
-							 "$searchstartindex lineend" );
-	}
-	$top->Unbusy( -recurse => 1 );
-}
 
 ### Text Processing
 
