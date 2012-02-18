@@ -9,7 +9,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&add_search_history &searchtext &search_history &reg_check &getnextscanno &updatesearchlabels
 	&isvalid &swapterms &findascanno &reghint &replaceeval &replace &opstop &replaceall &killstoppop
-	&searchfromstartifnew &searchoptset)
+	&searchfromstartifnew &searchoptset &searchpopup &stealthscanno)
 }
 
 sub add_search_history {
@@ -119,7 +119,7 @@ sub searchtext {
 		}
 		$::lglobal{lastsearchterm} = $searchterm
 		  unless ( ( $searchterm =~ m/\\n/ ) && ( $main::sopt[3] ) );
-		&main::clearmarks() if ( ( $searchterm =~ m/\\n/ ) && ( $main::sopt[3] ) );
+		clearmarks() if ( ( $searchterm =~ m/\\n/ ) && ( $main::sopt[3] ) );
 	}
 	$textwindow->tagRemove( 'sel', '1.0', 'end' );
 	my $length = '0';
@@ -169,9 +169,9 @@ sub searchtext {
 		}
 		my $mark;
 		if ( $main::sopt[2] ) {
-			$mark = &main::getmark($main::searchstartindex);
+			$mark = getmark($main::searchstartindex);
 		} else {
-			$mark = &main::getmark($main::searchendindex);
+			$mark = getmark($main::searchendindex);
 		}
 		while ($mark) {
 			if ( $mark =~ /nls\d+q(\d+)/ ) {
@@ -180,7 +180,7 @@ sub searchtext {
 				$main::searchstartindex = $textwindow->index($mark);
 				last;
 			} else {
-				$mark = &main::getmark($mark) if $mark;
+				$mark = getmark($mark) if $mark;
 				next;
 			}
 		}
@@ -1004,11 +1004,11 @@ sub searchoptset {
 	my @opt       = @_;
 	my $opt_count = @opt;
 
-# $sopt[0] --> 0 = pattern search               1 = whole word search
-# $sopt[1] --> 0 = case sensitive             1 = case insensitive search
-# $sopt[2] --> 0 = search forwards              1 = search backwards
-# $sopt[3] --> 0 = normal search term   1 = regex search term - 3 and 0 are mutually exclusive
-# $sopt[4] --> 1 = start search at beginning
+# $::sopt[0] --> 0 = pattern search               1 = whole word search
+# $::sopt[1] --> 0 = case sensitive             1 = case insensitive search
+# $::sopt[2] --> 0 = search forwards              1 = search backwards
+# $::sopt[3] --> 0 = normal search term   1 = regex search term - 3 and 0 are mutually exclusive
+# $::sopt[4] --> 1 = start search at beginning
 	for ( 0 .. $opt_count - 1 ) {
 		if ( defined( $::lglobal{searchpop} ) ) {
 			if ( $opt[$_] !~ /[a-zA-Z]/ ) {
@@ -1021,7 +1021,678 @@ sub searchoptset {
 		}
 	}
 
-	#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt set\n";
+	#print $::sopt[0],$::sopt[1],$::sopt[2],$::sopt[3],$::sopt[4].":sopt set\n";
+}
+
+### Search
+sub searchpopup {
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	viewpagenums() if ( $::lglobal{seepagenums} );
+	push @::operations, ( localtime() . ' - Search & Replace' )
+	  unless $::lglobal{doscannos};
+	push @::operations, ( localtime() . ' - Stealth Scannos' )
+	  if $::lglobal{doscannos};
+	oppopupdate() if $::lglobal{oppop};
+	my $aacheck;
+	my $searchterm = '';
+	my @ranges     = $textwindow->tagRanges('sel');
+	$searchterm = $textwindow->get( $ranges[0], $ranges[1] ) if @ranges;
+
+	if ( defined( $::lglobal{searchpop} ) ) {
+		$::lglobal{searchpop}->deiconify;
+		$::lglobal{searchpop}->raise;
+		$::lglobal{searchpop}->focus;
+		$::lglobal{searchentry}->focus;
+	} else {
+		$::lglobal{searchpop} = $top->Toplevel;
+		$::lglobal{searchpop}->title('Search & Replace');
+		$::lglobal{searchpop}->minsize( 460, 127 );
+		my $sf1 =
+		  $::lglobal{searchpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		my $searchlabel =
+		  $sf1->Label( -text => 'Search Text', )
+		  ->pack( -side => 'left', -anchor => 'n', -padx => 80 );
+		$::lglobal{searchnumlabel} =
+		  $sf1->Label(
+					   -text  => '',
+					   -width => 20,
+		  )->pack( -side => 'right', -anchor => 'e', -padx => 1 );
+		my $sf11 =
+		  $::lglobal{searchpop}->Frame->pack(
+											-side   => 'top',
+											-anchor => 'w',
+											-padx   => 3,
+											-expand => 'y',
+											-fill   => 'x'
+		  );
+
+		$sf11->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				$textwindow->undo;
+				$textwindow->tagRemove( 'highlight', '1.0', 'end' );
+			},
+			-text  => 'Undo',
+			-width => 6
+		)->pack( -side => 'right', -anchor => 'w' );
+		$::lglobal{searchbutton} = $sf11->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				add_search_history(
+								   $::lglobal{searchentry}->get( '1.0', '1.end' ),
+								   \@::search_history, $::history_size );
+				searchtext($textwindow,$top,'');
+			},
+			-text  => 'Search',
+			-width => 6
+		  )->pack(
+				   -side   => 'right',
+				   -pady   => 1,
+				   -padx   => 2,
+				   -anchor => 'w'
+		  );
+
+		$::lglobal{searchentry} =
+		  $sf11->Text(
+					   -background => $::bkgcolor,
+					   -width      => 60,
+					   -height     => 1,
+		  )->pack(
+				   -side   => 'right',
+				   -anchor => 'w',
+				   -expand => 'y',
+				   -fill   => 'x'
+		  );
+
+		$sf11->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				search_history( $::lglobal{searchentry}, \@::search_history );
+			},
+			-image  => $::lglobal{hist_img},
+			-width  => 9,
+			-height => 15,
+		)->pack( -side => 'right', -anchor => 'w' );
+
+		$::lglobal{regrepeat} = $::lglobal{searchentry}->repeat( 500, \&reg_check );
+
+		my $sf2 =
+		  $::lglobal{searchpop}->Frame->pack( -side => 'top', -anchor => 'w' );
+		$::lglobal{searchop1} =
+		  $sf2->Checkbutton(
+							 -variable    => \$::sopt[1],
+							 -selectcolor => $::lglobal{checkcolor},
+							 -text        => 'Case Insensitive'
+		  )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
+		$::lglobal{searchop0} =
+		  $sf2->Checkbutton(
+							 -variable => \$::sopt[0],
+							 -command  => [ \&searchoptset, 'x', 'x', 'x', 0 ],
+							 -selectcolor => $::lglobal{checkcolor},
+							 -text        => 'Whole Word'
+		  )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
+		$::lglobal{searchop3} =
+		  $sf2->Checkbutton(
+							 -variable => \$::sopt[3],
+							 -command  => [ \&searchoptset, 0, 'x', 'x', 'x' ],
+							 -selectcolor => $::lglobal{checkcolor},
+							 -text        => 'Regex'
+		  )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
+		$::lglobal{searchop2} =
+		  $sf2->Checkbutton(
+							 -variable    => \$::sopt[2],
+							 -selectcolor => $::lglobal{checkcolor},
+							 -text        => 'Reverse'
+		  )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
+		$::lglobal{searchop4} =
+		  $sf2->Checkbutton(
+							 -variable    => \$::sopt[4],
+							 -selectcolor => $::lglobal{checkcolor},
+							 -text        => 'Start at Beginning'
+		  )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
+
+		$::lglobal{searchop5} =
+		  $sf2->Checkbutton(
+							 -variable    => \$::auto_show_images,
+							 -selectcolor => $::lglobal{checkcolor},
+							 -text        => 'Show Images'
+		  )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
+
+		my ( $sf13, $sf14, $sf5 );
+		my $sf10 =
+		  $::lglobal{searchpop}->Frame->pack(
+											-side   => 'top',
+											-anchor => 'n',
+											-expand => '1',
+											-fill   => 'x'
+		  );
+		my $replacelabel =
+		  $sf10->Label( -text => "Replacement Text\t\t", )
+		  ->grid( -row => 1, -column => 1 );
+
+		$sf10->Label( -text => 'Terms - ' )->grid( -row => 1, -column => 2 );
+		$sf10->Radiobutton(
+			-text     => 'single',
+			-variable => \$::multiterm,
+			-value    => 0,
+			-command  => sub {
+				for ( $sf13, $sf14 ) {
+					$_->packForget;
+				}
+			},
+		)->grid( -row => 1, -column => 3 );
+		$sf10->Radiobutton(
+			-text     => 'multi',
+			-variable => \$::multiterm,
+			-value    => 1,
+			-command  => sub {
+				for ( $sf13, $sf14 ) {
+					print "$::multiterm:single\n";
+					if ( defined $sf5 ) {
+						$_->pack(
+								  -before => $sf5,
+								  -side   => 'top',
+								  -anchor => 'w',
+								  -padx   => 3,
+								  -expand => 'y',
+								  -fill   => 'x'
+						);
+					} else {
+						$_->pack(
+								  -side   => 'top',
+								  -anchor => 'w',
+								  -padx   => 3,
+								  -expand => 'y',
+								  -fill   => 'x'
+						);
+					}
+				}
+			},
+		)->grid( -row => 1, -column => 4 );
+		my $sf12 =
+		  $::lglobal{searchpop}->Frame->pack(
+											-side   => 'top',
+											-anchor => 'w',
+											-padx   => 3,
+											-expand => 'y',
+											-fill   => 'x'
+		  );
+
+		$sf12->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				my $temp = $::lglobal{replaceentry}->get( '1.0', '1.end' );
+				replaceall( $::lglobal{replaceentry}->get( '1.0', '1.end' ) );
+			},
+			-text  => 'Rpl All',
+			-width => 5
+		  )->pack(
+				   -side   => 'right',
+				   -pady   => 1,
+				   -padx   => 2,
+				   -anchor => 'nw'
+		  );
+
+		$sf12->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				replace( $::lglobal{replaceentry}->get( '1.0', '1.end' ) );
+				add_search_history(
+								   $::lglobal{searchentry}->get( '1.0', '1.end' ),
+								   \@::search_history, $::history_size );
+				searchtext($textwindow,$top,'');
+			},
+			-text  => 'R & S',
+			-width => 5
+		  )->pack(
+				   -side   => 'right',
+				   -pady   => 1,
+				   -padx   => 2,
+				   -anchor => 'nw'
+		  );
+		$sf12->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				replace( $::lglobal{replaceentry}->get( '1.0', '1.end' ) );
+				add_search_history(
+								  $::lglobal{replaceentry}->get( '1.0', '1.end' ),
+								  \@::replace_history, $::history_size );
+			},
+			-text  => 'Replace',
+			-width => 6
+		  )->pack(
+				   -side   => 'right',
+				   -pady   => 1,
+				   -padx   => 2,
+				   -anchor => 'nw'
+		  );
+
+		$::lglobal{replaceentry} =
+		  $sf12->Text(
+					   -background => $::bkgcolor,
+					   -width      => 60,
+					   -height     => 1,
+		  )->pack(
+				   -side   => 'right',
+				   -anchor => 'w',
+				   -padx   => 1,
+				   -expand => 'y',
+				   -fill   => 'x'
+		  );
+		$sf12->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				search_history( $::lglobal{replaceentry}, \@::replace_history );
+			},
+			-image  => $::lglobal{hist_img},
+			-width  => 9,
+			-height => 15,
+		)->pack( -side => 'right', -anchor => 'w' );
+		$sf13 = $::lglobal{searchpop}->Frame;
+
+		$sf13->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				replaceall( $::lglobal{replaceentry1}->get( '1.0', '1.end' ) );
+			},
+			-text  => 'Rpl All',
+			-width => 5
+		  )->pack(
+				   -side   => 'right',
+				   -pady   => 1,
+				   -padx   => 2,
+				   -anchor => 'nw'
+		  );
+
+		$sf13->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				replace( $::lglobal{replaceentry1}->get( '1.0', '1.end' ) );
+				searchtext($textwindow,$top,'');
+			},
+			-text  => 'R & S',
+			-width => 5
+		  )->pack(
+				   -side   => 'right',
+				   -pady   => 1,
+				   -padx   => 2,
+				   -anchor => 'nw'
+		  );
+		$sf13->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				replace( $::lglobal{replaceentry1}->get( '1.0', '1.end' ) );
+				add_search_history(
+								 $::lglobal{replaceentry1}->get( '1.0', '1.end' ),
+								 \@::replace_history );
+			},
+			-text  => 'Replace',
+			-width => 6
+		  )->pack(
+				   -side   => 'right',
+				   -pady   => 1,
+				   -padx   => 2,
+				   -anchor => 'nw'
+		  );
+
+		$::lglobal{replaceentry1} =
+		  $sf13->Text(
+					   -background => $::bkgcolor,
+					   -width      => 60,
+					   -height     => 1,
+		  )->pack(
+				   -side   => 'right',
+				   -anchor => 'w',
+				   -padx   => 1,
+				   -expand => 'y',
+				   -fill   => 'x'
+		  );
+		$sf13->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				search_history( $::lglobal{replaceentry1}, \@::replace_history );
+			},
+			-image  => $::lglobal{hist_img},
+			-width  => 9,
+			-height => 15,
+		)->pack( -side => 'right', -anchor => 'w' );
+		$sf14 = $::lglobal{searchpop}->Frame;
+
+		$sf14->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				replaceall( $::lglobal{replaceentry2}->get( '1.0', '1.end' ) );
+			},
+			-text  => 'Rpl All',
+			-width => 5
+		  )->pack(
+				   -side   => 'right',
+				   -pady   => 1,
+				   -padx   => 2,
+				   -anchor => 'nw'
+		  );
+
+		$sf14->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				replace( $::lglobal{replaceentry2}->get( '1.0', '1.end' ) );
+				searchtext($textwindow,$top,'');
+			},
+			-text  => 'R & S',
+			-width => 5
+		  )->pack(
+				   -side   => 'right',
+				   -pady   => 1,
+				   -padx   => 2,
+				   -anchor => 'nw'
+		  );
+		$sf14->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				replace( $::lglobal{replaceentry2}->get( '1.0', '1.end' ) );
+				add_search_history(
+								 $::lglobal{replaceentry2}->get( '1.0', '1.end' ),
+								 \@::replace_history );
+			},
+			-text  => 'Replace',
+			-width => 6
+		  )->pack(
+				   -side   => 'right',
+				   -pady   => 1,
+				   -padx   => 2,
+				   -anchor => 'nw'
+		  );
+
+		$::lglobal{replaceentry2} =
+		  $sf14->Text(
+					   -background => $::bkgcolor,
+					   -width      => 60,
+					   -height     => 1,
+		  )->pack(
+				   -side   => 'right',
+				   -anchor => 'w',
+				   -padx   => 1,
+				   -expand => 'y',
+				   -fill   => 'x'
+		  );
+		$sf14->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				search_history( $::lglobal{replaceentry2}, \@::replace_history );
+			},
+			-image  => $::lglobal{hist_img},
+			-width  => 9,
+			-height => 15,
+		)->pack( -side => 'right', -anchor => 'w' );
+
+		if ($::multiterm) {
+			for ( $sf13, $sf14 ) {
+				$_->pack(
+						  -side   => 'top',
+						  -anchor => 'w',
+						  -padx   => 3,
+						  -expand => 'y',
+						  -fill   => 'x'
+				);
+			}
+		}
+		if ( $::lglobal{doscannos} ) {
+			$sf5 =
+			  $::lglobal{searchpop}
+			  ->Frame->pack( -side => 'top', -anchor => 'n' );
+			my $nextbutton = $sf5->Button(
+				-activebackground => $::activecolor,
+				-command          => sub {
+					$::lglobal{scannosindex}++
+					  unless ( $::lglobal{scannosindex} >=
+							   scalar( @{ $::lglobal{scannosarray} } ) );
+					getnextscanno();
+				},
+				-text  => 'Next Stealtho',
+				-width => 15
+			  )->pack(
+					   -side   => 'left',
+					   -pady   => 5,
+					   -padx   => 2,
+					   -anchor => 'w'
+			  );
+			my $nextoccurrencebutton = $sf5->Button(
+				-activebackground => $::activecolor,
+				-command          => sub {
+					searchtext($textwindow,$top,'');
+				},
+				-text  => 'Next Occurrence',
+				-width => 15
+			  )->pack(
+					   -side   => 'left',
+					   -pady   => 5,
+					   -padx   => 2,
+					   -anchor => 'w'
+			  );
+			my $lastbutton = $sf5->Button(
+				-activebackground => $::activecolor,
+				-command          => sub {
+					$aacheck->deselect;
+					$::lglobal{scannosindex}--
+					  unless ( $::lglobal{scannosindex} == 0 );
+					getnextscanno();
+				},
+				-text  => 'Prev Stealtho',
+				-width => 15
+			  )->pack(
+					   -side   => 'left',
+					   -pady   => 5,
+					   -padx   => 2,
+					   -anchor => 'w'
+			  );
+			my $switchbutton =
+			  $sf5->Button(
+							-activebackground => $::activecolor,
+							-command          => sub { swapterms() },
+							-text             => 'Swap Terms',
+							-width            => 15
+			  )->pack(
+					   -side   => 'left',
+					   -pady   => 5,
+					   -padx   => 2,
+					   -anchor => 'w'
+			  );
+			my $hintbutton =
+			  $sf5->Button(
+							-activebackground => $::activecolor,
+							-command          => sub { reghint() },
+							-text             => 'Hint',
+							-width            => 5
+			  )->pack(
+					   -side   => 'left',
+					   -pady   => 5,
+					   -padx   => 2,
+					   -anchor => 'w'
+			  );
+			my $editbutton =
+			  $sf5->Button(
+							-activebackground => $::activecolor,
+							-command          => sub { regedit() },
+							-text             => 'Edit',
+							-width            => 5
+			  )->pack(
+					   -side   => 'left',
+					   -pady   => 5,
+					   -padx   => 2,
+					   -anchor => 'w'
+			  );
+			my $sf6 =
+			  $::lglobal{searchpop}
+			  ->Frame->pack( -side => 'top', -anchor => 'n' );
+			$::lglobal{regtracker} = $sf6->Label( -width => 15 )->pack(
+																-side => 'left',
+																-pady => 5,
+																-padx => 2,
+																-anchor => 'w'
+			);
+			$aacheck =
+			  $sf6->Checkbutton(
+								 -text     => 'Auto Advance',
+								 -variable => \$::lglobal{regaa},
+			  )->pack(
+					   -side   => 'left',
+					   -pady   => 5,
+					   -padx   => 2,
+					   -anchor => 'w'
+			  );
+		}
+		$::lglobal{searchpop}->protocol(
+			'WM_DELETE_WINDOW' => sub {
+				$::lglobal{regrepeat}->cancel;
+				undef $::lglobal{regrepeat};
+				$::lglobal{searchpop}->destroy;
+				undef $::lglobal{searchpop};
+				$textwindow->tagRemove( 'highlight', '1.0', 'end' );
+				undef $::lglobal{hintpop} if $::lglobal{hintpop};
+				$::scannosearch = 0;    #no longer in a scanno search
+			}
+		);
+		$::lglobal{searchpop}->Icon( -image => $::icon );
+		$::lglobal{searchentry}->focus;
+		$::lglobal{searchpop}->resizable( 'yes', 'no' );
+		$::lglobal{searchpop}->transient($top) if $::stayontop;
+		$::lglobal{searchpop}->Tk::bind(
+			'<Return>' => sub {
+				$::lglobal{searchentry}->see('1.0');
+				$::lglobal{searchentry}->delete('1.end');
+				$::lglobal{searchentry}->delete( '2.0', 'end' );
+				$::lglobal{replaceentry}->see('1.0');
+				$::lglobal{replaceentry}->delete('1.end');
+				$::lglobal{replaceentry}->delete( '2.0', 'end' );
+				searchtext($textwindow,$top);
+				$top->raise;
+			}
+		);
+		$::lglobal{searchpop}->Tk::bind(
+			'<Control-f>' => sub {
+				$::lglobal{searchentry}->see('1.0');
+				$::lglobal{searchentry}->delete( '2.0', 'end' );
+				$::lglobal{replaceentry}->see('1.0');
+				$::lglobal{replaceentry}->delete( '2.0', 'end' );
+				searchtext($textwindow,$top);
+				$top->raise;
+			}
+		);
+		$::lglobal{searchpop}->Tk::bind(
+			'<Control-F>' => sub {
+				$::lglobal{searchentry}->see('1.0');
+				$::lglobal{searchentry}->delete( '2.0', 'end' );
+				$::lglobal{replaceentry}->see('1.0');
+				$::lglobal{replaceentry}->delete( '2.0', 'end' );
+				searchtext($textwindow,$top);
+				$top->raise;
+			}
+		);
+		$::lglobal{searchpop}->eventAdd( '<<FindNexte>>' => '<Control-Key-G>',
+									   '<Control-Key-g>' );
+
+		$::lglobal{searchentry}->bind(
+			'<<FindNexte>>',
+			sub {
+				$::lglobal{searchentry}->delete('insert -1c')
+				  if ( $::lglobal{searchentry}->get('insert -1c') eq "\cG" );
+				searchtext($textwindow,$top, $::lglobal{searchentry}->get( '1.0', '1.end' ) );
+				$textwindow->focus;
+			}
+		);
+
+		$::lglobal{searchentry}->{_MENU_}   = ();
+		$::lglobal{replaceentry}->{_MENU_}  = ();
+		$::lglobal{replaceentry1}->{_MENU_} = ();
+		$::lglobal{replaceentry2}->{_MENU_} = ();
+
+		$::lglobal{searchentry}->bind(
+			'<FocusIn>',
+			sub {
+				$::lglobal{hasfocus} = $::lglobal{searchentry};
+			}
+		);
+		$::lglobal{replaceentry}->bind(
+			'<FocusIn>',
+			sub {
+				$::lglobal{hasfocus} = $::lglobal{replaceentry};
+			}
+		);
+		$::lglobal{replaceentry1}->bind(
+			'<FocusIn>',
+			sub {
+				$::lglobal{hasfocus} = $::lglobal{replaceentry1};
+			}
+		);
+		$::lglobal{replaceentry2}->bind(
+			'<FocusIn>',
+			sub {
+				$::lglobal{hasfocus} = $::lglobal{replaceentry2};
+			}
+		);
+
+		$::lglobal{searchpop}->Tk::bind(
+			'<Control-Return>' => sub {
+				$::lglobal{searchentry}->see('1.0');
+				$::lglobal{searchentry}->delete('1.end');
+				$::lglobal{searchentry}->delete( '2.0', 'end' );
+				$::lglobal{replaceentry}->see('1.0');
+				$::lglobal{replaceentry}->delete('1.end');
+				$::lglobal{replaceentry}->delete( '2.0', 'end' );
+				replace( $::lglobal{replaceentry}->get( '1.0', '1.end' ) );
+				searchtext($textwindow,$top);
+				$top->raise;
+			}
+		);
+		$::lglobal{searchpop}->Tk::bind(
+			'<Shift-Return>' => sub {
+				$::lglobal{searchentry}->see('1.0');
+				$::lglobal{searchentry}->delete('1.end');
+				$::lglobal{searchentry}->delete( '2.0', 'end' );
+				$::lglobal{replaceentry}->see('1.0');
+				$::lglobal{replaceentry}->delete('1.end');
+				$::lglobal{replaceentry}->delete( '2.0', 'end' );
+				replace( $::lglobal{replaceentry}->get( '1.0', '1.end' ) );
+				$top->raise;
+			}
+		);
+		$::lglobal{searchpop}->Tk::bind(
+			'<Control-Shift-Return>' => sub {
+				$::lglobal{searchentry}->see('1.0');
+				$::lglobal{searchentry}->delete('1.end');
+				$::lglobal{searchentry}->delete( '2.0', 'end' );
+				$::lglobal{replaceentry}->see('1.0');
+				$::lglobal{replaceentry}->delete('1.end');
+				$::lglobal{replaceentry}->delete( '2.0', 'end' );
+				replaceall( $::lglobal{replaceentry}->get( '1.0', '1.end' ) );
+				$top->raise;
+			}
+		);
+	}
+	if ( length $searchterm ) {
+		$::lglobal{searchentry}->delete( '1.0', 'end' );
+		$::lglobal{searchentry}->insert( 'end', $searchterm );
+		$::lglobal{searchentry}->tagAdd( 'sel', '1.0', 'end -1c' );
+		searchtext($textwindow,$top,'');
+	}
+}
+
+sub stealthscanno {
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	$::lglobal{doscannos} = 1;
+	$::lglobal{searchpop}->destroy if defined $::lglobal{searchpop};
+	undef $::lglobal{searchpop};
+	searchoptset(qw/1 x x 0 1/)
+	  ;    # force search to begin at start of doc, whole word
+	if ( ::loadscannos() ) {
+		::savesettings();
+		searchpopup();
+		getnextscanno();
+		searchtext($textwindow,$top);
+	}
+	$::lglobal{doscannos} = 0;
 }
 
 
