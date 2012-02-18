@@ -10,7 +10,7 @@ BEGIN {
 	@EXPORT=qw(&openpng &get_image_file &setviewerpath &::setdefaultpath &arabic &roman
 	&textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_cmdline &win32_start &win32_is_exe
 	&win32_create_process &runner &debug_dump &run &escape_regexmetacharacters &deaccent &BindMouseWheel
-	&working &initialize)
+	&working &initialize &fontinit)
 }
 
 sub get_image_file {
@@ -328,7 +328,7 @@ sub textbindings {
 	$textwindow->bind( 'TextUnicode', '<Shift-B1-Motion>', 'shiftB1_Motion' );
 	$textwindow->eventAdd( '<<FindNext>>' => '<Control-Key-G>',
 						   '<Control-Key-g>' );
-	$textwindow->bind( '<<ScrollDismiss>>', \&main::scrolldismiss );
+	$textwindow->bind( '<<ScrollDismiss>>', \&scrolldismiss );
 	$textwindow->bind( 'TextUnicode', '<ButtonRelease-2>',
 					   sub { popscroll() unless $Tk::mouseMoved } );
 	$textwindow->bind(
@@ -346,12 +346,12 @@ sub textbindings {
 		$textwindow->bind(
 			'TextUnicode',
 			'<3>' => sub {
-				&main::scrolldismiss();
+				scrolldismiss();
 				$main::menubar->Popup( -popover => 'cursor' );
 			}
 		);
 	} else {
-		$textwindow->bind( 'TextUnicode', '<3>' => sub { &main::scrolldismiss() } )
+		$textwindow->bind( 'TextUnicode', '<3>' => sub { &scrolldismiss() } )
 		  ;    # Try to trap odd right click error under OSX and Linux
 	}
 	$textwindow->bind( 'TextUnicode', '<Control-Alt-h>' => \&main::hilitepopup );
@@ -376,7 +376,7 @@ AAAAACH5BAAAAAAALAAAAAAMAAwAAwQfMMg5BaDYXiw178AlcJ6VhYFXoSoosm7KvrR8zfXHRQA7
 
 sub popscroll {
 	if ( $::lglobal{scroller} ) {
-		&main::scrolldismiss();
+		scrolldismiss();
 		return;
 	}
 	my $x = $main::top->pointerx - $main::top->rootx;
@@ -392,7 +392,7 @@ sub popscroll {
 
 	$::lglobal{scroller}->eventAdd( '<<ScrollDismiss>>', qw/<1> <3>/ );
 	$::lglobal{scroller}
-	  ->bind( 'current', '<<ScrollDismiss>>', sub { &main::scrolldismiss(); } );
+	  ->bind( 'current', '<<ScrollDismiss>>', sub { &scrolldismiss(); } );
 	$::lglobal{scroll_y}  = $y;
 	$::lglobal{scroll_x}  = $x;
 	$::lglobal{oldcursor} = $main::textwindow->cget( -cursor );
@@ -1338,6 +1338,10 @@ sub b2scroll {
 							'units' );
 		$::lglobal{scrolltriggerx} = 0;
 	}
+}
+
+sub fontinit {
+	$::lglobal{font} = "{$::fontname} $::fontsize $::fontweight";
 }
 
 

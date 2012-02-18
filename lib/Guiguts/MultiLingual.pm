@@ -199,7 +199,7 @@ sub multilangpopup {
 #		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 
 
-		&main::drag( $multiwclistbox );
+		::drag( $multiwclistbox );
 		$::lglobal{multispellpop}->protocol(
 			'WM_DELETE_WINDOW' => sub {
 				$::lglobal{multispellpop}->destroy;

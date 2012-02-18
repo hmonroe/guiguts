@@ -749,7 +749,7 @@ sub showproofers {
 							-wrap       => 'none',
 		  )->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
 		delete $main::proofers{''};
-		&main::drag( $::lglobal{prfrrotextbox} );
+		::drag( $::lglobal{prfrrotextbox} );
 		prfrbypage();
 	}
 }

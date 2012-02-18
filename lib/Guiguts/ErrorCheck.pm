@@ -7,7 +7,8 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
-	@EXPORT = qw(&errorcheckpop_up &errorcheckrun &gutcheckview &gutwindowpopulate &gcviewops &gcheckpop_up );
+	@EXPORT = qw(&errorcheckpop_up &errorcheckrun &gutcheckview &gutwindowpopulate &gcviewops 
+	&gcheckpop_up &jeebiesview jeebiesrun);
 }
 
 sub errorcheckpop_up {
@@ -74,8 +75,8 @@ sub errorcheckpop_up {
 			   -padx   => 2,
 			   -pady   => 2
 	  );
-	&main::drag( $::lglobal{errorchecklistbox} );
-	&main::BindMouseWheel( $::lglobal{errorchecklistbox} );
+	::drag( $::lglobal{errorchecklistbox} );
+	::BindMouseWheel( $::lglobal{errorchecklistbox} );
 	$::lglobal{errorchecklistbox}
 	  ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
 	$::lglobal{errorchecklistbox}->bind(
@@ -1156,6 +1157,74 @@ sub gcheckpop_up {
 	close $results;
 	unlink 'gutrslts.tmp';
 	gutwindowpopulate( \@gclines );
+}
+
+sub jeebiesrun {
+	my $listbox = shift;
+	my $top = $::top;
+	my $textwindow = $::textwindow;
+	$listbox->delete( '0', 'end' );
+	::savefile() if ( $textwindow->numberChanges );
+	my $title = ::os_normal( $::lglobal{global_filename} );
+	my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
+	unless ($::jeebiescommand) {
+		$::jeebiescommand =
+		  $textwindow->getOpenFile( -filetypes => $types,
+									-title => 'Where is the Jeebies executable?'
+		  );
+	}
+	return unless $::jeebiescommand;
+	my $jeebiesoptions = "-$::jeebiesmode" . 'e';
+	$::jeebiescommand = ::os_normal($::jeebiescommand);
+	%::jeeb           = ();
+	my $mark = 0;
+	$top->Busy( -recurse => 1 );
+	$listbox->insert( 'end',
+				 '---------------- Please wait: Processing. ----------------' );
+	$listbox->update;
+
+	my $runner = runner::tofile('results.tmp');
+	$runner->run($::jeebiescommand, $jeebiesoptions, $title);
+	if ( not $? ) {
+		open my $fh, '<', 'results.tmp';
+		while ( my $line = <$fh> ) {
+			$line =~ s/\n//;
+			$line =~ s/^\s+/  /;
+			if ($line) {
+				$::jeeb{$line} = '';
+				my ( $linenum, $colnum );
+				$linenum = $1 if ( $line =~ /Line (\d+)/ );
+				$colnum  = $1 if ( $line =~ /Line \d+ column (\d+)/ );
+				$mark++ if $linenum;
+				$textwindow->markSet( "j$mark", "$linenum.$colnum" )
+				  if $linenum;
+				$::jeeb{$line} = "j$mark";
+				$listbox->insert( 'end', $line );
+			}
+		}
+		unlink 'results.tmp';
+	} else {
+		warn "Unable to run Jeebies. $!";
+	}
+	$listbox->delete('0');
+	$listbox->insert( 2, "  --> $mark queries." );
+	$top->Unbusy( -recurse => 1 );
+}
+
+sub jeebiesview {
+	my $textwindow = $::textwindow;
+	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
+	my $line = $::lglobal{jelistbox}->get('active');
+	return unless $line;
+	if ( $line =~ /Line/ ) {
+		$textwindow->see('end');
+		$textwindow->see( $::jeeb{$line} );
+		$textwindow->markSet( 'insert', $::jeeb{$line} );
+		update_indicators();
+	}
+	$textwindow->focus;
+	$::lglobal{jeepop}->raise;
+	$::geometryhash{jeepop} = $::lglobal{jeepop}->geometry;
 }
 
 

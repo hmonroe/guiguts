@@ -634,9 +634,9 @@ sub opspop_up {
 				   -padx   => 2,
 				   -pady   => 2
 		  );
-		&main::drag( $::lglobal{oplistbox} );
+		::drag( $::lglobal{oplistbox} );
 	}
-	&main::oppopupdate();
+	::oppopupdate();
 }
 
 sub confirmdiscard {

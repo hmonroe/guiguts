@@ -538,7 +538,7 @@ sub fnview {
 				   -padx   => 2,
 				   -pady   => 2
 		  );
-		&main::drag($ftext);
+		::drag($ftext);
 		$ftext->tagConfigure( 'seq',    background => 'cyan' );
 		$ftext->tagConfigure( 'dup',    background => 'yellow' );
 		$ftext->tagConfigure( 'noanch', background => 'pink' );
