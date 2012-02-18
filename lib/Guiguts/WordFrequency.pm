@@ -506,7 +506,7 @@ sub bangmark {
 	return if ( nofileloaded($top) );
 	$::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
 	$::lglobal{wclistbox}->update;
-	my $wholefile = &main::slurpfile();
+	my $wholefile = slurpfile();
 
 	while (
 		   $wholefile =~ m/(\p{Alnum}+\.['"]?\n*\s*['"]?\p{Lower}\p{Alnum}*)/g )
@@ -725,7 +725,7 @@ sub commark {
 	return if ( nofileloaded($top) );
 	$::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
 	$::lglobal{wclistbox}->update;
-	my $wholefile = &main::slurpfile();
+	my $wholefile = slurpfile();
 
 	if ($main::intelligentWF) {
 
@@ -786,7 +786,7 @@ sub itwords {
 	return if ( nofileloaded($top) );
 	$::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
 	$::lglobal{wclistbox}->update;
-	my $wholefile = &main::slurpfile();
+	my $wholefile = slurpfile();
 	$main::markupthreshold = 0 unless $main::markupthreshold;
 
 	while ( $wholefile =~ m/(<(i|I|b|B|sc)>)(.*?)(<\/(i|I|b|B|sc)>)/sg ) {
@@ -1352,6 +1352,22 @@ sub add_navigation_events {
 			$dialog_box->activate( $dialog_box->index('end') - 1 );
 		}
 	);
+}
+
+sub slurpfile {
+	my $textwindow = $::textwindow;
+	my $filename = $textwindow->FileName;
+	my $wholefile;
+	::savefile() unless ( $textwindow->numberChanges == 0 );
+	{
+		local $/;    # slurp in the file
+		open my $fh, '<', $filename;
+		$wholefile = <$fh>;
+		close $fh;
+		utf8::decode($wholefile);
+	}
+	$wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
+	return $wholefile;
 }
 
 

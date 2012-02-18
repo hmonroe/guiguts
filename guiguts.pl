@@ -501,21 +501,6 @@ sub loadscannos {
 }
 
 
-sub slurpfile {
-	my $filename = $textwindow->FileName;
-	my $wholefile;
-	savefile() unless ( $textwindow->numberChanges == 0 );
-	{
-		local $/;    # slurp in the file
-		open my $fh, '<', $filename;
-		$wholefile = <$fh>;
-		close $fh;
-		utf8::decode($wholefile);
-	}
-	$wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
-	return $wholefile;
-}
-
 sub confirmdiscard {
 	if ( $textwindow->numberChanges ) {
 		my $ans = $top->messageBox(
