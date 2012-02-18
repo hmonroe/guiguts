@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
-	@EXPORT = qw(&spellcheckfirst &aspellstop &spellchecker &getprojectdic);
+	@EXPORT = qw(&spellcheckfirst &aspellstart &aspellstop &spellchecker &getprojectdic);
 }
 
 # Initialize spellchecker
@@ -258,13 +258,22 @@ sub spellmyaddword {
 	return unless $term;
 	getprojectdic();
 	$::projectdict{$term} = '';
-	open( my $dic, ">", "$::lglobal{projectdictname}" );
-	print $dic "\%::projectdict = (\n";
+	open( my $dic, ">:bytes", "$::lglobal{projectdictname}" );
+	my $section = "\%::projectdict = (\n";
 	for my $term ( sort { $a cmp $b } keys %::projectdict ) {
 		$term =~ s/'/\\'/g;
-		print $dic "'$term' => '',\n";
+		$section .= "'$term' => '',\n";
 	}
-	print $dic ");";
+	$section .= ");";
+	utf8::encode($section);
+	print $dic $section;
+#	open( my $dic, ">", "$::lglobal{projectdictname}" );
+#	print $dic "\%::projectdict = (\n";
+#	for my $term ( sort { $a cmp $b } keys %::projectdict ) {
+#		$term =~ s/'/\\'/g;
+#		print $dic "'$term' => '',\n";
+#	}
+#	print $dic ");";
 	close $dic;
 
 	#print "$::lglobal{projectdictname}";
