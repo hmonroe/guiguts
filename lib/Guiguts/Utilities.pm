@@ -371,7 +371,7 @@ AAAAACH5BAAAAAAALAAAAAAMAAwAAwQfMMg5BaDYXiw178AlcJ6VhYFXoSoosm7KvrR8zfXHRQA7
 		-data =>
 		  'R0lGODlhBwAEAIAAAAAAAP///yH5BAEAAAEALAAAAAAHAAQAAAIIhA+BGWoNWSgAOw=='
 	);
-	&main::drag($textwindow);
+		drag($textwindow);
 }
 
 sub popscroll {
@@ -1460,6 +1460,13 @@ sub natural_sort_freq {
 	map { $_->[1] } sort { $b->[0] <=> $a->[0] or $a->[2] cmp $b->[2] } @x;
 }
 
+## No Asterisks
+sub noast {
+	local $/ = ' ****';
+	my $phrase = shift;
+	chomp $phrase;
+	return $phrase;
+}
 
 
 
