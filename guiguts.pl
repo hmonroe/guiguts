@@ -440,7 +440,7 @@ $textwindow->CallNextGUICallback;
 
 $top->repeat( 200, sub { _updatesel($textwindow) } );
 
-# Do not move from guiguts.pl; do command must be run in ::main
+# Do not move from guiguts.pl; do command must be run in main
 sub loadscannos {
 	$lglobal{scannosfilename} = '';
 	%scannoslist = ();
@@ -593,6 +593,7 @@ EOM
 	}
 }
 
+# Do not move from guiguts.pl; do command must be run in main
 sub readsettings {
 	if ( -e 'setting.rc' ) {
 		unless ( my $return = do 'setting.rc' ) {
@@ -620,6 +621,7 @@ sub readsettings {
 	}
 }
 
+# Do not move from guiguts.pl; do command must be run in main
 sub spellloadprojectdict {
 	getprojectdic();
 	do "$::lglobal{projectdictname}"
@@ -629,7 +631,7 @@ sub spellloadprojectdict {
 
 
 ### File Menu
-### Do not move from guiguts.pl
+# Do not move from guiguts.pl; do command must be run in main
 sub openfile {    # and open it
 	my $name = shift;
 	return if ( $name eq '*empty*' );
@@ -713,53 +715,6 @@ sub openfile {    # and open it
 	oppopupdate() if $lglobal{oppop};
 	savesettings();
 	set_autosave() if $autosave;
-}
-
-### Edit Menu
-sub cut {
-	my @ranges      = $textwindow->tagRanges('sel');
-	my $range_total = @ranges;
-	return unless $range_total;
-	if ( $range_total == 2 ) {
-		$textwindow->clipboardCut;
-	} else {
-		$textwindow->addGlobStart;    # NOTE: Add to undo ring.
-		$textwindow->clipboardColumnCut;
-		$textwindow->addGlobEnd;      # NOTE: Add to undo ring.
-	}
-}
-
-sub textcopy {
-	my @ranges      = $textwindow->tagRanges('sel');
-	my $range_total = @ranges;
-	return unless $range_total;
-	$textwindow->clipboardClear;
-	if ( $range_total == 2 ) {
-		$textwindow->clipboardCopy;
-	} else {
-		$textwindow->clipboardColumnCopy;
-	}
-}
-
-# Special paste routine that will respond differently
-# for overstrike/insert modes
-sub paste {
-	if ( $textwindow->OverstrikeMode ) {
-		my @ranges = $textwindow->tagRanges('sel');
-		if (@ranges) {
-			my $end   = pop @ranges;
-			my $start = pop @ranges;
-			$textwindow->delete( $start, $end );
-		}
-		my $text    = $textwindow->clipboardGet;
-		my $lineend = $textwindow->get( 'insert', 'insert lineend' );
-		my $length  = length $text;
-		$length = length $lineend if ( length $lineend < length $text );
-		$textwindow->delete( 'insert', 'insert +' . ($length) . 'c' );
-		$textwindow->insert( 'insert', $text );
-	} else {
-		$textwindow->clipboardPaste;
-	}
 }
 
 ### Search

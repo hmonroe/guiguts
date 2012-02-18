@@ -12,7 +12,7 @@ BEGIN {
 	&win32_is_exe &win32_create_process &runner &debug_dump &run &escape_regexmetacharacters 
 	&deaccent &BindMouseWheel &working &initialize &fontinit &initialize_popup_with_deletebinding 
 	&initialize_popup_without_deletebinding &os_normal &escape_problems &natural_sort_alpha
-	&natural_sort_length &natural_sort_freq &drag)
+	&natural_sort_length &natural_sort_freq &drag &cut &paste &textcopy)
 }
 
 sub get_image_file {
@@ -1466,6 +1466,56 @@ sub noast {
 	my $phrase = shift;
 	chomp $phrase;
 	return $phrase;
+}
+
+### Edit Menu
+sub cut {
+	my $textwindow = $::textwindow;
+	my @ranges      = $textwindow->tagRanges('sel');
+	my $range_total = @ranges;
+	return unless $range_total;
+	if ( $range_total == 2 ) {
+		$textwindow->clipboardCut;
+	} else {
+		$textwindow->addGlobStart;    # NOTE: Add to undo ring.
+		$textwindow->clipboardColumnCut;
+		$textwindow->addGlobEnd;      # NOTE: Add to undo ring.
+	}
+}
+
+sub textcopy {
+	my $textwindow = $::textwindow;
+	my @ranges      = $textwindow->tagRanges('sel');
+	my $range_total = @ranges;
+	return unless $range_total;
+	$textwindow->clipboardClear;
+	if ( $range_total == 2 ) {
+		$textwindow->clipboardCopy;
+	} else {
+		$textwindow->clipboardColumnCopy;
+	}
+}
+
+# Special paste routine that will respond differently
+# for overstrike/insert modes
+sub paste {
+	my $textwindow = $::textwindow;
+	if ( $textwindow->OverstrikeMode ) {
+		my @ranges = $textwindow->tagRanges('sel');
+		if (@ranges) {
+			my $end   = pop @ranges;
+			my $start = pop @ranges;
+			$textwindow->delete( $start, $end );
+		}
+		my $text    = $textwindow->clipboardGet;
+		my $lineend = $textwindow->get( 'insert', 'insert lineend' );
+		my $length  = length $text;
+		$length = length $lineend if ( length $lineend < length $text );
+		$textwindow->delete( 'insert', 'insert +' . ($length) . 'c' );
+		$textwindow->insert( 'insert', $text );
+	} else {
+		$textwindow->clipboardPaste;
+	}
 }
 
 
