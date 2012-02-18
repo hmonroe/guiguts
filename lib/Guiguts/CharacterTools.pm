@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
-	@EXPORT = qw(&pututf &latinpopup &doutfbuttons &utfpopup);
+	@EXPORT = qw(&latinpopup &utfpopup &utffontinit);
 }
 
 sub pututf {
@@ -281,6 +281,10 @@ sub utfpopup {
 		}
 	);
 	$top->Unbusy( -recurse => 1 );
+}
+
+sub utffontinit {
+	$::lglobal{utffont} = "{$::utffontname} $::utffontsize";
 }
 
 
