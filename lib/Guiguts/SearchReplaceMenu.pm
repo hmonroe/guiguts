@@ -9,7 +9,8 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&add_search_history &searchtext &search_history &reg_check &getnextscanno &updatesearchlabels
 	&isvalid &swapterms &findascanno &reghint &replaceeval &replace &opstop &replaceall &killstoppop
-	&searchfromstartifnew &searchoptset &searchpopup &stealthscanno)
+	&searchfromstartifnew &searchoptset &searchpopup &stealthscanno &find_proofer_comment
+	&find_asterisks &find_transliterations &nextblock &orphanedbrackets &orphanedmarkup)
 }
 
 sub add_search_history {
@@ -281,8 +282,8 @@ sub searchtext {
 			}
 		}
 	}
-	&main::updatesearchlabels();
-	&main::update_indicators();
+	::updatesearchlabels();
+	::update_indicators();
 	return $foundone;    # return index of where found text started
 }
 
@@ -1693,6 +1694,360 @@ sub stealthscanno {
 		searchtext($textwindow,$top);
 	}
 	$::lglobal{doscannos} = 0;
+}
+
+sub find_proofer_comment {
+	my $textwindow = $::textwindow;
+	my $pattern = '[**';
+	my $comment = $textwindow->search( $pattern, "insert" );
+	if ($comment) {
+		my $index = $textwindow->index("$comment +1c");
+		$textwindow->SetCursor($index);
+	}
+}
+
+sub find_asterisks {
+	if ( defined( $::lglobal{searchpop} ) ) {
+		$::lglobal{searchpop}->destroy;
+		undef $::lglobal{searchpop};
+	}
+	searchpopup();
+	searchoptset(qw/0 x x 1/);
+	$::lglobal{searchentry}->delete( '1.0', 'end' );
+	$::lglobal{searchentry}->insert( 'end', "(?<!/)\\*(?!/)" );
+}
+
+sub find_transliterations {
+	searchpopup();
+	searchoptset(qw/0 x x 1/);
+	$::lglobal{searchentry}->delete( '1.0', 'end' );
+	$::lglobal{searchentry}->insert( 'end', "\\[[^FIS\\d]" );
+}
+
+sub nextblock {
+	my ( $mark, $direction ) = @_;
+	my $textwindow = $::textwindow;
+	unless ($::searchstartindex) { $::searchstartindex = '1.0' }
+
+#use Text::Balanced qw (			extract_delimited			extract_bracketed			extract_quotelike			extract_codeblock			extract_variable			extract_tagged			extract_multiple			gen_delimited_pat			gen_extract_tagged		       );
+#print extract_bracketed( "((I)(like(pie))!)", '()' );
+#return;
+	if ( $mark eq 'default' ) {
+		if ( $direction eq 'forward' ) {
+			$::searchstartindex =
+			  $textwindow->search( '-exact', '--', '/*', $::searchstartindex,
+								   'end' )
+			  if $::searchstartindex;
+		} elsif ( $direction eq 'reverse' ) {
+			$::searchstartindex =
+			  $textwindow->search( '-backwards', '-exact', '--', '/*',
+								   $::searchstartindex, '1.0' )
+			  if $::searchstartindex;
+		}
+	} elsif ( $mark eq 'indent' ) {
+		if ( $direction eq 'forward' ) {
+			$::searchstartindex =
+			  $textwindow->search( '-regexp', '--', '^\S', $::searchstartindex,
+								   'end' )
+			  if $::searchstartindex;
+			$::searchstartindex =
+			  $textwindow->search( '-regexp', '--', '^\s', $::searchstartindex,
+								   'end' )
+			  if $::searchstartindex;
+		} elsif ( $direction eq 'reverse' ) {
+			$::searchstartindex =
+			  $textwindow->search( '-backwards', '-regexp', '--', '^\S',
+								   $::searchstartindex, '1.0' )
+			  if $::searchstartindex;
+			$::searchstartindex =
+			  $textwindow->search( '-backwards', '-regexp', '--', '^\s',
+								   $::searchstartindex, '1.0' )
+			  if $::searchstartindex;
+		}
+	} elsif ( $mark eq 'stet' ) {
+		if ( $direction eq 'forward' ) {
+			$::searchstartindex =
+			  $textwindow->search( '-exact', '--', '/$', $::searchstartindex,
+								   'end' )
+			  if $::searchstartindex;
+		} elsif ( $direction eq 'reverse' ) {
+			$::searchstartindex =
+			  $textwindow->search( '-backwards', '-exact', '--', '/$',
+								   $::searchstartindex, '1.0' )
+			  if $::searchstartindex;
+		}
+	} elsif ( $mark eq 'block' ) {
+		if ( $direction eq 'forward' ) {
+			$::searchstartindex =
+			  $textwindow->search( '-exact', '--', '/#', $::searchstartindex,
+								   'end' )
+			  if $::searchstartindex;
+		} elsif ( $direction eq 'reverse' ) {
+			$::searchstartindex =
+			  $textwindow->search( '-backwards', '-exact', '--', '/#',
+								   $::searchstartindex, '1.0' )
+			  if $::searchstartindex;
+		}
+	} elsif ( $mark eq 'poetry' ) {
+		if ( $direction eq 'forward' ) {
+			$::searchstartindex =
+			  $textwindow->search( '-regexp', '--', '\/[pP]', $::searchstartindex,
+								   'end' )
+			  if $::searchstartindex;
+		} elsif ( $direction eq 'reverse' ) {
+			$::searchstartindex =
+			  $textwindow->search( '-backwards', '-regexp', '--', '\/[pP]',
+								   $::searchstartindex, '1.0' )
+			  if $::searchstartindex;
+		}
+	}
+	$textwindow->markSet( 'insert', $::searchstartindex )
+	  if $::searchstartindex;
+	$textwindow->see($::searchstartindex) if $::searchstartindex;
+	$textwindow->update;
+	$textwindow->focus;
+	if ( $direction eq 'forward' ) {
+		$::searchstartindex += 1;
+	} elsif ( $direction eq 'reverse' ) {
+		$::searchstartindex -= 1;
+	}
+	if ( $::searchstartindex = int($::searchstartindex) ) {
+		$::searchstartindex .= '.0';
+	}
+	::update_indicators();
+}
+
+sub orphanedbrackets {
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	my $psel;
+	if ( defined( $::lglobal{brkpop} ) ) {
+		$::lglobal{brkpop}->deiconify;
+		$::lglobal{brkpop}->raise;
+		$::lglobal{brkpop}->focus;
+	} else {
+		$::lglobal{brkpop} = $top->Toplevel;
+		$::lglobal{brkpop}->title('Find orphan brackets');
+		::initialize_popup_without_deletebinding('brkpop');
+
+		$::lglobal{brkpop}->Label( -text => 'Bracket or Markup Style' )->pack;
+		my $frame = $::lglobal{brkpop}->Frame->pack;
+		$psel = $frame->Radiobutton(
+									 -variable    => \$::lglobal{brsel},
+									 -selectcolor => $::lglobal{checkcolor},
+									 -value       => '[\(\)]',
+									 -text        => '(  )',
+		)->grid( -row => 1, -column => 1 );
+		my $ssel =
+		  $frame->Radiobutton(
+							   -variable    => \$::lglobal{brsel},
+							   -selectcolor => $::lglobal{checkcolor},
+							   -value       => '[\[\]]',
+							   -text        => '[  ]',
+		  )->grid( -row => 1, -column => 2 );
+		my $csel =
+		  $frame->Radiobutton(
+							   -variable    => \$::lglobal{brsel},
+							   -selectcolor => $::lglobal{checkcolor},
+							   -value       => '[\{\}]',
+							   -text        => '{  }',
+		  )->grid( -row => 1, -column => 3, -pady => 5 );
+		my $asel =
+		  $frame->Radiobutton(
+							   -variable    => \$::lglobal{brsel},
+							   -selectcolor => $::lglobal{checkcolor},
+							   -value       => '[<>]',
+							   -text        => '<  >',
+		  )->grid( -row => 1, -column => 4, -pady => 5 );
+		my $frame1 = $::lglobal{brkpop}->Frame->pack;
+		my $dsel =
+		  $frame1->Radiobutton(
+								-variable    => \$::lglobal{brsel},
+								-selectcolor => $::lglobal{checkcolor},
+								-value       => '\/\*|\*\/',
+								-text        => '/* */',
+		  )->grid( -row => 1, -column => 1, -pady => 5 );
+		my $nsel =
+		  $frame1->Radiobutton(
+								-variable    => \$::lglobal{brsel},
+								-selectcolor => $::lglobal{checkcolor},
+								-value       => '\/#|#\/',
+								-text        => '/# #/',
+		  )->grid( -row => 1, -column => 2, -pady => 5 );
+		my $stsel =
+		  $frame1->Radiobutton(
+								-variable    => \$::lglobal{brsel},
+								-selectcolor => $::lglobal{checkcolor},
+								-value       => '\/\$|\$\/',
+								-text        => '/$ $/',
+		  )->grid( -row => 1, -column => 3, -pady => 5 );
+		my $frame3 = $::lglobal{brkpop}->Frame->pack;
+		my $parasel =
+		  $frame3->Radiobutton(
+								-variable    => \$::lglobal{brsel},
+								-selectcolor => $::lglobal{checkcolor},
+								-value       => '^\/[Pp]|[Pp]\/',
+								-text        => '/p p/',
+		  )->grid( -row => 2, -column => 1, -pady => 5 );
+		my $qusel =
+		  $frame3->Radiobutton(
+								-variable    => \$::lglobal{brsel},
+								-selectcolor => $::lglobal{checkcolor},
+								-value       => '«|»',
+								-text        => 'Angle quotes « »',
+		  )->grid( -row => 2, -column => 2, -pady => 5 );
+
+		my $gqusel =
+		  $frame3->Radiobutton(
+								-variable    => \$::lglobal{brsel},
+								-selectcolor => $::lglobal{checkcolor},
+								-value       => '»|«',
+								-text        => 'German Angle quotes » «',
+		  )->grid( -row => 3, -column => 2 );
+
+		#		my $allqsel =
+		#		  $frame3->Radiobutton(
+		#								-variable    => \$::lglobal{brsel},
+		#								-selectcolor => $::lglobal{checkcolor},
+		#								-value       => 'all',
+		#								-text        => 'All brackets ( )',
+		#		  )->grid( -row => 3, -column => 2 );
+
+		my $frame2 = $::lglobal{brkpop}->Frame->pack;
+		my $brsearchbt =
+		  $frame2->Button(
+						   -activebackground => $::activecolor,
+						   -text             => 'Search',
+						   -command          => \&brsearch,
+						   -width            => 10,
+		  )->grid( -row => 1, -column => 2, -pady => 5 );
+		my $brnextbt = $frame2->Button(
+			-activebackground => $::activecolor,
+			-text             => 'Next',
+			-command          => sub {
+				shift @{ $::lglobal{brbrackets} }
+				  if @{ $::lglobal{brbrackets} };
+				shift @{ $::lglobal{brindices} }
+				  if @{ $::lglobal{brindices} };
+				$textwindow->bell
+				  unless ( $::lglobal{brbrackets}[1] || $::nobell );
+				return unless $::lglobal{brbrackets}[1];
+				brnext();
+			},
+			-width => 10,
+		)->grid( -row => 2, -column => 2, -pady => 5 );
+	}
+	$::lglobal{brkpop}->protocol(
+		'WM_DELETE_WINDOW' => sub {
+			$::lglobal{brkpop}->destroy;
+			undef $::lglobal{brkpop};
+			$textwindow->tagRemove( 'highlight', '1.0', 'end' );
+		}
+	);
+	$::lglobal{brkpop}->transient($top) if $::stayontop;
+	if ($psel) { $psel->select; }
+
+	sub brsearch {
+		my $textwindow = $::textwindow;
+		viewpagenums() if ( $::lglobal{seepagenums} );
+		@{ $::lglobal{brbrackets} } = ();
+		@{ $::lglobal{brindices} }  = ();
+		$::lglobal{brindex} = '1.0';
+		my $brcount = 0;
+		my $brlength;
+		while ( $::lglobal{brindex} ) {
+			$::lglobal{brindex} =
+			  $textwindow->search(
+								 '-regexp',
+								 '-count' => \$brlength,
+								 '--', $::lglobal{brsel}, $::lglobal{brindex}, 'end'
+			  );
+			last unless $::lglobal{brindex};
+			$::lglobal{brbrackets}[$brcount] =
+			  $textwindow->get( $::lglobal{brindex},
+								$::lglobal{brindex} . '+' . $brlength . 'c' );
+			$::lglobal{brindices}[$brcount] = $::lglobal{brindex};
+			$brcount++;
+			$::lglobal{brindex} .= '+1c';
+		}
+		brnext() if @{ $::lglobal{brbrackets} };
+	}
+
+	sub brnext {
+		my $textwindow = $::textwindow;
+		viewpagenums() if ( $::lglobal{seepagenums} );
+		$textwindow->tagRemove( 'highlight', '1.0', 'end' );
+		while (1) {
+			last
+			  unless (
+					   (
+						    ( $::lglobal{brbrackets}[0] =~ m{[\[\(\{<«]} )
+						 && ( $::lglobal{brbrackets}[1] =~ m{[\]\)\}>»]} )
+					   )
+					   || (    ( $::lglobal{brbrackets}[0] =~ m{[\[\(\{<»]} )
+							&& ( $::lglobal{brbrackets}[1] =~ m{[\]\)\}>«]} ) )
+					   || (    ( $::lglobal{brbrackets}[0] =~ m{^\x7f*/\*} )
+							&& ( $::lglobal{brbrackets}[1] =~ m{^\x7f*\*/} ) )
+					   || (    ( $::lglobal{brbrackets}[0] =~ m{^\x7f*/\$} )
+							&& ( $::lglobal{brbrackets}[1] =~ m{^\x7f*\$/} ) )
+					   || (    ( $::lglobal{brbrackets}[0] =~ m{^\x7f*/[p]}i )
+							&& ( $::lglobal{brbrackets}[1] =~ m{^\x7f*[p]/}i ) )
+					   || (    ( $::lglobal{brbrackets}[0] =~ m{^\x7f*/#} )
+							&& ( $::lglobal{brbrackets}[1] =~ m{^\x7f*#/} ) )
+			  );
+			shift @{ $::lglobal{brbrackets} };
+			shift @{ $::lglobal{brbrackets} };
+			shift @{ $::lglobal{brindices} };
+			shift @{ $::lglobal{brindices} };
+			$::lglobal{brbrackets}[0] = $::lglobal{brbrackets}[0] || '';
+			$::lglobal{brbrackets}[1] = $::lglobal{brbrackets}[1] || '';
+			last unless @{ $::lglobal{brbrackets} };
+		}
+		if ( ( $::lglobal{brbrackets}[2] ) && ( $::lglobal{brbrackets}[3] ) ) {
+			if (    ( $::lglobal{brbrackets}[0] eq $::lglobal{brbrackets}[1] )
+				 && ( $::lglobal{brbrackets}[2] eq $::lglobal{brbrackets}[3] ) )
+			{
+				shift @{ $::lglobal{brbrackets} };
+				shift @{ $::lglobal{brbrackets} };
+				shift @{ $::lglobal{brindices} };
+				shift @{ $::lglobal{brindices} };
+				shift @{ $::lglobal{brbrackets} };
+				shift @{ $::lglobal{brbrackets} };
+				shift @{ $::lglobal{brindices} };
+				shift @{ $::lglobal{brindices} };
+				brnext();
+			}
+		}
+		if ( @{ $::lglobal{brbrackets} } ) {
+			$textwindow->markSet( 'insert', $::lglobal{brindices}[0] )
+			  if $::lglobal{brindices}[0];
+			$textwindow->see( $::lglobal{brindices}[0] )
+			  if $::lglobal{brindices}[0];
+			$textwindow->tagAdd(
+								 'highlight',
+								 $::lglobal{brindices}[0],
+								 $::lglobal{brindices}[0] . '+'
+								   . ( length( $::lglobal{brbrackets}[0] ) ) . 'c'
+			) if $::lglobal{brindices}[0];
+			$textwindow->tagAdd(
+								 'highlight',
+								 $::lglobal{brindices}[1],
+								 $::lglobal{brindices}[1] . '+'
+								   . ( length( $::lglobal{brbrackets}[1] ) ) . 'c'
+			) if $::lglobal{brindices}[1];
+			$textwindow->focus;
+		}
+	}
+}
+
+sub orphanedmarkup {
+	searchpopup();
+	searchoptset(qw/0 x x 1/);
+	$::lglobal{searchentry}->delete( '1.0', 'end' );
+
+	#	$::lglobal{searchentry}->insert( 'end', "\\<(\\w+)>\\n?[^<]+<(?!/\\1>)" );
+	$::lglobal{searchentry}->insert( 'end',
+				 "<(?!tb)(\\w+)>(\\n|[^<])+<(?!/\\1>)|<(?!/?(tb|sc|[bfgi])>)" );
 }
 
 

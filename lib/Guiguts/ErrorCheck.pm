@@ -8,7 +8,7 @@ BEGIN {
 	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
 	@EXPORT = qw(&errorcheckpop_up &errorcheckrun &gutcheckview &gutwindowpopulate &gcviewops 
-	&gcheckpop_up &jeebiesview jeebiesrun);
+	&gcheckpop_up &jeebiesview jeebiesrun &gutcheck &gutopts &jeebiespop_up);
 }
 
 sub errorcheckpop_up {
@@ -1151,7 +1151,7 @@ sub gcheckpop_up {
 				$colnum = '0' unless $colnum;
 				$textwindow->markSet( "g$mark", "$linenum.$colnum" );
 			}
-			$::122gc{$line} = "g$mark";
+			$::gc{$line} = "g$mark";
 		}
 	}
 	close $results;
@@ -1202,10 +1202,10 @@ sub jeebiesrun {
 				$listbox->insert( 'end', $line );
 			}
 		}
-		unlink 'results.tmp';
 	} else {
 		warn "Unable to run Jeebies. $!";
 	}
+	unlink 'results.tmp';
 	$listbox->delete('0');
 	$listbox->insert( 2, "  --> $mark queries." );
 	$top->Unbusy( -recurse => 1 );
@@ -1225,6 +1225,246 @@ sub jeebiesview {
 	$textwindow->focus;
 	$::lglobal{jeepop}->raise;
 	$::geometryhash{jeepop} = $::lglobal{jeepop}->geometry;
+}
+
+## Gutcheck
+sub gutcheck {
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	no warnings;
+	push @::operations, ( localtime() . ' - Gutcheck' );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
+	::oppopupdate()  if $::lglobal{oppop};
+	my ( $name, $path, $extension, @path );
+	$textwindow->focus;
+	::update_indicators();
+	my $title = $top->cget('title');
+	return if ( $title =~ /No File Loaded/ );
+	#$top->Busy( -recurse => 1 );
+
+	# FIXME: wide character in print warning next line with unicode
+	# Figure out how to determine encoding. See scratchpad.pl
+	# open my $gc, ">:encoding(UTF-8)", "gutchk.tmp");
+	if ( open my $gc, ">:bytes", 'gutchk.tmp' ) {
+		my $count = 0;
+		my $index = '1.0';
+		my ($lines) = $textwindow->index('end - 1c') =~ /^(\d+)\./;
+		while ( $textwindow->compare( $index, '<', 'end' ) ) {
+			my $end = $textwindow->index("$index  lineend +1c");
+			print $gc $textwindow->get( $index, $end );
+			$index = $end;
+		}
+		close $gc;
+	} else {
+		warn "Could not open temp file for writing. $!";
+		my $dialog = $top->Dialog(
+				-text => 'Could not write to the '
+				  . cwd()
+				  . ' directory. Check for write permission or space problems.',
+				-bitmap  => 'question',
+				-title   => 'Gutcheck problem',
+				-buttons => [qw/OK/],
+		);
+		$dialog->Show;
+		return;
+	}
+	$title =~
+	  s/$::window_title - //; #FIXME: sub this out; this and next in the tidy code
+	$title =~ s/edited - //;
+	$title = ::os_normal($title);
+	( $name, $path, $extension ) = ::fileparse( $title, '\.[^\.]*$' );
+	my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
+	unless ($::gutcommand) {
+		$::gutcommand =
+		  $textwindow->getOpenFile(-filetypes => $types,
+								   -title => 'Where is the Gutcheck executable?'
+		  );
+	}
+	return unless $::gutcommand;
+	my $gutcheckoptions = '-ey'
+	  ;    # e - echo queried line. y - puts errors to stdout instead of stderr.
+	if ( $::gcopt[0] ) { $gutcheckoptions .= 't' }
+	;      # Check common typos
+	if ( $::gcopt[1] ) { $gutcheckoptions .= 'x' }
+	;      # "Trust no one" Paranoid mode. Queries everything
+	if ( $::gcopt[2] ) { $gutcheckoptions .= 'p' }
+	;      # Require closure of quotes on every paragraph
+	if ( $::gcopt[3] ) { $gutcheckoptions .= 's' }
+	;      # Force checking for matched pairs of single quotes
+	if ( $::gcopt[4] ) { $gutcheckoptions .= 'm' }
+	;      # Ignore markup in < >
+	if ( $::gcopt[5] ) { $gutcheckoptions .= 'l' }
+	;      # Line end checking - defaults on
+	if ( $::gcopt[6] ) { $gutcheckoptions .= 'v' }
+	;      # Verbose - list EVERYTHING!
+	if ( $::gcopt[7] ) { $gutcheckoptions .= 'u' }
+	;      # Use file of User-defined Typos
+	if ( $::gcopt[8] ) { $gutcheckoptions .= 'd' }
+	;      # Ignore DP style page separators
+	$::gutcommand = ::os_normal($::gutcommand);
+	::savesettings();
+
+	if ( $::lglobal{gcpop} ) {
+		$::lglobal{gclistbox}->delete( '0', 'end' );
+	}
+	my $runner = ::runner::tofile('gutrslts.tmp');
+	$runner->run( $::gutcommand, $gutcheckoptions, 'gutchk.tmp' );
+
+	#$top->Unbusy;
+	unlink 'gutchk.tmp';
+	gcheckpop_up();
+}
+
+sub gutopts {
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	$::lglobal{gcdialog} =
+	  $top->DialogBox( -title => 'Gutcheck Options', -buttons => ['OK'] );
+	::initialize_popup_without_deletebinding('gcdialog');
+	my $gcopt6 = $::lglobal{gcdialog}->add(
+							   'Checkbutton',
+							   -variable    => \$::gcopt[6],
+							   -selectcolor => $::lglobal{checkcolor},
+							   -text => '-v Enable verbose mode (Recommended).',
+	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt0 = $::lglobal{gcdialog}->add(
+								  'Checkbutton',
+								  -variable    => \$::gcopt[0],
+								  -selectcolor => $::lglobal{checkcolor},
+								  -text => '-t Disable check for common typos.',
+	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt1 = $::lglobal{gcdialog}->add(
+										  'Checkbutton',
+										  -variable    => \$::gcopt[1],
+										  -selectcolor => $::lglobal{checkcolor},
+										  -text => '-x Disable paranoid mode.',
+	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt2 = $::lglobal{gcdialog}->add(
+							 'Checkbutton',
+							 -variable    => \$::gcopt[2],
+							 -selectcolor => $::lglobal{checkcolor},
+							 -text => '-p Report ALL unbalanced double quotes.',
+	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt3 = $::lglobal{gcdialog}->add(
+							 'Checkbutton',
+							 -variable    => \$::gcopt[3],
+							 -selectcolor => $::lglobal{checkcolor},
+							 -text => '-s Report ALL unbalanced single quotes.',
+	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt4 = $::lglobal{gcdialog}->add(
+										  'Checkbutton',
+										  -variable    => \$::gcopt[4],
+										  -selectcolor => $::lglobal{checkcolor},
+										  -text => '-m Interpret HTML markup.',
+	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt5 = $::lglobal{gcdialog}->add(
+								  'Checkbutton',
+								  -variable    => \$::gcopt[5],
+								  -selectcolor => $::lglobal{checkcolor},
+								  -text => '-l Do not report non DOS newlines.',
+	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt7 = $::lglobal{gcdialog}->add(
+								   'Checkbutton',
+								   -variable    => \$::gcopt[7],
+								   -selectcolor => $::lglobal{checkcolor},
+								   -text => '-u Flag words from the .typ file.',
+	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt8 = $::lglobal{gcdialog}->add(
+								 'Checkbutton',
+								 -variable    => \$::gcopt[8],
+								 -selectcolor => $::lglobal{checkcolor},
+								 -text => '-d Ignore DP style page separators.',
+	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	$::lglobal{gcdialog}->Show;
+	::savesettings();
+}
+
+sub jeebiespop_up {
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	my @jlines;
+	::viewpagenums() if ( $::lglobal{seepagenums} );
+	if ( $::lglobal{jeepop} ) {
+		$::lglobal{jeepop}->deiconify;
+	} else {
+		$::lglobal{jeepop} = $top->Toplevel;
+		$::lglobal{jeepop}->title('Jeebies');
+		::initialize_popup_with_deletebinding('jeepop');
+		$::lglobal{jeepop}->transient($top) if $::stayontop;
+		my $ptopframe = $::lglobal{jeepop}->Frame->pack;
+		$ptopframe->Label( -text => 'Search mode:', )
+		  ->pack( -side => 'left', -padx => 2 );
+		my %rbutton = ( 'Paranoid', 'p', 'Normal', '', 'Tolerant', 't' );
+		for ( keys %rbutton ) {
+			$ptopframe->Radiobutton(
+									 -text     => $_,
+									 -variable => \$::jeebiesmode,
+									 -value    => $rbutton{$_},
+									 -command  => \&saveset,
+			)->pack( -side => 'left', -padx => 2 );
+		}
+		$ptopframe->Button(
+						  -activebackground => $::activecolor,
+						  -command => sub { jeebiesrun( $::lglobal{jelistbox} ) },
+						  -text    => 'Re-run Jeebies',
+						  -width   => 16
+		  )->pack(
+				   -side   => 'left',
+				   -pady   => 10,
+				   -padx   => 2,
+				   -anchor => 'n'
+		  );
+		my $pframe =
+		  $::lglobal{jeepop}->Frame->pack( -fill => 'both', -expand => 'both', );
+		$::lglobal{jelistbox} =
+		  $pframe->Scrolled(
+							 'Listbox',
+							 -scrollbars  => 'se',
+							 -background  => $::bkgcolor,
+							 -font        => $::lglobal{font},
+							 -selectmode  => 'single',
+							 -activestyle => 'none',
+		  )->pack(
+				   -anchor => 'nw',
+				   -fill   => 'both',
+				   -expand => 'both',
+				   -padx   => 2,
+				   -pady   => 2
+		  );
+		::drag( $::lglobal{jelistbox} );
+		::BindMouseWheel( $::lglobal{jelistbox} );
+		$::lglobal{jelistbox}
+		  ->eventAdd( '<<jview>>' => '<Button-1>', '<Return>' );
+		$::lglobal{jelistbox}->bind( '<<jview>>', sub { jeebiesview() } );
+		$::lglobal{jelistbox}->eventAdd( '<<jremove>>' => '<ButtonRelease-2>',
+									   '<ButtonRelease-3>' );
+		$::lglobal{jelistbox}->bind(
+			'<<jremove>>',
+			sub {
+				$::lglobal{jelistbox}->activate(
+										 $::lglobal{jelistbox}->index(
+											 '@'
+											   . (
+												 $::lglobal{jelistbox}->pointerx -
+												   $::lglobal{jelistbox}->rootx
+											   )
+											   . ','
+											   . (
+												 $::lglobal{jelistbox}->pointery -
+												   $::lglobal{jelistbox}->rooty
+											   )
+										 )
+				);
+				undef $::gc{ $::lglobal{jelistbox}->get('active') };
+				$::lglobal{jelistbox}->delete('active');
+				jeebiesview();
+				$::lglobal{jelistbox}->selectionClear( '0', 'end' );
+				$::lglobal{jelistbox}->selectionSet('active');
+				$::lglobal{jelistbox}->after( $::lglobal{delay} );
+			}
+		);
+		jeebiesrun( $::lglobal{jelistbox} );
+	}
 }
 
 

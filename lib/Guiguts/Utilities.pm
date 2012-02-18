@@ -914,7 +914,7 @@ sub initialize {
 
 	$::lglobal{guigutsdirectory} = ::dirname( ::rel2abs($0) )
 	  unless defined $::lglobal{guigutsdirectory};
-	$::scannospath = ::::catfile( $::lglobal{guigutsdirectory}, 'scannos' )
+	$::scannospath = ::catfile( $::lglobal{guigutsdirectory}, 'scannos' )
          unless $::scannospath;
 
 	if ($::OS_WIN) {

@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
-	@EXPORT=qw( &highlightscannos &scannosfile)
+	@EXPORT=qw( &highlightscannos &scannosfile &hilite &hilitepopup)
 }
 
 # Routine to find highlight word list
@@ -188,6 +188,123 @@ sub highlightscannos {
 		last if ( $y == $ypix );
 	}
 	return;
+}
+
+sub hilite {
+	my $textwindow = $main::textwindow;
+	my $top = $main::top;
+	my $mark = shift;
+	$::lglobal{hilitemode} = 'exact' unless $::lglobal{hilitemode};
+	$mark = quotemeta($mark)
+	  if $::lglobal{hilitemode} eq 'exact';    # FIXME: uninitialized 'hilitemode'
+	my @ranges      = $textwindow->tagRanges('sel');
+	my $range_total = @ranges;
+	my ( $index, $lastindex );
+	if ( $range_total == 0 ) {
+		return;
+	} else {
+		my $end            = pop(@ranges);
+		my $start          = pop(@ranges);
+		my $thisblockstart = $start;
+		$lastindex = $start;
+		my $thisblockend = $end;
+		$textwindow->tagRemove( 'quotemark', '1.0', 'end' );
+		my $length;
+		while ($lastindex) {
+			$index =
+			  $textwindow->search(
+								   '-regexp',
+								   -count => \$length,
+								   '--', $mark, $lastindex, $thisblockend
+			  );
+			$textwindow->tagAdd( 'quotemark', $index,
+								 $index . ' +' . $length . 'c' )
+			  if $index;
+			if   ($index) { $lastindex = "$index+1c" }
+			else          { $lastindex = '' }
+		}
+	}
+}
+# Popup for highlighting arbitrary characters in selection
+sub hilitepopup {
+	my $textwindow = $main::textwindow;
+	my $top = $main::top;
+	viewpagenums() if ( $::lglobal{seepagenums} );
+	if ( defined( $::lglobal{hilitepop} ) ) {
+		$::lglobal{hilitepop}->deiconify;
+		$::lglobal{hilitepop}->raise;
+		$::lglobal{hilitepop}->focus;
+	} else {
+		$::lglobal{hilitepop} = $top->Toplevel;
+		$::lglobal{hilitepop}->title('Character Highlight');
+		::initialize_popup_with_deletebinding('hilitepop');
+		$::lglobal{hilitemode} = 'exact';
+		my $f =
+		  $::lglobal{hilitepop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f->Label( -text => 'Highlight Character(s) or Regex', )
+		  ->pack( -side => 'top', -pady => 2, -padx => 2, -anchor => 'n' );
+		my $entry = $f->Entry(
+							   -width      => 40,
+							   -background => $::bkgcolor,
+							   -font       => $::lglobal{font},
+							   -relief     => 'sunken',
+		  )->pack(
+				   -expand => 1,
+				   -fill   => 'x',
+				   -padx   => 3,
+				   -pady   => 3,
+				   -anchor => 'n'
+		  );
+		my $f2 =
+		  $::lglobal{hilitepop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f2->Radiobutton(
+						  -variable    => \$::lglobal{hilitemode},
+						  -selectcolor => $::lglobal{checkcolor},
+						  -value       => 'exact',
+						  -text        => 'Exact',
+		)->grid( -row => 0, -column => 1 );
+		$f2->Radiobutton(
+						  -variable    => \$::lglobal{hilitemode},
+						  -selectcolor => $::lglobal{checkcolor},
+						  -value       => 'regex',
+						  -text        => 'Regex',
+		)->grid( -row => 0, -column => 2 );
+		my $f3 =
+		  $::lglobal{hilitepop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f3->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+
+				if ( $textwindow->markExists('selstart') ) {
+					$textwindow->tagAdd( 'sel', 'selstart', 'selend' );
+				}
+			},
+			-text  => 'Previous Selection',
+			-width => 16,
+		)->grid( -row => 1, -column => 1, -padx => 2, -pady => 2 );
+
+		$f3->Button(
+				 -activebackground => $::activecolor,
+				 -command => sub { $textwindow->tagAdd( 'sel', '1.0', 'end' ) },
+				 -text    => 'Select Whole File',
+				 -width   => 16,
+		)->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
+		$f3->Button(
+					 -activebackground => $::activecolor,
+					 -command          => sub { hilite( $entry->get ) },
+					 -text             => 'Apply Highlights',
+					 -width            => 16,
+		)->grid( -row => 2, -column => 1, -padx => 2, -pady => 2 );
+		$f3->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				$textwindow->tagRemove( 'quotemark', '1.0', 'end' );
+			},
+			-text  => 'Remove Highlight',
+			-width => 16,
+		)->grid( -row => 2, -column => 2, -padx => 2, -pady => 2 );
+
+	}
 }
 
 

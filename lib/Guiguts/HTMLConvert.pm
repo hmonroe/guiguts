@@ -3589,5 +3589,14 @@ sub pageadjust {
 
 }
 
+sub addpagelinks {
+	my $selection = shift;
+	$selection =~ s/(\d{1,3})-(\d{1,3})/<a href="#Page_$1">$1-$2<\/a>/g;
+	$selection =~ s/(\d{1,3})([,;\.])/<a href="#Page_$1">$1<\/a>$2/g;
+	$selection =~ s/\s(\d{1,3})\s/ <a href="#Page_$1">$1<\/a> /g;
+	$selection =~ s/(\d{1,3})$/<a href="#Page_$1">$1<\/a>/;
+	return $selection;
+}
+
 
 1;

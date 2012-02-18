@@ -8,7 +8,7 @@ BEGIN {
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&text_convert_italic &text_convert_bold &text_thought_break &text_convert_tb 
-	&text_convert_options &fixpopup)
+	&text_convert_options &fixpopup &text_convert_smallcaps &text_remove_smallcaps_markup)
 }
 
 sub text_convert_italic {
@@ -282,6 +282,24 @@ sub fixup {
 	$textwindow->markSet( 'insert', 'end' );
 	$textwindow->see('end');
 	::update_indicators();
+}
+
+sub text_convert_smallcaps {
+	::searchpopup();
+	::searchoptset(qw/0 x x 1/);
+	$::lglobal{searchentry}->delete( '1.0', 'end' );
+	$::lglobal{searchentry}->insert( 'end', "<sc>(\\n?[^<]+)</sc>" );
+	$::lglobal{replaceentry}->delete( '1.0', 'end' );
+	$::lglobal{replaceentry}->insert( 'end', "\\U\$1\\E" );
+}
+
+sub text_remove_smallcaps_markup {
+	::searchpopup();
+	::searchoptset(qw/0 x x 1/);
+	$::lglobal{searchentry}->delete( '1.0', 'end' );
+	$::lglobal{searchentry}->insert( 'end', "<sc>(\\n?[^<]+)</sc>" );
+	$::lglobal{replaceentry}->delete( '1.0', 'end' );
+	$::lglobal{replaceentry}->insert( 'end', "\$1" );
 }
 
 
