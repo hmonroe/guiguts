@@ -9,7 +9,8 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&openpng &get_image_file &setviewerpath &setdefaultpath &arabic &roman
 	&textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_cmdline &win32_start &win32_is_exe
-	&win32_create_process &runner &debug_dump &run &escape_regexmetacharacters &deaccent &BindMouseWheel)
+	&win32_create_process &runner &debug_dump &run &escape_regexmetacharacters &deaccent &BindMouseWheel
+	&working)
 }
 
 sub get_image_file {
@@ -133,8 +134,8 @@ sub arabic {
 }
 
 sub textbindings {
-	my $textwindow = $main::textwindow;
-	my $top = $main::top;
+	my $textwindow = $::textwindow;
+	my $top = $::top;
 
 	# Set up a bunch of events and key bindings for the widget
 	$textwindow->tagConfigure( 'footnote', -background => 'cyan' );
@@ -795,6 +796,38 @@ sub BindMouseWheel {
 				  unless $Tk::strictMotif;
 			}
 		);
+	}
+}
+
+sub working {
+	my $msg = shift;
+	my $top = $::top;
+	if ( defined( $::lglobal{workpop} ) && ( defined $msg ) ) {
+		$::lglobal{worklabel}
+		  ->configure( -text => "\n\n\nWorking....\n$msg\nPlease wait.\n\n\n" );
+		$::lglobal{workpop}->update;
+	} elsif ( defined $::lglobal{workpop} ) {
+		$::lglobal{workpop}->destroy;
+		undef $::lglobal{workpop};
+	} else {
+		$::lglobal{workpop} = $top->Toplevel;
+		$::lglobal{workpop}->transient($top);
+		$::lglobal{workpop}->title('Working.....');
+		$::lglobal{worklabel} =
+		  $::lglobal{workpop}->Label(
+						 -text => "\n\n\nWorking....\n$msg\nPlease wait.\n\n\n",
+						 -font => '{helvetica} 20 bold',
+						 -background => $::activecolor,
+		  )->pack;
+		$::lglobal{workpop}->resizable( 'no', 'no' );
+		$::lglobal{workpop}->protocol(
+			'WM_DELETE_WINDOW' => sub {
+				$::lglobal{workpop}->destroy;
+				undef $::lglobal{workpop};
+			}
+		);
+		$::lglobal{workpop}->Icon( -image => $::icon );
+		$::lglobal{workpop}->update;
 	}
 }
 

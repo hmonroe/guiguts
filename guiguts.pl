@@ -501,37 +501,6 @@ sub loadscannos {
 }
 
 
-sub working {
-	my $msg = shift;
-	if ( defined( $lglobal{workpop} ) && ( defined $msg ) ) {
-		$lglobal{worklabel}
-		  ->configure( -text => "\n\n\nWorking....\n$msg\nPlease wait.\n\n\n" );
-		$lglobal{workpop}->update;
-	} elsif ( defined $lglobal{workpop} ) {
-		$lglobal{workpop}->destroy;
-		undef $lglobal{workpop};
-	} else {
-		$lglobal{workpop} = $top->Toplevel;
-		$lglobal{workpop}->transient($top);
-		$lglobal{workpop}->title('Working.....');
-		$lglobal{worklabel} =
-		  $lglobal{workpop}->Label(
-						 -text => "\n\n\nWorking....\n$msg\nPlease wait.\n\n\n",
-						 -font => '{helvetica} 20 bold',
-						 -background => $activecolor,
-		  )->pack;
-		$lglobal{workpop}->resizable( 'no', 'no' );
-		$lglobal{workpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$lglobal{workpop}->destroy;
-				undef $lglobal{workpop};
-			}
-		);
-		$lglobal{workpop}->Icon( -image => $icon );
-		$lglobal{workpop}->update;
-	}
-}
-
 sub handleDND {
 	my ( $sel, $filename ) = shift;
 	eval {    # In case of an error, do the SelectionGet in an eval block
