@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
-	@EXPORT = qw(&pututf &latinpopup);
+	@EXPORT = qw(&pututf &latinpopup &doutfbuttons);
 }
 
 sub pututf {
@@ -18,7 +18,7 @@ sub pututf {
 	return unless $letter;
 	my $ord = ord($letter);
 	$letter = "&#$ord;" if ( $::lglobal{uoutp} eq 'h' );
-	::insertit($letter);
+	insertit($letter);
 }
 
 sub latinpopup {
@@ -95,12 +95,88 @@ sub latinpopup {
 			return unless $letter;
 			my $hex = sprintf( "%x", ord($letter) );
 			$letter = ::entity( '\x' . $hex ) if ( $::lglobal{latoutp} eq 'h' );
-			::insertit($letter);
+			insertit($letter);
 		}
 		$::lglobal{latinpop}->resizable( 'no', 'no' );
 		$::lglobal{latinpop}->raise;
 		$::lglobal{latinpop}->focus;
 	}
+}
+
+sub insertit {
+	my $letter  = shift;
+	my $isatext = 0;
+	my $spot;
+	$isatext = 1 if $::lglobal{hasfocus}->isa('Text');
+	if ($isatext) {
+		$spot = $::lglobal{hasfocus}->index('insert');
+		my @ranges = $::lglobal{hasfocus}->tagRanges('sel');
+		$::lglobal{hasfocus}->delete(@ranges) if @ranges;
+	}
+	$::lglobal{hasfocus}->insert( 'insert', $letter );
+	$::lglobal{hasfocus}->markSet( 'insert', $spot . '+' . length($letter) . 'c' )
+	  if $isatext;
+}
+
+sub doutfbuttons {
+	my ( $start, $end ) = @_;
+	my $textwindow = $::textwindow;
+	
+	my $rows = ( ( hex $end ) - ( hex $start ) + 1 ) / 16 - 1;
+	my ( @buttons, $blln );
+	$blln = $::lglobal{utfpop}->Balloon( -initwait => 750 );
+
+	$::lglobal{pframe}->destroy if $::lglobal{pframe};
+	undef $::lglobal{pframe};
+
+	$::lglobal{pframe} =
+	  $::lglobal{utfpop}->Frame( -background => $::bkgcolor )
+	  ->pack( -expand => 'y', -fill => 'both' );
+	$::lglobal{utfframe} =
+	  $::lglobal{pframe}->Scrolled(
+								  'Pane',
+								  -background => $::bkgcolor,
+								  -scrollbars => 'se',
+								  -sticky     => 'nswe'
+	  )->pack( -expand => 'y', -fill => 'both' );
+	::drag( $::lglobal{utfframe} );
+
+	for my $y ( 0 .. $rows ) {
+
+		for my $x ( 0 .. 15 ) {
+			my $name = hex($start) + ( $y * 16 ) + $x;
+			my $hex   = sprintf "%04X", $name;
+			my $msg   = "Dec. $name, Hex. $hex";
+			my $cname = charnames::viacode($name);
+			$msg .= ", $cname" if $cname;
+			$name = 0 unless $cname;
+
+			# FIXME: See Todo
+			$buttons[ ( $y * 16 ) + $x ] = $::lglobal{utfframe}->Button(
+
+				#    $buttons( ( $y * 16 ) + $x ) = $frame->Button(
+				-activebackground   => $::activecolor,
+				-text               => chr($name),
+				-font               => $::lglobal{utffont},
+				-relief             => 'flat',
+				-borderwidth        => 0,
+				-background         => $::bkgcolor,
+				-command            => [ \&pututf, $::lglobal{utfpop} ],
+				-highlightthickness => 0,
+			)->grid( -row => $y, -column => $x );
+			$buttons[ ( $y * 16 ) + $x ]->bind(
+				'<ButtonPress-3>',
+				sub {
+					$textwindow->clipboardClear;
+					$textwindow->clipboardAppend(
+								  $buttons[ ( $y * 16 ) + $x ]->cget('-text') );
+				}
+			);
+			$blln->attach( $buttons[ ( $y * 16 ) + $x ], -balloonmsg => $msg, );
+			$::lglobal{utfpop}->update;
+		}
+	}
+
 }
 
 
