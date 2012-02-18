@@ -1303,6 +1303,43 @@ sub initialize {
 				   -format => 'gif', );
 }
 
+sub scrolldismiss {
+	my $textwindow = $::textwindow;
+	return unless $::lglobal{scroller};
+	$textwindow->configure( -cursor => $::lglobal{oldcursor} );
+	$::lglobal{scroller}->destroy;
+	$::lglobal{scroller} = '';
+	$::lglobal{scroll_id}->cancel if $::lglobal{scroll_id};
+	$::lglobal{scroll_id}     = '';
+	$::lglobal{scrolltrigger} = 0;
+}
+
+sub b2scroll {
+	my $top = $::top;
+	my $textwindow = $::textwindow;
+	my $scrolly = $top->pointery - $top->rooty - $::lglobal{scroll_y} - 8;
+	my $scrollx = $top->pointerx - $top->rootx - $::lglobal{scroll_x} - 8;
+	my $signy   = ( abs $scrolly > 5 ) ? ( $scrolly < 0 ? -1 : 1 ) : 0;
+	my $signx   = ( abs $scrollx > 5 ) ? ( $scrollx < 0 ? -1 : 1 ) : 0;
+	$textwindow->configure(
+						  -cursor => $::lglobal{scroll_cursors}{"$signy$signx"} );
+	$scrolly = ( $scrolly**2 - 25 ) / 800;
+	$scrollx = ( $scrollx**2 - 25 ) / 2000;
+	$::lglobal{scrolltriggery} += $scrolly;
+
+	if ( $::lglobal{scrolltriggery} > 1 ) {
+		$textwindow->yview( 'scroll', ( $signy * $::lglobal{scrolltriggery} ),
+							'units' );
+		$::lglobal{scrolltriggery} = 0;
+	}
+	$::lglobal{scrolltriggerx} += $scrollx;
+	if ( $::lglobal{scrolltriggerx} > 1 ) {
+		$textwindow->xview( 'scroll', ( $signx * $::lglobal{scrolltriggerx} ),
+							'units' );
+		$::lglobal{scrolltriggerx} = 0;
+	}
+}
+
 
 
 1;
