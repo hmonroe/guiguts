@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
-	@EXPORT = qw(&latinpopup &utfpopup &utffontinit &utford &uchar);
+	@EXPORT = qw(&latinpopup &utfpopup &utffontinit &utford &uchar &cp1252toUni);
 }
 
 sub pututf {
@@ -121,7 +121,6 @@ sub insertit {
 sub doutfbuttons {
 	my ( $start, $end ) = @_;
 	my $textwindow = $::textwindow;
-	
 	my $rows = ( ( hex $end ) - ( hex $start ) + 1 ) / 16 - 1;
 	my ( @buttons, $blln );
 	$blln = $::lglobal{utfpop}->Balloon( -initwait => 750 );
@@ -613,6 +612,53 @@ END
 	$oops->Show;
 	return 0;
 }
+
+## Convert Windows CP 1252
+sub cp1252toUni {
+	my $textwindow = $::textwindow;
+	my %cp = (
+			   "\x{80}" => "\x{20AC}",
+			   "\x{82}" => "\x{201A}",
+			   "\x{83}" => "\x{0192}",
+			   "\x{84}" => "\x{201E}",
+			   "\x{85}" => "\x{2026}",
+			   "\x{86}" => "\x{2020}",
+			   "\x{87}" => "\x{2021}",
+			   "\x{88}" => "\x{02C6}",
+			   "\x{89}" => "\x{2030}",
+			   "\x{8A}" => "\x{0160}",
+			   "\x{8B}" => "\x{2039}",
+			   "\x{8C}" => "\x{0152}",
+			   "\x{8E}" => "\x{017D}",
+			   "\x{91}" => "\x{2018}",
+			   "\x{92}" => "\x{2019}",
+			   "\x{93}" => "\x{201C}",
+			   "\x{94}" => "\x{201D}",
+			   "\x{95}" => "\x{2022}",
+			   "\x{96}" => "\x{2013}",
+			   "\x{97}" => "\x{2014}",
+			   "\x{98}" => "\x{02DC}",
+			   "\x{99}" => "\x{2122}",
+			   "\x{9A}" => "\x{0161}",
+			   "\x{9B}" => "\x{203A}",
+			   "\x{9C}" => "\x{0153}",
+			   "\x{9E}" => "\x{017E}",
+			   "\x{9F}" => "\x{0178}"
+	);
+	for my $term ( keys %cp ) {
+		my $thisblockstart;
+		while ( $thisblockstart =
+				$textwindow->search( '-exact', '--', $term, '1.0', 'end' ) )
+		{
+
+			# Use replacewith() to ensure change is tracked and saved
+			$textwindow->replacewith( $thisblockstart, "$thisblockstart+1c",
+									  $cp{$term} );
+		}
+	}
+	::update_indicators();
+}
+
 
 
 1;
