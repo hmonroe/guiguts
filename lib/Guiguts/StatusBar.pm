@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&update_indicators &_updatesel &buildstatusbar &selection)
+	@EXPORT=qw(&update_indicators &_updatesel &buildstatusbar &selection &gotoline &gotopage)
 }
 
 # Routine to update the status bar when something has changed.

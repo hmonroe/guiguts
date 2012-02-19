@@ -2074,16 +2074,16 @@ sub menubuildtwo {
 			   'command',
 			   'Goto ~Line...',
 			   -command => sub {
-				   main::gotoline();
-				   main::update_indicators();
+				   &main::gotoline();
+				   &main::update_indicators();
 				 }
 			],
 			[
 			   'command',
 			   'Goto ~Page...',
 			   -command => sub {
-				   main::gotopage();
-				   main::update_indicators();
+				   &main::gotopage();
+				   &main::update_indicators();
 				 }
 			],
 			[ 'separator', '' ],
