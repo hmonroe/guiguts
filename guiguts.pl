@@ -975,31 +975,6 @@ sub saveinterval {
 	}
 }
 
-sub set_autosave {
-	$lglobal{autosaveid}->cancel     if $lglobal{autosaveid};
-	$lglobal{saveflashid}->cancel    if $lglobal{saveflashid};
-	$lglobal{saveflashingid}->cancel if $lglobal{saveflashingid};
-	$lglobal{autosaveid} = $top->repeat(
-		( $autosaveinterval * 60000 ),
-		sub {
-			savefile()
-			  if $textwindow->numberChanges
-				  and $lglobal{global_filename} !~ /No File Loaded/;
-		}
-	);
-	$lglobal{saveflashid} = $top->after(
-		( $autosaveinterval * 60000 - 10000 ),
-		sub {
-			_flash_save($textwindow)
-			  if $lglobal{global_filename} !~ /No File Loaded/;
-		}
-	);
-	$lglobal{savetool}
-	  ->configure( -background => 'green', -activebackground => 'green' )
-	  unless $notoolbar;
-	$lglobal{autosaveinterval} = time;
-}
-
 # Ready to enter main loop
 checkforupdatesmonthly();
 unless ( -e 'header.txt' ) {

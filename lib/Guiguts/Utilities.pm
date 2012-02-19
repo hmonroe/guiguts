@@ -15,7 +15,7 @@ BEGIN {
 	&natural_sort_length &natural_sort_freq &drag &cut &paste &textcopy &showversion
 	&checkforupdates &checkforupdatesmonthly &hotkeyshelp &regexref &gotobookmark &setbookmark
 	&epubmaker &gnutenberg &sidenotes &poetrynumbers &get_page_number &externalpopup
-	&xtops &setmargins &fontsize &setbrowser &setpngspath &setup)
+	&xtops &setmargins &fontsize &setbrowser &setpngspath &setup &set_autosave)
 }
 
 sub get_image_file {
@@ -2539,5 +2539,34 @@ $::icondata     = '
     ';
 	
 }
+
+sub set_autosave {
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	$::lglobal{autosaveid}->cancel     if $::lglobal{autosaveid};
+	$::lglobal{saveflashid}->cancel    if $::lglobal{saveflashid};
+	$::lglobal{saveflashingid}->cancel if $::lglobal{saveflashingid};
+	$::lglobal{autosaveid} = $top->repeat(
+		( $::autosaveinterval * 60000 ),
+		sub {
+			savefile()
+			  if $textwindow->numberChanges
+				  and $::lglobal{global_filename} !~ /No File Loaded/;
+		}
+	);
+	$::lglobal{saveflashid} = $top->after(
+		( $::autosaveinterval * 60000 - 10000 ),
+		sub {
+			_flash_save($textwindow)
+			  if $::lglobal{global_filename} !~ /No File Loaded/;
+		}
+	);
+	$::lglobal{savetool}
+	  ->configure( -background => 'green', -activebackground => 'green' )
+	  unless $::notoolbar;
+	$::lglobal{autosaveinterval} = time;
+}
+
+
 
 1;
