@@ -10,7 +10,7 @@ BEGIN {
 	@EXPORT=qw(&add_search_history &searchtext &search_history &reg_check &getnextscanno &updatesearchlabels
 	&isvalid &swapterms &findascanno &reghint &replaceeval &replace &opstop &replaceall &killstoppop
 	&searchfromstartifnew &searchoptset &searchpopup &stealthscanno &find_proofer_comment
-	&find_asterisks &find_transliterations &nextblock &orphanedbrackets &orphanedmarkup)
+	&find_asterisks &find_transliterations &nextblock &orphanedbrackets &orphanedmarkup &searchsize)
 }
 
 sub add_search_history {
@@ -2048,6 +2048,52 @@ sub orphanedmarkup {
 	#	$::lglobal{searchentry}->insert( 'end', "\\<(\\w+)>\\n?[^<]+<(?!/\\1>)" );
 	$::lglobal{searchentry}->insert( 'end',
 				 "<(?!tb)(\\w+)>(\\n|[^<])+<(?!/\\1>)|<(?!/?(tb|sc|[bfgi])>)" );
+}
+
+sub searchsize {  # Pop up a window where you can adjust the search history size
+	my $top = $::top;
+
+	if ( $::lglobal{hssizepop} ) {
+		$::lglobal{hssizepop}->deiconify;
+		$::lglobal{hssizepop}->raise;
+	} else {
+		$::lglobal{hssizepop} = $top->Toplevel;
+		$::lglobal{hssizepop}->title('History Size');
+		::initialize_popup_with_deletebinding('hssizepop');
+		$::lglobal{hssizepop}->resizable( 'no', 'no' );
+		my $frame =
+		  $::lglobal{hssizepop}
+		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+		$frame->Label( -text => 'History Size: # of terms to save - ' )
+		  ->pack( -side => 'left' );
+		my $entry = $frame->Entry(
+			-background   => $::bkgcolor,
+			-width        => 5,
+			-textvariable => \$::history_size,
+			-validate     => 'key',
+			-vcmd         => sub {
+				return 1 unless $_[0];
+				return 0 if ( $_[0] =~ /\D/ );
+				return 0 if ( $_[0] < 1 );
+				return 0 if ( $_[0] > 200 );
+				return 1;
+			},
+		)->pack( -side => 'left', -fill => 'x' );
+		my $frame2 =
+		  $::lglobal{hssizepop}
+		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+		$frame2->Button(
+			-text    => 'Ok',
+			-width   => 10,
+			-command => sub {
+				::savesettings();
+				$::lglobal{hssizepop}->destroy;
+				undef $::lglobal{hssizepop};
+			}
+		)->pack;
+		$::lglobal{hssizepop}->raise;
+		$::lglobal{hssizepop}->focus;
+	}
 }
 
 

@@ -287,19 +287,21 @@ sub menu_preferences {
 		  -menuitems =>
 			[  # FIXME: sub this and generalize for all occurences in menu code.
 				[
-					Checkbutton => 'New menus',
+					Checkbutton => 'PP Wizard Menu Structure',
 				  -variable   => \$::useppwizardmenus,
 				  -onvalue    => 1,
 				  -offvalue   => 0,
-				  -command    => \&::menurebuild
+				  -command    => sub {$::usemenutwo=0;
+				  	::menurebuild();}
 
 			   ],
 				[
-				  Checkbutton => 'New menu v2 - requires New menus to be ticked',
+				  Checkbutton => 'New menu structure',
 				  -variable   => \$::usemenutwo,
 				  -onvalue    => 1,
 				  -offvalue   => 0,
-				  -command    => \&::menurebuild
+				  -command    => sub {$::useppwizardmenus = 0;
+				  	::menurebuild();}
 
 			   ],
 			]
@@ -1150,7 +1152,7 @@ sub menubuild {
 	my $menubar = $::menubar;
 	my $textwindow = $::textwindow;
 	my $top = $::top;
-	unless ($::useppwizardmenus) {
+	unless ($::useppwizardmenus or $::usemenutwo) {
 		&::menubuildold();
 		return;
 	}
@@ -1918,7 +1920,7 @@ sub menubuildtwo {
 	my $top = $::top;
 	
 	my $file = $menubar->cascade(
-		-label     => '~File v2',
+		-label     => '~File',
 		-tearoff   => 1,
 		-menuitems => [
 			 [ 'command',   '~Open', -command => sub {&::file_open($textwindow)} ],
