@@ -37,13 +37,13 @@ my @templist = ();
 #startup routine
 sub spellmultiplelanguages {
 	my ($textwindow,$top) = @_;
-	push @main::operations, ( localtime() . ' - multilingual spelling' );
-	&main::viewpagenums() if ( $::lglobal{seepagenums} );
-	&main::oppopupdate()  if $::lglobal{oppop};
+	push @::operations, ( localtime() . ' - multilingual spelling' );
+	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	&::oppopupdate()  if $::lglobal{oppop};
 	# find Aspell and base language if necessary
-	&main::spelloptions() unless $::globalspellpath;
+	&::spelloptions() unless $::globalspellpath;
 	return unless $::globalspellpath;
-	&main::spelloptions() unless $::globalspelldictopt;
+	&::spelloptions() unless $::globalspelldictopt;
 	return unless $::globalspelldictopt;
 	multilangpopup($textwindow,$top);
 }
@@ -51,9 +51,9 @@ sub spellmultiplelanguages {
 #the popup window and menu
 sub multilangpopup {
 	my ( $textwindow, $top ) = @_;
-	push @main::operations, ( localtime() . ' - Multilingual Spelling' );
-	&main::viewpagenums() if ( $::lglobal{seepagenums} );
-	&main::oppopupdate()  if $::lglobal{oppop};
+	push @::operations, ( localtime() . ' - Multilingual Spelling' );
+	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	&::oppopupdate()  if $::lglobal{oppop};
 # open popup if necessary	
 	if ( defined( $::lglobal{multispellpop} ) ) {
 		$::lglobal{multispellpop}->deiconify;
@@ -92,7 +92,7 @@ sub multilangpopup {
 				)->grid( -row => 1, -column => 2, -padx => 1, -pady => 1 );
 			$f0->Button(
 						 -activebackground => $::activecolor,
-						 -command => sub { main::spelloptions();
+						 -command => sub { ::spelloptions();
 							clearmultilanguages();
 							updateMultiDictEntry();
 							},
@@ -215,7 +215,7 @@ sub multilangpopup {
 			}
 		);
 	}
-#	&main::spellloadprojectdict();
+#	&::spellloadprojectdict();
 	updateMultiDictEntry();
 	getwordcounts();
 }
@@ -228,19 +228,19 @@ sub showAllWords {
 	$multiwclistbox->update;
 	if($debug) { print $sortorder;};
 	if ($sortorder eq 'f') {
-		for ( &main::natural_sort_freq(\%distinctwords)){
+		for ( &::natural_sort_freq(\%distinctwords)){
 			if ($seenwordslang{$_}) { $lang = $seenwordslang{$_} } else { $lang = '' };
 			my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, $lang, $_);
 			$multiwclistbox->insert( 'end', $line );
 		}
 	} elsif ( $sortorder eq 'a' ) {
-		for ( &main::natural_sort_alpha( keys %distinctwords)) {
+		for ( &::natural_sort_alpha( keys %distinctwords)) {
 			if ($seenwordslang{$_}) { $lang = $seenwordslang{$_} } else { $lang = '' };
 			my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, $lang, $_);
 			$multiwclistbox->insert( 'end', $line );
 		}
 	} elsif ( $sortorder eq 'l' ) {
-		for ( &main::natural_sort_length( keys %distinctwords)) {
+		for ( &::natural_sort_length( keys %distinctwords)) {
 			if ($seenwordslang{$_}) { $lang = $seenwordslang{$_} } else { $lang = '' };
 			my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, $lang, $_);
 			$multiwclistbox->insert( 'end', $line );
@@ -265,21 +265,21 @@ sub showUnspeltWords {
 	$multiwclistbox->update;
 	if($debug) { print $sortorder;};
 	if ($sortorder eq 'f') {
-		for ( &main::natural_sort_freq(\%distinctwords)){
+		for ( &::natural_sort_freq(\%distinctwords)){
 			unless ($seenwordslang{$_}) {
 				my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, '', $_);
 				$multiwclistbox->insert( 'end', $line );
 			}
 		}
 	} elsif ( $sortorder eq 'a' ) {
-		for ( &main::natural_sort_alpha( keys %distinctwords)) {
+		for ( &::natural_sort_alpha( keys %distinctwords)) {
 			unless ($seenwordslang{$_}) {
 				my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, '', $_);
 				$multiwclistbox->insert( 'end', $line );
 			}
 		}
 	} elsif ( $sortorder eq 'l' ) {
-		for ( &main::natural_sort_length( keys %distinctwords)) {
+		for ( &::natural_sort_length( keys %distinctwords)) {
 			unless ($seenwordslang{$_}) {
 				my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, '', $_);
 				$multiwclistbox->insert( 'end', $line );
@@ -301,24 +301,24 @@ sub showspeltforeignwords {
 	my $i = 0;
 	if($debug) { print $sortorder;};
 	if ($sortorder eq 'f') {
-		for ( &main::natural_sort_freq(\%distinctwords)){
-			if (($seenwordslang{$_}) && ($seenwordslang{$_} ne $main::multidicts[0])) {
+		for ( &::natural_sort_freq(\%distinctwords)){
+			if (($seenwordslang{$_}) && ($seenwordslang{$_} ne $::multidicts[0])) {
 				my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, $seenwordslang{$_}, $_);
 				$multiwclistbox->insert( 'end', $line );
 				$i++;
 			}
 		}
 	} elsif ( $sortorder eq 'a' ) {
-		for ( &main::natural_sort_alpha( keys %distinctwords)) {
-			if (($seenwordslang{$_}) && ($seenwordslang{$_} ne $main::multidicts[0])) {
+		for ( &::natural_sort_alpha( keys %distinctwords)) {
+			if (($seenwordslang{$_}) && ($seenwordslang{$_} ne $::multidicts[0])) {
 				my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, $seenwordslang{$_}, $_);
 				$multiwclistbox->insert( 'end', $line );
 				$i++;
 			}
 		}
 	} elsif ( $sortorder eq 'l' ) {
-		for ( &main::natural_sort_length( keys %distinctwords)) {
-			if (($seenwordslang{$_}) && ($seenwordslang{$_} ne $main::multidicts[0])) {
+		for ( &::natural_sort_length( keys %distinctwords)) {
+			if (($seenwordslang{$_}) && ($seenwordslang{$_} ne $::multidicts[0])) {
 				my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$_}, $seenwordslang{$_}, $_);
 				$multiwclistbox->insert( 'end', $line );
 				$i++;
@@ -328,7 +328,7 @@ sub showspeltforeignwords {
 
 
 #	for my $key (sort (keys %distinctwords)){
-#		if (($seenwordslang{$key}) && ($seenwordslang{$key} ne $main::multidicts[0])) {
+#		if (($seenwordslang{$key}) && ($seenwordslang{$key} ne $::multidicts[0])) {
 #			my $line = sprintf ( "%-8d %-6s %s", $distinctwords{$key}, $seenwordslang{$key}, $key);
 #			$multiwclistbox->insert( 'end', $line );
 #			$i++;
@@ -393,10 +393,10 @@ sub showprojectdict {
 	$multiwclistbox->delete( '0', 'end' );
 	$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
 	$multiwclistbox->update;
-	&main::spellloadprojectdict();
+	&::spellloadprojectdict();
 	if ($debug) {print "$::lglobal{projectdictname}\n";};
 	my $i = 0;
-	for my $key (sort (keys %main::projectdict)) {
+	for my $key (sort (keys %::projectdict)) {
 		$i++;
 		my $line = sprintf ( "%-8s %-6s %s", $::projectdict{$key}, '', $key);
 		$multiwclistbox->insert( 'end', $line );
@@ -532,7 +532,7 @@ sub getwordcounts {
 #updates the dictionary display
 sub updateMultiDictEntry{
 	$multidictentry->delete( '0', 'end' );
-	for my $element (@main::multidicts) {
+	for my $element (@::multidicts) {
 		$multidictentry->insert( 'end', $element );
 		$multidictentry->insert( 'end', ' ' );
 	}
@@ -542,7 +542,7 @@ sub updateMultiDictEntry{
 sub setmultiplelanguages {
 	my ($textwindow,$top) = @_;
 	if ($::globalspellpath) {
-		main::aspellstart() unless $::lglobal{spellpid};
+		::aspellstart() unless $::lglobal{spellpid};
 	}
 	$::multidicts[0] = $::globalspelldictopt;
 	my $dicts;
@@ -576,7 +576,7 @@ sub setmultiplelanguages {
 									 -background => $::bkgcolor
 	)->pack( -pady => 4 );
 	$multidictxt->delete( '1.0', 'end' );
-	for my $element (@main::multidicts) {
+	for my $element (@::multidicts) {
 		$multidictxt->insert( 'end', $element );
 		$multidictxt->insert( 'end', ' ' );
 	}
@@ -584,7 +584,7 @@ sub setmultiplelanguages {
 
 	if ($::globalspellpath) {
 		my $runner = runner::tofile('aspell.tmp');
-		$runner->run($main::globalspellpath, 'dump', 'dicts');
+		$runner->run($::globalspellpath, 'dump', 'dicts');
 		warn "Unable to access dictionaries.\n" if $?;
 
 		open my $infile,'<', 'aspell.tmp';
@@ -601,13 +601,13 @@ sub setmultiplelanguages {
 		'<<dictsel>>',
 		sub {
 			my $selection = $dictlist->get('active');
-			push @main::multidicts, $selection;
+			push @::multidicts, $selection;
 			$multidictxt->delete( '1.0', 'end' );
-			for my $element (@main::multidicts) {
+			for my $element (@::multidicts) {
 				$multidictxt->insert( 'end', $element );
 				$multidictxt->insert( 'end', ' ' );
 			}
-			main::savesettings();
+			::savesettings();
 		}
 	);
 	my $clearmulti = $spellop->add ('Button', -text => 'Clear dictionaries',
@@ -615,7 +615,7 @@ sub setmultiplelanguages {
 		-command => sub {
 			clearmultilanguages();
 			$multidictxt->delete( '1.0', 'end' );
-			for my $element (@main::multidicts) {
+			for my $element (@::multidicts) {
 				$multidictxt->insert( 'end', $element );
 				$multidictxt->insert( 'end', ' ' );
 			}
@@ -626,7 +626,7 @@ sub setmultiplelanguages {
 
 # clear array of languages
 sub clearmultilanguages {
-	@main::multidicts = ();
+	@::multidicts = ();
 	$::multidicts[0] = $::globalspelldictopt;
 }
 
@@ -684,7 +684,7 @@ sub buildwordlist {
 			$index = $end;
 		}
 	}
-	&main::savefile()
+	&::savefile()
 	  if (    ( $textwindow->FileName )
 		   && ( $textwindow->numberChanges != 0 ) );
 	open my $fh, '<', $filename;
@@ -733,7 +733,7 @@ sub multilingualgetmisspelled {
 	my $line;
 	$top->Busy( -recurse => 1 );
 
-	for my $dict (@main::multidicts) {
+	for my $dict (@::multidicts) {
 		$words = '';
 		my $i = 0;
 		# only include words with undef language
@@ -778,7 +778,7 @@ sub getmisspelledwordstwo {
 	push @spellopt, "-d", $dict;
 
 	my $runner = runner::withfiles('checkfil.txt', 'temp.txt');
-	$runner->run($main::globalspellpath, @spellopt);
+	$runner->run($::globalspellpath, @spellopt);
 
 	unlink 'checkfil.txt'  unless ($debug) ;  # input file for Aspell
 
@@ -852,9 +852,9 @@ sub processmisspelledwords {
 sub includeprojectdict {
 	my ($textwindow,$top) = @_;
 	$top->Busy( -recurse => 1 );
-	&main::spellloadprojectdict();
+	&::spellloadprojectdict();
 	if ($debug) {print "$::lglobal{projectdictname}\n";};
-	for my $key (keys %main::projectdict) { 
+	for my $key (keys %::projectdict) { 
 		unless ($seenwordslang{$key}) { $seenwordslang{$key} = 'user';} };
 	updategloballists();
 	getwordcounts();
@@ -863,18 +863,18 @@ sub includeprojectdict {
 
 #add all spelt foreign words to project dictionary
 sub addspeltforeignproject {
-	&main::spellloadprojectdict();
+	&::spellloadprojectdict();
 	for my $key (sort (keys %distinctwords)){
-		if (($seenwordslang{$key}) && ($seenwordslang{$key} ne $main::multidicts[0])) {
+		if (($seenwordslang{$key}) && ($seenwordslang{$key} ne $::multidicts[0])) {
 			$::projectdict{$key} = $seenwordslang{$key};
 		}
 	};
 
-#	if ($debug) { print %main::projectdict;
+#	if ($debug) { print %::projectdict;
 #	print "\n$::lglobal{projectdictname}\n";}
 
 	my $section = "\%projectdict = (\n";
-	for my $key (sort keys %main::projectdict){
+	for my $key (sort keys %::projectdict){
 		$key =~ s/'/\\'/g;
 		$section .= "'$key' => '',\n";
 	};
@@ -892,7 +892,7 @@ sub lowergetmisspelled {
 	
 	$top->Busy( -recurse => 1 );
 
-	for my $dict (@main::multidicts) {
+	for my $dict (@::multidicts) {
 		my $words = '';
 		my %unspelt = ();
 		my %lcunspelt = ();

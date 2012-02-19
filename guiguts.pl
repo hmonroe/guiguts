@@ -1151,7 +1151,7 @@ sub runtests {
 	ok( 1 == do { openfile("tests/errorcheck.html"); 1 }, "openfile on tests/errorcheck.html" );
 	errorcheckpop_up($textwindow,$top,'Check All');
 	open my $logfile, ">","tests/errors.err" || die "output file error\n";
-	print $logfile $main::lglobal{errorchecklistbox}->get( '1.0', 'end' ); 
+	print $logfile $::lglobal{errorchecklistbox}->get( '1.0', 'end' ); 
 	close $logfile;
 	ok(
 		compare( "tests/errors.err", 'tests/errorcheckbaseline.txt' ) ==
@@ -1308,7 +1308,7 @@ sub runtests {
 # Ready to enter main loop
 checkforupdatesmonthly();
 		unless ( -e 'header.txt' ) {
-			&main::copy( 'headerdefault.txt', 'header.txt' );
+			&::copy( 'headerdefault.txt', 'header.txt' );
 		}
 if ( $lglobal{runtests} ) {
 	runtests();

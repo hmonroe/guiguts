@@ -13,7 +13,7 @@ BEGIN {
 
 ## Toggle visible page markers. This is not line numbers but marks for pages.
 sub viewpagenums {
-	my $textwindow = $main::textwindow;
+	my $textwindow = $::textwindow;
 	if ( $::lglobal{seepagenums} ) {
 		$::lglobal{seepagenums} = 0;
 		my @marks = $textwindow->markNames;
@@ -25,7 +25,7 @@ sub viewpagenums {
 		}
 		$textwindow->tagRemove( 'pagenum', '1.0', 'end' );
 		if ( $::lglobal{pnumpop} ) {
-			$main::geometryhash{pnumpop} = $::lglobal{pnumpop}->geometry;
+			$::geometryhash{pnumpop} = $::lglobal{pnumpop}->geometry;
 			$::lglobal{pnumpop}->destroy;
 			undef $::lglobal{pnumpop};
 		}
@@ -40,17 +40,17 @@ sub viewpagenums {
 									 "$_ +@{[length $pagenum]}c" );
 			}
 		}
-		&main::pnumadjust();
+		&::pnumadjust();
 	}
 }
 
 ## Pop up a window which will allow jumping directly to a specified page
 sub gotolabel {
-	my $textwindow = $main::textwindow;
-	my $top = $main::top;
+	my $textwindow = $::textwindow;
+	my $top = $::top;
 	unless ( defined( $::lglobal{gotolabpop} ) ) {
-		return unless %main::pagenumbers;
-		for ( keys(%main::pagenumbers) ) {
+		return unless %::pagenumbers;
+		for ( keys(%::pagenumbers) ) {
 			$::lglobal{pagedigits} = ( length($_) - 2 );
 			last;
 		}
@@ -61,9 +61,9 @@ sub gotolabel {
 			-command => sub {
 				if ( $_[0] eq 'Ok' ) {
 					my $mark;
-					for ( keys %main::pagenumbers ) {
-						if (    $main::pagenumbers{$_}{label}
-							 && $main::pagenumbers{$_}{label} eq $::lglobal{lastlabel} )
+					for ( keys %::pagenumbers ) {
+						if (    $::pagenumbers{$_}{label}
+							 && $::pagenumbers{$_}{label} eq $::lglobal{lastlabel} )
 						{
 							$mark = $_;
 							last;
@@ -93,7 +93,7 @@ sub gotolabel {
 		$frame->Label( -text => 'Enter Label: ' )->pack( -side => 'left' );
 		$::lglobal{lastlabel} = 'Pg ' unless $::lglobal{lastlabel};
 		my $entry = $frame->Entry(
-								   -background   => $main::bkgcolor,
+								   -background   => $::bkgcolor,
 								   -width        => 25,
 								   -textvariable => \$::lglobal{lastlabel}
 		)->pack( -side => 'left', -fill => 'x' );
@@ -107,8 +107,8 @@ sub gotolabel {
 
 ## Page Number Adjust
 sub pnumadjust {
-	my $textwindow = $main::textwindow;
-	my $top = $main::top;
+	my $textwindow = $::textwindow;
+	my $top = $::top;
 	my $mark = $textwindow->index('current');
 	while ( $mark = $textwindow->markPrevious($mark) ) {
 		if ( $mark =~ /Pg(\S+)/ ) {
@@ -291,7 +291,7 @@ sub pnumadjust {
 }
 
 sub pageremove {    # Delete a page marker
-	my $textwindow = $main::textwindow;
+	my $textwindow = $::textwindow;
 
 	my $num = $::lglobal{pagenumentry}->get;
 	$num = $textwindow->index('insert') unless $num;
@@ -306,7 +306,7 @@ sub pageremove {    # Delete a page marker
 }
 
 sub pageadd {    # Add a page marker
-	my $textwindow = $main::textwindow;
+	my $textwindow = $::textwindow;
 	my ( $prev, $next, $mark, $length );
 	my $insert = $textwindow->index('insert');
 	$textwindow->markSet( 'insert', '1.0' );
@@ -348,7 +348,7 @@ sub pageadd {    # Add a page marker
 }
 
 sub pgrenum {    # Re sequence page markers
-	my $textwindow = $main::textwindow;
+	my $textwindow = $::textwindow;
 	my ( $mark, $length, $num, $start, $end );
 	my $offset = $::lglobal{pagerenumoffset}->get;
 	return if $offset !~ m/-?\d+/;

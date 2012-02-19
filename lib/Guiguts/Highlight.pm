@@ -12,39 +12,39 @@ BEGIN {
 
 # Routine to find highlight word list
 sub scannosfile {
-	my $top = $main::top;
-	if ($main::debug) {print "sub scannosfile\n";}
-	if ($main::debug) {print "scannoslistpath=$main::scannoslistpath\n";}
-	$main::scannoslistpath = &main::os_normal($main::scannoslistpath);
-	if ($main::debug) {print "sub scannosfile1\n";}
+	my $top = $::top;
+	if ($::debug) {print "sub scannosfile\n";}
+	if ($::debug) {print "scannoslistpath=$::scannoslistpath\n";}
+	$::scannoslistpath = &::os_normal($::scannoslistpath);
+	if ($::debug) {print "sub scannosfile1\n";}
 	my $types = [ [ 'Text file', [ '.txt', ] ], [ 'All Files', ['*'] ], ];
 
-	$main::scannoslist = $top->getOpenFile(
+	$::scannoslist = $top->getOpenFile(
 									  -title => 'List of words to highlight?',
 									  -filetypes  => $types,
-									  -initialdir => $main::scannoslistpath
+									  -initialdir => $::scannoslistpath
 	);
-	if ($main::scannoslist) {
+	if ($::scannoslist) {
 		my ( $name, $path, $extension ) =
-		  &main::fileparse( $main::scannoslist, '\.[^\.]*$' );
-		$main::scannoslistpath = $path;
-		&main::highlight_scannos() if ( $main::scannos_highlighted );
+		  &::fileparse( $::scannoslist, '\.[^\.]*$' );
+		$::scannoslistpath = $path;
+		&::highlight_scannos() if ( $::scannos_highlighted );
 		%{ $::lglobal{wordlist} } = ();
-		&main::highlight_scannos();
+		&::highlight_scannos();
 	}
 	return;
 }
 
 ##routine to automatically highlight words in the text
 sub highlightscannos {
-	my $textwindow = $main::textwindow;
-	my $top = $main::top;
-	if ($main::debug) {print "sub highlightscannos\n";}
-	return 0 unless $main::scannos_highlighted;
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	if ($::debug) {print "sub highlightscannos\n";}
+	return 0 unless $::scannos_highlighted;
 	unless (  $::lglobal{wordlist}  ) {
-		&main::scannosfile() unless ( defined $main::scannoslist && -e $main::scannoslist );
-		return 0 unless $main::scannoslist;
-		if ( open my $fh, '<', $main::scannoslist ) {
+		&::scannosfile() unless ( defined $::scannoslist && -e $::scannoslist );
+		return 0 unless $::scannoslist;
+		if ( open my $fh, '<', $::scannoslist ) {
 			while (<$fh>) {
 				utf8::decode($_);
 				if ( $_ =~ 'scannoslist' ) {
@@ -57,8 +57,8 @@ sub highlightscannos {
 						   -buttons => ['OK'],
 					  );
 					my $answer = $dialog->Show;
-					$main::scannos_highlighted = 0;
-					undef $main::scannoslist;
+					$::scannos_highlighted = 0;
+					undef $::scannoslist;
 					return;
 
 				}
@@ -73,7 +73,7 @@ sub highlightscannos {
 				}
 			}
 		} else {
-			warn "Cannot open $main::scannoslist: $!";
+			warn "Cannot open $::scannoslist: $!";
 			return 0;
 		}
 	}
@@ -191,8 +191,8 @@ sub highlightscannos {
 }
 
 sub hilite {
-	my $textwindow = $main::textwindow;
-	my $top = $main::top;
+	my $textwindow = $::textwindow;
+	my $top = $::top;
 	my $mark = shift;
 	$::lglobal{hilitemode} = 'exact' unless $::lglobal{hilitemode};
 	$mark = quotemeta($mark)
@@ -227,8 +227,8 @@ sub hilite {
 }
 # Popup for highlighting arbitrary characters in selection
 sub hilitepopup {
-	my $textwindow = $main::textwindow;
-	my $top = $main::top;
+	my $textwindow = $::textwindow;
+	my $top = $::top;
 	viewpagenums() if ( $::lglobal{seepagenums} );
 	if ( defined( $::lglobal{hilitepop} ) ) {
 		$::lglobal{hilitepop}->deiconify;
