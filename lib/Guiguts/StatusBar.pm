@@ -1051,7 +1051,7 @@ sub gotopage {
 			-title   => 'Goto Page Number',
 			-popover => $top,
 			-command => sub {
-				if ( $_[0] eq 'Ok' ) {
+				if ((defined $_[0]) and  ($_[0] eq 'Ok') ) {
 					unless ( $::lglobal{lastpage} ) {
 						$::lglobal{gotopagpop}->bell;
 						$::lglobal{gotopagpop}->destroy;

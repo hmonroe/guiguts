@@ -607,16 +607,16 @@ sub menubuildold {
 			   'command',
 			   'Goto ~Line...',
 			   -command => sub {
-				   &main::gotoline();
-				   &main::update_indicators();
+				   ::gotoline();
+				   ::update_indicators();
 				 }
 			],
 			[
 			   'command',
 			   'Goto ~Page...',
 			   -command => sub {
-				   &main::gotopage();
-				   &main::update_indicators();
+				   ::gotopage();
+				   ::update_indicators();
 				 }
 			],
 			[
