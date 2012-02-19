@@ -1,31 +1,25 @@
 #!/usr/bin/perl
-
 # $Id$
-
 # GuiGuts text editor
-
 #This program is free software; you can redistribute it and/or
 #modify it under the terms of the GNU General Public License
 #as published by the Free Software Foundation; either version 2
 #of the License, or (at your option) any later version.
-
 #This program is distributed in the hope that it will be useful,
 #but WITHOUT ANY WARRANTY; without even the implied warranty of
 #MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #GNU General Public License for more details.
-
 #You should have received a copy of the GNU General Public License
 #along with this program; if not, write to the Free Software
 #Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
 use strict;
 use warnings;
-#use criticism 'gentle'; 
 
+#use criticism 'gentle';
 our $VERSION = '1.0.7';
+
 # To debug use Devel::ptkdb perl -d:ptkdb guiguts.pl
 our $debug = 0; # turn on to report debug messages. Do not commit with $debug on
-
 use FindBin;
 use lib $FindBin::Bin . "/lib";
 
@@ -43,7 +37,6 @@ use HTML::TokeParser;
 use IPC::Open2;
 use LWP::UserAgent;
 use charnames();
-
 use Tk;
 use Tk::widgets qw{Balloon
   BrowseEntry
@@ -63,11 +56,9 @@ use Tk::widgets qw{Balloon
   TextEdit
   ToolBar
 };
-
-our $APP_NAME = 'Guiguts';
+our $APP_NAME     = 'Guiguts';
 our $window_title = $APP_NAME . '-' . $VERSION;
-
-our $icondata = '
+our $icondata     = '
     R0lGODdhIAAgAPcAAAAAAAAAQAAAgAAA/wAgAAAgQAAggAAg/wBAAABAQABAgABA/wBgAABgQABg
     gABg/wCAAACAQACAgACA/wCgAACgQACggACg/wDAAADAQADAgADA/wD/AAD/QAD/gAD//yAAACAA
     QCAAgCAA/yAgACAgQCAggCAg/yBAACBAQCBAgCBA/yBgACBgQCBggCBg/yCAACCAQCCAgCCA/yCg
@@ -92,7 +83,6 @@ our $icondata = '
     hVmUBNYGGVddmUCcAGBWuVSYFrJVUAlAMWVAh2y26WZrWgVmEGx+IWnnnXgCllAbSJbm55+A+vlU
     QttYFOihgLXBpUOMNuqoQQEBADs=
     ';
-
 ### Custom Guiguts modules
 use Guiguts::ASCIITables;
 use Guiguts::ErrorCheck;
@@ -112,6 +102,7 @@ use Guiguts::SearchReplaceMenu;
 use Guiguts::SelectionMenu;
 use Guiguts::SpellCheck;
 use Guiguts::StatusBar;
+use Guiguts::Tests;
 use Guiguts::TextProcessingMenu;
 use Guiguts::TextUnicode;
 use Guiguts::CharacterTools;
@@ -122,14 +113,12 @@ use Guiguts::WordFrequency;
 # complete can trip it
 $SIG{ALRM} = 'IGNORE';
 $SIG{INT} = sub { _exit() };
-
 ### Constants
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
-
 ### Application Globals
-our $OS_WIN          = $^O =~ m{Win};
-our $OS_MAC   		= $^O =~ m{darwin}; 
+our $OS_WIN = $^O =~ m{Win};
+our $OS_MAC = $^O =~ m{darwin};
 our $activecolor      = '#24baec';    #'#f2f818';
 our $alpha_sort       = 'f';
 our $auto_page_marks  = 1;
@@ -154,15 +143,12 @@ our $geometry2     = q{};
 our $geometry3     = q{};
 our $geometry;
 our $globalaspellmode   = 'normal';
-
 our $globalbrowserstart = $ENV{BROWSER};
-if ( ! $globalbrowserstart ) { $globalbrowserstart = 'xdg-open'; }
-if ( $::OS_WIN ) { $globalbrowserstart = 'start'; }
-if ( $OS_MAC ) { $globalbrowserstart = 'open'; }
-
+if ( !$globalbrowserstart ) { $globalbrowserstart = 'xdg-open'; }
+if ($::OS_WIN)              { $globalbrowserstart = 'start'; }
+if ($OS_MAC)                { $globalbrowserstart = 'open'; }
 our $globalfirefoxstart = 'firefox';
-if( $OS_MAC ) { $globalbrowserstart = 'open -a firefox'; }
-
+if ($OS_MAC) { $globalbrowserstart = 'open -a firefox'; }
 our $globalimagepath        = q{};
 our $globallastpath         = q{};
 our $globalspelldictopt     = q{};
@@ -170,9 +156,9 @@ our $globalspellpath        = q{};
 our $globalviewerpath       = q{};
 our $globalprojectdirectory = q{};
 our @gsopt;
-our $highlightcolor         = '#a08dfc';
-our $history_size           = 20;
-our $italic_char            = "_";
+our $highlightcolor = '#a08dfc';
+our $history_size   = 20;
+our $italic_char    = "_";
 our $ignoreversions =
   "revision";    #ignore revisions by default but not major or minor versions
 our $ignoreversionnumber = "";       #ignore a specific version
@@ -185,32 +171,32 @@ our $nohighlights        = 0;
 our $notoolbar           = 0;
 our $intelligentWF       = 0;
 our $operationinterrupt;
-our $pngspath         = q{};
-our $projectid        = q{};
-our $regexpentry      = q();
-our $rmargin          = 72;
-our $rwhyphenspace    = 1;
-our $scannos_highlighted=0;
-our $scannoslist      = q{wordlist/en-common.txt};
-our $scannoslistpath  = q{wordlist};
-our $scannospath      = q{};
-our $scannosearch     = 0;
-our $scrollupdatespd  = 40;
-our $searchendindex   = 'end';
-our $searchstartindex = '1.0';
-our $multiterm        = 0;
-our $spellindexbkmrk  = q{};
-our $stayontop        = 0;
+our $pngspath            = q{};
+our $projectid           = q{};
+our $regexpentry         = q();
+our $rmargin             = 72;
+our $rwhyphenspace       = 1;
+our $scannos_highlighted = 0;
+our $scannoslist         = q{wordlist/en-common.txt};
+our $scannoslistpath     = q{wordlist};
+our $scannospath         = q{};
+our $scannosearch        = 0;
+our $scrollupdatespd     = 40;
+our $searchendindex      = 'end';
+our $searchstartindex    = '1.0';
+our $multiterm           = 0;
+our $spellindexbkmrk     = q{};
+our $stayontop           = 0;
 our $suspectindex;
-our $toolside            = 'bottom';
-our $useppwizardmenus    = 0;
-our $usemenutwo          = 0;
-our $utffontname         = 'Courier New';
-our $utffontsize         = 14;
-our $verboseerrorchecks  = 0;
-our $vislnnm             = 0;
-our $w3cremote           = 0;
-our $wfstayontop         = 0;
+our $toolside           = 'bottom';
+our $useppwizardmenus   = 0;
+our $usemenutwo         = 0;
+our $utffontname        = 'Courier New';
+our $utffontsize        = 14;
+our $verboseerrorchecks = 0;
+our $vislnnm            = 0;
+our $w3cremote          = 0;
+our $wfstayontop        = 0;
 
 # These are set to the default Windows values in initialize()
 our $gutcommand          = '';
@@ -219,7 +205,6 @@ our $tidycommand         = '';
 our $validatecommand     = '';
 our $validatecsscommand  = '';
 our $gnutenbergdirectory = '';
-
 our %gc;
 our %jeeb;
 our %pagenumbers;
@@ -229,65 +214,64 @@ our %reghints = ();
 our %scannoslist;
 our %geometryhash;    #Geometry of windows in one hash.
 $geometryhash{wfpop} = q{};
-
 our @bookmarks = ( 0, 0, 0, 0, 0, 0 );
 our @gcopt = ( 0, 0, 0, 0, 0, 0, 1, 0, 1 );
 our @joinundolist;
 our @joinredolist;
-our @multidicts          = ();
+our @multidicts = ();
 our @mygcview;
 our @operations;
 our @pageindex;
 our @recentfile;
-
 @recentfile = ('README.txt');
-
 our @replace_history;
 our @search_history;
 our @sopt = ( 0, 0, 0, 0, 0 );    # default is not whole word search
-our @extops = ( 
-        { 
-         'label'   => 'Open current file in its default program', 
-         'command' => "$globalbrowserstart \$d\$f\$e" 
-        }, 
-        { 
-         'label'   => 'Open current file in Firefox', 
-         'command' => "$globalfirefoxstart \$d\$f\$e" 
-        }, 
-        { 
-         'label'   => "Websters 1913 (Specialist Online Dictionary)", 
-         'command' => "$globalbrowserstart http://www.specialist-online-dictionary.com/websters/headword_search.cgi?query=\$t" 
-        }, 
-        { 
-         'label'   => "Websters 1828 American Dictionary", 
-         'command' => "$globalbrowserstart http://www.1828-dictionary.com/d/word/\$t" 
-        }, 
-        { 
-         'label'   => 'Onelook.com (several dictionaries)', 
-         'command' => "$globalbrowserstart http://www.onelook.com/?ls=a&w=\$t" 
-        }, 
-        { 
-         'label'   => 'Shape Catcher (Unicode character finder)', 
-         'command' => "$globalbrowserstart http://shapecatcher.com/" 
-        }, 
-        { 
-         'label'   => 'W3C Markup Validation Service', 
-         'command' => "$globalbrowserstart http://validator.w3.org/" 
-        }, 
-        { 
-         'label'   => 'W3C CSS Validation Service', 
-         'command' => "$globalbrowserstart http://jigsaw.w3.org/css-validator/#validate_by_upload" 
-        }, 
-        { 'label' => q{}, 'command' => q{} }, 
-        { 'label' => q{}, 'command' => q{} }, 
-        { 'label' => q{}, 'command' => q{} }, 
-); 
+our @extops = (
+	{
+	   'label'   => 'Open current file in its default program',
+	   'command' => "$globalbrowserstart \$d\$f\$e"
+	},
+	{
+	   'label'   => 'Open current file in Firefox',
+	   'command' => "$globalfirefoxstart \$d\$f\$e"
+	},
+	{
+	   'label' => "Websters 1913 (Specialist Online Dictionary)",
+	   'command' =>
+"$globalbrowserstart http://www.specialist-online-dictionary.com/websters/headword_search.cgi?query=\$t"
+	},
+	{
+	   'label' => "Websters 1828 American Dictionary",
+	   'command' =>
+		 "$globalbrowserstart http://www.1828-dictionary.com/d/word/\$t"
+	},
+	{
+	   'label'   => 'Onelook.com (several dictionaries)',
+	   'command' => "$globalbrowserstart http://www.onelook.com/?ls=a&w=\$t"
+	},
+	{
+	   'label'   => 'Shape Catcher (Unicode character finder)',
+	   'command' => "$globalbrowserstart http://shapecatcher.com/"
+	},
+	{
+	   'label'   => 'W3C Markup Validation Service',
+	   'command' => "$globalbrowserstart http://validator.w3.org/"
+	},
+	{
+	   'label' => 'W3C CSS Validation Service',
+	   'command' =>
+"$globalbrowserstart http://jigsaw.w3.org/css-validator/#validate_by_upload"
+	},
+	{ 'label' => q{}, 'command' => q{} },
+	{ 'label' => q{}, 'command' => q{} },
+	{ 'label' => q{}, 'command' => q{} },
+);
 
 #All local global variables contained in one hash. # now global
-our %lglobal; # need to document each variable
+our %lglobal;    # need to document each variable
 
 # $lglobal{hl_index} 	line number being scanned for highlighting
-
 if ( eval { require Text::LevenshteinXS } ) {
 	$lglobal{LevenshteinXS} = 1;
 }
@@ -296,7 +280,6 @@ if ( eval { require Text::LevenshteinXS } ) {
 #	print
 #"Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
 #}
-
 # load Image::Size if it is installed
 if ( eval { require Image::Size; 1; } ) {
 	$lglobal{ImageSize} = 1;
@@ -306,9 +289,7 @@ if ( eval { require Image::Size; 1; } ) {
 
 # FIXME: Change $top to $mw.
 our $top = tkinit( -title => $window_title, );
-
 initialize();    # Initialize a bunch of vars that need it.
-
 $top->minsize( 440, 90 );
 
 # Detect geometry changes for tracking
@@ -318,12 +299,9 @@ $top->bind(
 		$lglobal{geometryupdate} = 1;
 	}
 );
-
 our $icon = $top->Photo( -format => 'gif',
-						-data   => $icondata );
-
-fontinit();    # Initialize the fonts for the two windows
-
+						 -data   => $icondata );
+fontinit();      # Initialize the fonts for the two windows
 utffontinit();
 
 # Set up Main window size
@@ -341,7 +319,6 @@ my $text_frame = $top->Frame->pack(
 									-expand => 'yes',
 									-fill   => 'both'
 );
-
 our $counter_frame =
   $text_frame->Frame->pack(
 							-side   => 'bottom',
@@ -352,7 +329,6 @@ our $counter_frame =
 
 # Frame to hold proofer names. Pack it when necessary.
 my $proofer_frame = $text_frame->Frame;
-
 our $text_font = $top->fontCreate(
 								   'courier',
 								   -family => "Courier New",
@@ -375,9 +351,7 @@ our $textwindow = $text_frame->LineNumberText(
 		   -expand => 'yes',
 		   -fill   => 'both'
   );
-
 $top->protocol( 'WM_DELETE_WINDOW' => \&_exit );
-
 $top->configure( -menu => our $menubar = $top->Menu );
 
 # routines to call every time the text is edited
@@ -399,22 +373,15 @@ menubuild();
 
 # Set up the key bindings for the text widget
 textbindings();
-
-buildstatusbar($textwindow,$top);
+buildstatusbar( $textwindow, $top );
 
 # Load the icon into the window bar. Needs to happen late in the process
 $top->Icon( -image => $icon );
-
 $lglobal{hasfocus} = $textwindow;
-
 toolbar_toggle();
-
 $top->geometry($geometry) if $geometry;
-
 ( $lglobal{global_filename} ) = @ARGV;
-
 die "ERROR: too many files specified. \n" if ( @ARGV > 1 );
-
 if (     ( $lglobal{global_filename} )
 	 and ( $lglobal{global_filename} eq 'runtests' ) )
 {
@@ -422,22 +389,17 @@ if (     ( $lglobal{global_filename} )
 }
 if (@ARGV) {
 	$lglobal{global_filename} = shift @ARGV;
-
 	if ( -e $lglobal{global_filename} ) {
 		my $userfn = $lglobal{global_filename};
 		$top->update;
 		$lglobal{global_filename} = $userfn;
 		openfile( $lglobal{global_filename} );
 	}
-
 } else {
 	$lglobal{global_filename} = 'No File Loaded';
 }
-
 set_autosave() if $autosave;
-
 $textwindow->CallNextGUICallback;
-
 $top->repeat( 200, sub { _updatesel($textwindow) } );
 
 # Do not move from guiguts.pl; do command must be run in main
@@ -492,9 +454,9 @@ sub loadscannos {
 		return 1;
 	}
 }
-
 ## Save setting.rc file
 sub savesettings {
+
 	#print time()."savesettings\n";
 	my $message = <<EOM;
 # This file contains your saved settings for guiguts.
@@ -512,8 +474,8 @@ EOM
 		print $save_handle '@gcopt = (';
 		print $save_handle "$_," || '0,' for @gcopt;
 		print $save_handle ");\n\n";
-		# a variable's value is not saved unless it is nonzero
 
+		# a variable's value is not saved unless it is nonzero
 		for (
 			qw/alpha_sort activecolor auto_page_marks auto_show_images autobackup autosave autosaveinterval bkgcolor
 			blocklmargin blockrmargin bold_char defaultindent failedsearch fontname fontsize fontweight geometry
@@ -529,7 +491,6 @@ EOM
 			}
 		}
 		print $save_handle "\n";
-
 		for (
 			qw/globallastpath globalspellpath globalspelldictopt globalviewerpath globalbrowserstart
 			gutcommand jeebiescommand scannospath tidycommand validatecommand validatecsscommand gnutenbergdirectory/
@@ -540,13 +501,11 @@ EOM
 				  escape_problems( os_normal( eval '$' . $_ ) ), "';\n";
 			}
 		}
-
 		print $save_handle ("\n\@recentfile = (\n");
 		for (@recentfile) {
 			print $save_handle "\t'", escape_problems($_), "',\n";
 		}
 		print $save_handle (");\n\n");
-
 		print $save_handle ("\@extops = (\n");
 		for my $index ( 0 .. $#extops ) {
 			my $label   = escape_problems( $extops[$index]{label} );
@@ -561,11 +520,9 @@ EOM
 			print $save_handle "\$geometryhash{$_} = '$geometryhash{$_}';\n";
 		}
 		print $save_handle "\n";
-
 		print $save_handle '@mygcview = (';
 		for (@mygcview) { print $save_handle "$_," }
 		print $save_handle (");\n\n");
-
 		print $save_handle ("\@search_history = (\n");
 		my @array = @search_history;
 		for my $index (@array) {
@@ -573,16 +530,13 @@ EOM
 			print $save_handle qq/\t"$index",\n/;
 		}
 		print $save_handle ");\n\n";
-
 		print $save_handle ("\@replace_history = (\n");
-
 		@array = @replace_history;
 		for my $index (@array) {
 			$index =~ s/([^A-Za-z0-9 ])/'\x{'.(sprintf "%x", ord $1).'}'/eg;
 			print $save_handle qq/\t"$index",\n/;
 		}
 		print $save_handle ");\n\n";
-
 		print $save_handle ("\@multidicts = (\n");
 		for my $index (@multidicts) {
 			print $save_handle qq/\t"$index",\n/;
@@ -618,7 +572,6 @@ sub readsettings {
 		}
 	}
 }
-
 ### File Menu
 # Do not move from guiguts.pl; do command must be run in main
 sub openfile {    # and open it
@@ -721,9 +674,9 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 		);
 		$lglobal{toptool}->separator;
 		$lglobal{toptool}->ToolButton(
-									   -image   => 'fileopen16',
-									   -command => sub {file_open($textwindow);} ,
-									   -tip     => 'Open'
+									-image   => 'fileopen16',
+									-command => sub { file_open($textwindow); },
+									-tip     => 'Open'
 		);
 		$lglobal{savetool} =
 		  $lglobal{toptool}->ToolButton(
@@ -777,10 +730,14 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 		);
 		$lglobal{toptool}->separator;
 		$lglobal{toptool}->ToolButton(
-									   -text    => 'WF²',
-									   -font    => $lglobal{toolfont},
-									   -command => [ sub{wordfrequency($textwindow,$top)} ],
-									   -tip     => 'Word Frequency'
+			-text    => 'WF²',
+			-font    => $lglobal{toolfont},
+			-command => [
+				sub {
+					wordfrequency( $textwindow, $top );
+				  }
+			],
+			-tip => 'Word Frequency'
 		);
 		$lglobal{toptool}->ToolButton(
 									   -text    => 'GC',
@@ -809,10 +766,10 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 		);
 		$lglobal{toptool}->separator;
 		$lglobal{toptool}->ToolButton(
-									   -text    => 'HTML',
-									   -font    => $lglobal{toolfont},
-									   -command => sub{htmlpopup($textwindow,$top)},
-									   -tip     => 'HTML Fixup'
+							 -text    => 'HTML',
+							 -font    => $lglobal{toolfont},
+							 -command => sub { htmlpopup( $textwindow, $top ) },
+							 -tip     => 'HTML Fixup'
 		);
 		$lglobal{toptool}->separator;
 		$lglobal{toptool}->ToolButton(
@@ -866,35 +823,31 @@ sub spelloptions {
 				$spellpathentry->delete( 0, 'end' );
 				$spellpathentry->insert( 'end', $globalspellpath );
 				savesettings();
-
 				my $runner = runner::tofile('aspell.tmp');
-				$runner->run($globalspellpath, 'dump', 'dicts');
+				$runner->run( $globalspellpath, 'dump', 'dicts' );
 				warn "Unable to access dictionaries.\n" if $?;
-
 				open my $infile, '<', 'aspell.tmp';
+
 				while ( $dicts = <$infile> ) {
 					chomp $dicts;
 					next if ( $dicts =~ m/-/ );
 					$dictlist->insert( 'end', $dicts );
 				}
 				close $infile;
-				unlink 'aspell.tmp'
+				unlink 'aspell.tmp';
 			}
 		}
 	)->pack( -pady => 4 );
 	$spellpathentry->insert( 'end', $globalspellpath );
-
 	my $spellencodinglabel =
 	  $spellop->add( 'Label', -text => 'Set encoding: default = iso8859-1' )
 	  ->pack;
-
 	my $spellencodingentry =
 	  $spellop->add(
 					 'Entry',
 					 -width        => 30,
 					 -textvariable => \$lglobal{spellencoding},
 	  )->pack;
-
 	my $dictlabel = $spellop->add( 'Label', -text => 'Dictionary files' )->pack;
 	$dictlist = $spellop->add(
 							   'ScrlListbox',
@@ -916,13 +869,11 @@ sub spelloptions {
 	$spelldictxt->insert( '1.0', $globalspelldictopt );
 
 	#$dictlist->insert( 'end', "No dictionary!" );
-
 	if ($globalspellpath) {
 		my $runner = runner::tofile('aspell.tmp');
-		$runner->run($globalspellpath, 'dump', 'dicts');
+		$runner->run( $globalspellpath, 'dump', 'dicts' );
 		warn "Unable to access dictionaries.\n" if $?;
-
-		open my $infile,'<', 'aspell.tmp';
+		open my $infile, '<', 'aspell.tmp';
 		while ( $dicts = <$infile> ) {
 			chomp $dicts;
 			next if ( $dicts =~ m/-/ );
@@ -1073,12 +1024,14 @@ sub set_autosave {
 }
 
 sub highlight_scannos {    # Enable / disable word highlighting in the text
-	if ( $scannos_highlighted ) {
+	if ($scannos_highlighted) {
 		$lglobal{hl_index} = 1;
 		highlightscannos();
-		$lglobal{scannos_highlightedid} = $top->repeat( 400, \&highlightscannos );
+		$lglobal{scannos_highlightedid} =
+		  $top->repeat( 400, \&highlightscannos );
 	} else {
-		$lglobal{scannos_highlightedid}->cancel if $lglobal{scannos_highlightedid};
+		$lglobal{scannos_highlightedid}->cancel
+		  if $lglobal{scannos_highlightedid};
 		undef $lglobal{scannos_highlightedid};
 		$textwindow->tagRemove( 'scannos', '1.0', 'end' );
 	}
@@ -1130,186 +1083,11 @@ sub searchsize {  # Pop up a window where you can adjust the search history size
 	}
 }
 
-sub runtests {
-
-	# From the command line run "guiguts.pl runtests"
-	use Test::More;    #tests => 34;
-	ok( 1 == 1, "Dummy test 1==1" );
-
-	#if ( -e "setting.rc" ) { rename( "setting.rc", "setting.old" ); }
-	ok( roman(22) eq 'XXII.', "roman(22)==XXII" );
-	ok( arabic('XXII.') eq '22', "arabic(XXII.) eq '22'" );
-	ok(not (arabic('XXII.') eq '23'), "not arabic(XXII.) eq '23'" );
-	my $ln;
-	my @book   = ();
-	my $inbody = 0;
-	$lglobal{pageanch} = 1;
-	$lglobal{pagecmt}  = 0;
-
-	ok( 1 == do { 1 }, "do block" );
-	ok( -e "tests/errorcheck.html", "tests/errorcheck.html exists" );
-	ok( 1 == do { openfile("tests/errorcheck.html"); 1 }, "openfile on tests/errorcheck.html" );
-	errorcheckpop_up($textwindow,$top,'Check All');
-	open my $logfile, ">","tests/errors.err" || die "output file error\n";
-	print $logfile $::lglobal{errorchecklistbox}->get( '1.0', 'end' ); 
-	close $logfile;
-	ok(
-		compare( "tests/errors.err", 'tests/errorcheckbaseline.txt' ) ==
-		  0,
-		"Check All was successful"
-	);
-	print "begin diff\n";
-	system "diff tests/errorcheckbaseline.txt tests/errors.err";
-	print "end diff\n";
-	unlink 'tests/errors.err';
-	ok( 1 == do { openfile("readme.txt"); 1 }, "openfile on readme.txt" );
-	ok( "readme.txt" eq $textwindow->FileName, "File is named readme.txt" );
-	ok( 1 == do { file_close($textwindow); 1 }, "close readme.txt" );
-
-	# Test of rewrapping
-	ok( -e "tests/testfile.txt", "tests/testfile.txt exists" );
-	ok( 1 == do { openfile("tests/testfile.txt"); 1 },
-		"openfile on tests/testfile.txt" );
-	ok( 1 == do { $textwindow->selectAll; 1 }, "Select All" );
-	ok(
-		1 == do {
-			selectrewrap( $textwindow, $lglobal{seepagenums},
-						  $scannos_highlighted, $rwhyphenspace );
-			1;
-		},
-		"Rewrap Selection"
-	);
-	ok( 1 == do { $textwindow->SaveUTF('tests/testfilewrapped.txt'); 1 },
-		"File saved as tests/testfilewrapped" );
-	ok( -e 'tests/testfilewrapped.txt', "tests/testfilewrapped.txt was saved" );
-
-	ok( -e "tests/testfilebaseline.txt", "tests/testfilebaseline.txt exists" );
-	ok(
-		compare( "tests/testfilebaseline.txt", 'tests/testfilewrapped.txt' ) ==
-		  0,
-		"Rewrap was successful"
-	);
-	print "begin diff\n";
-	system "diff tests/testfilebaseline.txt tests/testfilewrapped.txt";
-	print "end diff\n";
-	unlink 'tests/testfilewrapped.txt';
-	ok( not( -e "tests/testfilewrapped.txt" ),
-		"Deletion confirmed of tests/testfilewrapped.txt" );
-	unlink 'setting.rc';
-	if ( -e "setting.old" ) { rename( "setting.old", "setting.rc" ); }
-
-	# Test 1 of HTML generation
-	ok( 1 == do { openfile("tests/testhtml1.txt"); 1 },
-		"openfile on tests/testhtml1.txt" );
-	ok( 1 == do { htmlautoconvert($textwindow,$top); 1 }, "openfile on tests/testhtml1.txt" );
-	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml1.html'); 1 },
-		"test of file save as tests/testfilewrapped" );
-	ok( -e 'tests/testhtml1.html', "tests/testhtml1.html was saved" );
-
-	ok( -e "tests/testhtml1baseline.html",
-		"tests/testhtml1baseline.html exists" );
-	open my $infile,  "<","tests/testhtml1.html"       || die "no source file\n";
-	open $logfile, ">","tests/testhtml1temp.html" || die "output file error\n";
-	while ( $ln = <$infile> ) {
-		if ($inbody) { print $logfile $ln; }
-		if ( $ln =~ /<\/head>/ ) {
-			$inbody = 1;
-		}
-	}
-	close $infile;
-	close $logfile;
-	ok(
-		compare( "tests/testhtml1baseline.html", 'tests/testhtml1temp.html' ) ==
-		  0,
-		"Autogenerate HTML successful"
-	);
-	print "begin diff\n";
-	system "diff tests/testhtml1baseline.html tests/testhtml1temp.html";
-	print "end diff\n";
-
-	unlink 'tests/testhtml1.html';
-	unlink 'tests/testhtml1temp.html';
-	unlink 'tests/testhtml1-htmlbak.txt';
-	unlink 'tests/testhtml1-htmlbak.txt.bin';
-	ok( not( -e "tests/testhtml1temp.html" ),
-		"Deletion confirmed of tests/testhtml1temp.html" );
-	ok( not( -e "tests/testhtml1.html" ),
-		"Deletion confirmed of tests/testhtml1.html" );
-
-	# Test 2 of HTML generation
-	ok( 1 == do { openfile("tests/testhtml2.txt"); 1 },
-		"openfile on tests/testhtml2.txt" );
-	ok( 1 == do { htmlautoconvert($textwindow,$top); 1 }, "openfile on tests/testhtml2.txt" );
-	ok( 1 == do { $textwindow->SaveUTF('tests/testhtml2.html'); 1 },
-		"test of file save as tests/testfilewrapped" );
-	ok( -e 'tests/testhtml2.html', "tests/testhtml2.html was saved" );
-
-	ok( -e "tests/testhtml2baseline.html",
-		"tests/testhtml2baseline.html exists" );
-	open $infile,"<","tests/testhtml2.html"       || die "no source file\n";
-	open $logfile, ">", "tests/testhtml2temp.html" || die "output file error\n";
-	@book   = ();
-	$inbody = 0;
-	while ( $ln = <$infile> ) {
-		if ($inbody) { print $logfile $ln; }
-		if ( $ln =~ /<\/head>/ ) {
-			$inbody = 1;
-		}
-	}
-	close $infile;
-	close $logfile;
-	ok(
-		compare( "tests/testhtml2baseline.html", 'tests/testhtml2temp.html' ) ==
-		  0,
-		"Autogenerate HTML successful"
-	);
-	print "begin diff\n";
-	system "diff tests/testhtml2baseline.html tests/testhtml2temp.html";
-	print "end diff\n";
-
-	unlink 'tests/testhtml2.html';
-	unlink 'tests/testhtml2temp.html';
-	unlink 'tests/testhtml2-htmlbak.txt';
-	unlink 'tests/testhtml2-htmlbak.txt.bin';
-	ok( not( -e "tests/testhtml2temp.html" ),
-		"Deletion confirmed of tests/testhtml2temp.html" );
-	ok( not( -e "tests/testhtml2.html" ),
-		"Deletion confirmed of tests/testhtml2.html" );
-	unlink 'null' if ( -e 'null' );
-
-	#	fnview();
-	#htmlimage();
-##errorcheckpop_up($textwindow,$top,'test');
-	#gcheckpop_up();
-	#harmonicspop();
-	#pnumadjust();
-	#searchpopup();
-	#asciipopup();
-	#alignpopup();
-	#wordfrequency();
-	#jeebiespop_up();
-	#separatorpopup();
-	#footnotepop();
-	#externalpopup();
-	#utfpopup();
-	#about_pop_up();
-	#opspop_up();
-	#greekpopup();
-	ok( $debug == 0, "Do not release with \$debug = 1" );
-	ok(deaccent('ÀÁÂÃÄÅàáâãäåÇçÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖØòóôõöøÑñÙÚÛÜùúûüİÿı') eq 'AAAAAAaaaaaaCcEEEEeeeeIIIIiiiiOOOOOOooooooNnUUUUuuuuYyy'
-	,"deaccent('ÀÁÂÃÄÅàáâãäåÇçÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖØòóôõöøÑñÙÚÛÜùúûüİÿı')");
-	ok((entity('\xff') eq '&yuml;'), "entity('\\xff') eq '&yuml;'");
-	ok( $debug == 0, "Do not release with \$debug = 1" );
-	ok( 1 == 1, "This is the last test" );
-	done_testing();
-	exit;
-}
-
 # Ready to enter main loop
 checkforupdatesmonthly();
-		unless ( -e 'header.txt' ) {
-			&::copy( 'headerdefault.txt', 'header.txt' );
-		}
+unless ( -e 'header.txt' ) {
+	&::copy( 'headerdefault.txt', 'header.txt' );
+}
 if ( $lglobal{runtests} ) {
 	runtests();
 } else {
