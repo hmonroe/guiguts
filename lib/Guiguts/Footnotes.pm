@@ -213,7 +213,7 @@ sub footnotepop {
 		$::lglobal{fnfpbutton} =
 		  $frame2->Button(
 						   -activebackground => $::activecolor,
-						   -command          => sub { &::footnotefixup() },
+						   -command          => sub { &footnotefixup() },
 						   -text             => 'Re Index',
 						   -state            => 'disabled',
 						   -width            => 14
@@ -478,7 +478,7 @@ sub fnjoin {
 	$::lglobal{fnalpha}-- if $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'a';
 	$::lglobal{fnroman}-- if $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'r';
 	$::lglobal{fnindex}--;
-	&::footnoteshow();
+	&footnoteshow();
 }
 
 # Pop up a window showing all the footnote addresses with potential
@@ -756,14 +756,14 @@ sub footnotefixup {
 		if ( $::lglobal{fnsecondpass} ) {
 			if ( $::lglobal{footstyle} eq 'end' ) {
 				$::lglobal{fnsearchlimit} = 1;
-				&::fninsertmarkers('n')
+				&fninsertmarkers('n')
 				  if (    ( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'n' )
 					   || ( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq '' )
 					   || ( $::lglobal{fntypen} ) );
-				&::fninsertmarkers('a')
+				&fninsertmarkers('a')
 				  if (    ( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'a' )
 					   || ( $::lglobal{fntypea} ) );
-				&::fninsertmarkers('r')
+				&fninsertmarkers('r')
 				  if (    ( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'r' )
 					   || ( $::lglobal{fntyper} ) );
 				$::lglobal{fnmvbutton}->configure( '-state' => 'normal' )
@@ -771,7 +771,7 @@ sub footnotefixup {
 			} else {
 				$textwindow->markSet( 'insert', 'fna' . $::lglobal{fnindex} );
 				$::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] = '';
-				&::setanchor();
+				&setanchor();
 			}
 		}
 	}
