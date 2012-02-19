@@ -205,31 +205,31 @@ sub menu_preferences {
 		  -tearoff => 0,
 		  -menuitems =>
 			[  # FIXME: sub this and generalize for all occurences in menu code.
-			  [ Button => '~Font...', -command => \&fontsize ],
+			  [ Button => '~Font...', -command => \&::fontsize ],
 			  [
 				 Checkbutton => 'Keep Pop-ups On Top',
-				 -variable   => \$main::stayontop,
+				 -variable   => \$::stayontop,
 				 -onvalue    => 1,
 				 -offvalue   => 0
 			  ],
 			  [
 				 Checkbutton => 'Keep Word Frequency Pop-up On Top',
-				 -variable   => \$main::wfstayontop,
+				 -variable   => \$::wfstayontop,
 				 -onvalue    => 1,
 				 -offvalue   => 0
 			  ],
 			  [
 				 Checkbutton => 'Enable Bell',
-				 -variable   => \$main::nobell,
+				 -variable   => \$::nobell,
 				 -onvalue    => 0,
 				 -offvalue   => 1
 			  ],
 			  [
 				 Button   => 'Set Background Color...',
 				 -command => sub {
-					 my $thiscolor = &main::setcolor($main::bkgcolor);
-					 $main::bkgcolor = $thiscolor if $thiscolor;
-					 &main::savesettings();
+					 my $thiscolor = &::setcolor($main::bkgcolor);
+					 $::bkgcolor = $thiscolor if $thiscolor;
+					 &::savesettings();
 				   }
 			  ],
 			  [

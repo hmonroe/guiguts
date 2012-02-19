@@ -13,7 +13,9 @@ BEGIN {
 	&deaccent &BindMouseWheel &working &initialize &fontinit &initialize_popup_with_deletebinding 
 	&initialize_popup_without_deletebinding &os_normal &escape_problems &natural_sort_alpha
 	&natural_sort_length &natural_sort_freq &drag &cut &paste &textcopy &showversion
-	&checkforupdates &checkforupdatesmonthly &hotkeyshelp &regexref &gotobookmark &setbookmark)
+	&checkforupdates &checkforupdatesmonthly &hotkeyshelp &regexref &gotobookmark &setbookmark
+	&epubmaker &gnutenberg &sidenotes &poetrynumbers &get_page_number &externalpopup
+	&xtops &setmargins &fontsize &setbrowser &setpngspath)
 }
 
 sub get_image_file {
@@ -1956,6 +1958,557 @@ sub gotobookmark {
 	::update_indicators();
 	$textwindow->tagAdd( 'bkmk', "bkmk$bookmark", "bkmk$bookmark+1c" )
 	  if $::bookmarks[$bookmark];
+}
+
+sub epubmaker {
+	my $format = shift;
+	if ( $::lglobal{global_filename} =~ /(\w+.(rst|htm|html))$/ ) {
+
+		print "\nBeginning epubmaker\n";
+		print "Files will appear in the directory $::globallastpath.\n";
+		print
+"Running in background with no messages that processing is complete.\n";
+		my $rstfilename = $1;
+		my $pwd         = getcwd();
+		chdir $::globallastpath;
+		my $epubmakerpath = catfile( $::lglobal{guigutsdirectory},
+									 'python27', 'scripts',
+									 'epubmaker-script.py' );
+		my $pythonpath =
+		  catfile( $::lglobal{guigutsdirectory}, 'python27', 'python.exe' );
+
+		if ( defined $format and (($format eq 'html') or ($format eq 'epub')) ) {
+			runner($pythonpath, $epubmakerpath, "--make", $format, $rstfilename);
+		} else {
+			runner($pythonpath, $epubmakerpath, $rstfilename);
+		}
+		chdir $pwd;
+	} else {
+		print "Not an .rst file\n";
+	}
+}
+
+sub gnutenberg {
+	my $format = shift;
+
+	print "\nBeginning Gnutenberg Press\n";
+	print "Warning: This requires installing perl including LibXML, and \n";
+	print "guiguts must be installed in c:\\guiguts on Windows systems.\n";
+	my $pwd = ::getcwd();
+	chdir $::globallastpath;
+	unless ( -d 'output' ) {
+		mkdir 'output' or die;
+	}
+	my $gnutenbergoutput = ::catfile( $::globallastpath, 'output' );
+	chdir $::gnutenbergdirectory;
+	::runner(
+"perl", "transform.pl", "-f", $format, $::lglobal{global_filename}, "$gnutenbergoutput" );
+	chdir $pwd;
+}
+
+## Sidenote Fixup
+sub sidenotes {
+	my $textwindow = $::textwindow;
+	push @::operations, ( localtime() . ' - Sidenote Fixup' );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
+	::oppopupdate()  if $::lglobal{oppop};
+	$textwindow->markSet( 'sidenote', '1.0' );
+	my ( $bracketndx, $nextbracketndx, $bracketstartndx, $bracketendndx,
+		 $paragraphp, $paragraphn, $sidenote, $sdnoteindexstart );
+
+	while (1) {
+		$sdnoteindexstart = $textwindow->index('sidenote');
+		$bracketstartndx =
+		  $textwindow->search( '-regexp', '--', '\[sidenote', $sdnoteindexstart,
+							   'end' );
+		if ($bracketstartndx) {
+			$textwindow->replacewith(
+									  "$bracketstartndx+1c",
+									  "$bracketstartndx+2c",
+									  'S'
+			);
+			$textwindow->markSet( 'sidenote', "$bracketstartndx+1c" );
+			next;
+		}
+		$textwindow->markSet( 'sidenote', '1.0' );
+		last;
+	}
+	while (1) {
+		$sdnoteindexstart = $textwindow->index('sidenote');
+		$bracketstartndx =
+		  $textwindow->search( '-regexp', '--', '\[Sidenote', $sdnoteindexstart,
+							   'end' );
+		last unless $bracketstartndx;
+		$bracketndx = "$bracketstartndx+1c";
+		while (1) {
+			$bracketendndx =
+			  $textwindow->search( '--', ']', $bracketndx, 'end' );
+			$bracketendndx = $textwindow->index("$bracketstartndx+9c")
+			  unless $bracketendndx;
+			$bracketendndx = $textwindow->index("$bracketendndx+1c")
+			  if $bracketendndx;
+			$nextbracketndx =
+			  $textwindow->search( '--', '[', $bracketndx, 'end' );
+			if (
+				 ($nextbracketndx)
+				 && (
+					  $textwindow->compare( $nextbracketndx, '<', $bracketendndx
+					  )
+				 )
+			  )
+			{
+				$bracketndx = $bracketendndx;
+				next;
+			}
+			last;
+		}
+		$textwindow->markSet( 'sidenote', $bracketendndx );
+		$paragraphp =
+		  $textwindow->search( '-backwards', '-regexp', '--', '^$',
+							   $bracketstartndx, '1.0' );
+		$paragraphn =
+		  $textwindow->search( '-regexp', '--', '^$', $bracketstartndx, 'end' );
+		$sidenote = $textwindow->get( $bracketstartndx, $bracketendndx );
+		if ( $textwindow->get( "$bracketstartndx-2c", $bracketstartndx ) ne
+			 "\n\n" )
+		{
+			if (
+				 (
+				   $textwindow->get( $bracketendndx, "$bracketendndx+1c" ) eq
+				   ' '
+				 )
+				 || ( $textwindow->get( $bracketendndx, "$bracketendndx+1c" ) eq
+					  "\n" )
+			  )
+			{
+				$textwindow->delete( $bracketendndx, "" );
+			}
+			$textwindow->delete( $bracketstartndx, $bracketendndx );
+			$textwindow->see($bracketstartndx);
+			$textwindow->insert( "$paragraphp+1l", $sidenote . "\n\n" );
+		} elsif (
+				 $textwindow->compare( "$bracketendndx+1c", '<', $paragraphn ) )
+		{
+			if (
+				 (
+				   $textwindow->get( $bracketendndx, "$bracketendndx+1c" ) eq
+				   ' '
+				 )
+				 || ( $textwindow->get( $bracketendndx, "$bracketendndx+1c" ) eq
+					  "\n" )
+			  )
+			{
+				$textwindow->delete( $bracketendndx, "$bracketendndx+1c" );
+			}
+			$textwindow->see($bracketstartndx);
+			$textwindow->insert( $bracketendndx, "\n\n" );
+		}
+		$sdnoteindexstart = "$bracketstartndx+10c";
+	}
+	my $error =
+	  $textwindow->search(
+						   '-regexp',                   '--',
+						   '(?<=[^\[])[Ss]idenote[: ]', '1.0',
+						   'end'
+	  );
+	unless ($::nobell) { $textwindow->bell if $error }
+	$textwindow->see($error) if $error;
+	$textwindow->markSet( 'insert', $error ) if $error;
+}
+
+# Find and format poetry line numbers. They need to be to the right, at
+# least 2 space from the text.
+
+## Reformat Poetry ~LINE Numbers
+sub poetrynumbers {
+	my $textwindow = $::textwindow;
+	$::searchstartindex = '1.0';
+	::viewpagenums() if ( $::lglobal{seepagenums} );
+	my ( $linenum, $line, $spacer, $row, $col );
+	while (1) {
+		$::searchstartindex =
+		  $textwindow->search( '-regexp', '--', '(?<=\S)\s\s+\d+$',
+							   $::searchstartindex, 'end' );
+		last unless $::searchstartindex;
+		$textwindow->see($::searchstartindex);
+		$textwindow->update;
+		::update_indicators();
+		( $row, $col ) = split /\./, $::searchstartindex;
+		$line = $textwindow->get( "$row.0", "$row.end" );
+		$line =~ s/(?<=\S)\s\s+(\d+)$//;
+		$linenum = $1;
+		$spacer  = $::rmargin - length($line) - length($linenum);
+		$spacer -= 2;
+		$line = '  ' . ( ' ' x $spacer ) . $linenum;
+		$textwindow->delete( $::searchstartindex, "$::searchstartindex lineend" );
+		$textwindow->insert( $::searchstartindex, $line );
+		$::searchstartindex = ++$row . '.0';
+	}
+}
+
+sub get_page_number {
+	my $textwindow = $::textwindow;
+	my $pnum;
+	my $markindex = $textwindow->index('insert');
+	my $mark      = $textwindow->markPrevious($markindex);
+	while ($mark) {
+		if ( $mark =~ /Pg(\S+)/ ) {
+			$pnum = $1;
+			last;
+		} else {
+			$mark = $textwindow->markPrevious($mark) if $mark;
+		}
+	}
+	unless ($pnum) {
+		$mark = $textwindow->markNext($markindex);
+		while ($mark) {
+			if ( $mark =~ /Pg(\S+)/ ) {
+				$pnum = $1;
+				last;
+			} else {
+
+				#print "$mark:1\n";
+				#print $textwindow->markNext($mark).":2\n";
+				if (    ( not defined $textwindow->markNext($mark) )
+					 || ( $mark eq $textwindow->markNext($mark) ) )
+				{
+					last;
+				}
+				$mark = $textwindow->markNext($mark);
+				last unless $mark;
+			}
+		}
+	}
+	$pnum = '' unless $pnum;
+	return $pnum;
+}
+
+sub externalpopup {    # Set up the external commands menu
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	my $menutempvar;
+	if ( $::lglobal{xtpop} ) {
+		$::lglobal{xtpop}->deiconify;
+	} else {
+		$::lglobal{xtpop} = $top->Toplevel( -title => 'External programs', );
+		::initialize_popup_with_deletebinding('xtpop');
+		my $f0 = $::lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		$f0->Label( -text =>
+"You can set up external programs to be called from within guiguts here. Each line of entry boxes represent\n"
+			. "a menu entry. The left box is the label that will show up under the menu. The right box is the calling parameters.\n"
+			. "Format the calling parameters as they would be when entered into the \"Run\" entry under the Start button\n"
+			. "(for Windows). You can call a file directly: (\"C:\\Program Files\\Accessories\\wordpad.exe\") or indirectly for\n"
+			. "registered apps (start or rundll). If you call a program that has a space in the path, you must enclose the program\n"
+			. "name in double quotes.\n\n"
+			. "There are a few exposed internal variables you can use to build commands with.\nUse one of these variable to "
+			. "substitute in the corresponding value.\n\n"
+			. "\$d = the directory path of the currently open file.\n"
+			. "\$f = the current open file name, without a path or extension.\n"
+			. "\$e = the extension of the currently open file.\n"
+			. '(So, to pass the currently open file, use $d$f$e.)' . "\n\n"
+			. "\$i = the directory with full path that the png files are in.\n"
+			. "\$p = the number of the page that the cursor is currently in.\n"
+		)->pack;
+		my $f1 = $::lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		for my $menutempvar ( 0 .. 9 ) {
+			$f1->Entry(
+						-width        => 50,
+						-background   => $::bkgcolor,
+						-relief       => 'sunken',
+						-textvariable => \$::extops[$menutempvar]{label},
+			  )->grid(
+					   -row    => "$menutempvar" + 1,
+					   -column => 1,
+					   -padx   => 2,
+					   -pady   => 4
+			  );
+			$f1->Entry(
+						-width        => 80,
+						-background   => $::bkgcolor,
+						-relief       => 'sunken',
+						-textvariable => \$::extops[$menutempvar]{command},
+			  )->grid(
+					   -row    => "$menutempvar" + 1,
+					   -column => 2,
+					   -padx   => 2,
+					   -pady   => 4
+			  );
+		}
+		my $f2 = $::lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		my $gobut = $f2->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				savesettings();
+				menurebuild();
+				$::lglobal{xtpop}->destroy;
+				undef $::lglobal{xtpop};
+			},
+			-text  => 'OK',
+			-width => 8
+		)->pack( -side => 'top', -pady => 5, -padx => 2, -anchor => 'n' );
+	}
+}
+
+sub xtops {    # run an external program through the external commands menu
+	my $index = shift;
+	return unless $::extops[$index]{command};
+	runner( cmdinterp( $::extops[$index]{command} ) );
+}
+
+sub setmargins {
+	my $top = $::top;
+	my $getmargins = $top->DialogBox( -title   => 'Set margins for rewrap',
+									  -buttons => ['OK'], );
+	my $lmframe =
+	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $lmlabel = $lmframe->Label(
+								   -width => 25,
+								   -text  => 'Rewrap Left Margin',
+	)->pack( -side => 'left' );
+	my $lmentry = $lmframe->Entry(
+								   -width        => 6,
+								   -background   => $::bkgcolor,
+								   -relief       => 'sunken',
+								   -textvariable => \$::lmargin,
+	)->pack( -side => 'left' );
+	my $rmframe =
+	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $rmlabel = $rmframe->Label(
+								   -width => 25,
+								   -text  => 'Rewrap Right Margin',
+	)->pack( -side => 'left' );
+	my $rmentry = $rmframe->Entry(
+								   -width        => 6,
+								   -background   => $::bkgcolor,
+								   -relief       => 'sunken',
+								   -textvariable => \$::rmargin,
+	)->pack( -side => 'left' );
+	my $blmframe =
+	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $blmlabel = $blmframe->Label(
+									 -width => 25,
+									 -text  => 'Block Rewrap Left Margin',
+	)->pack( -side => 'left' );
+	my $blmentry = $blmframe->Entry(
+									 -width        => 6,
+									 -background   => $::bkgcolor,
+									 -relief       => 'sunken',
+									 -textvariable => \$::blocklmargin,
+	)->pack( -side => 'left' );
+	my $brmframe =
+	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $brmlabel = $brmframe->Label(
+									 -width => 25,
+									 -text  => 'Block Rewrap Right Margin',
+	)->pack( -side => 'left' );
+	my $brmentry = $brmframe->Entry(
+									 -width        => 6,
+									 -background   => $::bkgcolor,
+									 -relief       => 'sunken',
+									 -textvariable => \$::blockrmargin,
+	)->pack( -side => 'left' );
+
+	#
+	my $plmframe =
+	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $plmlabel = $plmframe->Label(
+									 -width => 25,
+									 -text  => 'Poetry Rewrap Left Margin',
+	)->pack( -side => 'left' );
+	my $plmentry = $plmframe->Entry(
+									 -width        => 6,
+									 -background   => $::bkgcolor,
+									 -relief       => 'sunken',
+									 -textvariable => \$::poetrylmargin,
+	)->pack( -side => 'left' );
+
+	#
+	my $didntframe =
+	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $didntlabel =
+	  $didntframe->Label(
+						  -width => 25,
+						  -text  => 'Default Indent for /*  */ Blocks',
+	  )->pack( -side => 'left' );
+	my $didntmentry =
+	  $didntframe->Entry(
+						  -width        => 6,
+						  -background   => $::bkgcolor,
+						  -relief       => 'sunken',
+						  -textvariable => \$::defaultindent,
+	  )->pack( -side => 'left' );
+	$getmargins->Icon( -image => $::icon );
+	$getmargins->Show;
+
+	if (    ( $::blockrmargin eq '' )
+		 || ( $::blocklmargin eq '' )
+		 || ( $::rmargin      eq '' )
+		 || ( $::lmargin      eq '' ) )
+	{
+		$top->messageBox(
+						  -icon    => 'error',
+						  -message => 'The margins must be a positive integer.',
+						  -title   => 'Incorrect margin ',
+						  -type    => 'OK',
+		);
+		setmargins();
+	}
+	if (    ( $::blockrmargin =~ /[\D\.]/ )
+		 || ( $::blocklmargin =~ /[\D\.]/ )
+		 || ( $::rmargin      =~ /[\D\.]/ )
+		 || ( $::lmargin      =~ /[\D\.]/ ) )
+	{
+		$top->messageBox(
+						  -icon    => 'error',
+						  -message => 'The margins must be a positive integer.',
+						  -title   => 'Incorrect margin ',
+						  -type    => 'OK',
+		);
+		setmargins();
+	}
+	if ( ( $::blockrmargin < $::blocklmargin ) || ( $::rmargin < $::lmargin ) ) {
+		$top->messageBox(
+			  -icon    => 'error',
+			  -message => 'The left margins must come before the right margin.',
+			  -title   => 'Incorrect margin ',
+			  -type    => 'OK',
+		);
+		setmargins();
+	}
+	::savesettings();
+}
+
+# FIXME: Adapt to work with fontCreate thingy
+sub fontsize {
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	my $sizelabel;
+	if ( defined( $::lglobal{fspop} ) ) {
+		$::lglobal{fspop}->deiconify;
+		$::lglobal{fspop}->raise;
+		$::lglobal{fspop}->focus;
+	} else {
+		$::lglobal{fspop} = $top->Toplevel;
+		$::lglobal{fspop}->title('Font');
+		::initialize_popup_with_deletebinding('fspop');
+		my $tframe = $::lglobal{fspop}->Frame->pack;
+		my $fontlist = $tframe->BrowseEntry(
+			-label     => 'Font',
+			-browsecmd => sub {
+				fontinit();
+				$textwindow->configure( -font => $::lglobal{font} );
+			},
+			-variable => \$::fontname
+		)->grid( -row => 1, -column => 1, -pady => 5 );
+		$fontlist->insert( 'end', sort( $textwindow->fontFamilies ) );
+		my $mframe = $::lglobal{fspop}->Frame->pack;
+		my $smallerbutton = $mframe->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				$::fontsize++;
+				fontinit();
+				$textwindow->configure( -font => $::lglobal{font} );
+				$sizelabel->configure( -text => $::fontsize );
+			},
+			-text  => 'Bigger',
+			-width => 10
+		)->grid( -row => 1, -column => 1, -pady => 5 );
+		$sizelabel =
+		  $mframe->Label( -text => $::fontsize )
+		  ->grid( -row => 1, -column => 2, -pady => 5 );
+		my $biggerbutton = $mframe->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				$::fontsize--;
+				fontinit();
+				$textwindow->configure( -font => $::lglobal{font} );
+				$sizelabel->configure( -text => $::fontsize );
+			},
+			-text  => 'Smaller',
+			-width => 10
+		)->grid( -row => 1, -column => 3, -pady => 5 );
+		my $weightbox = $mframe->Checkbutton(
+			-variable    => \$::fontweight,
+			-onvalue     => 'bold',
+			-offvalue    => '',
+			-selectcolor => $::activecolor,
+			-command     => sub {
+				fontinit();
+				$textwindow->configure( -font => $::lglobal{font} );
+			},
+			-text => 'Bold'
+		)->grid( -row => 2, -column => 2, -pady => 5 );
+		my $button_ok = $mframe->Button(
+			-activebackground => $::activecolor,
+			-text             => 'OK',
+			-command          => sub {
+				$::lglobal{fspop}->destroy;
+				undef $::lglobal{fspop};
+				savesettings();
+			}
+		)->grid( -row => 3, -column => 2, -pady => 5 );
+		$::lglobal{fspop}->resizable( 'no', 'no' );
+		$::lglobal{fspop}->raise;
+		$::lglobal{fspop}->focus;
+	}
+}
+
+## Set up command to start a browser, varies by OS and browser
+sub setbrowser {
+	my $top = $::top;
+	my $browsepop = $top->Toplevel;
+	$browsepop->title('Browser Start Command?');
+	$browsepop->Label( -text =>
+"Enter the complete path to the executable.\n(Under Windows, you can use 'start' to use the default handler.\n"
+		. "Under OSX, 'open' will start the default browser.)" )
+	  ->grid( -row => 0, -column => 1, -columnspan => 2 );
+	my $browserentry =
+	  $browsepop->Entry(
+						 -width        => 60,
+						 -background   => $::bkgcolor,
+						 -textvariable => $::globalbrowserstart,
+	  )->grid( -row => 1, -column => 1, -columnspan => 2, -pady => 3 );
+	my $button_ok = $browsepop->Button(
+		-activebackground => $::activecolor,
+		-text             => 'OK',
+		-width            => 6,
+		-command          => sub {
+			$::globalbrowserstart = $browserentry->get;
+			savesettings();
+			$browsepop->destroy;
+			undef $browsepop;
+		}
+	)->grid( -row => 2, -column => 1, -pady => 8 );
+	my $button_cancel = $browsepop->Button(
+		-activebackground => $::activecolor,
+		-text             => 'Cancel',
+		-width            => 6,
+		-command          => sub {
+			$browsepop->destroy;
+			undef $browsepop;
+		}
+	)->grid( -row => 2, -column => 2, -pady => 8 );
+	$browsepop->protocol(
+		 'WM_DELETE_WINDOW' => sub { $browsepop->destroy; undef $browsepop; } );
+	$browsepop->Icon( -image => $::icon );
+}
+
+sub setpngspath {
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	my $pagenum = shift;
+
+	#print $pagenum.'';
+	my $path =
+	  $textwindow->chooseDirectory( -title => 'Choose the PNGs file directory.',
+									-initialdir => "$::globallastpath" . "pngs",
+	  );
+	return unless defined $path and -e $path;
+	$path .= '/';
+	$path     = os_normal($path);
+	$::pngspath = $path;
+	::_bin_save($textwindow,$top);
+	openpng($textwindow,$pagenum) if defined $pagenum;
 }
 
 1;
