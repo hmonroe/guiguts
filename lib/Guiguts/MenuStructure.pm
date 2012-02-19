@@ -1119,7 +1119,7 @@ $main::globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 		-tearoff   => 1,
 		-menuitems => [
 			[ Button => '~About',    -command => sub{&main::about_pop_up($top)} ],
-			[ Button => '~Versions', -command => [ \&main::showversion, $top ] ],
+			[ Button => '~Versions', -command => [ \&main::showversion ] ],
 			[
 			   Button   => '~Manual',
 			   -command => sub {        # FIXME: sub this out.
@@ -1880,7 +1880,7 @@ $main::globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 		-tearoff   => 1,
 		-menuitems => [
 			[ Button => '~About',    -command => sub{&main::about_pop_up($top)}],
-			[ Button => '~Versions', -command => [ \&main::showversion, $top ] ],
+			[ Button => '~Versions', -command => [ \&main::showversion ] ],
 			[
 			   Button   => '~Manual',
 			   -command => sub {        # FIXME: sub this out.
@@ -2638,7 +2638,7 @@ $main::globalbrowserstart, "http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklis
 			[ Button => '~UTF Character Search',  -command => \&main::uchar ],
 			[ 'separator', '' ],
 			[ Button => '~About',    -command => sub{&main::about_pop_up($top)}],
-			[ Button => '~Versions', -command => [ \&main::showversion, $top ] ],
+			[ Button => '~Versions', -command => [ \&main::showversion ] ],
 
 			# FIXME: Disable update check until it works
 			[

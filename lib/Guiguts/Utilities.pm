@@ -12,7 +12,8 @@ BEGIN {
 	&win32_is_exe &win32_create_process &runner &debug_dump &run &escape_regexmetacharacters 
 	&deaccent &BindMouseWheel &working &initialize &fontinit &initialize_popup_with_deletebinding 
 	&initialize_popup_without_deletebinding &os_normal &escape_problems &natural_sort_alpha
-	&natural_sort_length &natural_sort_freq &drag &cut &paste &textcopy)
+	&natural_sort_length &natural_sort_freq &drag &cut &paste &textcopy &showversion
+	&checkforupdates &checkforupdatesmonthly &hotkeyshelp &regexref)
 }
 
 sub get_image_file {
@@ -1515,6 +1516,412 @@ sub paste {
 		$textwindow->insert( 'insert', $text );
 	} else {
 		$textwindow->clipboardPaste;
+	}
+}
+
+### Help
+# FIXME: generalize about, version, etc. into one function.
+sub showversion {
+	my $top = $::top;
+	my $os = $^O;
+	$os =~ s/^([^\[]+)\[.+/$1/;
+	my $perl = sprintf( "Perl v%vd", $^V );
+	my $winver;
+	if ($::OS_WIN) {
+		$winver = qx{ver};
+		$winver =~ s{\n}{}smg;
+	} else {
+		$winver = "";
+	}    # stops "uninitialised value" message on non windows systems
+	my $message = <<"END";
+Currently Running :
+$::APP_NAME, Version : $::VERSION
+Platform : $os
+$winver
+$perl
+perl/Tk Version : $Tk::VERSION
+Tk patchLevel : $Tk::patchLevel
+Tk libraries : $Tk::library
+END
+
+	my $dialog = $top->Dialog(
+							   -title   => 'Versions',
+							   -popover => $top,
+							   -justify => 'center',
+							   -text    => $message,
+	);
+	$dialog->Show;
+}
+
+# Check what is the most recent version online
+sub checkonlineversion {
+
+	#working("Checking for update online (timeout 20 seconds)");
+	my $ua = LWP::UserAgent->new(
+								  env_proxy  => 1,
+								  keep_alive => 1,
+								  timeout    => 20,
+	);
+	my $response = $ua->get('http://sourceforge.net/projects/guiguts/');
+
+	#working();
+	unless ( $response->content ) {
+		return;
+	}
+	if ( $response->content =~ /(\d+)\.(\d+)\.(\d+)\.zip/i ) {
+		return "$1.$2.$3";
+	}
+}
+
+# Check to see if this is the most recent version
+sub checkforupdates {
+	my $top = $::top;
+	
+	my $monthlycheck = shift;
+	if ( ( $monthlycheck eq "monthly" ) and ( $::ignoreversions eq "major" ) ) {
+		return;
+	}
+	my $onlineversion;
+
+	$onlineversion = checkonlineversion();
+	if ($onlineversion) {
+		if ( $monthlycheck eq "monthly" ) {
+			if (    ( $onlineversion eq "$::VERSION" )
+				 or ( $onlineversion eq $::ignoreversionnumber ) )
+			{
+				return;
+			}
+			my ( $onlinemajorversion, $onlineminorversion, $onlinerevision ) =
+			  split( /\./, $onlineversion );
+			my ( $currentmajorversion, $currentminorversion, $currentrevision )
+			  = split( /\./, $::VERSION );
+			if (     ( $onlinemajorversion == $currentmajorversion )
+				 and ( $::ignoreversions eq "minor" ) )
+			{
+				return;
+			}
+			if (     ( $onlineminorversion == $currentminorversion )
+				 and ( $::ignoreversions eq "revisions" ) )
+			{
+				return;
+			}
+		}
+
+		my ( $dbox, $answer );
+		my $versionpopmessage;
+		my $versionbox = $top->Toplevel;
+		$versionbox->Icon( -image => $::icon );
+		$versionbox->title('Check for updates');
+		$versionbox->focusForce;
+		my $dialog_frame =
+		  $versionbox->Frame()->pack( -side => "top", -pady => 10 );
+		$dialog_frame->Label( -text =>
+"The latest version available online is $onlineversion, and your version is $::VERSION."
+		)->pack( -side => "top" );
+		my $button_frame = $dialog_frame->Frame()->pack( -side => "top" );
+		$button_frame->Button(
+			-text    => 'Update',
+			-command => sub {
+				runner(
+$::globalbrowserstart, "http://sourceforge.net/projects/guiguts/" );
+				$versionbox->destroy;
+				undef $versionbox;
+			}
+		)->pack( -side => 'left', -pady => 8, -padx => 5 );
+		$button_frame->Button(
+			-text    => 'Ignore This Version',
+			-command => sub {
+
+				#print $::ignoreversionnumber;
+				$::ignoreversionnumber = $onlineversion;
+				savesettings();
+				$versionbox->destroy;
+				undef $versionbox;
+			}
+		)->pack( -side => 'left', -pady => 8, -padx => 5 );
+		$button_frame->Button(
+			-text    => 'Remind Me',
+			-command => sub {
+				$versionbox->destroy;
+				undef $versionbox;
+				return;
+			}
+		)->pack( -side => 'left', -pady => 8, -padx => 5 );
+		$dialog_frame->Label( -text => $versionpopmessage )
+		  ->pack( -side => "top" );
+
+		my $radio_frame =
+		  $versionbox->Frame()->pack( -side => "top", -pady => 10 );
+		$radio_frame->Radiobutton(
+								   -text     => "Do Not Check Again",
+								   -value    => "major",
+								   -variable => \$::ignoreversions
+		)->pack( -side => "left" );
+		$radio_frame->Radiobutton(
+								   -text     => "Ignore Minor Versions",
+								   -value    => "minor",
+								   -variable => \$::ignoreversions
+		)->pack( -side => "left" );
+		$radio_frame->Radiobutton(
+								   -text     => "Ignore Revisions",
+								   -value    => "revisions",
+								   -variable => \$::ignoreversions
+		)->pack( -side => "left" );
+		$radio_frame->Radiobutton(
+								   -text     => "Check for Revisions",
+								   -value    => "none",
+								   -variable => \$::ignoreversions
+		)->pack( -side => "left" );
+
+	} else {
+		$top->messageBox(
+					   -icon    => 'error',
+					   -message => 'Could not determine latest version online.',
+					   -title   => 'Checking for Updates',
+					   -type    => 'Ok',
+		);
+		return;
+
+	}
+}
+
+# On a monthly basis, check to see if this is the most recent version
+sub checkforupdatesmonthly {
+	my $top = $::top;
+	if (     ( $::ignoreversions ne "major" )
+		 and ( time() - $::lastversioncheck > 2592000 ) )
+	{
+		$::lastversioncheck = time();
+
+		my $updateanswer = $top->Dialog(
+			-title => 'Check for Updates',
+			-font  => $::lglobal{font},
+
+			-text           => 'Would you like to check for updates?',
+			-buttons        => [ 'Ok', 'Later', 'Don\'t Ask' ],
+			-default_button => 'Ok'
+		)->Show();
+		if ( $updateanswer eq 'Ok' ) {
+			checkforupdates("monthly");
+			return;
+		}
+		if ( $updateanswer eq 'Later' ) {
+			return;
+		}
+		if ( $updateanswer eq 'Do Not Ask Again' ) {
+			$::ignoreversions = "major";
+			return;
+		}
+	}
+}
+
+sub hotkeyshelp {
+	my $top = $::top;
+	if ( defined( $::lglobal{hotpop} ) ) {
+		$::lglobal{hotpop}->deiconify;
+		$::lglobal{hotpop}->raise;
+		$::lglobal{hotpop}->focus;
+	} else {
+		$::lglobal{hotpop} = $top->Toplevel;
+		$::lglobal{hotpop}->title('Hot key combinations');
+		initialize_popup_with_deletebinding('hotpop');
+
+		my $frame =
+		  $::lglobal{hotpop}->Frame->pack(
+										 -anchor => 'nw',
+										 -expand => 'yes',
+										 -fill   => 'both'
+		  );
+		my $rotextbox =
+		  $frame->Scrolled(
+							'ROText',
+							-scrollbars => 'se',
+							-background => $::bkgcolor,
+							-font       => '{Helvetica} 10',
+							-width      => 80,
+							-height     => 25,
+							-wrap       => 'none',
+		  )->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
+		drag($rotextbox);
+		$rotextbox->focus;
+		$rotextbox->insert( 'end', <<'EOF' );
+
+MAIN WINDOW
+
+<ctrl>+x -- cut or column cut
+<ctrl>+c -- copy or column copy
+<ctrl>+v -- paste
+<ctrl>+` -- column paste
+<ctrl>+a -- select all
+
+F1 -- column copy
+F2 -- column cut
+F3 -- column paste
+
+F7 -- spell check selection (or document, if no selection made)
+
+<ctrl>+z -- undo
+<ctrl>+y -- redo
+
+<ctrl>+/ -- select all
+<ctrl>+\ -- unselect all
+<Esc> -- unselect all
+
+<ctrl>+u -- Convert case of selection to upper case
+<ctrl>+l -- Convert case of selection to lower case
+<ctrl>+t -- Convert case of selection to title case
+
+<ctrl>+i -- insert a tab character before cursor (Tab)
+<ctrl>+j -- insert a newline character before cursor (Enter)
+<ctrl>+o -- insert a newline character after cursor
+
+<ctrl>+d -- delete character after cursor (Delete)
+<ctrl>+h -- delete character to the left of the cursor (Backspace)
+<ctrl>+k -- delete from cursor to end of line
+
+<ctrl>+e -- move cursor to end of current line. (End)
+<ctrl>+b -- move cursor left one character (left arrow)
+<ctrl>+p -- move cursor up one line (up arrow)
+<ctrl>+n -- move cursor down one line (down arrow)
+
+<ctrl>Home -- move cursor to the start of the text
+<ctrl>End -- move cursor to end of the text
+<ctrl>+right arrow -- move to the start of the next word
+<ctrl>+left arrow -- move to the start of the previous word
+<ctrl>+up arrow -- move to the start of the current paragraph
+<ctrl>+down arrow -- move to the start of the next paragraph
+<ctrl>+PgUp -- scroll left one screen
+<ctrl>+PgDn -- scroll right one screen
+
+<shift>+Home -- adjust selection to beginning of current line
+<shift>+End -- adjust selection to end of current line
+<shift>+up arrow -- adjust selection up one line
+<shift>+down arrow -- adjust selection down one line
+<shift>+left arrow -- adjust selection left one character
+<shift>+right arrow -- adjust selection right one character
+
+<shift><ctrl>Home -- adjust selection to the start of the text
+<shift><ctrl>End -- adjust selection to end of the text
+<shift><ctrl>+left arrow -- adjust selection to the start of the previous word
+<shift><ctrl>+right arrow -- adjust selection to the start of the next word
+<shift><ctrl>+up arrow -- adjust selection to the start of the current paragraph
+<shift><ctrl>+down arrow -- adjust selection to the start of the next paragraph
+
+<ctrl>+' -- highlight all apostrophes in selection.
+<ctrl>+\" -- highlight all double quotes in selection.
+<ctrl>+0 -- remove all highlights.
+
+<Insert> -- Toggle insert / overstrike mode
+
+Double click left mouse button -- select word
+Triple click left mouse button -- select line
+
+<shift> click left mouse button -- adjust selection to click point
+<shift> Double click left mouse button -- adjust selection to include word clicked on
+<shift> Triple click left mouse button -- adjust selection to include line clicked on
+
+Single click right mouse button -- pop up shortcut to menu bar
+
+BOOKMARKS
+
+<ctrl>+<shift>+1 -- set bookmark 1
+<ctrl>+<shift>+2 -- set bookmark 1
+<ctrl>+<shift>+3 -- set bookmark 3
+<ctrl>+<shift>+4 -- set bookmark 4
+<ctrl>+<shift>+5 -- set bookmark 5
+
+<ctrl>+1 -- go to bookmark 1
+<ctrl>+2 -- go to bookmark 2
+<ctrl>+3 -- go to bookmark 3
+<ctrl>+4 -- go to bookmark 4
+<ctrl>+5 -- go to bookmark 5
+
+MENUS
+
+<alt>+f -- file menu
+<alt>+e -- edit menu
+<alt>+b -- bookmarks
+<alt>+s -- search menu
+<alt>+g -- gutcheck menu
+<alt>+x -- fixup menu
+<alt>+w -- word frequency menu
+
+
+SEARCH POPUP
+
+<Enter> -- Search
+<shift><Enter> -- Replace
+<ctrl><Enter> -- Replace & Search
+<ctrl><shift><Enter> -- Replace All
+
+PAGE SEPARATOR POPUP
+
+'j' -- Join Lines - join lines, remove all blank lines, spaces, asterisks and hyphens.
+'k' -- Join, Keep Hyphen - join lines, remove all blank lines, spaces and asterisks, keep hyphen.
+'l' -- Blank Line - leave one blank line. Close up any other whitespace. (Paragraph Break)
+'t' -- New Section - leave two blank lines. Close up any other whitespace. (Section Break)
+'h' -- New Chapter - leave four blank lines. Close up any other whitespace. (Chapter Break)
+'r' -- Refresh - search for, highlight and re-center the next page separator.
+'u' -- Undo - undo the last edit. (Note: in Full Automatic mode,\n\tthis just single steps back through the undo buffer)
+'d' -- Delete - delete the page separator. Make no other edits.
+'v' -- View the current page in the image viewer.
+'a' -- Toggle Full Automatic mode.
+'s' -- Toggle Semi Automatic mode.
+'?' -- View hotkey help popup.
+EOF
+		my $button_ok = $frame->Button(
+			-activebackground => $::activecolor,
+			-text             => 'OK',
+			-command          => sub {
+				$::lglobal{hotpop}->destroy;
+				undef $::lglobal{hotpop};
+			}
+		)->pack( -pady => 8 );
+	}
+}
+
+sub regexref {
+	my $top = $::top;
+	if ( defined( $::lglobal{regexrefpop} ) ) {
+		$::lglobal{regexrefpop}->deiconify;
+		$::lglobal{regexrefpop}->raise;
+		$::lglobal{regexrefpop}->focus;
+	} else {
+		$::lglobal{regexrefpop} = $top->Toplevel;
+		$::lglobal{regexrefpop}->title('Regex Quick Reference');
+		initialize_popup_with_deletebinding('regexrefpop');
+		my $button_ok = $::lglobal{regexrefpop}->Button(
+			-activebackground => $::activecolor,
+			-text             => 'Close',
+			-command          => sub {
+				$::lglobal{regexrefpop}->destroy;
+				undef $::lglobal{regexrefpop};
+			}
+		)->pack( -pady => 6 );
+		my $regtext =
+		  $::lglobal{regexrefpop}->Scrolled(
+										   'ROText',
+										   -scrollbars => 'se',
+										   -background => $::bkgcolor,
+										   -font       => $::lglobal{font},
+		  )->pack( -anchor => 'n', -expand => 'y', -fill => 'both' );
+		drag($regtext);
+		if ( -e 'regref.txt' ) {
+			if ( open my $ref, '<', 'regref.txt' ) {
+				while (<$ref>) {
+					$_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
+					#$_ = eol_convert($_);
+					$regtext->insert( 'end', $_ );
+				}
+			} else {
+				$regtext->insert( 'end',
+						  'Could not open Regex Reference file - regref.txt.' );
+			}
+		} else {
+			$regtext->insert( 'end',
+						  'Could not find Regex Reference file - regref.txt.' );
+		}
 	}
 }
 
