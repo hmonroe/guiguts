@@ -453,7 +453,7 @@ sub saveLangDebugFiles {
 	print "saving seenwordslang.txt - distinct words and spelt language\n";	
 	$section = "\%seenwordslang\n";
 	open $save, '>:bytes', 'seenwordslang.txt';
-	for my $key (sort (keys %distinctwords)){
+	for my $key (sort (keys %seenwordslang)){
 		if ($seenwordslang{$key}) {
 			$section .= "$key => $seenwordslang{$key}\n";
 		} else { $section .= "$key x=>\n"; }
@@ -514,7 +514,7 @@ sub getwordcounts {
 	$distinctwordcount = $i;
 	$totalwordcount = $j;
 	if (%seenwordslang){
-		for my $key (keys %seenwordslang) {
+		for my $key (keys %distinctwords) {
 			if ($seenwordslang{$key}) { $k++; };
 		}	
 	}
@@ -831,12 +831,14 @@ sub processmisspelledwords {
 		} else { print "How did I get here!!! Multilingual failure line 831\n"; };
 	}
 	
-	$i = 0;
-	for my $key (sort (keys %distinctwords)){
-		if ($seenwordslang{$key}) { $i++; }
-	};
-	$speltwordcount = $i;
-	$unspeltwordcount = $distinctwordcount - $speltwordcount;
+	getwordcounts();
+	
+#	$i = 0;
+#	for my $key (sort (keys %distinctwords)){
+#		if ($seenwordslang{$key}) { $i++; }
+#	};
+#	$speltwordcount = $i;
+#	$unspeltwordcount = $distinctwordcount - $speltwordcount;
 	$line = "Total words spelt: $speltwordcount";
 	$multiwclistbox->insert( 'end', $line );
 	$multiwclistbox->update;
