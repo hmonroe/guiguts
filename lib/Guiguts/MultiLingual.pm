@@ -814,25 +814,21 @@ sub processmisspelledwords {
 	$line = "Unspelt words from Aspell: $unspeltwordcount";
 	$multiwclistbox->insert( 'end', $line );
 
-	if ($debug) {print "$unspeltwordcount unspelt words, ";}
+	if ($debug) {print "$unspeltwordcount unspelt words, \n";}
 
 	#match words and update
 	$i = 0; $j = 0;
-	while ($i < $distinctwordcount) {   # $distinctwordcount
-		while ($j < $unspeltwordcount) {         # $unspeltwordcount
-			$compare = ($orderedwords[$i] cmp $startunspelt[$j]);
-			if ($compare == -1){  # spelt word
-				$seenwordslang{$orderedwords[$i]} = $dict unless ($seenwordslang{$orderedwords[$i]});
-				$i++;
-			} elsif ($compare == 0){ # unspelt word
-				$i++; $j++;
-			} elsif ($compare == 1){ # new word not in seenwords
-#				print "$startunspelt[$j] returned by Aspell but not in book!\n";
-				$j++;
-			} else { print "How did I get here!!! Multilingual failure\n"; };
-		}
-		$seenwordslang{$orderedwords[$i]} = $dict;
-		$i++;
+	while (($i < $distinctwordcount) and ($j < $unspeltwordcount)) {
+		$compare = ($orderedwords[$i] cmp $startunspelt[$j]);
+		if ($compare == -1){  # spelt word
+			$seenwordslang{$orderedwords[$i]} = $dict unless ($seenwordslang{$orderedwords[$i]});
+			$i++;
+		} elsif ($compare == 0){ # unspelt word
+			$i++; $j++;
+		} elsif ($compare == 1){ # new word not in seenwords
+			if ($debug) { print "$startunspelt[$j] returned by Aspell but not in book!\n"; };
+			$j++;
+		} else { print "How did I get here!!! Multilingual failure line 831\n"; };
 	}
 	
 	$i = 0;

@@ -104,13 +104,13 @@ sub findandhighlightpageseparator {
 			}
 		}
 		if ( ( $line =~ /\p{IsLower}/ ) || ( $line =~ /^I / ) ) {
-			::processpageseparator('j');
+			processpageseparator('j');
 		}
 		my ( $r, $c ) = split /\./, $textwindow->index('page-1c');
 		my ($size) =
 		  length( $textwindow->get( 'page+1l linestart', 'page+1l lineend' ) );
 		if ( ( $line =~ /[\.\"\'\?]/ ) && ( $c < ( $size * 0.5 ) ) ) {
-			::processpageseparator('l');
+			processpageseparator('l');
 		}
 	}
 	$textwindow->xviewMoveto(.0);
@@ -257,6 +257,7 @@ sub processpageseparator {
 		$textwindow->insert( $index, $pagesep ) if $::lglobal{htmlpagenum};
 		$::lglobal{joinundo}++ if $::lglobal{htmlpagenum};
 	} elsif ( $op eq 'k' ) {    # join lines keep hyphen
+# FIXME need to sort out the extra space after the hyphen somewhere here
 		$index = $textwindow->index('page');
 		$line  = $textwindow->get("$index-1c");
 		if ( $line =~ />/ ) {
