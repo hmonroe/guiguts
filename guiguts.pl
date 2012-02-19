@@ -1000,22 +1000,6 @@ sub set_autosave {
 	$lglobal{autosaveinterval} = time;
 }
 
-sub highlight_scannos {    # Enable / disable word highlighting in the text
-	if ($scannos_highlighted) {
-		$lglobal{hl_index} = 1;
-		highlightscannos();
-		$lglobal{scannos_highlightedid} =
-		  $top->repeat( 400, \&highlightscannos );
-	} else {
-		$lglobal{scannos_highlightedid}->cancel
-		  if $lglobal{scannos_highlightedid};
-		undef $lglobal{scannos_highlightedid};
-		$textwindow->tagRemove( 'scannos', '1.0', 'end' );
-	}
-	update_indicators();
-	savesettings();
-}
-
 sub searchsize {  # Pop up a window where you can adjust the search history size
 	if ( $lglobal{hssizepop} ) {
 		$lglobal{hssizepop}->deiconify;

@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
-	@EXPORT=qw( &highlightscannos &scannosfile &hilite &hilitepopup)
+	@EXPORT=qw(&scannosfile &hilite &hilitepopup &highlight_scannos)
 }
 
 # Routine to find highlight word list
@@ -305,6 +305,24 @@ sub hilitepopup {
 		)->grid( -row => 2, -column => 2, -padx => 2, -pady => 2 );
 
 	}
+}
+
+sub highlight_scannos {    # Enable / disable word highlighting in the text
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	if ($::scannos_highlighted) {
+		$::lglobal{hl_index} = 1;
+		highlightscannos();
+		$::lglobal{scannos_highlightedid} =
+		  $top->repeat( 400, \&highlightscannos );
+	} else {
+		$::lglobal{scannos_highlightedid}->cancel
+		  if $::lglobal{scannos_highlightedid};
+		undef $::lglobal{scannos_highlightedid};
+		$textwindow->tagRemove( 'scannos', '1.0', 'end' );
+	}
+	::update_indicators();
+	::savesettings();
 }
 
 
