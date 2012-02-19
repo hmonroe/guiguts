@@ -13,7 +13,7 @@ BEGIN {
 	&deaccent &BindMouseWheel &working &initialize &fontinit &initialize_popup_with_deletebinding 
 	&initialize_popup_without_deletebinding &os_normal &escape_problems &natural_sort_alpha
 	&natural_sort_length &natural_sort_freq &drag &cut &paste &textcopy &showversion
-	&checkforupdates &checkforupdatesmonthly &hotkeyshelp &regexref)
+	&checkforupdates &checkforupdatesmonthly &hotkeyshelp &regexref &gotobookmark &setbookmark)
 }
 
 sub get_image_file {
@@ -1925,6 +1925,37 @@ sub regexref {
 	}
 }
 
+### Bookmarks
 
+sub setbookmark {
+	my $bookmark = shift;
+	my $textwindow = $::textwindow;
+	my $index    = '';
+	my $indexb   = '';
+	if ( $::bookmarks[$bookmark] ) {
+		$indexb = $textwindow->index("bkmk$bookmark");
+	}
+	$index = $textwindow->index('insert');
+	if ( $::bookmarks[$bookmark] ) {
+		$textwindow->tagRemove( 'bkmk', $indexb, "$indexb+1c" );
+	}
+	if ( $index ne $indexb ) {
+		$textwindow->markSet( "bkmk$bookmark", $index );
+	}
+	$::bookmarks[$bookmark] = $index;
+	$textwindow->tagAdd( 'bkmk', $index, "$index+1c" );
+}
+
+sub gotobookmark {
+	my $bookmark = shift;
+	my $textwindow = $::textwindow;
+	$textwindow->bell unless ( $::bookmarks[$bookmark] || $::nobell );
+	$textwindow->see("bkmk$bookmark") if $::bookmarks[$bookmark];
+	$textwindow->markSet( 'insert', "bkmk$bookmark" )
+	  if $::bookmarks[$bookmark];
+	::update_indicators();
+	$textwindow->tagAdd( 'bkmk', "bkmk$bookmark", "bkmk$bookmark+1c" )
+	  if $::bookmarks[$bookmark];
+}
 
 1;
