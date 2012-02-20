@@ -7,8 +7,7 @@ BEGIN {
 	our ( @ISA, @EXPORT );
 	@ISA = qw(Exporter);
 	@EXPORT =
-	  qw(&spellcheckfirst &aspellstart &aspellstop &spellchecker &spellloadprojectdict 
-	  &getmisspelledwords &spelloptions);
+	  qw(&spellcheckfirst &aspellstart &aspellstop &spellchecker &spellloadprojectdict &getmisspelledwords	&spelloptions);
 }
 
 # Initialize spellchecker

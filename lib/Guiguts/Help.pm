@@ -6,7 +6,7 @@ BEGIN {
 	use Exporter();
 	our ( @ISA, @EXPORT );
 	@ISA    = qw(Exporter);
-	@EXPORT = qw(&about_pop_up &hotkeyshelp &regexref );
+	@EXPORT = qw(&about_pop_up );
 }
 
 sub about_pop_up {
@@ -259,6 +259,8 @@ sub regexref {
 			if ( open my $ref, '<', 'regref.txt' ) {
 				while (<$ref>) {
 					$_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+1;
+
 
 					#$_ = eol_convert($_);
 					$regtext->insert( 'end', $_ );

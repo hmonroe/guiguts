@@ -62,7 +62,7 @@ our $icondata;
 ### Custom Guiguts modules
 use Guiguts::ASCIITables;
 use Guiguts::ErrorCheck;
-use Guiguts::File;
+use Guiguts::FileMenu;
 use Guiguts::Footnotes;
 use Guiguts::Greek;
 use Guiguts::Greekgifs;
@@ -75,8 +75,8 @@ use Guiguts::MultiLingual;
 use Guiguts::PageNumbers;
 use Guiguts::PageSeparators;
 use Guiguts::Preferences;
-use Guiguts::SearchReplace;
-use Guiguts::Selection;
+use Guiguts::SearchReplaceMenu;
+use Guiguts::SelectionMenu;
 use Guiguts::SpellCheck;
 use Guiguts::StatusBar;
 use Guiguts::Tests;
@@ -259,6 +259,7 @@ our $text_font;
 our $textwindow;
 our $menubar;
 initialize();    # Initialize a bunch of vars that need it.
+
 
 if (     ( $lglobal{global_filename} )
 	 and ( $lglobal{global_filename} eq 'runtests' ) )
