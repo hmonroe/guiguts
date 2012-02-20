@@ -66,7 +66,7 @@ use Guiguts::FileMenu;
 use Guiguts::Footnotes;
 use Guiguts::Greek;
 use Guiguts::Greekgifs;
-use Guiguts::Help;
+use Guiguts::HelpMenu;
 use Guiguts::Highlight;
 use Guiguts::HTMLConvert;
 use Guiguts::LineNumberText;
