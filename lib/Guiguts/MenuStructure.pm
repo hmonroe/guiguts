@@ -1009,7 +1009,7 @@ $::globalbrowserstart, "http://pgtei.pglaf.org/marcello/0.4/tei-online" );
 				   [
 					  Button   => 'EpubMaker Online',
 					  -command => sub {
-						  runner(
+						  ::runner(
 							   $::globalbrowserstart, "http://epubmaker.pglaf.org/"
 						  );
 						}
@@ -1886,7 +1886,7 @@ $::globalbrowserstart, "http://www.pgdp.net/wiki/Dp2rst" );
 			[
 			   Button   => '~Manual',
 			   -command => sub {        # FIXME: sub this out.
-				   runner(
+				   ::runner(
 $::globalbrowserstart, "http://www.pgdp.net/wiki/PPTools/Guiguts"
 				   );
 				 }
@@ -1895,7 +1895,7 @@ $::globalbrowserstart, "http://www.pgdp.net/wiki/PPTools/Guiguts"
 			[
 			   Button   => '~PP Process Checklist',
 			   -command => sub {        # FIXME: sub this out.
-				   runner(
+				   ::runner(
 $::globalbrowserstart, "http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
 				   );
 				 }
@@ -1979,7 +1979,7 @@ sub menubuildtwo {
 			   -command => sub {
 				   my $defaulthandler = $::extops[0]{command};
 				   $defaulthandler =~ s/\$f\$e/project_comments.html/;
-				   runner( &::cmdinterp($defaulthandler) );
+				   ::runner( &::cmdinterp($defaulthandler) );
 				 }
 			],
 			[
@@ -1987,7 +1987,7 @@ sub menubuildtwo {
 			   'View Project Discussion',
 			   -command => sub {
 				   return if &::nofileloadedwarning();
-				   runner(
+				   ::runner(
 "$::globalbrowserstart http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$::projectid"
 				   ) if $::projectid;
 				 }

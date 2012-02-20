@@ -768,7 +768,7 @@ sub openfile {    # and open it
 	::update_indicators();
 	file_mark_pages() if $::auto_page_marks;
 	push @::operations, ( localtime() . " - Open $::lglobal{global_filename}" );
-	oppopupdate() if $::lglobal{oppop};
+	::oppopupdate() if $::lglobal{oppop};
 	::savesettings();
 	::set_autosave() if $::autosave;
 }

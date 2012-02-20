@@ -613,7 +613,7 @@ sub updatesearchlabels {
 # calls the replacewith command after calling replaceeval
 # to allow arbitrary perl code to be included in the replace entry
 sub replace {
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my $replaceterm = shift;
 	$replaceterm = '' unless length $replaceterm;
 	return unless $::searchstartindex;
@@ -830,7 +830,7 @@ END
 		while ( $replaceseg = shift @replarray ) {
 			$seg1 = $seg2 = '';
 			( $seg1, $seg2 ) = split /\\E/, $replaceseg, 2;
-			$replbuild .= betaascii($seg1);
+			$replbuild .= ::betaascii($seg1);
 			$replbuild .= $seg2 if $seg2;
 		}
 		$replaceterm = $replbuild;
@@ -874,7 +874,7 @@ END
 		while ( $replaceseg = shift @replarray ) {
 			$seg1 = $seg2 = '';
 			( $seg1, $seg2 ) = split /\\E/, $replaceseg, 2;
-			$replbuild .= betagreek( 'unicode', $seg1 );
+			$replbuild .= ::betagreek( 'unicode', $seg1 );
 			$replbuild .= $seg2 if $seg2;
 		}
 		$replaceterm = $replbuild;
@@ -897,7 +897,7 @@ END
 			$seg1 = $seg2 = '';
 			( $seg1, $seg2 ) = split /\\E/, $replaceseg, 2;
 			my $linkname;
-			$linkname = makeanchor( deaccent($seg1) );
+			$linkname = ::makeanchor( ::deaccent($seg1) );
 			$seg1     = "<a id=\"$linkname\"></a>";
 			$replbuild .= $seg1;
 			$replbuild .= $seg2 if $seg2;
@@ -959,14 +959,14 @@ sub replaceall {
 			my $exactsearch = $searchterm;
 
 			# escape metacharacters for whole word matching
-			$exactsearch = escape_regexmetacharacters($exactsearch)
+			$exactsearch = ::escape_regexmetacharacters($exactsearch)
 			  ;    # this is a whole word search
 			$searchterm = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
 			  if $::sopt[0];
 			my ( $searchstart, $mode );
 			if   ( $::sopt[0] or $::sopt[3] ) { $mode = '-regexp' }
 			else                          { $mode = '-exact' }
-			working("Replace All");
+			::working("Replace All");
 			if ( $::sopt[1] ) {
 				$textwindow->FindAndReplaceAll( $mode, '-nocase', $searchterm,
 												$replacement );
@@ -974,7 +974,7 @@ sub replaceall {
 				$textwindow->FindAndReplaceAll( $mode, '-case', $searchterm,
 												$replacement );
 			}
-			working();
+			::working();
 			return;
 		}
 	}
@@ -1030,12 +1030,12 @@ sub searchoptset {
 sub searchpopup {
 	my $textwindow = $::textwindow;
 	my $top = $::top;
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	push @::operations, ( localtime() . ' - Search & Replace' )
 	  unless $::lglobal{doscannos};
 	push @::operations, ( localtime() . ' - Stealth Scannos' )
 	  if $::lglobal{doscannos};
-	oppopupdate() if $::lglobal{oppop};
+	::oppopupdate() if $::lglobal{oppop};
 	my $aacheck;
 	my $searchterm = '';
 	my @ranges     = $textwindow->tagRanges('sel');
@@ -1950,7 +1950,7 @@ sub orphanedbrackets {
 
 	sub brsearch {
 		my $textwindow = $::textwindow;
-		viewpagenums() if ( $::lglobal{seepagenums} );
+		::viewpagenums() if ( $::lglobal{seepagenums} );
 		@{ $::lglobal{brbrackets} } = ();
 		@{ $::lglobal{brindices} }  = ();
 		$::lglobal{brindex} = '1.0';
@@ -1976,7 +1976,7 @@ sub orphanedbrackets {
 
 	sub brnext {
 		my $textwindow = $::textwindow;
-		viewpagenums() if ( $::lglobal{seepagenums} );
+		::viewpagenums() if ( $::lglobal{seepagenums} );
 		$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 		while (1) {
 			last

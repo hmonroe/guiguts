@@ -12,7 +12,7 @@ BEGIN {
 
 ## ASCII Table Special Effects
 sub tablefx {
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my $textwindow = $::textwindow;
 	my $top = $::top;
 	if ( defined( $::lglobal{tblfxpop} ) ) {

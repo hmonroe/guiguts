@@ -80,7 +80,7 @@ sub spellloadprojectdict {
 sub spellchecknext {
 	my $textwindow = $::textwindow;
 	my $top = $::top;
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' )
 	  ;    # unhighlight any higlighted text
 	spellclearvars();
@@ -216,7 +216,7 @@ sub spellgettextselection {
 
 sub spellreplace {
 	my $textwindow = $::textwindow;
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my $replacement =
 	  $::lglobal{spreplaceentry}->get;    # get the word for the replacement box
 	$textwindow->bell unless ( $replacement || $::nobell );
@@ -239,7 +239,7 @@ sub spellreplaceall {
 	my $textwindow = $::textwindow;
 	my $top = $::top;
 	$top->Busy;
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my $lastindex   = '1.0';
 	my $misspelled  = $::lglobal{misspelledentry}->get;
 	my $replacement = $::lglobal{spreplaceentry}->get;
@@ -252,7 +252,7 @@ sub spellreplaceall {
 
 # replace the replacement word with one from the guess list
 sub spellmisspelled_replace {
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	$::lglobal{spreplaceentry}->delete( 0, 'end' );
 	my $term = $::lglobal{replacementlist}->get('active');
 	$::lglobal{spreplaceentry}->insert( 'end', $term );
@@ -382,7 +382,7 @@ sub spellshow_guesses {
 
 # only spell check selected text or whole file if nothing selected
 sub spellcheckrange {
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my $textwindow = $::textwindow;
 	my @ranges = $textwindow->tagRanges('sel');
 	$::operationinterrupt = 0;
@@ -541,7 +541,7 @@ sub spellchecker {    # Set up spell check window
 	my $textwindow = $::textwindow;
 	my $top = $::top;
 	push @::operations, ( localtime() . ' - Spellcheck' );
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	oppopupdate()  if $::lglobal{oppop};
 	if ( defined( $::lglobal{spellpopup} ) ) {    # If window already exists
 		$::lglobal{spellpopup}->deiconify;        # pop it up off the task bar

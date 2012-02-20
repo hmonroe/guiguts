@@ -1732,8 +1732,8 @@ sub thumbnailbrowse {
 	$::lglobal{imgname}->delete( '0', 'end' );
 	$::lglobal{imgname}->insert( 'end', $name );
 	my ( $fn, $ext );
-	( $fn, $::globalimagepath, $ext ) = fileparse( $name, '(?<=\.)[^\.]*$' );
-	$::globalimagepath = os_normal($::globalimagepath);
+	( $fn, $::globalimagepath, $ext ) = ::fileparse( $name, '(?<=\.)[^\.]*$' );
+	$::globalimagepath = ::os_normal($::globalimagepath);
 	$ext =~ s/jpg/jpeg/;
 
 	if ( lc($ext) eq 'gif' ) {
@@ -2104,7 +2104,7 @@ sub htmlpopup {
 				while (<$infile>) {
 					$_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
 
-					#$_ = eol_convert($_);
+					#$_ =::eol_convert($_);
 					$headertext .= $_;
 				}
 				$textwindow->insert( '1.0', $headertext );
@@ -2855,7 +2855,7 @@ sub autotable {
 
 sub orphans {
 	my $textwindow = $::textwindow;
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my $br = shift;
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 	my ( $thisindex, $open, $close, $crow, $ccol, $orow, $ocol, @op );
@@ -2987,7 +2987,7 @@ sub orphans {
 
 sub poetryhtml {
 	my $textwindow = $::textwindow;
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
 	if ( $range_total == 0 ) {

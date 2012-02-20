@@ -528,7 +528,7 @@ sub separatorpopup {
 	$::lglobal{pagepop}->Tk::bind( '<r>' => \&findandhighlightpageseparator );
 	$::lglobal{pagepop}->Tk::bind(
 		'<v>' => sub {
-			openpng($textwindow, get_page_number() );
+			::openpng($textwindow, ::get_page_number() );
 			$::lglobal{pagepop}->raise;
 		}
 	);

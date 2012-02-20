@@ -757,9 +757,9 @@ sub showproofers {
 sub prfrmessage {
 	my $proofer = shift;
 	if ( $proofer eq '' ) {
-		runner($::globalbrowserstart, $::no_proofer_url);
+		::runner($::globalbrowserstart, $::no_proofer_url);
 	} else {
-		runner($::globalbrowserstart, "$::yes_proofer_url$proofer");
+		::runner($::globalbrowserstart, "$::yes_proofer_url$proofer");
 	}
 }
 
@@ -875,7 +875,7 @@ sub prfrby {
 	foreach my $prfr (
 		sort {
 			$ptemp{$b} <=> $ptemp{$a}
-			  || ( deaccent( lc($a) ) cmp deaccent( lc($b) ) )
+			  || ( ::deaccent( lc($a) ) cmp ::deaccent( lc($b) ) )
 		} keys %ptemp
 	  )
 	{

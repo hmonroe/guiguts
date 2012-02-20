@@ -271,7 +271,7 @@ sub pnumadjust {
 				#$geometryhash{pnumpop} = $::lglobal{pnumpop}->geometry;
 				$::lglobal{pnumpop}->destroy;
 				undef $::lglobal{pnumpop};
-				viewpagenums() if ( $::lglobal{seepagenums} );
+				::viewpagenums() if ( $::lglobal{seepagenums} );
 			}
 		);
 		if ($::OS_WIN) {
@@ -295,14 +295,14 @@ sub pageremove {    # Delete a page marker
 
 	my $num = $::lglobal{pagenumentry}->get;
 	$num = $textwindow->index('insert') unless $num;
-	viewpagenums() if $::lglobal{seepagenums};
+	::viewpagenums() if $::lglobal{seepagenums};
 	$textwindow->markUnset($num);
 	%::pagenumbers = ();
 	my @marks = $textwindow->markNames;
 	for (@marks) {
 		$::pagenumbers{$_}{offset} = $textwindow->index($_) if $_ =~ /Pg\S+/;
 	}
-	viewpagenums();
+	::viewpagenums();
 }
 
 sub pageadd {    # Add a page marker
@@ -333,7 +333,7 @@ sub pageadd {    # Add a page marker
 	$mark = "Pg$mark";
 	$textwindow->markSet( 'insert', $insert );
 	return 0 if ( $textwindow->markExists($mark) );
-	viewpagenums() if $::lglobal{seepagenums};
+	::viewpagenums() if $::lglobal{seepagenums};
 	$textwindow->markSet( $mark, $insert );
 	$textwindow->markGravity( $mark, 'left' );
 	%::pagenumbers = ();
@@ -343,7 +343,7 @@ sub pageadd {    # Add a page marker
 		$::pagenumbers{$_}{offset} = $textwindow->index($_) if $_ =~ /Pg\S+/;
 	}
 	$::lglobal{seepagenums} = 0;
-	viewpagenums();
+	::viewpagenums();
 	return 1;
 }
 
@@ -390,7 +390,7 @@ sub pgrenum {    # Re sequence page markers
 	$textwindow->bell unless $offset;
 	return unless $offset;
 	$::lglobal{seepagenums} = 1;
-	viewpagenums();
+	::viewpagenums();
 	$textwindow->markSet( 'insert', '1.0' );
 	%::pagenumbers = ();
 	while (1) {
@@ -414,7 +414,7 @@ sub pgrenum {    # Re sequence page markers
 		$::pagenumbers{$_}{offset} = $textwindow->index($_) if $_ =~ /Pg\d+/;
 	}
 	$::lglobal{seepagenums} = 0;
-	viewpagenums();
+	::viewpagenums();
 }
 
 sub pgprevious {    #move focus to previous page marker
@@ -453,7 +453,7 @@ sub pgnext {    #move focus to next page marker
 	$textwindow->yview( $textwindow->index($mark) );
 	if ( $::lglobal{showthispageimage} and ( $mark =~ /Pg(\S+)/ ) ) {
 		$textwindow->focus;
-		openpng($textwindow,$1);
+		::openpng($textwindow,$1);
 		$::lglobal{showthispageimage} = 0;
 
 	}

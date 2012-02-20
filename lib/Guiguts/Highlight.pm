@@ -195,7 +195,7 @@ sub hilite {
 	my $top = $::top;
 	my $mark = shift;
 	$::lglobal{hilitemode} = 'exact' unless $::lglobal{hilitemode};
-	$mark = quotemeta($mark)
+	$mark = ::quotemeta($mark)
 	  if $::lglobal{hilitemode} eq 'exact';    # FIXME: uninitialized 'hilitemode'
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
