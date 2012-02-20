@@ -470,34 +470,6 @@ EOM
 	}
 }
 
-# Do not move from guiguts.pl; do command must be run in main
-sub readsettings {
-	if ( -e 'setting.rc' ) {
-		unless ( my $return = do 'setting.rc' ) {
-			open my $file, "<", "setting.rc"
-			  or warn "Could not open setting file\n";
-			my @file = <$file>;
-			close $file;
-			my $settings = '';
-			for (@file) {
-				$settings .= $_;
-			}
-			unless ( my $return = eval($settings) ) {
-				if ( -e 'setting.rc' ) {
-					open my $file, "<", "setting.rc"
-					  or warn "Could not open setting file\n";
-					my @file = <$file>;
-					close $file;
-					open $file, ">", "setting.err";
-					print $file @file;
-					close $file;
-					print length($file);
-				}
-			}
-		}
-	}
-}
-
 sub dofile {
 	my $filename = shift;
 	do $filename;

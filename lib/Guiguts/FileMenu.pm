@@ -9,7 +9,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close 
 	&_flash_save &clearvars &savefile &_exit &file_mark_pages &_recentupdate &file_guess_page_marks
-	&oppopupdate &opspop_up &confirmempty &openfile)
+	&oppopupdate &opspop_up &confirmempty &openfile &readsettings)
 }
 
 sub file_open {    # Find a text file to open
@@ -773,7 +773,32 @@ sub openfile {    # and open it
 	::set_autosave() if $::autosave;
 }
 
-
+sub readsettings {
+	if ( -e 'setting.rc' ) {
+		unless ( my $return = ::dofile( 'setting.rc' )) {
+			open my $file, "<", "setting.rc"
+			  or warn "Could not open setting file\n";
+			my @file = <$file>;
+			close $file;
+			my $settings = '';
+			for (@file) {
+				$settings .= $_;
+			}
+			unless ( my $return = eval($settings) ) {
+				if ( -e 'setting.rc' ) {
+					open my $file, "<", "setting.rc"
+					  or warn "Could not open setting file\n";
+					my @file = <$file>;
+					close $file;
+					open $file, ">", "setting.err";
+					print $file @file;
+					close $file;
+					print length($file);
+				}
+			}
+		}
+	}
+}
 
 1;
 
