@@ -246,7 +246,7 @@ sub menu_preferences {
 			  [
 				 Button   => 'Set Scanno Highlight Color...',
 				 -command => sub {
-					 my $thiscolor = setcolor($::highlightcolor);
+					 my $thiscolor = ::setcolor($::highlightcolor);
 					 $::highlightcolor = $thiscolor if $thiscolor;
 					 $textwindow->tagConfigure( 'scannos',
 											   -background => $::highlightcolor );

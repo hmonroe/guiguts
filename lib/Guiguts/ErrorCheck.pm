@@ -1239,7 +1239,11 @@ sub gutcheck {
 	$textwindow->focus;
 	::update_indicators();
 	my $title = $top->cget('title');
-	return if ( $title =~ /No File Loaded/ );
+	
+	if ( $title =~ /No File Loaded/ ) {
+		::nofileloadedwarning();
+		return;
+	};
 	#$top->Busy( -recurse => 1 );
 
 	# FIXME: wide character in print warning next line with unicode

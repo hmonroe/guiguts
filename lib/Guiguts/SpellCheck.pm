@@ -7,7 +7,7 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA    = qw(Exporter);
-	@EXPORT = qw(&spellcheckfirst &aspellstart &aspellstop &spellchecker &spellloadprojectdict &getmisspelledwords);
+	@EXPORT = qw(&spellcheckfirst &aspellstart &aspellstop &spellchecker &spellloadprojectdict &getmisspelledwords	&spelloptions);
 }
 
 # Initialize spellchecker
@@ -61,7 +61,7 @@ sub spellcheckfirst {
 
 sub spellloadprojectdict {
 	getprojectdic();
-	if (-e $::lglobal{projectdictname}){
+	if ((defined $::lglobal{projectdictname})and (-e $::lglobal{projectdictname})){
 		open( my $fh, "<:encoding(utf8)", $::lglobal{projectdictname});
 		while (my $line = <$fh>){
 			utf8::decode($line);
@@ -862,7 +862,137 @@ sub getprojectdic {
 	}
 }
 
+sub spelloptions {
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	if ($::globalspellpath) {
+		aspellstart() unless $::lglobal{spellpid};
+	}
+	my $dicts;
+	my $dictlist;
+	my $spellop = $top->DialogBox( -title   => 'Spellcheck Options',
+								   -buttons => ['Close'] );
+	my $spellpathlabel =
+	  $spellop->add( 'Label', -text => 'Aspell executable file?' )->pack;
+	my $spellpathentry =
+	  $spellop->add( 'Entry', -width => 60, -background => $::bkgcolor )->pack;
+	my $spellpathbrowse = $spellop->add(
+		'Button',
+		-text    => 'Browse',
+		-width   => 12,
+		-command => sub {
+			my $name = $spellop->getOpenFile( -title => 'Aspell executable?' );
+			if ($name) {
+				$::globalspellpath = $name;
+				$::globalspellpath = os_normal($::globalspellpath);
+				$spellpathentry->delete( 0, 'end' );
+				$spellpathentry->insert( 'end', $::globalspellpath );
+				::savesettings();
+				my $runner = ::runner::tofile('aspell.tmp');
+				$runner->run( $::globalspellpath, 'dump', 'dicts' );
+				warn "Unable to access dictionaries.\n" if $?;
+				open my $infile, '<', 'aspell.tmp';
 
+				while ( $dicts = <$infile> ) {
+					chomp $dicts;
+					next if ( $dicts =~ m/-/ );
+					$dictlist->insert( 'end', $dicts );
+				}
+				close $infile;
+				unlink 'aspell.tmp';
+			}
+		}
+	)->pack( -pady => 4 );
+	$spellpathentry->insert( 'end', $::globalspellpath );
+	my $spellencodinglabel =
+	  $spellop->add( 'Label', -text => 'Set encoding: default = iso8859-1' )
+	  ->pack;
+	my $spellencodingentry =
+	  $spellop->add(
+					 'Entry',
+					 -width        => 30,
+					 -textvariable => \$::lglobal{spellencoding},
+	  )->pack;
+	my $dictlabel = $spellop->add( 'Label', -text => 'Dictionary files' )->pack;
+	$dictlist = $spellop->add(
+							   'ScrlListbox',
+							   -scrollbars => 'oe',
+							   -selectmode => 'browse',
+							   -background => $::bkgcolor,
+							   -height     => 10,
+							   -width      => 40,
+	)->pack( -pady => 4 );
+	my $spelldiclabel =
+	  $spellop->add( 'Label', -text => 'Current Dictionary (ies)' )->pack;
+	my $spelldictxt = $spellop->add(
+									 'ROText',
+									 -width      => 40,
+									 -height     => 1,
+									 -background => $::bkgcolor
+	)->pack;
+	$spelldictxt->delete( '1.0', 'end' );
+	$spelldictxt->insert( '1.0', $::globalspelldictopt );
 
+	#$dictlist->insert( 'end', "No dictionary!" );
+	if ($::globalspellpath) {
+		my $runner = runner::tofile('aspell.tmp');
+		$runner->run( $::globalspellpath, 'dump', 'dicts' );
+		warn "Unable to access dictionaries.\n" if $?;
+		open my $infile, '<', 'aspell.tmp';
+		while ( $dicts = <$infile> ) {
+			chomp $dicts;
+			next if ( $dicts =~ m/-/ );
+			$dictlist->insert( 'end', $dicts );
+		}
+		close $infile;
+		unlink 'aspell.tmp';
+	}
+	$dictlist->eventAdd( '<<dictsel>>' => '<Double-Button-1>' );
+	$dictlist->bind(
+		'<<dictsel>>',
+		sub {
+			my $selection = $dictlist->get('active');
+			$spelldictxt->delete( '1.0', 'end' );
+			$spelldictxt->insert( '1.0', $selection );
+			$selection = '' if $selection eq "No dictionary!";
+			$::globalspelldictopt = $selection;
+			::savesettings();
+			aspellstart();
+			$top->Busy( -recurse => 1 );
+
+			if ( defined( $::lglobal{spellpopup} ) ) {
+				spellclearvars();
+				spellcheckfirst();
+			}
+			$top->Unbusy( -recurse => 1 );
+		}
+	);
+	my $spopframe = $spellop->Frame->pack;
+	$spopframe->Radiobutton(
+							 -selectcolor => $::lglobal{checkcolor},
+							 -text        => 'Ultra Fast',
+							 -variable    => \$::globalaspellmode,
+							 -value       => 'ultra'
+	)->grid( -row => 0, -sticky => 'w' );
+	$spopframe->Radiobutton(
+							 -selectcolor => $::lglobal{checkcolor},
+							 -text        => 'Fast',
+							 -variable    => \$::globalaspellmode,
+							 -value       => 'fast'
+	)->grid( -row => 1, -sticky => 'w' );
+	$spopframe->Radiobutton(
+							 -selectcolor => $::lglobal{checkcolor},
+							 -text        => 'Normal',
+							 -variable    => \$::globalaspellmode,
+							 -value       => 'normal'
+	)->grid( -row => 2, -sticky => 'w' );
+	$spopframe->Radiobutton(
+							 -selectcolor => $::lglobal{checkcolor},
+							 -text        => 'Bad Spellers',
+							 -variable    => \$::globalaspellmode,
+							 -value       => 'bad-spellers'
+	)->grid( -row => 3, -sticky => 'w' );
+	$spellop->Show;
+}
 
 1;

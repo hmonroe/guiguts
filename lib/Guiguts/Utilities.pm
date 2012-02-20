@@ -15,7 +15,8 @@ BEGIN {
 	&natural_sort_length &natural_sort_freq &drag &cut &paste &textcopy &showversion
 	&checkforupdates &checkforupdatesmonthly &hotkeyshelp &regexref &gotobookmark &setbookmark
 	&epubmaker &gnutenberg &sidenotes &poetrynumbers &get_page_number &externalpopup
-	&xtops &setmargins &fontsize &setbrowser &setpngspath &setup &set_autosave)
+	&xtops &setmargins &fontsize &setbrowser &setpngspath &setup &set_autosave &toolbar_toggle
+	&saveinterval &toggle_autosave &setcolor)
 }
 
 sub get_image_file {
@@ -2549,7 +2550,7 @@ sub set_autosave {
 	$::lglobal{autosaveid} = $top->repeat(
 		( $::autosaveinterval * 60000 ),
 		sub {
-			savefile()
+			::savefile()
 			  if $textwindow->numberChanges
 				  and $::lglobal{global_filename} !~ /No File Loaded/;
 		}
@@ -2565,6 +2566,219 @@ sub set_autosave {
 	  ->configure( -background => 'green', -activebackground => 'green' )
 	  unless $::notoolbar;
 	$::lglobal{autosaveinterval} = time;
+}
+
+sub toolbar_toggle {    # Set up / remove the tool bar
+	my $textwindow = $::textwindow;
+	my $top = $::top;
+	if ( $::notoolbar && $::lglobal{toptool} ) {
+		$::lglobal{toptool}->destroy;
+		undef $::lglobal{toptool};
+	} elsif ( !$::notoolbar && !$::lglobal{toptool} ) {
+		$::lglobal{toptool} = $top->ToolBar( -side => $::toolside, -close => '30' );
+		$::lglobal{toolfont} = $top->Font(
+			-family => 'Times',
+
+			# -slant  => 'italic',
+			-weight => 'bold',
+			-size   => 9
+		);
+		$::lglobal{toptool}->separator;
+		$::lglobal{toptool}->ToolButton(
+									-image   => 'fileopen16',
+									-command => sub { ::file_open($textwindow); },
+									-tip     => 'Open'
+		);
+		$::lglobal{savetool} =
+		  $::lglobal{toptool}->ToolButton(
+										 -image   => 'filesave16',
+										 -command => [ \&::savefile ],
+										 -tip     => 'Save',
+		  );
+		$::lglobal{savetool}->bind( '<3>', sub { set_autosave() } );
+		$::lglobal{savetool}->bind(
+			'<Shift-3>',
+			sub {
+				$::autosave = !$::autosave;
+				toggle_autosave();
+			}
+		);
+		$::lglobal{toptool}->ToolButton(
+			-image   => 'edittrash16',
+			-command => sub {
+				return if ( ::confirmempty() =~ /cancel/i );
+				::clearvars($textwindow);
+				::update_indicators();
+			},
+			-tip => 'Discard Edits'
+		);
+		$::lglobal{toptool}->separator;
+		$::lglobal{toptool}->ToolButton(
+									   -image   => 'actundo16',
+									   -command => sub { $textwindow->undo },
+									   -tip     => 'Undo'
+		);
+		$::lglobal{toptool}->ToolButton(
+									   -image   => 'actredo16',
+									   -command => sub { $textwindow->redo },
+									   -tip     => 'Redo'
+		);
+		$::lglobal{toptool}->separator;
+		$::lglobal{toptool}->ToolButton(
+									   -image   => 'filefind16',
+									   -command => [ \&::searchpopup ],
+									   -tip     => 'Search'
+		);
+		$::lglobal{toptool}->ToolButton(
+									   -image   => 'actcheck16',
+									   -command => [ \&::spellchecker ],
+									   -tip     => 'Spell Check'
+		);
+		$::lglobal{toptool}->ToolButton(
+									   -text    => '"arid"',
+									   -command => [ \&::stealthscanno ],
+									   -tip     => 'Scannos'
+		);
+		$::lglobal{toptool}->separator;
+		$::lglobal{toptool}->ToolButton(
+			-text    => 'WF²',
+			-font    => $::lglobal{toolfont},
+			-command => [
+				sub {
+					::wordfrequency( $textwindow, $top );
+				  }
+			],
+			-tip => 'Word Frequency'
+		);
+		$::lglobal{toptool}->ToolButton(
+									   -text    => 'GC',
+									   -font    => $::lglobal{toolfont},
+									   -command => [ \&::gutcheck ],
+									   -tip     => 'Gutcheck'
+		);
+		$::lglobal{toptool}->separator;
+		$::lglobal{toptool}->ToolButton(
+									   -text    => 'Ltn-1',
+									   -font    => $::lglobal{toolfont},
+									   -command => [ \&::latinpopup ],
+									   -tip     => 'Latin - 1 Popup'
+		);
+		$::lglobal{toptool}->ToolButton(
+									   -text    => 'Grk',
+									   -font    => $::lglobal{toolfont},
+									   -command => [ \&::greekpopup ],
+									   -tip     => 'Greek Transliteration Popup'
+		);
+		$::lglobal{toptool}->ToolButton(
+									   -text    => 'UCS',
+									   -font    => $::lglobal{toolfont},
+									   -command => [ \&::uchar ],
+									   -tip     => 'Unicode Character Search'
+		);
+		$::lglobal{toptool}->separator;
+		$::lglobal{toptool}->ToolButton(
+							 -text    => 'HTML',
+							 -font    => $::lglobal{toolfont},
+							 -command => sub { ::htmlpopup( $textwindow, $top ) },
+							 -tip     => 'HTML Fixup'
+		);
+		$::lglobal{toptool}->separator;
+		$::lglobal{toptool}->ToolButton(
+									   -text    => 'Tfx',
+									   -font    => $::lglobal{toolfont},
+									   -command => [ \&::tablefx ],
+									   -tip     => 'ASCII Table Formatting'
+		);
+		$::lglobal{toptool}->separator;
+		$::lglobal{toptool}->ToolButton(
+								   -text    => 'Eol',
+								   -font    => $::lglobal{toolfont},
+								   -command => [ \&::endofline ],
+								   -tip => 'Remove trailing spaces in selection'
+		);
+	}
+	::savesettings();
+}
+
+sub setcolor {    # Color picking routine
+	my $top = $::top;
+	my $initial = shift;
+	return (
+			 $top->chooseColor(
+								-initialcolor => $initial,
+								-title        => 'Choose color'
+			 )
+	);
+}
+
+sub toggle_autosave {
+	if ($::autosave) {
+		set_autosave();
+	} else {
+		$::lglobal{autosaveid}->cancel;
+		undef $::lglobal{autosaveid};
+		$::lglobal{saveflashid}->cancel;
+		undef $::lglobal{saveflashid};
+		$::lglobal{saveflashingid}->cancel if $::lglobal{saveflashingid};
+		undef $::lglobal{saveflashingid};
+		$::lglobal{savetool}->configure(
+									   -background       => 'SystemButtonFace',
+									   -activebackground => 'SystemButtonFace'
+		) unless $::notoolbar;
+	}
+}
+
+# Pop up a window where you can adjust the auto save interval
+sub saveinterval {
+	my $top = $::top;
+	
+	if ( $::lglobal{intervalpop} ) {
+		$::lglobal{intervalpop}->deiconify;
+		$::lglobal{intervalpop}->raise;
+	} else {
+		$::lglobal{intervalpop} = $top->Toplevel;
+		$::lglobal{intervalpop}->title('Autosave Interval');
+		::initialize_popup_with_deletebinding('intervalpop');
+		$::lglobal{intervalpop}->resizable( 'no', 'no' );
+		my $frame =
+		  $::lglobal{intervalpop}
+		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+		$frame->Label( -text => 'Minutes between Autosave' )
+		  ->pack( -side => 'left' );
+		my $entry = $frame->Entry(
+			-background   => $::bkgcolor,
+			-width        => 5,
+			-textvariable => \$::autosaveinterval,
+			-validate     => 'key',
+			-vcmd         => sub {
+				return 1 unless $_[0];
+				return 0 if ( $_[0] =~ /\D/ );
+				return 0 if ( $_[0] < 1 );
+				return 0 if ( $_[0] > 999 );
+				return 1;
+			},
+		)->pack( -side => 'left', -fill => 'x' );
+		my $frame1 =
+		  $::lglobal{intervalpop}
+		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+		$frame1->Label( -text => '1-999 minutes' )->pack( -side => 'left' );
+		my $button = $frame1->Button(
+			-text    => 'OK',
+			-command => sub {
+				$::autosaveinterval = 5 unless $::autosaveinterval;
+				$::lglobal{intervalpop}->destroy;
+				undef $::lglobal{scrlspdpop};
+			},
+		)->pack( -side => 'left' );
+		$::lglobal{intervalpop}->protocol(
+			'WM_DELETE_WINDOW' => sub {
+				$::autosaveinterval = 5 unless $::autosaveinterval;
+				$::lglobal{intervalpop}->destroy;
+				undef $::lglobal{intervalpop};
+			}
+		);
+		$entry->selectionRange( 0, 'end' );
+	}
 }
 
 

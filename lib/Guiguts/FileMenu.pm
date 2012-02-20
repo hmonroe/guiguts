@@ -9,7 +9,7 @@ BEGIN {
 	@ISA=qw(Exporter);
 	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close 
 	&_flash_save &clearvars &savefile &_exit &file_mark_pages &_recentupdate &file_guess_page_marks
-	&oppopupdate &opspop_up &confirmempty)
+	&oppopupdate &opspop_up &confirmempty &openfile)
 }
 
 sub file_open {    # Find a text file to open
@@ -255,7 +255,7 @@ sub _bin_save {
 	}
 	my $fh = FileHandle->new("> $binname");
 	if ( defined $fh ) {
-		print $fh "\%pagenumbers = (\n";
+		print $fh "\%::pagenumbers = (\n";
 		for my $page ( sort { $a cmp $b } keys %::pagenumbers ) {
 			no warnings 'uninitialized';
 			if ( $page eq "Pg" ) {
@@ -297,14 +297,14 @@ sub _bin_save {
 			}
 		}
 		print $fh "\n\n";
-		print $fh "\@operations = (\n";
+		print $fh "\@::operations = (\n";
 		for my $mark (@::operations) {
 			$mark = &::escape_problems($mark);
 			print $fh "'$mark',\n";
 		}
 		print $fh ");\n\n";
 		print $fh "\$::spellindexbkmrk = '$::spellindexbkmrk';\n\n";
-		print $fh "\$projectid = '$::projectid';\n\n";
+		print $fh "\$::projectid = '$::projectid';\n\n";
 		print $fh "\$booklang = '$::booklang';\n\n";
 		print $fh
 "\$scannoslistpath = '@{[&::escape_problems(&::os_normal($::scannoslistpath))]}';\n\n";
@@ -682,6 +682,95 @@ sub confirmempty {
 		$textwindow->EmptyDocument;
 	}
 	return $answer;
+}
+
+### File Menu
+# Do not move from guiguts.pl; do command must be run in main
+sub openfile {    # and open it
+	my $name = shift;
+	my $top =$::top;
+	my $textwindow = $::textwindow;
+	return if ( $name eq '*empty*' );
+	return if ( confirmempty() =~ /cancel/i );
+	unless ( -e $name ) {
+		my $dbox = $top->Dialog(
+				  -text => 'Could not find file. Has it been moved or deleted?',
+				  -bitmap  => 'error',
+				  -title   => 'Could not find File.',
+				  -buttons => ['Ok']
+		);
+		$dbox->Show;
+		return;
+	}
+	clearvars($textwindow);
+	if ( $::lglobal{img_num_label} ) {
+		$::lglobal{img_num_label}->destroy;
+		undef $::lglobal{img_num_label};
+	}
+	if ( $::lglobal{page_label} ) {
+		$::lglobal{page_label}->destroy;
+		undef $::lglobal{page_label};
+	}
+	if ( $::lglobal{pagebutton} ) {
+		$::lglobal{pagebutton}->destroy;
+		undef $::lglobal{pagebutton};
+	}
+	if ( $::lglobal{previmagebutton} ) {
+		$::lglobal{previmagebutton}->destroy;
+		undef $::lglobal{previmagebutton};
+	}
+	if ( $::lglobal{proofbutton} ) {
+		$::lglobal{proofbutton}->destroy;
+		undef $::lglobal{proofbutton};
+	}
+	my ( $fname, $extension, $filevar );
+	$textwindow->Load($name);
+	( $fname, $::globallastpath, $extension ) = ::fileparse($name);
+	$textwindow->markSet( 'insert', '1.0' );
+	$::globallastpath = ::os_normal($::globallastpath);
+	$name = ::os_normal($name);
+	$::lglobal{global_filename} = $name;
+	my $binname = "$::lglobal{global_filename}.bin";
+
+	unless ( -e $binname ) {    #for backward compatibility
+		$binname = $::lglobal{global_filename};
+		$binname =~ s/\.[^\.]*$/\.bin/;
+		if ( $binname eq $::lglobal{global_filename} ) { $binname .= '.bin' }
+	}
+	if ( -e $binname ) {
+		my $markindex;
+		::dofile($binname); #do $binname;
+		foreach my $mark ( keys %::pagenumbers ) {
+			$markindex = $::pagenumbers{$mark}{offset};
+			if ( $markindex eq '' ) {
+				delete $::pagenumbers{$mark};
+				next;
+			}
+			$textwindow->markSet( $mark, $markindex );
+			$textwindow->markGravity( $mark, 'left' );
+		}
+		for ( 1 .. 5 ) {
+			if ( $::bookmarks[$_] ) {
+				$textwindow->markSet( 'insert', $::bookmarks[$_] );
+				$textwindow->markSet( "bkmk$_", $::bookmarks[$_] );
+				::setbookmark($_);
+			}
+		}
+		$::bookmarks[0] ||= '1.0';
+		$textwindow->markSet( 'insert',    $::bookmarks[0] );
+		$textwindow->markSet( 'spellbkmk', $::spellindexbkmrk )
+		  if $::spellindexbkmrk;
+		$textwindow->see( $::bookmarks[0] );
+		$textwindow->focus;
+	}
+	::getprojectid() unless $::projectid;
+	_recentupdate($name);
+	::update_indicators();
+	file_mark_pages() if $::auto_page_marks;
+	push @::operations, ( localtime() . " - Open $::lglobal{global_filename}" );
+	oppopupdate() if $::lglobal{oppop};
+	::savesettings();
+	::set_autosave() if $::autosave;
 }
 
 

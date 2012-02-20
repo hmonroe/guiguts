@@ -293,7 +293,7 @@ sub uchar {
 		$::lglobal{ucharpop}->deiconify;
 		$::lglobal{ucharpop}->raise;
 	} else {
-		return unless ::blocks_check();
+		return unless blocks_check();
 		require q(unicore/Blocks.pl);
 		require q(unicore/Name.pl);
 		my $stopit = 0;
