@@ -58,7 +58,7 @@ use Tk::widgets qw{Balloon
 };
 our $APP_NAME     = 'Guiguts';
 our $window_title = $APP_NAME . '-' . $VERSION;
-our $icondata ;
+our $icondata;
 ### Custom Guiguts modules
 use Guiguts::ASCIITables;
 use Guiguts::ErrorCheck;
@@ -85,10 +85,6 @@ use Guiguts::CharacterTools;
 use Guiguts::Utilities;
 use Guiguts::WordFrequency;
 
-# Ignore any watchdog timer alarms. Subroutines that take a long time to
-# complete can trip it
-$SIG{ALRM} = 'IGNORE';
-$SIG{INT} = sub { _exit() };
 ### Constants
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
@@ -247,30 +243,25 @@ our @extops = (
 #All local global variables contained in one hash. # now global
 our %lglobal;    # need to document each variable
 
-# $lglobal{hl_index} 	line number being scanned for highlighting
 if ( eval { require Text::LevenshteinXS } ) {
 	$lglobal{LevenshteinXS} = 1;
 }
 
-#else {
-#	print
-#"Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
-#}
-# load Image::Size if it is installed
 if ( eval { require Image::Size; 1; } ) {
 	$lglobal{ImageSize} = 1;
 } else {
 	$lglobal{ImageSize} = 0;
 }
 
-# FIXME: Change $top to $mw.
 our $top;
+our $icon;
+our $text_frame;
+our $counter_frame;
+our $proofer_frame;
+our $text_font;
 our $textwindow;
-
+our $menubar;
 initialize();    # Initialize a bunch of vars that need it.
-our $icon = $top->Photo( -format => 'gif',
-						 -data   => $icondata );
-    
 
 # Set up the custom menus
 menubuild();
@@ -307,9 +298,9 @@ $textwindow->CallNextGUICallback;
 $top->repeat( 200, sub { _updatesel($textwindow) } );
 
 sub dofile {
-	do shift;
+	my $filename = shift;
+	do $filename;
 }
-
 # Ready to enter main loop
 checkforupdatesmonthly();
 unless ( -e 'header.txt' ) {

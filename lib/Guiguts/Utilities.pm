@@ -7,15 +7,16 @@ BEGIN {
 	our ( @ISA, @EXPORT );
 	@ISA = qw(Exporter);
 	@EXPORT =
-	  qw(&openpng &get_image_file &arabic &roman
-	  &textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_&cmdline &win32_start
+	  qw(&openpng &get_image_file &setviewerpath &::setdefaultpath &arabic &roman
+	  &textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_cmdline &win32_start
 	  &win32_is_exe &win32_create_process &runner &debug_dump &run &escape_regexmetacharacters
 	  &deaccent &BindMouseWheel &working &initialize &fontinit &initialize_popup_with_deletebinding
 	  &initialize_popup_without_deletebinding &os_normal &escape_problems &natural_sort_alpha
 	  &natural_sort_length &natural_sort_freq &drag &cut &paste &textcopy &showversion
-	  &checkforupdates &checkforupdatesmonthly &gotobookmark &setbookmark &epubmaker 
-	  &gnutenberg &sidenotes &poetrynumbers &get_page_number &externalpopup
-	  &xtops &toggle_autosave &setcolor);
+	  &checkforupdates &checkforupdatesmonthly &hotkeyshelp &regexref &gotobookmark &setbookmark
+	  &epubmaker &gnutenberg &sidenotes &poetrynumbers &get_page_number &externalpopup
+	  &xtops &setmargins &fontsize &setbrowser &setpngspath &set_autosave &toolbar_toggle
+	  &saveinterval &toggle_autosave &setcolor);
 }
 
 sub get_image_file {
@@ -56,6 +57,37 @@ sub openpng {
 		&::setpngspath($pagenum);
 	}
 	return;
+}
+
+sub setviewerpath {    #Find your image viewer
+	my $textwindow = shift;
+	my $types;
+	if ($::OS_WIN) {
+		$types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
+	} else {
+		$types = [ [ 'All Files', ['*'] ] ];
+	}
+
+	#print $::globalviewerpath."aa\n";
+	#	print &::dirname($::globalviewerpath)."aa\n";
+	$::lglobal{pathtemp} =
+	  $textwindow->getOpenFile(
+								-filetypes  => $types,
+								-title      => 'Where is your image viewer?',
+								-initialdir => &::dirname($::globalviewerpath)
+	  );
+	$::globalviewerpath = $::lglobal{pathtemp} if $::lglobal{pathtemp};
+	$::globalviewerpath = &::os_normal($::globalviewerpath);
+	&::savesettings();
+}
+
+sub ::setdefaultpath {
+	my ( $pathname, $path ) = @_;
+	if ($pathname) { return $pathname }
+	if ( ( !$pathname ) && ( -e $path ) ) { return $path; }
+	else {
+		return '';
+	}
 }
 
 # Roman numeral conversion taken directly from the Roman.pm module Copyright
@@ -892,22 +924,6 @@ sub initialize {
 			 }
 		]
 	);
-
-	# Set up the custom menus
-	::menubuild();
-
-	# Set up the key bindings for the text widget
-	::textbindings();
-	::buildstatusbar( $::textwindow, $::top );
-
-	# Load the icon into the window bar. Needs to happen late in the process
-	$::top->Icon( -image => $::icon );
-	$::lglobal{hasfocus} = $::textwindow;
-	::toolbar_toggle();
-	$::top->geometry($::geometry) if $::geometry;
-	( $::lglobal{global_filename} ) = @::ARGV;
-	die "ERROR: too many files specified. \n" if ( @::ARGV > 1 );
-	
 
 	# Ignore any watchdog timer alarms. Subroutines that take a long time to
 	# complete can trip it
@@ -1847,6 +1863,214 @@ sub checkforupdatesmonthly {
 	}
 }
 
+sub hotkeyshelp {
+	my $top = $::top;
+	if ( defined( $::lglobal{hotpop} ) ) {
+		$::lglobal{hotpop}->deiconify;
+		$::lglobal{hotpop}->raise;
+		$::lglobal{hotpop}->focus;
+	} else {
+		$::lglobal{hotpop} = $top->Toplevel;
+		$::lglobal{hotpop}->title('Hot key combinations');
+		initialize_popup_with_deletebinding('hotpop');
+		my $frame =
+		  $::lglobal{hotpop}->Frame->pack(
+										   -anchor => 'nw',
+										   -expand => 'yes',
+										   -fill   => 'both'
+		  );
+		my $rotextbox =
+		  $frame->Scrolled(
+							'ROText',
+							-scrollbars => 'se',
+							-background => $::bkgcolor,
+							-font       => '{Helvetica} 10',
+							-width      => 80,
+							-height     => 25,
+							-wrap       => 'none',
+		  )->pack( -anchor => 'nw', -expand => 'yes', -fill => 'both' );
+		drag($rotextbox);
+		$rotextbox->focus;
+		$rotextbox->insert( 'end', <<'EOF' );
+
+MAIN WINDOW
+
+<ctrl>+x -- cut or column cut
+<ctrl>+c -- copy or column copy
+<ctrl>+v -- paste
+<ctrl>+` -- column paste
+<ctrl>+a -- select all
+
+F1 -- column copy
+F2 -- column cut
+F3 -- column paste
+
+F7 -- spell check selection (or document, if no selection made)
+
+<ctrl>+z -- undo
+<ctrl>+y -- redo
+
+<ctrl>+/ -- select all
+<ctrl>+\ -- unselect all
+<Esc> -- unselect all
+
+<ctrl>+u -- Convert case of selection to upper case
+<ctrl>+l -- Convert case of selection to lower case
+<ctrl>+t -- Convert case of selection to title case
+
+<ctrl>+i -- insert a tab character before cursor (Tab)
+<ctrl>+j -- insert a newline character before cursor (Enter)
+<ctrl>+o -- insert a newline character after cursor
+
+<ctrl>+d -- delete character after cursor (Delete)
+<ctrl>+h -- delete character to the left of the cursor (Backspace)
+<ctrl>+k -- delete from cursor to end of line
+
+<ctrl>+e -- move cursor to end of current line. (End)
+<ctrl>+b -- move cursor left one character (left arrow)
+<ctrl>+p -- move cursor up one line (up arrow)
+<ctrl>+n -- move cursor down one line (down arrow)
+
+<ctrl>Home -- move cursor to the start of the text
+<ctrl>End -- move cursor to end of the text
+<ctrl>+right arrow -- move to the start of the next word
+<ctrl>+left arrow -- move to the start of the previous word
+<ctrl>+up arrow -- move to the start of the current paragraph
+<ctrl>+down arrow -- move to the start of the next paragraph
+<ctrl>+PgUp -- scroll left one screen
+<ctrl>+PgDn -- scroll right one screen
+
+<shift>+Home -- adjust selection to beginning of current line
+<shift>+End -- adjust selection to end of current line
+<shift>+up arrow -- adjust selection up one line
+<shift>+down arrow -- adjust selection down one line
+<shift>+left arrow -- adjust selection left one character
+<shift>+right arrow -- adjust selection right one character
+
+<shift><ctrl>Home -- adjust selection to the start of the text
+<shift><ctrl>End -- adjust selection to end of the text
+<shift><ctrl>+left arrow -- adjust selection to the start of the previous word
+<shift><ctrl>+right arrow -- adjust selection to the start of the next word
+<shift><ctrl>+up arrow -- adjust selection to the start of the current paragraph
+<shift><ctrl>+down arrow -- adjust selection to the start of the next paragraph
+
+<ctrl>+' -- highlight all apostrophes in selection.
+<ctrl>+\" -- highlight all double quotes in selection.
+<ctrl>+0 -- remove all highlights.
+
+<Insert> -- Toggle insert / overstrike mode
+
+Double click left mouse button -- select word
+Triple click left mouse button -- select line
+
+<shift> click left mouse button -- adjust selection to click point
+<shift> Double click left mouse button -- adjust selection to include word clicked on
+<shift> Triple click left mouse button -- adjust selection to include line clicked on
+
+Single click right mouse button -- pop up shortcut to menu bar
+
+BOOKMARKS
+
+<ctrl>+<shift>+1 -- set bookmark 1
+<ctrl>+<shift>+2 -- set bookmark 1
+<ctrl>+<shift>+3 -- set bookmark 3
+<ctrl>+<shift>+4 -- set bookmark 4
+<ctrl>+<shift>+5 -- set bookmark 5
+
+<ctrl>+1 -- go to bookmark 1
+<ctrl>+2 -- go to bookmark 2
+<ctrl>+3 -- go to bookmark 3
+<ctrl>+4 -- go to bookmark 4
+<ctrl>+5 -- go to bookmark 5
+
+MENUS
+
+<alt>+f -- file menu
+<alt>+e -- edit menu
+<alt>+b -- bookmarks
+<alt>+s -- search menu
+<alt>+g -- gutcheck menu
+<alt>+x -- fixup menu
+<alt>+w -- word frequency menu
+
+
+SEARCH POPUP
+
+<Enter> -- Search
+<shift><Enter> -- Replace
+<ctrl><Enter> -- Replace & Search
+<ctrl><shift><Enter> -- Replace All
+
+PAGE SEPARATOR POPUP
+
+'j' -- Join Lines - join lines, remove all blank lines, spaces, asterisks and hyphens.
+'k' -- Join, Keep Hyphen - join lines, remove all blank lines, spaces and asterisks, keep hyphen.
+'l' -- Blank Line - leave one blank line. Close up any other whitespace. (Paragraph Break)
+'t' -- New Section - leave two blank lines. Close up any other whitespace. (Section Break)
+'h' -- New Chapter - leave four blank lines. Close up any other whitespace. (Chapter Break)
+'r' -- Refresh - search for, highlight and re-center the next page separator.
+'u' -- Undo - undo the last edit. (Note: in Full Automatic mode,\n\tthis just single steps back through the undo buffer)
+'d' -- Delete - delete the page separator. Make no other edits.
+'v' -- View the current page in the image viewer.
+'a' -- Toggle Full Automatic mode.
+'s' -- Toggle Semi Automatic mode.
+'?' -- View hotkey help popup.
+EOF
+		my $button_ok = $frame->Button(
+			-activebackground => $::activecolor,
+			-text             => 'OK',
+			-command          => sub {
+				$::lglobal{hotpop}->destroy;
+				undef $::lglobal{hotpop};
+			}
+		)->pack( -pady => 8 );
+	}
+}
+
+sub regexref {
+	my $top = $::top;
+	if ( defined( $::lglobal{regexrefpop} ) ) {
+		$::lglobal{regexrefpop}->deiconify;
+		$::lglobal{regexrefpop}->raise;
+		$::lglobal{regexrefpop}->focus;
+	} else {
+		$::lglobal{regexrefpop} = $top->Toplevel;
+		$::lglobal{regexrefpop}->title('Regex Quick Reference');
+		initialize_popup_with_deletebinding('regexrefpop');
+		my $button_ok = $::lglobal{regexrefpop}->Button(
+			-activebackground => $::activecolor,
+			-text             => 'Close',
+			-command          => sub {
+				$::lglobal{regexrefpop}->destroy;
+				undef $::lglobal{regexrefpop};
+			}
+		)->pack( -pady => 6 );
+		my $regtext =
+		  $::lglobal{regexrefpop}->Scrolled(
+											 'ROText',
+											 -scrollbars => 'se',
+											 -background => $::bkgcolor,
+											 -font       => $::lglobal{font},
+		  )->pack( -anchor => 'n', -expand => 'y', -fill => 'both' );
+		drag($regtext);
+		if ( -e 'regref.txt' ) {
+			if ( open my $ref, '<', 'regref.txt' ) {
+				while (<$ref>) {
+					$_ =~ s/\cM\cJ|\cM|\cJ/\n/g;
+
+					#$_ = eol_convert($_);
+					$regtext->insert( 'end', $_ );
+				}
+			} else {
+				$regtext->insert( 'end',
+						  'Could not open Regex Reference file - regref.txt.' );
+			}
+		} else {
+			$regtext->insert( 'end',
+						  'Could not find Regex Reference file - regref.txt.' );
+		}
+	}
+}
 ### Bookmarks
 sub setbookmark {
 	my $bookmark   = shift;
@@ -2177,73 +2401,286 @@ sub xtops {    # run an external program through the external commands menu
 	runner( cmdinterp( $::extops[$index]{command} ) );
 }
 
-sub toggle_autosave {
-	if ($::autosave) {
-		set_autosave();
-	} else {
-		$::lglobal{autosaveid}->cancel;
-		undef $::lglobal{autosaveid};
-		$::lglobal{saveflashid}->cancel;
-		undef $::lglobal{saveflashid};
-		$::lglobal{saveflashingid}->cancel if $::lglobal{saveflashingid};
-		undef $::lglobal{saveflashingid};
-		$::lglobal{savetool}->configure(
-										 -background => 'SystemButtonFace',
-										 -activebackground => 'SystemButtonFace'
-		) unless $::notoolbar;
+sub setmargins {
+	my $top = $::top;
+	my $getmargins = $top->DialogBox( -title   => 'Set margins for rewrap',
+									  -buttons => ['OK'], );
+	my $lmframe =
+	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $lmlabel = $lmframe->Label(
+								   -width => 25,
+								   -text  => 'Rewrap Left Margin',
+	)->pack( -side => 'left' );
+	my $lmentry = $lmframe->Entry(
+								   -width        => 6,
+								   -background   => $::bkgcolor,
+								   -relief       => 'sunken',
+								   -textvariable => \$::lmargin,
+	)->pack( -side => 'left' );
+	my $rmframe =
+	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $rmlabel = $rmframe->Label(
+								   -width => 25,
+								   -text  => 'Rewrap Right Margin',
+	)->pack( -side => 'left' );
+	my $rmentry = $rmframe->Entry(
+								   -width        => 6,
+								   -background   => $::bkgcolor,
+								   -relief       => 'sunken',
+								   -textvariable => \$::rmargin,
+	)->pack( -side => 'left' );
+	my $blmframe =
+	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $blmlabel = $blmframe->Label(
+									 -width => 25,
+									 -text  => 'Block Rewrap Left Margin',
+	)->pack( -side => 'left' );
+	my $blmentry = $blmframe->Entry(
+									 -width        => 6,
+									 -background   => $::bkgcolor,
+									 -relief       => 'sunken',
+									 -textvariable => \$::blocklmargin,
+	)->pack( -side => 'left' );
+	my $brmframe =
+	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $brmlabel = $brmframe->Label(
+									 -width => 25,
+									 -text  => 'Block Rewrap Right Margin',
+	)->pack( -side => 'left' );
+	my $brmentry = $brmframe->Entry(
+									 -width        => 6,
+									 -background   => $::bkgcolor,
+									 -relief       => 'sunken',
+									 -textvariable => \$::blockrmargin,
+	)->pack( -side => 'left' );
+
+	#
+	my $plmframe =
+	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $plmlabel = $plmframe->Label(
+									 -width => 25,
+									 -text  => 'Poetry Rewrap Left Margin',
+	)->pack( -side => 'left' );
+	my $plmentry = $plmframe->Entry(
+									 -width        => 6,
+									 -background   => $::bkgcolor,
+									 -relief       => 'sunken',
+									 -textvariable => \$::poetrylmargin,
+	)->pack( -side => 'left' );
+
+	#
+	my $didntframe =
+	  $getmargins->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+	my $didntlabel =
+	  $didntframe->Label(
+						  -width => 25,
+						  -text  => 'Default Indent for /*  */ Blocks',
+	  )->pack( -side => 'left' );
+	my $didntmentry =
+	  $didntframe->Entry(
+						  -width        => 6,
+						  -background   => $::bkgcolor,
+						  -relief       => 'sunken',
+						  -textvariable => \$::defaultindent,
+	  )->pack( -side => 'left' );
+	$getmargins->Icon( -image => $::icon );
+	$getmargins->Show;
+	if (    ( $::blockrmargin eq '' )
+		 || ( $::blocklmargin eq '' )
+		 || ( $::rmargin      eq '' )
+		 || ( $::lmargin      eq '' ) )
+	{
+		$top->messageBox(
+						  -icon    => 'error',
+						  -message => 'The margins must be a positive integer.',
+						  -title   => 'Incorrect margin ',
+						  -type    => 'OK',
+		);
+		setmargins();
 	}
+	if (    ( $::blockrmargin =~ /[\D\.]/ )
+		 || ( $::blocklmargin =~ /[\D\.]/ )
+		 || ( $::rmargin      =~ /[\D\.]/ )
+		 || ( $::lmargin      =~ /[\D\.]/ ) )
+	{
+		$top->messageBox(
+						  -icon    => 'error',
+						  -message => 'The margins must be a positive integer.',
+						  -title   => 'Incorrect margin ',
+						  -type    => 'OK',
+		);
+		setmargins();
+	}
+	if ( ( $::blockrmargin < $::blocklmargin ) || ( $::rmargin < $::lmargin ) )
+	{
+		$top->messageBox(
+			  -icon    => 'error',
+			  -message => 'The left margins must come before the right margin.',
+			  -title   => 'Incorrect margin ',
+			  -type    => 'OK',
+		);
+		setmargins();
+	}
+	::savesettings();
 }
 
-# Pop up a window where you can adjust the auto save interval
-sub saveinterval {
-	my $top = $::top;
-	if ( $::lglobal{intervalpop} ) {
-		$::lglobal{intervalpop}->deiconify;
-		$::lglobal{intervalpop}->raise;
+# FIXME: Adapt to work with fontCreate thingy
+sub fontsize {
+	my $textwindow = $::textwindow;
+	my $top        = $::top;
+	my $sizelabel;
+	if ( defined( $::lglobal{fspop} ) ) {
+		$::lglobal{fspop}->deiconify;
+		$::lglobal{fspop}->raise;
+		$::lglobal{fspop}->focus;
 	} else {
-		$::lglobal{intervalpop} = $top->Toplevel;
-		$::lglobal{intervalpop}->title('Autosave Interval');
-		::initialize_popup_with_deletebinding('intervalpop');
-		$::lglobal{intervalpop}->resizable( 'no', 'no' );
-		my $frame =
-		  $::lglobal{intervalpop}
-		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
-		$frame->Label( -text => 'Minutes between Autosave' )
-		  ->pack( -side => 'left' );
-		my $entry = $frame->Entry(
-			-background   => $::bkgcolor,
-			-width        => 5,
-			-textvariable => \$::autosaveinterval,
-			-validate     => 'key',
-			-vcmd         => sub {
-				return 1 unless $_[0];
-				return 0 if ( $_[0] =~ /\D/ );
-				return 0 if ( $_[0] < 1 );
-				return 0 if ( $_[0] > 999 );
-				return 1;
+		$::lglobal{fspop} = $top->Toplevel;
+		$::lglobal{fspop}->title('Font');
+		::initialize_popup_with_deletebinding('fspop');
+		my $tframe = $::lglobal{fspop}->Frame->pack;
+		my $fontlist = $tframe->BrowseEntry(
+			-label     => 'Font',
+			-browsecmd => sub {
+				fontinit();
+				$textwindow->configure( -font => $::lglobal{font} );
 			},
-		)->pack( -side => 'left', -fill => 'x' );
-		my $frame1 =
-		  $::lglobal{intervalpop}
-		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
-		$frame1->Label( -text => '1-999 minutes' )->pack( -side => 'left' );
-		my $button = $frame1->Button(
-			-text    => 'OK',
-			-command => sub {
-				$::autosaveinterval = 5 unless $::autosaveinterval;
-				$::lglobal{intervalpop}->destroy;
-				undef $::lglobal{scrlspdpop};
+			-variable => \$::fontname
+		)->grid( -row => 1, -column => 1, -pady => 5 );
+		$fontlist->insert( 'end', sort( $textwindow->fontFamilies ) );
+		my $mframe = $::lglobal{fspop}->Frame->pack;
+		my $smallerbutton = $mframe->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				$::fontsize++;
+				fontinit();
+				$textwindow->configure( -font => $::lglobal{font} );
+				$sizelabel->configure( -text => $::fontsize );
 			},
-		)->pack( -side => 'left' );
-		$::lglobal{intervalpop}->protocol(
-			'WM_DELETE_WINDOW' => sub {
-				$::autosaveinterval = 5 unless $::autosaveinterval;
-				$::lglobal{intervalpop}->destroy;
-				undef $::lglobal{intervalpop};
+			-text  => 'Bigger',
+			-width => 10
+		)->grid( -row => 1, -column => 1, -pady => 5 );
+		$sizelabel =
+		  $mframe->Label( -text => $::fontsize )
+		  ->grid( -row => 1, -column => 2, -pady => 5 );
+		my $biggerbutton = $mframe->Button(
+			-activebackground => $::activecolor,
+			-command          => sub {
+				$::fontsize--;
+				fontinit();
+				$textwindow->configure( -font => $::lglobal{font} );
+				$sizelabel->configure( -text => $::fontsize );
+			},
+			-text  => 'Smaller',
+			-width => 10
+		)->grid( -row => 1, -column => 3, -pady => 5 );
+		my $weightbox = $mframe->Checkbutton(
+			-variable    => \$::fontweight,
+			-onvalue     => 'bold',
+			-offvalue    => '',
+			-selectcolor => $::activecolor,
+			-command     => sub {
+				fontinit();
+				$textwindow->configure( -font => $::lglobal{font} );
+			},
+			-text => 'Bold'
+		)->grid( -row => 2, -column => 2, -pady => 5 );
+		my $button_ok = $mframe->Button(
+			-activebackground => $::activecolor,
+			-text             => 'OK',
+			-command          => sub {
+				$::lglobal{fspop}->destroy;
+				undef $::lglobal{fspop};
+				::savesettings();
 			}
-		);
-		$entry->selectionRange( 0, 'end' );
+		)->grid( -row => 3, -column => 2, -pady => 5 );
+		$::lglobal{fspop}->resizable( 'no', 'no' );
+		$::lglobal{fspop}->raise;
+		$::lglobal{fspop}->focus;
 	}
+}
+## Set up command to start a browser, varies by OS and browser
+sub setbrowser {
+	my $top       = $::top;
+	my $browsepop = $top->Toplevel;
+	$browsepop->title('Browser Start Command?');
+	$browsepop->Label( -text =>
+"Enter the complete path to the executable.\n(Under Windows, you can use 'start' to use the default handler.\n"
+		. "Under OSX, 'open' will start the default browser.)" )
+	  ->grid( -row => 0, -column => 1, -columnspan => 2 );
+	my $browserentry =
+	  $browsepop->Entry(
+						 -width        => 60,
+						 -background   => $::bkgcolor,
+						 -textvariable => $::globalbrowserstart,
+	  )->grid( -row => 1, -column => 1, -columnspan => 2, -pady => 3 );
+	my $button_ok = $browsepop->Button(
+		-activebackground => $::activecolor,
+		-text             => 'OK',
+		-width            => 6,
+		-command          => sub {
+			$::globalbrowserstart = $browserentry->get;
+			savesettings();
+			$browsepop->destroy;
+			undef $browsepop;
+		}
+	)->grid( -row => 2, -column => 1, -pady => 8 );
+	my $button_cancel = $browsepop->Button(
+		-activebackground => $::activecolor,
+		-text             => 'Cancel',
+		-width            => 6,
+		-command          => sub {
+			$browsepop->destroy;
+			undef $browsepop;
+		}
+	)->grid( -row => 2, -column => 2, -pady => 8 );
+	$browsepop->protocol(
+		 'WM_DELETE_WINDOW' => sub { $browsepop->destroy; undef $browsepop; } );
+	$browsepop->Icon( -image => $::icon );
+}
+
+sub setpngspath {
+	my $textwindow = $::textwindow;
+	my $top        = $::top;
+	my $pagenum    = shift;
+
+	#print $pagenum.'';
+	my $path =
+	  $textwindow->chooseDirectory( -title => 'Choose the PNGs file directory.',
+									-initialdir => "$::globallastpath" . "pngs",
+	  );
+	return unless defined $path and -e $path;
+	$path .= '/';
+	$path       = os_normal($path);
+	$::pngspath = $path;
+	::_bin_save( $textwindow, $top );
+	openpng( $textwindow, $pagenum ) if defined $pagenum;
+}
+
+sub set_autosave {
+	my $textwindow = $::textwindow;
+	my $top        = $::top;
+	$::lglobal{autosaveid}->cancel     if $::lglobal{autosaveid};
+	$::lglobal{saveflashid}->cancel    if $::lglobal{saveflashid};
+	$::lglobal{saveflashingid}->cancel if $::lglobal{saveflashingid};
+	$::lglobal{autosaveid} = $top->repeat(
+		( $::autosaveinterval * 60000 ),
+		sub {
+			::savefile()
+			  if $textwindow->numberChanges
+				  and $::lglobal{global_filename} !~ /No File Loaded/;
+		}
+	);
+	$::lglobal{saveflashid} = $top->after(
+		( $::autosaveinterval * 60000 - 10000 ),
+		sub {
+			::_flash_save($textwindow)
+			  if $::lglobal{global_filename} !~ /No File Loaded/;
+		}
+	);
+	$::lglobal{savetool}
+	  ->configure( -background => 'green', -activebackground => 'green' )
+	  unless $::notoolbar;
+	$::lglobal{autosaveinterval} = time;
 }
 
 sub toolbar_toggle {    # Set up / remove the tool bar
@@ -2379,4 +2816,83 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 	::savesettings();
 }
 
+sub setcolor {    # Color picking routine
+	my $top     = $::top;
+	my $initial = shift;
+	return (
+			 $top->chooseColor(
+								-initialcolor => $initial,
+								-title        => 'Choose color'
+			 )
+	);
+}
+
+sub toggle_autosave {
+	if ($::autosave) {
+		set_autosave();
+	} else {
+		$::lglobal{autosaveid}->cancel;
+		undef $::lglobal{autosaveid};
+		$::lglobal{saveflashid}->cancel;
+		undef $::lglobal{saveflashid};
+		$::lglobal{saveflashingid}->cancel if $::lglobal{saveflashingid};
+		undef $::lglobal{saveflashingid};
+		$::lglobal{savetool}->configure(
+										 -background => 'SystemButtonFace',
+										 -activebackground => 'SystemButtonFace'
+		) unless $::notoolbar;
+	}
+}
+
+# Pop up a window where you can adjust the auto save interval
+sub saveinterval {
+	my $top = $::top;
+	if ( $::lglobal{intervalpop} ) {
+		$::lglobal{intervalpop}->deiconify;
+		$::lglobal{intervalpop}->raise;
+	} else {
+		$::lglobal{intervalpop} = $top->Toplevel;
+		$::lglobal{intervalpop}->title('Autosave Interval');
+		::initialize_popup_with_deletebinding('intervalpop');
+		$::lglobal{intervalpop}->resizable( 'no', 'no' );
+		my $frame =
+		  $::lglobal{intervalpop}
+		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+		$frame->Label( -text => 'Minutes between Autosave' )
+		  ->pack( -side => 'left' );
+		my $entry = $frame->Entry(
+			-background   => $::bkgcolor,
+			-width        => 5,
+			-textvariable => \$::autosaveinterval,
+			-validate     => 'key',
+			-vcmd         => sub {
+				return 1 unless $_[0];
+				return 0 if ( $_[0] =~ /\D/ );
+				return 0 if ( $_[0] < 1 );
+				return 0 if ( $_[0] > 999 );
+				return 1;
+			},
+		)->pack( -side => 'left', -fill => 'x' );
+		my $frame1 =
+		  $::lglobal{intervalpop}
+		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+		$frame1->Label( -text => '1-999 minutes' )->pack( -side => 'left' );
+		my $button = $frame1->Button(
+			-text    => 'OK',
+			-command => sub {
+				$::autosaveinterval = 5 unless $::autosaveinterval;
+				$::lglobal{intervalpop}->destroy;
+				undef $::lglobal{scrlspdpop};
+			},
+		)->pack( -side => 'left' );
+		$::lglobal{intervalpop}->protocol(
+			'WM_DELETE_WINDOW' => sub {
+				$::autosaveinterval = 5 unless $::autosaveinterval;
+				$::lglobal{intervalpop}->destroy;
+				undef $::lglobal{intervalpop};
+			}
+		);
+		$entry->selectionRange( 0, 'end' );
+	}
+}
 1;

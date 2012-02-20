@@ -1,23 +1,23 @@
 package Guiguts::FileMenu;
+
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our ( @ISA, @EXPORT );
-	@ISA = qw(Exporter);
-	@EXPORT =
-	  qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close
-	  &_flash_save &clearvars &savefile &_exit &file_mark_pages &_recentupdate &file_guess_page_marks
-	  &oppopupdate &opspop_up &confirmempty &openfile &readsettings &savesettings);
+	our (@ISA, @EXPORT);
+	@ISA=qw(Exporter);
+	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close 
+	&_flash_save &clearvars &savefile &_exit &file_mark_pages &_recentupdate &file_guess_page_marks
+	&oppopupdate &opspop_up &confirmempty &openfile &readsettings &savesettings)
 }
 
 sub file_open {    # Find a text file to open
 	my $textwindow = shift;
-
 	#my %lglobal;
 	#%lglobal = %{\%::lglobal};
-	#$::lglobal{test}="abcd";
+	#$::lglobal{test}="abcd";	
+	
 	my ($name);
 	return if ( &::confirmempty() =~ /cancel/i );
 	my $types = [
@@ -38,15 +38,12 @@ sub file_open {    # Find a text file to open
 }
 
 sub file_include {    # FIXME: Should include even if no file loaded.
-	my $textwindow = shift;
+	my $textwindow= shift;
 	my ($name);
 	my $types = [
 				  [
 					 'Text Files',
-					 [
-						'.txt',  '.text', '.ggp', '.htm',
-						'.html', '.rst',  '.tei', '.xml'
-					 ]
+					 [ '.txt', '.text', '.ggp', '.htm', '.html', '.rst','.tei','.xml' ]
 				  ],
 				  [ 'All Files', ['*'] ],
 	];
@@ -90,10 +87,10 @@ sub file_saveas {
 		my ( $fname, $extension, $filevar );
 		( $fname, $::globallastpath, $extension ) = &::fileparse($name);
 		$::globallastpath = &::os_normal($::globallastpath);
-		$name             = &::os_normal($name);
+		$name           = &::os_normal($name);
 		$textwindow->FileName($name);
 		$::lglobal{global_filename} = $name;
-		_bin_save( $textwindow, $::top );
+		_bin_save($textwindow,$::top);
 		&::_recentupdate($name);
 	} else {
 		return;
@@ -111,7 +108,7 @@ sub file_close {
 }
 
 sub file_import {
-	my ( $textwindow, $top ) = @_;
+	my ($textwindow,$top)=@_;
 	return if ( &::confirmempty() =~ /cancel/i );
 	my $directory = $top->chooseDirectory( -title =>
 			'Choose the directory containing the text files to be imported.', );
@@ -123,10 +120,10 @@ sub file_import {
 	my @files = glob "*.txt";
 	chdir $pwd;
 	$directory .= '/';
-	$directory        = &::os_normal($directory);
+	$directory      = &::os_normal($directory);
 	$::globallastpath = $directory;
 
-	for my $file ( sort { $a <=> $b } @files ) {
+	for my $file (sort {$a <=> $b} @files) {
 		if ( $file =~ /^(\w+)\.txt/ ) {
 			$textwindow->ntinsert( 'end', ( "\n" . '-' x 5 ) );
 			$textwindow->ntinsert( 'end', "File: $1.png" );
@@ -155,7 +152,7 @@ sub file_import {
 }
 
 sub file_export {
-	my ( $textwindow, $top ) = @_;
+	my ($textwindow,$top)=@_;
 	my $directory = $top->chooseDirectory(
 			   -title => 'Choose the directory to export the text files to.', );
 	return 0 unless ( defined $directory and $directory ne '' );
@@ -199,22 +196,23 @@ sub _flash_save {
 		sub {
 			if ( $::lglobal{savetool}->cget('-background') eq 'yellow' ) {
 				$::lglobal{savetool}->configure(
-												 -background       => 'green',
-												 -activebackground => 'green'
+											   -background       => 'green',
+											   -activebackground => 'green'
 				) unless $::notoolbar;
 			} else {
 				$::lglobal{savetool}->configure(
-												 -background       => 'yellow',
-												 -activebackground => 'yellow'
-				) if ( $::textwindow->numberChanges and ( !$::notoolbar ) );
+											   -background       => 'yellow',
+											   -activebackground => 'yellow'
+				) if ($::textwindow->numberChanges and (!$::notoolbar));
 			}
 		}
 	);
 	return;
 }
+
 ## save the .bin file associated with the text file
 sub _bin_save {
-	my ( $textwindow, $top ) = @_;
+	my ($textwindow,$top)=@_;
 	push @::operations, ( localtime() . ' - File Saved' );
 	&::oppopupdate() if $::lglobal{oppop};
 	my $mark = '1.0';
@@ -224,9 +222,9 @@ sub _bin_save {
 	my $markindex;
 	while ($mark) {
 		if ( $mark =~ m{Pg(\S+)} ) {
-			$markindex                    = $textwindow->index($mark);
+			$markindex                  = $textwindow->index($mark);
 			$::pagenumbers{$mark}{offset} = $markindex;
-			$mark                         = $textwindow->markNext($mark);
+			$mark                       = $textwindow->markNext($mark);
 		} else {
 			$mark = $textwindow->markNext($mark) if $mark;
 			next;
@@ -271,8 +269,8 @@ sub _bin_save {
 			print $fh "'base' => '$::pagenumbers{$page}{base}'},\n";
 		}
 		print $fh ");\n\n";
-		print $fh '$::bookmarks[0] = \''
-		  . $textwindow->index('insert') . "';\n";
+
+		print $fh '$::bookmarks[0] = \'' . $textwindow->index('insert') . "';\n";
 		for ( 1 .. 5 ) {
 			print $fh '$::bookmarks[' 
 			  . $_ 
@@ -281,12 +279,12 @@ sub _bin_save {
 			  if $::bookmarks[$_];
 		}
 		if ($::pngspath) {
-			print $fh
-			  "\n\$::pngspath = '@{[&::escape_problems($::pngspath)]}';\n\n";
+			print $fh "\n\$::pngspath = '@{[&::escape_problems($::pngspath)]}';\n\n";
 		}
 		my ($prfr);
 		delete $::proofers{''};
 		foreach my $page ( sort keys %::proofers ) {
+
 			no warnings 'uninitialized';
 			for my $round ( 1 .. $::lglobal{numrounds} ) {
 				if ( defined $::proofers{$page}->[$round] ) {
@@ -317,10 +315,12 @@ sub _bin_save {
 	}
 	return;
 }
+
+
 ## Clear persistent variables before loading another file
 sub clearvars {
 	my $textwindow = shift;
-	my @marks      = $textwindow->markNames;
+	my @marks = $textwindow->markNames;
 	for (@marks) {
 		unless ( $_ =~ m{insert|current} ) {
 			$textwindow->markUnset($_);
@@ -343,7 +343,7 @@ sub clearvars {
 }
 
 sub savefile {    # Determine which save routine to use and then use it
-	my ( $textwindow, $top ) = ( $::textwindow, $::top );
+	my ($textwindow,$top)=($::textwindow,$::top);
 	&::viewpagenums() if ( $::lglobal{seepagenums} );
 	if ( $::lglobal{global_filename} =~ /No File Loaded/ ) {
 		if ( $textwindow->numberChanges == 0 ) {
@@ -377,35 +377,34 @@ sub savefile {    # Determine which save routine to use and then use it
 		$textwindow->SaveUTF;
 	}
 	$textwindow->ResetUndo;
-	&::_bin_save( $textwindow, $top );
+	&::_bin_save($textwindow,$top);
 	&::set_autosave() if $::autosave;
 	&::update_indicators();
 }
 
 sub file_mark_pages {
-	my $top        = $::top;
+	my $top =$::top;
 	my $textwindow = $::textwindow;
+	
 	$top->Busy( -recurse => 1 );
 	&::viewpagenums() if ( $::lglobal{seepagenums} );
 	my ( $line, $index, $page, $rnd1, $rnd2, $pagemark );
 	$::searchstartindex = '1.0';
 	$::searchendindex   = '1.0';
 	while ($::searchstartindex) {
-
 		#$::searchstartindex =
 		#  $textwindow->search( '-exact', '--',
 		#					   '--- File:',
 		#					   $::searchendindex, 'end' );
-		$::searchstartindex =
-		  $textwindow->search( '-nocase', '-regexp', '--',
+ 		$::searchstartindex =$textwindow->search( '-nocase', '-regexp', '--',
 							   '-*\s?File:\s?(\S+)\.(png|jpg)---.*$',
 							   $::searchendindex, 'end' );
 		last unless $::searchstartindex;
 		my ( $row, $col ) = split /\./, $::searchstartindex;
 		$line = $textwindow->get( "$row.0", "$row.end" );
 		$::searchendindex = $textwindow->index("$::searchstartindex lineend");
-
 		#$line = $textwindow->get( $::searchstartindex, $::searchendindex );
+
 		# get the page name - we do this separate from pulling the
 		# proofer names in case we did an Import Test Prep Files
 		# which does not include proofer names
@@ -429,6 +428,7 @@ sub file_mark_pages {
 			# split the proofer string into parts
 			@{ $::proofers{$page} } = split( "\Q\\\E", $prftrim );
 		}
+
 		$pagemark = 'Pg' . $page;
 		$::pagenumbers{$pagemark}{offset} = 1;
 		$textwindow->markSet( $pagemark, $::searchstartindex );
@@ -438,6 +438,7 @@ sub file_mark_pages {
 	$top->Unbusy( -recurse => 1 );
 	return;
 }
+
 ## Track recently open files for the menu
 sub _recentupdate {    # FIXME: Seems to be choking.
 	my $name = shift;
@@ -453,6 +454,9 @@ sub _recentupdate {    # FIXME: Seems to be choking.
 	&::menurebuild();
 	return;
 }
+
+
+
 ## Global Exit
 sub _exit {
 	if ( confirmdiscard() =~ m{no}i ) {
@@ -462,7 +466,7 @@ sub _exit {
 }
 
 sub file_guess_page_marks {
-	my $top        = $::top;
+	my $top = $::top;
 	my $textwindow = $::textwindow;
 	my ( $totpages, $line25, $linex );
 	if ( $::lglobal{pgpop} ) {
@@ -590,6 +594,7 @@ sub file_guess_page_marks {
 	}
 	return;
 }
+
 ## Update the Operations history
 sub oppopupdate {
 	$::lglobal{oplistbox}->delete( '0', 'end' );
@@ -609,11 +614,11 @@ sub opspop_up {
 		&::initialize_popup_with_deletebinding('oppop');
 		my $frame =
 		  $::lglobal{oppop}->Frame->pack(
-										  -anchor => 'nw',
-										  -fill   => 'both',
-										  -expand => 'both',
-										  -padx   => 2,
-										  -pady   => 2
+										-anchor => 'nw',
+										-fill   => 'both',
+										-expand => 'both',
+										-padx   => 2,
+										-pady   => 2
 		  );
 		$::lglobal{oplistbox} =
 		  $frame->Scrolled(
@@ -636,7 +641,7 @@ sub opspop_up {
 
 sub confirmdiscard {
 	my $textwindow = $::textwindow;
-	my $top        = $::top;
+	my $top = $::top;
 	if ( $textwindow->numberChanges ) {
 		my $ans = $top->messageBox(
 				 -icon    => 'warning',
@@ -656,7 +661,7 @@ sub confirmdiscard {
 
 sub confirmempty {
 	my $textwindow = $::textwindow;
-	my $answer     = confirmdiscard();
+	my $answer = confirmdiscard();
 	if ( $answer =~ /no/i ) {
 		if ( $::lglobal{img_num_label} ) {
 			$::lglobal{img_num_label}->destroy;
@@ -678,11 +683,12 @@ sub confirmempty {
 	}
 	return $answer;
 }
+
 ### File Menu
 # Do not move from guiguts.pl; do command must be run in main
 sub openfile {    # and open it
-	my $name       = shift;
-	my $top        = $::top;
+	my $name = shift;
+	my $top =$::top;
 	my $textwindow = $::textwindow;
 	return if ( $name eq '*empty*' );
 	return if ( confirmempty() =~ /cancel/i );
@@ -721,8 +727,8 @@ sub openfile {    # and open it
 	$textwindow->Load($name);
 	( $fname, $::globallastpath, $extension ) = ::fileparse($name);
 	$textwindow->markSet( 'insert', '1.0' );
-	$::globallastpath           = ::os_normal($::globallastpath);
-	$name                       = ::os_normal($name);
+	$::globallastpath = ::os_normal($::globallastpath);
+	$name = ::os_normal($name);
 	$::lglobal{global_filename} = $name;
 	my $binname = "$::lglobal{global_filename}.bin";
 
@@ -733,7 +739,7 @@ sub openfile {    # and open it
 	}
 	if ( -e $binname ) {
 		my $markindex;
-		::dofile($binname);     #do $binname;
+		::dofile($binname); #do $binname;
 		foreach my $mark ( keys %::pagenumbers ) {
 			$markindex = $::pagenumbers{$mark}{offset};
 			if ( $markindex eq '' ) {
@@ -769,7 +775,7 @@ sub openfile {    # and open it
 
 sub readsettings {
 	if ( -e 'setting.rc' ) {
-		unless ( my $return = ::dofile('setting.rc') ) {
+		unless ( my $return = ::dofile( 'setting.rc' )) {
 			open my $file, "<", "setting.rc"
 			  or warn "Could not open setting file\n";
 			my @file = <$file>;
@@ -793,9 +799,10 @@ sub readsettings {
 		}
 	}
 }
+
 ## Save setting.rc file
 sub savesettings {
-	my $top = $::top;
+	my $top =$::top;
 
 	#print time()."savesettings\n";
 	my $message = <<EOM;
@@ -884,4 +891,9 @@ EOM
 		print $save_handle ");\n\n1;\n";
 	}
 }
+
+
+
 1;
+
+
