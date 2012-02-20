@@ -1,4 +1,4 @@
-package Guiguts::HelpMenu;
+package Guiguts::Help;
 
 use strict;
 use warnings;

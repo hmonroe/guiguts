@@ -1,4 +1,4 @@
-package Guiguts::FileMenu;
+package Guiguts::File;
 
 use strict;
 use warnings;

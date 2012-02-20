@@ -1,4 +1,4 @@
-package Guiguts::SearchReplaceMenu;
+package Guiguts::SearchReplace;
 
 use strict;
 use warnings;

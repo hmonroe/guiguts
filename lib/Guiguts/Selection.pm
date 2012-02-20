@@ -1,4 +1,4 @@
-package Guiguts::SelectionMenu;
+package Guiguts::Selection;
 
 use strict;
 use warnings;
