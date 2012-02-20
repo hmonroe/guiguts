@@ -1,14 +1,13 @@
 package Guiguts::ErrorCheck;
-
 use strict;
 use warnings;
-
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
-	@ISA    = qw(Exporter);
-	@EXPORT = qw(&errorcheckpop_up &errorcheckrun &gutcheckview &gutwindowpopulate &gcviewops 
-	&gcheckpop_up &jeebiesview jeebiesrun &gutcheck &gutopts &jeebiespop_up);
+	our ( @ISA, @EXPORT );
+	@ISA = qw(Exporter);
+	@EXPORT =
+	  qw(&errorcheckpop_up &errorcheckrun &gutcheckview &gutwindowpopulate &gcviewops
+	  &gcheckpop_up &jeebiesview jeebiesrun &gutcheck &gutopts &jeebiespop_up);
 }
 
 sub errorcheckpop_up {
@@ -102,29 +101,28 @@ sub errorcheckpop_up {
 			$::lglobal{errorcheckpop}->raise;
 		}
 	);
-	$::lglobal{errorchecklistbox}->eventAdd(
-											'<<remove>>' => '<ButtonRelease-2>',
+	$::lglobal{errorchecklistbox}->eventAdd('<<remove>>' => '<ButtonRelease-2>',
 											'<ButtonRelease-3>' );
 	$::lglobal{errorchecklistbox}->bind(
 		'<<remove>>',
 		sub {
 			$::lglobal{errorchecklistbox}->activate(
-						   $::lglobal{errorchecklistbox}->index(
-							   '@'
-								 . (
-								   $::lglobal{errorchecklistbox}->pointerx -
-									 $::lglobal{errorchecklistbox}->rootx
-								 )
-								 . ','
-								 . (
-								   $::lglobal{errorchecklistbox}->pointery -
-									 $::lglobal{errorchecklistbox}->rooty
-								 )
-						   )
+							   $::lglobal{errorchecklistbox}->index(
+								   '@'
+									 . (
+									   $::lglobal{errorchecklistbox}->pointerx -
+										 $::lglobal{errorchecklistbox}->rootx
+									 )
+									 . ','
+									 . (
+									   $::lglobal{errorchecklistbox}->pointery -
+										 $::lglobal{errorchecklistbox}->rooty
+									 )
+							   )
 			);
 			$::lglobal{errorchecklistbox}->selectionClear( 0, 'end' );
-			$::lglobal{errorchecklistbox}->selectionSet(
-						   $::lglobal{errorchecklistbox}->index('active') );
+			$::lglobal{errorchecklistbox}
+			  ->selectionSet( $::lglobal{errorchecklistbox}->index('active') );
 			$::lglobal{errorchecklistbox}->delete('active');
 			$::lglobal{errorchecklistbox}->after( $::lglobal{delay} );
 		}
@@ -158,7 +156,7 @@ sub errorcheckpop_up {
 	foreach my $thiserrorchecktype (@errorchecktypes) {
 		&::working($thiserrorchecktype);
 		push @errorchecklines, "Beginning check: " . $thiserrorchecktype;
-		if ( errorcheckrun( $thiserrorchecktype ) ) {
+		if ( errorcheckrun($thiserrorchecktype) ) {
 			push @errorchecklines, "Failed to run: " . $thiserrorchecktype;
 		}
 		my $fh = FileHandle->new("< errors.err");
@@ -303,10 +301,10 @@ sub errorcheckpop_up {
 }
 
 sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
-	#my ( $textwindow, $top, $errorchecktype ) = @_;
-	my $errorchecktype  = shift;
-	my $textwindow = $::textwindow;
-	my $top = $::top;
+	                   #my ( $textwindow, $top, $errorchecktype ) = @_;
+	my $errorchecktype = shift;
+	my $textwindow     = $::textwindow;
+	my $top            = $::top;
 	if ( $errorchecktype eq 'W3C Validate Remote' ) {
 		unless ( eval { require WebService::Validator::HTML::W3C } ) {
 			print
@@ -323,7 +321,7 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 	$textwindow->focus;
 	::update_indicators();
 	my $title = $top->cget('title');
-	if ( $title =~ /No File Loaded/ ) { ::savefile($textwindow,$top) }
+	if ( $title =~ /No File Loaded/ ) { ::savefile( $textwindow, $top ) }
 	my $types = [ [ 'Executable', [ '.exe', ] ], [ 'All Files', ['*'] ], ];
 	if ( $errorchecktype eq 'W3C Validate CSS' ) {
 		$types = [ [ 'JAR file', [ '.jar', ] ], [ 'All Files', ['*'] ], ];
@@ -401,16 +399,15 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		$::lglobal{errorchecklistbox}->delete( '0', 'end' );
 	}
 	if ( $errorchecktype eq 'HTML Tidy' ) {
-		&::run( $::tidycommand, "-f", "errors.err", "-o", "null",
-					$name );
+		&::run( $::tidycommand, "-f", "errors.err", "-o", "null", $name );
 	} elsif ( $errorchecktype eq 'W3C Validate' ) {
 		if ( $::w3cremote == 0 ) {
 			my $validatepath = &::dirname($::validatecommand);
 			&::run(
-						$::validatecommand, "--directory=$validatepath",
-						"--catalog=xhtml.soc",  "--no-output",
-						"--open-entities",      "--error-file=errors.err",
-						$name
+					$::validatecommand,    "--directory=$validatepath",
+					"--catalog=xhtml.soc", "--no-output",
+					"--open-entities",     "--error-file=errors.err",
+					$name
 			);
 		}
 	} elsif ( $errorchecktype eq 'W3C Validate Remote' ) {
@@ -441,20 +438,19 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		$runner->run( "java", "-jar", $::validatecsscommand, "file:$name" );
 	} elsif ( $errorchecktype eq 'pphtml' ) {
 		&::run( "perl", "lib/ppvchecks/pphtml.pl", "-i", $name, "-o",
-					"errors.err" );
+				"errors.err" );
 	} elsif ( $errorchecktype eq 'Link Check' ) {
 		linkcheckrun();
-	}
-	elsif ( $errorchecktype eq 'Image Check' ) {
+	} elsif ( $errorchecktype eq 'Image Check' ) {
 		my ( $f, $d, $e ) =
 		  &::fileparse( $::lglobal{global_filename}, qr{\.[^\.]*$} );
 		&::run( "perl", "lib/ppvchecks/ppvimage.pl", $name, $d );
 	} elsif ( $errorchecktype eq 'pptxt' ) {
 		&::run( "perl", "lib/ppvchecks/pptxt.pl", "-i", $name, "-o",
-					"errors.err" );
+				"errors.err" );
 	} elsif ( $errorchecktype eq 'Epub Friendly' ) {
 		&::run( "perl", "lib/ppvchecks/epubfriendly.pl",
-					"-i", $name, "-o", "errors.err" );
+				"-i", $name, "-o", "errors.err" );
 	}
 	$top->Unbusy;
 	unlink $name;
@@ -463,7 +459,7 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 
 sub linkcheckrun {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	open my $logfile, ">", "errors.err" || die "output file error\n";
 	my ( %anchor,  %id,  %link,   %image,  %badlink, $length, $upper );
 	my ( $anchors, $ids, $ilinks, $elinks, $images,  $count,  $css ) =
@@ -480,9 +476,9 @@ sub linkcheckrun {
 	my $imagedir = '';
 	push @warning, '';
 	my ( $fh, $filename );
-
 	my @temp = split( /[\\\/]/, $textwindow->FileName );
 	my $tempfilename = $temp[-1];
+
 	if ( $tempfilename =~ /projectid/i ) {
 		print $logfile "Choose a human readable filename: $tempfilename\n";
 	}
@@ -681,61 +677,61 @@ sub gutwindowpopulate {
 
 sub gcviewops {
 	my $linesref = shift;
-	my $top = $::top;
+	my $top      = $::top;
 	my @gsoptions;
 	@{ $::lglobal{gcarray} } = (
-							   'Asterisk',
-							   'Begins with punctuation',
-							   'Broken em-dash',
-							   'Capital "S"',
-							   'Carat character',
-							   'CR without LF',
-							   'Double punctuation',
-							   'endquote missing punctuation',
-							   'Extra period',
-							   'Forward slash',
-							   'HTML symbol',
-							   'HTML Tag',
-							   'Hyphen at end of line',
-							   'Long line',
-							   'Mismatched curly brackets',
-							   'Mismatched quotes',
-							   'Mismatched round brackets',
-							   'Mismatched singlequotes',
-							   'Mismatched square brackets',
-							   'Mismatched underscores',
-							   'Missing space',
-							   'No CR',
-							   'No punctuation at para end',
-							   'Non-ASCII character',
-							   'Non-ISO-8859 character',
-							   'Paragraph starts with lower-case',
-							   'Query angled bracket with From',
-							   'Query digit in',
-							   "Query he\/be error",
-							   "Query hut\/but error",
-							   'Query I=exclamation mark',
-							   'Query missing paragraph break',
-							   'Query possible scanno',
-							   'Query punctuation after',
-							   'Query single character line',
-							   'Query standalone 0',
-							   'Query standalone 1',
-							   'Query word',
-							   'Short line',
-							   'Spaced dash',
-							   'Spaced doublequote',
-							   'Spaced em-dash',
-							   'Spaced punctuation',
-							   'Spaced quote',
-							   'Spaced singlequote',
-							   'Tab character',
-							   'Tilde character',
-							   'Two successive CRs',
-							   'Unspaced bracket',
-							   'Unspaced quotes',
-							   'Wrongspaced quotes',
-							   'Wrongspaced singlequotes',
+								 'Asterisk',
+								 'Begins with punctuation',
+								 'Broken em-dash',
+								 'Capital "S"',
+								 'Carat character',
+								 'CR without LF',
+								 'Double punctuation',
+								 'endquote missing punctuation',
+								 'Extra period',
+								 'Forward slash',
+								 'HTML symbol',
+								 'HTML Tag',
+								 'Hyphen at end of line',
+								 'Long line',
+								 'Mismatched curly brackets',
+								 'Mismatched quotes',
+								 'Mismatched round brackets',
+								 'Mismatched singlequotes',
+								 'Mismatched square brackets',
+								 'Mismatched underscores',
+								 'Missing space',
+								 'No CR',
+								 'No punctuation at para end',
+								 'Non-ASCII character',
+								 'Non-ISO-8859 character',
+								 'Paragraph starts with lower-case',
+								 'Query angled bracket with From',
+								 'Query digit in',
+								 "Query he\/be error",
+								 "Query hut\/but error",
+								 'Query I=exclamation mark',
+								 'Query missing paragraph break',
+								 'Query possible scanno',
+								 'Query punctuation after',
+								 'Query single character line',
+								 'Query standalone 0',
+								 'Query standalone 1',
+								 'Query word',
+								 'Short line',
+								 'Spaced dash',
+								 'Spaced doublequote',
+								 'Spaced em-dash',
+								 'Spaced punctuation',
+								 'Spaced quote',
+								 'Spaced singlequote',
+								 'Tab character',
+								 'Tilde character',
+								 'Two successive CRs',
+								 'Unspaced bracket',
+								 'Unspaced quotes',
+								 'Wrongspaced quotes',
+								 'Wrongspaced singlequotes',
 	);
 	my $gcrows = int( ( @{ $::lglobal{gcarray} } / 3 ) + .9 );
 	if ( defined( $::lglobal{viewpop} ) ) {
@@ -850,7 +846,7 @@ sub gcviewops {
 				$::lglobal{viewpop}->destroy;
 				@{ $::lglobal{gcarray} } = ();
 				undef $::lglobal{viewpop};
-				unlink 'gutreslts.tmp';  #cat('gutreslts.tmp')
+				unlink 'gutreslts.tmp';    #cat('gutreslts.tmp')
 			}
 		);
 		$::lglobal{viewpop}->resizable( 'no', 'no' );
@@ -859,7 +855,7 @@ sub gcviewops {
 }
 
 sub gcheckpop_up {
-	my $top = $::top;
+	my $top        = $::top;
 	my $textwindow = $::textwindow;
 	my @gclines;
 	my ( $line, $linenum, $colnum, $lincol, $word );
@@ -871,7 +867,7 @@ sub gcheckpop_up {
 		$::lglobal{gcpop} = $top->Toplevel;
 		$::lglobal{gcpop}->title('Gutcheck');
 		$::lglobal{gcpop}->geometry($::geometry2) if $::geometry2;
-		$::lglobal{gcpop}->transient($top)      if $::stayontop;
+		$::lglobal{gcpop}->transient($top)        if $::stayontop;
 		my $ptopframe = $::lglobal{gcpop}->Frame->pack;
 		my $opsbutton =
 		  $ptopframe->Button(
@@ -938,7 +934,8 @@ sub gcheckpop_up {
 		);
 		$::lglobal{gcpop}->Icon( -image => $::icon );
 		::BindMouseWheel( $::lglobal{gclistbox} );
-		$::lglobal{gclistbox}->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
+		$::lglobal{gclistbox}
+		  ->eventAdd( '<<view>>' => '<Button-1>', '<Return>' );
 		$::lglobal{gclistbox}->bind( '<<view>>', sub { gutcheckview() } );
 		$::lglobal{gcpop}->bind(
 			'<Configure>' => sub {
@@ -948,26 +945,26 @@ sub gcheckpop_up {
 			}
 		);
 		$::lglobal{gclistbox}->eventAdd( '<<remove>>' => '<ButtonRelease-2>',
-									   '<ButtonRelease-3>' );
+										 '<ButtonRelease-3>' );
 		$::lglobal{gclistbox}->bind(
 			'<<remove>>',
 			sub {
 				$::lglobal{gclistbox}->activate(
-										 $::lglobal{gclistbox}->index(
-											 '@'
-											   . (
-												 $::lglobal{gclistbox}->pointerx -
-												   $::lglobal{gclistbox}->rootx
-											   )
-											   . ','
-											   . (
-												 $::lglobal{gclistbox}->pointery -
-												   $::lglobal{gclistbox}->rooty
-											   )
-										 )
+									   $::lglobal{gclistbox}->index(
+										   '@'
+											 . (
+											   $::lglobal{gclistbox}->pointerx -
+												 $::lglobal{gclistbox}->rootx
+											 )
+											 . ','
+											 . (
+											   $::lglobal{gclistbox}->pointery -
+												 $::lglobal{gclistbox}->rooty
+											 )
+									   )
 				);
 				$textwindow->markUnset(
-									$::gc{ $::lglobal{gclistbox}->get('active') } );
+								$::gc{ $::lglobal{gclistbox}->get('active') } );
 				undef $::gc{ $::lglobal{gclistbox}->get('active') };
 				$::lglobal{gclistbox}->delete('active');
 				$::lglobal{gclistbox}->selectionClear( '0', 'end' );
@@ -980,18 +977,18 @@ sub gcheckpop_up {
 			'<Button-3>',
 			sub {
 				$::lglobal{gclistbox}->activate(
-										 $::lglobal{gclistbox}->index(
-											 '@'
-											   . (
-												 $::lglobal{gclistbox}->pointerx -
-												   $::lglobal{gclistbox}->rootx
-											   )
-											   . ','
-											   . (
-												 $::lglobal{gclistbox}->pointery -
-												   $::lglobal{gclistbox}->rooty
-											   )
-										 )
+									   $::lglobal{gclistbox}->index(
+										   '@'
+											 . (
+											   $::lglobal{gclistbox}->pointerx -
+												 $::lglobal{gclistbox}->rootx
+											 )
+											 . ','
+											 . (
+											   $::lglobal{gclistbox}->pointery -
+												 $::lglobal{gclistbox}->rooty
+											 )
+									   )
 				);
 			}
 		);
@@ -1010,24 +1007,22 @@ sub gcheckpop_up {
 		return;
 	}
 	my $mark = 0;
-	%::gc      = ();
+	%::gc    = ();
 	@gclines = ();
 	while ( $line = <$results> ) {
 		$line =~ s/^\s//g;
 		chomp $line;
 		$line =~ s/^(File: )gutchk.tmp/$1$::lglobal{global_filename}/g;
 		{
-
 			no warnings 'uninitialized';
 			next if $line eq $gclines[-1];
 		}
 		push @gclines, $line;
 		$::gc{$line} = '';
-		$colnum    = '0';
-		$lincol    = '';
+		$colnum      = '0';
+		$lincol      = '';
 		if ( $line =~ /Line (\d+)/ ) {
 			$linenum = $1;
-
 			if ( $line =~ /Line \d+ column (\d+)/ ) {
 				$colnum = $1;
 				$colnum--
@@ -1160,8 +1155,8 @@ sub gcheckpop_up {
 }
 
 sub jeebiesrun {
-	my $listbox = shift;
-	my $top = $::top;
+	my $listbox    = shift;
+	my $top        = $::top;
 	my $textwindow = $::textwindow;
 	$listbox->delete( '0', 'end' );
 	::savefile() if ( $textwindow->numberChanges );
@@ -1182,9 +1177,9 @@ sub jeebiesrun {
 	$listbox->insert( 'end',
 				 '---------------- Please wait: Processing. ----------------' );
 	$listbox->update;
-
 	my $runner = runner::tofile('results.tmp');
-	$runner->run($::jeebiescommand, $jeebiesoptions, $title);
+	$runner->run( $::jeebiescommand, $jeebiesoptions, $title );
+
 	if ( not $? ) {
 		open my $fh, '<', 'results.tmp';
 		while ( my $line = <$fh> ) {
@@ -1226,11 +1221,10 @@ sub jeebiesview {
 	$::lglobal{jeepop}->raise;
 	$::geometryhash{jeepop} = $::lglobal{jeepop}->geometry;
 }
-
 ## Gutcheck
 sub gutcheck {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	no warnings;
 	push @::operations, ( localtime() . ' - Gutcheck' );
 	::viewpagenums() if ( $::lglobal{seepagenums} );
@@ -1239,13 +1233,13 @@ sub gutcheck {
 	$textwindow->focus;
 	::update_indicators();
 	my $title = $top->cget('title');
-	
+
 	if ( $title =~ /No File Loaded/ ) {
 		::nofileloadedwarning();
 		return;
-	};
-	#$top->Busy( -recurse => 1 );
+	}
 
+	#$top->Busy( -recurse => 1 );
 	# FIXME: wide character in print warning next line with unicode
 	# Figure out how to determine encoding. See scratchpad.pl
 	# open my $gc, ">:encoding(UTF-8)", "gutchk.tmp");
@@ -1272,8 +1266,8 @@ sub gutcheck {
 		$dialog->Show;
 		return;
 	}
-	$title =~
-	  s/$::window_title - //; #FIXME: sub this out; this and next in the tidy code
+	$title =~ s/$::window_title - //
+	  ;    #FIXME: sub this out; this and next in the tidy code
 	$title =~ s/edited - //;
 	$title = ::os_normal($title);
 	( $name, $path, $extension ) = ::fileparse( $title, '\.[^\.]*$' );
@@ -1321,71 +1315,80 @@ sub gutcheck {
 
 sub gutopts {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	$::lglobal{gcdialog} =
 	  $top->DialogBox( -title => 'Gutcheck Options', -buttons => ['OK'] );
 	::initialize_popup_without_deletebinding('gcdialog');
-	my $gcopt6 = $::lglobal{gcdialog}->add(
+	my $gcopt6 =
+	  $::lglobal{gcdialog}->add(
 							   'Checkbutton',
 							   -variable    => \$::gcopt[6],
 							   -selectcolor => $::lglobal{checkcolor},
 							   -text => '-v Enable verbose mode (Recommended).',
-	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt0 = $::lglobal{gcdialog}->add(
-								  'Checkbutton',
-								  -variable    => \$::gcopt[0],
-								  -selectcolor => $::lglobal{checkcolor},
-								  -text => '-t Disable check for common typos.',
-	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt1 = $::lglobal{gcdialog}->add(
-										  'Checkbutton',
-										  -variable    => \$::gcopt[1],
-										  -selectcolor => $::lglobal{checkcolor},
-										  -text => '-x Disable paranoid mode.',
-	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt2 = $::lglobal{gcdialog}->add(
+	  )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt0 =
+	  $::lglobal{gcdialog}->add(
+								 'Checkbutton',
+								 -variable    => \$::gcopt[0],
+								 -selectcolor => $::lglobal{checkcolor},
+								 -text => '-t Disable check for common typos.',
+	  )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt1 =
+	  $::lglobal{gcdialog}->add(
+								 'Checkbutton',
+								 -variable    => \$::gcopt[1],
+								 -selectcolor => $::lglobal{checkcolor},
+								 -text        => '-x Disable paranoid mode.',
+	  )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt2 =
+	  $::lglobal{gcdialog}->add(
 							 'Checkbutton',
 							 -variable    => \$::gcopt[2],
 							 -selectcolor => $::lglobal{checkcolor},
 							 -text => '-p Report ALL unbalanced double quotes.',
-	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt3 = $::lglobal{gcdialog}->add(
+	  )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt3 =
+	  $::lglobal{gcdialog}->add(
 							 'Checkbutton',
 							 -variable    => \$::gcopt[3],
 							 -selectcolor => $::lglobal{checkcolor},
 							 -text => '-s Report ALL unbalanced single quotes.',
-	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt4 = $::lglobal{gcdialog}->add(
-										  'Checkbutton',
-										  -variable    => \$::gcopt[4],
-										  -selectcolor => $::lglobal{checkcolor},
-										  -text => '-m Interpret HTML markup.',
-	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt5 = $::lglobal{gcdialog}->add(
-								  'Checkbutton',
-								  -variable    => \$::gcopt[5],
-								  -selectcolor => $::lglobal{checkcolor},
-								  -text => '-l Do not report non DOS newlines.',
-	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt7 = $::lglobal{gcdialog}->add(
-								   'Checkbutton',
-								   -variable    => \$::gcopt[7],
-								   -selectcolor => $::lglobal{checkcolor},
-								   -text => '-u Flag words from the .typ file.',
-	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
-	my $gcopt8 = $::lglobal{gcdialog}->add(
+	  )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt4 =
+	  $::lglobal{gcdialog}->add(
+								 'Checkbutton',
+								 -variable    => \$::gcopt[4],
+								 -selectcolor => $::lglobal{checkcolor},
+								 -text        => '-m Interpret HTML markup.',
+	  )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt5 =
+	  $::lglobal{gcdialog}->add(
+								 'Checkbutton',
+								 -variable    => \$::gcopt[5],
+								 -selectcolor => $::lglobal{checkcolor},
+								 -text => '-l Do not report non DOS newlines.',
+	  )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt7 =
+	  $::lglobal{gcdialog}->add(
+								 'Checkbutton',
+								 -variable    => \$::gcopt[7],
+								 -selectcolor => $::lglobal{checkcolor},
+								 -text => '-u Flag words from the .typ file.',
+	  )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	my $gcopt8 =
+	  $::lglobal{gcdialog}->add(
 								 'Checkbutton',
 								 -variable    => \$::gcopt[8],
 								 -selectcolor => $::lglobal{checkcolor},
 								 -text => '-d Ignore DP style page separators.',
-	)->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
+	  )->pack( -side => 'top', -anchor => 'nw', -padx => 5 );
 	$::lglobal{gcdialog}->Show;
 	::savesettings();
 }
 
 sub jeebiespop_up {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	my @jlines;
 	::viewpagenums() if ( $::lglobal{seepagenums} );
 	if ( $::lglobal{jeepop} ) {
@@ -1408,10 +1411,10 @@ sub jeebiespop_up {
 			)->pack( -side => 'left', -padx => 2 );
 		}
 		$ptopframe->Button(
-						  -activebackground => $::activecolor,
-						  -command => sub { jeebiesrun( $::lglobal{jelistbox} ) },
-						  -text    => 'Re-run Jeebies',
-						  -width   => 16
+						-activebackground => $::activecolor,
+						-command => sub { jeebiesrun( $::lglobal{jelistbox} ) },
+						-text    => 'Re-run Jeebies',
+						-width   => 16
 		  )->pack(
 				   -side   => 'left',
 				   -pady   => 10,
@@ -1419,7 +1422,8 @@ sub jeebiespop_up {
 				   -anchor => 'n'
 		  );
 		my $pframe =
-		  $::lglobal{jeepop}->Frame->pack( -fill => 'both', -expand => 'both', );
+		  $::lglobal{jeepop}
+		  ->Frame->pack( -fill => 'both', -expand => 'both', );
 		$::lglobal{jelistbox} =
 		  $pframe->Scrolled(
 							 'Listbox',
@@ -1441,23 +1445,23 @@ sub jeebiespop_up {
 		  ->eventAdd( '<<jview>>' => '<Button-1>', '<Return>' );
 		$::lglobal{jelistbox}->bind( '<<jview>>', sub { jeebiesview() } );
 		$::lglobal{jelistbox}->eventAdd( '<<jremove>>' => '<ButtonRelease-2>',
-									   '<ButtonRelease-3>' );
+										 '<ButtonRelease-3>' );
 		$::lglobal{jelistbox}->bind(
 			'<<jremove>>',
 			sub {
 				$::lglobal{jelistbox}->activate(
-										 $::lglobal{jelistbox}->index(
-											 '@'
-											   . (
-												 $::lglobal{jelistbox}->pointerx -
-												   $::lglobal{jelistbox}->rootx
-											   )
-											   . ','
-											   . (
-												 $::lglobal{jelistbox}->pointery -
-												   $::lglobal{jelistbox}->rooty
-											   )
-										 )
+									   $::lglobal{jelistbox}->index(
+										   '@'
+											 . (
+											   $::lglobal{jelistbox}->pointerx -
+												 $::lglobal{jelistbox}->rootx
+											 )
+											 . ','
+											 . (
+											   $::lglobal{jelistbox}->pointery -
+												 $::lglobal{jelistbox}->rooty
+											 )
+									   )
 				);
 				undef $::gc{ $::lglobal{jelistbox}->get('active') };
 				$::lglobal{jelistbox}->delete('active');
@@ -1470,7 +1474,4 @@ sub jeebiespop_up {
 		jeebiesrun( $::lglobal{jelistbox} );
 	}
 }
-
-
-
 1;

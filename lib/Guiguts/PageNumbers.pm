@@ -1,16 +1,15 @@
 package Guiguts::PageNumbers;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
-	@ISA=qw(Exporter);
-	@EXPORT=qw( &viewpagenums &gotolabel &pnumadjust &pgnext &pgprevious &pgrenum &pmovedown
-	&pmoveup &pmoveleft &pmoveright &pageadd &pageremove	)
+	our ( @ISA, @EXPORT );
+	@ISA = qw(Exporter);
+	@EXPORT =
+	  qw( &viewpagenums &gotolabel &pnumadjust &pgnext &pgprevious &pgrenum &pmovedown
+	  &pmoveup &pmoveleft &pmoveright &pageadd &pageremove	);
 }
-
 ## Toggle visible page markers. This is not line numbers but marks for pages.
 sub viewpagenums {
 	my $textwindow = $::textwindow;
@@ -43,11 +42,10 @@ sub viewpagenums {
 		&::pnumadjust();
 	}
 }
-
 ## Pop up a window which will allow jumping directly to a specified page
 sub gotolabel {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	unless ( defined( $::lglobal{gotolabpop} ) ) {
 		return unless %::pagenumbers;
 		for ( keys(%::pagenumbers) ) {
@@ -63,7 +61,8 @@ sub gotolabel {
 					my $mark;
 					for ( keys %::pagenumbers ) {
 						if (    $::pagenumbers{$_}{label}
-							 && $::pagenumbers{$_}{label} eq $::lglobal{lastlabel} )
+							 && $::pagenumbers{$_}{label} eq
+							 $::lglobal{lastlabel} )
 						{
 							$mark = $_;
 							last;
@@ -104,12 +103,11 @@ sub gotolabel {
 		$::lglobal{gotolabpop}->Wait;
 	}
 }
-
 ## Page Number Adjust
 sub pnumadjust {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
-	my $mark = $textwindow->index('current');
+	my $top        = $::top;
+	my $mark       = $textwindow->index('current');
 	while ( $mark = $textwindow->markPrevious($mark) ) {
 		if ( $mark =~ /Pg(\S+)/ ) {
 			last;
@@ -127,7 +125,6 @@ sub pnumadjust {
 				last;
 			}
 		}
-
 	}
 	$textwindow->markSet( 'insert', $mark || '1.0' );
 	if ( $::lglobal{pnumpop} ) {
@@ -209,10 +206,10 @@ sub pnumadjust {
 		)->grid( -row => 3, -column => 1, -pady => 3 );
 		my $frame5 = $::lglobal{pnumpop}->Frame->pack( -pady => 5 );
 		$frame5->Button(
-						 -activebackground => $::activecolor,
-						 -command => sub { $textwindow->bell unless ::pageadd() },
-						 -text    => 'Add',
-						 -width   => 8
+					   -activebackground => $::activecolor,
+					   -command => sub { $textwindow->bell unless ::pageadd() },
+					   -text    => 'Add',
+					   -width   => 8
 		)->grid( -row => 1, -column => 1 );
 		$frame5->Button(
 			-activebackground => $::activecolor,
@@ -256,13 +253,17 @@ sub pnumadjust {
 			-text  => 'Insert Page Markers',
 			-width => 20,
 		)->grid( -row => 1, -column => 1 );
-
-		$::lglobal{pnumpop}->bind( $::lglobal{pnumpop}, '<Up>'    => \&::pmoveup );
-		$::lglobal{pnumpop}->bind( $::lglobal{pnumpop}, '<Left>'  => \&::pmoveleft );
-		$::lglobal{pnumpop}->bind( $::lglobal{pnumpop}, '<Right>' => \&::pmoveright );
-		$::lglobal{pnumpop}->bind( $::lglobal{pnumpop}, '<Down>'  => \&::pmovedown );
-		$::lglobal{pnumpop}->bind( $::lglobal{pnumpop}, '<Prior>' => \&::pgprevious );
-		$::lglobal{pnumpop}->bind( $::lglobal{pnumpop}, '<Next>'  => \&::pgnext );
+		$::lglobal{pnumpop}->bind( $::lglobal{pnumpop}, '<Up>' => \&::pmoveup );
+		$::lglobal{pnumpop}
+		  ->bind( $::lglobal{pnumpop}, '<Left>' => \&::pmoveleft );
+		$::lglobal{pnumpop}
+		  ->bind( $::lglobal{pnumpop}, '<Right>' => \&::pmoveright );
+		$::lglobal{pnumpop}
+		  ->bind( $::lglobal{pnumpop}, '<Down>' => \&::pmovedown );
+		$::lglobal{pnumpop}
+		  ->bind( $::lglobal{pnumpop}, '<Prior>' => \&::pgprevious );
+		$::lglobal{pnumpop}
+		  ->bind( $::lglobal{pnumpop}, '<Next>' => \&::pgnext );
 		$::lglobal{pnumpop}
 		  ->bind( $::lglobal{pnumpop}, '<Delete>' => \&::pageremove );
 		$::lglobal{pnumpop}->protocol(
@@ -292,8 +293,7 @@ sub pnumadjust {
 
 sub pageremove {    # Delete a page marker
 	my $textwindow = $::textwindow;
-
-	my $num = $::lglobal{pagenumentry}->get;
+	my $num        = $::lglobal{pagenumentry}->get;
 	$num = $textwindow->index('insert') unless $num;
 	::viewpagenums() if $::lglobal{seepagenums};
 	$textwindow->markUnset($num);
@@ -432,7 +432,7 @@ sub pgprevious {    #move focus to previous page marker
 	$textwindow->yview( $textwindow->index($mark) );
 	if ( $::lglobal{showthispageimage} and ( $mark =~ /Pg(\S+)/ ) ) {
 		$textwindow->focus;
-		::openpng($textwindow,$1);
+		::openpng( $textwindow, $1 );
 		$::lglobal{showthispageimage} = 0;
 	}
 	::update_indicators();
@@ -453,9 +453,8 @@ sub pgnext {    #move focus to next page marker
 	$textwindow->yview( $textwindow->index($mark) );
 	if ( $::lglobal{showthispageimage} and ( $mark =~ /Pg(\S+)/ ) ) {
 		$textwindow->focus;
-		::openpng($textwindow,$1);
+		::openpng( $textwindow, $1 );
 		$::lglobal{showthispageimage} = 0;
-
 	}
 	::update_indicators();
 }
@@ -512,7 +511,6 @@ sub pmoveleft {    # move the page marker left a character
 	$num = '1.0' unless $num;
 	my $pagenum = " $mark ";
 	my $index   = $textwindow->index("$mark-1c");
-
 	if ( $num eq '1.0' ) {
 		return if $textwindow->compare( $index, '<', '1.0' );
 	} else {
@@ -597,6 +595,4 @@ sub pmovedown {    # move the page marker down a line
 	$textwindow->see($mark);
 }
 ## End Page Number Adjust
-
-
 1;

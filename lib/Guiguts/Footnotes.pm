@@ -1,19 +1,17 @@
 package Guiguts::Footnotes;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
-	@ISA=qw(Exporter);
-	@EXPORT=qw(&footnotepop &footnotefixup &getlz)
+	our ( @ISA, @EXPORT );
+	@ISA    = qw(Exporter);
+	@EXPORT = qw(&footnotepop &footnotefixup &getlz);
 }
-
 ## Pop up a window where footnotes can be found, fixed and formatted. (heh)
 sub footnotepop {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	push @::operations, ( localtime() . ' - Footnote Fixup' );
 	&::viewpagenums() if ( $::lglobal{seepagenums} );
 	&::oppopupdate()  if $::lglobal{oppop};
@@ -37,7 +35,8 @@ sub footnotepop {
 			-activebackground => $::activecolor,
 			-command          => sub {
 				$textwindow->yview('end');
-				$textwindow->see( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] )
+				$textwindow->see(
+							   $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] )
 				  if $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2];
 			},
 			-text  => 'See Anchor',
@@ -228,7 +227,8 @@ sub footnotepop {
 				footnoteshow();
 				$::lglobal{fnmvbutton}->configure( -state => 'normal' )
 				  if ( $::lglobal{fnsecondpass}
-					  && ( defined $::lglobal{fnlzs} and @{ $::lglobal{fnlzs} } ) );
+					 && ( defined $::lglobal{fnlzs} and @{ $::lglobal{fnlzs} } )
+				  );
 			},
 		)->grid( -row => 8, -column => 3 );
 		my $frame1 =
@@ -270,7 +270,6 @@ sub footnotepop {
 			-text  => '<--- Last LZ',
 			-width => 12
 		)->grid( -row => 2, -column => 1, -padx => 2, -pady => 4 );
-
 		$frame1->Button(
 			-activebackground => $::activecolor,
 			-command          => sub {
@@ -310,7 +309,7 @@ sub footnotepop {
 		  $::lglobal{footpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$frame4->Button(
 						 -activebackground => $::activecolor,
-						 -command          => sub {footnotetidy() },
+						 -command          => sub { footnotetidy() },
 						 -text             => 'Tidy Up Footnotes',
 						 -width            => 18
 		)->grid( -row => 1, -column => 1, -padx => 6, -pady => 4 );
@@ -344,7 +343,7 @@ sub footnotepop {
 		$::lglobal{footnoteroman}
 		  ->configure( -text => &::roman( $::lglobal{fnroman} ) );
 		$::lglobal{footnotetotal}->configure(
-				   -text => "# $::lglobal{fnindex}" . "/" . "$::lglobal{fntotal}" );
+			   -text => "# $::lglobal{fnindex}" . "/" . "$::lglobal{fntotal}" );
 		$::lglobal{fnsecondpass} = 0;
 	}
 }
@@ -394,24 +393,25 @@ sub footnoteshow {
 }
 
 sub fninsertmarkers {
-	my $style = shift;
+	my $style      = shift;
 	my $textwindow = $::textwindow;
 	my $offset = $textwindow->search(
-									'--',
-									':',
-									$::lglobal{fnarray}->[ $::lglobal{fnindex} ][0],
-									$::lglobal{fnarray}->[ $::lglobal{fnindex} ][1]
+								'--',
+								':',
+								$::lglobal{fnarray}->[ $::lglobal{fnindex} ][0],
+								$::lglobal{fnarray}->[ $::lglobal{fnindex} ][1]
 	);
 	if ( $::lglobal{footstyle} eq 'end' ) {
 		$textwindow->delete(
-							$::lglobal{fnarray}->[ $::lglobal{fnindex} ][0] . '+9c',
-							$offset )
+						$::lglobal{fnarray}->[ $::lglobal{fnindex} ][0] . '+9c',
+						$offset )
 		  if $offset;
 		if ( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][3] ne
 			 $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] )
 		{
-			$textwindow->delete( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2],
-								 $::lglobal{fnarray}->[ $::lglobal{fnindex} ][3] );
+			$textwindow->delete(
+							  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2],
+							  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][3] );
 		}
 		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][6] = $::lglobal{fncount}
 		  if $style eq 'n';
@@ -422,23 +422,27 @@ sub fninsertmarkers {
 		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] = $style;
 		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] = $::lglobal{fncount}
 		  if $style eq 'n';
-		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] = &alpha( $::lglobal{fnalpha} )
+		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] =
+		  &alpha( $::lglobal{fnalpha} )
 		  if $style eq 'a';
-		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] = &::roman( $::lglobal{fnroman} )
+		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] =
+		  &::roman( $::lglobal{fnroman} )
 		  if $style eq 'r';
 		$::lglobal{fncount}++ if $style eq 'n';
 		$::lglobal{fnalpha}++ if $style eq 'a';
 		$::lglobal{fnroman}++ if $style eq 'r';
 		footnoteadjust();
 		$textwindow->insert(
-							$::lglobal{fnarray}->[ $::lglobal{fnindex} ][0] . '+9c',
-							' ' . $::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] );
+						$::lglobal{fnarray}->[ $::lglobal{fnindex} ][0] . '+9c',
+						' ' . $::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] );
 		$textwindow->insert( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2],
-					  '[' . $::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] . ']' );
+				  '[' . $::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] . ']' );
 		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][3] =
-		  $textwindow->index( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] . ' +'
-				 . ( length( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] ) + 2 )
-				 . 'c' );
+		  $textwindow->index(
+			 $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] . ' +'
+			   . (
+				 length( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] ) + 2 )
+			   . 'c' );
 		$textwindow->markSet( "fna$::lglobal{fnindex}",
 							  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] );
 		$textwindow->markSet( "fnb$::lglobal{fnindex}",
@@ -453,30 +457,33 @@ sub fnjoin {
 	$textwindow->tagRemove( 'footnote',  '1.0', 'end' );
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 	my $start = $textwindow->search(
-									'--',
-									':',
-									$::lglobal{fnarray}->[ $::lglobal{fnindex} ][0],
-									$::lglobal{fnarray}->[ $::lglobal{fnindex} ][1]
+								'--',
+								':',
+								$::lglobal{fnarray}->[ $::lglobal{fnindex} ][0],
+								$::lglobal{fnarray}->[ $::lglobal{fnindex} ][1]
 	);
 	my $end = $::lglobal{fnarray}->[ $::lglobal{fnindex} ][1] . '-1c';
 	$textwindow->delete( $::lglobal{fnarray}->[ $::lglobal{fnindex} - 1 ][1] )
 	  if (
-		  $textwindow->get( $::lglobal{fnarray}->[ $::lglobal{fnindex} - 1 ][1] ) eq
-		  '*' );
+		 $textwindow->get( $::lglobal{fnarray}->[ $::lglobal{fnindex} - 1 ][1] )
+		 eq '*' );
 	$textwindow->insert(
-						$::lglobal{fnarray}->[ $::lglobal{fnindex} - 1 ][1] . '-1c',
-						"\n" . $textwindow->get( "$start+2c", $end ) );
+					$::lglobal{fnarray}->[ $::lglobal{fnindex} - 1 ][1] . '-1c',
+					"\n" . $textwindow->get( "$start+2c", $end ) );
 	footnoteadjust();
-	$textwindow->delete( "fns$::lglobal{fnindex}",    "fne$::lglobal{fnindex}" );
-	$textwindow->delete( "fna$::lglobal{fnindex}",    "fnb$::lglobal{fnindex}" );
+	$textwindow->delete( "fns$::lglobal{fnindex}", "fne$::lglobal{fnindex}" );
+	$textwindow->delete( "fna$::lglobal{fnindex}", "fnb$::lglobal{fnindex}" );
 	$textwindow->delete( "fns$::lglobal{fnindex}-1c", "fns$::lglobal{fnindex}" )
 	  if ( $textwindow->get("fns$::lglobal{fnindex}-1c") eq '*' );
 	$::lglobal{fnarray}->[ $::lglobal{fnindex} ][0] = '';
 	$::lglobal{fnarray}->[ $::lglobal{fnindex} ][1] = '';
 	footnoteadjust();
-	$::lglobal{fncount}-- if $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'n';
-	$::lglobal{fnalpha}-- if $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'a';
-	$::lglobal{fnroman}-- if $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'r';
+	$::lglobal{fncount}--
+	  if $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'n';
+	$::lglobal{fnalpha}--
+	  if $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'a';
+	$::lglobal{fnroman}--
+	  if $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'r';
 	$::lglobal{fnindex}--;
 	&footnoteshow();
 }
@@ -484,7 +491,7 @@ sub fnjoin {
 # Pop up a window showing all the footnote addresses with potential
 # problems highlighted
 sub fnview {
-	my $top = $::top;
+	my $top        = $::top;
 	my $textwindow = $::textwindow;
 	my ( %fnotes, %anchors, $ftext );
 	&::viewpagenums() if ( $::lglobal{seepagenums} );
@@ -518,13 +525,12 @@ sub fnview {
 "Very long.\nfn missing its' end bracket?\n(may just be a long fn.)",
 			-background => 'tan',
 		)->grid( -row => 1, -column => 4 );
-
 		my $frame2 =
 		  $::lglobal{footviewpop}->Frame->pack(
-											  -side   => 'top',
-											  -anchor => 'n',
-											  -fill   => 'both',
-											  -expand => 'both'
+												-side   => 'top',
+												-anchor => 'n',
+												-fill   => 'both',
+												-expand => 'both'
 		  );
 		$ftext = $frame2->Scrolled(
 									'ROText',
@@ -563,12 +569,13 @@ sub fnview {
 			if (
 				 ( $findex > 1 )
 				 && (
-					  $textwindow->compare($::lglobal{fnarray}->[$findex][0], '<',
-										   $::lglobal{fnarray}->[ $findex - 1 ][0]
+					  $textwindow->compare(
+										 $::lglobal{fnarray}->[$findex][0], '<',
+										 $::lglobal{fnarray}->[ $findex - 1 ][0]
 					  )
 					  || $textwindow->compare(
-										   $::lglobal{fnarray}->[$findex][2], '<',
-										   $::lglobal{fnarray}->[ $findex - 1 ][2]
+										 $::lglobal{fnarray}->[$findex][2], '<',
+										 $::lglobal{fnarray}->[ $findex - 1 ][2]
 					  )
 				 )
 			  )
@@ -601,22 +608,23 @@ sub fnview {
 # $::lglobal{fnarray}->[$::lglobal{fnindex}][4] = anchor label.
 # $::lglobal{fnarray}->[$::lglobal{fnindex}][5] = anchor type n a r (numeric, alphabet, roman)
 # $::lglobal{fnarray}->[$::lglobal{fnindex}][6] = type index
-
 sub footnotefixup {
-	my $top = $::top;
+	my $top        = $::top;
 	my $textwindow = $::textwindow;
 	&::viewpagenums() if ( $::lglobal{seepagenums} );
 	my ( $start, $end, $anchor, $pointer );
-	$start            = 1;
+	$start              = 1;
 	$::lglobal{fncount} = '1';
 	$::lglobal{fnalpha} = '1';
 	$::lglobal{fnroman} = '1';
 	$::lglobal{fnindexbrowse}->delete( '0', 'end' ) if $::lglobal{footpop};
 	$::lglobal{footnotenumber}->configure( -text => $::lglobal{fncount} )
 	  if $::lglobal{footpop};
-	$::lglobal{footnoteletter}->configure( -text => &alpha( $::lglobal{fnalpha} ) )
+	$::lglobal{footnoteletter}
+	  ->configure( -text => &alpha( $::lglobal{fnalpha} ) )
 	  if $::lglobal{footpop};
-	$::lglobal{footnoteroman}->configure( -text => &::roman( $::lglobal{fnroman} ) )
+	$::lglobal{footnoteroman}
+	  ->configure( -text => &::roman( $::lglobal{fnroman} ) )
 	  if $::lglobal{footpop};
 	$::lglobal{ftnoteindexstart} = '1.0';
 	$textwindow->markSet( 'fnindex', $::lglobal{ftnoteindexstart} );
@@ -724,9 +732,10 @@ sub footnotefixup {
 		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][3] = $start
 		  unless ( $pointer && $anchor );
 		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][3] =
-		  $textwindow->index( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] . '+'
-							  . ( length($pointer) + 2 )
-							  . 'c' )
+		  $textwindow->index(
+						   $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] . '+'
+							 . ( length($pointer) + 2 )
+							 . 'c' )
 		  if $anchor;
 		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] = $pointer if $pointer;
 
@@ -757,15 +766,18 @@ sub footnotefixup {
 			if ( $::lglobal{footstyle} eq 'end' ) {
 				$::lglobal{fnsearchlimit} = 1;
 				&fninsertmarkers('n')
-				  if (    ( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'n' )
-					   || ( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq '' )
-					   || ( $::lglobal{fntypen} ) );
+				  if (
+					( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'n' )
+					|| ( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq '' )
+					|| ( $::lglobal{fntypen} ) );
 				&fninsertmarkers('a')
-				  if (    ( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'a' )
-					   || ( $::lglobal{fntypea} ) );
+				  if (
+					  ( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'a' )
+					  || ( $::lglobal{fntypea} ) );
 				&fninsertmarkers('r')
-				  if (    ( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'r' )
-					   || ( $::lglobal{fntyper} ) );
+				  if (
+					  ( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][5] eq 'r' )
+					  || ( $::lglobal{fntyper} ) );
 				$::lglobal{fnmvbutton}->configure( '-state' => 'normal' )
 				  if ( defined $::lglobal{fnlzs} and @{ $::lglobal{fnlzs} } );
 			} else {
@@ -784,8 +796,8 @@ sub footnotefixup {
 
 sub getlz {
 	my $textwindow = $::textwindow;
-	my $index = '1.0';
-	my $zone  = 0;
+	my $index      = '1.0';
+	my $zone       = 0;
 	$::lglobal{fnlzs} = ();
 	my @marks = grep( /^LZ/, $textwindow->markNames );
 	for my $mark (@marks) {
@@ -859,11 +871,12 @@ sub footnotemove {
 	getlz();
 	$::lglobal{fnindex} = 1;
 	foreach my $lz ( @{ $::lglobal{fnlzs} } ) {
+
 		if ( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][0] ) {
 			while (
 					$textwindow->compare(
-									$::lglobal{fnarray}->[ $::lglobal{fnindex} ][0],
-									'<=', $lz
+								$::lglobal{fnarray}->[ $::lglobal{fnindex} ][0],
+								'<=', $lz
 					)
 			  )
 			{
@@ -881,7 +894,8 @@ sub footnotemove {
 		  if ( $textwindow->get("fne$::lglobal{fnindex} +1c") eq "\n" );
 		$textwindow->delete("fns$::lglobal{fnindex} -1c")
 		  if ( $textwindow->get("fns$::lglobal{fnindex} -1c") eq "\n" );
-		$textwindow->delete( "fns$::lglobal{fnindex}", "fne$::lglobal{fnindex}" );
+		$textwindow->delete( "fns$::lglobal{fnindex}",
+							 "fne$::lglobal{fnindex}" );
 		$::lglobal{fnindex}--;
 	}
 	$zone = 0;
@@ -915,7 +929,7 @@ sub footnotemove {
 	}
 	@{ $::lglobal{fnlzs} }   = ();
 	@{ $::lglobal{fnarray} } = ();
-	$index            = '1.0';
+	$index              = '1.0';
 	$::lglobal{fnindex} = 0;
 	$::lglobal{fntotal} = 0;
 	while (1) {
@@ -933,9 +947,9 @@ sub footnotemove {
 
 sub footnoteadjust {
 	my $textwindow = $::textwindow;
-	my $end      = $::lglobal{fnarray}->[ $::lglobal{fnindex} ][1];
-	my $start    = $::lglobal{fnarray}->[ $::lglobal{fnindex} ][0];
-	my $tempsave = $::lglobal{ftnoteindexstart};
+	my $end        = $::lglobal{fnarray}->[ $::lglobal{fnindex} ][1];
+	my $start      = $::lglobal{fnarray}->[ $::lglobal{fnindex} ][0];
+	my $tempsave   = $::lglobal{ftnoteindexstart};
 	my $label;
 	unless ( $start and $::lglobal{fnindex} ) {
 		$tempsave = $::lglobal{fnindex};
@@ -948,21 +962,21 @@ sub footnoteadjust {
 			$::lglobal{fnarray}->[ $::lglobal{fnindex} ][0] =
 			  $textwindow->index( 'fns' . ( $::lglobal{fnindex} + 1 ) );
 			$textwindow->markSet( "fns$::lglobal{fnindex}",
-								  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][0] );
+							  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][0] );
 			$::lglobal{fnarray}->[ $::lglobal{fnindex} ][1] =
 			  $textwindow->index( 'fne' . ( $::lglobal{fnindex} + 1 ) );
 			$textwindow->markSet( "fne$::lglobal{fnindex}",
-								  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][1] );
+							  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][1] );
 			$::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] =
 			  $textwindow->index( 'fna' . ( $::lglobal{fnindex} + 1 ) );
 			$textwindow->markSet( "fna$::lglobal{fnindex}",
-								  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] );
+							  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] );
 			$::lglobal{fnarray}->[ $::lglobal{fnindex} ][3] = '';
 			$::lglobal{fnarray}->[ $::lglobal{fnindex} ][3] =
 			  $textwindow->index( 'fnb' . ( $::lglobal{fnindex} + 1 ) )
 			  if $::lglobal{fnarray}->[ $::lglobal{fnindex} + 1 ][3];
 			$textwindow->markSet( "fnb$::lglobal{fnindex}",
-								  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][3] )
+							   $::lglobal{fnarray}->[ $::lglobal{fnindex} ][3] )
 			  if $::lglobal{fnarray}->[ $::lglobal{fnindex} + 1 ][3];
 			$::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] =
 			  $::lglobal{fnarray}->[ $::lglobal{fnindex} + 1 ][4];
@@ -1004,9 +1018,11 @@ sub footnoteadjust {
 	$textwindow->markSet( 'insert', $start );
 	$::lglobal{footnotenumber}->configure( -text => $::lglobal{fncount} )
 	  if $::lglobal{footpop};
-	$::lglobal{footnoteletter}->configure( -text => &alpha( $::lglobal{fnalpha} ) )
+	$::lglobal{footnoteletter}
+	  ->configure( -text => &alpha( $::lglobal{fnalpha} ) )
 	  if $::lglobal{footpop};
-	$::lglobal{footnoteroman}->configure( -text => &::roman( $::lglobal{fnroman} ) )
+	$::lglobal{footnoteroman}
+	  ->configure( -text => &::roman( $::lglobal{fnroman} ) )
 	  if $::lglobal{footpop};
 
 	if ( $end eq "$start+10c" ) {
@@ -1019,7 +1035,6 @@ sub footnoteadjust {
 	$::lglobal{footpop}->raise if $::lglobal{footpop};
 	return ( $start, $end );
 }
-
 ## Footnote Operations
 # Clean up footnotes in ASCII version of text. Note: destructive. Use only
 # at end of editing.
@@ -1034,15 +1049,19 @@ sub footnotetidy {
 		$begin = $textwindow->index( 'fns' . $::lglobal{fnindex} );
 		$textwindow->delete( "$begin+1c", "$begin+10c" );
 		$colon =
-		  $textwindow->search( '--', ':', $begin,
-							  $textwindow->index( 'fne' . $::lglobal{fnindex} ) );
+		  $textwindow->search(
+							   '--', ':', $begin,
+							   $textwindow->index(
+												   'fne' . $::lglobal{fnindex}
+							   )
+		  );
 		$textwindow->delete($colon) if $colon;
 		$textwindow->insert( $colon, ']' ) if $colon;
 		$end = $textwindow->index( 'fne' . $::lglobal{fnindex} );
 		$textwindow->delete("$end-1c");
 		$textwindow->tagAdd( 'sel', 'fns' . $::lglobal{fnindex}, "$end+1c" );
-		&::selectrewrap( $textwindow, $::lglobal{seepagenums}, $MAIN::scannos_highlighted,
-					  $::rwhyphenspace );
+		&::selectrewrap( $textwindow, $::lglobal{seepagenums},
+						 $MAIN::scannos_highlighted, $::rwhyphenspace );
 		$::lglobal{fnindex}++;
 		last if $::lglobal{fnindex} > $::lglobal{fntotal};
 	}
@@ -1072,10 +1091,10 @@ sub setanchor {
 		footnoteadjust();
 		my $fn = $textwindow->get(
 								   $textwindow->index(
-													   'fns' . $::lglobal{fnindex}
+													 'fns' . $::lglobal{fnindex}
 								   ),
 								   $textwindow->index(
-													   'fne' . $::lglobal{fnindex}
+													 'fne' . $::lglobal{fnindex}
 								   )
 		);
 		$textwindow->insert( $textwindow->index("fna$::lglobal{fnindex}"), $fn )
@@ -1102,9 +1121,9 @@ sub setanchor {
 		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] = $insert;
 		if (
 			 $textwindow->compare(
-								   $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2],
-								   '>',
-								   $::lglobal{fnarray}->[ $::lglobal{fnindex} ][0]
+								$::lglobal{fnarray}->[ $::lglobal{fnindex} ][2],
+								'>',
+								$::lglobal{fnarray}->[ $::lglobal{fnindex} ][0]
 			 )
 		  )
 		{
@@ -1112,12 +1131,14 @@ sub setanchor {
 			  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][0];
 		}
 		$textwindow->insert( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2],
-					  '[' . $::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] . ']' );
+				  '[' . $::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] . ']' );
 		$textwindow->update;
 		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][3] =
-		  $textwindow->index( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] . '+'
-				 . ( length( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] ) + 2 )
-				 . 'c' );
+		  $textwindow->index(
+			 $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] . '+'
+			   . (
+				 length( $::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] ) + 2 )
+			   . 'c' );
 		$textwindow->markSet( "fna$::lglobal{fnindex}",
 							  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] );
 		$textwindow->markSet( "fnb$::lglobal{fnindex}",
@@ -1171,5 +1192,4 @@ sub alpha {
 	$triple = '' if ( $label < 676 );
 	return ( $triple . $double . $single );
 }
-
 1;

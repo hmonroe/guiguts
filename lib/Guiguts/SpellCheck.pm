@@ -1,19 +1,20 @@
 package Guiguts::SpellCheck;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
-	@ISA    = qw(Exporter);
-	@EXPORT = qw(&spellcheckfirst &aspellstart &aspellstop &spellchecker &spellloadprojectdict &getmisspelledwords	&spelloptions);
+	our ( @ISA, @EXPORT );
+	@ISA = qw(Exporter);
+	@EXPORT =
+	  qw(&spellcheckfirst &aspellstart &aspellstop &spellchecker &spellloadprojectdict 
+	  &getmisspelledwords &spelloptions);
 }
 
 # Initialize spellchecker
 sub spellcheckfirst {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	@{ $::lglobal{misspelledlist} } = ();
 	::viewpagenums() if ( $::lglobal{seepagenums} );
 	spellloadprojectdict();
@@ -36,23 +37,24 @@ sub spellcheckfirst {
 	  );                    # search for the misspelled word in the text
 	$::lglobal{lastmatchindex} =
 	  spelladjust_index( $::lglobal{matchindex}, $term )
-	  ;                     # find the index of the end of the match
-	spelladdtexttags();     # highlight the word in the text
+	  ;                       # find the index of the end of the match
+	spelladdtexttags();       # highlight the word in the text
 	::update_indicators();    # update the status bar
-	aspellstart();          # initialize the guess function
-	spellguesses($term);    # get the guesses for the misspelling
-	spellshow_guesses();    # populate the listbox with guesses
-
+	aspellstart();            # initialize the guess function
+	spellguesses($term);      # get the guesses for the misspelling
+	spellshow_guesses();      # populate the listbox with guesses
 	$::lglobal{hyphen_words} = ();    # hyphenated list of words
+
 	if ( scalar( $::lglobal{seenwords} ) ) {
 		$::lglobal{misspelledlabel}->configure( -text =>
-			   "Not in Dictionary:  -  $::lglobal{seenwords}->{$term} in text." ) 
-			   if $::lglobal{seenwords}->{$term};
+			  "Not in Dictionary:  -  $::lglobal{seenwords}->{$term} in text." )
+		  if $::lglobal{seenwords}->{$term};
 
 		# collect hyphenated words for faster, more accurate spell-check later
 		foreach my $word ( keys %{ $::lglobal{seenwords} } ) {
 			if ( $::lglobal{seenwords}->{$word} >= 1 && $word =~ /-/ ) {
-				$::lglobal{hyphen_words}->{$word} = $::lglobal{seenwords}->{$word};
+				$::lglobal{hyphen_words}->{$word} =
+				  $::lglobal{seenwords}->{$word};
 			}
 		}
 	}
@@ -61,25 +63,28 @@ sub spellcheckfirst {
 
 sub spellloadprojectdict {
 	getprojectdic();
-	if ((defined $::lglobal{projectdictname})and (-e $::lglobal{projectdictname})){
-		open( my $fh, "<:encoding(utf8)", $::lglobal{projectdictname});
-		while (my $line = <$fh>){
+	if (     ( defined $::lglobal{projectdictname} )
+		 and ( -e $::lglobal{projectdictname} ) )
+	{
+		open( my $fh, "<:encoding(utf8)", $::lglobal{projectdictname} );
+		while ( my $line = <$fh> ) {
 			utf8::decode($line);
-			if ($line eq "%projectdict = (\n") { next; }
-			if ($line eq ");"){ next; }
-			$line =~ s/' => '',\n$//g;  # remove ending
-			$line =~ s/^'//g; # remove start
-			$line =~ s/\\'/'/g; # remove \'
+			if ( $line eq "%projectdict = (\n" ) { next; }
+			if ( $line eq ");" ) { next; }
+			$line =~ s/' => '',\n$//g;    # remove ending
+			$line =~ s/^'//g;             # remove start
+			$line =~ s/\\'/'/g;           # remove \'
 			$::projectdict{$line} = '';
 		}
 	}
-#	do "$::lglobal{projectdictname}"
-#	  if $::lglobal{projectdictname};    
+
+	#	do "$::lglobal{projectdictname}"
+	#	  if $::lglobal{projectdictname};
 }
 
 sub spellchecknext {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	::viewpagenums() if ( $::lglobal{seepagenums} );
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' )
 	  ;    # unhighlight any higlighted text
@@ -87,8 +92,8 @@ sub spellchecknext {
 	$::lglobal{misspelledlabel}->configure( -text => 'Not in Dictionary:' );
 	unless ($::nobell) {
 		$textwindow->bell
-		  if (
-			$::lglobal{nextmiss} >= ( scalar( @{ $::lglobal{misspelledlist} } ) ) );
+		  if ( $::lglobal{nextmiss} >=
+			   ( scalar( @{ $::lglobal{misspelledlist} } ) ) );
 	}
 	$::lglobal{suggestionlabel}->configure( -text => 'Suggestions:' );
 	return
@@ -97,37 +102,41 @@ sub spellchecknext {
 	$::lglobal{lastmatchindex} = $textwindow->index('spellindex');
 
 #print $::lglobal{misspelledlist}[$::lglobal{nextmiss}]." | $::lglobal{lastmatchindex}\n";
-	if (    ( $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ] =~ /^[\xC0-\xFF]/ )
-		 || ( $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ] =~ /[\xC0-\xFF]$/ )
+	if (
+		 (
+		   $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ] =~ /^[\xC0-\xFF]/
+		 )
+		 || ( $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ] =~
+			  /[\xC0-\xFF]$/ )
 	  )
 	{      # crappy workaround for accented character bug
 		$::lglobal{matchindex} = (
-							 $textwindow->search(
-								 -forwards,
-								 -count => \$::lglobal{matchlength},
-								 $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ],
-								 $::lglobal{lastmatchindex}, 'end'
-							 )
+						 $textwindow->search(
+							 -forwards,
+							 -count => \$::lglobal{matchlength},
+							 $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ],
+							 $::lglobal{lastmatchindex}, 'end'
+						 )
 		);
 	} else {
 		$::lglobal{matchindex} = (
-						$textwindow->search(
-							-forwards, -regexp,
-							-count => \$::lglobal{matchlength},
-							'(?<!\p{Alpha})'
-							  . $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ]
-							  . '(?!\p{Alnum})', $::lglobal{lastmatchindex}, 'end'
-						)
+					  $textwindow->search(
+						  -forwards, -regexp,
+						  -count => \$::lglobal{matchlength},
+						  '(?<!\p{Alpha})'
+							. $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ]
+							. '(?!\p{Alnum})', $::lglobal{lastmatchindex}, 'end'
+					  )
 		);
 	}
 	unless ( $::lglobal{matchindex} ) {
 		$::lglobal{matchindex} = (
-							 $textwindow->search(
-								 -forwards, -exact,
-								 -count => \$::lglobal{matchlength},
-								 $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ],
-								 $::lglobal{lastmatchindex}, 'end'
-							 )
+						 $textwindow->search(
+							 -forwards, -exact,
+							 -count => \$::lglobal{matchlength},
+							 $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ],
+							 $::lglobal{lastmatchindex}, 'end'
+						 )
 		);
 	}
 	$::lglobal{spreplaceentry}->delete( '0', 'end' )
@@ -142,18 +151,18 @@ sub spellchecknext {
 						 $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ] )
 	  if $::lglobal{matchindex};    #get the index of the end of the match
 	spellguesses( $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ] )
-	  ;                           # get a list of guesses for the misspelling
-	spellshow_guesses();          # and put them in the guess list
+	  ;                             # get a list of guesses for the misspelling
+	spellshow_guesses();            # and put them in the guess list
 	::update_indicators();          # update the status bar
 	$::lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
-						  . ( $::globalspelldictopt || 'No dictionary!' )
-						  . " | $#{$::lglobal{misspelledlist}} words to check." );
+						. ( $::globalspelldictopt || 'No dictionary!' )
+						. " | $#{$::lglobal{misspelledlist}} words to check." );
 
 	if ( scalar( $::lglobal{seenwords} ) ) {
 		my $spell_count_case = 0;
 		my $hyphen_count     = 0;
-		my $cur_word         = $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ];
-		my $proper_case      = lc($cur_word);
+		my $cur_word    = $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ];
+		my $proper_case = lc($cur_word);
 		$proper_case =~ s/(^\w)/\U$1\E/;
 		$spell_count_case += ( $::lglobal{seenwords}->{ uc($cur_word) } || 0 )
 		  if $cur_word ne uc($cur_word)
@@ -184,18 +193,19 @@ sub spellchecknext {
 		  ( $::lglobal{seenwords}->{ $cur_word . '\'S' } || 0 )
 		  if $cur_word !~ /^(.*)'s$/i;
 		$::lglobal{misspelledlabel}->configure(
-			   -text => 'Not in Dictionary:  -  '
-				 . (
-				   $::lglobal{seenwords}
-					 ->{ $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ] } || '0'
-				 )
-				 . (
-					 $spell_count_case + $spell_count_non_poss > 0
-					 ? ", $spell_count_case, $spell_count_non_poss"
-					 : ''
-				 )
-				 . ( $hyphen_count > 0 ? ", $hyphen_count hyphens" : '' )
-				 . ' in text.'
+				  -text => 'Not in Dictionary:  -  '
+					. (
+					  $::lglobal{seenwords}
+						->{ $::lglobal{misspelledlist}[ $::lglobal{nextmiss} ] }
+						|| '0'
+					)
+					. (
+						$spell_count_case + $spell_count_non_poss > 0
+						? ", $spell_count_case, $spell_count_non_poss"
+						: ''
+					)
+					. ( $hyphen_count > 0 ? ", $hyphen_count hyphens" : '' )
+					. ' in text.'
 		);
 	}
 	return 1;
@@ -237,7 +247,7 @@ sub spellreplace {
 # replace all instances of a word with another, pretty straightforward
 sub spellreplaceall {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	$top->Busy;
 	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my $lastindex   = '1.0';
@@ -261,7 +271,7 @@ sub spellmisspelled_replace {
 # tell aspell to add a word to the personal dictionary
 sub spelladdword {
 	my $textwindow = $::textwindow;
-	my $term = $::lglobal{misspelledentry}->get;
+	my $term       = $::lglobal{misspelledentry}->get;
 	$textwindow->bell unless ( $term || $::nobell );
 	return unless $term;
 	print OUT "*$term\n";
@@ -271,13 +281,14 @@ sub spelladdword {
 # add a word to the project dictionary
 sub spellmyaddword {
 	my $textwindow = $::textwindow;
-	my $term = shift;
+	my $term       = shift;
 	$textwindow->bell unless ( $term || $::nobell );
 	return unless $term;
 	getprojectdic();
 	$::projectdict{$term} = '';
 	open( my $dic, '>:bytes', "$::lglobal{projectdictname}" );
 	my $section = "\%projectdict = (\n";
+
 	for my $term ( sort { $a cmp $b } keys %::projectdict ) {
 		$term =~ s/'/\\'/g;
 		$section .= "'$term' => '',\n";
@@ -285,13 +296,14 @@ sub spellmyaddword {
 	$section .= ");";
 	utf8::encode($section);
 	print $dic $section;
-#	open( my $dic, ">", "$::lglobal{projectdictname}" );
-#	print $dic "\%::projectdict = (\n";
-#	for my $term ( sort { $a cmp $b } keys %::projectdict ) {
-#		$term =~ s/'/\\'/g;
-#		print $dic "'$term' => '',\n";
-#	}
-#	print $dic ");";
+
+	#	open( my $dic, ">", "$::lglobal{projectdictname}" );
+	#	print $dic "\%::projectdict = (\n";
+	#	for my $term ( sort { $a cmp $b } keys %::projectdict ) {
+	#		$term =~ s/'/\\'/g;
+	#		print $dic "'$term' => '',\n";
+	#	}
+	#	print $dic ");";
 	close $dic;
 
 	#print "$::lglobal{projectdictname}";
@@ -321,7 +333,7 @@ sub get_spellchecker_version {
 	return $::lglobal{spellversion} if $::lglobal{spellversion};
 	my $aspell_version;
 	my $runner = runner::tofile('aspell.tmp');
-	$runner->run($::globalspellpath, 'help');
+	$runner->run( $::globalspellpath, 'help' );
 	open my $aspell, '<', 'aspell.tmp';
 	while (<$aspell>) {
 		$aspell_version = $1 if m/^Aspell ([\d\.]+)/;
@@ -345,12 +357,11 @@ sub aspellstop {
 }
 
 sub spellguesses {    #feed aspell a word to get a list of guess
-	my $word = shift;     # word to get guesses for
+	my $word       = shift;           # word to get guesses for
 	my $textwindow = $::textwindow;
-	$textwindow->Busy;    # let the user know something is happening
-	@{ $::lglobal{guesslist} } = ();    # clear the guesslist
+	$textwindow->Busy;                # let the user know something is happening
+	@{ $::lglobal{guesslist} } = ();  # clear the guesslist
 	utf8::encode($word);
-
 	print OUT $word, "\n";            # send the word to the stdout file handle
 	my $list = <IN>;                  # and read the results
 	$list =~
@@ -384,7 +395,7 @@ sub spellshow_guesses {
 sub spellcheckrange {
 	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my $textwindow = $::textwindow;
-	my @ranges = $textwindow->tagRanges('sel');
+	my @ranges     = $textwindow->tagRanges('sel');
 	$::operationinterrupt = 0;
 	if (@ranges) {
 		$::lglobal{spellindexstart} = $ranges[0];
@@ -397,62 +408,56 @@ sub spellcheckrange {
 
 sub spellget_misspellings {    # get list of misspelled words
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	spellcheckrange();         # get chunk of text to process
 	return if ( $::lglobal{spellindexstart} eq $::lglobal{spellindexend} );
 	$top->Busy( -recurse => 1 );    # let user know something is going on
 	my $section =
-	  $textwindow->get( $::lglobal{spellindexstart}, $::lglobal{spellindexend} )
-	  ;                             # get selection
+	  $textwindow->get( $::lglobal{spellindexstart},
+						$::lglobal{spellindexend} );    # get selection
 	$section =~ s/^-----File:.*//g;
-
 	getmisspelledwords($section);
-
 	::wordfrequencybuildwordlist($textwindow);
 
 	#wordfrequencygetmisspelled();
-
 	if ( $#{ $::lglobal{misspelledlist} } > 0 ) {
 		$::lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
-						  . ( $::globalspelldictopt || '<default>' )
-						  . " | $#{$::lglobal{misspelledlist}} words to check." );
+						. ( $::globalspelldictopt || '<default>' )
+						. " | $#{$::lglobal{misspelledlist}} words to check." );
 	} else {
 		$::lglobal{spellpopup}->configure( -title => 'Current Dictionary - '
-								   . ( $::globalspelldictopt || 'No dictionary!' )
-								   . ' | No Misspelled Words Found.' );
+								 . ( $::globalspelldictopt || 'No dictionary!' )
+								 . ' | No Misspelled Words Found.' );
 	}
 	$top->Unbusy( -recurse => 0 );    # done processing
 	unlink 'checkfil.txt';
 }
 
 sub getmisspelledwords {
-	if ($::debug) {print "sub getmisspelledwords\n";}
-    $::lglobal{misspelledlist}=();	
+	if ($::debug) { print "sub getmisspelledwords\n"; }
+	$::lglobal{misspelledlist} = ();
 	my $section = shift;
 	my ( $word, @templist );
-
 	open my $save, '>:bytes', 'checkfil.txt';
 	utf8::encode($section);
 	print $save $section;
 	close $save;
-	my @spellopt = ("list", "--encoding=utf-8");
+	my @spellopt = ( "list", "--encoding=utf-8" );
 	push @spellopt, "-d", $::globalspelldictopt if $::globalspelldictopt;
-
-	my $runner = ::runner::withfiles('checkfil.txt', 'temp.txt');
-	$runner->run($::globalspellpath, @spellopt);
+	my $runner = ::runner::withfiles( 'checkfil.txt', 'temp.txt' );
+	$runner->run( $::globalspellpath, @spellopt );
 
 	if ($::debug) {
 		print "\$::globalspellpath ", $::globalspellpath, "\n";
 		print "\@spellopt\n";
 		for my $element (@spellopt) {
-		print "$element\n";
-		};
+			print "$element\n";
+		}
 		print "checkfil.txt retained\n";
 	} else {
-	unlink 'checkfil.txt';
-	};
-
-	open my $infile,'<', 'temp.txt';
+		unlink 'checkfil.txt';
+	}
+	open my $infile, '<', 'temp.txt';
 	my ( $ln, $tmp );
 	while ( $ln = <$infile> ) {
 		$ln =~ s/\r\n/\n/;
@@ -461,13 +466,11 @@ sub getmisspelledwords {
 		push( @templist, $ln );
 	}
 	close $infile;
-	
 	if ($::debug) {
 		print "temp.txt retained\n";
 	} else {
-	unlink 'temp.txt';
+		unlink 'temp.txt';
 	}
-
 	foreach my $word (@templist) {
 		next if ( exists( $::projectdict{$word} ) );
 		push @{ $::lglobal{misspelledlist} },
@@ -479,12 +482,12 @@ sub getmisspelledwords {
 sub spellignoreall {
 	my $textwindow = $::textwindow;
 	my $next;
-	my $word = $::lglobal{misspelledentry}->get;    # get word you want to ignore
+	my $word = $::lglobal{misspelledentry}->get;   # get word you want to ignore
 	$textwindow->bell unless ( $word || $::nobell );
 	return unless $word;
 	my @ignorelist =
-	  @{ $::lglobal{misspelledlist} };              # copy the misspellings array
-	@{ $::lglobal{misspelledlist} } = ();           # then clear it
+	  @{ $::lglobal{misspelledlist} };             # copy the misspellings array
+	@{ $::lglobal{misspelledlist} } = ();          # then clear it
 	foreach my $next (@ignorelist)
 	{    # then put all of the words you are NOT ignoring back into the
 		    # misspellings list
@@ -509,14 +512,14 @@ sub spelladdtexttags {
 	my $textwindow = $::textwindow;
 	$textwindow->markSet( 'insert', $::lglobal{matchindex} );
 	$textwindow->tagAdd( 'highlight', $::lglobal{matchindex},
-						 "$::lglobal{matchindex}+$::lglobal{matchlength} chars" );
+					   "$::lglobal{matchindex}+$::lglobal{matchlength} chars" );
 	$textwindow->yview('end');
 	$textwindow->see( $::lglobal{matchindex} );
 }
 
 sub spelladdgoodwords {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	my $ans = $top->messageBox(
 		-icon    => 'warning',
 		-type    => 'YesNo',
@@ -539,19 +542,19 @@ sub spelladdgoodwords {
 
 sub spellchecker {    # Set up spell check window
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	push @::operations, ( localtime() . ' - Spellcheck' );
 	::viewpagenums() if ( $::lglobal{seepagenums} );
-	oppopupdate()  if $::lglobal{oppop};
+	oppopupdate() if $::lglobal{oppop};
 	if ( defined( $::lglobal{spellpopup} ) ) {    # If window already exists
 		$::lglobal{spellpopup}->deiconify;        # pop it up off the task bar
 		$::lglobal{spellpopup}->raise;            # put it on top
 		$::lglobal{spellpopup}->focus;            # and give it focus
 		spelloptions()
-		  unless $::globalspellpath;    # Whoops, don't know where to find Aspell
+		  unless $::globalspellpath;   # Whoops, don't know where to find Aspell
 		spellclearvars();
-		spellcheckfirst();            # Start checking the spelling
-	} else {                          # window doesn't exist so set it up
+		spellcheckfirst();             # Start checking the spelling
+	} else {                           # window doesn't exist so set it up
 		$::lglobal{spellpopup} = $top->Toplevel;
 		$::lglobal{spellpopup}
 		  ->title(    'Current Dictionary - ' . $::globalspelldictopt
@@ -679,10 +682,11 @@ sub spellchecker {    # Set up spell check window
 			-command          => sub {
 				@{ $::lglobal{misspelledlist} } = ();
 				$::lglobal{spellpopup}->destroy;
-				undef $::lglobal{spellpopup}; # completly remove spellcheck window
+				undef
+				  $::lglobal{spellpopup};   # completly remove spellcheck window
 				print OUT "\cC\n"
 				  if $::lglobal{spellpid};    # send a quit signal to aspell
-				aspellstop();               # and remove the process
+				aspellstop();                 # and remove the process
 				$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 			},
 			-text  => 'Close',
@@ -784,10 +788,11 @@ sub spellchecker {    # Set up spell check window
 			'WM_DELETE_WINDOW' => sub {
 				@{ $::lglobal{misspelledlist} } = ();
 				$::lglobal{spellpopup}->destroy;
-				undef $::lglobal{spellpopup}; # completly remove spellcheck window
+				undef
+				  $::lglobal{spellpopup};   # completly remove spellcheck window
 				print OUT "\cC\n"
 				  if $::lglobal{spellpid};    # send quit signal to aspell
-				aspellstop();               # and remove the process
+				aspellstop();                 # and remove the process
 				$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 			}
 		);
@@ -839,13 +844,11 @@ sub spellchecker {    # Set up spell check window
 							sub { spellmisspelled_replace(); spellreplace() } );
 		::BindMouseWheel( $::lglobal{replacementlist} );
 		spelloptions()
-		  unless $::globalspellpath;    # Check to see if we know where Aspell is
-		spellcheckfirst();            # Start the spellcheck
+		  unless $::globalspellpath;   # Check to see if we know where Aspell is
+		spellcheckfirst();             # Start the spellcheck
 	}
 }
-
 ## Spell Check
-
 #needed elsewhere - load projectdict
 sub getprojectdic {
 	return unless $::lglobal{global_filename};
@@ -854,8 +857,9 @@ sub getprojectdic {
 	return unless $fname;
 	$::lglobal{projectdictname} = $fname;
 	$::lglobal{projectdictname} =~ s/\.[^\.]*?$/\.dic/;
-# adjustment for multi-volume projects
-# assumes multi-volumes in same directory and end in numbers
+
+	# adjustment for multi-volume projects
+	# assumes multi-volumes in same directory and end in numbers
 	$::lglobal{projectdictname} =~ s/\d\.dic$/\.dic/;
 	if ( $::lglobal{projectdictname} eq $fname ) {
 		$::lglobal{projectdictname} .= '.dic';
@@ -864,7 +868,7 @@ sub getprojectdic {
 
 sub spelloptions {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	if ($::globalspellpath) {
 		aspellstart() unless $::lglobal{spellpid};
 	}
@@ -994,5 +998,4 @@ sub spelloptions {
 	)->grid( -row => 3, -sticky => 'w' );
 	$spellop->Show;
 }
-
 1;

@@ -1,17 +1,16 @@
 package Guiguts::Help;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
-	@ISA=qw(Exporter);
-	@EXPORT=qw(&about_pop_up )
+	our ( @ISA, @EXPORT );
+	@ISA    = qw(Exporter);
+	@EXPORT = qw(&about_pop_up );
 }
 
 sub about_pop_up {
-	my $top = shift;
+	my $top        = shift;
 	my $about_text = <<EOM;
 Guiguts.pl post processing toolkit/interface to gutcheck.
 
@@ -40,7 +39,6 @@ Original guiguts written by Stephen Schulze.
 Partially based on the Gedi editor - Gregs editor.
 Redistributable on the same terms as Perl.
 EOM
-
 	if ( defined( $::lglobal{aboutpop} ) ) {
 		$::lglobal{aboutpop}->deiconify;
 		$::lglobal{aboutpop}->raise;
@@ -50,8 +48,8 @@ EOM
 		&::initialize_popup_with_deletebinding('aboutpop');
 		$::lglobal{aboutpop}->title('About');
 		$::lglobal{aboutpop}->Label(
-								   -justify => "left",
-								   -text    => $about_text
+									 -justify => "left",
+									 -text    => $about_text
 		)->pack;
 		my $button_ok = $::lglobal{aboutpop}->Button(
 			-activebackground => $::activecolor,
@@ -66,7 +64,4 @@ EOM
 		$::lglobal{aboutpop}->focus;
 	}
 }
-
 1;
-
-

@@ -1,13 +1,13 @@
 package Guiguts::CharacterTools;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
-	@ISA    = qw(Exporter);
-	@EXPORT = qw(&latinpopup &utfpopup &utffontinit &utford &uchar &cp1252toUni);
+	our ( @ISA, @EXPORT );
+	@ISA = qw(Exporter);
+	@EXPORT =
+	  qw(&latinpopup &utfpopup &utffontinit &utford &uchar &cp1252toUni);
 }
 
 sub pututf {
@@ -32,7 +32,6 @@ sub latinpopup {
 		$::lglobal{latinpop} = $top->Toplevel;
 		$::lglobal{latinpop}->title('Latin-1 ISO 8859-1');
 		::initialize_popup_with_deletebinding('latinpop');
-
 		my $b = $::lglobal{latinpop}->Balloon( -initwait => 750 );
 		my $tframe = $::lglobal{latinpop}->Frame->pack;
 		my $default =
@@ -48,7 +47,8 @@ sub latinpopup {
 							  -value       => 'h',
 							  -text        => 'HTML Named Entity',
 		)->grid( -row => 1, -column => 2 );
-		my $frame = $::lglobal{latinpop}->Frame( -background => $::bkgcolor )->pack;
+		my $frame =
+		  $::lglobal{latinpop}->Frame( -background => $::bkgcolor )->pack;
 		my @latinchars = (
 						 [ 'À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ',     'Ç' ],
 						 [ 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ',     'ç' ],
@@ -114,7 +114,8 @@ sub insertit {
 		$::lglobal{hasfocus}->delete(@ranges) if @ranges;
 	}
 	$::lglobal{hasfocus}->insert( 'insert', $letter );
-	$::lglobal{hasfocus}->markSet( 'insert', $spot . '+' . length($letter) . 'c' )
+	$::lglobal{hasfocus}
+	  ->markSet( 'insert', $spot . '+' . length($letter) . 'c' )
 	  if $isatext;
 }
 
@@ -124,24 +125,21 @@ sub doutfbuttons {
 	my $rows = ( ( hex $end ) - ( hex $start ) + 1 ) / 16 - 1;
 	my ( @buttons, $blln );
 	$blln = $::lglobal{utfpop}->Balloon( -initwait => 750 );
-
 	$::lglobal{pframe}->destroy if $::lglobal{pframe};
 	undef $::lglobal{pframe};
-
 	$::lglobal{pframe} =
 	  $::lglobal{utfpop}->Frame( -background => $::bkgcolor )
 	  ->pack( -expand => 'y', -fill => 'both' );
 	$::lglobal{utfframe} =
 	  $::lglobal{pframe}->Scrolled(
-								  'Pane',
-								  -background => $::bkgcolor,
-								  -scrollbars => 'se',
-								  -sticky     => 'nswe'
+									'Pane',
+									-background => $::bkgcolor,
+									-scrollbars => 'se',
+									-sticky     => 'nswe'
 	  )->pack( -expand => 'y', -fill => 'both' );
 	::drag( $::lglobal{utfframe} );
 
 	for my $y ( 0 .. $rows ) {
-
 		for my $x ( 0 .. 15 ) {
 			my $name = hex($start) + ( $y * 16 ) + $x;
 			my $hex   = sprintf "%04X", $name;
@@ -175,14 +173,11 @@ sub doutfbuttons {
 			$::lglobal{utfpop}->update;
 		}
 	}
-
 }
-
 ### Unicode
-
 sub utfpopup {
 	my ( $block, $start, $end ) = @_;
-	my $top = $::top;
+	my $top        = $::top;
 	my $textwindow = $::textwindow;
 	$top->Busy( -recurse => 1 );
 	my $blln;
@@ -252,22 +247,20 @@ sub utfpopup {
 		-browsecmd => sub {
 			doutfbuttons( $::lglobal{utfblocks}{$block}[0],
 						  $::lglobal{utfblocks}{$block}[1] );
-
 		},
 		-variable => \$block,
 	)->grid( -row => 1, -column => 7, -padx => 8, -pady => 2 );
 	$unicodelist->insert( 'end', sort( keys %{ $::lglobal{utfblocks} } ) );
-
 	$usel->select;
 	$::lglobal{pframe} =
 	  $::lglobal{utfpop}->Frame( -background => $::bkgcolor )
 	  ->pack( -expand => 'y', -fill => 'both' );
 	$::lglobal{utfframe} =
 	  $::lglobal{pframe}->Scrolled(
-								  'Pane',
-								  -background => $::bkgcolor,
-								  -scrollbars => 'se',
-								  -sticky     => 'nswe'
+									'Pane',
+									-background => $::bkgcolor,
+									-scrollbars => 'se',
+									-sticky     => 'nswe'
 	  )->pack( -expand => 'y', -fill => 'both' );
 	::drag( $::lglobal{utfframe} );
 	doutfbuttons( $start, $end );
@@ -288,7 +281,7 @@ sub utffontinit {
 
 sub uchar {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	if ( defined $::lglobal{ucharpop} ) {
 		$::lglobal{ucharpop}->deiconify;
 		$::lglobal{ucharpop}->raise;
@@ -305,7 +298,6 @@ sub uchar {
 		$::lglobal{ucharpop} = $top->Toplevel;
 		$::lglobal{ucharpop}->title('Unicode Character Search');
 		::initialize_popup_with_deletebinding('ucharpop');
-
 		$::lglobal{ucharpop}->geometry('550x450');
 		my $cframe = $::lglobal{ucharpop}->Frame->pack;
 		my $frame0 =
@@ -315,10 +307,10 @@ sub uchar {
 		my ( @textchars, @textlabels );
 		my $pane =
 		  $::lglobal{ucharpop}->Scrolled(
-										'Pane',
-										-background => $::bkgcolor,
-										-scrollbars => 'se',
-										-sticky     => 'wne',
+										  'Pane',
+										  -background => $::bkgcolor,
+										  -scrollbars => 'se',
+										  -sticky     => 'wne',
 		  )->pack( -expand => 'y', -fill => 'both', -anchor => 'nw' );
 		::drag($pane);
 		::BindMouseWheel($pane);
@@ -360,7 +352,6 @@ sub uchar {
 				$sizelabel->configure( -text => $::utffontsize );
 			},
 		)->grid( -row => 1, -column => 4, -padx => 2, -pady => 2 );
-
 		$frame0->Label( -text => 'Search Characteristics ', )
 		  ->grid( -row => 1, -column => 1 );
 		my $characteristics =
@@ -409,7 +400,6 @@ sub uchar {
 									   -sticky => 'w'
 							  );
 							utfchar_bind( $textchars[$row] );
-
 							$textlabels[$row] =
 							  $pane->Label(
 								   -text => "$name  -  Ordinal $ord  -  $block",
@@ -456,7 +446,7 @@ sub utflabel_bind {
 
 sub utfchar_bind {
 	my $textwindow = $::textwindow;
-	my $widget = shift;
+	my $widget     = shift;
 	$widget->bind(
 		'<Enter>',
 		sub {
@@ -497,8 +487,7 @@ sub utfchar_bind {
 # Pop up window to allow entering Unicode characters by ordinal number
 sub utford {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
-	
+	my $top        = $::top;
 	my $ord;
 	my $base = 'dec';
 	if ( $::lglobal{ordpop} ) {
@@ -508,12 +497,13 @@ sub utford {
 		$::lglobal{ordpop} = $top->Toplevel;
 		$::lglobal{ordpop}->title('Ordinal to Char');
 		::initialize_popup_with_deletebinding('ordpop');
-
 		$::lglobal{ordpop}->resizable( 'yes', 'no' );
 		my $frame =
-		  $::lglobal{ordpop}->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+		  $::lglobal{ordpop}
+		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
 		my $frame2 =
-		  $::lglobal{ordpop}->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+		  $::lglobal{ordpop}
+		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
 		$frame->Label( -text => 'Ordinal of char.' )
 		  ->grid( -row => 1, -column => 1 );
 		my $charlbl = $frame2->Label( -text => '', -width => 50 )->pack;
@@ -568,7 +558,8 @@ sub utford {
 									-height     => 1,
 		)->grid( -row => 2, -column => 2 );
 		my $frame1 =
-		  $::lglobal{ordpop}->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
+		  $::lglobal{ordpop}
+		  ->Frame->pack( -fill => 'x', -padx => 5, -pady => 5 );
 		my $button = $frame1->Button(
 			-text    => 'OK',
 			-width   => 8,
@@ -607,12 +598,10 @@ Do you want to download/install them?\n(You need to have an active internet conn
 If running under Linux or OSX, you will probably need to run the command\n\"sudo perl /[pathto]/guiguts/update_unicore.pl\
 in a terminal window for the updates to be installed correctly.
 END
-
 	$oops->add( 'Label', -text => $message )->pack;
 	$oops->Show;
 	return 0;
 }
-
 ## Convert Windows CP 1252
 sub cp1252toUni {
 	my $textwindow = $::textwindow;
@@ -658,7 +647,4 @@ sub cp1252toUni {
 	}
 	::update_indicators();
 }
-
-
-
 1;

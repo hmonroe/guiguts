@@ -1,20 +1,18 @@
 package Guiguts::ASCIITables;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
+	our ( @ISA, @EXPORT );
 	@ISA    = qw(Exporter);
 	@EXPORT = qw(&tablefx);
 }
-
 ## ASCII Table Special Effects
 sub tablefx {
 	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	if ( defined( $::lglobal{tblfxpop} ) ) {
 		$::lglobal{tblfxpop}->deiconify;
 		$::lglobal{tblfxpop}->raise;
@@ -24,7 +22,6 @@ sub tablefx {
 		$::lglobal{tblfxpop}     = $top->Toplevel;
 		$::lglobal{tblfxpop}->title('ASCII Table Special Effects');
 		::initialize_popup_without_deletebinding('tblfxpop');
-
 		my $f0 =
 		  $::lglobal{tblfxpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my %tb_buttons = (
@@ -101,7 +98,6 @@ sub tablefx {
 			  );
 			++$inc;
 		}
-
 		my $f1 =
 		  $::lglobal{tblfxpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f1->Label( -text => 'Justify', )
@@ -197,8 +193,8 @@ sub tablefx {
 		)->grid( -row => 1, -column => 3, -padx => 1, -pady => 2 );
 		$::lglobal{tblfxpop}->bind( '<Control-Left>',  sub { coladjust(-1) } );
 		$::lglobal{tblfxpop}->bind( '<Control-Right>', sub { coladjust(1) } );
-		$::lglobal{tblfxpop}->bind( '<Left>',          sub { tlineselect('p') } );
-		$::lglobal{tblfxpop}->bind( '<Right>',         sub { tlineselect('n') } );
+		$::lglobal{tblfxpop}->bind( '<Left>',  sub { tlineselect('p') } );
+		$::lglobal{tblfxpop}->bind( '<Right>', sub { tlineselect('n') } );
 		$::lglobal{tblfxpop}->bind(
 			'<Control-z>',
 			sub {
@@ -244,7 +240,7 @@ sub tblselect {
 }
 
 sub tlineremove {
-	my $textwindow = $::textwindow;
+	my $textwindow  = $::textwindow;
 	my @ranges      = $textwindow->tagRanges('linesel');
 	my $range_total = @ranges;
 	$::operationinterrupt = 0;
@@ -274,6 +270,7 @@ sub tlineselect {
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
 	$::operationinterrupt = 0;
+
 	if ( $range_total == 0 ) {
 		my $nextcolumn;
 		if ( $op and ( $op eq 'p' ) ) {
@@ -323,7 +320,7 @@ sub tlineselect {
 }
 
 sub colcalc {
-	my $srow = shift;
+	my $srow       = shift;
 	my $textwindow = $::textwindow;
 	my $widthline =
 	  $textwindow->get( "$srow.0", "$srow.$::lglobal{selectedline}" );
@@ -332,11 +329,12 @@ sub colcalc {
 	} else {
 		$::lglobal{columnspaces} = 0;
 	}
-	$::lglobal{colwidthlbl}->configure( -text => "Width $::lglobal{columnspaces}" );
+	$::lglobal{colwidthlbl}
+	  ->configure( -text => "Width $::lglobal{columnspaces}" );
 }
 
 sub tblspace {
-	my $textwindow = $::textwindow;
+	my $textwindow  = $::textwindow;
 	my @ranges      = $textwindow->tagRanges('table');
 	my $range_total = @ranges;
 	if ( $range_total == 0 ) {
@@ -364,7 +362,7 @@ sub tblspace {
 }
 
 sub tblcompress {
-	my $textwindow = $::textwindow;
+	my $textwindow  = $::textwindow;
 	my @ranges      = $textwindow->tagRanges('table');
 	my $range_total = @ranges;
 	if ( $range_total == 0 ) {
@@ -389,9 +387,9 @@ sub tblcompress {
 }
 
 sub insertline {
-	my $op     = shift;
+	my $op         = shift;
 	my $textwindow = $::textwindow;
-	my $insert = $textwindow->index('insert');
+	my $insert     = $textwindow->index('insert');
 	my ( $row, $col ) = split( /\./, $insert );
 	my @ranges      = $textwindow->tagRanges('table');
 	my $range_total = @ranges;
@@ -426,7 +424,7 @@ sub insertline {
 }
 
 sub coladjust {
-	my $dir = shift;
+	my $dir        = shift;
 	my $textwindow = $::textwindow;
 	return 0 unless defined $::lglobal{selectedline} or tlineselect();
 	if ( $::lglobal{tblrwcol} ) {
@@ -473,7 +471,6 @@ sub coladjust {
 			$temp = $col[ ( $colindex - 1 ) ];
 
 			#print "colcolindex-1:"."$temp"."\n";
-
 			my $cell = substr(
 							   $_,
 							   ( $col[ ( $colindex - 1 ) ] ),
@@ -529,8 +526,8 @@ sub coladjust {
 			}
 			my $wrapped =
 			  ::wrapper( 0, 0,
-					   ( $col[$colindex] - $col[ ( $colindex - 1 ) ] + $dir ),
-					   $templine, $::rwhyphenspace );
+						 ( $col[$colindex] - $col[ ( $colindex - 1 ) ] + $dir ),
+						 $templine, $::rwhyphenspace );
 			push @tblwr, $wrapped;
 		}
 		my $rowcount = 0;
@@ -694,11 +691,11 @@ sub grid2step {
 	for my $row ( 0 .. $#tbl ) {
 		for ( 0 .. $cols ) {
 			my $wrapped;
-			$wrapped = ::wrapper( ( $cell * 5 ),
-								( $cell * 5 ),
-								$::lglobal{stepmaxwidth}, $tbl[$row][$_],
-								$::rwhyphenspace )
-			  if $tbl[$row][$_];
+			$wrapped = ::wrapper(
+								  ( $cell * 5 ), ( $cell * 5 ),
+								  $::lglobal{stepmaxwidth}, $tbl[$row][$_],
+								  $::rwhyphenspace
+			) if $tbl[$row][$_];
 			$wrapped = " \n" unless $wrapped;
 			my @temparray = split( /\n/, $wrapped );
 			if ($cell) {
@@ -826,7 +823,4 @@ sub tblautoc {
 	$textwindow->tagAdd( 'table', 'tblstart', 'tblend' );
 	$textwindow->addGlobEnd;
 }
-
-
-
 1;

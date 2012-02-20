@@ -1,47 +1,44 @@
 package Guiguts::Highlight;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
-	@ISA=qw(Exporter);
-	@EXPORT=qw(&scannosfile &hilite &hilitepopup &highlight_scannos)
+	our ( @ISA, @EXPORT );
+	@ISA    = qw(Exporter);
+	@EXPORT = qw(&scannosfile &hilite &hilitepopup &highlight_scannos);
 }
 
 # Routine to find highlight word list
 sub scannosfile {
 	my $top = $::top;
-	if ($::debug) {print "sub scannosfile\n";}
-	if ($::debug) {print "scannoslistpath=$::scannoslistpath\n";}
+	if ($::debug) { print "sub scannosfile\n"; }
+	if ($::debug) { print "scannoslistpath=$::scannoslistpath\n"; }
 	$::scannoslistpath = &::os_normal($::scannoslistpath);
-	if ($::debug) {print "sub scannosfile1\n";}
+	if ($::debug) { print "sub scannosfile1\n"; }
 	my $types = [ [ 'Text file', [ '.txt', ] ], [ 'All Files', ['*'] ], ];
-
 	$::scannoslist = $top->getOpenFile(
-									  -title => 'List of words to highlight?',
-									  -filetypes  => $types,
-									  -initialdir => $::scannoslistpath
+										-title => 'List of words to highlight?',
+										-filetypes  => $types,
+										-initialdir => $::scannoslistpath
 	);
 	if ($::scannoslist) {
 		my ( $name, $path, $extension ) =
 		  &::fileparse( $::scannoslist, '\.[^\.]*$' );
 		$::scannoslistpath = $path;
-		&::highlight_scannos() if ( $::scannos_highlighted );
+		&::highlight_scannos() if ($::scannos_highlighted);
 		%{ $::lglobal{wordlist} } = ();
 		&::highlight_scannos();
 	}
 	return;
 }
-
 ##routine to automatically highlight words in the text
 sub highlightscannos {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
-	if ($::debug) {print "sub highlightscannos\n";}
+	my $top        = $::top;
+	if ($::debug) { print "sub highlightscannos\n"; }
 	return 0 unless $::scannos_highlighted;
-	unless (  $::lglobal{wordlist}  ) {
+	unless ( $::lglobal{wordlist} ) {
 		&::scannosfile() unless ( defined $::scannoslist && -e $::scannoslist );
 		return 0 unless $::scannoslist;
 		if ( open my $fh, '<', $::scannoslist ) {
@@ -60,7 +57,6 @@ sub highlightscannos {
 					$::scannos_highlighted = 0;
 					undef $::scannoslist;
 					return;
-
 				}
 				$_ =~ s/^\x{FFEF}?// if ( $. < 2 );
 				s/\cM\cJ|\cM|\cJ//g;
@@ -90,7 +86,6 @@ sub highlightscannos {
 			$textline =~ s/--/  /g;
 			my @words = split( /[^'\p{Alnum},-]+/, $textline );
 			for my $word (@words) {
-
 				if ( defined $::lglobal{wordlist}->{$word} ) {
 					my $indx = 0;
 					my $index;
@@ -102,20 +97,20 @@ sub highlightscannos {
 							next
 							  if (
 								   $textwindow->get(
-										  "$::lglobal{hl_index}.@{[$index-1]}") =~
+										"$::lglobal{hl_index}.@{[$index-1]}") =~
 								   m{\p{Alnum}}
 							  );
 						}
 						next
 						  if (
-							 $textwindow->get(
-								 "$::lglobal{hl_index}.@{[$index + length $word]}"
-							 ) =~ m{\p{Alnum}}
+							$textwindow->get(
+"$::lglobal{hl_index}.@{[$index + length $word]}"
+							) =~ m{\p{Alnum}}
 						  );
 						$textwindow->tagAdd(
-								 'scannos',
-								 "$::lglobal{hl_index}.$index",
-								 "$::lglobal{hl_index}.$index +@{[length $word]}c"
+							   'scannos',
+							   "$::lglobal{hl_index}.$index",
+							   "$::lglobal{hl_index}.$index +@{[length $word]}c"
 						);
 					}
 				}
@@ -125,7 +120,6 @@ sub highlightscannos {
 		}
 	}
 	my $idx1 = $textwindow->index('@0,0');   # First visible line in text widget
-
 	$::lglobal{visibleline} = $idx1;
 	$textwindow->tagRemove(
 							'scannos',
@@ -192,14 +186,15 @@ sub highlightscannos {
 
 sub hilite {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
-	my $mark = shift;
+	my $top        = $::top;
+	my $mark       = shift;
 	$::lglobal{hilitemode} = 'exact' unless $::lglobal{hilitemode};
 	$mark = ::quotemeta($mark)
-	  if $::lglobal{hilitemode} eq 'exact';    # FIXME: uninitialized 'hilitemode'
+	  if $::lglobal{hilitemode} eq 'exact';  # FIXME: uninitialized 'hilitemode'
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
 	my ( $index, $lastindex );
+
 	if ( $range_total == 0 ) {
 		return;
 	} else {
@@ -225,10 +220,11 @@ sub hilite {
 		}
 	}
 }
+
 # Popup for highlighting arbitrary characters in selection
 sub hilitepopup {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	viewpagenums() if ( $::lglobal{seepagenums} );
 	if ( defined( $::lglobal{hilitepop} ) ) {
 		$::lglobal{hilitepop}->deiconify;
@@ -282,7 +278,6 @@ sub hilitepopup {
 			-text  => 'Previous Selection',
 			-width => 16,
 		)->grid( -row => 1, -column => 1, -padx => 2, -pady => 2 );
-
 		$f3->Button(
 				 -activebackground => $::activecolor,
 				 -command => sub { $textwindow->tagAdd( 'sel', '1.0', 'end' ) },
@@ -303,13 +298,12 @@ sub hilitepopup {
 			-text  => 'Remove Highlight',
 			-width => 16,
 		)->grid( -row => 2, -column => 2, -padx => 2, -pady => 2 );
-
 	}
 }
 
 sub highlight_scannos {    # Enable / disable word highlighting in the text
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	if ($::scannos_highlighted) {
 		$::lglobal{hl_index} = 1;
 		highlightscannos();
@@ -324,7 +318,4 @@ sub highlight_scannos {    # Enable / disable word highlighting in the text
 	::update_indicators();
 	::savesettings();
 }
-
-
-
 1;

@@ -84,7 +84,6 @@ use Guiguts::TextUnicode;
 use Guiguts::CharacterTools;
 use Guiguts::Utilities;
 use Guiguts::WordFrequency;
-
 ### Constants
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
@@ -242,17 +241,14 @@ our @extops = (
 
 #All local global variables contained in one hash. # now global
 our %lglobal;    # need to document each variable
-
 if ( eval { require Text::LevenshteinXS } ) {
 	$lglobal{LevenshteinXS} = 1;
 }
-
 if ( eval { require Image::Size; 1; } ) {
 	$lglobal{ImageSize} = 1;
 } else {
 	$lglobal{ImageSize} = 0;
 }
-
 our $top;
 our $icon;
 our $text_frame;
@@ -287,6 +283,7 @@ sub dofile {
 	my $filename = shift;
 	do $filename;
 }
+
 # Ready to enter main loop
 checkforupdatesmonthly();
 unless ( -e 'header.txt' ) {

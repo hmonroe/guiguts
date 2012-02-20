@@ -1,17 +1,16 @@
 package Guiguts::PageSeparators;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
-	@ISA=qw(Exporter);
-	@EXPORT=qw(&separatorpopup &delblanklines)
+	our ( @ISA, @EXPORT );
+	@ISA    = qw(Exporter);
+	@EXPORT = qw(&separatorpopup &delblanklines);
 }
 
 sub pageseparatorhelppopup {
-	my $top = $::top;
+	my $top       = $::top;
 	my $help_text = <<'EOM';
     Join Lines - join lines removing any spaces, asterisks and hyphens as necessary. - Hotkey j
     Join, Keep hyphen - join lines removing any spaces and asterisks as necessary. - Hotkey k
@@ -26,7 +25,6 @@ sub pageseparatorhelppopup {
     View page image - Hotkey v
     View Page Separator help -Hotkey ?
 EOM
-
 	if ( defined( $::lglobal{phelppop} ) ) {
 		$::lglobal{phelppop}->deiconify;
 		$::lglobal{phelppop}->raise;
@@ -36,8 +34,8 @@ EOM
 		$::lglobal{phelppop}->title('Functions and Hotkeys');
 		::initialize_popup_with_deletebinding('phelppop');
 		$::lglobal{phelppop}->Label(
-								   -justify => "left",
-								   -text    => $help_text
+									 -justify => "left",
+									 -text    => $help_text
 		)->pack;
 		my $button_ok = $::lglobal{phelppop}->Button(
 			-activebackground => $::activecolor,
@@ -51,9 +49,8 @@ EOM
 	}
 }
 
-
 # Called by "Refresh" on Separator popup.
-# Search for page separator. If automatic, then process it. 
+# Search for page separator. If automatic, then process it.
 sub findandhighlightpageseparator {
 	my $textwindow = $::textwindow;
 	::viewpagenums() if ( $::lglobal{seepagenums} );
@@ -119,7 +116,7 @@ sub findandhighlightpageseparator {
 }
 
 sub processpageseparator {
-	my $op = shift;
+	my $op         = shift;
 	my $textwindow = $::textwindow;
 	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my ( $line, $index, $r, $c );
@@ -127,8 +124,9 @@ sub processpageseparator {
 	$::searchendindex    = '1.0';
 	$::lglobal{joinundo} = 0;
 	$::searchstartindex =
-	  $textwindow->search( '-regexp', '--', '^-----*\s?File:', $::searchendindex,
-						   'end' );
+	  $textwindow->search( '-regexp', '--', '^-----*\s?File:',
+						   $::searchendindex, 'end' );
+
 	unless ($::searchstartindex) {
 		$textwindow->bell unless $::nobell;
 		return;
@@ -207,7 +205,6 @@ sub processpageseparator {
 			}
 			$line = $textwindow->get("$index-1c");
 		}
-
 		if ( $line =~ />/ ) {
 			my $markupl = $textwindow->get( "$index-4c", $index );
 			my $markupn = $textwindow->get( $index,      "$index+3c" );
@@ -257,7 +254,8 @@ sub processpageseparator {
 		$textwindow->insert( $index, $pagesep ) if $::lglobal{htmlpagenum};
 		$::lglobal{joinundo}++ if $::lglobal{htmlpagenum};
 	} elsif ( $op eq 'k' ) {    # join lines keep hyphen
-# FIXME need to sort out the extra space after the hyphen somewhere here
+
+		# FIXME need to sort out the extra space after the hyphen somewhere here
 		$index = $textwindow->index('page');
 		$line  = $textwindow->get("$index-1c");
 		if ( $line =~ />/ ) {
@@ -297,12 +295,10 @@ sub processpageseparator {
 					$index =
 					  $textwindow->search( '-regexp', '--', '\s', "$index+1c",
 										   'end' );
-
 				} else {
 					$index =
 					  $textwindow->search( '-regexp', '--', '\s', "$index",
 										   'end' );
-
 				}
 				$textwindow->insert( "$index", " " );
 				$index =
@@ -350,7 +346,8 @@ sub processpageseparator {
 		$textwindow->delete("$index-1c");
 		$::lglobal{joinundo}++;
 	}
-	findandhighlightpageseparator() if ( $::lglobal{jautomatic} || $::lglobal{jsemiautomatic} );
+	findandhighlightpageseparator()
+	  if ( $::lglobal{jautomatic} || $::lglobal{jsemiautomatic} );
 	push @::joinundolist, $::lglobal{joinundo};
 }
 
@@ -383,7 +380,7 @@ sub redojoin {
 
 sub separatorpopup {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	push @::operations, ( localtime() . ' - Page Separators Fixup' );
 	::oppopupdate() if $::lglobal{oppop};
 	if ( defined( $::lglobal{pagepop} ) ) {
@@ -412,7 +409,6 @@ sub separatorpopup {
 						-underline        => 6,
 						-width            => 18
 		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-
 		my $sf2 =
 		  $::lglobal{pagepop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
@@ -424,7 +420,6 @@ sub separatorpopup {
 						-underline        => 6,
 						-width            => 12
 		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-
 		my $sectjoinbutton =
 		  $sf2->Button(
 						-activebackground => $::activecolor,
@@ -466,19 +461,17 @@ sub separatorpopup {
 							 -selectcolor => $::lglobal{checkcolor},
 							 -text        => 'Show Images'
 		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-
 		my $sf4 =
 		  $::lglobal{pagepop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -padx => 5 );
 		my $refreshbutton =
 		  $sf4->Button(
 						-activebackground => $::activecolor,
-						-command          => sub { findandhighlightpageseparator() },
-						-text             => 'Refresh',
-						-underline        => 0,
-						-width            => 8
+						-command   => sub { findandhighlightpageseparator() },
+						-text      => 'Refresh',
+						-underline => 0,
+						-width     => 8
 		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
-
 		my $undobutton =
 		  $sf4->Button(
 						-activebackground => $::activecolor,
@@ -496,11 +489,11 @@ sub separatorpopup {
 						-width            => 8
 		  )->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
 		my $delbutton = $sf4->Button(
-									  -activebackground => $::activecolor,
-									  -command   => sub { processpageseparator('d') },
-									  -text      => 'Delete',
-									  -underline => 0,
-									  -width     => 8
+								  -activebackground => $::activecolor,
+								  -command => sub { processpageseparator('d') },
+								  -text    => 'Delete',
+								  -underline => 0,
+								  -width     => 8
 		)->pack( -side => 'left', -pady => 2, -padx => 2, -anchor => 'w' );
 		my $phelpbutton =
 		  $sf4->Button(
@@ -524,11 +517,12 @@ sub separatorpopup {
 	$::lglobal{pagepop}->Tk::bind( '<h>' => sub { processpageseparator('h') } );
 	$::lglobal{pagepop}->Tk::bind( '<d>' => sub { processpageseparator('d') } );
 	$::lglobal{pagepop}->Tk::bind( '<t>' => sub { processpageseparator('t') } );
-	$::lglobal{pagepop}->Tk::bind( '<?>' => sub { pageseparatorhelppopup('?') } );
+	$::lglobal{pagepop}
+	  ->Tk::bind( '<?>' => sub { pageseparatorhelppopup('?') } );
 	$::lglobal{pagepop}->Tk::bind( '<r>' => \&findandhighlightpageseparator );
 	$::lglobal{pagepop}->Tk::bind(
 		'<v>' => sub {
-			::openpng($textwindow, ::get_page_number() );
+			::openpng( $textwindow, ::get_page_number() );
 			$::lglobal{pagepop}->raise;
 		}
 	);
@@ -537,12 +531,12 @@ sub separatorpopup {
 	$::lglobal{pagepop}->Tk::bind(
 		'<a>' => sub {
 			if   ( $::lglobal{jautomatic} ) { $::lglobal{jautomatic} = 0 }
-			else                          { $::lglobal{jautomatic} = 1 }
+			else                            { $::lglobal{jautomatic} = 1 }
 		}
 	);
 	$::lglobal{pagepop}->Tk::bind(
 		'<s>' => sub {
-			if   ( $::lglobal{jsemiautomatic} ) { $::lglobal{jsemiautomatic} = 0 }
+			if ( $::lglobal{jsemiautomatic} ) { $::lglobal{jsemiautomatic} = 0 }
 			else                              { $::lglobal{jsemiautomatic} = 1 }
 		}
 	);
@@ -568,7 +562,6 @@ sub delblanklines {
 							   'end'
 		  );
 		{
-
 			no warnings 'uninitialized';
 			$::searchstartindex = '2.0' if $::searchstartindex eq '1.0';
 		}
@@ -576,16 +569,15 @@ sub delblanklines {
 		( $r, $c ) = split /\./, $::searchstartindex;
 		if ( $textwindow->get( ( $r - 1 ) . '.0', ( $r - 1 ) . '.end' ) eq '' )
 		{
-			$textwindow->delete( "$::searchstartindex -1c", $::searchstartindex );
+			$textwindow->delete( "$::searchstartindex -1c",
+								 $::searchstartindex );
 			$::searchendindex = $textwindow->index("$::searchstartindex -2l");
 			$textwindow->see($::searchstartindex);
 			$textwindow->update;
 			next;
 		}
 		$::searchendindex = $r ? "$r.end" : '2.0';
-
 	}
 	$textwindow->Unbusy;
 }
-
 1;

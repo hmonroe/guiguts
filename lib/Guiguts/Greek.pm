@@ -1,11 +1,10 @@
 package Guiguts::Greek;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
+	our ( @ISA, @EXPORT );
 	@ISA    = qw(Exporter);
 	@EXPORT = qw(&greekpopup &findandextractgreek &betagreek);
 }
@@ -92,10 +91,9 @@ sub fromgreektr {
 	$phrase =~ s/([AEIOUaeiou])y/$1u/g;
 	return $phrase;
 }
-
 ## Find Greek
 sub findandextractgreek {
-	my $top = $::top;
+	my $top        = $::top;
 	my $textwindow = $::textwindow;
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 	my ( $greekIndex, $closeIndex ) = findgreek('insert');
@@ -116,7 +114,7 @@ sub findandextractgreek {
 }
 
 sub greekpopup {
-	my $top = $::top;
+	my $top        = $::top;
 	my $textwindow = $::textwindow;
 	my $buildlabel;
 	my %attributes;
@@ -238,7 +236,6 @@ sub greekpopup {
 			'oulig' => [ 'ou', 'oulig', '&#959;&#965;', "\x{03BF}\x{03C5}" ]
 		);
 		my $grfont = '{Times} 14';
-
 		for my $image ( keys %attributes ) {
 			$::lglobal{images}->{$image} =
 			  $top->Photo( -format => 'gif',
@@ -302,10 +299,10 @@ sub greekpopup {
 		if ( $Tk::version ge 8.4 ) {
 			my $tframe2 =
 			  $::lglobal{grpop}->Frame->pack(
-											-expand => 'no',
-											-fill   => 'none',
-											-anchor => 'n',
-											-pady   => 3
+											  -expand => 'no',
+											  -fill   => 'none',
+											  -anchor => 'n',
+											  -pady   => 3
 			  );
 			$tframe2->Button(
 				-activebackground => $::activecolor,
@@ -340,7 +337,8 @@ sub greekpopup {
 					my $start     = pop(@ranges);
 					my $selection = $::lglobal{grtext}->get( $start, $end );
 					$::lglobal{grtext}->delete( $start, $end );
-					$::lglobal{grtext}->insert( $start, fromgreektr($selection) );
+					$::lglobal{grtext}
+					  ->insert( $start, fromgreektr($selection) );
 					if ( $::lglobal{grtext}->get( 'end -1c', 'end' ) =~ /^$/ ) {
 						$::lglobal{grtext}->delete( 'end -1c', 'end' );
 					}
@@ -465,9 +463,9 @@ sub greekpopup {
 		  )->grid( -row => 5, -column => 16 );
 		my $bframe =
 		  $::lglobal{grpop}->Frame->pack(
-										-expand => 'yes',
-										-fill   => 'both',
-										-anchor => 'n'
+										  -expand => 'yes',
+										  -fill   => 'both',
+										  -anchor => 'n'
 		  );
 		$::lglobal{grtext} =
 		  $bframe->Scrolled(
@@ -700,7 +698,6 @@ sub greekpopup {
 				)->pack( -side => 'left', -padx => 1 );
 			}
 		}
-
 		$::lglobal{grpop}->protocol(
 			'WM_DELETE_WINDOW' => sub {
 				$textwindow->tagRemove( 'highlight', '1.0', 'end' );
@@ -721,11 +718,10 @@ sub greekpopup {
 }
 
 sub findmatchingclosebracket {
-	my $textwindow = $::textwindow;
+	my $textwindow   = $::textwindow;
 	my ($startIndex) = @_;
-	my $indentLevel = 1;
+	my $indentLevel  = 1;
 	my $closeIndex;
-
 	while ($indentLevel) {
 		$closeIndex =
 		  $textwindow->search( '-exact', '--', ']', "$startIndex" . '+1c',
@@ -779,14 +775,15 @@ sub putgreek {
 	$letter = $$hash{$attrib}[2]       if ( $::lglobal{groutp} eq 'h' );
 	$letter = $$hash{$attrib}[3]       if ( $::lglobal{groutp} eq 'u' );
 	my $spot = $::lglobal{grtext}->index('insert');
-	if ( $::lglobal{groutp} eq 'l' and $letter eq 'y' or $letter eq 'Y' ) {
 
+	if ( $::lglobal{groutp} eq 'l' and $letter eq 'y' or $letter eq 'Y' ) {
 		if ( $::lglobal{grtext}->get('insert -1c') =~ /[AEIOUaeiou]/ ) {
 			$letter = chr( ord($letter) - 4 );
 		}
 	}
 	$::lglobal{grtext}->insert( 'insert', $letter );
-	$::lglobal{grtext}->markSet( 'insert', $spot . '+' . length($letter) . 'c' );
+	$::lglobal{grtext}
+	  ->markSet( 'insert', $spot . '+' . length($letter) . 'c' );
 	$::lglobal{grtext}->focus;
 	$::lglobal{grtext}->see('insert');
 }
@@ -933,8 +930,8 @@ sub betagreek {
 		$phrase =~ s/U\(/\x{1F59}/g;
 		$phrase =~ s/\?/\x{037E}/g;
 		$phrase =~ s/;/\x{0387}/g;
-		
 		my %atebkrg = reverse %{ $::lglobal{grkbeta3} };
+
 		for ( keys %atebkrg ) {
 			$phrase =~ s/\Q$_\E/$atebkrg{$_}/g;
 		}
@@ -972,7 +969,7 @@ sub betagreek {
 		$phrase =~ s/\x{03CD}/y\//g;
 		$phrase =~ s/\x{037E}/?/g;
 		$phrase =~ s/\x{0387}/;/g;
-	return fromgreektr($phrase);
+		return fromgreektr($phrase);
 	}
 }
 
@@ -986,7 +983,4 @@ sub betaascii {
 	$phrase =~ s/([aeiouyêô]+)\(/h$1/g;
 	return $phrase;
 }
-
-
-
 1;

@@ -1,24 +1,24 @@
 package Guiguts::SearchReplace;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
-	@ISA=qw(Exporter);
-	@EXPORT=qw(&add_search_history &searchtext &search_history &reg_check &getnextscanno &updatesearchlabels
-	&isvalid &swapterms &findascanno &reghint &replaceeval &replace &opstop &replaceall &killstoppop
-	&searchfromstartifnew &searchoptset &searchpopup &stealthscanno &find_proofer_comment
-	&find_asterisks &find_transliterations &nextblock &orphanedbrackets &orphanedmarkup &searchsize
-	&loadscannos)
+	our ( @ISA, @EXPORT );
+	@ISA = qw(Exporter);
+	@EXPORT =
+	  qw(&add_search_history &searchtext &search_history &reg_check &getnextscanno &updatesearchlabels
+	  &isvalid &swapterms &findascanno &reghint &replaceeval &replace &opstop &replaceall &killstoppop
+	  &searchfromstartifnew &searchoptset &searchpopup &stealthscanno &find_proofer_comment
+	  &find_asterisks &find_transliterations &nextblock &orphanedbrackets &orphanedmarkup &searchsize
+	  &loadscannos);
 }
 
 sub add_search_history {
 	if ($::scannosearch) {
-		return; # do not add to search history during a scannos check		
-	} 
-	my ( $term, $history_array_ref,$history_size ) = @_;
+		return;    # do not add to search history during a scannos check
+	}
+	my ( $term, $history_array_ref, $history_size ) = @_;
 	my @temparray = @$history_array_ref;
 	@$history_array_ref = ();
 	push @$history_array_ref, $term;
@@ -30,24 +30,22 @@ sub add_search_history {
 }
 
 sub searchtext {
-	my ($textwindow,$top,$searchterm)=@_;
+	my ( $textwindow, $top, $searchterm ) = @_;
 	&::viewpagenums() if ( $::lglobal{seepagenums} );
 
-	#print $::sopt[0],$::sopt[1],$::sopt[2],$::sopt[3],$::sopt[4].":sopt\n";
-
+#print $::sopt[0],$::sopt[1],$::sopt[2],$::sopt[3],$::sopt[4].":sopt\n";
 # $::sopt[0] --> 0 = pattern search                       1 = whole word search
 # $::sopt[1] --> 0 = case sensitive                     1 = case insensitive search
 # $::sopt[2] --> 0 = search forwards    \                  1 = search backwards
 # $::sopt[3] --> 0 = normal search term           1 = regex search term - 3 and 0 are mutually exclusive
 # $::sopt[4] --> 0 = search from last index       1 = Start from beginning
-
 #	$::searchstartindex--where the last search for this $searchterm ended
 #   replaced with the insertion point if the user has clicked someplace else
-
-	#print $::sopt[4]."from beginning\n";
+#print $::sopt[4]."from beginning\n";
 	$searchterm = '' unless defined $searchterm;
 	if ( length($searchterm) ) {    #and not ($searchterm =~ /\W/)
-		&::add_search_history( $searchterm, \@::search_history, $::history_size );
+		&::add_search_history( $searchterm, \@::search_history,
+							   $::history_size );
 	}
 	$::lglobal{lastsearchterm} = 'stupid variable needs to be initialized'
 	  unless length( $::lglobal{lastsearchterm} );
@@ -56,20 +54,23 @@ sub searchtext {
 	my $foundone    = 1;
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
-	$::searchstartindex = $textwindow->index('insert') unless $::searchstartindex;
+	$::searchstartindex = $textwindow->index('insert')
+	  unless $::searchstartindex;
 	my $searchstartingpoint = $textwindow->index('insert');
+
 	# this is a search within a selection
 	if ( $range_total == 0 && $::lglobal{selectionsearch} ) {
 		$start = $textwindow->index('insert');
 		$end   = $::lglobal{selectionsearch};
+
 		# this is a search through the end of the document
 	} elsif ( $range_total == 0 && !$::lglobal{selectionsearch} ) {
 		$start = $textwindow->index('insert');
 		$end   = 'end';
 		$end   = '1.0' if ( $::sopt[2] );
 	} else {
-		$end                      = pop(@ranges);
-		$start                    = pop(@ranges);
+		$end                        = pop(@ranges);
+		$start                      = pop(@ranges);
 		$::lglobal{selectionsearch} = $end;
 	}
 	if ( $::sopt[4] ) {
@@ -79,6 +80,7 @@ sub searchtext {
 			$start = 'end';
 			$end   = '1.0';
 		} else {
+
 			# search forwards and Start From Beginning so start from the end
 			$start = '1.0';
 			$end   = 'end';
@@ -86,25 +88,28 @@ sub searchtext {
 		$::lglobal{searchop4}->deselect if ( defined $::lglobal{searchpop} );
 		$::lglobal{lastsearchterm} = "resetresetreset";
 	}
+
 	#print "start:$start\n";
 	if ($start) {    # but start is always defined?
 		if ( $::sopt[2] ) {    # if backwards
 			$::searchstartindex = $start;
 		} else {
-			$::searchendindex = "$start+1c";  #forwards. #unless ( $start eq '1.0' )
-		  #print $::searchstartindex.":".$::searchendindex."4\n";
-			
+			$::searchendindex =
+			  "$start+1c";     #forwards. #unless ( $start eq '1.0' )
+			    #print $::searchstartindex.":".$::searchendindex."4\n";
 		}
+
 		# forward search begin +1c or the next search would find the same match
 	}
-	{   # Turn off warnings temporarily since $searchterm is undefined on first
-		# search
+	{    # Turn off warnings temporarily since $searchterm is undefined on first
+		    # search
 		no warnings;
 		unless ( length($searchterm) ) {
 			$searchterm = $::lglobal{searchentry}->get( '1.0', '1.end' );
-			&::add_search_history( $searchterm, \@::search_history, $::history_size );
+			&::add_search_history( $searchterm, \@::search_history,
+								   $::history_size );
 		}
-	} # warnings back on; keep this bracket
+	}    # warnings back on; keep this bracket
 	return ('') unless length($searchterm);
 	if ( $::sopt[3] ) {
 		unless ( &::isvalid($searchterm) ) {
@@ -112,6 +117,7 @@ sub searchtext {
 			return;
 		}
 	}
+
 	# if this is a new searchterm
 	unless ( $searchterm eq $::lglobal{lastsearchterm} ) {
 		if ( $::sopt[2] ) {
@@ -177,7 +183,8 @@ sub searchtext {
 		}
 		while ($mark) {
 			if ( $mark =~ /nls\d+q(\d+)/ ) {
-				$length           = $1;
+				$length = $1;
+
 				#print $length."1\n";
 				$::searchstartindex = $textwindow->index($mark);
 				last;
@@ -186,7 +193,6 @@ sub searchtext {
 				next;
 			}
 		}
-
 		$::searchstartindex = 0 unless $mark;
 		$::lglobal{lastsearchterm} = 'reset' unless $mark;
 	} else {    # not a search across line boundaries
@@ -196,16 +202,17 @@ sub searchtext {
 		  if $::sopt[0];
 		my ( $direction, $searchstart, $mode );
 		if   ( $::sopt[2] ) { $searchstart = $::searchstartindex }
-		else              { $searchstart = $::searchendindex }
+		else                { $searchstart = $::searchendindex }
 		if   ( $::sopt[2] ) { $direction = '-backwards' }
-		else              { $direction = '-forwards' }
+		else                { $direction = '-forwards' }
 		if   ( $::sopt[0] or $::sopt[3] ) { $mode = '-regexp' }
-		else                          { $mode = '-exact' }
+		else                              { $mode = '-exact' }
 
-		if ($::debug) {print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";}
-				#print $length."2\n";
-		
+		if ($::debug) {
+			print "$mode:$direction:$length:$searchterm:$searchstart:$end\n";
+		}
 
+		#print $length."2\n";
 		#finally we actually do some searching
 		if ( $::sopt[1] ) {
 			$::searchstartindex =
@@ -214,8 +221,8 @@ sub searchtext {
 								   '-count' => \$length,
 								   '--', $searchterm, $searchstart, $end
 			  );
-			  				#print $length."3\n";
-			  
+
+			#print $length."3\n";
 		} else {
 			$::searchstartindex =
 			  $textwindow->search(
@@ -223,49 +230,61 @@ sub searchtext {
 								   '-count' => \$length,
 								   '--', $searchterm, $searchstart, $end
 			  );
-			  				#print $length."4\n";
+
+			#print $length."4\n";
 		}
 	}
 	if ($::searchstartindex) {
 		$tempindex = $::searchstartindex;
-		  #print $::searchstartindex.":".$::searchendindex."7\n";
+
+		#print $::searchstartindex.":".$::searchendindex."7\n";
 		my ( $row, $col ) = split /\./, $tempindex;
+
 		#print "$row:$col:$length 5\n";
-		
 		$col += $length;
 		$::searchendindex = "$row.$col" if $length;
-		  #print $::searchstartindex.":".$::searchendindex."3\n";
-		$::searchendindex = $textwindow->index("$::searchstartindex +${length}c")
+
+		#print $::searchstartindex.":".$::searchendindex."3\n";
+		$::searchendindex =
+		  $textwindow->index("$::searchstartindex +${length}c")
 		  if ( $searchterm =~ m/\\n/ );
-		  #print $::searchstartindex.":".$::searchendindex."2\n";
+
+		#print $::searchstartindex.":".$::searchendindex."2\n";
 		$::searchendindex = $textwindow->index("$::searchstartindex +1c")
 		  unless $length;
-		  #print $::searchstartindex.":".$::searchendindex."1\n";
+
+		#print $::searchstartindex.":".$::searchendindex."1\n";
 		$textwindow->markSet( 'insert', $::searchstartindex )
 		  if $::searchstartindex;    # position the cursor at the index
-		  #print $::searchstartindex.":".$::searchendindex."\n";
-		$textwindow->tagAdd( 'highlight', $::searchstartindex, $::searchendindex )
+		    #print $::searchstartindex.":".$::searchendindex."\n";
+		$textwindow->tagAdd( 'highlight', $::searchstartindex,
+							 $::searchendindex )
 		  if $::searchstartindex;    # highlight the text
 		$textwindow->yviewMoveto(1);
 		$textwindow->see($::searchstartindex)
 		  if ( $::searchendindex && $::sopt[2] )
 		  ;    # scroll text box, if necessary, to make found text visible
-		$textwindow->see($::searchendindex) if ( $::searchendindex && !$::sopt[2] );
+		$textwindow->see($::searchendindex)
+		  if ( $::searchendindex && !$::sopt[2] );
 		$::searchendindex = $::searchstartindex unless $length;
-		  #print $::searchstartindex.":".$::searchendindex.":10\n";
+
+		#print $::searchstartindex.":".$::searchendindex.":10\n";
 	}
 	unless ($::searchstartindex) {
-		  #print $::searchstartindex.":".$::searchendindex.":11\n";
+
+		#print $::searchstartindex.":".$::searchendindex.":11\n";
 		$foundone = 0;
 		unless ( $::lglobal{selectionsearch} ) { $start = '1.0'; $end = 'end' }
 		if ( $::sopt[2] ) {
 			$::searchstartindex = $end;
-		  #print $::searchstartindex.":".$::searchendindex.":12\n";
+
+			#print $::searchstartindex.":".$::searchendindex.":12\n";
 			$textwindow->markSet( 'insert', $::searchstartindex );
 			$textwindow->see($::searchendindex);
 		} else {
 			$::searchendindex = $start;
-		   #print $::searchstartindex.":".$::searchendindex.":13\n";
+
+			#print $::searchstartindex.":".$::searchendindex.":13\n";
 			$textwindow->markSet( 'insert', $start );
 			$textwindow->see($start);
 		}
@@ -291,13 +310,15 @@ sub searchtext {
 sub search_history {
 	my ( $widget, $history_array_ref ) = @_;
 	my $menu = $widget->Menu( -title => 'History', -tearoff => 0 );
-	$menu->command( -label   => 'Clear History',
-					-command => sub { @$history_array_ref = (); &::savesettings(); }, );
+	$menu->command(
+			   -label   => 'Clear History',
+			   -command => sub { @$history_array_ref = (); &::savesettings(); },
+	);
 	$menu->separator;
 	for my $item (@$history_array_ref) {
 		$menu->command(
 				-label   => $item,
-				-command => [ sub {load_hist_term( $widget, $_[0] ) }, $item ],
+				-command => [ sub { load_hist_term( $widget, $_[0] ) }, $item ],
 		);
 	}
 	my $x = $widget->rootx;
@@ -329,26 +350,27 @@ sub regedit {
 								  -buttons => [ 'Save', 'Cancel' ] );
 	my $regsearchlabel = $editor->add( 'Label', -text => 'Search Term' )->pack;
 	$::lglobal{regsearch} = $editor->add(
-										'Text',
-										-background => $::bkgcolor,
-										-width      => 40,
-										-height     => 1,
+										  'Text',
+										  -background => $::bkgcolor,
+										  -width      => 40,
+										  -height     => 1,
 	)->pack;
 	my $regreplacelabel =
 	  $editor->add( 'Label', -text => 'Replacement Term' )->pack;
-	$::lglobal{regreplace} = $editor->add(
-										 'Text',
-										 -background => $::bkgcolor,
-										 -width      => 40,
-										 -height     => 1,
-	)->pack;
+	$::lglobal{regreplace} =
+	  $editor->add(
+					'Text',
+					-background => $::bkgcolor,
+					-width      => 40,
+					-height     => 1,
+	  )->pack;
 	my $reghintlabel = $editor->add( 'Label', -text => 'Hint Text' )->pack;
 	$::lglobal{reghinted} = $editor->add(
-										'Text',
-										-background => $::bkgcolor,
-										-width      => 40,
-										-height     => 8,
-										-wrap       => 'word',
+										  'Text',
+										  -background => $::bkgcolor,
+										  -width      => 40,
+										  -height     => 8,
+										  -wrap       => 'word',
 	)->pack;
 	my $buttonframe = $editor->add('Frame')->pack;
 	$buttonframe->Button(
@@ -379,26 +401,27 @@ sub regedit {
 						  -command          => \&regdel,
 	)->pack( -side => 'left', -pady => 5, -padx => 2, -anchor => 'w' );
 	$::lglobal{regsearch}->insert(
-								 'end',
-								 (
-									$::lglobal{searchentry}->get( '1.0', '1.end' )
-								 )
+								   'end',
+								   (
+									  $::lglobal{searchentry}
+										->get( '1.0', '1.end' )
+								   )
 	) if $::lglobal{searchentry}->get( '1.0', '1.end' );
 	$::lglobal{regreplace}->insert(
-								  'end',
-								  (
-									 $::lglobal{replaceentry}
-									   ->get( '1.0', '1.end' )
-								  )
+									'end',
+									(
+									   $::lglobal{replaceentry}
+										 ->get( '1.0', '1.end' )
+									)
 	) if $::lglobal{replaceentry}->get( '1.0', '1.end' );
 	$::lglobal{reghinted}->insert(
-								 'end',
-								 (
-									$::reghints{
-										$::lglobal{searchentry}
-										  ->get( '1.0', '1.end' )
-									  }
-								 )
+								   'end',
+								   (
+									 $::reghints{
+										 $::lglobal{searchentry}
+										   ->get( '1.0', '1.end' )
+									   }
+								   )
 	) if $::reghints{ $::lglobal{searchentry}->get( '1.0', '1.end' ) };
 	my $button = $editor->Show;
 	if ( $button =~ /save/i ) {
@@ -421,7 +444,6 @@ sub regedit {
 
 EOF
 		print $reg '%::reghints = (' . "\n";
-
 		foreach my $word ( sort ( keys %::reghints ) ) {
 			my $srch = $word;
 			$srch =~ s/'/\\'/;
@@ -507,9 +529,9 @@ sub reghint {
 		$::lglobal{hintpop}->title('Search Term Hint');
 		my $frame =
 		  $::lglobal{hintpop}->Frame->pack(
-										  -anchor => 'nw',
-										  -expand => 'yes',
-										  -fill   => 'both'
+											-anchor => 'nw',
+											-expand => 'yes',
+											-fill   => 'both'
 		  );
 		$::lglobal{hintmessage} =
 		  $frame->ROText(
@@ -530,16 +552,15 @@ sub reghint {
 
 sub getnextscanno {
 	$::scannosearch = 1;
-
 	::findascanno();
-	unless ( searchtext($::textwindow,$::top) ) {
+	unless ( searchtext( $::textwindow, $::top ) ) {
 		if ( $::lglobal{regaa} ) {
 			while (1) {
 				last
-				  if (
-					 $::lglobal{scannosindex}++ >= $#{ $::lglobal{scannosarray} } );
+				  if ( $::lglobal{scannosindex}++ >=
+					   $#{ $::lglobal{scannosarray} } );
 				::findascanno();
-				last if searchtext($::textwindow,$::top);
+				last if searchtext( $::textwindow, $::top );
 			}
 		}
 	}
@@ -552,7 +573,7 @@ sub swapterms {
 	  ->insert( 'end', $::lglobal{searchentry}->get( '1.0', '1.end' ) );
 	$::lglobal{searchentry}->delete( '1.0', 'end' );
 	$::lglobal{searchentry}->insert( 'end', $tempholder );
-	searchtext($::textwindow,$::top);
+	searchtext( $::textwindow, $::top );
 }
 
 sub isvalid {
@@ -590,7 +611,7 @@ sub getmark {
 	my $start = shift;
 	if ( $::sopt[2] ) {    # search reverse
 		return $::textwindow->markPrevious($start);
-	} else {             # search forward
+	} else {               # search forward
 		return $::textwindow->markNext($start);
 	}
 }
@@ -601,7 +622,7 @@ sub updatesearchlabels {
 		my $searchterm1 = $::lglobal{searchentry}->get( '1.0', '1.end' );
 		if ( ( $::lglobal{seenwords}->{$searchterm1} ) && ( $::sopt[0] ) ) {
 			$::lglobal{searchnumlabel}->configure(
-				  -text => "Found $::lglobal{seenwords}->{$searchterm1} times." );
+				-text => "Found $::lglobal{seenwords}->{$searchterm1} times." );
 		} elsif ( ( $searchterm1 eq '' ) || ( !$::sopt[0] ) ) {
 			$::lglobal{searchnumlabel}->configure( -text => '' );
 		} else {
@@ -621,7 +642,7 @@ sub replace {
 	$replaceterm = replaceeval( $searchterm, $replaceterm ) if ( $::sopt[3] );
 	if ($::searchstartindex) {
 		$::textwindow->replacewith( $::searchstartindex, $::searchendindex,
-								  $replaceterm );
+									$replaceterm );
 	}
 	return 1;
 }
@@ -655,7 +676,7 @@ sub findascanno {
 # called only from replace()
 sub replaceeval {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	my ( $searchterm, $replaceterm ) = @_;
 	my @replarray = ();
 	my ( $replaceseg, $seg1, $seg2, $replbuild );
@@ -674,7 +695,6 @@ sub replaceeval {
 	if ( $replaceterm =~ /\\GB/ ) { $gbfound = 1; }
 	if ( $replaceterm =~ /\\G/ )  { $gfound  = 1; }
 	if ( $replaceterm =~ /\\A/ )  { $afound  = 1; }
-
 	my $found = $textwindow->get( $::searchstartindex, $::searchendindex );
 	$searchterm =~ s/\Q(?<=\E.*?\)//;
 	$searchterm =~ s/\Q(?=\E.*?\)//;
@@ -710,7 +730,6 @@ to construct an expression that would delete files, execute arbitrary malicious 
 reformat hard drives, etc.
 Do you want to proceed?
 END
-
 			my $dialog = $top->Dialog(
 								 -text    => $message,
 								 -bitmap  => 'warning',
@@ -916,13 +935,12 @@ sub opstop {
 		$::lglobal{stoppop} = $::top->Toplevel;
 		$::lglobal{stoppop}->title('Interrupt');
 		::initialize_popup_with_deletebinding('stoppop');
-
 		my $frame = $::lglobal{stoppop}->Frame->pack;
 		my $stopbutton = $frame->Button(
-									-activebackground => $::activecolor,
-									-command => sub { $::operationinterrupt = 1 },
-									-text    => 'Interrupt Operation',
-									-width   => 16
+								  -activebackground => $::activecolor,
+								  -command => sub { $::operationinterrupt = 1 },
+								  -text    => 'Interrupt Operation',
+								  -width   => 16
 		)->grid( -row => 1, -column => 1, -padx => 10, -pady => 10 );
 	}
 }
@@ -938,8 +956,8 @@ sub killstoppop {
 sub replaceall {
 	my $replacement = shift;
 	$replacement = '' unless $replacement;
-	my $textwindow =$::textwindow;
-	my $top =$::top;
+	my $textwindow = $::textwindow;
+	my $top        = $::top;
 
 	# Check if replaceall applies only to a selection
 	my @ranges = $textwindow->tagRanges('sel');
@@ -965,7 +983,7 @@ sub replaceall {
 			  if $::sopt[0];
 			my ( $searchstart, $mode );
 			if   ( $::sopt[0] or $::sopt[3] ) { $mode = '-regexp' }
-			else                          { $mode = '-exact' }
+			else                              { $mode = '-exact' }
 			::working("Replace All");
 			if ( $::sopt[1] ) {
 				$textwindow->FindAndReplaceAll( $mode, '-nocase', $searchterm,
@@ -982,7 +1000,7 @@ sub replaceall {
 	#print "repl:$replacement:ranges:@ranges:\n";
 	$textwindow->focus;
 	opstop();
-	while ( searchtext($textwindow,$top) )
+	while ( searchtext( $textwindow, $top ) )
 	{    # keep calling search() and replace() until you return undef
 		last unless replace($replacement);
 		last if $::operationinterrupt;
@@ -1000,7 +1018,6 @@ sub searchfromstartifnew {
 		searchoptset(qw/x x x x 1/);
 	}
 }
-
 
 sub searchoptset {
 	my @opt       = @_;
@@ -1025,11 +1042,10 @@ sub searchoptset {
 
 	#print $::sopt[0],$::sopt[1],$::sopt[2],$::sopt[3],$::sopt[4].":sopt set\n";
 }
-
 ### Search
 sub searchpopup {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	::viewpagenums() if ( $::lglobal{seepagenums} );
 	push @::operations, ( localtime() . ' - Search & Replace' )
 	  unless $::lglobal{doscannos};
@@ -1062,13 +1078,12 @@ sub searchpopup {
 		  )->pack( -side => 'right', -anchor => 'e', -padx => 1 );
 		my $sf11 =
 		  $::lglobal{searchpop}->Frame->pack(
-											-side   => 'top',
-											-anchor => 'w',
-											-padx   => 3,
-											-expand => 'y',
-											-fill   => 'x'
+											  -side   => 'top',
+											  -anchor => 'w',
+											  -padx   => 3,
+											  -expand => 'y',
+											  -fill   => 'x'
 		  );
-
 		$sf11->Button(
 			-activebackground => $::activecolor,
 			-command          => sub {
@@ -1082,9 +1097,9 @@ sub searchpopup {
 			-activebackground => $::activecolor,
 			-command          => sub {
 				add_search_history(
-								   $::lglobal{searchentry}->get( '1.0', '1.end' ),
-								   \@::search_history, $::history_size );
-				searchtext($textwindow,$top,'');
+								 $::lglobal{searchentry}->get( '1.0', '1.end' ),
+								 \@::search_history, $::history_size );
+				searchtext( $textwindow, $top, '' );
 			},
 			-text  => 'Search',
 			-width => 6
@@ -1094,7 +1109,6 @@ sub searchpopup {
 				   -padx   => 2,
 				   -anchor => 'w'
 		  );
-
 		$::lglobal{searchentry} =
 		  $sf11->Text(
 					   -background => $::bkgcolor,
@@ -1106,7 +1120,6 @@ sub searchpopup {
 				   -expand => 'y',
 				   -fill   => 'x'
 		  );
-
 		$sf11->Button(
 			-activebackground => $::activecolor,
 			-command          => sub {
@@ -1116,9 +1129,8 @@ sub searchpopup {
 			-width  => 9,
 			-height => 15,
 		)->pack( -side => 'right', -anchor => 'w' );
-
-		$::lglobal{regrepeat} = $::lglobal{searchentry}->repeat( 500, \&reg_check );
-
+		$::lglobal{regrepeat} =
+		  $::lglobal{searchentry}->repeat( 500, \&reg_check );
 		my $sf2 =
 		  $::lglobal{searchpop}->Frame->pack( -side => 'top', -anchor => 'w' );
 		$::lglobal{searchop1} =
@@ -1153,32 +1165,30 @@ sub searchpopup {
 							 -selectcolor => $::lglobal{checkcolor},
 							 -text        => 'Start at Beginning'
 		  )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
-
 		$::lglobal{searchop5} =
 		  $sf2->Checkbutton(
 							 -variable    => \$::auto_show_images,
 							 -selectcolor => $::lglobal{checkcolor},
 							 -text        => 'Show Images'
 		  )->pack( -side => 'left', -anchor => 'n', -pady => 1 );
-
 		my ( $sf13, $sf14, $sf5 );
 		my $sf10 =
 		  $::lglobal{searchpop}->Frame->pack(
-											-side   => 'top',
-											-anchor => 'n',
-											-expand => '1',
-											-fill   => 'x'
+											  -side   => 'top',
+											  -anchor => 'n',
+											  -expand => '1',
+											  -fill   => 'x'
 		  );
 		my $replacelabel =
 		  $sf10->Label( -text => "Replacement Text\t\t", )
 		  ->grid( -row => 1, -column => 1 );
-
 		$sf10->Label( -text => 'Terms - ' )->grid( -row => 1, -column => 2 );
 		$sf10->Radiobutton(
 			-text     => 'single',
 			-variable => \$::multiterm,
 			-value    => 0,
 			-command  => sub {
+
 				for ( $sf13, $sf14 ) {
 					$_->packForget;
 				}
@@ -1214,13 +1224,12 @@ sub searchpopup {
 		)->grid( -row => 1, -column => 4 );
 		my $sf12 =
 		  $::lglobal{searchpop}->Frame->pack(
-											-side   => 'top',
-											-anchor => 'w',
-											-padx   => 3,
-											-expand => 'y',
-											-fill   => 'x'
+											  -side   => 'top',
+											  -anchor => 'w',
+											  -padx   => 3,
+											  -expand => 'y',
+											  -fill   => 'x'
 		  );
-
 		$sf12->Button(
 			-activebackground => $::activecolor,
 			-command          => sub {
@@ -1235,15 +1244,14 @@ sub searchpopup {
 				   -padx   => 2,
 				   -anchor => 'nw'
 		  );
-
 		$sf12->Button(
 			-activebackground => $::activecolor,
 			-command          => sub {
 				replace( $::lglobal{replaceentry}->get( '1.0', '1.end' ) );
 				add_search_history(
-								   $::lglobal{searchentry}->get( '1.0', '1.end' ),
-								   \@::search_history, $::history_size );
-				searchtext($textwindow,$top,'');
+								 $::lglobal{searchentry}->get( '1.0', '1.end' ),
+								 \@::search_history, $::history_size );
+				searchtext( $textwindow, $top, '' );
 			},
 			-text  => 'R & S',
 			-width => 5
@@ -1258,8 +1266,8 @@ sub searchpopup {
 			-command          => sub {
 				replace( $::lglobal{replaceentry}->get( '1.0', '1.end' ) );
 				add_search_history(
-								  $::lglobal{replaceentry}->get( '1.0', '1.end' ),
-								  \@::replace_history, $::history_size );
+								$::lglobal{replaceentry}->get( '1.0', '1.end' ),
+								\@::replace_history, $::history_size );
 			},
 			-text  => 'Replace',
 			-width => 6
@@ -1269,7 +1277,6 @@ sub searchpopup {
 				   -padx   => 2,
 				   -anchor => 'nw'
 		  );
-
 		$::lglobal{replaceentry} =
 		  $sf12->Text(
 					   -background => $::bkgcolor,
@@ -1292,7 +1299,6 @@ sub searchpopup {
 			-height => 15,
 		)->pack( -side => 'right', -anchor => 'w' );
 		$sf13 = $::lglobal{searchpop}->Frame;
-
 		$sf13->Button(
 			-activebackground => $::activecolor,
 			-command          => sub {
@@ -1306,12 +1312,11 @@ sub searchpopup {
 				   -padx   => 2,
 				   -anchor => 'nw'
 		  );
-
 		$sf13->Button(
 			-activebackground => $::activecolor,
 			-command          => sub {
 				replace( $::lglobal{replaceentry1}->get( '1.0', '1.end' ) );
-				searchtext($textwindow,$top,'');
+				searchtext( $textwindow, $top, '' );
 			},
 			-text  => 'R & S',
 			-width => 5
@@ -1326,8 +1331,8 @@ sub searchpopup {
 			-command          => sub {
 				replace( $::lglobal{replaceentry1}->get( '1.0', '1.end' ) );
 				add_search_history(
-								 $::lglobal{replaceentry1}->get( '1.0', '1.end' ),
-								 \@::replace_history );
+							   $::lglobal{replaceentry1}->get( '1.0', '1.end' ),
+							   \@::replace_history );
 			},
 			-text  => 'Replace',
 			-width => 6
@@ -1337,7 +1342,6 @@ sub searchpopup {
 				   -padx   => 2,
 				   -anchor => 'nw'
 		  );
-
 		$::lglobal{replaceentry1} =
 		  $sf13->Text(
 					   -background => $::bkgcolor,
@@ -1353,14 +1357,14 @@ sub searchpopup {
 		$sf13->Button(
 			-activebackground => $::activecolor,
 			-command          => sub {
-				search_history( $::lglobal{replaceentry1}, \@::replace_history );
+				search_history( $::lglobal{replaceentry1},
+								\@::replace_history );
 			},
 			-image  => $::lglobal{hist_img},
 			-width  => 9,
 			-height => 15,
 		)->pack( -side => 'right', -anchor => 'w' );
 		$sf14 = $::lglobal{searchpop}->Frame;
-
 		$sf14->Button(
 			-activebackground => $::activecolor,
 			-command          => sub {
@@ -1374,12 +1378,11 @@ sub searchpopup {
 				   -padx   => 2,
 				   -anchor => 'nw'
 		  );
-
 		$sf14->Button(
 			-activebackground => $::activecolor,
 			-command          => sub {
 				replace( $::lglobal{replaceentry2}->get( '1.0', '1.end' ) );
-				searchtext($textwindow,$top,'');
+				searchtext( $textwindow, $top, '' );
 			},
 			-text  => 'R & S',
 			-width => 5
@@ -1394,8 +1397,8 @@ sub searchpopup {
 			-command          => sub {
 				replace( $::lglobal{replaceentry2}->get( '1.0', '1.end' ) );
 				add_search_history(
-								 $::lglobal{replaceentry2}->get( '1.0', '1.end' ),
-								 \@::replace_history );
+							   $::lglobal{replaceentry2}->get( '1.0', '1.end' ),
+							   \@::replace_history );
 			},
 			-text  => 'Replace',
 			-width => 6
@@ -1405,7 +1408,6 @@ sub searchpopup {
 				   -padx   => 2,
 				   -anchor => 'nw'
 		  );
-
 		$::lglobal{replaceentry2} =
 		  $sf14->Text(
 					   -background => $::bkgcolor,
@@ -1421,13 +1423,13 @@ sub searchpopup {
 		$sf14->Button(
 			-activebackground => $::activecolor,
 			-command          => sub {
-				search_history( $::lglobal{replaceentry2}, \@::replace_history );
+				search_history( $::lglobal{replaceentry2},
+								\@::replace_history );
 			},
 			-image  => $::lglobal{hist_img},
 			-width  => 9,
 			-height => 15,
 		)->pack( -side => 'right', -anchor => 'w' );
-
 		if ($::multiterm) {
 			for ( $sf13, $sf14 ) {
 				$_->pack(
@@ -1462,7 +1464,7 @@ sub searchpopup {
 			my $nextoccurrencebutton = $sf5->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					searchtext($textwindow,$top,'');
+					searchtext( $textwindow, $top, '' );
 				},
 				-text  => 'Next Occurrence',
 				-width => 15
@@ -1567,7 +1569,7 @@ sub searchpopup {
 				$::lglobal{replaceentry}->see('1.0');
 				$::lglobal{replaceentry}->delete('1.end');
 				$::lglobal{replaceentry}->delete( '2.0', 'end' );
-				searchtext($textwindow,$top);
+				searchtext( $textwindow, $top );
 				$top->raise;
 			}
 		);
@@ -1577,7 +1579,7 @@ sub searchpopup {
 				$::lglobal{searchentry}->delete( '2.0', 'end' );
 				$::lglobal{replaceentry}->see('1.0');
 				$::lglobal{replaceentry}->delete( '2.0', 'end' );
-				searchtext($textwindow,$top);
+				searchtext( $textwindow, $top );
 				$top->raise;
 			}
 		);
@@ -1587,28 +1589,26 @@ sub searchpopup {
 				$::lglobal{searchentry}->delete( '2.0', 'end' );
 				$::lglobal{replaceentry}->see('1.0');
 				$::lglobal{replaceentry}->delete( '2.0', 'end' );
-				searchtext($textwindow,$top);
+				searchtext( $textwindow, $top );
 				$top->raise;
 			}
 		);
 		$::lglobal{searchpop}->eventAdd( '<<FindNexte>>' => '<Control-Key-G>',
-									   '<Control-Key-g>' );
-
+										 '<Control-Key-g>' );
 		$::lglobal{searchentry}->bind(
 			'<<FindNexte>>',
 			sub {
 				$::lglobal{searchentry}->delete('insert -1c')
 				  if ( $::lglobal{searchentry}->get('insert -1c') eq "\cG" );
-				searchtext($textwindow,$top, $::lglobal{searchentry}->get( '1.0', '1.end' ) );
+				searchtext( $textwindow, $top,
+							$::lglobal{searchentry}->get( '1.0', '1.end' ) );
 				$textwindow->focus;
 			}
 		);
-
 		$::lglobal{searchentry}->{_MENU_}   = ();
 		$::lglobal{replaceentry}->{_MENU_}  = ();
 		$::lglobal{replaceentry1}->{_MENU_} = ();
 		$::lglobal{replaceentry2}->{_MENU_} = ();
-
 		$::lglobal{searchentry}->bind(
 			'<FocusIn>',
 			sub {
@@ -1633,7 +1633,6 @@ sub searchpopup {
 				$::lglobal{hasfocus} = $::lglobal{replaceentry2};
 			}
 		);
-
 		$::lglobal{searchpop}->Tk::bind(
 			'<Control-Return>' => sub {
 				$::lglobal{searchentry}->see('1.0');
@@ -1643,7 +1642,7 @@ sub searchpopup {
 				$::lglobal{replaceentry}->delete('1.end');
 				$::lglobal{replaceentry}->delete( '2.0', 'end' );
 				replace( $::lglobal{replaceentry}->get( '1.0', '1.end' ) );
-				searchtext($textwindow,$top);
+				searchtext( $textwindow, $top );
 				$top->raise;
 			}
 		);
@@ -1676,13 +1675,13 @@ sub searchpopup {
 		$::lglobal{searchentry}->delete( '1.0', 'end' );
 		$::lglobal{searchentry}->insert( 'end', $searchterm );
 		$::lglobal{searchentry}->tagAdd( 'sel', '1.0', 'end -1c' );
-		searchtext($textwindow,$top,'');
+		searchtext( $textwindow, $top, '' );
 	}
 }
 
 sub stealthscanno {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	$::lglobal{doscannos} = 1;
 	$::lglobal{searchpop}->destroy if defined $::lglobal{searchpop};
 	undef $::lglobal{searchpop};
@@ -1692,15 +1691,15 @@ sub stealthscanno {
 		::savesettings();
 		searchpopup();
 		getnextscanno();
-		searchtext($textwindow,$top);
+		searchtext( $textwindow, $top );
 	}
 	$::lglobal{doscannos} = 0;
 }
 
 sub find_proofer_comment {
 	my $textwindow = $::textwindow;
-	my $pattern = '[**';
-	my $comment = $textwindow->search( $pattern, "insert" );
+	my $pattern    = '[**';
+	my $comment    = $textwindow->search( $pattern, "insert" );
 	if ($comment) {
 		my $index = $textwindow->index("$comment +1c");
 		$textwindow->SetCursor($index);
@@ -1792,8 +1791,8 @@ sub nextblock {
 	} elsif ( $mark eq 'poetry' ) {
 		if ( $direction eq 'forward' ) {
 			$::searchstartindex =
-			  $textwindow->search( '-regexp', '--', '\/[pP]', $::searchstartindex,
-								   'end' )
+			  $textwindow->search( '-regexp', '--', '\/[pP]',
+								   $::searchstartindex, 'end' )
 			  if $::searchstartindex;
 		} elsif ( $direction eq 'reverse' ) {
 			$::searchstartindex =
@@ -1820,7 +1819,7 @@ sub nextblock {
 
 sub orphanedbrackets {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	my $psel;
 	if ( defined( $::lglobal{brkpop} ) ) {
 		$::lglobal{brkpop}->deiconify;
@@ -1830,7 +1829,6 @@ sub orphanedbrackets {
 		$::lglobal{brkpop} = $top->Toplevel;
 		$::lglobal{brkpop}->title('Find orphan brackets');
 		::initialize_popup_without_deletebinding('brkpop');
-
 		$::lglobal{brkpop}->Label( -text => 'Bracket or Markup Style' )->pack;
 		my $frame = $::lglobal{brkpop}->Frame->pack;
 		$psel = $frame->Radiobutton(
@@ -1897,7 +1895,6 @@ sub orphanedbrackets {
 								-value       => '«|»',
 								-text        => 'Angle quotes « »',
 		  )->grid( -row => 2, -column => 2, -pady => 5 );
-
 		my $gqusel =
 		  $frame3->Radiobutton(
 								-variable    => \$::lglobal{brsel},
@@ -1913,7 +1910,6 @@ sub orphanedbrackets {
 		#								-value       => 'all',
 		#								-text        => 'All brackets ( )',
 		#		  )->grid( -row => 3, -column => 2 );
-
 		my $frame2 = $::lglobal{brkpop}->Frame->pack;
 		my $brsearchbt =
 		  $frame2->Button(
@@ -1959,9 +1955,9 @@ sub orphanedbrackets {
 		while ( $::lglobal{brindex} ) {
 			$::lglobal{brindex} =
 			  $textwindow->search(
-								 '-regexp',
-								 '-count' => \$brlength,
-								 '--', $::lglobal{brsel}, $::lglobal{brindex}, 'end'
+							 '-regexp',
+							 '-count' => \$brlength,
+							 '--', $::lglobal{brsel}, $::lglobal{brindex}, 'end'
 			  );
 			last unless $::lglobal{brindex};
 			$::lglobal{brbrackets}[$brcount] =
@@ -2028,13 +2024,15 @@ sub orphanedbrackets {
 								 'highlight',
 								 $::lglobal{brindices}[0],
 								 $::lglobal{brindices}[0] . '+'
-								   . ( length( $::lglobal{brbrackets}[0] ) ) . 'c'
+								   . ( length( $::lglobal{brbrackets}[0] ) )
+								   . 'c'
 			) if $::lglobal{brindices}[0];
 			$textwindow->tagAdd(
 								 'highlight',
 								 $::lglobal{brindices}[1],
 								 $::lglobal{brindices}[1] . '+'
-								   . ( length( $::lglobal{brbrackets}[1] ) ) . 'c'
+								   . ( length( $::lglobal{brbrackets}[1] ) )
+								   . 'c'
 			) if $::lglobal{brindices}[1];
 			$textwindow->focus;
 		}
@@ -2053,7 +2051,6 @@ sub orphanedmarkup {
 
 sub searchsize {  # Pop up a window where you can adjust the search history size
 	my $top = $::top;
-
 	if ( $::lglobal{hssizepop} ) {
 		$::lglobal{hssizepop}->deiconify;
 		$::lglobal{hssizepop}->raise;
@@ -2112,11 +2109,12 @@ sub loadscannos {
 						 -title      => 'Scannos list?',
 						 -initialdir => $::scannospath
 	  );
+
 	if ( $::lglobal{scannosfilename} ) {
 		my ( $name, $path, $extension ) =
 		  ::fileparse( $::lglobal{scannosfilename}, '\.[^\.]*$' );
 		$::scannospath = $path;
-		unless ( my $return = ::dofile( $::lglobal{scannosfilename}) )
+		unless ( my $return = ::dofile( $::lglobal{scannosfilename} ) )
 		{    # load scannos list
 			unless ( defined $return ) {
 				if ($@) {
@@ -2150,5 +2148,4 @@ sub loadscannos {
 		return 1;
 	}
 }
-
 1;

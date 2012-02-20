@@ -1,13 +1,12 @@
 package Guiguts::WordFrequency;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
-	@ISA=qw(Exporter);
-	@EXPORT=qw(&wordfrequencybuildwordlist &wordfrequency)
+	our ( @ISA, @EXPORT );
+	@ISA    = qw(Exporter);
+	@EXPORT = qw(&wordfrequencybuildwordlist &wordfrequency);
 }
 
 # build lists of words, word pairs, and double hyphenated words
@@ -18,9 +17,10 @@ sub wordfrequencybuildwordlist {
 	my $wc    = 0;
 	my $end   = $textwindow->index('end');
 	$::lglobal{seenwordsdoublehyphen} = ();
-	$::lglobal{seenwords} = ();
-	$::lglobal{seenwordpairs} = ();
+	$::lglobal{seenwords}             = ();
+	$::lglobal{seenwordpairs}         = ();
 	my $filename = $textwindow->FileName;
+
 	unless ($filename) {
 		$filename = 'tempfile.tmp';
 		open( my $file, ">", "$filename" );
@@ -57,20 +57,21 @@ sub wordfrequencybuildwordlist {
 			$::lglobal{seenwordsdoublehyphen}->{$match}++;
 		}
 		$line =~ s/[^'\.,\p{Alnum}\*-]/ /g;    # get rid of nonalphanumeric
-		$line =~ s/--/ /g;                   # get rid of --
+		$line =~ s/--/ /g;                     # get rid of --
 		$line =~
 		  s/—/ /g;    # trying to catch words with real em-dashes, from dp2rst
 		$line =~ s/(\D),/$1 /g;    # throw away comma after non-digit
 		$line =~ s/,(\D)/ $1/g;    # and before
 		@words = split( /\s+/, $line );
 		for my $word (@words) {
-			$word =~s/ //g;
-			if (length($word)==0) {next;}
-			if ($lastwordseen && not ("$lastwordseen $word" =~ m/\d/)) {
+			$word =~ s/ //g;
+			if ( length($word) == 0 ) { next; }
+			if ( $lastwordseen && not( "$lastwordseen $word" =~ m/\d/ ) ) {
 				$::lglobal{seenwordpairs}->{"$lastwordseen $word"}++;
 			}
 			$lastwordseen = $word;
-			#$word =~ s/\*//;    
+
+			#$word =~ s/\*//;
 			$word =~ s/[\.',-]+$//;    # throw away punctuation at end
 			$word =~ s/^[\.,'-]+//;    #and at the beginning
 			next if ( $word eq '' );
@@ -86,10 +87,9 @@ sub wordfrequencybuildwordlist {
 	unlink 'tempfile.tmp' if ( -e 'tempfile.tmp' );
 	return $wc;
 }
-
 ## Word Frequency
 sub wordfrequency {
-	my ($textwindow,$top) = @_;
+	my ( $textwindow, $top ) = @_;
 	push @::operations, ( localtime() . ' - Word Frequency' );
 	&::viewpagenums() if ( $::lglobal{seepagenums} );
 	&::oppopupdate()  if $::lglobal{oppop};
@@ -112,13 +112,13 @@ sub wordfrequency {
 		  $::lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $wcopt3 =
 		  $wordfreqseframe->Checkbutton(
-										 -variable => \$::lglobal{suspects_only},
-										 -selectcolor => $::lglobal{checkcolor},
-										 -text        => 'Suspects only'
+										-variable => \$::lglobal{suspects_only},
+										-selectcolor => $::lglobal{checkcolor},
+										-text        => 'Suspects only'
 		  )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
 		my $wcopt1 =
 		  $wordfreqseframe->Checkbutton(
-										 -variable    => \$::lglobal{ignore_case},
+										 -variable => \$::lglobal{ignore_case},
 										 -selectcolor => $::lglobal{checkcolor},
 										 -text        => 'No case',
 		  )->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
@@ -174,7 +174,7 @@ sub wordfrequency {
 
 				#return if $::lglobal{global_filename} =~ /No File Loaded/;
 				#savefile() unless ( $textwindow->numberChanges == 0 );
-				wordfrequency($textwindow,$top);
+				wordfrequency( $textwindow, $top );
 			},
 			-text => 'Rerun '
 		  )->pack(
@@ -186,9 +186,9 @@ sub wordfrequency {
 		my $wordfreqseframe1 =
 		  $::lglobal{wfpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my @wfbuttons = (
-			[ 'Emdashes'  => sub {dashcheck($top) }],
-			[ 'Hyphens'   => sub{hyphencheck($top)} ],
-			[ 'Alpha/num' => sub{alphanumcheck($top) }],
+			[ 'Emdashes'  => sub { dashcheck($top) } ],
+			[ 'Hyphens'   => sub { hyphencheck($top) } ],
+			[ 'Alpha/num' => sub { alphanumcheck($top) } ],
 			[
 			   'All Words' => sub {
 				   $::lglobal{saveheader} =
@@ -196,49 +196,54 @@ sub wordfrequency {
 					 keys( %{ $::lglobal{seenwords} } )
 					 . " distinct words in file.";
 				   sortwords( $::lglobal{seenwords} );
-				   &::searchoptset(qw/1 0 x 0/);    #default is whole word search
+				   &::searchoptset(qw/1 0 x 0/);   #default is whole word search
 				 }
 			],
-			[ 'Check Spelling', sub{wordfrequencyspellcheck($top)} ],
-			[ 'Ital/Bold/SC', sub {itwords($top); ital_adjust($top) }],
-			[ 'ALL CAPS',     sub {capscheck($top)} ],
-			[ 'MiXeD CasE',   sub {mixedcasecheck($top)} ],
-			[ 'Initial Caps',
-				  sub {anythingwfcheck('words with initial caps',
-				  '^\p{Upper}\P{Upper}+$',$top)}
+			[ 'Check Spelling', sub { wordfrequencyspellcheck($top) } ],
+			[ 'Ital/Bold/SC',   sub { itwords($top); ital_adjust($top) } ],
+			[ 'ALL CAPS',       sub { capscheck($top) } ],
+			[ 'MiXeD CasE',     sub { mixedcasecheck($top) } ],
+			[
+			   'Initial Caps',
+			   sub {
+				   anythingwfcheck( 'words with initial caps',
+									'^\p{Upper}\P{Upper}+$', $top );
+				 }
 			],
-			[ 'Character Cnts', sub{charsortcheck($textwindow,$top) }],
-			[ 'Check , Upper',  sub{commark($top)} ],
-			[ 'Check . Lower',  sub{bangmark($top) }],
-			[ 'Check Accents',  sub{accentcheck($top)} ],
+			[ 'Character Cnts', sub { charsortcheck( $textwindow, $top ) } ],
+			[ 'Check , Upper',  sub { commark($top) } ],
+			[ 'Check . Lower',  sub { bangmark($top) } ],
+			[ 'Check Accents',  sub { accentcheck($top) } ],
 			[
 			   'Unicode > FF',
 			   [
-				  \&anythingwfcheck, 'words with unicode chars > FF',
-				  '[\x{100}-\x{FFEF}]',$top
+				  \&anythingwfcheck,    'words with unicode chars > FF',
+				  '[\x{100}-\x{FFEF}]', $top
 			   ]
 			],
-
-			[ 'Stealtho Check', sub {stealthcheck($textwindow,$top)} ],
+			[ 'Stealtho Check', sub { stealthcheck( $textwindow, $top ) } ],
 			[
 			   'Ligatures',
 			   [
 				  \&anythingwfcheck,
 				  'words with possible ligatures',
-				  '(oe|ae|æ|Æ|\x{0153}|\x{0152})',$top
+				  '(oe|ae|æ|Æ|\x{0153}|\x{0152})',
+				  $top
 			   ]
 			],
-			[ 'RegExpEntry', [ \&anythingwfcheck, 'dummy entry', 'dummy',$top] ],
+			[
+			   'RegExpEntry',
+			   [ \&anythingwfcheck, 'dummy entry', 'dummy', $top ]
+			],
 			[
 			   '<--RegExp',
 			   [
 				  sub {
 					  anythingwfcheck( 'words matching regular expression',
-									   $::regexpentry,$top );
+									   $::regexpentry, $top );
 					}
 			   ]
 			],
-
 		);
 		my ( $row, $col, $inc ) = ( 0, 0, 0 );
 		for (@wfbuttons) {
@@ -248,10 +253,10 @@ sub wordfrequency {
 			if ( not( $_->[0] eq 'RegExpEntry' ) ) {
 				my $button =
 				  $wordfreqseframe1->Button(
-											 -activebackground => $::activecolor,
-											 -command          => $_->[1],
-											 -text             => $_->[0],
-											 -width            => 13
+											-activebackground => $::activecolor,
+											-command          => $_->[1],
+											-text             => $_->[0],
+											-width            => 13
 				  )->grid(
 						   -row    => $row,
 						   -column => $col,
@@ -268,7 +273,6 @@ sub wordfrequency {
 				  )->grid( -row => $row, -column => $col );
 			}
 		}
-
 		my $wcframe =
 		  $::lglobal{wfpop}->Frame->pack( -fill => 'both', -expand => 'both', );
 		$::lglobal{wclistbox} =
@@ -303,23 +307,24 @@ sub wordfrequency {
 			sub {
 				$::lglobal{wclistbox}->selectionClear( 0, 'end' );
 				$::lglobal{wclistbox}->selectionSet(
-										 $::lglobal{wclistbox}->index(
-											 '@'
-											   . (
-												 $::lglobal{wclistbox}->pointerx -
-												   $::lglobal{wclistbox}->rootx
-											   )
-											   . ','
-											   . (
-												 $::lglobal{wclistbox}->pointery -
-												   $::lglobal{wclistbox}->rooty
-											   )
-										 )
+									   $::lglobal{wclistbox}->index(
+										   '@'
+											 . (
+											   $::lglobal{wclistbox}->pointerx -
+												 $::lglobal{wclistbox}->rootx
+											 )
+											 . ','
+											 . (
+											   $::lglobal{wclistbox}->pointery -
+												 $::lglobal{wclistbox}->rooty
+											 )
+									   )
 				);
 
 				# right click means popup a search box
 				my ($sword) =
-				  $::lglobal{wclistbox}->get( $::lglobal{wclistbox}->curselection );
+				  $::lglobal{wclistbox}
+				  ->get( $::lglobal{wclistbox}->curselection );
 				&::searchpopup();
 				$sword =~ s/\d+\s+(\S)/$1/;
 				$sword =~ s/\s+\*\*\*\*$//;
@@ -351,7 +356,8 @@ sub wordfrequency {
 			'<<find>>',
 			sub {
 				my ($sword) =
-				  $::lglobal{wclistbox}->get( $::lglobal{wclistbox}->curselection );
+				  $::lglobal{wclistbox}
+				  ->get( $::lglobal{wclistbox}->curselection );
 				return unless length $sword;
 				@savesets = @::sopt;
 				$sword =~ s/(\d+)\s+(\S)/$2/;
@@ -372,7 +378,8 @@ sub wordfrequency {
 
 				# not whole word search from character cnts popup
 				if (     ( length($sword) == 1 )
-					 and ( $::lglobal{saveheader} =~ /characters in the file./ ) )
+					 and ( $::lglobal{saveheader} =~ /characters in the file./ )
+				  )
 				{
 					&::searchoptset(qw/0 0 x 0/);
 				}
@@ -382,7 +389,6 @@ sub wordfrequency {
 		# NOTE: sword will be used as a regular expression filter during display
 					$sword .= '([^\.\?\!]|$)';
 				}
-
 				if    ( $sword =~ /\*space\*/ )   { $sword = ' ' }
 				elsif ( $sword =~ /\*tab\*/ )     { $sword = "\t" }
 				elsif ( $sword =~ /\*newline\*/ ) { $sword = "\n" }
@@ -396,7 +402,7 @@ sub wordfrequency {
 
 				#print $sopt[0],$sopt[1],$sopt[2],$sopt[3],$sopt[4].":sopt\n";
 				&::searchfromstartifnew($sword);
-				&::searchtext($textwindow,$top,$sword);
+				&::searchtext( $textwindow, $top, $sword );
 				&::searchoptset(@savesets);
 				$top->raise;
 			}
@@ -411,7 +417,7 @@ sub wordfrequency {
 			}
 		);
 		$::lglobal{wclistbox}->eventAdd( '<<adddict>>' => '<Control-Button-2>',
-									   '<Control-Button-3>' );
+										 '<Control-Button-3>' );
 		$::lglobal{wclistbox}->bind(
 			'<<adddict>>',
 			sub {
@@ -440,7 +446,8 @@ sub wordfrequency {
 										-initialdir  => $::globallastpath,
 										-initialfile => 'wordfreq.txt'
 				  );
-	#FIXME not UTF-8 compatible
+
+				#FIXME not UTF-8 compatible
 				if ( defined($name) and length($name) ) {
 					open( my $save, ">", "$name" );
 					print $save join "\n",
@@ -457,7 +464,8 @@ sub wordfrequency {
 									  -initialdir  => $::globallastpath,
 									  -initialfile => 'wordlist.txt'
 				  );
-	#FIXME not UTF-8 compatible
+
+				#FIXME not UTF-8 compatible
 				if ( defined($name) and length($name) ) {
 					my $count = $::lglobal{wclistbox}->index('end');
 					open( my $save, ">", "$name" );
@@ -475,7 +483,8 @@ sub wordfrequency {
 	}
 	$top->Busy( -recurse => 1 );
 	$::lglobal{wclistbox}->focus;
-	$::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$::lglobal{wclistbox}
+	  ->insert( 'end', 'Please wait, building word list....' );
 	$wc = wordfrequencybuildwordlist($textwindow);
 
 	#print "$index  ";
@@ -496,7 +505,7 @@ sub wordfrequency {
 }
 
 sub bangmark {
-	my $top=shift;
+	my $top = shift;
 	$top->Busy( -recurse => 1 );
 	$::lglobal{wclistbox}->delete( '0', 'end' );
 	my %display = ();
@@ -540,7 +549,7 @@ sub bangmark {
 }
 
 sub dashcheck {
-	my $top=shift;
+	my $top = shift;
 	$top->Busy( -recurse => 1 );
 	$::lglobal{wclistbox}->delete( '0', 'end' );
 	$::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
@@ -581,10 +590,12 @@ sub alphanumcheck {
 	$top->Busy( -recurse => 1 );
 	my %display = ();
 	$::lglobal{wclistbox}->delete( '0', 'end' );
-	$::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$::lglobal{wclistbox}
+	  ->insert( 'end', 'Please wait, building word list....' );
 	$::lglobal{wclistbox}->update;
 	$::lglobal{wclistbox}->delete( '0', 'end' );
 	my $wordw = 0;
+
 	foreach ( keys %{ $::lglobal{seenwords} } ) {
 		next unless ( $_ =~ /\d/ );
 		next unless ( $_ =~ /\p{Alpha}/ );
@@ -604,7 +615,8 @@ sub capscheck {
 	my $top = shift;
 	$top->Busy( -recurse => 1 );
 	$::lglobal{wclistbox}->delete( '0', 'end' );
-	$::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$::lglobal{wclistbox}
+	  ->insert( 'end', 'Please wait, building word list....' );
 	$::lglobal{wclistbox}->update;
 	my %display = ();
 	my $wordw   = 0;
@@ -625,7 +637,8 @@ sub mixedcasecheck {
 	my $top = shift;
 	$top->Busy( -recurse => 1 );
 	$::lglobal{wclistbox}->delete( '0', 'end' );
-	$::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$::lglobal{wclistbox}
+	  ->insert( 'end', 'Please wait, building word list....' );
 	$::lglobal{wclistbox}->update;
 	my %display = ();
 	my $wordw   = 0;
@@ -644,7 +657,7 @@ sub mixedcasecheck {
 
 # Refactor various word frequency checks into one
 sub anythingwfcheck {
-	my ( $checktype, $checkregexp,$top ) = @_;
+	my ( $checktype, $checkregexp, $top ) = @_;
 	$::lglobal{wclistbox}->delete( '0', 'end' );
 	if ( not &::isvalid($checkregexp) ) {
 		$::lglobal{wclistbox}
@@ -652,7 +665,8 @@ sub anythingwfcheck {
 		$::lglobal{wclistbox}->update;
 		return;
 	}
-	$::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$::lglobal{wclistbox}
+	  ->insert( 'end', 'Please wait, building word list....' );
 	$::lglobal{wclistbox}->update;
 	$top->Busy( -recurse => 1 );
 	my %display = ();
@@ -672,7 +686,8 @@ sub accentcheck {
 	my $top = shift;
 	$top->Busy( -recurse => 1 );
 	$::lglobal{wclistbox}->delete( '0', 'end' );
-	$::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$::lglobal{wclistbox}
+	  ->insert( 'end', 'Please wait, building word list....' );
 	my %display = ();
 	my %accent  = ();
 	$::lglobal{wclistbox}->update;
@@ -746,7 +761,6 @@ s/([\.\?\!]['"]*[\n\s]['"]*\p{Upper}\p{Alnum}*),([\n\s]['"]*\p{Upper})/$1 $2/g;
 			  && $2
 			  && $2 ne '';    # ignore if word followed by period, !, or ?
 		$wordw++;
-
 		if ( $wordw == 0 ) {
 
 			# FIXME: think this code DOESN'T WORK. skipping
@@ -822,13 +836,15 @@ sub itwords {
 
 sub ital_adjust {
 	my $top = shift;
-	return if $::lglobal{markuppop}; 
+	return if $::lglobal{markuppop};
 	$::lglobal{markuppop} = $top->Toplevel( -title => 'Word count threshold', );
-	my $f0 = $::lglobal{markuppop}->Frame->pack( -side => 'top', -anchor => 'n' );
+	my $f0 =
+	  $::lglobal{markuppop}->Frame->pack( -side => 'top', -anchor => 'n' );
 	$f0->Label( -text =>
 "Threshold word count for marked up phrase.\nPhrases with more words will be skipped.\nDefault is 4."
 	)->pack;
-	my $f1 = $::lglobal{markuppop}->Frame->pack( -side => 'top', -anchor => 'n' );
+	my $f1 =
+	  $::lglobal{markuppop}->Frame->pack( -side => 'top', -anchor => 'n' );
 	$f1->Entry(
 		-width        => 10,
 		-background   => $::bkgcolor,
@@ -856,7 +872,8 @@ sub hyphencheck {
 	my $top = shift;
 	$top->Busy( -recurse => 1 );
 	$::lglobal{wclistbox}->delete( '0', 'end' );
-	$::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$::lglobal{wclistbox}
+	  ->insert( 'end', 'Please wait, building word list....' );
 	$::lglobal{wclistbox}->update;
 	my $wordw   = 0;
 	my $wordwo  = 0;
@@ -868,19 +885,25 @@ sub hyphencheck {
 		if ( $word =~ /-/ ) {
 			$wordw++;
 			my $wordtemp = $word;
+
 			# display all words with hyphens unless suspects only is chosen
 			$display{$word} = $::lglobal{seenwords}->{$word}
 			  unless $::lglobal{suspects_only};
+
 			# Check if the same word also appears with a double hyphen
 			$word =~ s/-/--/g;
 			if ( $::lglobal{seenwordsdoublehyphen}->{$word} ) {
+
 				# display with single and with double hyphen
-				$display{$wordtemp. ' ****'} = $::lglobal{seenwords}->{$wordtemp}
+				$display{ $wordtemp . ' ****' } =
+				  $::lglobal{seenwords}->{$wordtemp}
 				  if $::lglobal{suspects_only};
 				my $aword = $word . ' ****';
-				$display{$word. ' ****'} = $::lglobal{seenwordsdoublehyphen}->{$word};
+				$display{ $word . ' ****' } =
+				  $::lglobal{seenwordsdoublehyphen}->{$word};
 				$wordwo++;
 			}
+
 			# Check if the same word also appears with space
 			$word =~ s/-/ /g;
 			$word =~ s/  / /g;
@@ -893,7 +916,8 @@ sub hyphencheck {
 			# Check if the same word also appears without a space or hyphen
 			$word =~ s/ //g;
 			if ( $::lglobal{seenwords}->{$word} ) {
-				$display{$wordtemp. ' ****'} = $::lglobal{seenwords}->{$wordtemp}
+				$display{ $wordtemp . ' ****' } =
+				  $::lglobal{seenwords}->{$wordtemp}
 				  if $::lglobal{suspects_only};
 				my $aword = $word . ' ****';
 				$display{$aword} = $::lglobal{seenwords}->{$word};
@@ -910,7 +934,7 @@ sub hyphencheck {
 			# Check if the same word also appears without a space
 			$word =~ s/ //g;
 			if ( $::lglobal{seenwords}->{$word} ) {
-				$display{$word. ' ****'} = $::lglobal{seenwords}->{$word};
+				$display{ $word . ' ****' } = $::lglobal{seenwords}->{$word};
 				my $aword = $wordtemp . ' ****';
 				$display{$aword} = $::lglobal{seenwordpairs}->{$wordtemp}
 				  unless $display{$aword};
@@ -918,7 +942,7 @@ sub hyphencheck {
 			}
 			$word =~ s/-//g;
 			if ( $::lglobal{seenwords}->{$word} ) {
-				$display{$word. ' ****'} = $::lglobal{seenwords}->{$word};
+				$display{ $word . ' ****' } = $::lglobal{seenwords}->{$word};
 				my $aword = $wordtemp . ' ****';
 				$display{$aword} = $::lglobal{seenwordpairs}->{$wordtemp}
 				  unless $display{$aword};
@@ -933,7 +957,7 @@ sub hyphencheck {
 }
 
 sub wordfrequencygetmisspelled {
-	$::lglobal{misspelledlist}= ();
+	$::lglobal{misspelledlist} = ();
 	my ( $words, $uwords );
 	my $wordw = 0;
 	foreach ( sort ( keys %{ $::lglobal{seenwords} } ) ) {
@@ -942,7 +966,7 @@ sub wordfrequencygetmisspelled {
 	if ($words) {
 		&::getmisspelledwords($words);
 	}
-	if ($::lglobal{misspelledlist}){
+	if ( $::lglobal{misspelledlist} ) {
 		foreach ( sort @{ $::lglobal{misspelledlist} } ) {
 			$::lglobal{spellsort}->{$_} = $::lglobal{seenwords}->{$_} || '0';
 			$wordw++;
@@ -957,9 +981,9 @@ sub wordfrequencyspellcheck {
 	return unless $::globalspellpath;
 	$top->Busy( -recurse => 1 );
 	$::lglobal{wclistbox}->delete( '0', 'end' );
-	$::lglobal{wclistbox}->insert( 'end', 'Please wait, building word list....' );
+	$::lglobal{wclistbox}
+	  ->insert( 'end', 'Please wait, building word list....' );
 	$::lglobal{wclistbox}->update;
-
 	my $wordw = wordfrequencygetmisspelled();
 	$::lglobal{saveheader} = "$wordw words not recognised by the spellchecker.";
 	sortwords( \%{ $::lglobal{spellsort} } );
@@ -967,7 +991,7 @@ sub wordfrequencyspellcheck {
 }
 
 sub charsortcheck {
-	my ($textwindow, $top) = @_;
+	my ( $textwindow, $top ) = @_;
 	$top->Busy( -recurse => 1 );
 	$::lglobal{wclistbox}->delete( '0', 'end' );
 	my %display = ();
@@ -1016,7 +1040,7 @@ sub charsortcheck {
 }
 
 sub stealthcheck {
-	my ($textwindow, $top) = @_;
+	my ( $textwindow, $top ) = @_;
 	&::loadscannos();
 	$top->Busy( -recurse => 1 );
 	$::lglobal{wclistbox}->delete( '0', 'end' );
@@ -1055,7 +1079,8 @@ sub harmonicspop {
 		$::lglobal{hpopup}->title('Word harmonics');
 		&::initialize_popup_with_deletebinding('hpopup');
 		my $frame =
-		  $::lglobal{hpopup}->Frame->pack( -fill => 'both', -expand => 'both', );
+		  $::lglobal{hpopup}
+		  ->Frame->pack( -fill => 'both', -expand => 'both', );
 		$::lglobal{hlistbox} =
 		  $frame->Scrolled(
 							'Listbox',
@@ -1086,21 +1111,22 @@ sub harmonicspop {
 			sub {
 				$::lglobal{hlistbox}->selectionClear( 0, 'end' );
 				$::lglobal{hlistbox}->selectionSet(
-										  $::lglobal{hlistbox}->index(
-											  '@'
-												. (
-												  $::lglobal{hlistbox}->pointerx -
-													$::lglobal{hlistbox}->rootx
-												)
-												. ','
-												. (
-												  $::lglobal{hlistbox}->pointery -
-													$::lglobal{hlistbox}->rooty
-												)
-										  )
+										$::lglobal{hlistbox}->index(
+											'@'
+											  . (
+												$::lglobal{hlistbox}->pointerx -
+												  $::lglobal{hlistbox}->rootx
+											  )
+											  . ','
+											  . (
+												$::lglobal{hlistbox}->pointery -
+												  $::lglobal{hlistbox}->rooty
+											  )
+										)
 				);
 				my ($sword) =
-				  $::lglobal{hlistbox}->get( $::lglobal{hlistbox}->curselection );
+				  $::lglobal{hlistbox}
+				  ->get( $::lglobal{hlistbox}->curselection );
 				searchpopup();
 				$sword =~ s/\d+\s+([\w'-]*)/$1/;
 				$sword =~ s/\s+\*\*\*\*$//;
@@ -1128,7 +1154,7 @@ sub harmonicspop {
 					$sword = "(?<=-)$sword|$sword(?=-)";
 				}
 				&::searchfromstartifnew($sword);
-				&::searchtext($::textwindow,$top,$sword);
+				&::searchtext( $::textwindow, $top, $sword );
 				&::searchoptset(@savesets);
 				$top->Unbusy( -recurse => 1 );
 			}
@@ -1225,28 +1251,23 @@ sub harmonics2 {
 		$::lglobal{harmonic}{$test} = 1 if ( distance( $word, $test ) <= 2 );
 	}
 }
-
 #### Levenshtein edit distance calculations #################
 #### taken from the Text::Levenshtein Module ################
 #### If available, uses Text::LevenshteinXS #################
 #### which is orders of magnitude faster. ###################
-
 sub distance {
 	if ( $::lglobal{LevenshteinXS} ) {
 		return Text::LevenshteinXS::distance(@_);
 	}
-
 	no warnings;
 	my $word1 = shift;
 	my $word2 = shift;
-
 	return 0 if $word1 eq $word2;
 	my @d;
-
 	my $len1 = length $word1;
 	my $len2 = length $word2;
-
 	$d[0][0] = 0;
+
 	for ( 1 .. $len1 ) {
 		$d[$_][0] = $_;
 		return $_
@@ -1257,7 +1278,6 @@ sub distance {
 		return $_
 		  if $_ != $len2 && substr( $word1, $_ ) eq substr( $word2, $_ );
 	}
-
 	for my $i ( 1 .. $len1 ) {
 		my $w1 = substr( $word1, $i - 1, 1 );
 		for ( 1 .. $len2 ) {
@@ -1333,7 +1353,6 @@ sub add_navigation_events {
 			$dialog_box->selectionSet( $dialog_box->index('active') );
 		}
 	);
-
 	$dialog_box->bind(
 		'<Home>',
 		sub {
@@ -1356,7 +1375,7 @@ sub add_navigation_events {
 
 sub slurpfile {
 	my $textwindow = $::textwindow;
-	my $filename = $textwindow->FileName;
+	my $filename   = $textwindow->FileName;
 	my $wholefile;
 	::savefile() unless ( $textwindow->numberChanges == 0 );
 	{
@@ -1369,6 +1388,4 @@ sub slurpfile {
 	$wholefile =~ s/-----*\s?File:\s?\S+\.(png|jpg)---.*\r?\n?//g;
 	return $wholefile;
 }
-
-
 1;

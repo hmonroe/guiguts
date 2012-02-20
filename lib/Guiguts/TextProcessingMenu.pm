@@ -1,32 +1,30 @@
 package Guiguts::TextProcessingMenu;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
-	@ISA=qw(Exporter);
-	@EXPORT=qw(&text_convert_italic &text_convert_bold &text_thought_break &text_convert_tb 
-	&text_convert_options &fixpopup &text_convert_smallcaps &text_remove_smallcaps_markup
-	&endofline &cleanup)
+	our ( @ISA, @EXPORT );
+	@ISA = qw(Exporter);
+	@EXPORT =
+	  qw(&text_convert_italic &text_convert_bold &text_thought_break &text_convert_tb
+	  &text_convert_options &fixpopup &text_convert_smallcaps &text_remove_smallcaps_markup
+	  &endofline &cleanup);
 }
 
 sub text_convert_italic {
-	my ($textwindow ,$italic_char) = @_;
-	
+	my ( $textwindow, $italic_char ) = @_;
 	my $italic  = qr/<\/?i>/;
 	my $replace = $italic_char;
 	$textwindow->FindAndReplaceAll( '-regexp', '-nocase', $italic, $replace );
 }
 
 sub text_convert_bold {
-	my ($textwindow ,$bold_char) = @_;
+	my ( $textwindow, $bold_char ) = @_;
 	my $bold    = qr{</?b>};
 	my $replace = "$bold_char";
 	$textwindow->FindAndReplaceAll( '-regexp', '-nocase', $bold, $replace );
 }
-
 ## Insert a "Thought break" (duh)
 sub text_thought_break {
 	my ($textwindow) = @_;
@@ -42,10 +40,8 @@ sub text_convert_tb {
 
 sub text_convert_options {
 	my $top = shift;
-
 	my $options = $top->DialogBox( -title   => "Text Processing Options",
 								   -buttons => ["OK"], );
-
 	my $italic_frame =
 	  $options->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
 	my $italic_label =
@@ -60,7 +56,6 @@ sub text_convert_options {
 							-relief       => 'sunken',
 							-textvariable => \$::italic_char,
 	  )->pack( -side => 'left' );
-
 	my $bold_frame =
 	  $options->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
 	my $bold_label =
@@ -119,16 +114,15 @@ sub fixpopup {
 			'Remove spaces before commas.',
 			'Remove spaces after beginning and before ending double quote.',
 'Remove spaces after opening and before closing brackets, () [], {}.',
-'Mark up a line with 4 or more * and nothing else as <tb>.',
+			'Mark up a line with 4 or more * and nothing else as <tb>.',
 			'Fix obvious l<->1 problems, lst, llth, etc.',
 			'Format ellipses correctly',
 'Remove spaces after beginning and before ending angle quotes « ».',
-
 		);
 		my $row = 0;
 		for (@rbuttons) {
 			$pframe1->Checkbutton(
-								   -variable    => \${ $::lglobal{fixopt} }[$row],
+								   -variable => \${ $::lglobal{fixopt} }[$row],
 								   -selectcolor => $::lglobal{checkcolor},
 								   -text        => $_,
 			)->grid( -row => $row, -column => 1, -sticky => 'nw' );
@@ -149,11 +143,9 @@ sub fixpopup {
 		)->grid( -row => $row, -column => 1 );
 	}
 }
-
 ## Fixup Popup
-
 sub fixup {
-	my $textwindow= $::textwindow;
+	my $textwindow = $::textwindow;
 	push @::operations, ( localtime() . ' - Fixup Routine' );
 	::viewpagenums() if ( $::lglobal{seepagenums} );
 	::oppopupdate()  if $::lglobal{oppop};
@@ -173,93 +165,93 @@ sub fixup {
 		unless ( $inblock && ${ $::lglobal{fixopt} }[0] ) {
 			if ( ${ $::lglobal{fixopt} }[2] ) {
 				while ( $line =~ s/(?<=\S)\s\s+(?=\S)/ / ) { $edited++ }
-			;	# remove multiple spaces
-				}
+				;    # remove multiple spaces
+			}
 			if ( ${ $::lglobal{fixopt} }[1] ) {
-			;	# Remove spaces before hyphen (only if hyphen isn't first on line, like poetry)
+				; # Remove spaces before hyphen (only if hyphen isn't first on line, like poetry)
 				$edited++ if $line =~ s/(\S) +-/$1-/g;
 				$edited++ if $line =~ s/- /-/g;    # Remove space after hyphen
 				$edited++
 				  if $line =~ s/(?<![-])([-]*---)(?=[^\s\\"F-])/$1 /g
-			; 	# Except leave a space after a string of three or more hyphens
+				; # Except leave a space after a string of three or more hyphens
 			}
 			if ( ${ $::lglobal{fixopt} }[3] ) {
-			; 	# Remove space before periods (only if not first on line, like poetry's ellipses)
+				; # Remove space before periods (only if not first on line, like poetry's ellipses)
 				$edited++ if $line =~ s/(\S) +\.(?=\D)/$1\./g;
 			}
-			;   # Get rid of space before periods
+			;     # Get rid of space before periods
 			if ( ${ $::lglobal{fixopt} }[4] ) {
 				$edited++
 				  if $line =~ s/ +!/!/g;
 			}
-			;   # Get rid of space before exclamation points
+			;     # Get rid of space before exclamation points
 			if ( ${ $::lglobal{fixopt} }[5] ) {
 				$edited++
 				  if $line =~ s/ +\?/\?/g;
 			}
-			;   # Get rid of space before question marks
-
+			;     # Get rid of space before question marks
 			if ( ${ $::lglobal{fixopt} }[6] ) {
 				$edited++
 				  if $line =~ s/ +\;/\;/g;
 			}
-			;   # Get rid of space before semicolons
+			;     # Get rid of space before semicolons
 			if ( ${ $::lglobal{fixopt} }[7] ) {
 				$edited++
 				  if $line =~ s/ +:/:/g;
 			}
-			;   # Get rid of space before colons
-
+			;     # Get rid of space before colons
 			if ( ${ $::lglobal{fixopt} }[8] ) {
 				$edited++
 				  if $line =~ s/ +,/,/g;
 			}
-			;   # Get rid of space before commas
-			# FIXME way to go on managing quotes
+			;     # Get rid of space before commas
+			      # FIXME way to go on managing quotes
 			if ( ${ $::lglobal{fixopt} }[9] ) {
 				$edited++
 				  if $line =~ s/^\" +/\"/
-			; 	# Remove space after doublequote if it is the first character on a line
+				; # Remove space after doublequote if it is the first character on a line
 				$edited++
 				  if $line =~ s/ +\"$/\"/
-			; 	# Remove space before doublequote if it is the last character on a line
+				; # Remove space before doublequote if it is the last character on a line
 			}
 			if ( ${ $::lglobal{fixopt} }[10] ) {
 				$edited++
 				  if $line =~ s/(?<=(\(|\{|\[)) //g
-			;   # Get rid of space after opening brackets
+				;    # Get rid of space after opening brackets
 				$edited++
 				  if $line =~ s/ (?=(\)|\}|\]))//g
-			;   # Get rid of space before closing brackets
+				;    # Get rid of space before closing brackets
 			}
-			;	# FIXME format to standard thought breaks - changed to <tb>
+			;        # FIXME format to standard thought breaks - changed to <tb>
 			if ( ${ $::lglobal{fixopt} }[11] ) {
 				$edited++
-#				  if $line =~
-# s/^\s*(\*\s*){5}$/       \*       \*       \*       \*       \*\n/;
+
+		   #				  if $line =~
+		   # s/^\s*(\*\s*){5}$/       \*       \*       \*       \*       \*\n/;
 				  if $line =~ s/^\s*(\*\s*){4,}$/<tb>\n/;
 			}
 			$edited++ if ( $line =~ s/ +$// );
-			;	# Fix llth, lst
+			;        # Fix llth, lst
 			if ( ${ $::lglobal{fixopt} }[12] ) {
 				$edited++ if $line =~ s/llth/11th/g;
 				$edited++ if $line =~ s/(?<=\d)lst/1st/g;
 				$edited++ if $line =~ s/(?<=\s)lst/1st/g;
 				$edited++ if $line =~ s/^lst/1st/;
 			}
-			;	# format ellipses correctly
+			;        # format ellipses correctly
 			if ( ${ $::lglobal{fixopt} }[13] ) {
 				$edited++ if $line =~ s/(?<![\.\!\?])\.{3}(?!\.)/ \.\.\./g;
 				$edited++ if $line =~ s/^ \./\./;
 			}
-			;	# format guillemots correctly
-			;	# french guillemots
+			;        # format guillemots correctly
+			;        # french guillemots
 			if ( ${ $::lglobal{fixopt} }[14] and ${ $::lglobal{fixopt} }[15] ) {
 				$edited++ if $line =~ s/«\s+/«/g;
 				$edited++ if $line =~ s/\s+»/»/g;
 			}
-			;	# german guillemots			
-			if ( ${ $::lglobal{fixopt} }[14] and !${ $::lglobal{fixopt} }[15] ) {
+			;        # german guillemots
+			if ( ${ $::lglobal{fixopt} }[14] and !${ $::lglobal{fixopt} }[15] )
+			{
 				$edited++ if $line =~ s/\s+«/«/g;
 				$edited++ if $line =~ s/»\s+/»/g;
 			}
@@ -270,7 +262,7 @@ sub fixup {
 			}
 		}
 		$textwindow->markSet( 'insert', $index ) if $update;
-		$textwindow->update if ( $edited || $update );
+		$textwindow->update   if ( $edited || $update );
 		::update_indicators() if ( $edited || $update );
 		$edited    = 0;
 		$update    = 0;
@@ -302,10 +294,9 @@ sub text_remove_smallcaps_markup {
 	$::lglobal{replaceentry}->delete( '1.0', 'end' );
 	$::lglobal{replaceentry}->insert( 'end', "\$1" );
 }
-
 ## End of Line Cleanup
 sub endofline {
-	my $textwindow= $::textwindow;
+	my $textwindow = $::textwindow;
 	push @::operations, ( localtime() . ' - End-of-line Spaces' );
 	::viewpagenums() if ( $::lglobal{seepagenums} );
 	::oppopupdate()  if $::lglobal{oppop};
@@ -320,11 +311,10 @@ sub endofline {
 	$textwindow->FindAndReplaceAll( '-regex', '-nocase', '\s+$', '' );
 	::update_indicators();
 }
-
 ## Clean Up Rewrap
 sub cleanup {
-	my $textwindow= $::textwindow;
-	my $top = $::top;
+	my $textwindow = $::textwindow;
+	my $top        = $::top;
 	$top->Busy( -recurse => 1 );
 	$::searchstartindex = '1.0';
 	::viewpagenums() if ( $::lglobal{seepagenums} );
@@ -339,9 +329,4 @@ sub cleanup {
 	}
 	$top->Unbusy( -recurse => 1 );
 }
-
-
-
 1;
-
-

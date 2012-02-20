@@ -1,19 +1,19 @@
 package Guiguts::Tests;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
+	our ( @ISA, @EXPORT );
 	@ISA    = qw(Exporter);
 	@EXPORT = qw(&runtests);
 }
 
 sub runtests {
+
 	# From the command line run "guiguts.pl runtests"
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	use Test::More;    #tests => 34;
 	ok( 1 == 1, "Dummy test 1==1" );
 
@@ -52,7 +52,7 @@ sub runtests {
 	ok(
 		1 == do {
 			::selectrewrap( $textwindow, $::lglobal{seepagenums},
-						  $::scannos_highlighted, $::rwhyphenspace );
+							$::scannos_highlighted, $::rwhyphenspace );
 			1;
 		},
 		"Rewrap Selection"
@@ -62,8 +62,8 @@ sub runtests {
 	ok( -e 'tests/testfilewrapped.txt', "tests/testfilewrapped.txt was saved" );
 	ok( -e "tests/testfilebaseline.txt", "tests/testfilebaseline.txt exists" );
 	ok(
-		::compare( "tests/testfilebaseline.txt", 'tests/testfilewrapped.txt' ) ==
-		  0,
+		::compare( "tests/testfilebaseline.txt", 'tests/testfilewrapped.txt' )
+		  == 0,
 		"Rewrap was successful"
 	);
 	print "begin diff\n";
@@ -97,8 +97,8 @@ sub runtests {
 	close $infile;
 	close $logfile;
 	ok(
-		::compare( "tests/testhtml1baseline.html", 'tests/testhtml1temp.html' ) ==
-		  0,
+		::compare( "tests/testhtml1baseline.html", 'tests/testhtml1temp.html' )
+		  == 0,
 		"Autogenerate HTML successful"
 	);
 	print "begin diff\n";
@@ -137,8 +137,8 @@ sub runtests {
 	close $infile;
 	close $logfile;
 	ok(
-		::compare( "tests/testhtml2baseline.html", 'tests/testhtml2temp.html' ) ==
-		  0,
+		::compare( "tests/testhtml2baseline.html", 'tests/testhtml2temp.html' )
+		  == 0,
 		"Autogenerate HTML successful"
 	);
 	print "begin diff\n";
@@ -181,10 +181,8 @@ sub runtests {
 	);
 	ok( ( ::entity('\xff') eq '&yuml;' ), "entity('\\xff') eq '&yuml;'" );
 	ok( $::debug == 0, "Do not release with \$debug = 1" );
-	ok( 1 == 1,      "This is the last test" );
+	ok( 1 == 1,        "This is the last test" );
 	done_testing();
 	exit;
 }
-
-
 1;

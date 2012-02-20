@@ -1,15 +1,15 @@
 package Guiguts::HTMLConvert;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
 	use List::Util qw[min max];
-	our (@ISA, @EXPORT);
-	@ISA    = qw(Exporter);
-	@EXPORT = qw(&htmlautoconvert &htmlpopup &makeanchor &autoindex &entity &named &tonamed 
-	&fromnamed &fracconv &pageadjust);
+	our ( @ISA, @EXPORT );
+	@ISA = qw(Exporter);
+	@EXPORT =
+	  qw(&htmlautoconvert &htmlpopup &makeanchor &autoindex &entity &named &tonamed
+	  &fromnamed &fracconv &pageadjust);
 }
 
 sub html_convert_tb {
@@ -832,8 +832,10 @@ sub html_convert_body {
 			 && ( !$last5[3] )
 			 && ($selection) )
 		{
+
 			#Find the previous page marker
-			my $hmark = $textwindow->markPrevious( ( $step  ) . '.0' );
+			my $hmark = $textwindow->markPrevious( ($step) . '.0' );
+
 			#print $hmark.":hmarkprevious\n";
 			if ($hmark) {
 				my $hmarkindex = $textwindow->index($hmark);
@@ -843,8 +845,10 @@ sub html_convert_body {
 # the header.
 				if ( $step - 5 <= $pagemarkline ) {
 					$textwindow->markSet( "HRULE$pagemarkline", $hmarkindex );
+
 					#print "HRULE$pagemarkline  $hmarkindex\n";
 				} else {
+
 					#print "NO HRULE\n";
 				}
 			}
@@ -1182,7 +1186,7 @@ sub html_convert_pageanchors {
 			{    #place the <hr> for a chapter before the page number
 				my $hrulemarkindex = $textwindow->index($mark);
 				my $pgstart =
-				  $textwindow->search('-backwards' ,'--', '<p><span',
+				  $textwindow->search( '-backwards', '--', '<p><span',
 									   $hrulemarkindex . '+10c', '1.0' )
 				  || '1.0';
 				if (
@@ -1194,7 +1198,8 @@ sub html_convert_pageanchors {
 				{
 					$textwindow->ntinsert( $pgstart, '<hr class="chap" />' );
 				} else {
-					$textwindow->ntinsert( $hrulemarkindex, '<hr class="chap" />' );
+					$textwindow->ntinsert( $hrulemarkindex,
+										   '<hr class="chap" />' );
 				}
 			}
 		}
@@ -1491,10 +1496,10 @@ sub htmlimage {
 						  -value       => 'left',
 		)->grid( -row => 1, -column => 1 );
 		my $censel = $f2->Radiobutton(
-									 -variable    => \$alignment,
-									 -text        => 'Center',
-									 -selectcolor => $::lglobal{checkcolor},
-									 -value       => 'center',
+									   -variable    => \$alignment,
+									   -text        => 'Center',
+									   -selectcolor => $::lglobal{checkcolor},
+									   -value       => 'center',
 		)->grid( -row => 1, -column => 2 );
 		$f2->Radiobutton(
 						  -variable    => \$alignment,
@@ -1504,8 +1509,7 @@ sub htmlimage {
 		)->grid( -row => 1, -column => 3 );
 		$censel->select;
 		my $f8 =
-		  $::lglobal{htmlimpop}
-		  ->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $::lglobal{htmlimpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f8->Button(
 			-text    => 'Ok',
 			-width   => 10,
@@ -1521,8 +1525,7 @@ sub htmlimage {
 					return unless $name;
 					( $fname, $::globalimagepath, $extension ) =
 					  &::fileparse($name);
-					$::globalimagepath =
-					  &::os_normal($::globalimagepath);
+					$::globalimagepath = &::os_normal($::globalimagepath);
 					$name =~ s/[\/\\]/\;/g;
 					my $tempname = $::globallastpath;
 					$tempname =~ s/[\/\\]/\;/g;
@@ -1681,23 +1684,18 @@ sub htmlautoconvert {
 	$::lglobal{fnsecondpass}  = 0;
 	$::lglobal{fnsearchlimit} = 1;
 	html_convert_footnotes( $textwindow, $::lglobal{fnarray} );
-	html_convert_body(
-					   $textwindow,
-					   $headertext,
+	html_convert_body( $textwindow, $headertext,
 					   $::lglobal{cssblockmarkup},
 					   $::lglobal{poetrynumbers},
-					   $::lglobal{classhash}
-	);
+					   $::lglobal{classhash} );
 	html_cleanup_markers($textwindow);
 	html_convert_underscoresmallcaps($textwindow);
 	html_convert_sidenotes($textwindow);
 	html_convert_pageanchors( $textwindow, $::lglobal{pageanch},
 							  $::lglobal{pagecmt} );
-	html_convert_utf( $textwindow,
-					  $::lglobal{leave_utf},
+	html_convert_utf( $textwindow, $::lglobal{leave_utf},
 					  $::lglobal{keep_latin1} );
-	html_wrapup( $textwindow, $headertext,
-				 $::lglobal{leave_utf},
+	html_wrapup( $textwindow, $headertext, $::lglobal{leave_utf},
 				 $::lglobal{autofraction},
 				 $::lglobal{classhash} );
 	$textwindow->ResetUndo;
@@ -1709,9 +1707,9 @@ sub thumbnailbrowse {
 	  ];
 	my $name =
 	  $::lglobal{htmlimpop}->getOpenFile(
-										   -filetypes  => $types,
-										   -title      => 'File Load',
-										   -initialdir => $::globalimagepath
+										  -filetypes  => $types,
+										  -title      => 'File Load',
+										  -initialdir => $::globalimagepath
 	  );
 	return unless ($name);
 	my $xythumb = 200;
@@ -1751,9 +1749,9 @@ sub thumbnailbrowse {
 	  ->copy( $::lglobal{htmlorig}, -subsample => ($sw), -shrink )
 	  ;    #hkm changed textcopy to copy
 	$::lglobal{imagelbl}->configure(
-										 -image   => $::lglobal{htmlthumb},
-										 -text    => 'Thumbnail',
-										 -justify => 'center',
+									 -image   => $::lglobal{htmlthumb},
+									 -text    => 'Thumbnail',
+									 -justify => 'center',
 	);
 }
 
@@ -1771,8 +1769,7 @@ sub htmlpopup {
 		$::lglobal{markpop}->title('HTML Markup');
 		my $tableformat;
 		my $f0 =
-		  $::lglobal{markpop}
-		  ->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f0->Button(
 					 -activebackground => $::activecolor,
 					 -command => sub { htmlautoconvert( $textwindow, $top ) },
@@ -1883,8 +1880,7 @@ sub htmlpopup {
 				   -sticky => 'w'
 		  );
 		my $f1 =
-		  $::lglobal{markpop}
-		  ->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my ( $inc, $row, $col ) = ( 0, 0, 0 );
 
 	   # Warning: if you add tags to the list below move nbsp and poetry buttons
@@ -1925,8 +1921,7 @@ sub htmlpopup {
 					 -width            => 10
 		)->grid( -row => 4, -column => 4, -padx => 1, -pady => 2 );
 		my $f2 =
-		  $::lglobal{markpop}
-		  ->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my %hbuttons = (
 						 'anchor', 'Named anchor',  'img',   'Image',
 						 'elink',  'External Link', 'ilink', 'Internal Link'
@@ -1952,8 +1947,7 @@ sub htmlpopup {
 			++$col;
 		}
 		my $f3 =
-		  $::lglobal{markpop}
-		  ->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f3->Button(
 					 -activebackground => $::activecolor,
 					 -command => sub { markup( $textwindow, $top, 'del' ) },
@@ -1979,8 +1973,7 @@ sub htmlpopup {
 			-width => 28
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
 		my $f4 =
-		  $::lglobal{markpop}
-		  ->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $unorderselect =
 		  $f4->Radiobutton(
 							-text        => 'unordered',
@@ -2047,8 +2040,7 @@ sub htmlpopup {
 						  -offvalue => 0
 		)->grid( -row => 2, -column => 5 );
 		my $f5 =
-		  $::lglobal{markpop}
-		  ->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$tableformat = $f5->Entry(
 								   -width      => 40,
 								   -background => $::bkgcolor,
@@ -2071,8 +2063,7 @@ sub htmlpopup {
 			-width => 8
 		)->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
 		my $f6 =
-		  $::lglobal{markpop}
-		  ->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $spanentry = $f6->Entry(
 									-width      => 40,
 									-background => $::bkgcolor,
@@ -2088,8 +2079,7 @@ sub htmlpopup {
 			-width => 8
 		)->grid( -row => 1, -column => 2, -padx => 2, -pady => 2 );
 		my $f7 =
-		  $::lglobal{markpop}
-		  ->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f7->Checkbutton(
 						  -variable    => \$::lglobal{poetrynumbers},
 						  -selectcolor => $::lglobal{checkcolor},
@@ -2115,8 +2105,7 @@ sub htmlpopup {
 			-width => 16
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
 		my $f8 =
-		  $::lglobal{markpop}
-		  ->Frame->pack( -side => 'top', -anchor => 'n' );
+		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f8->Button(
 					 -activebackground => $::activecolor,
 					 -command          => \&::hyperlinkpagenums,
@@ -2127,7 +2116,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up($textwindow,$top,'Link Check');
+					&::errorcheckpop_up( $textwindow, $top, 'Link Check' );
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Link Check',
@@ -2136,7 +2125,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up($textwindow,$top,'HTML Tidy');
+					&::errorcheckpop_up( $textwindow, $top, 'HTML Tidy' );
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'HTML Tidy',
@@ -2146,9 +2135,11 @@ sub htmlpopup {
 				-activebackground => $::activecolor,
 				-command          => sub {
 					if ($::w3cremote) {
-						&::errorcheckpop_up($textwindow,$top,'W3C Validate Remote');
+						&::errorcheckpop_up( $textwindow, $top,
+											 'W3C Validate Remote' );
 					} else {
-						&::errorcheckpop_up($textwindow,$top,'W3C Validate');
+						&::errorcheckpop_up( $textwindow, $top,
+											 'W3C Validate' );
 					}
 					unlink 'null' if ( -e 'null' );
 				},
@@ -2158,8 +2149,8 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up($textwindow,$top,'W3C Validate CSS')
-					  ;    #validatecssrun('');
+					&::errorcheckpop_up( $textwindow, $top,
+									  'W3C Validate CSS' ); #validatecssrun('');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'W3C Validate CSS',
@@ -2168,7 +2159,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up($textwindow,$top,'pphtml');
+					&::errorcheckpop_up( $textwindow, $top, 'pphtml' );
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'pphtml',
@@ -2177,7 +2168,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up($textwindow,$top,'Image Check');
+					&::errorcheckpop_up( $textwindow, $top, 'Image Check' );
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Image Check',
@@ -2186,7 +2177,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up($textwindow,$top,'Epub Friendly');
+					&::errorcheckpop_up( $textwindow, $top, 'Epub Friendly' );
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Epub Friendly',
@@ -2195,7 +2186,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up($textwindow,$top,'Check All');
+					&::errorcheckpop_up( $textwindow, $top, 'Check All' );
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Check All',
@@ -2427,7 +2418,7 @@ sub markup {
 				$::lglobal{linkpop} = $top->Toplevel;
 				$::lglobal{linkpop}->title('Internal Links');
 				$::lglobal{linkpop}->geometry($::geometry2) if $::geometry2;
-				$::lglobal{linkpop}->transient($top)      if $::stayontop;
+				$::lglobal{linkpop}->transient($top)        if $::stayontop;
 				$::lglobal{fnlinks} = 1;
 				my $tframe = $::lglobal{linkpop}->Frame->pack;
 				$tframe->Checkbutton(
@@ -2503,9 +2494,9 @@ sub markup {
 				$linklistbox->bind(
 					'<<trans>>',
 					sub {
-						$name      = $linklistbox->get('active');
+						$name        = $linklistbox->get('active');
 						$::geometry2 = $::lglobal{linkpop}->geometry;
-						$done      = '</a>';
+						$done        = '</a>';
 						$textwindow->insert( $thisblockend, $done );
 						$done = "<a href=\"" . $name . "\">";
 						$textwindow->insert( $thisblockstart, $done );
@@ -2609,8 +2600,7 @@ sub hyperlinkpagenums {
 	&::searchpopup();
 	&::searchoptset(qw/0 x x 1/);
 	$::lglobal{searchentry}->insert( 'end', "(?<!\\d)(\\d{1,3})" );
-	$::lglobal{replaceentry}
-	  ->insert( 'end', "<a href=\"#Page_\$1\">\$1</a>" );
+	$::lglobal{replaceentry}->insert( 'end', "<a href=\"#Page_\$1\">\$1</a>" );
 }
 
 sub makeanchor {
@@ -3264,8 +3254,8 @@ sub named {
 
 sub fromnamed {
 	my ($textwindow) = @_;
-	my @ranges      = $textwindow->tagRanges('sel');
-	my $range_total = @ranges;
+	my @ranges       = $textwindow->tagRanges('sel');
+	my $range_total  = @ranges;
 	if ( $range_total == 0 ) {
 		return;
 	} else {
@@ -3283,7 +3273,8 @@ sub fromnamed {
 
 			for ( 160 .. 255 ) {
 				$from = lc sprintf( "%x", $_ );
-				&::named( &::entity( '\x' . $from ), chr($_), $start, 'srchend' );
+				&::named( &::entity( '\x' . $from ),
+						  chr($_), $start, 'srchend' );
 			}
 			while (
 					$thisblockstart =
@@ -3309,8 +3300,8 @@ sub fromnamed {
 
 sub tonamed {
 	my ($textwindow) = @_;
-	my @ranges      = $textwindow->tagRanges('sel');
-	my $range_total = @ranges;
+	my @ranges       = $textwindow->tagRanges('sel');
+	my $range_total  = @ranges;
 	if ( $range_total == 0 ) {
 		return;
 	} else {
@@ -3333,8 +3324,9 @@ sub tonamed {
 
 			for ( 128 .. 255 ) {
 				$from = lc sprintf( "%x", $_ );
-				&::named( '\x' . $from, &::entity( '\x' . $from ), $start,
-					   'srchend' );
+				&::named( '\x' . $from,
+						  &::entity( '\x' . $from ),
+						  $start, 'srchend' );
 			}
 			while (
 					$thisblockstart =
@@ -3355,7 +3347,7 @@ sub tonamed {
 }
 
 sub fracconv {
-	my ($textwindow, $start, $end ) = @_;
+	my ( $textwindow, $start, $end ) = @_;
 	my %frachash = (
 					 '\b1\/2\b' => '&frac12;',
 					 '\b1\/4\b' => '&frac14;',
@@ -3377,12 +3369,11 @@ sub fracconv {
 									  $thisblockstart . "+$length c", $html );
 		}
 	}
-
 }
 
 sub pageadjust {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	if ( defined $::lglobal{padjpop} ) {
 		$::lglobal{padjpop}->deiconify;
 		$::lglobal{padjpop}->raise;
@@ -3390,7 +3381,6 @@ sub pageadjust {
 		my @marks = $textwindow->markNames;
 		my @pages = sort grep ( /^Pg\S+$/, @marks );
 		my %pagetrack;
-
 		$::lglobal{padjpop} = $top->Toplevel;
 		$::lglobal{padjpop}->title('Configure Page Labels');
 		$::geometryhash{padjpop} = ('375x500') unless $::geometryhash{padjpop};
@@ -3398,6 +3388,7 @@ sub pageadjust {
 		my $frame0 =
 		  $::lglobal{padjpop}
 		  ->Frame->pack( -side => 'top', -anchor => 'n', -pady => 4 );
+
 		unless (@pages) {
 			$frame0->Label(
 							-text       => 'No Page Markers Found',
@@ -3460,9 +3451,9 @@ sub pageadjust {
 		)->grid( -row => 1, -column => 2, -padx => 5 );
 		my $frame1 =
 		  $::lglobal{padjpop}->Scrolled(
-									   'Pane',
-									   -scrollbars => 'se',
-									   -background => $::bkgcolor,
+										 'Pane',
+										 -scrollbars => 'se',
+										 -background => $::bkgcolor,
 		  )->pack(
 				   -expand => 1,
 				   -fill   => 'both',
@@ -3478,23 +3469,20 @@ sub pageadjust {
 			my ($num) = $page =~ /Pg(\S+)/;
 			$updatetemp++;
 			$::lglobal{padjpop}->update if ( $updatetemp == 20 );
-
 			$pagetrack{$num}[0] = $frame1->Button(
 				-text    => "Image# $num",
 				-width   => 12,
 				-command => [
 					sub {
-						::openpng($textwindow,$num);
+						::openpng( $textwindow, $num );
 					},
 				],
 			)->grid( -row => $row, -column => 0, -padx => 2 );
-
 			$pagetrack{$num}[1] =
 			  $frame1->Label(
 							  -text       => "Label -->",
 							  -background => $::bkgcolor,
 			  )->grid( -row => $row, -column => 1 );
-
 			my $temp = $num;
 			$temp =~ s/^0+//;
 			$pagetrack{$num}[2] =
@@ -3502,7 +3490,6 @@ sub pageadjust {
 							  -text       => "Pg $temp",
 							  -background => 'yellow',
 			  )->grid( -row => $row, -column => 2 );
-
 			$pagetrack{$num}[3] = $frame1->Button(
 				-text => ( $page eq $pages[0] ) ? 'Arabic' : '"',
 				-width   => 8,
@@ -3575,18 +3562,18 @@ sub pageadjust {
 				$pagetrack{$num}[2]
 				  ->configure( -text => $::pagenumbers{$page}{label} );
 				$pagetrack{$num}[3]->configure(
-						  -text => ( $::pagenumbers{$page}{style} or 'Arabic' ) );
+						-text => ( $::pagenumbers{$page}{style} or 'Arabic' ) );
 				$pagetrack{$num}[4]->configure(
-							 -text => ( $::pagenumbers{$page}{action} or '+1' ) );
+						   -text => ( $::pagenumbers{$page}{action} or '+1' ) );
 				$pagetrack{$num}[5]->delete( '0', 'end' );
-				$pagetrack{$num}[5]->insert( 'end', $::pagenumbers{$page}{base} );
+				$pagetrack{$num}[5]
+				  ->insert( 'end', $::pagenumbers{$page}{base} );
 			}
 		}
 		$frame1->yview( 'scroll', => 1, 'units' );
 		$top->update;
 		$frame1->yview( 'scroll', -1, 'units' );
 	}
-
 }
 
 sub addpagelinks {
@@ -3597,6 +3584,4 @@ sub addpagelinks {
 	$selection =~ s/(\d{1,3})$/<a href="#Page_$1">$1<\/a>/;
 	return $selection;
 }
-
-
 1;
