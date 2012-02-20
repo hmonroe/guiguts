@@ -925,6 +925,21 @@ sub initialize {
 		]
 	);
 
+	# Set up the custom menus
+	::menubuild();
+
+	# Set up the key bindings for the text widget
+	::textbindings();
+	::buildstatusbar( $::textwindow, $::top );
+
+	# Load the icon into the window bar. Needs to happen late in the process
+	$::top->Icon( -image => $::icon );
+	$::lglobal{hasfocus} = $::textwindow;
+	::toolbar_toggle();
+	$::top->geometry($::geometry) if $::geometry;
+	( $::lglobal{global_filename} ) = @::ARGV;
+	die "ERROR: too many files specified. \n" if ( @::ARGV > 1 );
+
 	# Ignore any watchdog timer alarms. Subroutines that take a long time to
 	# complete can trip it
 	$SIG{ALRM} = 'IGNORE';
