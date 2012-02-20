@@ -201,6 +201,17 @@ sub multilangpopup {
 						  -value       => 'l',
 						  -text        => 'Len',
 		)->pack( -side => 'left', -anchor => 'nw', -pady => 1 );
+		$multiwclistbox->bind( '<Control-f>' => sub { 
+			my ($sword) =
+				$multiwclistbox->get( $multiwclistbox->curselection );
+				return unless length $sword;
+print "206 $sword 8 6 s\n";
+			my $word = $sword;
+			$word =~ s/^.........//;
+			$word =~ s/^.......//;
+print "210 $word\n";
+			}
+		);
 
 		#		$f3->Radiobutton(
 		#									   -variable    => \$sortorder,
