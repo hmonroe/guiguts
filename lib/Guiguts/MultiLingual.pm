@@ -28,6 +28,7 @@ my $multidictentry;
 my $multiwclistbox;
 my $sortorder = 'f';
 my @templist  = ();
+my $multihelppop;
 
 #startup routine
 sub spellmultiplelanguages {
@@ -125,7 +126,7 @@ sub multilangpopup {
 					 -command          => sub { saveLangDebugFiles() },
 					 -text             => 'Save Debug Files',
 					 -width            => 20
-		)->grid( -row => 1, -column => 3, -padx => 1, -pady => 1 );
+		)->grid( -row => 5, -column => 1, -padx => 1, -pady => 1 );
 		$f0->Button(
 					 -activebackground => $::activecolor,
 					 -command          => sub { showAllWords() },
@@ -162,6 +163,12 @@ sub multilangpopup {
 					-text    => 'Lower case spellcheck',
 					-width   => 20
 		)->grid( -row => 5, -column => 3, -padx => 1, -pady => 1 );
+		$f0->Button(
+					-activebackground => $::activecolor,
+					-command => sub { multi_help_popup( $top ) },
+					-text    => 'Help',
+					-width   => 20
+		)->grid( -row => 1, -column => 3, -padx => 1, -pady => 1 );
 		my $f1 =
 		  $::lglobal{multispellpop}
 		  ->Frame->pack( -fill => 'both', -expand => 'both', );
@@ -988,6 +995,81 @@ sub lowergetmisspelled {
 	getwordcounts();
 	$top->Unbusy;
 }
+
+sub multi_help_popup {
+	my $top        = shift;
+	my $text = <<EOM;
+Multilingual spellchecking help:
+
+Set Base Language:
+Select the base language that is used.
+
+Set Languages:
+Select one or more foreign languages for additional spell-checking.
+
+(Re)create Wordlist:
+Identify all distinct words and word counts.
+
+Check spelling:
+Spell-check in all selected languages.  Note that some unicode words
+currently appear as spelt in the base language. Aspell currently does
+not handle these words correctly.
+
+Include project words:
+Amend unspelt words which occur in the project dictionary with the
+language tag 'user'.  Note that dictionary files have now been given
+filenames so that two or more volumes labelled abc1.txt and abc2.txt
+in the same directory will share the same project dictionary abc.dic.
+
+Show all words:
+Shows all the distinct words together with their frequency, and if
+available, language in which they are correctly spelt.
+
+Show unspelt words:
+Shows all words which have not yet been spelt in any language nor are
+included in the project dictionary.
+
+Show spelt foreign words:
+Shows all words that have been spelt, other than those in the base language.
+
+Show project dictionary:
+Shows all words in the project dictionary.
+
+Add foreign to project:
+Adds all words that have been correctly spelt in languages other than the
+base language to the project dictionary.
+
+Lower case spellcheck:
+Currently not working.
+
+	
+EOM
+	if ( defined( $multihelppop ) ) {
+		$multihelppop->deiconify;
+		$multihelppop->raise;
+		$multihelppop->focus;
+	} else {
+		$multihelppop = $top->Toplevel;
+#		&::initialize_popup_with_deletebinding('aboutpop');
+		$multihelppop->title('Mutilingual help');
+		$multihelppop->Label(
+									 -justify => "left",
+									 -text    => $text
+		)->pack;
+		my $button_ok = $multihelppop->Button(
+			-activebackground => $::activecolor,
+			-text             => 'OK',
+			-command          => sub {
+				$multihelppop->destroy;
+				undef $multihelppop;
+			}
+		)->pack( -pady => 6 );
+		$multihelppop->resizable( 'no', 'no' );
+		$multihelppop->raise;
+		$multihelppop->focus;
+	}
+}
+
 1;
 __END__
 
