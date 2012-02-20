@@ -2445,7 +2445,7 @@ sub fontsize {
 			-command          => sub {
 				$::lglobal{fspop}->destroy;
 				undef $::lglobal{fspop};
-				savesettings();
+				::savesettings();
 			}
 		)->grid( -row => 3, -column => 2, -pady => 5 );
 		$::lglobal{fspop}->resizable( 'no', 'no' );
