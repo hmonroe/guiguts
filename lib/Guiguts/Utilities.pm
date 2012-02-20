@@ -1,22 +1,22 @@
 package Guiguts::Utilities;
-
 use strict;
 use warnings;
 
 BEGIN {
 	use Exporter();
-	our (@ISA, @EXPORT);
-	@ISA=qw(Exporter);
-	@EXPORT=qw(&openpng &get_image_file &setviewerpath &::setdefaultpath &arabic &roman
-	&textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_cmdline &win32_start 
-	&win32_is_exe &win32_create_process &runner &debug_dump &run &escape_regexmetacharacters 
-	&deaccent &BindMouseWheel &working &initialize &fontinit &initialize_popup_with_deletebinding 
-	&initialize_popup_without_deletebinding &os_normal &escape_problems &natural_sort_alpha
-	&natural_sort_length &natural_sort_freq &drag &cut &paste &textcopy &showversion
-	&checkforupdates &checkforupdatesmonthly &hotkeyshelp &regexref &gotobookmark &setbookmark
-	&epubmaker &gnutenberg &sidenotes &poetrynumbers &get_page_number &externalpopup
-	&xtops &setmargins &fontsize &setbrowser &setpngspath &setup &set_autosave &toolbar_toggle
-	&saveinterval &toggle_autosave &setcolor)
+	our ( @ISA, @EXPORT );
+	@ISA = qw(Exporter);
+	@EXPORT =
+	  qw(&openpng &get_image_file &setviewerpath &::setdefaultpath &arabic &roman
+	  &textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_cmdline &win32_start
+	  &win32_is_exe &win32_create_process &runner &debug_dump &run &escape_regexmetacharacters
+	  &deaccent &BindMouseWheel &working &initialize &fontinit &initialize_popup_with_deletebinding
+	  &initialize_popup_without_deletebinding &os_normal &escape_problems &natural_sort_alpha
+	  &natural_sort_length &natural_sort_freq &drag &cut &paste &textcopy &showversion
+	  &checkforupdates &checkforupdatesmonthly &hotkeyshelp &regexref &gotobookmark &setbookmark
+	  &epubmaker &gnutenberg &sidenotes &poetrynumbers &get_page_number &externalpopup
+	  &xtops &setmargins &fontsize &setbrowser &setpngspath &set_autosave &toolbar_toggle
+	  &saveinterval &toggle_autosave &setcolor);
 }
 
 sub get_image_file {
@@ -42,7 +42,7 @@ sub get_image_file {
 
 # Routine to handle image viewer file requests
 sub openpng {
-	my ($textwindow,$pagenum) = @_;
+	my ( $textwindow, $pagenum ) = @_;
 	if ( $pagenum eq 'Pg' ) {
 		return;
 	}
@@ -67,9 +67,9 @@ sub setviewerpath {    #Find your image viewer
 	} else {
 		$types = [ [ 'All Files', ['*'] ] ];
 	}
+
 	#print $::globalviewerpath."aa\n";
-#	print &::dirname($::globalviewerpath)."aa\n";
-	
+	#	print &::dirname($::globalviewerpath)."aa\n";
 	$::lglobal{pathtemp} =
 	  $textwindow->getOpenFile(
 								-filetypes  => $types,
@@ -80,11 +80,14 @@ sub setviewerpath {    #Find your image viewer
 	$::globalviewerpath = &::os_normal($::globalviewerpath);
 	&::savesettings();
 }
+
 sub ::setdefaultpath {
-	my ($pathname,$path) = @_;
-	if ($pathname) {return $pathname}
-	if ((!$pathname) && (-e $path)) {return $path;} else {
-	return ''}
+	my ( $pathname, $path ) = @_;
+	if ($pathname) { return $pathname }
+	if ( ( !$pathname ) && ( -e $path ) ) { return $path; }
+	else {
+		return '';
+	}
 }
 
 # Roman numeral conversion taken directly from the Roman.pm module Copyright
@@ -139,7 +142,7 @@ sub arabic {
 
 sub textbindings {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 
 	# Set up a bunch of events and key bindings for the widget
 	$textwindow->tagConfigure( 'footnote', -background => 'cyan' );
@@ -180,8 +183,7 @@ sub textbindings {
 	$textwindow->bind( 'TextUnicode', '<<Copy>>' => \&::textcopy );
 	$textwindow->eventAdd( '<<Cut>>' => '<Control-X>',
 						   '<Control-x>', '<F2>' );
-	$textwindow->bind( 'TextUnicode', '<<Cut>>' => sub { &::cut() } );
-
+	$textwindow->bind( 'TextUnicode', '<<Cut>>'     => sub { &::cut() } );
 	$textwindow->bind( 'TextUnicode', '<Control-V>' => sub { &::paste() } );
 	$textwindow->bind( 'TextUnicode', '<Control-v>' => sub { &::paste() } );
 	$textwindow->bind(
@@ -200,7 +202,6 @@ sub textbindings {
 			$textwindow->addGlobEnd;
 		}
 	);
-
 	$textwindow->bind(
 		'TextUnicode',
 		'<Delete>' => sub {
@@ -221,11 +222,11 @@ sub textbindings {
 		}
 	);
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-l>' => sub { &::case ( $textwindow, 'lc' ); } );
+					   '<Control-l>' => sub { &::case( $textwindow, 'lc' ); } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-u>' => sub { &::case ( $textwindow, 'uc' ); } );
+					   '<Control-u>' => sub { &::case( $textwindow, 'uc' ); } );
 	$textwindow->bind( 'TextUnicode',
-			 '<Control-t>' => sub { &::case ( $textwindow, 'tc' ); $top->break } );
+		   '<Control-t>' => sub { &::case( $textwindow, 'tc' ); $top->break } );
 	$textwindow->bind(
 		'TextUnicode',
 		'<Control-Z>' => sub {
@@ -265,15 +266,15 @@ sub textbindings {
 		}
 	);
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-Shift-exclam>' => sub { &::setbookmark('1') } );
+					  '<Control-Shift-exclam>' => sub { &::setbookmark('1') } );
 	$textwindow->bind( 'TextUnicode',
 					   '<Control-Shift-at>' => sub { &::setbookmark('2') } );
 	$textwindow->bind( 'TextUnicode',
-					 '<Control-Shift-numbersign>' => sub { &::setbookmark('3') } );
+				  '<Control-Shift-numbersign>' => sub { &::setbookmark('3') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-Shift-dollar>' => sub { &::setbookmark('4') } );
+					  '<Control-Shift-dollar>' => sub { &::setbookmark('4') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-Shift-percent>' => sub { &::setbookmark('5') } );
+					 '<Control-Shift-percent>' => sub { &::setbookmark('5') } );
 	$textwindow->bind( 'TextUnicode',
 					   '<Control-KeyPress-1>' => sub { &::gotobookmark('1') } );
 	$textwindow->bind( 'TextUnicode',
@@ -317,7 +318,6 @@ sub textbindings {
 		}
 	);
 	$textwindow->bind( 'TextUnicode', '<F7>' => \&::spellchecker );
-
 	$textwindow->bind(
 		'TextUnicode',
 		'<Control-Alt-s>' => sub {
@@ -328,7 +328,8 @@ sub textbindings {
 			&::runner('start scratchpad.txt') if $::OS_WIN;
 		}
 	);
-	$textwindow->bind( 'TextUnicode', '<Control-Alt-r>' => sub { &::regexref() } );
+	$textwindow->bind( 'TextUnicode',
+					   '<Control-Alt-r>' => sub { &::regexref() } );
 	$textwindow->bind( 'TextUnicode', '<Shift-B1-Motion>', 'shiftB1_Motion' );
 	$textwindow->eventAdd( '<<FindNext>>' => '<Control-Key-G>',
 						   '<Control-Key-g>' );
@@ -340,7 +341,7 @@ sub textbindings {
 		sub {
 			if ( $::lglobal{searchpop} ) {
 				my $searchterm = $::lglobal{searchentry}->get( '1.0', '1.end' );
-				&::searchtext($textwindow,$top,$searchterm);
+				&::searchtext( $textwindow, $top, $searchterm );
 			} else {
 				&::searchpopup();
 			}
@@ -360,8 +361,7 @@ sub textbindings {
 	}
 	$textwindow->bind( 'TextUnicode', '<Control-Alt-h>' => \&::hilitepopup );
 	$textwindow->bind( 'TextUnicode',
-					  '<FocusIn>' => sub { $::lglobal{hasfocus} = $textwindow } );
-
+					'<FocusIn>' => sub { $::lglobal{hasfocus} = $textwindow } );
 	$::lglobal{drag_img} = $top->Photo(
 		-format => 'gif',
 		-data   => '
@@ -369,13 +369,12 @@ R0lGODlhDAAMALMAAISChNTSzPz+/AAAAOAAyukAwRIA4wAAd8oA0MEAe+MTYHcAANAGgnsAAGAA
 AAAAACH5BAAAAAAALAAAAAAMAAwAAwQfMMg5BaDYXiw178AlcJ6VhYFXoSoosm7KvrR8zfXHRQA7
 '
 	);
-
 	$::lglobal{hist_img} = $top->Photo(
 		-format => 'gif',
 		-data =>
 		  'R0lGODlhBwAEAIAAAAAAAP///yH5BAEAAAEALAAAAAAHAAQAAAIIhA+BGWoNWSgAOw=='
 	);
-		drag($textwindow);
+	drag($textwindow);
 }
 
 sub popscroll {
@@ -386,14 +385,13 @@ sub popscroll {
 	my $x = $::top->pointerx - $::top->rootx;
 	my $y = $::top->pointery - $::top->rooty - 8;
 	$::lglobal{scroller} = $::top->Label(
-									  -background  => $::textwindow->cget( -bg ),
-									  -image       => $::lglobal{scrollgif},
-									  -cursor      => 'double_arrow',
-									  -borderwidth => 0,
+									  -background => $::textwindow->cget( -bg ),
+									  -image      => $::lglobal{scrollgif},
+									  -cursor     => 'double_arrow',
+									  -borderwidth        => 0,
 									  -highlightthickness => 0,
 									  -relief             => 'flat',
 	)->place( -x => $x, -y => $y );
-
 	$::lglobal{scroller}->eventAdd( '<<ScrollDismiss>>', qw/<1> <3>/ );
 	$::lglobal{scroller}
 	  ->bind( 'current', '<<ScrollDismiss>>', sub { &scrolldismiss(); } );
@@ -401,30 +399,29 @@ sub popscroll {
 	$::lglobal{scroll_x}  = $x;
 	$::lglobal{oldcursor} = $::textwindow->cget( -cursor );
 	%{ $::lglobal{scroll_cursors} } = (
-									  '-1-1' => 'top_left_corner',
-									  '-10'  => 'top_side',
-									  '-11'  => 'top_right_corner',
-									  '0-1'  => 'left_side',
-									  '00'   => 'double_arrow',
-									  '01'   => 'right_side',
-									  '1-1'  => 'bottom_left_corner',
-									  '10'   => 'bottom_side',
-									  '11'   => 'bottom_right_corner',
+										'-1-1' => 'top_left_corner',
+										'-10'  => 'top_side',
+										'-11'  => 'top_right_corner',
+										'0-1'  => 'left_side',
+										'00'   => 'double_arrow',
+										'01'   => 'right_side',
+										'1-1'  => 'bottom_left_corner',
+										'10'   => 'bottom_side',
+										'11'   => 'bottom_right_corner',
 	);
 	$::lglobal{scroll_id} = $::top->repeat( $::scrollupdatespd, \&::b2scroll );
 }
 
 # Command parsing for External command routine
 sub cmdinterp {
+
 	# Allow basic quoting, in case anyone specifies paths with spaces.
 	# Don't support paths with quotes.  The standard \" and \\ escapes
 	# would not be friendly on Windows-style paths.
 	my $textwindow = $::textwindow;
 	my @args = shift =~ m/"[^"]+"|\S+/g;
-
 	my ( $fname, $pagenum, $number, $pname );
 	my ( $selection, $ranges );
-
 	foreach my $arg (@args) {
 		$arg =~ s/^"(.*)"$/$1/;
 
@@ -505,7 +502,7 @@ sub win32_cmdline {
 	#
 	# which includes perl's system(LIST).  So we do our own quoting.
 	#
-	foreach ( @args ) {
+	foreach (@args) {
 		s/(\\*)\"/$!$!\\\"/g;
 		s/^(.*)(\\*)$/\"$1$2$2\"/ if m/[ "]/;
 	}
@@ -516,7 +513,6 @@ sub win32_start {
 	my @args = @_;
 
 	# Windows command to open a file (or URL) using the default program
-
 	# start command must be run through CMD.EXE
 	# (we don't have Win32:Gui, or we could use ShellExecute())
 	#
@@ -525,49 +521,42 @@ sub win32_start {
 	# Other external commands can go through win32_create_process(),
 	# which doesn't have this limitation.
 	#
-	foreach ( @args ) {
-		if ( m/["<>|&()!%^]/ ) {
-			warn 'Refusing to run "start" command with unsafe characters ("<>|&()!%^): '
-			     . join(" ", @args);
+	foreach (@args) {
+		if (m/["<>|&()!%^]/) {
+			warn
+'Refusing to run "start" command with unsafe characters ("<>|&()!%^): '
+			  . join( " ", @args );
 			return -1;
 		}
 	}
 
-	# <http://stackoverflow.com/questions/72671/
-	#  how-to-create-batch-file-in-windows-using-start-with-a-path-and-command-with-s
-	#
-	# Users never need to create a titled DOS window,
-	# but they may need to run the 'start' command on files with spaces.
-	#
+# <http://stackoverflow.com/questions/72671/
+#  how-to-create-batch-file-in-windows-using-start-with-a-path-and-command-with-s
+#
+# Users never need to create a titled DOS window,
+# but they may need to run the 'start' command on files with spaces.
+#
 	@args = ( 'start', '', @args );
-
-	my $cmdline = win32_cmdline( @args );
+	my $cmdline = win32_cmdline(@args);
 	system $cmdline;
 }
 
 sub win32_is_exe {
-	my ( $exe ) = @_;
-	return -x $exe && ! -d $exe;
+	my ($exe) = @_;
+	return -x $exe && !-d $exe;
 }
 
 sub win32_find_exe {
-	my ( $exe ) = @_;
-
+	my ($exe) = @_;
 	return $exe if win32_is_exe($exe);
-
-	foreach my $ext ( split ';', $::ENV{PATHEXT} )
-	{
+	foreach my $ext ( split ';', $::ENV{PATHEXT} ) {
 		my $p = $exe . $ext;
 		return $p if win32_is_exe($p);
 	}
-
-	if ( ! File::Spec->file_name_is_absolute($exe) )
-	{
-		foreach my $path ( split ';', $::ENV{PATH} )
-		{
-			my $stem = ::catfile($path, $exe);
+	if ( !File::Spec->file_name_is_absolute($exe) ) {
+		foreach my $path ( split ';', $::ENV{PATH} ) {
+			my $stem = ::catfile( $path, $exe );
 			return $stem if win32_is_exe($stem);
-
 			foreach my $ext ( split ';', $::ENV{PATHEXT} ) {
 				my $p = $stem . $ext;
 				return $p if win32_is_exe($p);
@@ -582,12 +571,9 @@ sub win32_find_exe {
 sub win32_create_process {
 	require Win32;
 	require Win32::Process;
-
-	my @args = @_;
-
-	my $exe = win32_find_exe( $args[0] );
-	my $cmdline = win32_cmdline( @args );
-
+	my @args    = @_;
+	my $exe     = win32_find_exe( $args[0] );
+	my $cmdline = win32_cmdline(@args);
 	my $proc;
 	if ( Win32::Process::Create( $proc, $exe, $cmdline, 1, 0, '.' ) ) {
 		return $proc;
@@ -603,14 +589,12 @@ sub win32_create_process {
 # (but slightly more robust, particularly on Windows).
 sub run {
 	my @args = @_;
-
-	if ( ! $::OS_WIN ) {
+	if ( !$::OS_WIN ) {
 		system { $args[0] } @args;
 	} else {
 		require Win32;
 		require Win32::Process;
-
-		my $proc = win32_create_process( @args );
+		my $proc = win32_create_process(@args);
 		return -1 unless defined $proc;
 		$proc->Wait( Win32::Process::INFINITE() );
 		$proc->GetExitCode( my $exitcode );
@@ -622,20 +606,20 @@ sub run {
 # Start an external program
 sub runner {
 	my @args = @_;
-	unless ( @args ) {
+	unless (@args) {
 		warn "Tried to run an empty command";
 		return -1;
 	}
+	if ( !$::OS_WIN ) {
 
-	if ( ! $::OS_WIN ) {
 		# We can't call perl fork() in the main GUI process, because Tk crashes
 		system( "perl", "$::lglobal{guigutsdirectory}/spawn.pl", @args );
 	} else {
-		if ( $args[0] eq 'start') {
-			win32_start( @args[1 .. $#args] );
+		if ( $args[0] eq 'start' ) {
+			win32_start( @args[ 1 .. $#args ] );
 		} else {
-			my $proc = win32_create_process( @args );
-			return (defined $proc) ? 0 : -1;
+			my $proc = win32_create_process(@args);
+			return ( defined $proc ) ? 0 : -1;
 		}
 	}
 	return;
@@ -643,23 +627,26 @@ sub runner {
 
 # Run external program, with stdin and/or stdout redirected to temporary files
 {
+
 	package runner;
 
 	sub tofile {
 		my ($outfile) = @_;
-		withfiles(undef, $outfile);
+		withfiles( undef, $outfile );
 	}
-	sub withfiles {
-		my ($infile, $outfile) = @_;
-		bless {
-			infile => $infile,
-			outfile => $outfile,
-		}, 'runner';
-	}
-	sub run {
-		my ($self, @args) = @_;
 
-		my ($oldstdout, $oldstdin);
+	sub withfiles {
+		my ( $infile, $outfile ) = @_;
+		bless {
+				infile  => $infile,
+				outfile => $outfile,
+		  },
+		  'runner';
+	}
+
+	sub run {
+		my ( $self, @args ) = @_;
+		my ( $oldstdout, $oldstdin );
 		unless ( open $oldstdin, '<&', \*STDIN ) {
 			warn "Failed to save stdin: $!";
 			return -1;
@@ -668,7 +655,6 @@ sub runner {
 			warn "Failed to save stdout: $!";
 			return -1;
 		}
-
 		if ( defined $self->{infile} ) {
 			unless ( open STDIN, '<', $self->{infile} ) {
 				warn "Failed to open '$self->{infile}': $!";
@@ -678,12 +664,12 @@ sub runner {
 		if ( defined $self->{outfile} ) {
 			unless ( open STDOUT, '>', $self->{outfile} ) {
 				warn "Failed to open '$self->{outfile}' for writing: $!";
+
 				# Don't bother to restore STDIN here.
 				return -1;
 			}
 		}
-		::run( @args );
-
+		::run(@args);
 		unless ( open STDOUT, '>&', $oldstdout ) {
 			warn "Failed to restore stdout: $!";
 		}
@@ -692,7 +678,6 @@ sub runner {
 		unless ( open STDIN, '<&', $oldstdin ) {
 			warn "Failed to restore stdin: $!";
 		}
-
 		return $?;
 	}
 }
@@ -703,60 +688,62 @@ sub runner {
 sub debug_dump {
 	open my $save, '>', 'debug.txt';
 	print $save "\%lglobal values:\n";
-	for my $key (keys %::lglobal) { 
-		if ($::lglobal{$key}){ print $save "$key => $::lglobal{$key}\n";}
-		else { print $save "$key x=>\n";}
-		};
+	for my $key ( keys %::lglobal ) {
+		if   ( $::lglobal{$key} ) { print $save "$key => $::lglobal{$key}\n"; }
+		else                      { print $save "$key x=>\n"; }
+	}
 	print $save "\n\@ARGV command line arguments:\n";
 	for my $element (@ARGV) {
 		print $save "$element\n";
-		};
+	}
 	print $save "\n\%SIG variables:\n";
-	for my $key (keys %SIG) { 
-		if ($SIG{$key}){
+	for my $key ( keys %SIG ) {
+		if ( $SIG{$key} ) {
 			print $save "$key => $SIG{$key}\n";
-		} else { print $save "$key x=>\n"; 	}
-	};
+		} else {
+			print $save "$key x=>\n";
+		}
+	}
 	print $save "\n\%ENV environment variables:\n";
-	for my $key (keys %ENV) { 
+	for my $key ( keys %ENV ) {
 		print $save "$key => $ENV{$key}\n";
-		};
+	}
 	print $save "\n\@INC include path:\n";
 	for my $element (@INC) {
 		print $save "$element\n";
-		};
+	}
 	print $save "\n\%INC included filenames:\n";
-	for my $key (keys %INC) { 
+	for my $key ( keys %INC ) {
 		print $save "$key => $INC{$key}\n";
-		};
+	}
 	close $save;
 	my $section = "\%lglobal{seenwords}\n";
 	open $save, '>:bytes', 'words.txt';
-	for my $key (keys %{$::lglobal{seenwords}}){
+	for my $key ( keys %{ $::lglobal{seenwords} } ) {
 		$section .= "$key => $::lglobal{seenwords}{$key}\n";
-	};
+	}
 	utf8::encode($section);
 	print $save $section;
 	close $save;
 	$section = "\%lglobal{seenwordsland}\n";
 	open $save, '>:bytes', 'words2.txt';
-	for my $key (keys %{$::lglobal{seenwords}}){
-		if ($::lglobal{seenwordslang}{$key}) {
+	for my $key ( keys %{ $::lglobal{seenwords} } ) {
+		if ( $::lglobal{seenwordslang}{$key} ) {
 			$section .= "$key => $::lglobal{seenwordslang}{$key}\n";
 		} else {
 			$section .= "$key x=>\n";
 		}
-	};
+	}
 	utf8::encode($section);
 	print $save $section;
 	close $save;
 	open $save, '>', 'project.txt';
 	print $save "\%projectdict\n";
-	for my $key (keys %::projectdict){
+	for my $key ( keys %::projectdict ) {
 		print $save "$key => $::projectdict{$key}\n";
-	};
+	}
 	close $save;
-};
+}
 
 sub escape_regexmetacharacters {
 	my $inputstring = shift;
@@ -774,7 +761,6 @@ tr/ÀÁÂÃÄÅàáâãäåÇçÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖØòóôõöøÑñÙÚÛÜùúûüÝÿý/AAAAAAaaaaaaCcEEEEeee
 	$phrase =~ s/([ÆæÞþÐðß])/$trans{$1}/g;
 	return $phrase;
 }
-
 
 sub BindMouseWheel {
 	my ($w) = @_;
@@ -836,10 +822,117 @@ sub working {
 }
 
 sub initialize {
+	$::top = ::tkinit( -title => $::window_title, );
+	my $top = $::top;
+	$top->minsize( 440, 90 );
+
+	# Detect geometry changes for tracking
+	$top->bind(
+		'<Configure>' => sub {
+			$::geometry = $top->geometry;
+			$::lglobal{geometryupdate} = 1;
+		}
+	);
+	$::icondata = '
+    R0lGODdhIAAgAPcAAAAAAAAAQAAAgAAA/wAgAAAgQAAggAAg/wBAAABAQABAgABA/wBgAABgQABg
+    gABg/wCAAACAQACAgACA/wCgAACgQACggACg/wDAAADAQADAgADA/wD/AAD/QAD/gAD//yAAACAA
+    QCAAgCAA/yAgACAgQCAggCAg/yBAACBAQCBAgCBA/yBgACBgQCBggCBg/yCAACCAQCCAgCCA/yCg
+    ACCgQCCggCCg/yDAACDAQCDAgCDA/yD/ACD/QCD/gCD//0AAAEAAQEAAgEAA/0AgAEAgQEAggEAg
+    /0BAAEBAQEBAgEBA/0BgAEBgQEBggEBg/0CAAECAQECAgECA/0CgAECgQECggECg/0DAAEDAQEDA
+    gEDA/0D/AED/QED/gED//2AAAGAAQGAAgGAA/2AgAGAgQGAggGAg/2BAAGBAQGBAgGBA/2BgAGBg
+    QGBggGBg/2CAAGCAQGCAgGCA/2CgAGCgQGCggGCg/2DAAGDAQGDAgGDA/2D/AGD/QGD/gGD//4AA
+    AIAAQIAAgIAA/4AgAIAgQIAggIAg/4BAAIBAQIBAgIBA/4BgAIBgQIBggIBg/4CAAICAQICAgICA
+    /4CgAICgQICggICg/4DAAIDAQIDAgIDA/4D/AID/QID/gID//6AAAKAAQKAAgKAA/6AgAKAgQKAg
+    gKAg/6BAAKBAQKBAgKBA/6BgAKBgQKBggKBg/6CAAKCAQKCAgKCA/6CgAKCgQKCggKCg/6DAAKDA
+    QKDAgKDA/6D/AKD/QKD/gKD//8AAAMAAQMAAgMAA/8AgAMAgQMAggMAg/8BAAMBAQMBAgMBA/8Bg
+    AMBgQMBggMBg/8CAAMCAQMCAgMCA/8CgAMCgQMCggMCg/8DAAMDAQMDAgMDA/8D/AMD/QMD/gMD/
+    //8AAP8AQP8AgP8A//8gAP8gQP8ggP8g//9AAP9AQP9AgP9A//9gAP9gQP9ggP9g//+AAP+AQP+A
+    gP+A//+gAP+gQP+ggP+g///AAP/AQP/AgP/A////AP//QP//gP///yH5BAAAAAAALAAAAAAgACAA
+    AAj/AP8JHEiwoMGDCBMqXMiwIUNJJCJKnDixDQlJD5PYErito8ePHictMYERYRtb225NWsmypctJ
+    b04IaHMwyS2Vb5bo3Mmzp84TMpMUPHkrJ9CjSJMmNSAgAE2OSbZNQrpEqdKqR5sC2Cawzc2YJ56s
+    VPnE6ptJl1RW1fqUxDeRJ85q60e3n62kcybNrSvJQAAAJASSkLpE7N66/bIdPYu4bqS/AAQT1ks3
+    W5I2tRILOLFkUja6tS5/fgwg8r/BYyuXCGDCgJISmyfZAh1AQOskASBLXvm53+qrk1RvPuq39O5L
+    dCOZKPymecw3s/u1We48p+7TUveOtaUtm/danumO19XW3Xsb49jDZ7vVuC77ftqit/+7G3TvynWj
+    u2ncuxb99MkpEUkbJbgRXD+1vJeEG5EkUQJ0dOFmGmrJGXCCCXLRVYKCJnTIWGLXUdhPPs2ttNdj
+    b1T2Rl7IRRiiSvJ5V1c2sJ1w3339xJIbem0oMckTmTVWS41A4Zhcbn89tU0AT1TVRiy11BLJasMd
+    hVmUBNYGGVddmUCcAGBWuVSYFrJVUAlAMWVAh2y26WZrWgVmEGx+IWnnnXgCllAbSJbm55+A+vlU
+    QttYFOihgLXBpUOMNuqoQQEBADs=
+    ';
+	$::icon = $top->Photo( -format => 'gif',
+						   -data   => $::icondata );
+	::fontinit();    # Initialize the fonts for the two windows
+	::utffontinit();
+
+	# Set up Main window size
+	unless ($::geometry) {
+		my $height = $top->screenheight() - 90;
+		my $width  = $top->screenwidth() - 20;
+		$::geometry = $width . "x" . $height . "+0+0";
+		$::geometry = $top->geometry($::geometry);
+	}
+	$top->geometry($::geometry) if $::geometry;
+	$::text_frame = $top->Frame->pack(
+									   -anchor => 'nw',
+									   -expand => 'yes',
+									   -fill   => 'both'
+	);
+
+	# Set up Main window layout
+	$::counter_frame =
+	  $::text_frame->Frame->pack(
+								  -side   => 'bottom',
+								  -anchor => 'sw',
+								  -pady   => 2,
+								  -expand => 0
+	  );
+	$::proofer_frame = $::text_frame->Frame;
+	$::text_font = $top->fontCreate(
+									 'courier',
+									 -family => "Courier New",
+									 -size   => 12,
+									 -weight => 'normal',
+	);
+
+	# The actual text widget
+	$::textwindow = $::text_frame->LineNumberText(
+		-widget => 'TextUnicode',
+		-exportselection => 'true',    # 'sel' tag is associated with selections
+		-background => $::bkgcolor,
+		-relief     => 'sunken',
+		-font       => $::lglobal{font},
+		-wrap       => 'none',
+		-curlinebg  => $::activecolor,
+	  )->pack(
+			   -side   => 'bottom',
+			   -anchor => 'nw',
+			   -expand => 'yes',
+			   -fill   => 'both'
+	  );
+	$top->protocol( 'WM_DELETE_WINDOW' => \&::_exit );
+	$top->configure( -menu => $::menubar = $top->Menu );
+
+	# routines to call every time the text is edited
+	$::textwindow->SetGUICallbacks(
+		[
+		   \&::update_indicators,
+		   sub {
+			   return unless $::nohighlights;
+			   $::textwindow->HighlightAllPairsBracketingCursor;
+		   },
+		   sub {
+			   $::textwindow->hidelinenum unless $::vislnnm;
+			 }
+		]
+	);
+
+	# Ignore any watchdog timer alarms. Subroutines that take a long time to
+	# complete can trip it
+	$SIG{ALRM} = 'IGNORE';
+	$SIG{INT} = sub { ::_exit() };
+
   # Initialize a whole bunch of global values that used to be discrete variables
   # spread willy-nilly through the code. Refactored them into a global
   # hash and gathered them together in a single subroutine.
-	my $top = $::top;
 	$::lglobal{alignstring}       = '.';
 	$::lglobal{asciijustify}      = 'center';
 	$::lglobal{asciiwidth}        = 64;
@@ -880,7 +973,6 @@ sub initialize {
 		$dir =~ s/(\/|\\)[^\/\\]+$/$1/;
 		chdir $dir if length $dir;
 	}
-
 	::readsettings();
 
 	# For backward compatibility, carry over old geometry settings
@@ -913,27 +1005,99 @@ sub initialize {
 		$::geometryhash{asciipop}      = '278x209+358+187';
 		$::geometryhash{ordpop}        = '316x150+191+132';
 		$::geometryhash{jeepop}        = '462x583+684+72';
-
 	}
-
 	$::lglobal{guigutsdirectory} = ::dirname( ::rel2abs($0) )
 	  unless defined $::lglobal{guigutsdirectory};
 	$::scannospath = ::catfile( $::lglobal{guigutsdirectory}, 'scannos' )
-         unless $::scannospath;
-
+	  unless $::scannospath;
 	if ($::OS_WIN) {
-		$::gutcommand =::setdefaultpath($::gutcommand,::catfile($::lglobal{guigutsdirectory},'tools', 'gutcheck', 'gutcheck.exe'));
-		$::jeebiescommand =::setdefaultpath($::jeebiescommand,::catfile( $::lglobal{guigutsdirectory},'tools','jeebies','jeebies.exe' ));
-		$::tidycommand =::setdefaultpath($::tidycommand,::catfile( $::lglobal{guigutsdirectory}, 'tools', 'tidy', 'tidy.exe' ));
-		$::globalviewerpath=::setdefaultpath($::globalviewerpath,::catfile('\Program Files', 'XnView', 'xnview.exe' ));
-		$::globalspellpath=::setdefaultpath($::globalspellpath,::catfile('\Program Files', 'Aspell','bin','aspell.exe' ));
-		$::validatecommand = ::setdefaultpath($::validatecommand,::catfile($::lglobal{guigutsdirectory}, 'tools', 'W3C', 'onsgmls.exe') );
-		$::validatecsscommand = ::setdefaultpath($::validatecsscommand,::catfile($::lglobal{guigutsdirectory},'tools', 'W3C', 'css-validator.jar'));
-		$::validatecsscommand = ::setdefaultpath($::validatecsscommand,::catfile($::lglobal{guigutsdirectory},'tools', 'W3C', 'css-validator.jar'));
-		$::gnutenbergdirectory = ::setdefaultpath($::gnutenbergdirectory,::catfile($::lglobal{guigutsdirectory}, 'tools', 'gnutenberg', '0.4' ));
+		$::gutcommand = ::setdefaultpath(
+							   $::gutcommand,
+							   ::catfile(
+										  $::lglobal{guigutsdirectory}, 'tools',
+										  'gutcheck', 'gutcheck.exe'
+							   )
+		);
+		$::jeebiescommand =
+		  ::setdefaultpath(
+							$::jeebiescommand,
+							::catfile(
+									   $::lglobal{guigutsdirectory},
+									   'tools', 'jeebies', 'jeebies.exe'
+							)
+		  );
+		$::tidycommand =
+		  ::setdefaultpath(
+							$::tidycommand,
+							::catfile(
+									   $::lglobal{guigutsdirectory},
+									   'tools', 'tidy', 'tidy.exe'
+							)
+		  );
+		$::globalviewerpath =
+		  ::setdefaultpath(
+							$::globalviewerpath,
+							::catfile(
+									   '\Program Files', 'XnView',
+									   'xnview.exe'
+							)
+		  );
+		$::globalspellpath =
+		  ::setdefaultpath(
+							$::globalspellpath,
+							::catfile(
+									   '\Program Files', 'Aspell',
+									   'bin',            'aspell.exe'
+							)
+		  );
+		$::validatecommand =
+		  ::setdefaultpath(
+							$::validatecommand,
+							::catfile(
+									   $::lglobal{guigutsdirectory},
+									   'tools', 'W3C', 'onsgmls.exe'
+							)
+		  );
+		$::validatecsscommand =
+		  ::setdefaultpath(
+							$::validatecsscommand,
+							::catfile(
+									   $::lglobal{guigutsdirectory},
+									   'tools', 'W3C', 'css-validator.jar'
+							)
+		  );
+		$::validatecsscommand =
+		  ::setdefaultpath(
+							$::validatecsscommand,
+							::catfile(
+									   $::lglobal{guigutsdirectory},
+									   'tools', 'W3C', 'css-validator.jar'
+							)
+		  );
+		$::gnutenbergdirectory =
+		  ::setdefaultpath(
+							$::gnutenbergdirectory,
+							::catfile(
+									   $::lglobal{guigutsdirectory}, 'tools',
+									   'gnutenberg',                 '0.4'
+							)
+		  );
 	} else {
-		$::gutcommand = ::setdefaultpath($::gutcommand,::catfile( $::lglobal{guigutsdirectory},'tools','gutcheck','gutcheck' ));
-		$::jeebiescommand = ::setdefaultpath($::jeebiescommand,::catfile( $::lglobal{guigutsdirectory},'tools', 'jeebies', 'jeebies' ));
+		$::gutcommand = ::setdefaultpath(
+							   $::gutcommand,
+							   ::catfile(
+										  $::lglobal{guigutsdirectory}, 'tools',
+										  'gutcheck', 'gutcheck'
+							   )
+		);
+		$::jeebiescommand =
+		  ::setdefaultpath(
+							$::jeebiescommand,
+							::catfile(
+									   $::lglobal{guigutsdirectory},
+									   'tools', 'jeebies', 'jeebies'
+							)
+		  );
 	}
 	%{ $::lglobal{utfblocks} } = (
 		'Alphabetic Presentation Forms' => [ 'FB00', 'FB4F' ],
@@ -1049,256 +1213,252 @@ sub initialize {
 		#'Yi Syllables' => ['A000', 'A48F'],
 		#'Yijing Hexagram Symbols' => ['4DC0', '4DFF'],
 	);
-
 	%{ $::lglobal{grkbeta1} } = (
-								"\x{1F00}" => 'a)',
-								"\x{1F01}" => 'a(',
-								"\x{1F08}" => 'A)',
-								"\x{1F09}" => 'A(',
-								"\x{1FF8}" => 'O\\',
-								"\x{1FF9}" => 'O/',
-								"\x{1FFA}" => 'Ô\\',
-								"\x{1FFB}" => 'Ô/',
-								"\x{1FFC}" => 'Ô|',
-								"\x{1F10}" => 'e)',
-								"\x{1F11}" => 'e(',
-								"\x{1F18}" => 'E)',
-								"\x{1F19}" => 'E(',
-								"\x{1F20}" => 'ê)',
-								"\x{1F21}" => 'ê(',
-								"\x{1F28}" => 'Ê)',
-								"\x{1F29}" => 'Ê(',
-								"\x{1F30}" => 'i)',
-								"\x{1F31}" => 'i(',
-								"\x{1F38}" => 'I)',
-								"\x{1F39}" => 'I(',
-								"\x{1F40}" => 'o)',
-								"\x{1F41}" => 'o(',
-								"\x{1F48}" => 'O)',
-								"\x{1F49}" => 'O(',
-								"\x{1F50}" => 'y)',
-								"\x{1F51}" => 'y(',
-								"\x{1F59}" => 'Y(',
-								"\x{1F60}" => 'ô)',
-								"\x{1F61}" => 'ô(',
-								"\x{1F68}" => 'Ô)',
-								"\x{1F69}" => 'Ô(',
-								"\x{1F70}" => 'a\\',
-								"\x{1F71}" => 'a/',
-								"\x{1F72}" => 'e\\',
-								"\x{1F73}" => 'e/',
-								"\x{1F74}" => 'ê\\',
-								"\x{1F75}" => 'ê/',
-								"\x{1F76}" => 'i\\',
-								"\x{1F77}" => 'i/',
-								"\x{1F78}" => 'o\\',
-								"\x{1F79}" => 'o/',
-								"\x{1F7A}" => 'y\\',
-								"\x{1F7B}" => 'y/',
-								"\x{1F7C}" => 'ô\\',
-								"\x{1F7D}" => 'ô/',
-								"\x{1FB0}" => 'a=',
-								"\x{1FB1}" => 'a_',
-								"\x{1FB3}" => 'a|',
-								"\x{1FB6}" => 'a~',
-								"\x{1FB8}" => 'A=',
-								"\x{1FB9}" => 'A_',
-								"\x{1FBA}" => 'A\\',
-								"\x{1FBB}" => 'A/',
-								"\x{1FBC}" => 'A|',
-								"\x{1FC3}" => 'ê|',
-								"\x{1FC6}" => 'ê~',
-								"\x{1FC8}" => 'E\\',
-								"\x{1FC9}" => 'E/',
-								"\x{1FCA}" => 'Ê\\',
-								"\x{1FCB}" => 'Ê/',
-								"\x{1FCC}" => 'Ê|',
-								"\x{1FD0}" => 'i=',
-								"\x{1FD1}" => 'i_',
-								"\x{1FD6}" => 'i~',
-								"\x{1FD8}" => 'I=',
-								"\x{1FD9}" => 'I_',
-								"\x{1FDA}" => 'I\\',
-								"\x{1FDB}" => 'I/',
-								"\x{1FE0}" => 'y=',
-								"\x{1FE1}" => 'y_',
-								"\x{1FE4}" => 'r)',
-								"\x{1FE5}" => 'r(',
-								"\x{1FE6}" => 'y~',
-								"\x{1FE8}" => 'Y=',
-								"\x{1FE9}" => 'Y_',
-								"\x{1FEA}" => 'Y\\',
-								"\x{1FEB}" => 'Y/',
-								"\x{1FEC}" => 'R(',
-								"\x{1FF6}" => 'ô~',
-								"\x{1FF3}" => 'ô|',
-								"\x{03AA}" => 'I+',
-								"\x{03AB}" => 'Y+',
-								"\x{03CA}" => 'i+',
-								"\x{03CB}" => 'y+',
-								"\x{03DE}" => '*#1',
-								"\x{03DE}" => '#1',
-								"\x{03DA}" => '*#2',
-								"\x{03DB}" => '#2',
-								"\x{03D8}" => '*#3',
-								"\x{03D9}" => '#3',
-								"\x{03E0}" => '*#5',
-								"\x{03E1}" => '#5',
-								"\x{20EF}" => '#6',
-								"\x{03FD}" => '#10',
-								"\x{03FF}" => '#11',
-								"\x{203B}" => '#13',
-								"\x{2E16}" => '#14',
-								"\x{03FE}" => '#16',
-								"\x{0259}" => '#55',
-								"\x{205A}" => '#73',
-								"\x{205D}" => '#74',
+								  "\x{1F00}" => 'a)',
+								  "\x{1F01}" => 'a(',
+								  "\x{1F08}" => 'A)',
+								  "\x{1F09}" => 'A(',
+								  "\x{1FF8}" => 'O\\',
+								  "\x{1FF9}" => 'O/',
+								  "\x{1FFA}" => 'Ô\\',
+								  "\x{1FFB}" => 'Ô/',
+								  "\x{1FFC}" => 'Ô|',
+								  "\x{1F10}" => 'e)',
+								  "\x{1F11}" => 'e(',
+								  "\x{1F18}" => 'E)',
+								  "\x{1F19}" => 'E(',
+								  "\x{1F20}" => 'ê)',
+								  "\x{1F21}" => 'ê(',
+								  "\x{1F28}" => 'Ê)',
+								  "\x{1F29}" => 'Ê(',
+								  "\x{1F30}" => 'i)',
+								  "\x{1F31}" => 'i(',
+								  "\x{1F38}" => 'I)',
+								  "\x{1F39}" => 'I(',
+								  "\x{1F40}" => 'o)',
+								  "\x{1F41}" => 'o(',
+								  "\x{1F48}" => 'O)',
+								  "\x{1F49}" => 'O(',
+								  "\x{1F50}" => 'y)',
+								  "\x{1F51}" => 'y(',
+								  "\x{1F59}" => 'Y(',
+								  "\x{1F60}" => 'ô)',
+								  "\x{1F61}" => 'ô(',
+								  "\x{1F68}" => 'Ô)',
+								  "\x{1F69}" => 'Ô(',
+								  "\x{1F70}" => 'a\\',
+								  "\x{1F71}" => 'a/',
+								  "\x{1F72}" => 'e\\',
+								  "\x{1F73}" => 'e/',
+								  "\x{1F74}" => 'ê\\',
+								  "\x{1F75}" => 'ê/',
+								  "\x{1F76}" => 'i\\',
+								  "\x{1F77}" => 'i/',
+								  "\x{1F78}" => 'o\\',
+								  "\x{1F79}" => 'o/',
+								  "\x{1F7A}" => 'y\\',
+								  "\x{1F7B}" => 'y/',
+								  "\x{1F7C}" => 'ô\\',
+								  "\x{1F7D}" => 'ô/',
+								  "\x{1FB0}" => 'a=',
+								  "\x{1FB1}" => 'a_',
+								  "\x{1FB3}" => 'a|',
+								  "\x{1FB6}" => 'a~',
+								  "\x{1FB8}" => 'A=',
+								  "\x{1FB9}" => 'A_',
+								  "\x{1FBA}" => 'A\\',
+								  "\x{1FBB}" => 'A/',
+								  "\x{1FBC}" => 'A|',
+								  "\x{1FC3}" => 'ê|',
+								  "\x{1FC6}" => 'ê~',
+								  "\x{1FC8}" => 'E\\',
+								  "\x{1FC9}" => 'E/',
+								  "\x{1FCA}" => 'Ê\\',
+								  "\x{1FCB}" => 'Ê/',
+								  "\x{1FCC}" => 'Ê|',
+								  "\x{1FD0}" => 'i=',
+								  "\x{1FD1}" => 'i_',
+								  "\x{1FD6}" => 'i~',
+								  "\x{1FD8}" => 'I=',
+								  "\x{1FD9}" => 'I_',
+								  "\x{1FDA}" => 'I\\',
+								  "\x{1FDB}" => 'I/',
+								  "\x{1FE0}" => 'y=',
+								  "\x{1FE1}" => 'y_',
+								  "\x{1FE4}" => 'r)',
+								  "\x{1FE5}" => 'r(',
+								  "\x{1FE6}" => 'y~',
+								  "\x{1FE8}" => 'Y=',
+								  "\x{1FE9}" => 'Y_',
+								  "\x{1FEA}" => 'Y\\',
+								  "\x{1FEB}" => 'Y/',
+								  "\x{1FEC}" => 'R(',
+								  "\x{1FF6}" => 'ô~',
+								  "\x{1FF3}" => 'ô|',
+								  "\x{03AA}" => 'I+',
+								  "\x{03AB}" => 'Y+',
+								  "\x{03CA}" => 'i+',
+								  "\x{03CB}" => 'y+',
+								  "\x{03DE}" => '*#1',
+								  "\x{03DE}" => '#1',
+								  "\x{03DA}" => '*#2',
+								  "\x{03DB}" => '#2',
+								  "\x{03D8}" => '*#3',
+								  "\x{03D9}" => '#3',
+								  "\x{03E0}" => '*#5',
+								  "\x{03E1}" => '#5',
+								  "\x{20EF}" => '#6',
+								  "\x{03FD}" => '#10',
+								  "\x{03FF}" => '#11',
+								  "\x{203B}" => '#13',
+								  "\x{2E16}" => '#14',
+								  "\x{03FE}" => '#16',
+								  "\x{0259}" => '#55',
+								  "\x{205A}" => '#73',
+								  "\x{205D}" => '#74',
 	);
-
 	%{ $::lglobal{grkbeta2} } = (
-								"\x{1F02}" => 'a)\\',
-								"\x{1F03}" => 'a(\\',
-								"\x{1F04}" => 'a)/',
-								"\x{1F05}" => 'a(/',
-								"\x{1F06}" => 'a~)',
-								"\x{1F07}" => 'a~(',
-								"\x{1F0A}" => 'A)\\',
-								"\x{1F0B}" => 'A(\\',
-								"\x{1F0C}" => 'A)/',
-								"\x{1F0D}" => 'A(/',
-								"\x{1F0E}" => 'A~)',
-								"\x{1F0F}" => 'A~(',
-								"\x{1F12}" => 'e)\\',
-								"\x{1F13}" => 'e(\\',
-								"\x{1F14}" => 'e)/',
-								"\x{1F15}" => 'e(/',
-								"\x{1F1A}" => 'E)\\',
-								"\x{1F1B}" => 'E(\\',
-								"\x{1F1C}" => 'E)/',
-								"\x{1F1D}" => 'E(/',
-								"\x{1F22}" => 'ê)\\',
-								"\x{1F23}" => 'ê(\\',
-								"\x{1F24}" => 'ê)/',
-								"\x{1F25}" => 'ê(/',
-								"\x{1F26}" => 'ê~)',
-								"\x{1F27}" => 'ê~(',
-								"\x{1F2A}" => 'Ê)\\',
-								"\x{1F2B}" => 'Ê(\\',
-								"\x{1F2C}" => 'Ê)/',
-								"\x{1F2D}" => 'Ê(/',
-								"\x{1F2E}" => 'Ê~)',
-								"\x{1F2F}" => 'Ê~(',
-								"\x{1F32}" => 'i)\\',
-								"\x{1F33}" => 'i(\\',
-								"\x{1F34}" => 'i)/',
-								"\x{1F35}" => 'i(/',
-								"\x{1F36}" => 'i~)',
-								"\x{1F37}" => 'i~(',
-								"\x{1F3A}" => 'I)\\',
-								"\x{1F3B}" => 'I(\\',
-								"\x{1F3C}" => 'I)/',
-								"\x{1F3D}" => 'I(/',
-								"\x{1F3E}" => 'I~)',
-								"\x{1F3F}" => 'I~(',
-								"\x{1F42}" => 'o)\\',
-								"\x{1F43}" => 'o(\\',
-								"\x{1F44}" => 'o)/',
-								"\x{1F45}" => 'o(/',
-								"\x{1F4A}" => 'O)\\',
-								"\x{1F4B}" => 'O(\\',
-								"\x{1F4C}" => 'O)/',
-								"\x{1F4D}" => 'O(/',
-								"\x{1F52}" => 'y)\\',
-								"\x{1F53}" => 'y(\\',
-								"\x{1F54}" => 'y)/',
-								"\x{1F55}" => 'y(/',
-								"\x{1F56}" => 'y~)',
-								"\x{1F57}" => 'y~(',
-								"\x{1F5B}" => 'Y(\\',
-								"\x{1F5D}" => 'Y(/',
-								"\x{1F5F}" => 'Y~(',
-								"\x{1F62}" => 'ô)\\',
-								"\x{1F63}" => 'ô(\\',
-								"\x{1F64}" => 'ô)/',
-								"\x{1F65}" => 'ô(/',
-								"\x{1F66}" => 'ô~)',
-								"\x{1F67}" => 'ô~(',
-								"\x{1F6A}" => 'Ô)\\',
-								"\x{1F6B}" => 'Ô(\\',
-								"\x{1F6C}" => 'Ô)/',
-								"\x{1F6D}" => 'Ô(/',
-								"\x{1F6E}" => 'Ô~)',
-								"\x{1F6F}" => 'Ô~(',
-								"\x{1F80}" => 'a)|',
-								"\x{1F81}" => 'a(|',
-								"\x{1F88}" => 'A)|',
-								"\x{1F89}" => 'A(|',
-								"\x{1F90}" => 'ê)|',
-								"\x{1F91}" => 'ê(|',
-								"\x{1F98}" => 'Ê)|',
-								"\x{1F99}" => 'Ê(|',
-								"\x{1FA0}" => 'ô)|',
-								"\x{1FA1}" => 'ô(|',
-								"\x{1FA8}" => 'Ô)|',
-								"\x{1FA9}" => 'Ô(|',
-								"\x{1FB2}" => 'a\|',
-								"\x{1FB4}" => 'a/|',
-								"\x{1FB7}" => 'a~|',
-								"\x{1FC2}" => 'ê\|',
-								"\x{1FC4}" => 'ê/|',
-								"\x{1FC7}" => 'ê~|',
-								"\x{1FD2}" => 'i\+',
-								"\x{1FD3}" => 'i/+',
-								"\x{1FD7}" => 'i~+',
-								"\x{1FE2}" => 'y\+',
-								"\x{1FE3}" => 'y/+',
-								"\x{1FE7}" => 'y~+',
-								"\x{1FF2}" => 'ô\|',
-								"\x{1FF4}" => 'ô/|',
-								"\x{1FF7}" => 'ô~|',
-								"\x{0390}" => 'i/+',
-								"\x{03B0}" => 'y/+',
+								  "\x{1F02}" => 'a)\\',
+								  "\x{1F03}" => 'a(\\',
+								  "\x{1F04}" => 'a)/',
+								  "\x{1F05}" => 'a(/',
+								  "\x{1F06}" => 'a~)',
+								  "\x{1F07}" => 'a~(',
+								  "\x{1F0A}" => 'A)\\',
+								  "\x{1F0B}" => 'A(\\',
+								  "\x{1F0C}" => 'A)/',
+								  "\x{1F0D}" => 'A(/',
+								  "\x{1F0E}" => 'A~)',
+								  "\x{1F0F}" => 'A~(',
+								  "\x{1F12}" => 'e)\\',
+								  "\x{1F13}" => 'e(\\',
+								  "\x{1F14}" => 'e)/',
+								  "\x{1F15}" => 'e(/',
+								  "\x{1F1A}" => 'E)\\',
+								  "\x{1F1B}" => 'E(\\',
+								  "\x{1F1C}" => 'E)/',
+								  "\x{1F1D}" => 'E(/',
+								  "\x{1F22}" => 'ê)\\',
+								  "\x{1F23}" => 'ê(\\',
+								  "\x{1F24}" => 'ê)/',
+								  "\x{1F25}" => 'ê(/',
+								  "\x{1F26}" => 'ê~)',
+								  "\x{1F27}" => 'ê~(',
+								  "\x{1F2A}" => 'Ê)\\',
+								  "\x{1F2B}" => 'Ê(\\',
+								  "\x{1F2C}" => 'Ê)/',
+								  "\x{1F2D}" => 'Ê(/',
+								  "\x{1F2E}" => 'Ê~)',
+								  "\x{1F2F}" => 'Ê~(',
+								  "\x{1F32}" => 'i)\\',
+								  "\x{1F33}" => 'i(\\',
+								  "\x{1F34}" => 'i)/',
+								  "\x{1F35}" => 'i(/',
+								  "\x{1F36}" => 'i~)',
+								  "\x{1F37}" => 'i~(',
+								  "\x{1F3A}" => 'I)\\',
+								  "\x{1F3B}" => 'I(\\',
+								  "\x{1F3C}" => 'I)/',
+								  "\x{1F3D}" => 'I(/',
+								  "\x{1F3E}" => 'I~)',
+								  "\x{1F3F}" => 'I~(',
+								  "\x{1F42}" => 'o)\\',
+								  "\x{1F43}" => 'o(\\',
+								  "\x{1F44}" => 'o)/',
+								  "\x{1F45}" => 'o(/',
+								  "\x{1F4A}" => 'O)\\',
+								  "\x{1F4B}" => 'O(\\',
+								  "\x{1F4C}" => 'O)/',
+								  "\x{1F4D}" => 'O(/',
+								  "\x{1F52}" => 'y)\\',
+								  "\x{1F53}" => 'y(\\',
+								  "\x{1F54}" => 'y)/',
+								  "\x{1F55}" => 'y(/',
+								  "\x{1F56}" => 'y~)',
+								  "\x{1F57}" => 'y~(',
+								  "\x{1F5B}" => 'Y(\\',
+								  "\x{1F5D}" => 'Y(/',
+								  "\x{1F5F}" => 'Y~(',
+								  "\x{1F62}" => 'ô)\\',
+								  "\x{1F63}" => 'ô(\\',
+								  "\x{1F64}" => 'ô)/',
+								  "\x{1F65}" => 'ô(/',
+								  "\x{1F66}" => 'ô~)',
+								  "\x{1F67}" => 'ô~(',
+								  "\x{1F6A}" => 'Ô)\\',
+								  "\x{1F6B}" => 'Ô(\\',
+								  "\x{1F6C}" => 'Ô)/',
+								  "\x{1F6D}" => 'Ô(/',
+								  "\x{1F6E}" => 'Ô~)',
+								  "\x{1F6F}" => 'Ô~(',
+								  "\x{1F80}" => 'a)|',
+								  "\x{1F81}" => 'a(|',
+								  "\x{1F88}" => 'A)|',
+								  "\x{1F89}" => 'A(|',
+								  "\x{1F90}" => 'ê)|',
+								  "\x{1F91}" => 'ê(|',
+								  "\x{1F98}" => 'Ê)|',
+								  "\x{1F99}" => 'Ê(|',
+								  "\x{1FA0}" => 'ô)|',
+								  "\x{1FA1}" => 'ô(|',
+								  "\x{1FA8}" => 'Ô)|',
+								  "\x{1FA9}" => 'Ô(|',
+								  "\x{1FB2}" => 'a\|',
+								  "\x{1FB4}" => 'a/|',
+								  "\x{1FB7}" => 'a~|',
+								  "\x{1FC2}" => 'ê\|',
+								  "\x{1FC4}" => 'ê/|',
+								  "\x{1FC7}" => 'ê~|',
+								  "\x{1FD2}" => 'i\+',
+								  "\x{1FD3}" => 'i/+',
+								  "\x{1FD7}" => 'i~+',
+								  "\x{1FE2}" => 'y\+',
+								  "\x{1FE3}" => 'y/+',
+								  "\x{1FE7}" => 'y~+',
+								  "\x{1FF2}" => 'ô\|',
+								  "\x{1FF4}" => 'ô/|',
+								  "\x{1FF7}" => 'ô~|',
+								  "\x{0390}" => 'i/+',
+								  "\x{03B0}" => 'y/+',
 	);
-
 	%{ $::lglobal{grkbeta3} } = (
-								"\x{1F82}" => 'a)\|',
-								"\x{1F83}" => 'a(\|',
-								"\x{1F84}" => 'a)/|',
-								"\x{1F85}" => 'a(/|',
-								"\x{1F86}" => 'a~)|',
-								"\x{1F87}" => 'a~(|',
-								"\x{1F8A}" => 'A)\|',
-								"\x{1F8B}" => 'A(\|',
-								"\x{1F8C}" => 'A)/|',
-								"\x{1F8D}" => 'A(/|',
-								"\x{1F8E}" => 'A~)|',
-								"\x{1F8F}" => 'A~(|',
-								"\x{1F92}" => 'ê)\|',
-								"\x{1F93}" => 'ê(\|',
-								"\x{1F94}" => 'ê)/|',
-								"\x{1F95}" => 'ê(/|',
-								"\x{1F96}" => 'ê~)|',
-								"\x{1F97}" => 'ê~(|',
-								"\x{1F9A}" => 'Ê)\|',
-								"\x{1F9B}" => 'Ê(\|',
-								"\x{1F9C}" => 'Ê)/|',
-								"\x{1F9D}" => 'Ê(/|',
-								"\x{1F9E}" => 'Ê~)|',
-								"\x{1F9F}" => 'Ê~(|',
-								"\x{1FA2}" => 'ô)\|',
-								"\x{1FA3}" => 'ô(\|',
-								"\x{1FA4}" => 'ô)/|',
-								"\x{1FA5}" => 'ô(/|',
-								"\x{1FA6}" => 'ô~)|',
-								"\x{1FA7}" => 'ô~(|',
-								"\x{1FAA}" => 'Ô)\|',
-								"\x{1FAB}" => 'Ô(\|',
-								"\x{1FAC}" => 'Ô)/|',
-								"\x{1FAD}" => 'Ô(/|',
-								"\x{1FAE}" => 'Ô~)|',
-								"\x{1FAF}" => 'Ô~(|',
+								  "\x{1F82}" => 'a)\|',
+								  "\x{1F83}" => 'a(\|',
+								  "\x{1F84}" => 'a)/|',
+								  "\x{1F85}" => 'a(/|',
+								  "\x{1F86}" => 'a~)|',
+								  "\x{1F87}" => 'a~(|',
+								  "\x{1F8A}" => 'A)\|',
+								  "\x{1F8B}" => 'A(\|',
+								  "\x{1F8C}" => 'A)/|',
+								  "\x{1F8D}" => 'A(/|',
+								  "\x{1F8E}" => 'A~)|',
+								  "\x{1F8F}" => 'A~(|',
+								  "\x{1F92}" => 'ê)\|',
+								  "\x{1F93}" => 'ê(\|',
+								  "\x{1F94}" => 'ê)/|',
+								  "\x{1F95}" => 'ê(/|',
+								  "\x{1F96}" => 'ê~)|',
+								  "\x{1F97}" => 'ê~(|',
+								  "\x{1F9A}" => 'Ê)\|',
+								  "\x{1F9B}" => 'Ê(\|',
+								  "\x{1F9C}" => 'Ê)/|',
+								  "\x{1F9D}" => 'Ê(/|',
+								  "\x{1F9E}" => 'Ê~)|',
+								  "\x{1F9F}" => 'Ê~(|',
+								  "\x{1FA2}" => 'ô)\|',
+								  "\x{1FA3}" => 'ô(\|',
+								  "\x{1FA4}" => 'ô)/|',
+								  "\x{1FA5}" => 'ô(/|',
+								  "\x{1FA6}" => 'ô~)|',
+								  "\x{1FA7}" => 'ô~(|',
+								  "\x{1FAA}" => 'Ô)\|',
+								  "\x{1FAB}" => 'Ô(\|',
+								  "\x{1FAC}" => 'Ô)/|',
+								  "\x{1FAD}" => 'Ô(/|',
+								  "\x{1FAE}" => 'Ô~)|',
+								  "\x{1FAF}" => 'Ô~(|',
 	);
-
 	$::lglobal{checkcolor} = ($::OS_WIN) ? 'white' : $::activecolor;
 	my $scroll_gif =
 'R0lGODlhCAAQAIAAAAAAAP///yH5BAEAAAEALAAAAAAIABAAAAIUjAGmiMutopz0pPgwk7B6/3SZphQAOw==';
@@ -1319,14 +1479,14 @@ sub scrolldismiss {
 }
 
 sub b2scroll {
-	my $top = $::top;
+	my $top        = $::top;
 	my $textwindow = $::textwindow;
-	my $scrolly = $top->pointery - $top->rooty - $::lglobal{scroll_y} - 8;
-	my $scrollx = $top->pointerx - $top->rootx - $::lglobal{scroll_x} - 8;
-	my $signy   = ( abs $scrolly > 5 ) ? ( $scrolly < 0 ? -1 : 1 ) : 0;
-	my $signx   = ( abs $scrollx > 5 ) ? ( $scrollx < 0 ? -1 : 1 ) : 0;
+	my $scrolly    = $top->pointery - $top->rooty - $::lglobal{scroll_y} - 8;
+	my $scrollx    = $top->pointerx - $top->rootx - $::lglobal{scroll_x} - 8;
+	my $signy      = ( abs $scrolly > 5 ) ? ( $scrolly < 0 ? -1 : 1 ) : 0;
+	my $signx      = ( abs $scrollx > 5 ) ? ( $scrollx < 0 ? -1 : 1 ) : 0;
 	$textwindow->configure(
-						  -cursor => $::lglobal{scroll_cursors}{"$signy$signx"} );
+						-cursor => $::lglobal{scroll_cursors}{"$signy$signx"} );
 	$scrolly = ( $scrolly**2 - 25 ) / 800;
 	$scrollx = ( $scrollx**2 - 25 ) / 2000;
 	$::lglobal{scrolltriggery} += $scrolly;
@@ -1360,7 +1520,7 @@ sub initialize_popup_with_deletebinding {
 }
 
 sub initialize_popup_without_deletebinding {
-	my $top = $::top;
+	my $top       = $::top;
 	my $popupname = shift;
 	$::lglobal{$popupname}->geometry( $::geometryhash{$popupname} )
 	  if $::geometryhash{$popupname};
@@ -1438,7 +1598,6 @@ sub drag {
 		}
 	);
 }
-
 ## Ultra fast natural sort - wants an array
 sub natural_sort_alpha {
 	my $i;
@@ -1446,14 +1605,12 @@ sub natural_sort_alpha {
 	  for ( my @x = map { lc deaccent $_} @_ );
 	@_[ map { (split)[-1] } sort @x ];
 }
-
 ## Fast length sort with secondary natural sort - wants an array
 sub natural_sort_length {
 	$_->[2] =~ s/(\d+(,\d+)*)/pack 'aNa*', 0, length $1, $1/eg
 	  for ( my @x = map { [ length noast($_), $_, lc deaccent $_ ] } @_ );
 	map { $_->[1] } sort { $b->[0] <=> $a->[0] or $a->[2] cmp $b->[2] } @x;
 }
-
 ## Fast freqency sort with secondary natural sort - wants a hash reference
 sub natural_sort_freq {
 	$_->[2] =~ s/(\d+(,\d+)*)/pack 'aNa*', 0, length $1, $1/eg
@@ -1463,7 +1620,6 @@ sub natural_sort_freq {
 	  );
 	map { $_->[1] } sort { $b->[0] <=> $a->[0] or $a->[2] cmp $b->[2] } @x;
 }
-
 ## No Asterisks
 sub noast {
 	local $/ = ' ****';
@@ -1471,10 +1627,9 @@ sub noast {
 	chomp $phrase;
 	return $phrase;
 }
-
 ### Edit Menu
 sub cut {
-	my $textwindow = $::textwindow;
+	my $textwindow  = $::textwindow;
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
 	return unless $range_total;
@@ -1488,7 +1643,7 @@ sub cut {
 }
 
 sub textcopy {
-	my $textwindow = $::textwindow;
+	my $textwindow  = $::textwindow;
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
 	return unless $range_total;
@@ -1521,12 +1676,11 @@ sub paste {
 		$textwindow->clipboardPaste;
 	}
 }
-
 ### Help
 # FIXME: generalize about, version, etc. into one function.
 sub showversion {
 	my $top = $::top;
-	my $os = $^O;
+	my $os  = $^O;
 	$os =~ s/^([^\[]+)\[.+/$1/;
 	my $perl = sprintf( "Perl v%vd", $^V );
 	my $winver;
@@ -1546,7 +1700,6 @@ perl/Tk Version : $Tk::VERSION
 Tk patchLevel : $Tk::patchLevel
 Tk libraries : $Tk::library
 END
-
 	my $dialog = $top->Dialog(
 							   -title   => 'Versions',
 							   -popover => $top,
@@ -1578,14 +1731,12 @@ sub checkonlineversion {
 
 # Check to see if this is the most recent version
 sub checkforupdates {
-	my $top = $::top;
-	
+	my $top          = $::top;
 	my $monthlycheck = shift;
 	if ( ( $monthlycheck eq "monthly" ) and ( $::ignoreversions eq "major" ) ) {
 		return;
 	}
 	my $onlineversion;
-
 	$onlineversion = checkonlineversion();
 	if ($onlineversion) {
 		if ( $monthlycheck eq "monthly" ) {
@@ -1609,7 +1760,6 @@ sub checkforupdates {
 				return;
 			}
 		}
-
 		my ( $dbox, $answer );
 		my $versionpopmessage;
 		my $versionbox = $top->Toplevel;
@@ -1625,8 +1775,8 @@ sub checkforupdates {
 		$button_frame->Button(
 			-text    => 'Update',
 			-command => sub {
-				runner(
-$::globalbrowserstart, "http://sourceforge.net/projects/guiguts/" );
+				runner( $::globalbrowserstart,
+						"http://sourceforge.net/projects/guiguts/" );
 				$versionbox->destroy;
 				undef $versionbox;
 			}
@@ -1652,7 +1802,6 @@ $::globalbrowserstart, "http://sourceforge.net/projects/guiguts/" );
 		)->pack( -side => 'left', -pady => 8, -padx => 5 );
 		$dialog_frame->Label( -text => $versionpopmessage )
 		  ->pack( -side => "top" );
-
 		my $radio_frame =
 		  $versionbox->Frame()->pack( -side => "top", -pady => 10 );
 		$radio_frame->Radiobutton(
@@ -1675,7 +1824,6 @@ $::globalbrowserstart, "http://sourceforge.net/projects/guiguts/" );
 								   -value    => "none",
 								   -variable => \$::ignoreversions
 		)->pack( -side => "left" );
-
 	} else {
 		$top->messageBox(
 					   -icon    => 'error',
@@ -1684,7 +1832,6 @@ $::globalbrowserstart, "http://sourceforge.net/projects/guiguts/" );
 					   -type    => 'Ok',
 		);
 		return;
-
 	}
 }
 
@@ -1695,14 +1842,12 @@ sub checkforupdatesmonthly {
 		 and ( time() - $::lastversioncheck > 2592000 ) )
 	{
 		$::lastversioncheck = time();
-
 		my $updateanswer = $top->Dialog(
-			-title => 'Check for Updates',
-			-font  => $::lglobal{font},
-
-			-text           => 'Would you like to check for updates?',
-			-buttons        => [ 'Ok', 'Later', 'Don\'t Ask' ],
-			-default_button => 'Ok'
+								-title => 'Check for Updates',
+								-font  => $::lglobal{font},
+								-text => 'Would you like to check for updates?',
+								-buttons => [ 'Ok', 'Later', 'Don\'t Ask' ],
+								-default_button => 'Ok'
 		)->Show();
 		if ( $updateanswer eq 'Ok' ) {
 			checkforupdates("monthly");
@@ -1728,12 +1873,11 @@ sub hotkeyshelp {
 		$::lglobal{hotpop} = $top->Toplevel;
 		$::lglobal{hotpop}->title('Hot key combinations');
 		initialize_popup_with_deletebinding('hotpop');
-
 		my $frame =
 		  $::lglobal{hotpop}->Frame->pack(
-										 -anchor => 'nw',
-										 -expand => 'yes',
-										 -fill   => 'both'
+										   -anchor => 'nw',
+										   -expand => 'yes',
+										   -fill   => 'both'
 		  );
 		my $rotextbox =
 		  $frame->Scrolled(
@@ -1903,10 +2047,10 @@ sub regexref {
 		)->pack( -pady => 6 );
 		my $regtext =
 		  $::lglobal{regexrefpop}->Scrolled(
-										   'ROText',
-										   -scrollbars => 'se',
-										   -background => $::bkgcolor,
-										   -font       => $::lglobal{font},
+											 'ROText',
+											 -scrollbars => 'se',
+											 -background => $::bkgcolor,
+											 -font       => $::lglobal{font},
 		  )->pack( -anchor => 'n', -expand => 'y', -fill => 'both' );
 		drag($regtext);
 		if ( -e 'regref.txt' ) {
@@ -1927,14 +2071,12 @@ sub regexref {
 		}
 	}
 }
-
 ### Bookmarks
-
 sub setbookmark {
-	my $bookmark = shift;
+	my $bookmark   = shift;
 	my $textwindow = $::textwindow;
-	my $index    = '';
-	my $indexb   = '';
+	my $index      = '';
+	my $indexb     = '';
 	if ( $::bookmarks[$bookmark] ) {
 		$indexb = $textwindow->index("bkmk$bookmark");
 	}
@@ -1950,7 +2092,7 @@ sub setbookmark {
 }
 
 sub gotobookmark {
-	my $bookmark = shift;
+	my $bookmark   = shift;
 	my $textwindow = $::textwindow;
 	$textwindow->bell unless ( $::bookmarks[$bookmark] || $::nobell );
 	$textwindow->see("bkmk$bookmark") if $::bookmarks[$bookmark];
@@ -1964,7 +2106,6 @@ sub gotobookmark {
 sub epubmaker {
 	my $format = shift;
 	if ( $::lglobal{global_filename} =~ /(\w+.(rst|htm|html))$/ ) {
-
 		print "\nBeginning epubmaker\n";
 		print "Files will appear in the directory $::globallastpath.\n";
 		print
@@ -1978,10 +2119,13 @@ sub epubmaker {
 		my $pythonpath =
 		  catfile( $::lglobal{guigutsdirectory}, 'python27', 'python.exe' );
 
-		if ( defined $format and (($format eq 'html') or ($format eq 'epub')) ) {
-			runner($pythonpath, $epubmakerpath, "--make", $format, $rstfilename);
+		if ( defined $format
+			 and ( ( $format eq 'html' ) or ( $format eq 'epub' ) ) )
+		{
+			runner( $pythonpath, $epubmakerpath, "--make", $format,
+					$rstfilename );
 		} else {
-			runner($pythonpath, $epubmakerpath, $rstfilename);
+			runner( $pythonpath, $epubmakerpath, $rstfilename );
 		}
 		chdir $pwd;
 	} else {
@@ -1991,7 +2135,6 @@ sub epubmaker {
 
 sub gnutenberg {
 	my $format = shift;
-
 	print "\nBeginning Gnutenberg Press\n";
 	print "Warning: This requires installing perl including LibXML, and \n";
 	print "guiguts must be installed in c:\\guiguts on Windows systems.\n";
@@ -2002,11 +2145,11 @@ sub gnutenberg {
 	}
 	my $gnutenbergoutput = ::catfile( $::globallastpath, 'output' );
 	chdir $::gnutenbergdirectory;
-	::runner(
-"perl", "transform.pl", "-f", $format, $::lglobal{global_filename}, "$gnutenbergoutput" );
+	::runner( "perl", "transform.pl", "-f", $format,
+			  $::lglobal{global_filename},
+			  "$gnutenbergoutput" );
 	chdir $pwd;
 }
-
 ## Sidenote Fixup
 sub sidenotes {
 	my $textwindow = $::textwindow;
@@ -2016,7 +2159,6 @@ sub sidenotes {
 	$textwindow->markSet( 'sidenote', '1.0' );
 	my ( $bracketndx, $nextbracketndx, $bracketstartndx, $bracketendndx,
 		 $paragraphp, $paragraphn, $sidenote, $sdnoteindexstart );
-
 	while (1) {
 		$sdnoteindexstart = $textwindow->index('sidenote');
 		$bracketstartndx =
@@ -2119,7 +2261,6 @@ sub sidenotes {
 
 # Find and format poetry line numbers. They need to be to the right, at
 # least 2 space from the text.
-
 ## Reformat Poetry ~LINE Numbers
 sub poetrynumbers {
 	my $textwindow = $::textwindow;
@@ -2141,7 +2282,8 @@ sub poetrynumbers {
 		$spacer  = $::rmargin - length($line) - length($linenum);
 		$spacer -= 2;
 		$line = '  ' . ( ' ' x $spacer ) . $linenum;
-		$textwindow->delete( $::searchstartindex, "$::searchstartindex lineend" );
+		$textwindow->delete( $::searchstartindex,
+							 "$::searchstartindex lineend" );
 		$textwindow->insert( $::searchstartindex, $line );
 		$::searchstartindex = ++$row . '.0';
 	}
@@ -2186,14 +2328,15 @@ sub get_page_number {
 
 sub externalpopup {    # Set up the external commands menu
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	my $menutempvar;
 	if ( $::lglobal{xtpop} ) {
 		$::lglobal{xtpop}->deiconify;
 	} else {
 		$::lglobal{xtpop} = $top->Toplevel( -title => 'External programs', );
 		::initialize_popup_with_deletebinding('xtpop');
-		my $f0 = $::lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		my $f0 =
+		  $::lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f0->Label( -text =>
 "You can set up external programs to be called from within guiguts here. Each line of entry boxes represent\n"
 			. "a menu entry. The left box is the label that will show up under the menu. The right box is the calling parameters.\n"
@@ -2210,7 +2353,8 @@ sub externalpopup {    # Set up the external commands menu
 			. "\$i = the directory with full path that the png files are in.\n"
 			. "\$p = the number of the page that the cursor is currently in.\n"
 		)->pack;
-		my $f1 = $::lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		my $f1 =
+		  $::lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		for my $menutempvar ( 0 .. 9 ) {
 			$f1->Entry(
 						-width        => 50,
@@ -2235,7 +2379,8 @@ sub externalpopup {    # Set up the external commands menu
 					   -pady   => 4
 			  );
 		}
-		my $f2 = $::lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
+		my $f2 =
+		  $::lglobal{xtpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $gobut = $f2->Button(
 			-activebackground => $::activecolor,
 			-command          => sub {
@@ -2340,7 +2485,6 @@ sub setmargins {
 	  )->pack( -side => 'left' );
 	$getmargins->Icon( -image => $::icon );
 	$getmargins->Show;
-
 	if (    ( $::blockrmargin eq '' )
 		 || ( $::blocklmargin eq '' )
 		 || ( $::rmargin      eq '' )
@@ -2367,7 +2511,8 @@ sub setmargins {
 		);
 		setmargins();
 	}
-	if ( ( $::blockrmargin < $::blocklmargin ) || ( $::rmargin < $::lmargin ) ) {
+	if ( ( $::blockrmargin < $::blocklmargin ) || ( $::rmargin < $::lmargin ) )
+	{
 		$top->messageBox(
 			  -icon    => 'error',
 			  -message => 'The left margins must come before the right margin.',
@@ -2382,7 +2527,7 @@ sub setmargins {
 # FIXME: Adapt to work with fontCreate thingy
 sub fontsize {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	my $sizelabel;
 	if ( defined( $::lglobal{fspop} ) ) {
 		$::lglobal{fspop}->deiconify;
@@ -2453,10 +2598,9 @@ sub fontsize {
 		$::lglobal{fspop}->focus;
 	}
 }
-
 ## Set up command to start a browser, varies by OS and browser
 sub setbrowser {
-	my $top = $::top;
+	my $top       = $::top;
 	my $browsepop = $top->Toplevel;
 	$browsepop->title('Browser Start Command?');
 	$browsepop->Label( -text =>
@@ -2496,8 +2640,8 @@ sub setbrowser {
 
 sub setpngspath {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
-	my $pagenum = shift;
+	my $top        = $::top;
+	my $pagenum    = shift;
 
 	#print $pagenum.'';
 	my $path =
@@ -2506,44 +2650,15 @@ sub setpngspath {
 	  );
 	return unless defined $path and -e $path;
 	$path .= '/';
-	$path     = os_normal($path);
+	$path       = os_normal($path);
 	$::pngspath = $path;
-	::_bin_save($textwindow,$top);
-	openpng($textwindow,$pagenum) if defined $pagenum;
-}
-
-sub setup {
-$::icondata     = '
-    R0lGODdhIAAgAPcAAAAAAAAAQAAAgAAA/wAgAAAgQAAggAAg/wBAAABAQABAgABA/wBgAABgQABg
-    gABg/wCAAACAQACAgACA/wCgAACgQACggACg/wDAAADAQADAgADA/wD/AAD/QAD/gAD//yAAACAA
-    QCAAgCAA/yAgACAgQCAggCAg/yBAACBAQCBAgCBA/yBgACBgQCBggCBg/yCAACCAQCCAgCCA/yCg
-    ACCgQCCggCCg/yDAACDAQCDAgCDA/yD/ACD/QCD/gCD//0AAAEAAQEAAgEAA/0AgAEAgQEAggEAg
-    /0BAAEBAQEBAgEBA/0BgAEBgQEBggEBg/0CAAECAQECAgECA/0CgAECgQECggECg/0DAAEDAQEDA
-    gEDA/0D/AED/QED/gED//2AAAGAAQGAAgGAA/2AgAGAgQGAggGAg/2BAAGBAQGBAgGBA/2BgAGBg
-    QGBggGBg/2CAAGCAQGCAgGCA/2CgAGCgQGCggGCg/2DAAGDAQGDAgGDA/2D/AGD/QGD/gGD//4AA
-    AIAAQIAAgIAA/4AgAIAgQIAggIAg/4BAAIBAQIBAgIBA/4BgAIBgQIBggIBg/4CAAICAQICAgICA
-    /4CgAICgQICggICg/4DAAIDAQIDAgIDA/4D/AID/QID/gID//6AAAKAAQKAAgKAA/6AgAKAgQKAg
-    gKAg/6BAAKBAQKBAgKBA/6BgAKBgQKBggKBg/6CAAKCAQKCAgKCA/6CgAKCgQKCggKCg/6DAAKDA
-    QKDAgKDA/6D/AKD/QKD/gKD//8AAAMAAQMAAgMAA/8AgAMAgQMAggMAg/8BAAMBAQMBAgMBA/8Bg
-    AMBgQMBggMBg/8CAAMCAQMCAgMCA/8CgAMCgQMCggMCg/8DAAMDAQMDAgMDA/8D/AMD/QMD/gMD/
-    //8AAP8AQP8AgP8A//8gAP8gQP8ggP8g//9AAP9AQP9AgP9A//9gAP9gQP9ggP9g//+AAP+AQP+A
-    gP+A//+gAP+gQP+ggP+g///AAP/AQP/AgP/A////AP//QP//gP///yH5BAAAAAAALAAAAAAgACAA
-    AAj/AP8JHEiwoMGDCBMqXMiwIUNJJCJKnDixDQlJD5PYErito8ePHictMYERYRtb225NWsmypctJ
-    b04IaHMwyS2Vb5bo3Mmzp84TMpMUPHkrJ9CjSJMmNSAgAE2OSbZNQrpEqdKqR5sC2Cawzc2YJ56s
-    VPnE6ptJl1RW1fqUxDeRJ85q60e3n62kcybNrSvJQAAAJASSkLpE7N66/bIdPYu4bqS/AAQT1ks3
-    W5I2tRILOLFkUja6tS5/fgwg8r/BYyuXCGDCgJISmyfZAh1AQOskASBLXvm53+qrk1RvPuq39O5L
-    dCOZKPymecw3s/u1We48p+7TUveOtaUtm/danumO19XW3Xsb49jDZ7vVuC77ftqit/+7G3TvynWj
-    u2ncuxb99MkpEUkbJbgRXD+1vJeEG5EkUQJ0dOFmGmrJGXCCCXLRVYKCJnTIWGLXUdhPPs2ttNdj
-    b1T2Rl7IRRiiSvJ5V1c2sJ1w3339xJIbem0oMckTmTVWS41A4Zhcbn89tU0AT1TVRiy11BLJasMd
-    hVmUBNYGGVddmUCcAGBWuVSYFrJVUAlAMWVAh2y26WZrWgVmEGx+IWnnnXgCllAbSJbm55+A+vlU
-    QttYFOihgLXBpUOMNuqoQQEBADs=
-    ';
-	
+	::_bin_save( $textwindow, $top );
+	openpng( $textwindow, $pagenum ) if defined $pagenum;
 }
 
 sub set_autosave {
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	$::lglobal{autosaveid}->cancel     if $::lglobal{autosaveid};
 	$::lglobal{saveflashid}->cancel    if $::lglobal{saveflashid};
 	$::lglobal{saveflashingid}->cancel if $::lglobal{saveflashingid};
@@ -2570,12 +2685,13 @@ sub set_autosave {
 
 sub toolbar_toggle {    # Set up / remove the tool bar
 	my $textwindow = $::textwindow;
-	my $top = $::top;
+	my $top        = $::top;
 	if ( $::notoolbar && $::lglobal{toptool} ) {
 		$::lglobal{toptool}->destroy;
 		undef $::lglobal{toptool};
 	} elsif ( !$::notoolbar && !$::lglobal{toptool} ) {
-		$::lglobal{toptool} = $top->ToolBar( -side => $::toolside, -close => '30' );
+		$::lglobal{toptool} =
+		  $top->ToolBar( -side => $::toolside, -close => '30' );
 		$::lglobal{toolfont} = $top->Font(
 			-family => 'Times',
 
@@ -2585,15 +2701,15 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 		);
 		$::lglobal{toptool}->separator;
 		$::lglobal{toptool}->ToolButton(
-									-image   => 'fileopen16',
-									-command => sub { ::file_open($textwindow); },
-									-tip     => 'Open'
+								  -image   => 'fileopen16',
+								  -command => sub { ::file_open($textwindow); },
+								  -tip     => 'Open'
 		);
 		$::lglobal{savetool} =
 		  $::lglobal{toptool}->ToolButton(
-										 -image   => 'filesave16',
-										 -command => [ \&::savefile ],
-										 -tip     => 'Save',
+										   -image   => 'filesave16',
+										   -command => [ \&::savefile ],
+										   -tip     => 'Save',
 		  );
 		$::lglobal{savetool}->bind( '<3>', sub { set_autosave() } );
 		$::lglobal{savetool}->bind(
@@ -2614,30 +2730,30 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 		);
 		$::lglobal{toptool}->separator;
 		$::lglobal{toptool}->ToolButton(
-									   -image   => 'actundo16',
-									   -command => sub { $textwindow->undo },
-									   -tip     => 'Undo'
+										 -image   => 'actundo16',
+										 -command => sub { $textwindow->undo },
+										 -tip     => 'Undo'
 		);
 		$::lglobal{toptool}->ToolButton(
-									   -image   => 'actredo16',
-									   -command => sub { $textwindow->redo },
-									   -tip     => 'Redo'
+										 -image   => 'actredo16',
+										 -command => sub { $textwindow->redo },
+										 -tip     => 'Redo'
 		);
 		$::lglobal{toptool}->separator;
 		$::lglobal{toptool}->ToolButton(
-									   -image   => 'filefind16',
-									   -command => [ \&::searchpopup ],
-									   -tip     => 'Search'
+										 -image   => 'filefind16',
+										 -command => [ \&::searchpopup ],
+										 -tip     => 'Search'
 		);
 		$::lglobal{toptool}->ToolButton(
-									   -image   => 'actcheck16',
-									   -command => [ \&::spellchecker ],
-									   -tip     => 'Spell Check'
+										 -image   => 'actcheck16',
+										 -command => [ \&::spellchecker ],
+										 -tip     => 'Spell Check'
 		);
 		$::lglobal{toptool}->ToolButton(
-									   -text    => '"arid"',
-									   -command => [ \&::stealthscanno ],
-									   -tip     => 'Scannos'
+										 -text    => '"arid"',
+										 -command => [ \&::stealthscanno ],
+										 -tip     => 'Scannos'
 		);
 		$::lglobal{toptool}->separator;
 		$::lglobal{toptool}->ToolButton(
@@ -2651,43 +2767,43 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 			-tip => 'Word Frequency'
 		);
 		$::lglobal{toptool}->ToolButton(
-									   -text    => 'GC',
-									   -font    => $::lglobal{toolfont},
-									   -command => [ \&::gutcheck ],
-									   -tip     => 'Gutcheck'
+										 -text    => 'GC',
+										 -font    => $::lglobal{toolfont},
+										 -command => [ \&::gutcheck ],
+										 -tip     => 'Gutcheck'
 		);
 		$::lglobal{toptool}->separator;
 		$::lglobal{toptool}->ToolButton(
-									   -text    => 'Ltn-1',
-									   -font    => $::lglobal{toolfont},
-									   -command => [ \&::latinpopup ],
-									   -tip     => 'Latin - 1 Popup'
+										 -text    => 'Ltn-1',
+										 -font    => $::lglobal{toolfont},
+										 -command => [ \&::latinpopup ],
+										 -tip     => 'Latin - 1 Popup'
 		);
 		$::lglobal{toptool}->ToolButton(
-									   -text    => 'Grk',
-									   -font    => $::lglobal{toolfont},
-									   -command => [ \&::greekpopup ],
-									   -tip     => 'Greek Transliteration Popup'
+										 -text    => 'Grk',
+										 -font    => $::lglobal{toolfont},
+										 -command => [ \&::greekpopup ],
+										 -tip => 'Greek Transliteration Popup'
 		);
 		$::lglobal{toptool}->ToolButton(
-									   -text    => 'UCS',
-									   -font    => $::lglobal{toolfont},
-									   -command => [ \&::uchar ],
-									   -tip     => 'Unicode Character Search'
-		);
-		$::lglobal{toptool}->separator;
-		$::lglobal{toptool}->ToolButton(
-							 -text    => 'HTML',
-							 -font    => $::lglobal{toolfont},
-							 -command => sub { ::htmlpopup( $textwindow, $top ) },
-							 -tip     => 'HTML Fixup'
+										 -text    => 'UCS',
+										 -font    => $::lglobal{toolfont},
+										 -command => [ \&::uchar ],
+										 -tip     => 'Unicode Character Search'
 		);
 		$::lglobal{toptool}->separator;
 		$::lglobal{toptool}->ToolButton(
-									   -text    => 'Tfx',
-									   -font    => $::lglobal{toolfont},
-									   -command => [ \&::tablefx ],
-									   -tip     => 'ASCII Table Formatting'
+						   -text    => 'HTML',
+						   -font    => $::lglobal{toolfont},
+						   -command => sub { ::htmlpopup( $textwindow, $top ) },
+						   -tip     => 'HTML Fixup'
+		);
+		$::lglobal{toptool}->separator;
+		$::lglobal{toptool}->ToolButton(
+										 -text    => 'Tfx',
+										 -font    => $::lglobal{toolfont},
+										 -command => [ \&::tablefx ],
+										 -tip     => 'ASCII Table Formatting'
 		);
 		$::lglobal{toptool}->separator;
 		$::lglobal{toptool}->ToolButton(
@@ -2701,7 +2817,7 @@ sub toolbar_toggle {    # Set up / remove the tool bar
 }
 
 sub setcolor {    # Color picking routine
-	my $top = $::top;
+	my $top     = $::top;
 	my $initial = shift;
 	return (
 			 $top->chooseColor(
@@ -2722,8 +2838,8 @@ sub toggle_autosave {
 		$::lglobal{saveflashingid}->cancel if $::lglobal{saveflashingid};
 		undef $::lglobal{saveflashingid};
 		$::lglobal{savetool}->configure(
-									   -background       => 'SystemButtonFace',
-									   -activebackground => 'SystemButtonFace'
+										 -background => 'SystemButtonFace',
+										 -activebackground => 'SystemButtonFace'
 		) unless $::notoolbar;
 	}
 }
@@ -2731,7 +2847,6 @@ sub toggle_autosave {
 # Pop up a window where you can adjust the auto save interval
 sub saveinterval {
 	my $top = $::top;
-	
 	if ( $::lglobal{intervalpop} ) {
 		$::lglobal{intervalpop}->deiconify;
 		$::lglobal{intervalpop}->raise;
@@ -2780,7 +2895,4 @@ sub saveinterval {
 		$entry->selectionRange( 0, 'end' );
 	}
 }
-
-
-
 1;

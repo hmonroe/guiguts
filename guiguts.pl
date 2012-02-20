@@ -59,7 +59,6 @@ use Tk::widgets qw{Balloon
 our $APP_NAME     = 'Guiguts';
 our $window_title = $APP_NAME . '-' . $VERSION;
 our $icondata;
-setup();
 ### Custom Guiguts modules
 use Guiguts::ASCIITables;
 use Guiguts::ErrorCheck;
@@ -86,10 +85,6 @@ use Guiguts::CharacterTools;
 use Guiguts::Utilities;
 use Guiguts::WordFrequency;
 
-# Ignore any watchdog timer alarms. Subroutines that take a long time to
-# complete can trip it
-$SIG{ALRM} = 'IGNORE';
-$SIG{INT} = sub { _exit() };
 ### Constants
 my $no_proofer_url  = 'http://www.pgdp.net/phpBB2/privmsg.php?mode=post';
 my $yes_proofer_url = 'http://www.pgdp.net/c/stats/members/mbr_list.php?uname=';
@@ -248,102 +243,25 @@ our @extops = (
 #All local global variables contained in one hash. # now global
 our %lglobal;    # need to document each variable
 
-# $lglobal{hl_index} 	line number being scanned for highlighting
 if ( eval { require Text::LevenshteinXS } ) {
 	$lglobal{LevenshteinXS} = 1;
 }
 
-#else {
-#	print
-#"Install the module Text::LevenshteinXS for much faster harmonics sorting.\n";
-#}
-# load Image::Size if it is installed
 if ( eval { require Image::Size; 1; } ) {
 	$lglobal{ImageSize} = 1;
 } else {
 	$lglobal{ImageSize} = 0;
 }
 
-# FIXME: Change $top to $mw.
-our $top = tkinit( -title => $window_title, );
+our $top;
+our $icon;
+our $text_frame;
+our $counter_frame;
+our $proofer_frame;
+our $text_font;
+our $textwindow;
+our $menubar;
 initialize();    # Initialize a bunch of vars that need it.
-$top->minsize( 440, 90 );
-
-# Detect geometry changes for tracking
-$top->bind(
-	'<Configure>' => sub {
-		$geometry = $top->geometry;
-		$lglobal{geometryupdate} = 1;
-	}
-);
-our $icon = $top->Photo( -format => 'gif',
-						 -data   => $icondata );
-fontinit();      # Initialize the fonts for the two windows
-utffontinit();
-
-# Set up Main window size
-unless ($geometry) {
-	my $height = $top->screenheight() - 90;
-	my $width  = $top->screenwidth() - 20;
-	$geometry = $width . "x" . $height . "+0+0";
-	$geometry = $top->geometry($geometry);
-}
-$top->geometry($geometry) if $geometry;
-
-# Set up Main window layout
-my $text_frame = $top->Frame->pack(
-									-anchor => 'nw',
-									-expand => 'yes',
-									-fill   => 'both'
-);
-our $counter_frame =
-  $text_frame->Frame->pack(
-							-side   => 'bottom',
-							-anchor => 'sw',
-							-pady   => 2,
-							-expand => 0
-  );
-
-# Frame to hold proofer names. Pack it when necessary.
-my $proofer_frame = $text_frame->Frame;
-our $text_font = $top->fontCreate(
-								   'courier',
-								   -family => "Courier New",
-								   -size   => 12,
-								   -weight => 'normal',
-);
-
-# The actual text widget
-our $textwindow = $text_frame->LineNumberText(
-	-widget          => 'TextUnicode',
-	-exportselection => 'true',        # 'sel' tag is associated with selections
-	-background      => $bkgcolor,
-	-relief          => 'sunken',
-	-font            => $lglobal{font},
-	-wrap            => 'none',
-	-curlinebg       => $::activecolor,
-  )->pack(
-		   -side   => 'bottom',
-		   -anchor => 'nw',
-		   -expand => 'yes',
-		   -fill   => 'both'
-  );
-$top->protocol( 'WM_DELETE_WINDOW' => \&_exit );
-$top->configure( -menu => our $menubar = $top->Menu );
-
-# routines to call every time the text is edited
-$textwindow->SetGUICallbacks(
-	[
-	   \&update_indicators,
-	   sub {
-		   return unless $nohighlights;
-		   $textwindow->HighlightAllPairsBracketingCursor;
-	   },
-	   sub {
-		   $textwindow->hidelinenum unless $vislnnm;
-		 }
-	]
-);
 
 # Set up the custom menus
 menubuild();
