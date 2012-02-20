@@ -2558,7 +2558,7 @@ sub set_autosave {
 	$::lglobal{saveflashid} = $top->after(
 		( $::autosaveinterval * 60000 - 10000 ),
 		sub {
-			_flash_save($textwindow)
+			::_flash_save($textwindow)
 			  if $::lglobal{global_filename} !~ /No File Loaded/;
 		}
 	);

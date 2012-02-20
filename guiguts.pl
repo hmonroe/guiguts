@@ -379,58 +379,6 @@ set_autosave() if $autosave;
 $textwindow->CallNextGUICallback;
 $top->repeat( 200, sub { _updatesel($textwindow) } );
 
-# Do not move from guiguts.pl; do command must be run in main
-sub loadscannos {
-	$lglobal{scannosfilename} = '';
-	%scannoslist = ();
-	@{ $lglobal{scannosarray} } = ();
-	$lglobal{scannosindex} = 0;
-	my $types = [ [ 'Scannos', ['.rc'] ], [ 'All Files', ['*'] ], ];
-	$scannospath = os_normal($scannospath);
-	$lglobal{scannosfilename} =
-	  $top->getOpenFile(
-						 -filetypes  => $types,
-						 -title      => 'Scannos list?',
-						 -initialdir => $scannospath
-	  );
-	if ( $lglobal{scannosfilename} ) {
-		my ( $name, $path, $extension ) =
-		  fileparse( $lglobal{scannosfilename}, '\.[^\.]*$' );
-		$scannospath = $path;
-		unless ( my $return = do $lglobal{scannosfilename} )
-		{    # load scannos list
-			unless ( defined $return ) {
-				if ($@) {
-					$top->messageBox(
-						-icon => 'error',
-						-message =>
-'Could not parse scannos file, file may be corrupted.',
-						-title => 'Problem with file',
-						-type  => 'Ok',
-					);
-				} else {
-					$top->messageBox(
-									 -icon    => 'error',
-									 -message => 'Could not find scannos file.',
-									 -title   => 'Problem with file',
-									 -type    => 'Ok',
-					);
-				}
-				$lglobal{doscannos} = 0;
-				return 0;
-			}
-		}
-		foreach ( sort ( keys %scannoslist ) ) {
-			push @{ $lglobal{scannosarray} }, $_;
-		}
-		if ( $lglobal{scannosfilename} =~ /reg/i ) {
-			searchoptset(qw/0 x x 1/);
-		} else {
-			searchoptset(qw/x x x 0/);
-		}
-		return 1;
-	}
-}
 ## Save setting.rc file
 sub savesettings {
 
