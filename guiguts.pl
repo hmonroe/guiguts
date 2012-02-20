@@ -74,6 +74,7 @@ use Guiguts::MenuStructure;
 use Guiguts::MultiLingual;
 use Guiguts::PageNumbers;
 use Guiguts::PageSeparators;
+use Guiguts::Preferences;
 use Guiguts::SearchReplace;
 use Guiguts::Selection;
 use Guiguts::SpellCheck;
