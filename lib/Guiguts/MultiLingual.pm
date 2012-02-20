@@ -29,6 +29,7 @@ my $multiwclistbox;
 my $sortorder = 'f';
 my @templist  = ();
 my $multihelppop;
+my $minfreq = 5;
 
 #startup routine
 sub spellmultiplelanguages {
@@ -155,6 +156,12 @@ sub multilangpopup {
 					 -activebackground => $::activecolor,
 					 -command          => sub { addspeltforeignproject() },
 					 -text             => 'Add foreign to project',
+					 -width            => 20
+		)->grid( -row => 4, -column => 2, -padx => 1, -pady => 1 );
+		$f0->Button(
+					 -activebackground => $::activecolor,
+					 -command          => sub { addminfreqproject() },
+					 -text             => 'Add frequent to project',
 					 -width            => 20
 		)->grid( -row => 4, -column => 3, -padx => 1, -pady => 1 );
 		$f0->Button(
@@ -668,6 +675,19 @@ sub setmultiplelanguages {
 			}
 		}
 	)->pack;
+	my $freqframe =
+	  $spellop->add('Frame')->pack( -side => 'top', -padx => 5, -pady => 3 );
+
+	my $minfreqlabel = $freqframe->Label(
+								   -width => 25,
+								   -text  => 'Min frequency for auto-addition',
+	)->pack( -side => 'left' );
+	my $minfreqcell = $freqframe->Entry(
+								   -width        => 6,
+								   -background   => $::bkgcolor,
+								   -relief       => 'sunken',
+								   -textvariable => \$minfreq,
+	)->pack( -side => 'left' );
 	$spellop->Show;
 }
 
@@ -901,12 +921,20 @@ sub processmisspelledwords {
 # includes all projectdict words as spelt
 sub includeprojectdict {
 	my ( $textwindow, $top ) = @_;
+	my $i = 0;
 	$top->Busy( -recurse => 1 );
 	&::spellloadprojectdict();
 	if ($debug) { print "$::lglobal{projectdictname}\n"; }
 	for my $key ( keys %::projectdict ) {
-		unless ( $seenwordslang{$key} ) { $seenwordslang{$key} = 'user'; }
+		unless ( $seenwordslang{$key} ) { 
+			$seenwordslang{$key} = 'user'; 
+			$i++;
+		}
 	}
+	my $line = "$i additional words from project dictionary";
+	$multiwclistbox->delete( '0', 'end' );
+	$multiwclistbox->insert( 'end', $line );
+	$multiwclistbox->update;
 	updategloballists();
 	getwordcounts();
 	$top->Unbusy;
@@ -915,11 +943,13 @@ sub includeprojectdict {
 #add all spelt foreign words to project dictionary
 sub addspeltforeignproject {
 	&::spellloadprojectdict();
+	my $i = 0;
 	for my $key ( sort ( keys %distinctwords ) ) {
 		if (    ( $seenwordslang{$key} )
-			 && ( $seenwordslang{$key} ne $::multidicts[0] ) )
-		{
-			$::projectdict{$key} = $seenwordslang{$key};
+			 && ( $seenwordslang{$key} ne $::multidicts[0] )
+  			 && ( $seenwordslang{$key} ne 'user') ) {
+				$::projectdict{$key} = $seenwordslang{$key};
+				$i++;
 		}
 	}
 
@@ -935,9 +965,48 @@ sub addspeltforeignproject {
 	open my $save, '>:bytes', $::lglobal{projectdictname};
 	print $save $section;
 	close $save;
+	my $line = "$i words added to project dictionary";
+	$multiwclistbox->delete( '0', 'end' );
+	$multiwclistbox->insert( 'end', $line );
+	$multiwclistbox->update;
+	updategloballists();
+	getwordcounts();
 }
 
-#spelling control routine
+#add words above minfreq to project dictionary
+sub addminfreqproject {
+	&::spellloadprojectdict();
+	my $i = 0;
+	for my $key ( keys %distinctwords )  {
+		unless ( $seenwordslang{$key} ) {
+			if ( $distinctwords{$key} >= $minfreq) {
+				$::projectdict{$key} = 'freq';
+				$seenwordslang{$key} = 'freq';
+				$i++;
+			}
+		}
+	}
+
+		if ($debug) { print %::projectdict;
+		print "\n$::lglobal{projectdictname}\n";}
+	my $section = "\%projectdict = (\n";
+	for my $key ( sort keys %::projectdict ) {
+		$key =~ s/'/\\'/g;
+		$section .= "'$key' => '',\n";
+	}
+	$section .= ");";
+	utf8::encode($section);
+	open my $save, '>:bytes', $::lglobal{projectdictname};
+	print $save $section;
+	close $save;
+	my $line = "$i words added to project dictionary";
+	$multiwclistbox->delete( '0', 'end' );
+	$multiwclistbox->insert( 'end', $line );
+	$multiwclistbox->update;
+	updategloballists();
+	getwordcounts();
+}
+
 sub lowergetmisspelled {
 	my ( $textwindow, $top ) = @_;
 
@@ -1001,33 +1070,33 @@ sub multi_help_popup {
 	my $text = <<EOM;
 Multilingual spellchecking help:
 
-Set Base Language:
-Select the base language that is used.
+Aspell interactive spell-checking ignores words from the project dictionary.
+This popup allows you to pre-populate the project dictionary with a number of words that
+do not need to be further spell-checked.
 
-Set Languages:
-Select one or more foreign languages for additional spell-checking.
+1. Set Base Language:   Select the base language that is used.
 
-(Re)create Wordlist:
-Identify all distinct words and word counts.
+2. Set Languages:       Select one or more foreign languages for additional spell-checking.
+Also set minimum frequency for automatic addition of words to project dictionary.
 
-Check spelling:
-Spell-check in all selected languages.  Note that some unicode words
-currently appear as spelt in the base language. Aspell currently does
-not handle these words correctly.
+3. (Re)create Wordlist: Identify all distinct words and word counts.
 
-Include project words:
-Amend unspelt words which occur in the project dictionary with the
-language tag 'user'.  Note that dictionary files have now been given
-filenames so that two or more volumes labelled abc1.txt and abc2.txt
-in the same directory will share the same project dictionary abc.dic.
+4. Check spelling:
+Spell-check in all selected languages.  Note that some unicode words currently appear 
+as spelt in the base language. Aspell currently does not handle these words correctly.
+
+5. Include project words:
+Amend unspelt words which occur in the project dictionary with the language tag 'user'. Note
+that dictionary files have now been given filenames so that two or more volumes labelled 
+abc1.txt and abc2.txt in the same directory will share the same project dictionary abc.dic.
 
 Show all words:
-Shows all the distinct words together with their frequency, and if
-available, language in which they are correctly spelt.
+Shows all the distinct words together with their frequency, and if available, language 
+in which they are correctly spelt.
 
 Show unspelt words:
-Shows all words which have not yet been spelt in any language nor are
-included in the project dictionary.
+Shows all words which have not yet been spelt in any language nor are included 
+in the project dictionary.
 
 Show spelt foreign words:
 Shows all words that have been spelt, other than those in the base language.
@@ -1035,14 +1104,14 @@ Shows all words that have been spelt, other than those in the base language.
 Show project dictionary:
 Shows all words in the project dictionary.
 
-Add foreign to project:
-Adds all words that have been correctly spelt in languages other than the
-base language to the project dictionary.
+6. Add foreign to project:  Adds all words that have been correctly spelt in languages other 
+than the base language to the project dictionary.
+
+7. Add frequent to project:  Adds all words with a frequency more than or equal to the minimum
+frequency to the project dictionary.
 
 Lower case spellcheck:
 Currently not working.
-
-	
 EOM
 	if ( defined( $multihelppop ) ) {
 		$multihelppop->deiconify;
