@@ -268,7 +268,7 @@ menubuild();
 
 # Set up the key bindings for the text widget
 textbindings();
-buildstatusbar( $textwindow, $top );
+buildstatusbar();
 
 # Load the icon into the window bar. Needs to happen late in the process
 $top->Icon( -image => $icon );
@@ -297,15 +297,17 @@ set_autosave() if $autosave;
 $textwindow->CallNextGUICallback;
 $top->repeat( 200, sub { _updatesel($textwindow) } );
 
-sub dofile {
-	my $filename = shift;
-	do $filename;
-}
 # Ready to enter main loop
 checkforupdatesmonthly();
 unless ( -e 'header.txt' ) {
 	&::copy( 'headerdefault.txt', 'header.txt' );
 }
+
+sub dofile {
+	my $filename = shift;
+	do $filename;
+}
+
 if ( $lglobal{runtests} ) {
 	runtests();
 } else {

@@ -530,14 +530,25 @@ sub menubuildold {
 			],
 			[ 'separator', '' ],
 			[
-			   'command',
-			   'Import Prep Text Files',
-			   -command => sub { &::file_import( $textwindow, $top ) }
+			   Cascade    => 'Export',
+			   -tearoff   => 0,
+			   -menuitems => [
+							   [
+								  'command',
+								  'Export As Prep Text Files',
+								  -command => sub { ::file_export_preptext() }
+							   ],
+							   [
+								  'command',
+								  'Export with Markup',
+								  -command => sub { ::file_export_markup(); }
+							   ],
+			   ]
 			],
 			[
 			   'command',
-			   'Export As Prep Text Files',
-			   -command => sub { &::file_export( $textwindow, $top ) }
+			   'Import Prep Text Files',
+			   -command => sub { &::file_import( $textwindow, $top ) }
 			],
 			[ 'separator', '' ],
 			[
@@ -1220,16 +1231,27 @@ sub menubuild {
 			   -command => sub { &::file_include($textwindow) }
 			],
 			[
+			   Cascade    => 'Export',
+			   -tearoff   => 0,
+			   -menuitems => [
+							   [
+								  'command',
+								  'Export As Prep Text Files',
+								  -command => sub { &::file_export_preptext() }
+							   ],
+							   [
+								  'command',
+								  'Export with Markup',
+								  -command => sub { &::::file_export_markup; }
+							   ],
+			   ]
+			],
+			[
 			   'command',
 			   'Import Prep Text Files',
 			   -command => sub {
 				   &::file_import( $textwindow, $top );
 				 }
-			],
-			[
-			   'command',
-			   'Export As Prep Text Files',
-			   -command => sub { &::file_export( $textwindow, $top ) }
 			],
 			[ 'separator', '' ],
 			[
@@ -2031,16 +2053,32 @@ sub menubuildtwo {
 			   -command => sub { &::file_include($textwindow) }
 			],
 			[
+			   Cascade    => 'Export',
+			   -tearoff   => 0,
+			   -menuitems => []
+			],
+			[
+			   Cascade    => 'Export',
+			   -tearoff   => 0,
+			   -menuitems => [
+							   [
+								  'command',
+								  'Export As Prep Text Files',
+								  -command => sub { &::file_export_preptext() }
+							   ],
+							   [
+								  'command',
+								  'Export with Markup',
+								  -command => sub { &::::file_export_markup; }
+							   ],
+			   ]
+			],
+			[
 			   'command',
 			   'Import Prep Text Files',
 			   -command => sub {
 				   &::file_import( $textwindow, $top );
 				 }
-			],
-			[
-			   'command',
-			   'Export As Prep Text Files',
-			   -command => sub { &::file_export( $textwindow, $top ) }
 			],
 			[ 'separator', '' ],
 

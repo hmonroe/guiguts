@@ -144,7 +144,8 @@ sub _updatesel {
 }
 ## Status Bar
 sub buildstatusbar {
-	my ( $textwindow, $top ) = @_;
+	my $textwindow = $::textwindow;
+	my $top        = $::top;
 	$::lglobal{current_line_label} =
 	  $::counter_frame->Label(
 							   -text       => 'Ln: 1/1 - Col: 0',

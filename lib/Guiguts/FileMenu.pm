@@ -7,9 +7,9 @@ BEGIN {
 	use Exporter();
 	our (@ISA, @EXPORT);
 	@ISA=qw(Exporter);
-	@EXPORT=qw(&file_open &file_saveas &file_include &file_export &file_import &_bin_save &file_close 
+	@EXPORT=qw(&file_open &file_saveas &file_include &file_export_preptext &file_import &_bin_save &file_close 
 	&_flash_save &clearvars &savefile &_exit &file_mark_pages &_recentupdate &file_guess_page_marks
-	&oppopupdate &opspop_up &confirmempty &openfile &readsettings &savesettings)
+	&oppopupdate &opspop_up &confirmempty &openfile &readsettings &savesettings &file_export_markup)
 }
 
 sub file_open {    # Find a text file to open
@@ -151,8 +151,9 @@ sub file_import {
 	return;
 }
 
-sub file_export {
-	my ($textwindow,$top)=@_;
+sub file_export_preptext {
+	my $top =$::top;
+	my $textwindow = $::textwindow;
 	my $directory = $top->chooseDirectory(
 			   -title => 'Choose the directory to export the text files to.', );
 	return 0 unless ( defined $directory and $directory ne '' );
@@ -385,7 +386,6 @@ sub savefile {    # Determine which save routine to use and then use it
 sub file_mark_pages {
 	my $top =$::top;
 	my $textwindow = $::textwindow;
-	
 	$top->Busy( -recurse => 1 );
 	&::viewpagenums() if ( $::lglobal{seepagenums} );
 	my ( $line, $index, $page, $rnd1, $rnd2, $pagemark );
@@ -892,7 +892,11 @@ EOM
 	}
 }
 
-
+sub file_export_markup {
+	$::lglobal{exportwithmarkup}=1;
+	::html_convert_pageanchors();
+	$::lglobal{exportwithmarkup}=0;
+}
 
 1;
 

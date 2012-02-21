@@ -9,7 +9,7 @@ BEGIN {
 	@ISA = qw(Exporter);
 	@EXPORT =
 	  qw(&htmlautoconvert &htmlpopup &makeanchor &autoindex &entity &named &tonamed
-	  &fromnamed &fracconv &pageadjust);
+	  &fromnamed &fracconv &pageadjust &html_convert_pageanchors);
 }
 
 sub html_convert_tb {
@@ -1039,7 +1039,7 @@ sub html_convert_sidenotes {
 }
 
 sub html_convert_pageanchors {
-	my ($textwindow) = @_;
+	my $textwindow = $::textwindow;
 	&::working("Inserting Page Number Markup");
 	$|++;
 	my $markindex;
@@ -1093,16 +1093,25 @@ sub html_convert_pageanchors {
 					$pagereference = "";
 					no warnings;    # roman numerals are nonnumeric
 					for ( sort { $a <=> $b } @pagerefs ) {
-						$pagereference .= "$br"
-						  . "<a name=\"Page_$_\" id=\"Page_$_\">[Pg $_]</a>";
-						$br = "<br />";
+						if ( $::lglobal{exportwithmarkup} ) {
+							$pagereference .= "$br" . "<$mark=\"$::pagenumbers{$mark}{label}\">";
+							$br = "<br />";
+						} else {
+							$pagereference .= "$br"
+							  . "<a name=\"Page_$_\" id=\"Page_$_\">[Pg $_]</a>";
+							$br = "<br />";
+						}
 					}
 					@pagerefs = ();
 				} else {
-
 					# just one page reference
-					$pagereference =
-					  "<a name=\"Page_$num\" id=\"Page_$num\">[Pg $num]</a>";
+					if ( $::lglobal{exportwithmarkup} ) {
+						$pagereference =
+						  "<$mark=\"$::pagenumbers{$mark}{label}\">";
+					} else {
+						$pagereference =
+"<a name=\"Page_$num\" id=\"Page_$num\">[Pg $num]</a>";
+					}
 				}
 			}
 
@@ -1112,6 +1121,8 @@ sub html_convert_pageanchors {
 
 			#print $pagereference."3\n";
 			if ($pagereference) {
+				$textwindow->ntinsert( $markindex, $pagereference )
+				  if ( $::lglobal{exportwithmarkup} and $num );
 				my $insertpoint = $markindex;
 				my $inserted    = 0;
 
@@ -1204,6 +1215,7 @@ sub html_convert_pageanchors {
 			}
 		}
 	}
+	::working();
 	return;
 }
 
@@ -1691,8 +1703,7 @@ sub htmlautoconvert {
 	html_cleanup_markers($textwindow);
 	html_convert_underscoresmallcaps($textwindow);
 	html_convert_sidenotes($textwindow);
-	html_convert_pageanchors( $textwindow, $::lglobal{pageanch},
-							  $::lglobal{pagecmt} );
+	html_convert_pageanchors();
 	html_convert_utf( $textwindow, $::lglobal{leave_utf},
 					  $::lglobal{keep_latin1} );
 	html_wrapup( $textwindow, $headertext, $::lglobal{leave_utf},

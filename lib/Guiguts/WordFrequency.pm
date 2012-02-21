@@ -1003,7 +1003,7 @@ sub charsortcheck {
 	return if ( nofileloaded($top) );
 	$::lglobal{wclistbox}->insert( 'end', 'Please wait, building list....' );
 	$::lglobal{wclistbox}->update;
-	&::savefile() unless ( $textwindow->numberChanges == 0 );
+	::savefile() unless ( $textwindow->numberChanges == 0 );
 	open my $fh, '<', $filename;
 
 	while ( my $line = <$fh> ) {
