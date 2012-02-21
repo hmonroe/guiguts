@@ -14,14 +14,14 @@ sub errorcheckpop_up {
 	my ( $textwindow, $top, $errorchecktype ) = @_;
 	my ( %errors,     @errorchecklines );
 	my ( $line,       $lincol );
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	if ( $::lglobal{errorcheckpop} ) {
 		$::lglobal{errorcheckpop}->destroy;
 		undef $::lglobal{errorcheckpop};
 	}
 	$::lglobal{errorcheckpop} = $top->Toplevel;
 	$::lglobal{errorcheckpop}->title($errorchecktype);
-	&::initialize_popup_with_deletebinding('errorcheckpop');
+	::initialize_popup_with_deletebinding('errorcheckpop');
 	$::lglobal{errorcheckpop}->transient($top) if $::stayontop;
 	my $ptopframe = $::lglobal{errorcheckpop}->Frame->pack;
 	my $opsbutton = $ptopframe->Button(
@@ -86,14 +86,14 @@ sub errorcheckpop_up {
 			if ( $line =~ /^line/ ) {
 				$textwindow->see( $::errors{$line} );
 				$textwindow->markSet( 'insert', $::errors{$line} );
-				&::update_indicators();
+				::update_indicators();
 			} else {
 				if ( $line =~ /^\+(.*):/ ) {    # search on text between + and :
 					my @savesets = @::sopt;
-					&::searchoptset(qw/0 x x 0/);
-					&::searchfromstartifnew($1);
-					&::searchtext( $textwindow, $top, $1 );
-					&::searchoptset(@savesets);
+					::searchoptset(qw/0 x x 0/);
+					::searchfromstartifnew($1);
+					::searchtext( $textwindow, $top, $1 );
+					::searchoptset(@savesets);
 					$top->raise;
 				}
 			}
@@ -154,7 +154,7 @@ sub errorcheckpop_up {
 		}
 	}
 	foreach my $thiserrorchecktype (@errorchecktypes) {
-		&::working($thiserrorchecktype);
+		::working($thiserrorchecktype);
 		push @errorchecklines, "Beginning check: " . $thiserrorchecktype;
 		if ( errorcheckrun($thiserrorchecktype) ) {
 			push @errorchecklines, "Failed to run: " . $thiserrorchecktype;
@@ -291,7 +291,7 @@ sub errorcheckpop_up {
 			}
 			push @errorchecklines, "";
 		}
-		&::working();
+		::working();
 	}
 	$::lglobal{errorchecklistbox}->insert( 'end', @errorchecklines );
 	$::lglobal{errorchecklistbox}->yview( 'scroll', 1, 'units' );
@@ -313,7 +313,7 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		}
 	}
 	push @::operations, ( localtime() . ' - $errorchecktype' );
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	if ( $::lglobal{errorcheckpop} ) {
 		$::lglobal{errorchecklistbox}->delete( '0', 'end' );
 	}
@@ -347,7 +347,7 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 			  );
 		}
 		return 1 unless $::validatecommand;
-		$::validatecommand = &::os_normal($::validatecommand);
+		$::validatecommand = ::os_normal($::validatecommand);
 	} elsif ( $errorchecktype eq 'W3C CSS Validate' ) {
 		unless ($::validatecsscommand) {
 			$::validatecsscommand =
@@ -360,7 +360,7 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		return 1 unless $::validatecsscommand;
 		$::validatecsscommand = ::os_normal($::validatecsscommand);
 	}
-	&::savesettings();
+	::savesettings();
 	$top->Busy( -recurse => 1 );
 	if (    ( $errorchecktype eq 'W3C Validate Remote' )
 		 or ( $errorchecktype eq 'W3C Validate CSS' ) )
@@ -399,11 +399,11 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 		$::lglobal{errorchecklistbox}->delete( '0', 'end' );
 	}
 	if ( $errorchecktype eq 'HTML Tidy' ) {
-		&::run( $::tidycommand, "-f", "errors.err", "-o", "null", $name );
+		::run( $::tidycommand, "-f", "errors.err", "-o", "null", $name );
 	} elsif ( $errorchecktype eq 'W3C Validate' ) {
 		if ( $::w3cremote == 0 ) {
-			my $validatepath = &::dirname($::validatecommand);
-			&::run(
+			my $validatepath = ::dirname($::validatecommand);
+			::run(
 					$::validatecommand,    "--directory=$validatepath",
 					"--catalog=xhtml.soc", "--no-output",
 					"--open-entities",     "--error-file=errors.err",
@@ -434,22 +434,22 @@ sub errorcheckrun {    # Runs Tidy, W3C Validate, and other error checks
 			}
 		}
 	} elsif ( $errorchecktype eq 'W3C Validate CSS' ) {
-		my $runner = &::runner::tofile("errors.err");
+		my $runner = ::runner::tofile("errors.err");
 		$runner->run( "java", "-jar", $::validatecsscommand, "file:$name" );
 	} elsif ( $errorchecktype eq 'pphtml' ) {
-		&::run( "perl", "lib/ppvchecks/pphtml.pl", "-i", $name, "-o",
+		::run( "perl", "lib/ppvchecks/pphtml.pl", "-i", $name, "-o",
 				"errors.err" );
 	} elsif ( $errorchecktype eq 'Link Check' ) {
 		linkcheckrun();
 	} elsif ( $errorchecktype eq 'Image Check' ) {
 		my ( $f, $d, $e ) =
-		  &::fileparse( $::lglobal{global_filename}, qr{\.[^\.]*$} );
-		&::run( "perl", "lib/ppvchecks/ppvimage.pl", $name, $d );
+		  ::fileparse( $::lglobal{global_filename}, qr{\.[^\.]*$} );
+		::run( "perl", "lib/ppvchecks/ppvimage.pl", $name, $d );
 	} elsif ( $errorchecktype eq 'pptxt' ) {
-		&::run( "perl", "lib/ppvchecks/pptxt.pl", "-i", $name, "-o",
+		::run( "perl", "lib/ppvchecks/pptxt.pl", "-i", $name, "-o",
 				"errors.err" );
 	} elsif ( $errorchecktype eq 'Epub Friendly' ) {
-		&::run( "perl", "lib/ppvchecks/epubfriendly.pl",
+		::run( "perl", "lib/ppvchecks/epubfriendly.pl",
 				"-i", $name, "-o", "errors.err" );
 	}
 	$top->Unbusy;

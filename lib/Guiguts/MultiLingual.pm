@@ -35,13 +35,13 @@ my $minfreq = 5;
 sub spellmultiplelanguages {
 	my ( $textwindow, $top ) = @_;
 	push @::operations, ( localtime() . ' - multilingual spelling' );
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
-	&::oppopupdate()  if $::lglobal{oppop};
+	::viewpagenums() if ( $::lglobal{seepagenums} );
+	::oppopupdate()  if $::lglobal{oppop};
 
 	# find Aspell and base language if necessary
-	&::spelloptions() unless $::globalspellpath;
+	::spelloptions() unless $::globalspellpath;
 	return            unless $::globalspellpath;
-	&::spelloptions() unless $::globalspelldictopt;
+	::spelloptions() unless $::globalspelldictopt;
 	return            unless $::globalspelldictopt;
 	multilangpopup( $textwindow, $top );
 }
@@ -50,8 +50,8 @@ sub spellmultiplelanguages {
 sub multilangpopup {
 	my ( $textwindow, $top ) = @_;
 	push @::operations, ( localtime() . ' - Multilingual Spelling' );
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
-	&::oppopupdate()  if $::lglobal{oppop};
+	::viewpagenums() if ( $::lglobal{seepagenums} );
+	::oppopupdate()  if $::lglobal{oppop};
 
 	# open popup if necessary
 	if ( defined( $::lglobal{multispellpop} ) ) {
@@ -243,7 +243,7 @@ print "210 $word\n";
 		);
 	}
 
-	#	&::spellloadprojectdict();
+	#	::spellloadprojectdict();
 	updateMultiDictEntry();
 	getwordcounts();
 }
@@ -257,21 +257,21 @@ sub showAllWords {
 	$multiwclistbox->update;
 	if ($debug) { print $sortorder; }
 	if ( $sortorder eq 'f' ) {
-		for ( &::natural_sort_freq( \%distinctwords ) ) {
+		for ( ::natural_sort_freq( \%distinctwords ) ) {
 			if   ( $seenwordslang{$_} ) { $lang = $seenwordslang{$_} }
 			else                        { $lang = '' }
 			my $line = sprintf( "%-8d %-6s %s", $distinctwords{$_}, $lang, $_ );
 			$multiwclistbox->insert( 'end', $line );
 		}
 	} elsif ( $sortorder eq 'a' ) {
-		for ( &::natural_sort_alpha( keys %distinctwords ) ) {
+		for ( ::natural_sort_alpha( keys %distinctwords ) ) {
 			if   ( $seenwordslang{$_} ) { $lang = $seenwordslang{$_} }
 			else                        { $lang = '' }
 			my $line = sprintf( "%-8d %-6s %s", $distinctwords{$_}, $lang, $_ );
 			$multiwclistbox->insert( 'end', $line );
 		}
 	} elsif ( $sortorder eq 'l' ) {
-		for ( &::natural_sort_length( keys %distinctwords ) ) {
+		for ( ::natural_sort_length( keys %distinctwords ) ) {
 			if   ( $seenwordslang{$_} ) { $lang = $seenwordslang{$_} }
 			else                        { $lang = '' }
 			my $line = sprintf( "%-8d %-6s %s", $distinctwords{$_}, $lang, $_ );
@@ -298,7 +298,7 @@ sub showUnspeltWords {
 	$multiwclistbox->update;
 	if ($debug) { print $sortorder; }
 	if ( $sortorder eq 'f' ) {
-		for ( &::natural_sort_freq( \%distinctwords ) ) {
+		for ( ::natural_sort_freq( \%distinctwords ) ) {
 			unless ( $seenwordslang{$_} ) {
 				my $line =
 				  sprintf( "%-8d %-6s %s", $distinctwords{$_}, '', $_ );
@@ -306,7 +306,7 @@ sub showUnspeltWords {
 			}
 		}
 	} elsif ( $sortorder eq 'a' ) {
-		for ( &::natural_sort_alpha( keys %distinctwords ) ) {
+		for ( ::natural_sort_alpha( keys %distinctwords ) ) {
 			unless ( $seenwordslang{$_} ) {
 				my $line =
 				  sprintf( "%-8d %-6s %s", $distinctwords{$_}, '', $_ );
@@ -314,7 +314,7 @@ sub showUnspeltWords {
 			}
 		}
 	} elsif ( $sortorder eq 'l' ) {
-		for ( &::natural_sort_length( keys %distinctwords ) ) {
+		for ( ::natural_sort_length( keys %distinctwords ) ) {
 			unless ( $seenwordslang{$_} ) {
 				my $line =
 				  sprintf( "%-8d %-6s %s", $distinctwords{$_}, '', $_ );
@@ -337,7 +337,7 @@ sub showspeltforeignwords {
 	my $i = 0;
 	if ($debug) { print $sortorder; }
 	if ( $sortorder eq 'f' ) {
-		for ( &::natural_sort_freq( \%distinctwords ) ) {
+		for ( ::natural_sort_freq( \%distinctwords ) ) {
 			if (    ( $seenwordslang{$_} )
 				 && ( $seenwordslang{$_} ne $::multidicts[0] ) )
 			{
@@ -349,7 +349,7 @@ sub showspeltforeignwords {
 			}
 		}
 	} elsif ( $sortorder eq 'a' ) {
-		for ( &::natural_sort_alpha( keys %distinctwords ) ) {
+		for ( ::natural_sort_alpha( keys %distinctwords ) ) {
 			if (    ( $seenwordslang{$_} )
 				 && ( $seenwordslang{$_} ne $::multidicts[0] ) )
 			{
@@ -361,7 +361,7 @@ sub showspeltforeignwords {
 			}
 		}
 	} elsif ( $sortorder eq 'l' ) {
-		for ( &::natural_sort_length( keys %distinctwords ) ) {
+		for ( ::natural_sort_length( keys %distinctwords ) ) {
 			if (    ( $seenwordslang{$_} )
 				 && ( $seenwordslang{$_} ne $::multidicts[0] ) )
 			{
@@ -443,7 +443,7 @@ sub showprojectdict {
 	$multiwclistbox->delete( '0', 'end' );
 	$multiwclistbox->insert( 'end', 'Please wait, sorting list....' );
 	$multiwclistbox->update;
-	&::spellloadprojectdict();
+	::spellloadprojectdict();
 	if ($debug) { print "$::lglobal{projectdictname}\n"; }
 	my $i = 0;
 	for my $key ( sort ( keys %::projectdict ) ) {
@@ -751,7 +751,7 @@ sub buildwordlist {
 			$index = $end;
 		}
 	}
-	&::savefile()
+	::savefile()
 	  if (    ( $textwindow->FileName )
 		   && ( $textwindow->numberChanges != 0 ) );
 	open my $fh, '<', $filename;
@@ -923,7 +923,7 @@ sub includeprojectdict {
 	my ( $textwindow, $top ) = @_;
 	my $i = 0;
 	$top->Busy( -recurse => 1 );
-	&::spellloadprojectdict();
+	::spellloadprojectdict();
 	if ($debug) { print "$::lglobal{projectdictname}\n"; }
 	for my $key ( keys %::projectdict ) {
 		unless ( $seenwordslang{$key} ) { 
@@ -942,7 +942,7 @@ sub includeprojectdict {
 
 #add all spelt foreign words to project dictionary
 sub addspeltforeignproject {
-	&::spellloadprojectdict();
+	::spellloadprojectdict();
 	my $i = 0;
 	for my $key ( sort ( keys %distinctwords ) ) {
 		if (    ( $seenwordslang{$key} )
@@ -975,7 +975,7 @@ sub addspeltforeignproject {
 
 #add words above minfreq to project dictionary
 sub addminfreqproject {
-	&::spellloadprojectdict();
+	::spellloadprojectdict();
 	my $i = 0;
 	for my $key ( keys %distinctwords )  {
 		unless ( $seenwordslang{$key} ) {
@@ -1119,7 +1119,7 @@ EOM
 		$multihelppop->focus;
 	} else {
 		$multihelppop = $top->Toplevel;
-#		&::initialize_popup_with_deletebinding('aboutpop');
+#		::initialize_popup_with_deletebinding('aboutpop');
 		$multihelppop->title('Mutilingual help');
 		$multihelppop->Label(
 									 -justify => "left",

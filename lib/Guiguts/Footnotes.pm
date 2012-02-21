@@ -13,8 +13,8 @@ sub footnotepop {
 	my $textwindow = $::textwindow;
 	my $top        = $::top;
 	push @::operations, ( localtime() . ' - Footnote Fixup' );
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
-	&::oppopupdate()  if $::lglobal{oppop};
+	::viewpagenums() if ( $::lglobal{seepagenums} );
+	::oppopupdate()  if $::lglobal{oppop};
 	if ( defined( $::lglobal{footpop} ) ) {
 		$::lglobal{footpop}->deiconify;
 		$::lglobal{footpop}->raise;
@@ -26,7 +26,7 @@ sub footnotepop {
 		$::lglobal{fnindex} = '0' unless $::lglobal{fnindex};
 		$::lglobal{fntotal} = '0' unless $::lglobal{fntotal};
 		$::lglobal{footpop} = $top->Toplevel;
-		&::initialize_popup_without_deletebinding('footpop');
+		::initialize_popup_without_deletebinding('footpop');
 		my ( $checkn, $checka, $checkr );
 		$::lglobal{footpop}->title('Footnote Fixup');
 		my $frame2 =
@@ -341,7 +341,7 @@ sub footnotepop {
 		$::lglobal{footnoteletter}
 		  ->configure( -text => &alpha( $::lglobal{fnalpha} ) );
 		$::lglobal{footnoteroman}
-		  ->configure( -text => &::roman( $::lglobal{fnroman} ) );
+		  ->configure( -text => ::roman( $::lglobal{fnroman} ) );
 		$::lglobal{footnotetotal}->configure(
 			   -text => "# $::lglobal{fnindex}" . "/" . "$::lglobal{fntotal}" );
 		$::lglobal{fnsecondpass} = 0;
@@ -389,7 +389,7 @@ sub footnoteshow {
 	$::lglobal{footnotetotal}
 	  ->configure( -text => "# $::lglobal{fnindex}/$::lglobal{fntotal}" )
 	  if $::lglobal{footpop};
-	&::update_indicators();
+	::update_indicators();
 }
 
 sub fninsertmarkers {
@@ -426,7 +426,7 @@ sub fninsertmarkers {
 		  &alpha( $::lglobal{fnalpha} )
 		  if $style eq 'a';
 		$::lglobal{fnarray}->[ $::lglobal{fnindex} ][4] =
-		  &::roman( $::lglobal{fnroman} )
+		  ::roman( $::lglobal{fnroman} )
 		  if $style eq 'r';
 		$::lglobal{fncount}++ if $style eq 'n';
 		$::lglobal{fnalpha}++ if $style eq 'a';
@@ -494,14 +494,14 @@ sub fnview {
 	my $top        = $::top;
 	my $textwindow = $::textwindow;
 	my ( %fnotes, %anchors, $ftext );
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	if ( defined( $::lglobal{footviewpop} ) ) {
 		$::lglobal{footviewpop}->deiconify;
 		$::lglobal{footviewpop}->raise;
 		$::lglobal{footviewpop}->focus;
 	} else {
 		$::lglobal{footviewpop} = $top->Toplevel( -background => $::bkgcolor );
-		&::initialize_popup_with_deletebinding('footviewpop');
+		::initialize_popup_with_deletebinding('footviewpop');
 		$::lglobal{footviewpop}->title('Footnotes');
 		my $frame1 =
 		  $::lglobal{footviewpop}->Frame( -background => $::bkgcolor )
@@ -595,7 +595,7 @@ sub fnview {
 			}
 			$fnotes{ $::lglobal{fnarray}->[$findex][2] } = $findex;
 		}
-		&::BindMouseWheel($ftext);
+		::BindMouseWheel($ftext);
 	}
 }
 
@@ -611,7 +611,7 @@ sub fnview {
 sub footnotefixup {
 	my $top        = $::top;
 	my $textwindow = $::textwindow;
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my ( $start, $end, $anchor, $pointer );
 	$start              = 1;
 	$::lglobal{fncount} = '1';
@@ -624,7 +624,7 @@ sub footnotefixup {
 	  ->configure( -text => &alpha( $::lglobal{fnalpha} ) )
 	  if $::lglobal{footpop};
 	$::lglobal{footnoteroman}
-	  ->configure( -text => &::roman( $::lglobal{fnroman} ) )
+	  ->configure( -text => ::roman( $::lglobal{fnroman} ) )
 	  if $::lglobal{footpop};
 	$::lglobal{ftnoteindexstart} = '1.0';
 	$textwindow->markSet( 'fnindex', $::lglobal{ftnoteindexstart} );
@@ -758,7 +758,7 @@ sub footnotefixup {
 							  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][2] );
 		$textwindow->markSet( "fnb$::lglobal{fnindex}",
 							  $::lglobal{fnarray}->[ $::lglobal{fnindex} ][3] );
-		&::update_indicators();
+		::update_indicators();
 		$textwindow->focus;
 		$::lglobal{footpop}->raise if $::lglobal{footpop};
 
@@ -1022,7 +1022,7 @@ sub footnoteadjust {
 	  ->configure( -text => &alpha( $::lglobal{fnalpha} ) )
 	  if $::lglobal{footpop};
 	$::lglobal{footnoteroman}
-	  ->configure( -text => &::roman( $::lglobal{fnroman} ) )
+	  ->configure( -text => ::roman( $::lglobal{fnroman} ) )
 	  if $::lglobal{footpop};
 
 	if ( $end eq "$start+10c" ) {
@@ -1060,7 +1060,7 @@ sub footnotetidy {
 		$end = $textwindow->index( 'fne' . $::lglobal{fnindex} );
 		$textwindow->delete("$end-1c");
 		$textwindow->tagAdd( 'sel', 'fns' . $::lglobal{fnindex}, "$end+1c" );
-		&::selectrewrap( $textwindow, $::lglobal{seepagenums},
+		::selectrewrap( $textwindow, $::lglobal{seepagenums},
 						 $MAIN::scannos_highlighted, $::rwhyphenspace );
 		$::lglobal{fnindex}++;
 		last if $::lglobal{fnindex} > $::lglobal{fntotal};

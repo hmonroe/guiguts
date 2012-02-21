@@ -14,7 +14,7 @@ sub scannosfile {
 	my $top = $::top;
 	if ($::debug) { print "sub scannosfile\n"; }
 	if ($::debug) { print "scannoslistpath=$::scannoslistpath\n"; }
-	$::scannoslistpath = &::os_normal($::scannoslistpath);
+	$::scannoslistpath = ::os_normal($::scannoslistpath);
 	if ($::debug) { print "sub scannosfile1\n"; }
 	my $types = [ [ 'Text file', [ '.txt', ] ], [ 'All Files', ['*'] ], ];
 	$::scannoslist = $top->getOpenFile(
@@ -24,11 +24,11 @@ sub scannosfile {
 	);
 	if ($::scannoslist) {
 		my ( $name, $path, $extension ) =
-		  &::fileparse( $::scannoslist, '\.[^\.]*$' );
+		  ::fileparse( $::scannoslist, '\.[^\.]*$' );
 		$::scannoslistpath = $path;
-		&::highlight_scannos() if ($::scannos_highlighted);
+		::highlight_scannos() if ($::scannos_highlighted);
 		%{ $::lglobal{wordlist} } = ();
-		&::highlight_scannos();
+		::highlight_scannos();
 	}
 	return;
 }
@@ -39,7 +39,7 @@ sub highlightscannos {
 	if ($::debug) { print "sub highlightscannos\n"; }
 	return 0 unless $::scannos_highlighted;
 	unless ( $::lglobal{wordlist} ) {
-		&::scannosfile() unless ( defined $::scannoslist && -e $::scannoslist );
+		::scannosfile() unless ( defined $::scannoslist && -e $::scannoslist );
 		return 0 unless $::scannoslist;
 		if ( open my $fh, '<', $::scannoslist ) {
 			while (<$fh>) {

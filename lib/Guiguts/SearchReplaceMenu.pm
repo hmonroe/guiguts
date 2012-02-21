@@ -31,7 +31,7 @@ sub add_search_history {
 
 sub searchtext {
 	my ( $textwindow, $top, $searchterm ) = @_;
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 
 #print $::sopt[0],$::sopt[1],$::sopt[2],$::sopt[3],$::sopt[4].":sopt\n";
 # $::sopt[0] --> 0 = pattern search                       1 = whole word search
@@ -44,7 +44,7 @@ sub searchtext {
 #print $::sopt[4]."from beginning\n";
 	$searchterm = '' unless defined $searchterm;
 	if ( length($searchterm) ) {    #and not ($searchterm =~ /\W/)
-		&::add_search_history( $searchterm, \@::search_history,
+		::add_search_history( $searchterm, \@::search_history,
 							   $::history_size );
 	}
 	$::lglobal{lastsearchterm} = 'stupid variable needs to be initialized'
@@ -106,14 +106,14 @@ sub searchtext {
 		no warnings;
 		unless ( length($searchterm) ) {
 			$searchterm = $::lglobal{searchentry}->get( '1.0', '1.end' );
-			&::add_search_history( $searchterm, \@::search_history,
+			::add_search_history( $searchterm, \@::search_history,
 								   $::history_size );
 		}
 	}    # warnings back on; keep this bracket
 	return ('') unless length($searchterm);
 	if ( $::sopt[3] ) {
-		unless ( &::isvalid($searchterm) ) {
-			&::badreg();
+		unless ( ::isvalid($searchterm) ) {
+			::badreg();
 			return;
 		}
 	}
@@ -197,7 +197,7 @@ sub searchtext {
 		$::lglobal{lastsearchterm} = 'reset' unless $mark;
 	} else {    # not a search across line boundaries
 		my $exactsearch = $searchterm;
-		$exactsearch = &::escape_regexmetacharacters($exactsearch);
+		$exactsearch = ::escape_regexmetacharacters($exactsearch);
 		$searchterm  = '(?<!\p{Alnum})' . $exactsearch . '(?!\p{Alnum})'
 		  if $::sopt[0];
 		my ( $direction, $searchstart, $mode );
@@ -312,7 +312,7 @@ sub search_history {
 	my $menu = $widget->Menu( -title => 'History', -tearoff => 0 );
 	$menu->command(
 			   -label   => 'Clear History',
-			   -command => sub { @$history_array_ref = (); &::savesettings(); },
+			   -command => sub { @$history_array_ref = (); ::savesettings(); },
 	);
 	$menu->separator;
 	for my $item (@$history_array_ref) {
@@ -339,7 +339,7 @@ sub reg_check {
 	$::lglobal{searchentry}->tagAdd( 'reg', '1.0', 'end' );
 	my $term = $::lglobal{searchentry}->get( '1.0', 'end' );
 	return if ( $term eq '^' or $term eq '$' );
-	return if &::isvalid($term);
+	return if ::isvalid($term);
 	$::lglobal{searchentry}->tagConfigure( 'reg', -foreground => 'red' );
 	return;
 }

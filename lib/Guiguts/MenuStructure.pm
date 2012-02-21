@@ -23,13 +23,13 @@ sub locateAspellExe {
 	  $textwindow->getOpenFile(
 								-filetypes => $types,
 								-title     => 'Where is the Aspell executable?',
-								-initialdir => &::dirname($::globalspellpath)
+								-initialdir => ::dirname($::globalspellpath)
 	  );
 	$::globalspellpath = $::lglobal{pathtemp}
 	  if $::lglobal{pathtemp};
 	return unless $::globalspellpath;
-	$::globalspellpath = &::os_normal($::globalspellpath);
-	&::savesettings();
+	$::globalspellpath = ::os_normal($::globalspellpath);
+	::savesettings();
 }
 
 sub menu_preferences {
@@ -46,7 +46,7 @@ sub menu_preferences {
 			  ],
 			  [
 				 Button   => 'Locate Image Viewer Executable',
-				 -command => sub { &::setviewerpath($textwindow) }
+				 -command => sub { ::setviewerpath($textwindow) }
 			  ],
 			  [ 'separator', '' ],
 			  [
@@ -65,13 +65,13 @@ sub menu_preferences {
 					   $textwindow->getOpenFile(
 								  -filetypes => $types,
 								  -title => 'Where is the Gutcheck executable?',
-								  -initialdir => &::dirname($::gutcommand)
+								  -initialdir => ::dirname($::gutcommand)
 					   );
 					 $::gutcommand = $::lglobal{pathtemp}
 					   if $::lglobal{pathtemp};
 					 return unless $::gutcommand;
-					 $::gutcommand = &:: & ::os_normal($::gutcommand);
-					 &::savesettings();
+					 $::gutcommand = ::os_normal($::gutcommand);
+					 ::savesettings();
 				   }
 			  ],
 			  [
@@ -90,13 +90,13 @@ sub menu_preferences {
 					   $textwindow->getOpenFile(
 								   -filetypes => $types,
 								   -title => 'Where is the Jeebies executable?',
-								   -initialdir => &::dirname($::jeebiescommand)
+								   -initialdir => ::dirname($::jeebiescommand)
 					   );
 					 $::jeebiescommand = $::lglobal{pathtemp}
 					   if $::lglobal{pathtemp};
 					 return unless $::jeebiescommand;
-					 $::jeebiescommand = &:: & ::os_normal($::jeebiescommand);
-					 &::savesettings();
+					 $::jeebiescommand = ::os_normal($::jeebiescommand);
+					 ::savesettings();
 				   }
 			  ],
 			  [
@@ -114,12 +114,12 @@ sub menu_preferences {
 					 $::tidycommand =
 					   $textwindow->getOpenFile(
 									  -filetypes  => $types,
-									  -initialdir => &::dirname($::tidycommand),
+									  -initialdir => ::dirname($::tidycommand),
 									  -title => 'Where is the Tidy executable?'
 					   );
 					 return unless $::tidycommand;
-					 $::tidycommand = &:: & ::os_normal($::tidycommand);
-					 &::savesettings();
+					 $::tidycommand = ::os_normal($::tidycommand);
+					 ::savesettings();
 				   }
 			  ],
 			  [
@@ -137,13 +137,13 @@ sub menu_preferences {
 					 $::validatecommand =
 					   $textwindow->getOpenFile(
 						 -filetypes  => $types,
-						 -initialdir => &::dirname($::validatecommand),
+						 -initialdir => ::dirname($::validatecommand),
 						 -title =>
 'Where is the W3C Validate (onsgmls) executable (must be in tools\W3C)?'
 					   );
 					 return unless $::validatecommand;
-					 $::validatecommand = &::os_normal($::validatecommand);
-					 &::savesettings();
+					 $::validatecommand = ::os_normal($::validatecommand);
+					 ::savesettings();
 				   }
 			  ],
 			  [
@@ -162,14 +162,14 @@ sub menu_preferences {
 					 $::validatecsscommand =
 					   $textwindow->getOpenFile(
 						 -filetypes  => $types,
-						 -initialdir => &::dirname($::validatecsscommand),
+						 -initialdir => ::dirname($::validatecsscommand),
 						 -title =>
 'Where is the W3C CSS Validator (css-validator.jar) executable?'
 					   );
 					 return unless $::validatecsscommand;
 					 $::validatecsscommand =
-					   &::os_normal($::validatecsscommand);
-					 &::savesettings();
+					   ::os_normal($::validatecsscommand);
+					 ::savesettings();
 				   }
 			  ],
 			  [
@@ -187,10 +187,10 @@ sub menu_preferences {
 					   );
 					 return unless $::gnutenbergdirectory;
 					 $::gnutenbergdirectory =
-					   &::os_normal($::gnutenbergdirectory);
+					   ::os_normal($::gnutenbergdirectory);
 					 $::gnutenbergdirectory =
-					   &::dirname($::gnutenbergdirectory);
-					 &::savesettings();
+					   ::dirname($::gnutenbergdirectory);
+					 ::savesettings();
 				   }
 			  ],
 			  [ 'separator', '' ],
@@ -227,20 +227,20 @@ sub menu_preferences {
 			  [
 				 Button   => 'Set Background Color...',
 				 -command => sub {
-					 my $thiscolor = &::setcolor($::bkgcolor);
+					 my $thiscolor = ::setcolor($::bkgcolor);
 					 $::bkgcolor = $thiscolor if $thiscolor;
-					 &::savesettings();
+					 ::savesettings();
 				   }
 			  ],
 			  [
 				 Button   => 'Set Button Highlight Color...',
 				 -command => sub {
-					 my $thiscolor = &::setcolor($::activecolor);
+					 my $thiscolor = ::setcolor($::activecolor);
 					 $::activecolor = $thiscolor if $thiscolor;
 					 $::OS_WIN
 					   ? $::lglobal{checkcolor} = 'white'
 					   : $::lglobal{checkcolor} = $::activecolor;
-					 &::savesettings();
+					 ::savesettings();
 				   }
 			  ],
 			  [
@@ -250,7 +250,7 @@ sub menu_preferences {
 					 $::highlightcolor = $thiscolor if $thiscolor;
 					 $textwindow->tagConfigure( 'scannos',
 											 -background => $::highlightcolor );
-					 &::savesettings();
+					 ::savesettings();
 				   }
 			  ],
 			  [
@@ -326,7 +326,7 @@ sub menu_preferences {
 					 $::lglobal{toptool}->destroy
 					   if $::lglobal{toptool};
 					 undef $::lglobal{toptool};
-					 &::toolbar_toggle();
+					 ::toolbar_toggle();
 				 },
 				 -value => 'top'
 			  ],
@@ -337,7 +337,7 @@ sub menu_preferences {
 					 $::lglobal{toptool}->destroy
 					   if $::lglobal{toptool};
 					 undef $::lglobal{toptool};
-					 &::toolbar_toggle();
+					 ::toolbar_toggle();
 				 },
 				 -value => 'bottom'
 			  ],
@@ -348,7 +348,7 @@ sub menu_preferences {
 					 $::lglobal{toptool}->destroy
 					   if $::lglobal{toptool};
 					 undef $::lglobal{toptool};
-					 &::toolbar_toggle();
+					 ::toolbar_toggle();
 				 },
 				 -value => 'left'
 			  ],
@@ -359,7 +359,7 @@ sub menu_preferences {
 					 $::lglobal{toptool}->destroy
 					   if $::lglobal{toptool};
 					 undef $::lglobal{toptool};
-					 &::toolbar_toggle();
+					 ::toolbar_toggle();
 				 },
 				 -value => 'right'
 			  ],
@@ -374,16 +374,16 @@ sub menu_preferences {
 				 Checkbutton => 'Enable Auto Save',
 				 -variable   => \$::autosave,
 				 -command    => sub {
-					 &::toggle_autosave();
-					 &::savesettings();
+					 ::toggle_autosave();
+					 ::savesettings();
 				   }
 			  ],
 			  [
 				 Button   => 'Auto Save Interval...',
 				 -command => sub {
-					 &::saveinterval();
-					 &::savesettings();
-					 &::set_autosave() if $::autosave;
+					 ::saveinterval();
+					 ::savesettings();
+					 ::set_autosave() if $::autosave;
 				   }
 			  ],
 			  [
@@ -433,13 +433,13 @@ sub menu_preferences {
 			  [ 'separator', '' ],
 			  [
 				 Button   => 'Spellcheck Dictionary Select...',
-				 -command => sub { &::spelloptions() }
+				 -command => sub { ::spelloptions() }
 			  ],
 			  [
 				 Button   => 'Search History Size...',
 				 -command => sub {
-					 &::searchsize();
-					 &::savesettings();
+					 ::searchsize();
+					 ::savesettings();
 				   }
 			  ],
 			  [
@@ -498,7 +498,7 @@ sub menubuildold {
 		-menuitems => [
 			[
 			   'command', '~Open',
-			   -command => sub { &::file_open($textwindow) }
+			   -command => sub { ::file_open($textwindow) }
 			],
 			[ 'separator', '' ],
 			map ( [
@@ -515,18 +515,18 @@ sub menubuildold {
 			],
 			[
 			   'command', 'Save ~As',
-			   -command => sub { &::file_saveas($textwindow) }
+			   -command => sub { ::file_saveas($textwindow) }
 			],
 			[
 			   'command',
 			   '~Include File',
 			   -command => sub {
-				   &::file_include($textwindow);
+				   ::file_include($textwindow);
 				 }
 			],
 			[
 			   'command', '~Close',
-			   -command => sub { &::file_close($textwindow) }
+			   -command => sub { ::file_close($textwindow) }
 			],
 			[ 'separator', '' ],
 			[
@@ -548,7 +548,7 @@ sub menubuildold {
 			[
 			   'command',
 			   'Import Prep Text Files',
-			   -command => sub { &::file_import( $textwindow, $top ) }
+			   -command => sub { ::file_import( $textwindow, $top ) }
 			],
 			[ 'separator', '' ],
 			[
@@ -583,18 +583,18 @@ sub menubuildold {
 			[ 'separator', '' ],
 			[
 			   'command', 'Cut',
-			   -command     => sub { &::cut() },
+			   -command     => sub { ::cut() },
 			   -accelerator => 'Ctrl+x'
 			],
 			[ 'separator', '' ],
 			[
 			   'command', 'Copy',
-			   -command     => sub { &::textcopy() },
+			   -command     => sub { ::textcopy() },
 			   -accelerator => 'Ctrl+c'
 			],
 			[
 			   'command', 'Paste',
-			   -command     => sub { &::paste() },
+			   -command     => sub { ::paste() },
 			   -accelerator => 'Ctrl+v'
 			],
 			[
@@ -769,20 +769,20 @@ sub menubuildold {
 			[
 			   Button   => '~lowercase Selection',
 			   -command => sub {
-				   &::case( $textwindow, 'lc' );
+				   ::case( $textwindow, 'lc' );
 				 }
 			],
 			[
 			   Button   => '~Sentence case Selection',
-			   -command => sub { &::case( $textwindow, 'sc' ); }
+			   -command => sub { ::case( $textwindow, 'sc' ); }
 			],
 			[
 			   Button   => '~Title Case Selection',
-			   -command => sub { &::case( $textwindow, 'tc' ); }
+			   -command => sub { ::case( $textwindow, 'tc' ); }
 			],
 			[
 			   Button   => '~UPPERCASE Selection',
-			   -command => sub { &::case( $textwindow, 'uc' ); }
+			   -command => sub { ::case( $textwindow, 'uc' ); }
 			],
 			[ 'separator', '' ],
 			[
@@ -839,7 +839,7 @@ sub menubuildold {
 					   my $gobut = $f2->Button(
 						   -activebackground => $::activecolor,
 						   -command          => sub {
-							   &::surroundit( $surstrt->get, $surend->get,
+							   ::surroundit( $surstrt->get, $surend->get,
 											  $textwindow );
 						   },
 						   -text  => 'OK',
@@ -867,7 +867,7 @@ sub menubuildold {
 			   -command => sub {
 				   $textwindow->addGlobStart;
 				   $::lglobal{floodpop} =
-					 &::flood( $textwindow, $top, $::lglobal{floodpop},
+					 ::flood( $textwindow, $top, $::lglobal{floodpop},
 							   $::lglobal{font}, $::activecolor, $::icon );
 				   $textwindow->addGlobEnd;
 				 }
@@ -877,7 +877,7 @@ sub menubuildold {
 			   Button   => 'Indent Selection 1',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::indent( $textwindow, 'in' );
+				   ::indent( $textwindow, 'in' );
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -885,7 +885,7 @@ sub menubuildold {
 			   Button   => 'Indent Selection -1',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::indent( $textwindow, 'out', $::operationinterrupt );
+				   ::indent( $textwindow, 'out', $::operationinterrupt );
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -894,7 +894,7 @@ sub menubuildold {
 			   Button   => '~Rewrap Selection',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::selectrewrap( $textwindow, $::lglobal{seepagenums},
+				   ::selectrewrap( $textwindow, $::lglobal{seepagenums},
 									$::scannos_highlighted, $::rwhyphenspace );
 				   $textwindow->addGlobEnd;
 				 }
@@ -903,7 +903,7 @@ sub menubuildold {
 			   Button   => '~Block Rewrap Selection',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::blockrewrap();
+				   ::blockrewrap();
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -922,7 +922,7 @@ sub menubuildold {
 			   Button   => 'Convert To Named/Numeric Entities',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::tonamed($textwindow);
+				   ::tonamed($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -930,7 +930,7 @@ sub menubuildold {
 			   Button   => 'Convert From Named/Numeric Entities',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::fromnamed($textwindow);
+				   ::fromnamed($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -943,10 +943,10 @@ sub menubuildold {
 					   while (@ranges) {
 						   my $end   = pop @ranges;
 						   my $start = pop @ranges;
-						   &::fracconv( $textwindow, $start, $end );
+						   ::fracconv( $textwindow, $start, $end );
 					   }
 				   } else {
-					   &::fracconv( $textwindow, '1.0', 'end' );
+					   ::fracconv( $textwindow, '1.0', 'end' );
 				   }
 				   $textwindow->addGlobEnd;
 				 }
@@ -960,7 +960,7 @@ sub menubuildold {
 			[
 			   Button   => 'Run ~Word Frequency Routine...',
 			   -command => sub {
-				   &::wordfrequency( $textwindow, $top );
+				   ::wordfrequency( $textwindow, $top );
 				 }
 			],
 			[ 'separator', '' ],
@@ -970,7 +970,7 @@ sub menubuildold {
 			[
 			   Button   => 'pptxt...',
 			   -command => sub {
-				   &::errorcheckpop_up( $textwindow, $top, 'pptxt' );
+				   ::errorcheckpop_up( $textwindow, $top, 'pptxt' );
 				   unlink 'null' if ( -e 'null' );
 			   },
 			],
@@ -979,7 +979,7 @@ sub menubuildold {
 			   Button   => 'Remove End-of-line Spaces',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::endofline();
+				   ::endofline();
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -993,7 +993,7 @@ sub menubuildold {
 			   Button   => 'Remove Blank Lines Before Page Separators',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::delblanklines();
+				   ::delblanklines();
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1001,7 +1001,7 @@ sub menubuildold {
 			[ Button => '~Footnote Fixup...', -command => \&::footnotepop ],
 			[
 			   Button   => '~HTML Fixup...',
-			   -command => sub { &::htmlpopup( $textwindow, $top ) }
+			   -command => sub { ::htmlpopup( $textwindow, $top ) }
 			],
 			[ Button => '~Sidenote Fixup...', -command => \&::sidenotes ],
 			[
@@ -1014,7 +1014,7 @@ sub menubuildold {
 			],
 			[
 			   Button   => 'HTML Auto ~Index (List)',
-			   -command => sub { &::autoindex($textwindow) }
+			   -command => sub { ::autoindex($textwindow) }
 			],
 			[
 			   Cascade    => 'PGTEI Tools',
@@ -1023,22 +1023,22 @@ sub menubuildold {
 				   [
 					  Button   => 'W3C Validate PGTEI',
 					  -command => sub {
-						  &::errorcheckpop_up( $textwindow, $top,
+						  ::errorcheckpop_up( $textwindow, $top,
 											   'W3C Validate' );
 						}
 				   ],
 				   [
 					  Button   => 'Gnutenberg Press (HTML only)',
-					  -command => sub { &::gnutenberg('html') }
+					  -command => sub { ::gnutenberg('html') }
 				   ],
 				   [
 					  Button   => 'Gnutenberg Press (Text only)',
-					  -command => sub { &::gnutenberg('txt') }
+					  -command => sub { ::gnutenberg('txt') }
 				   ],
 				   [
 					  Button   => 'Gnutenberg Press Online',
 					  -command => sub {
-						  &::runner(
+						  ::runner(
 								$::globalbrowserstart,
 								"http://pgtei.pglaf.org/marcello/0.4/tei-online"
 						  );
@@ -1059,16 +1059,16 @@ sub menubuildold {
 				   ],
 				   [
 					  Button   => 'EpubMaker (all formats)',
-					  -command => sub { &::epubmaker() }
+					  -command => sub { ::epubmaker() }
 				   ],
 				   [
 					  Button   => 'EpubMaker (HTML only)',
-					  -command => sub { &::epubmaker('html') }
+					  -command => sub { ::epubmaker('html') }
 				   ],
 				   [
 					  Button   => 'dp2rst Conversion',
 					  -command => sub {
-						  &::runner( $::globalbrowserstart,
+						  ::runner( $::globalbrowserstart,
 									 "http://www.pgdp.net/wiki/Dp2rst" );
 						}
 				   ],
@@ -1084,7 +1084,7 @@ sub menubuildold {
 			   Button   => 'Clean Up Rewrap ~Markers',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::cleanup();
+				   ::cleanup();
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1099,29 +1099,29 @@ sub menubuildold {
 			[
 			   Button   => "Convert Italics",
 			   -command => sub {
-				   &::text_convert_italic( $textwindow, $::italic_char );
+				   ::text_convert_italic( $textwindow, $::italic_char );
 				 }
 			],
 			[
 			   Button => "Convert Bold",
 			   -command =>
-				 sub { &::text_convert_bold( $textwindow, $::bold_char ) }
+				 sub { ::text_convert_bold( $textwindow, $::bold_char ) }
 			],
 			[
 			   Button   => 'Convert <tb> to asterisk break',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::text_convert_tb($textwindow);
+				   ::text_convert_tb($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
 			[
 			   Button   => 'All of the above',
 			   -command => sub {
-				   &::text_convert_italic( $textwindow, $::italic_char );
-				   &::text_convert_bold( $textwindow, $::bold_char );
+				   ::text_convert_italic( $textwindow, $::italic_char );
+				   ::text_convert_bold( $textwindow, $::bold_char );
 				   $textwindow->addGlobStart;
-				   &::text_convert_tb($textwindow);
+				   ::text_convert_tb($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1129,7 +1129,7 @@ sub menubuildold {
 			   Button   => '~Add a Thought Break',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::text_thought_break($textwindow);
+				   ::text_thought_break($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1143,7 +1143,7 @@ sub menubuildold {
 			],
 			[
 			   Button   => "Options...",
-			   -command => sub { &::text_convert_options($top) }
+			   -command => sub { ::text_convert_options($top) }
 			],
 		]
 	);
@@ -1152,7 +1152,7 @@ sub menubuildold {
 										-tearoff   => 1,
 										-menuitems => &::menu_external,
 	);
-	&::unicodemenu();
+	::unicodemenu();
 	$::menubar->Cascade(
 						 -label     => '~Preferences',
 						 -tearoff   => 1,
@@ -1162,12 +1162,12 @@ sub menubuildold {
 		-label     => '~Help',
 		-tearoff   => 1,
 		-menuitems => [
-			[ Button => '~About', -command => sub { &::about_pop_up($top) } ],
+			[ Button => '~About', -command => sub { ::about_pop_up($top) } ],
 			[ Button => '~Versions', -command => [ \&::showversion ] ],
 			[
 			   Button   => '~Manual',
 			   -command => sub {        # FIXME: sub this out.
-				   &::runner( $::globalbrowserstart,
+				   ::runner( $::globalbrowserstart,
 							  "http://www.pgdp.net/wiki/PPTools/Guiguts" );
 				 }
 			],
@@ -1175,7 +1175,7 @@ sub menubuildold {
 			# FIXME: Disable update check until it works
 			[
 			   Button   => 'Check For ~Updates',
-			   -command => sub { &::checkforupdates(0) }
+			   -command => sub { ::checkforupdates(0) }
 			],
 			[ Button => '~Hot keys',              -command => \&::hotkeyshelp ],
 			[ Button => '~Function History',      -command => \&::opspop_up ],
@@ -1193,7 +1193,7 @@ sub menubuild {
 	my $textwindow = $::textwindow;
 	my $top        = $::top;
 	unless ( $::useppwizardmenus or $::usemenutwo ) {
-		&::menubuildold();
+		::menubuildold();
 		return;
 	}
 	if ($::usemenutwo) {
@@ -1206,7 +1206,7 @@ sub menubuild {
 		-menuitems => [
 			[
 			   'command', '~Open',
-			   -command => sub { &::file_open($textwindow) }
+			   -command => sub { ::file_open($textwindow) }
 			],
 			[ 'separator', '' ],
 			map ( [
@@ -1223,12 +1223,12 @@ sub menubuild {
 			],
 			[
 			   'command', 'Save ~As',
-			   -command => sub { &::file_saveas($textwindow) }
+			   -command => sub { ::file_saveas($textwindow) }
 			],
 			[
 			   'command',
 			   '~Include File',
-			   -command => sub { &::file_include($textwindow) }
+			   -command => sub { ::file_include($textwindow) }
 			],
 			[
 			   Cascade    => 'Export',
@@ -1237,12 +1237,12 @@ sub menubuild {
 							   [
 								  'command',
 								  'Export As Prep Text Files',
-								  -command => sub { &::file_export_preptext() }
+								  -command => sub { ::file_export_preptext() }
 							   ],
 							   [
 								  'command',
 								  'Export with Markup',
-								  -command => sub { &::::file_export_markup; }
+								  -command => sub { ::file_export_markup(); }
 							   ],
 			   ]
 			],
@@ -1250,13 +1250,13 @@ sub menubuild {
 			   'command',
 			   'Import Prep Text Files',
 			   -command => sub {
-				   &::file_import( $textwindow, $top );
+				   ::file_import( $textwindow, $top );
 				 }
 			],
 			[ 'separator', '' ],
 			[
 			   'command', '~Close',
-			   -command => sub { &::file_close($textwindow) }
+			   -command => sub { ::file_close($textwindow) }
 			],
 			[ 'command', 'E~xit', -command => \&::_exit ],
 		]
@@ -1268,17 +1268,17 @@ sub menubuild {
 			[ 'command', 'Search & ~Replace...', -command => \&::searchpopup ],
 			[
 			   'command', 'Cut',
-			   -command     => sub { &::cut() },
+			   -command     => sub { ::cut() },
 			   -accelerator => 'Ctrl+x'
 			],
 			[
 			   'command', 'Copy',
-			   -command     => sub { &::textcopy() },
+			   -command     => sub { ::textcopy() },
 			   -accelerator => 'Ctrl+c'
 			],
 			[
 			   'command', 'Paste',
-			   -command     => sub { &::paste() },
+			   -command     => sub { ::paste() },
 			   -accelerator => 'Ctrl+v'
 			],
 			[
@@ -1328,16 +1328,16 @@ sub menubuild {
 			   'command',
 			   'Goto ~Line...',
 			   -command => sub {
-				   &::gotoline();
-				   &::update_indicators();
+				   ::gotoline();
+				   ::update_indicators();
 				 }
 			],
 			[
 			   'command',
 			   'Goto ~Page...',
 			   -command => sub {
-				   &::gotopage();
-				   &::update_indicators();
+				   ::gotopage();
+				   ::update_indicators();
 				 }
 			],
 			[
@@ -1353,20 +1353,20 @@ sub menubuild {
 			[
 			   Button   => '~lowercase Selection',
 			   -command => sub {
-				   &::case( $textwindow, 'lc' );
+				   ::case( $textwindow, 'lc' );
 				 }
 			],
 			[
 			   Button   => '~Sentence case Selection',
-			   -command => sub { &::case( $textwindow, 'sc' ); }
+			   -command => sub { ::case( $textwindow, 'sc' ); }
 			],
 			[
 			   Button   => '~Title Case Selection',
-			   -command => sub { &::case( $textwindow, 'tc' ); }
+			   -command => sub { ::case( $textwindow, 'tc' ); }
 			],
 			[
 			   Button   => '~UPPERCASE Selection',
-			   -command => sub { &::case( $textwindow, 'uc' ); }
+			   -command => sub { ::case( $textwindow, 'uc' ); }
 			],
 			[ 'separator', '' ],
 			[
@@ -1423,7 +1423,7 @@ sub menubuild {
 					   my $gobut = $f2->Button(
 						   -activebackground => $::activecolor,
 						   -command          => sub {
-							   &::surroundit( $surstrt->get, $surend->get,
+							   ::surroundit( $surstrt->get, $surend->get,
 											  $textwindow );
 						   },
 						   -text  => 'OK',
@@ -1451,7 +1451,7 @@ sub menubuild {
 			   -command => sub {
 				   $textwindow->addGlobStart;
 				   $::lglobal{floodpop} =
-					 &::flood( $textwindow, $top, $::lglobal{floodpop},
+					 ::flood( $textwindow, $top, $::lglobal{floodpop},
 							   $::lglobal{font}, $::activecolor, $::icon );
 				   $textwindow->addGlobEnd;
 				 }
@@ -1461,7 +1461,7 @@ sub menubuild {
 			   Button   => 'Indent Selection 1',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::indent( $textwindow, 'in' );
+				   ::indent( $textwindow, 'in' );
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1469,7 +1469,7 @@ sub menubuild {
 			   Button   => 'Indent Selection -1',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::indent( $textwindow, 'out', $::operationinterrupt );
+				   ::indent( $textwindow, 'out', $::operationinterrupt );
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1483,7 +1483,7 @@ sub menubuild {
 			   Button   => 'Convert To Named/Numeric Entities',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::tonamed($textwindow);
+				   ::tonamed($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1491,7 +1491,7 @@ sub menubuild {
 			   Button   => 'Convert From Named/Numeric Entities',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::fromnamed($textwindow);
+				   ::fromnamed($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1504,10 +1504,10 @@ sub menubuild {
 					   while (@ranges) {
 						   my $end   = pop @ranges;
 						   my $start = pop @ranges;
-						   &::fracconv( $textwindow, $start, $end );
+						   ::fracconv( $textwindow, $start, $end );
 					   }
 				   } else {
-					   &::fracconv( $textwindow, '1.0', 'end' );
+					   ::fracconv( $textwindow, '1.0', 'end' );
 				   }
 				   $textwindow->addGlobEnd;
 				 }
@@ -1583,15 +1583,15 @@ sub menubuild {
 			   -command => sub {
 				   my $defaulthandler = $::extops[0]{command};
 				   $defaulthandler =~ s/\$f\$e/project_comments.html/;
-				   &::runner( &::cmdinterp($defaulthandler) );
+				   ::runner( ::cmdinterp($defaulthandler) );
 				 }
 			],
 			[
 			   'command',
 			   'View Project Discussion',
 			   -command => sub {
-				   return if &::nofileloadedwarning();
-				   &::runner(
+				   return if ::nofileloadedwarning();
+				   ::runner(
 					   $::globalbrowserstart,
 "http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$::projectid"
 				   ) if $::projectid;
@@ -1679,7 +1679,7 @@ sub menubuild {
 			   Button   => 'Remove End-of-line Spaces',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::endofline();
+				   ::endofline();
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1693,7 +1693,7 @@ sub menubuild {
 			   Button   => 'Remove Blank Lines Before Page Separators',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::delblanklines();
+				   ::delblanklines();
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1711,7 +1711,7 @@ sub menubuild {
 		-menuitems => [
 			[
 			   Button   => 'Run ~Word Frequency Routine...',
-			   -command => sub { &::wordfrequency( $textwindow, $top ) }
+			   -command => sub { ::wordfrequency( $textwindow, $top ) }
 			],
 			[ 'command', '~Stealth Scannos...', -command => \&::stealthscanno ],
 			[ 'separator', '' ],
@@ -1722,7 +1722,7 @@ sub menubuild {
 			[
 			   Button   => 'pptxt...',
 			   -command => sub {
-				   &::errorcheckpop_up( $textwindow, $top, 'pptxt' );
+				   ::errorcheckpop_up( $textwindow, $top, 'pptxt' );
 				   unlink 'null' if ( -e 'null' );
 			   },
 			],
@@ -1735,29 +1735,29 @@ sub menubuild {
 			[
 			   Button   => "Convert Italics",
 			   -command => sub {
-				   &::text_convert_italic( $textwindow, $::italic_char );
+				   ::text_convert_italic( $textwindow, $::italic_char );
 				 }
 			],
 			[
 			   Button => "Convert Bold",
 			   -command =>
-				 sub { &::text_convert_bold( $textwindow, $::bold_char ) }
+				 sub { ::text_convert_bold( $textwindow, $::bold_char ) }
 			],
 			[
 			   Button   => 'Convert <tb> to asterisk break',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::text_convert_tb($textwindow);
+				   ::text_convert_tb($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
 			[
 			   Button   => 'All of the above',
 			   -command => sub {
-				   &::text_convert_italic( $textwindow, $::italic_char );
-				   &::text_convert_bold( $textwindow, $::bold_char );
+				   ::text_convert_italic( $textwindow, $::italic_char );
+				   ::text_convert_bold( $textwindow, $::bold_char );
 				   $textwindow->addGlobStart;
-				   &::text_convert_tb($textwindow);
+				   ::text_convert_tb($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1765,7 +1765,7 @@ sub menubuild {
 			   Button   => '~Add a Thought Break',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::text_thought_break($textwindow);
+				   ::text_thought_break($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1779,7 +1779,7 @@ sub menubuild {
 			],
 			[
 			   Button   => "Options...",
-			   -command => sub { &::text_convert_options($top) }
+			   -command => sub { ::text_convert_options($top) }
 			],
 			[ 'separator', '' ],
 			[ Button => 'ASCII ~Boxes...', -command => \&::asciipopup ],
@@ -1791,7 +1791,7 @@ sub menubuild {
 			   Button   => '~Rewrap Selection',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::selectrewrap( $textwindow, $::lglobal{seepagenums},
+				   ::selectrewrap( $textwindow, $::lglobal{seepagenums},
 									$::scannos_highlighted, $::rwhyphenspace );
 				   $textwindow->addGlobEnd;
 				 }
@@ -1800,7 +1800,7 @@ sub menubuild {
 			   Button   => '~Block Rewrap Selection',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::blockrewrap();
+				   ::blockrewrap();
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1812,7 +1812,7 @@ sub menubuild {
 			   Button   => 'Clean Up Rewrap ~Markers',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::cleanup();
+				   ::cleanup();
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -1829,11 +1829,11 @@ sub menubuild {
 		-menuitems => [
 			[
 			   Button   => '~HTML Fixup',
-			   -command => sub { &::htmlpopup( $textwindow, $top ) }
+			   -command => sub { ::htmlpopup( $textwindow, $top ) }
 			],
 			[
 			   Button   => 'HTML Auto ~Index (List)',
-			   -command => sub { &::autoindex($textwindow) }
+			   -command => sub { ::autoindex($textwindow) }
 			],
 			[
 			   Cascade    => 'HTML to Epub',
@@ -1842,34 +1842,34 @@ sub menubuild {
 				   [
 					  Button   => 'EpubMaker Online',
 					  -command => sub {
-						  &::runner( $::globalbrowserstart,
+						  ::runner( $::globalbrowserstart,
 									 "http://epubmaker.pglaf.org/" );
 						}
 				   ],
 				   [
 					  Button   => 'EpubMaker',
-					  -command => sub { &::epubmaker('epub') }
+					  -command => sub { ::epubmaker('epub') }
 				   ],
 			   ],
 			],
 			[
 			   Button => 'Link Check',
 			   -command =>
-				 sub { &::errorcheckpop_up( $textwindow, $top, 'Link Check' ) }
+				 sub { ::errorcheckpop_up( $textwindow, $top, 'Link Check' ) }
 			],
 			[
 			   Button => 'HTML Tidy',
 			   -command =>
-				 sub { &::errorcheckpop_up( $textwindow, $top, 'HTML Tidy' ) }
+				 sub { ::errorcheckpop_up( $textwindow, $top, 'HTML Tidy' ) }
 			],
 			[
 			   Button   => 'W3C Validate',
 			   -command => sub {
 				   if ($::w3cremote) {
-					   &::errorcheckpop_up( $textwindow, $top,
+					   ::errorcheckpop_up( $textwindow, $top,
 											'W3C Validate Remote' );
 				   } else {
-					   &::errorcheckpop_up( $textwindow, $top, 'W3C Validate' );
+					   ::errorcheckpop_up( $textwindow, $top, 'W3C Validate' );
 				   }
 				   unlink 'null' if ( -e 'null' );
 				 }
@@ -1877,7 +1877,7 @@ sub menubuild {
 			[
 			   Button   => 'W3C Validate CSS',
 			   -command => sub {
-				   &::errorcheckpop_up( $textwindow, $top, 'W3C Validate CSS' )
+				   ::errorcheckpop_up( $textwindow, $top, 'W3C Validate CSS' )
 					 ;    #validatecssrun('');
 				   unlink 'null' if ( -e 'null' );
 				 }
@@ -1885,28 +1885,28 @@ sub menubuild {
 			[
 			   Button   => 'pphtml',
 			   -command => sub {
-				   &::errorcheckpop_up( $textwindow, $top, 'pphtml' );
+				   ::errorcheckpop_up( $textwindow, $top, 'pphtml' );
 				   unlink 'null' if ( -e 'null' );
 				 }
 			],
 			[
 			   Button   => 'Image Check',
 			   -command => sub {
-				   &::errorcheckpop_up( $textwindow, $top, 'Image Check' );
+				   ::errorcheckpop_up( $textwindow, $top, 'Image Check' );
 				   unlink 'null' if ( -e 'null' );
 				 }
 			],
 			[
 			   Button   => 'Epub Friendly',
 			   -command => sub {
-				   &::errorcheckpop_up( $textwindow, $top, 'Epub Friendly' );
+				   ::errorcheckpop_up( $textwindow, $top, 'Epub Friendly' );
 				   unlink 'null' if ( -e 'null' );
 				 }
 			],
 			[
 			   Button   => 'Check All',
 			   -command => sub {
-				   &::errorcheckpop_up( $textwindow, $top, 'Check All' );
+				   ::errorcheckpop_up( $textwindow, $top, 'Check All' );
 				   unlink 'null' if ( -e 'null' );
 				 }
 			],
@@ -1923,14 +1923,14 @@ sub menubuild {
 				   [
 					  Button   => 'W3C Validate PGTEI',
 					  -command => sub {
-						  &::errorcheckpop_up( $textwindow, $top,
+						  ::errorcheckpop_up( $textwindow, $top,
 											   'W3C Validate' );
 						}
 				   ],
 				   [
 					  Button   => 'Gnutenberg Press Online',
 					  -command => sub {
-						  &::runner(
+						  ::runner(
 								$::globalbrowserstart,
 								"http://pgtei.pglaf.org/marcello/0.4/tei-online"
 						  );
@@ -1938,11 +1938,11 @@ sub menubuild {
 				   ],
 				   [
 					  Button   => 'Gnutenberg Press (HTML only)',
-					  -command => sub { &::gnutenberg('html') }
+					  -command => sub { ::gnutenberg('html') }
 				   ],
 				   [
 					  Button   => 'Gnutenberg Press (Text only)',
-					  -command => sub { &::gnutenberg('txt') }
+					  -command => sub { ::gnutenberg('txt') }
 				   ],
 			   ]
 			],
@@ -1953,22 +1953,22 @@ sub menubuild {
 				   [
 					  Button   => 'dp2rst Conversion',
 					  -command => sub {
-						  &::runner( $::globalbrowserstart,
+						  ::runner( $::globalbrowserstart,
 									 "http://www.pgdp.net/wiki/Dp2rst" );
 						}
 				   ],
 				   [
 					  Button   => 'EpubMaker (all formats)',
-					  -command => sub { &::epubmaker() }
+					  -command => sub { ::epubmaker() }
 				   ],
 				   [
 					  Button   => 'EpubMaker (HTML only)',
-					  -command => sub { &::epubmaker('html') }
+					  -command => sub { ::epubmaker('html') }
 				   ],
 				   [
 					  Button   => 'EpubMaker Online',
 					  -command => sub {
-						  &::runner( $::globalbrowserstart,
+						  ::runner( $::globalbrowserstart,
 									 "http://epubmaker.pglaf.org/" );
 						}
 				   ],
@@ -1976,7 +1976,7 @@ sub menubuild {
 			]
 		]
 	);
-	&::unicodemenu();
+	::unicodemenu();
 	$menubar->Cascade(
 					   -label     => '~Preferences',
 					   -tearoff   => 1,
@@ -1986,7 +1986,7 @@ sub menubuild {
 		-label     => '~Help',
 		-tearoff   => 1,
 		-menuitems => [
-			[ Button => '~About', -command => sub { &::about_pop_up($top) } ],
+			[ Button => '~About', -command => sub { ::about_pop_up($top) } ],
 			[ Button => '~Versions', -command => [ \&::showversion ] ],
 			[
 			   Button   => '~Manual',
@@ -2008,7 +2008,7 @@ sub menubuild {
 			# FIXME: Disable update check until it works
 			[
 			   Button   => 'Check For ~Updates',
-			   -command => sub { &::checkforupdates(0) }
+			   -command => sub { ::checkforupdates(0) }
 			],
 			[ Button => '~Hot keys',              -command => \&::hotkeyshelp ],
 			[ Button => '~Function History',      -command => \&::opspop_up ],
@@ -2028,17 +2028,17 @@ sub menubuildtwo {
 		-menuitems => [
 			[
 			   'command', '~Open',
-			   -command => sub { &::file_open($textwindow) }
+			   -command => sub { ::file_open($textwindow) }
 			],
 			[
 			   'command',
 			   '~Save',
 			   -accelerator => 'Ctrl+s',
-			   -command     => sub { &::savefile }
+			   -command     => sub { ::savefile() }
 			],
 			[
 			   'command', 'Save ~As',
-			   -command => sub { &::file_saveas($textwindow) }
+			   -command => sub { ::file_saveas($textwindow) }
 			],
 			[ 'separator', '' ],
 			map ( [
@@ -2050,7 +2050,7 @@ sub menubuildtwo {
 			[
 			   'command',
 			   '~Include File',
-			   -command => sub { &::file_include($textwindow) }
+			   -command => sub { ::file_include($textwindow) }
 			],
 			[
 			   Cascade    => 'Export',
@@ -2064,12 +2064,12 @@ sub menubuildtwo {
 							   [
 								  'command',
 								  'Export As Prep Text Files',
-								  -command => sub { &::file_export_preptext() }
+								  -command => sub { ::file_export_preptext() }
 							   ],
 							   [
 								  'command',
 								  'Export with Markup',
-								  -command => sub { &::::file_export_markup; }
+								  -command => sub { ::file_export_markup(); }
 							   ],
 			   ]
 			],
@@ -2077,7 +2077,7 @@ sub menubuildtwo {
 			   'command',
 			   'Import Prep Text Files',
 			   -command => sub {
-				   &::file_import( $textwindow, $top );
+				   ::file_import( $textwindow, $top );
 				 }
 			],
 			[ 'separator', '' ],
@@ -2111,14 +2111,14 @@ sub menubuildtwo {
 			   -command => sub {
 				   my $defaulthandler = $::extops[0]{command};
 				   $defaulthandler =~ s/\$f\$e/project_comments.html/;
-				   ::runner( &::cmdinterp($defaulthandler) );
+				   ::runner( ::cmdinterp($defaulthandler) );
 				 }
 			],
 			[
 			   'command',
 			   'View Project Discussion',
 			   -command => sub {
-				   return if &::nofileloadedwarning();
+				   return if ::nofileloadedwarning();
 				   ::runner(
 "$::globalbrowserstart http://www.pgdp.net/c/tools/proofers/project_topic.php?project=$::projectid"
 				   ) if $::projectid;
@@ -2127,12 +2127,12 @@ sub menubuildtwo {
 
 			# end of copy
 			[ 'separator', '' ],
-			[ 'command', 'Debug', -command => sub { &::debug_dump } ],
+			[ 'command', 'Debug', -command => sub { ::debug_dump() } ],
 			[
 			   'command', '~Close',
-			   -command => sub { &::file_close($textwindow) }
+			   -command => sub { ::file_close($textwindow) }
 			],
-			[ 'command', 'E~xit', -command => sub { &::_exit } ],
+			[ 'command', 'E~xit', -command => sub { ::_exit() } ],
 		]
 	);
 	my $edit = $menubar->cascade(
@@ -2152,18 +2152,18 @@ sub menubuildtwo {
 			[ 'separator', '' ],
 			[
 			   'command', 'Cut',
-			   -command     => sub { &::cut() },
+			   -command     => sub { ::cut() },
 			   -accelerator => 'Ctrl+x'
 			],
 			[ 'separator', '' ],
 			[
 			   'command', 'Copy',
-			   -command     => sub { &::textcopy() },
+			   -command     => sub { ::textcopy() },
 			   -accelerator => 'Ctrl+c'
 			],
 			[
 			   'command', 'Paste',
-			   -command     => sub { &::paste() },
+			   -command     => sub { ::paste() },
 			   -accelerator => 'Ctrl+v'
 			],
 			[
@@ -2206,16 +2206,16 @@ sub menubuildtwo {
 			   'command',
 			   'Goto ~Line...',
 			   -command => sub {
-				   &::gotoline();
-				   &::update_indicators();
+				   ::gotoline();
+				   ::update_indicators();
 				 }
 			],
 			[
 			   'command',
 			   'Goto ~Page...',
 			   -command => sub {
-				   &::gotopage();
-				   &::update_indicators();
+				   ::gotopage();
+				   ::update_indicators();
 				 }
 			],
 			[ 'separator', '' ],
@@ -2407,7 +2407,7 @@ sub menubuildtwo {
 			   Button   => 'Indent Selection  1',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::indent( $textwindow, 'in' );
+				   ::indent( $textwindow, 'in' );
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -2415,7 +2415,7 @@ sub menubuildtwo {
 			   Button   => 'Indent Selection -1',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::indent( $textwindow, 'out', $::operationinterrupt );
+				   ::indent( $textwindow, 'out', $::operationinterrupt );
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -2424,7 +2424,7 @@ sub menubuildtwo {
 			   Button   => '~Rewrap Selection',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::selectrewrap( $textwindow, $::lglobal{seepagenums},
+				   ::selectrewrap( $textwindow, $::lglobal{seepagenums},
 									$::scannos_highlighted, $::rwhyphenspace );
 				   $textwindow->addGlobEnd;
 				 }
@@ -2433,7 +2433,7 @@ sub menubuildtwo {
 			   Button   => '~Block Rewrap Selection',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::blockrewrap();
+				   ::blockrewrap();
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -2451,7 +2451,7 @@ sub menubuildtwo {
 			   Button   => 'Convert To Named/Numeric Entities',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::tonamed($textwindow);
+				   ::tonamed($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -2459,7 +2459,7 @@ sub menubuildtwo {
 			   Button   => 'Convert From Named/Numeric Entities',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::fromnamed($textwindow);
+				   ::fromnamed($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -2472,10 +2472,10 @@ sub menubuildtwo {
 					   while (@ranges) {
 						   my $end   = pop @ranges;
 						   my $start = pop @ranges;
-						   &::fracconv( $textwindow, $start, $end );
+						   ::fracconv( $textwindow, $start, $end );
 					   }
 				   } else {
-					   &::fracconv( $textwindow, '1.0', 'end' );
+					   ::fracconv( $textwindow, '1.0', 'end' );
 				   }
 				   $textwindow->addGlobEnd;
 				 }
@@ -2519,7 +2519,7 @@ sub menubuildtwo {
 			   Button   => 'Remove End-of-line Spaces',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::endofline();
+				   ::endofline();
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -2527,7 +2527,7 @@ sub menubuildtwo {
 			   Button   => 'Remove Blank Lines Before Page Separators',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::delblanklines();
+				   ::delblanklines();
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -2564,12 +2564,12 @@ sub menubuildtwo {
 			[ 'separator', '' ],
 			[
 			   Button   => 'Run ~Word Frequency Routine...',
-			   -command => sub { &::wordfrequency( $textwindow, $top ) }
+			   -command => sub { ::wordfrequency( $textwindow, $top ) }
 			],
 			[
 			   Button => 'Spell in multiple languages',
 			   -command =>
-				 sub { &::spellmultiplelanguages( $textwindow, $top ) }
+				 sub { ::spellmultiplelanguages( $textwindow, $top ) }
 			],
 			[ 'command',   'Spell ~Check...', -command => \&::spellchecker ],
 			[ 'separator', '' ],
@@ -2579,7 +2579,7 @@ sub menubuildtwo {
 			[
 			   Button   => 'pptxt...',
 			   -command => sub {
-				   &::errorcheckpop_up( $textwindow, $top, 'pptxt' );
+				   ::errorcheckpop_up( $textwindow, $top, 'pptxt' );
 				   unlink 'null' if ( -e 'null' );
 			   },
 			],
@@ -2587,26 +2587,26 @@ sub menubuildtwo {
 			[
 			   Button   => '~HTML Fixup...',
 			   -command => sub {
-				   &::htmlpopup( $textwindow, $top );
+				   ::htmlpopup( $textwindow, $top );
 				 }
 			],
 			[
 			   Button   => 'View in Browser',
 			   -command => sub {
-				   &::runner( &::cmdinterp("$::extops[0]{command}") );
+				   ::runner( ::cmdinterp("$::extops[0]{command}") );
 			   },
 			],
 			[
 			   Button   => 'HTML Check All',
 			   -command => sub {
-				   &::errorcheckpop_up( $textwindow, $top, 'Check All' );
+				   ::errorcheckpop_up( $textwindow, $top, 'Check All' );
 				   unlink 'null' if ( -e 'null' );
 				 }
 			],
 			[ 'separator', '' ],
 			[
 			   Button   => 'HTML Auto ~Index (List)',
-			   -command => sub { &::autoindex($textwindow) }
+			   -command => sub { ::autoindex($textwindow) }
 			],
 			[
 			   Cascade    => 'HTML to Epub',
@@ -2615,13 +2615,13 @@ sub menubuildtwo {
 				   [
 					  Button   => 'EpubMaker Online',
 					  -command => sub {
-						  &::runner(
+						  ::runner(
 "$::globalbrowserstart http://epubmaker.pglaf.org/" );
 						}
 				   ],
 				   [
 					  Button   => 'EpubMaker',
-					  -command => sub { &::epubmaker('epub') }
+					  -command => sub { ::epubmaker('epub') }
 				   ],
 			   ],
 			],
@@ -2632,22 +2632,22 @@ sub menubuildtwo {
 				   [
 					  Button   => 'W3C Validate PGTEI',
 					  -command => sub {
-						  &::errorcheckpop_up( $textwindow, $top,
+						  ::errorcheckpop_up( $textwindow, $top,
 											   'W3C Validate' );
 						}
 				   ],
 				   [
 					  Button   => 'Gnutenberg Press (HTML only)',
-					  -command => sub { &::gnutenberg('html') }
+					  -command => sub { ::gnutenberg('html') }
 				   ],
 				   [
 					  Button   => 'Gnutenberg Press (Text only)',
-					  -command => sub { &::gnutenberg('txt') }
+					  -command => sub { ::gnutenberg('txt') }
 				   ],
 				   [
 					  Button   => 'Gnutenberg Press Online',
 					  -command => sub {
-						  &::runner(
+						  ::runner(
 								$::globalbrowserstart,
 								"http://pgtei.pglaf.org/marcello/0.4/tei-online"
 						  );
@@ -2662,22 +2662,22 @@ sub menubuildtwo {
 				   [
 					  Button   => 'EpubMaker Online',
 					  -command => sub {
-						  &::runner( $::globalbrowserstart,
+						  ::runner( $::globalbrowserstart,
 									 "http://epubmaker.pglaf.org/" );
 						}
 				   ],
 				   [
 					  Button   => 'EpubMaker (all formats)',
-					  -command => sub { &::epubmaker() }
+					  -command => sub { ::epubmaker() }
 				   ],
 				   [
 					  Button   => 'EpubMaker (HTML only)',
-					  -command => sub { &::epubmaker('html') }
+					  -command => sub { ::epubmaker('html') }
 				   ],
 				   [
 					  Button   => 'dp2rst Conversion',
 					  -command => sub {
-						  &::runner( $::globalbrowserstart,
+						  ::runner( $::globalbrowserstart,
 									 "http://www.pgdp.net/wiki/Dp2rst" );
 						}
 				   ],
@@ -2692,35 +2692,35 @@ sub menubuildtwo {
 			[
 			   Button   => "Convert Italics",
 			   -command => sub {
-				   &::text_convert_italic( $textwindow, $::italic_char );
+				   ::text_convert_italic( $textwindow, $::italic_char );
 				 }
 			],
 			[
 			   Button => "Convert Bold",
 			   -command =>
-				 sub { &::text_convert_bold( $textwindow, $::bold_char ) }
+				 sub { ::text_convert_bold( $textwindow, $::bold_char ) }
 			],
 			[
 			   Button   => 'Convert <tb> to asterisk break',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::text_convert_tb($textwindow);
+				   ::text_convert_tb($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
 			[
 			   Button   => 'All of the above',
 			   -command => sub {
-				   &::text_convert_italic( $textwindow, $::italic_char );
-				   &::text_convert_bold( $textwindow, $::bold_char );
+				   ::text_convert_italic( $textwindow, $::italic_char );
+				   ::text_convert_bold( $textwindow, $::bold_char );
 				   $textwindow->addGlobStart;
-				   &::text_convert_tb($textwindow);
+				   ::text_convert_tb($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
 			[
 			   Button   => "Options...",
-			   -command => sub { &::text_convert_options($top) }
+			   -command => sub { ::text_convert_options($top) }
 			],
 			[ 'separator', '' ],
 			[
@@ -2736,7 +2736,7 @@ sub menubuildtwo {
 			   Button   => '~Add a Thought Break',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::text_thought_break($textwindow);
+				   ::text_thought_break($textwindow);
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -2750,7 +2750,7 @@ sub menubuildtwo {
 			   Button   => 'Clean Up Rewrap ~Markers',
 			   -command => sub {
 				   $textwindow->addGlobStart;
-				   &::cleanup();
+				   ::cleanup();
 				   $textwindow->addGlobEnd;
 				 }
 			],
@@ -2761,7 +2761,7 @@ sub menubuildtwo {
 									  -tearoff   => 1,
 									  -menuitems => &menu_external,
 	);
-	&::unicodemenu();
+	::unicodemenu();
 	$menubar->Cascade(
 					   -label     => 'Options',
 					   -tearoff   => 1,
@@ -2774,14 +2774,14 @@ sub menubuildtwo {
 			[
 			   Button   => '~Manual',
 			   -command => sub {        # FIXME: sub this out.
-				   &::runner( $::globalbrowserstart,
+				   ::runner( $::globalbrowserstart,
 							  "http://www.pgdp.net/wiki/PPTools/Guiguts" );
 				 }
 			],
 			[
 			   Button   => '~PP Process Checklist',
 			   -command => sub {                      # FIXME: sub this out.
-				   &::runner(
+				   ::runner(
 						 $::globalbrowserstart,
 						 "http://www.pgdp.net/wiki/Guiguts_PP_Process_Checklist"
 				   );
@@ -2794,13 +2794,13 @@ sub menubuildtwo {
 			[ Button => '~UTF Character entry',  -command => \&::utford ],
 			[ Button => '~UTF Character Search', -command => \&::uchar ],
 			[ 'separator', '' ],
-			[ Button => '~About', -command => sub { &::about_pop_up($top) } ],
+			[ Button => '~About', -command => sub { ::about_pop_up($top) } ],
 			[ Button => '~Versions', -command => [ \&::showversion ] ],
 
 			# FIXME: Disable update check until it works
 			[
 			   Button   => 'Check For ~Updates',
-			   -command => sub { &::checkforupdates(0) }
+			   -command => sub { ::checkforupdates(0) }
 			],
 			[ 'separator', '' ],
 			[ Button => '~Function History', -command => \&::opspop_up ],

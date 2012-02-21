@@ -36,7 +36,7 @@ sub update_indicators {
 		$::lglobal{highlightlabel}->configure( -background => 'gray' )
 		  unless ($::scannos_highlighted);
 	}
-	$filename = &::os_normal($filename);
+	$filename = ::os_normal($filename);
 	$::lglobal{global_filename} = $filename;
 	my $edit_flag = '';
 	if ( $textwindow->numberChanges ) {
@@ -56,7 +56,7 @@ sub update_indicators {
 	#FIXME: need some logic behind this
 	$textwindow->idletasks;
 	my ( $mark, $pnum );
-	$pnum = &::get_page_number();
+	$pnum = ::get_page_number();
 	my $markindex = $textwindow->index('insert');
 	if ( $filename ne 'No File Loaded' or defined $::lglobal{prepfile} ) {
 		$::lglobal{img_num_label}->configure( -text => 'Img:001' )
@@ -70,7 +70,7 @@ sub update_indicators {
 				 or ( $pnum ne "$::lglobal{pageimageviewed}" ) )
 			{
 				$::lglobal{pageimageviewed} = $pnum;
-				&::openpng( $textwindow, $pnum );
+				::openpng( $textwindow, $pnum );
 			}
 		}
 		update_img_button($pnum);
@@ -84,7 +84,7 @@ sub update_indicators {
 	}
 	$textwindow->tagRemove( 'bkmk', '1.0', 'end' ) unless $::bkmkhl;
 	if ( $::lglobal{geometryupdate} ) {
-		&::savesettings();
+		::savesettings();
 		$::lglobal{geometryupdate} = 0;
 	}
 }
@@ -139,7 +139,7 @@ sub _updatesel {
 	$::lglobal{selmaxlength} = $msgln if ( $msgln > $::lglobal{selmaxlength} );
 	$::lglobal{selectionlabel}
 	  ->configure( -text => $msg, -width => $::lglobal{selmaxlength} );
-	&::update_indicators();
+	::update_indicators();
 	$textwindow->_lineupdate;
 }
 ## Status Bar
@@ -158,7 +158,7 @@ sub buildstatusbar {
 		sub {
 			$::lglobal{current_line_label}->configure( -relief => 'sunken' );
 			gotoline();
-			&::update_indicators();
+			::update_indicators();
 		}
 	);
 	$::lglobal{current_line_label}->bind(
@@ -168,7 +168,7 @@ sub buildstatusbar {
 			else              { $::vislnnm = 1 }
 			$textwindow->showlinenum if $::vislnnm;
 			$textwindow->hidelinenum unless $::vislnnm;
-			&::savesettings();
+			::savesettings();
 		}
 	);
 	$::lglobal{selectionlabel} =
@@ -187,7 +187,7 @@ sub buildstatusbar {
 			}
 		}
 	);
-	$::lglobal{selectionlabel}->bind( '<Double-1>', sub { &::selection() } );
+	$::lglobal{selectionlabel}->bind( '<Double-1>', sub { ::selection() } );
 	$::lglobal{selectionlabel}->bind(
 		'<3>',
 		sub {
@@ -224,15 +224,15 @@ sub buildstatusbar {
 				$::scannos_highlighted = 0;
 				$::lglobal{highlighttempcolor} = 'gray';
 			} else {
-				&::scannosfile() unless $::scannoslist;
+				::scannosfile() unless $::scannoslist;
 				return unless $::scannoslist;
 				$::scannos_highlighted = 1;
 				$::lglobal{highlighttempcolor} = $::highlightcolor;
 			}
-			&::highlight_scannos();
+			::highlight_scannos();
 		}
 	);
-	$::lglobal{highlightlabel}->bind( '<3>', sub { &::scannosfile() } );
+	$::lglobal{highlightlabel}->bind( '<3>', sub { ::scannosfile() } );
 	$::lglobal{highlightlabel}->bind(
 		'<Enter>',
 		sub {
@@ -288,7 +288,7 @@ sub buildstatusbar {
 		sub {
 			$::lglobal{ordinallabel}->configure( -relief => 'sunken' );
 			$::lglobal{longordlabel} = $::lglobal{longordlabel} ? 0 : 1;
-			&::update_indicators();
+			::update_indicators();
 		}
 	);
 	_butbind($_)
@@ -333,15 +333,15 @@ sub update_img_button {
 			sub {
 				$::lglobal{img_num_label}->configure( -relief => 'sunken' );
 				gotopage();
-				&::update_indicators();
+				::update_indicators();
 			}
 		);
 		$::lglobal{img_num_label}->bind(
 			'<3>',
 			sub {
 				$::lglobal{img_num_label}->configure( -relief => 'sunken' );
-				&::viewpagenums();
-				&::update_indicators();
+				::viewpagenums();
+				::update_indicators();
 			}
 		);
 		_butbind( $::lglobal{img_num_label} );
@@ -365,14 +365,14 @@ sub update_label_button {
 			'<1>',
 			sub {
 				$::lglobal{page_label}->configure( -relief => 'sunken' );
-				&::gotolabel();
+				::gotolabel();
 			}
 		);
 		$::lglobal{page_label}->bind(
 			'<3>',
 			sub {
 				$::lglobal{page_label}->configure( -relief => 'sunken' );
-				&::pageadjust();
+				::pageadjust();
 			}
 		);
 		$::lglobal{statushelp}->attach( $::lglobal{page_label},
@@ -421,9 +421,9 @@ sub update_prev_img_button {
 			sub {
 				$::lglobal{previmagebutton}->configure( -relief => 'sunken' );
 				$::lglobal{showthispageimage} = 1;
-				&::viewpagenums() unless $::lglobal{pnumpop};
+				::viewpagenums() unless $::lglobal{pnumpop};
 				$textwindow->focus;
-				&::pgprevious();
+				::pgprevious();
 			}
 		);
 		_butbind( $::lglobal{previmagebutton} );
@@ -450,15 +450,15 @@ sub update_see_img_button {
 			'<1>',
 			sub {
 				$::lglobal{pagebutton}->configure( -relief => 'sunken' );
-				my $pagenum = &::get_page_number();
+				my $pagenum = ::get_page_number();
 				if ( defined $::lglobal{pnumpop} ) {
 					$::lglobal{pagenumentry}->delete( '0', 'end' );
 					$::lglobal{pagenumentry}->insert( 'end', "Pg" . $pagenum );
 				}
-				&::openpng( $textwindow, $pagenum );
+				::openpng( $textwindow, $pagenum );
 			}
 		);
-		$::lglobal{pagebutton}->bind( '<3>', sub { &::setpngspath() } );
+		$::lglobal{pagebutton}->bind( '<3>', sub { ::setpngspath() } );
 		_butbind( $::lglobal{pagebutton} );
 		$::lglobal{statushelp}->attach( $::lglobal{pagebutton},
 			 -balloonmsg =>
@@ -482,9 +482,9 @@ sub update_next_img_button {
 			sub {
 				$::lglobal{nextimagebutton}->configure( -relief => 'sunken' );
 				$::lglobal{showthispageimage} = 1;
-				&::viewpagenums() unless $::lglobal{pnumpop};
+				::viewpagenums() unless $::lglobal{pnumpop};
 				$textwindow->focus;
-				&::pgnext();
+				::pgnext();
 			}
 		);
 		_butbind( $::lglobal{nextimagebutton} );
@@ -583,7 +583,7 @@ sub update_proofers_button {
 				'<3>',
 				sub {
 					$::lglobal{proofbutton}->configure( -relief => 'sunken' );
-					&::tglprfbar();
+					::tglprfbar();
 				}
 			);
 			_butbind( $::lglobal{proofbutton} );
@@ -649,7 +649,7 @@ sub tglprfbar {
 						  $::lglobal{proofbar}[$round]->cget( -text );
 						$proofer =~ s/\s+Round \d\s+|\s+$//g;
 						$proofer =~ s/\s/%20/g;
-						&::prfrmessage($proofer);
+						::prfrmessage($proofer);
 					}
 				);
 			}
@@ -668,7 +668,7 @@ sub showproofers {
 	} else {
 		$::lglobal{prooferpop} = $top->Toplevel;
 		$::lglobal{prooferpop}->title('Proofers For This File');
-		&::initialize_popup_with_deletebinding('prooferpop');
+		::initialize_popup_with_deletebinding('prooferpop');
 		my $bframe = $::lglobal{prooferpop}->Frame->pack;
 		$bframe->Button(
 			-activebackground => $::activecolor,
@@ -683,7 +683,7 @@ sub showproofers {
 					$proofer =~ s/\s\s.*//s;
 					$proofer =~ s/\s/%20/g;
 				}
-				&::prfrmessage($proofer);
+				::prfrmessage($proofer);
 			},
 			-text  => 'Send Message',
 			-width => 12
@@ -887,7 +887,7 @@ sub selection {
 	} else {
 		$::lglobal{selectionpop} = $top->Toplevel;
 		$::lglobal{selectionpop}->title('Select Line.Col');
-		&::initialize_popup_without_deletebinding('selectionpop');
+		::initialize_popup_without_deletebinding('selectionpop');
 		$::lglobal{selectionpop}->resizable( 'no', 'no' );
 		my $frame =
 		  $::lglobal{selectionpop}

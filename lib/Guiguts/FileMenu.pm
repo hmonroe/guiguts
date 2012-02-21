@@ -19,7 +19,7 @@ sub file_open {    # Find a text file to open
 	#$::lglobal{test}="abcd";	
 	
 	my ($name);
-	return if ( &::confirmempty() =~ /cancel/i );
+	return if ( ::confirmempty() =~ /cancel/i );
 	my $types = [
 				  [
 					'Text Files',
@@ -33,7 +33,7 @@ sub file_open {    # Find a text file to open
 									  -initialdir => $::globallastpath
 	);
 	if ( defined($name) and length($name) ) {
-		&::openfile($name);
+		::openfile($name);
 	}
 }
 
@@ -56,7 +56,7 @@ sub file_include {    # FIXME: Should include even if no file loaded.
 	$textwindow->IncludeFile($name)
 	  if defined($name)
 		  and length($name);
-	&::update_indicators();
+	::update_indicators();
 	return;
 }
 
@@ -85,42 +85,42 @@ sub file_saveas {
 		}
 		$textwindow->SaveUTF($name);
 		my ( $fname, $extension, $filevar );
-		( $fname, $::globallastpath, $extension ) = &::fileparse($name);
-		$::globallastpath = &::os_normal($::globallastpath);
-		$name           = &::os_normal($name);
+		( $fname, $::globallastpath, $extension ) = ::fileparse($name);
+		$::globallastpath = ::os_normal($::globallastpath);
+		$name           = ::os_normal($name);
 		$textwindow->FileName($name);
 		$::lglobal{global_filename} = $name;
 		_bin_save($textwindow,$::top);
-		&::_recentupdate($name);
+		::_recentupdate($name);
 	} else {
 		return;
 	}
-	&::update_indicators();
+	::update_indicators();
 	return;
 }
 
 sub file_close {
 	my $textwindow = shift;
-	return if ( &::confirmempty() =~ m{cancel}i );
+	return if ( ::confirmempty() =~ m{cancel}i );
 	clearvars($textwindow);
-	&::update_indicators();
+	::update_indicators();
 	return;
 }
 
 sub file_import {
 	my ($textwindow,$top)=@_;
-	return if ( &::confirmempty() =~ /cancel/i );
+	return if ( ::confirmempty() =~ /cancel/i );
 	my $directory = $top->chooseDirectory( -title =>
 			'Choose the directory containing the text files to be imported.', );
 	return 0
 	  unless ( -d $directory and defined $directory and $directory ne '' );
 	$top->Busy( -recurse => 1 );
-	my $pwd = &::getcwd();
+	my $pwd = ::getcwd();
 	chdir $directory;
 	my @files = glob "*.txt";
 	chdir $pwd;
 	$directory .= '/';
-	$directory      = &::os_normal($directory);
+	$directory      = ::os_normal($directory);
 	$::globallastpath = $directory;
 
 	for my $file (sort {$a <=> $b} @files) {
@@ -145,7 +145,7 @@ sub file_import {
 	}
 	$textwindow->markSet( 'insert', '1.0' );
 	$::lglobal{prepfile} = 1;
-	&::file_mark_pages();
+	::file_mark_pages();
 	$::pngspath = '';
 	$top->Unbusy( -recurse => 1 );
 	return;
@@ -215,7 +215,7 @@ sub _flash_save {
 sub _bin_save {
 	my ($textwindow,$top)=@_;
 	push @::operations, ( localtime() . ' - File Saved' );
-	&::oppopupdate() if $::lglobal{oppop};
+	::oppopupdate() if $::lglobal{oppop};
 	my $mark = '1.0';
 	while ( $textwindow->markPrevious($mark) ) {
 		$mark = $textwindow->markPrevious($mark);
@@ -280,7 +280,7 @@ sub _bin_save {
 			  if $::bookmarks[$_];
 		}
 		if ($::pngspath) {
-			print $fh "\n\$::pngspath = '@{[&::escape_problems($::pngspath)]}';\n\n";
+			print $fh "\n\$::pngspath = '@{[::escape_problems($::pngspath)]}';\n\n";
 		}
 		my ($prfr);
 		delete $::proofers{''};
@@ -300,7 +300,7 @@ sub _bin_save {
 		print $fh "\n\n";
 		print $fh "\@::operations = (\n";
 		for my $mark (@::operations) {
-			$mark = &::escape_problems($mark);
+			$mark = ::escape_problems($mark);
 			print $fh "'$mark',\n";
 		}
 		print $fh ");\n\n";
@@ -308,7 +308,7 @@ sub _bin_save {
 		print $fh "\$::projectid = '$::projectid';\n\n";
 		print $fh "\$booklang = '$::booklang';\n\n";
 		print $fh
-"\$scannoslistpath = '@{[&::escape_problems(&::os_normal($::scannoslistpath))]}';\n\n";
+"\$scannoslistpath = '@{[::escape_problems(::os_normal($::scannoslistpath))]}';\n\n";
 		print $fh '1;';
 		$fh->close;
 	} else {
@@ -345,7 +345,7 @@ sub clearvars {
 
 sub savefile {    # Determine which save routine to use and then use it
 	my ($textwindow,$top)=($::textwindow,$::top);
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	if ( $::lglobal{global_filename} =~ /No File Loaded/ ) {
 		if ( $textwindow->numberChanges == 0 ) {
 			return;
@@ -356,8 +356,8 @@ sub savefile {    # Determine which save routine to use and then use it
 									-initialdir => $::globallastpath );
 		if ( defined($name) and length($name) ) {
 			$textwindow->SaveUTF($name);
-			$name = &::os_normal($name);
-			&::_recentupdate($name);
+			$name = ::os_normal($name);
+			::_recentupdate($name);
 		} else {
 			return;
 		}
@@ -378,16 +378,16 @@ sub savefile {    # Determine which save routine to use and then use it
 		$textwindow->SaveUTF;
 	}
 	$textwindow->ResetUndo;
-	&::_bin_save($textwindow,$top);
-	&::set_autosave() if $::autosave;
-	&::update_indicators();
+	::_bin_save($textwindow,$top);
+	::set_autosave() if $::autosave;
+	::update_indicators();
 }
 
 sub file_mark_pages {
 	my $top =$::top;
 	my $textwindow = $::textwindow;
 	$top->Busy( -recurse => 1 );
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my ( $line, $index, $page, $rnd1, $rnd2, $pagemark );
 	$::searchstartindex = '1.0';
 	$::searchendindex   = '1.0';
@@ -451,7 +451,7 @@ sub _recentupdate {    # FIXME: Seems to be choking.
 
 	# limit the list to 10 entries
 	pop @::recentfile while ( $#::recentfile > 10 );
-	&::menurebuild();
+	::menurebuild();
 	return;
 }
 
@@ -460,7 +460,7 @@ sub _recentupdate {    # FIXME: Seems to be choking.
 ## Global Exit
 sub _exit {
 	if ( confirmdiscard() =~ m{no}i ) {
-		&::aspellstop() if $::lglobal{spellpid};
+		::aspellstop() if $::lglobal{spellpid};
 		exit;
 	}
 }
@@ -474,7 +474,7 @@ sub file_guess_page_marks {
 	} else {
 		$::lglobal{pgpop} = $top->Toplevel;
 		$::lglobal{pgpop}->title('Guess Page Numbers');
-		&::initialize_popup_with_deletebinding('pgpop');
+		::initialize_popup_with_deletebinding('pgpop');
 		my $f0 = $::lglobal{pgpop}->Frame->pack;
 		$f0->Label( -text =>
 'This function should only be used if you have the page images but no page markers in the text.',
@@ -611,7 +611,7 @@ sub opspop_up {
 	} else {
 		$::lglobal{oppop} = $top->Toplevel;
 		$::lglobal{oppop}->title('Function history');
-		&::initialize_popup_with_deletebinding('oppop');
+		::initialize_popup_with_deletebinding('oppop');
 		my $frame =
 		  $::lglobal{oppop}->Frame->pack(
 										-anchor => 'nw',

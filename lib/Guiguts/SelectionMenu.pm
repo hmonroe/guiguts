@@ -94,8 +94,8 @@ sub wrapper {
 
 sub selectrewrap {
 	my ( $textwindow, $seepagenums, $scannos_highlighted ) = @_;
-	&::viewpagenums() if ($seepagenums);
-	&::savesettings();
+	::viewpagenums() if ($seepagenums);
+	::savesettings();
 	my $marker      = shift @_;
 	my @ranges      = $textwindow->tagRanges('sel');
 	my $range_total = @ranges;
@@ -164,7 +164,7 @@ sub selectrewrap {
 		{           #trap top line delete bug
 			$toplineblank = 1;
 		}
-		&::opstop();
+		::opstop();
 		$spaces = 0;
 
 		# main while loop
@@ -398,9 +398,9 @@ sub selectrewrap {
 			last
 			  if ( $thisblockstart eq $end )
 			  ;    #quit if next paragrapn starts at end of selection
-			&::update_indicators();    # update line and page numbers
+			::update_indicators();    # update line and page numbers
 		}
-		&::killstoppop();
+		::killstoppop();
 		$::operationinterrupt = 0;
 		$textwindow->focus;
 		$textwindow->update;
@@ -493,7 +493,7 @@ sub asciibox {
 		$textwindow->addGlobStart;
 		$::lmargin = 0;
 		$::rmargin = ( $asciiwidth - 4 );
-		&::selectrewrap unless $asciiwrap;
+		::selectrewrap() unless $asciiwrap;
 		$::lmargin = $saveleft;
 		$::rmargin = $saveright;
 		$textwindow->insert(
@@ -548,7 +548,7 @@ sub asciibox {
 }
 
 sub case {
-	&::savesettings();
+	::savesettings();
 	my ( $textwindow, $marker ) = @_;
 
 	#my $marker      = shift;
@@ -736,7 +736,7 @@ sub floodfill {
 }
 
 sub indent {
-	&::savesettings();
+	::savesettings();
 	my ( $textwindow, $indent ) = @_;
 
 	#my $indent      = shift;

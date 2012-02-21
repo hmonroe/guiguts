@@ -21,16 +21,16 @@ sub setviewerpath {    #Find your image viewer
 	}
 
 	#print $::globalviewerpath."aa\n";
-	#	print &::dirname($::globalviewerpath)."aa\n";
+	#	print ::dirname($::globalviewerpath)."aa\n";
 	$::lglobal{pathtemp} =
 	  $textwindow->getOpenFile(
 								-filetypes  => $types,
 								-title      => 'Where is your image viewer?',
-								-initialdir => &::dirname($::globalviewerpath)
+								-initialdir => ::dirname($::globalviewerpath)
 	  );
 	$::globalviewerpath = $::lglobal{pathtemp} if $::lglobal{pathtemp};
-	$::globalviewerpath = &::os_normal($::globalviewerpath);
-	&::savesettings();
+	$::globalviewerpath = ::os_normal($::globalviewerpath);
+	::savesettings();
 }
 
 sub setdefaultpath {

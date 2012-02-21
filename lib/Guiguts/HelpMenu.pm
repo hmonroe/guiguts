@@ -45,7 +45,7 @@ EOM
 		$::lglobal{aboutpop}->focus;
 	} else {
 		$::lglobal{aboutpop} = $top->Toplevel;
-		&::initialize_popup_with_deletebinding('aboutpop');
+		::initialize_popup_with_deletebinding('aboutpop');
 		$::lglobal{aboutpop}->title('About');
 		$::lglobal{aboutpop}->Label(
 									 -justify => "left",

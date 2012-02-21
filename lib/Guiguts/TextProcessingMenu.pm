@@ -71,7 +71,7 @@ sub text_convert_options {
 						  -textvariable => \$::bold_char,
 	  )->pack( -side => 'left' );
 	$options->Show;
-	&::savesettings();
+	::savesettings();
 }
 
 sub fixpopup {

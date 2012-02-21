@@ -29,7 +29,7 @@ sub get_image_file {
 		} else {
 			$::pngspath = "${main::globallastpath}pngs/";
 		}
-		&::setpngspath($pagenum) unless ( -e "$::pngspath$pagenum.png" );
+		::setpngspath($pagenum) unless ( -e "$::pngspath$pagenum.png" );
 	}
 	if ($::pngspath) {
 		$imagefile = "$::pngspath$pagenum.png";
@@ -48,13 +48,13 @@ sub openpng {
 	}
 	$::lglobal{pageimageviewed} = $pagenum;
 	if ( not $::globalviewerpath ) {
-		&::setviewerpath($textwindow);
+		::setviewerpath($textwindow);
 	}
-	my $imagefile = &::get_image_file($pagenum);
+	my $imagefile = ::get_image_file($pagenum);
 	if ( $imagefile && $::globalviewerpath ) {
-		&::runner( $::globalviewerpath, $imagefile );
+		::runner( $::globalviewerpath, $imagefile );
 	} else {
-		&::setpngspath($pagenum);
+		::setpngspath($pagenum);
 	}
 	return;
 }
@@ -69,16 +69,16 @@ sub setviewerpath {    #Find your image viewer
 	}
 
 	#print $::globalviewerpath."aa\n";
-	#	print &::dirname($::globalviewerpath)."aa\n";
+	#	print ::dirname($::globalviewerpath)."aa\n";
 	$::lglobal{pathtemp} =
 	  $textwindow->getOpenFile(
 								-filetypes  => $types,
 								-title      => 'Where is your image viewer?',
-								-initialdir => &::dirname($::globalviewerpath)
+								-initialdir => ::dirname($::globalviewerpath)
 	  );
 	$::globalviewerpath = $::lglobal{pathtemp} if $::lglobal{pathtemp};
-	$::globalviewerpath = &::os_normal($::globalviewerpath);
-	&::savesettings();
+	$::globalviewerpath = ::os_normal($::globalviewerpath);
+	::savesettings();
 }
 
 sub ::setdefaultpath {
@@ -161,9 +161,9 @@ sub textbindings {
 	);
 	$textwindow->tagBind( 'pagenum', '<ButtonRelease-1>', \&::pnumadjust );
 	$textwindow->eventAdd( '<<hlquote>>' => '<Control-quoteright>' );
-	$textwindow->bind( '<<hlquote>>', sub { &::hilite('\'') } );
+	$textwindow->bind( '<<hlquote>>', sub { ::hilite('\'') } );
 	$textwindow->eventAdd( '<<hldquote>>' => '<Control-quotedbl>' );
-	$textwindow->bind( '<<hldquote>>', sub { &::hilite('"') } );
+	$textwindow->bind( '<<hldquote>>', sub { ::hilite('"') } );
 	$textwindow->eventAdd( '<<hlrem>>' => '<Control-0>' );
 	$textwindow->bind(
 		'<<hlrem>>',
@@ -183,9 +183,9 @@ sub textbindings {
 	$textwindow->bind( 'TextUnicode', '<<Copy>>' => \&::textcopy );
 	$textwindow->eventAdd( '<<Cut>>' => '<Control-X>',
 						   '<Control-x>', '<F2>' );
-	$textwindow->bind( 'TextUnicode', '<<Cut>>'     => sub { &::cut() } );
-	$textwindow->bind( 'TextUnicode', '<Control-V>' => sub { &::paste() } );
-	$textwindow->bind( 'TextUnicode', '<Control-v>' => sub { &::paste() } );
+	$textwindow->bind( 'TextUnicode', '<<Cut>>'     => sub { ::cut() } );
+	$textwindow->bind( 'TextUnicode', '<Control-V>' => sub { ::paste() } );
+	$textwindow->bind( 'TextUnicode', '<Control-v>' => sub { ::paste() } );
 	$textwindow->bind(
 		'TextUnicode',
 		'<F3>' => sub {
@@ -222,11 +222,11 @@ sub textbindings {
 		}
 	);
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-l>' => sub { &::case( $textwindow, 'lc' ); } );
+					   '<Control-l>' => sub { ::case( $textwindow, 'lc' ); } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-u>' => sub { &::case( $textwindow, 'uc' ); } );
+					   '<Control-u>' => sub { ::case( $textwindow, 'uc' ); } );
 	$textwindow->bind( 'TextUnicode',
-		   '<Control-t>' => sub { &::case( $textwindow, 'tc' ); $top->break } );
+		   '<Control-t>' => sub { ::case( $textwindow, 'tc' ); $top->break } );
 	$textwindow->bind(
 		'TextUnicode',
 		'<Control-Z>' => sub {
@@ -253,7 +253,7 @@ sub textbindings {
 		'TextUnicode',
 		'<Control-w>' => sub {
 			$textwindow->addGlobStart;
-			&::floodfill();
+			::floodfill();
 			$textwindow->addGlobEnd;
 		}
 	);
@@ -261,35 +261,35 @@ sub textbindings {
 		'TextUnicode',
 		'<Control-W>' => sub {
 			$textwindow->addGlobStart;
-			&::floodfill();
+			::floodfill();
 			$textwindow->addGlobEnd;
 		}
 	);
 	$textwindow->bind( 'TextUnicode',
-					  '<Control-Shift-exclam>' => sub { &::setbookmark('1') } );
+					  '<Control-Shift-exclam>' => sub { ::setbookmark('1') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-Shift-at>' => sub { &::setbookmark('2') } );
+					   '<Control-Shift-at>' => sub { ::setbookmark('2') } );
 	$textwindow->bind( 'TextUnicode',
-				  '<Control-Shift-numbersign>' => sub { &::setbookmark('3') } );
+				  '<Control-Shift-numbersign>' => sub { ::setbookmark('3') } );
 	$textwindow->bind( 'TextUnicode',
-					  '<Control-Shift-dollar>' => sub { &::setbookmark('4') } );
+					  '<Control-Shift-dollar>' => sub { ::setbookmark('4') } );
 	$textwindow->bind( 'TextUnicode',
-					 '<Control-Shift-percent>' => sub { &::setbookmark('5') } );
+					 '<Control-Shift-percent>' => sub { ::setbookmark('5') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-KeyPress-1>' => sub { &::gotobookmark('1') } );
+					   '<Control-KeyPress-1>' => sub { ::gotobookmark('1') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-KeyPress-2>' => sub { &::gotobookmark('2') } );
+					   '<Control-KeyPress-2>' => sub { ::gotobookmark('2') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-KeyPress-3>' => sub { &::gotobookmark('3') } );
+					   '<Control-KeyPress-3>' => sub { ::gotobookmark('3') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-KeyPress-4>' => sub { &::gotobookmark('4') } );
+					   '<Control-KeyPress-4>' => sub { ::gotobookmark('4') } );
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-KeyPress-5>' => sub { &::gotobookmark('5') } );
+					   '<Control-KeyPress-5>' => sub { ::gotobookmark('5') } );
 	$textwindow->bind(
 		'TextUnicode',
 		'<Alt-Left>' => sub {
 			$textwindow->addGlobStart;
-			&::indent('out');
+			::indent('out');
 			$textwindow->addGlobEnd;
 		}
 	);
@@ -297,7 +297,7 @@ sub textbindings {
 		'TextUnicode',
 		'<Alt-Right>' => sub {
 			$textwindow->addGlobStart;
-			&::indent('in');
+			::indent('in');
 			$textwindow->addGlobEnd;
 		}
 	);
@@ -305,7 +305,7 @@ sub textbindings {
 		'TextUnicode',
 		'<Alt-Up>' => sub {
 			$textwindow->addGlobStart;
-			&::indent('up');
+			::indent('up');
 			$textwindow->addGlobEnd;
 		}
 	);
@@ -313,7 +313,7 @@ sub textbindings {
 		'TextUnicode',
 		'<Alt-Down>' => sub {
 			$textwindow->addGlobStart;
-			&::indent('dn');
+			::indent('dn');
 			$textwindow->addGlobEnd;
 		}
 	);
@@ -325,11 +325,11 @@ sub textbindings {
 				open my $fh, '>', 'scratchpad.txt'
 				  or warn "Could not create file $!";
 			}
-			&::runner('start scratchpad.txt') if $::OS_WIN;
+			::runner('start scratchpad.txt') if $::OS_WIN;
 		}
 	);
 	$textwindow->bind( 'TextUnicode',
-					   '<Control-Alt-r>' => sub { &::regexref() } );
+					   '<Control-Alt-r>' => sub { ::regexref() } );
 	$textwindow->bind( 'TextUnicode', '<Shift-B1-Motion>', 'shiftB1_Motion' );
 	$textwindow->eventAdd( '<<FindNext>>' => '<Control-Key-G>',
 						   '<Control-Key-g>' );
@@ -341,9 +341,9 @@ sub textbindings {
 		sub {
 			if ( $::lglobal{searchpop} ) {
 				my $searchterm = $::lglobal{searchentry}->get( '1.0', '1.end' );
-				&::searchtext( $textwindow, $top, $searchterm );
+				::searchtext( $textwindow, $top, $searchterm );
 			} else {
-				&::searchpopup();
+				::searchpopup();
 			}
 		}
 	);
@@ -433,7 +433,7 @@ sub cmdinterp {
 			my $start = pop(@ranges);
 			$selection = $textwindow->get( $start, $end );
 			$arg =~ s/\$t/$selection/;
-			$arg = &::encode( "utf-8", $arg );
+			$arg = ::encode( "utf-8", $arg );
 		}
 
 # Pass file to default file handler, $f $d $e give the fully specified path/filename
@@ -483,7 +483,7 @@ sub nofileloadedwarning {
 #FIXME: doesnt work quite right if multiple volumes held in same directory!
 sub getprojectid {
 	my $fname = $::lglobal{global_filename};
-	my ( $f, $d, $e ) = &::fileparse( $fname, qr{\.[^\.]*$} );
+	my ( $f, $d, $e ) = ::fileparse( $fname, qr{\.[^\.]*$} );
 	opendir( DIR, "$d" );
 	for ( readdir(DIR) ) {
 		if ( $_ =~ m/(project.*)_comments.html/ ) {

@@ -39,7 +39,7 @@ sub viewpagenums {
 									 "$_ +@{[length $pagenum]}c" );
 			}
 		}
-		&::pnumadjust();
+		::pnumadjust();
 	}
 }
 ## Pop up a window which will allow jumping directly to a specified page
