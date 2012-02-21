@@ -300,7 +300,7 @@ $top->repeat( 200, sub { _updatesel($textwindow) } );
 # Ready to enter main loop
 checkforupdatesmonthly();
 unless ( -e 'header.txt' ) {
-	&::copy( 'headerdefault.txt', 'header.txt' );
+	::copy( 'headerdefault.txt', 'header.txt' );
 }
 
 sub dofile {

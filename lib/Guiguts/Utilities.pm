@@ -7,7 +7,7 @@ BEGIN {
 	our ( @ISA, @EXPORT );
 	@ISA = qw(Exporter);
 	@EXPORT =
-	  qw(&openpng &get_image_file &setviewerpath &::setdefaultpath &arabic &roman
+	  qw(&openpng &get_image_file &setviewerpath &arabic &roman
 	  &textbindings &cmdinterp &nofileloadedwarning &getprojectid &win32_cmdline &win32_start
 	  &win32_is_exe &win32_create_process &runner &debug_dump &run &escape_regexmetacharacters
 	  &deaccent &BindMouseWheel &working &initialize &fontinit &initialize_popup_with_deletebinding

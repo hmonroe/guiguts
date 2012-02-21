@@ -65,13 +65,13 @@ sub html_convert_superscripts {
 
 sub html_convert_ampersands {
 	my $textwindow = shift;
-	&::working("Converting Ampersands");
-	&::named( '&(?![\w#])', '&amp;' );
-	&::named( '&$',         '&amp;' );
-	&::named( '& ',         '&amp; ' );
-	&::named( '&c\.',       '&amp;c.' );
-	&::named( '&c,',        '&amp;c.,' );
-	&::named( '&c ',        '&amp;c. ' );
+	::working("Converting Ampersands");
+	::named( '&(?![\w#])', '&amp;' );
+	::named( '&$',         '&amp;' );
+	::named( '& ',         '&amp; ' );
+	::named( '&c\.',       '&amp;c.' );
+	::named( '&c,',        '&amp;c.,' );
+	::named( '&c ',        '&amp;c. ' );
 	$textwindow->FindAndReplaceAll( '-regexp',                 '-nocase',
 									"(?<![a-zA-Z0-9/\\-\"])>", "&gt;" );
 	$textwindow->FindAndReplaceAll( '-regexp', '-nocase',
@@ -82,29 +82,29 @@ sub html_convert_ampersands {
 
 # double hyphens go to character entity ref. FIXME: Add option for real emdash.
 sub html_convert_emdashes {
-	&::working("Converting Emdashes");
-	&::named( '(?<=[^-!])--(?=[^>])', '&mdash;' );
-	&::named( '(?<=[^<])!--(?=[^>])', '!&mdash;' );
-	&::named( '(?<=[^-])--$',         '&mdash;' );
-	&::named( '^--(?=[^-])',          '&mdash;' );
-	&::named( '^--$',                 '&mdash;' );
-	&::named( "\x{A0}",               '&nbsp;' );
+	::working("Converting Emdashes");
+	::named( '(?<=[^-!])--(?=[^>])', '&mdash;' );
+	::named( '(?<=[^<])!--(?=[^>])', '!&mdash;' );
+	::named( '(?<=[^-])--$',         '&mdash;' );
+	::named( '^--(?=[^-])',          '&mdash;' );
+	::named( '^--$',                 '&mdash;' );
+	::named( "\x{A0}",               '&nbsp;' );
 	return;
 }
 
 # convert latin1 and utf charactes to HTML Character Entity Reference's.
 sub html_convert_latin1 {
-	&::working("Converting Latin-1 Characters...");
+	::working("Converting Latin-1 Characters...");
 	for ( 128 .. 255 ) {
 		my $from = lc sprintf( "%x", $_ );
-		&::named( '\x' . $from, &::entity( '\x' . $from ) );
+		::named( '\x' . $from, ::entity( '\x' . $from ) );
 	}
 	return;
 }
 
 sub html_convert_codepage {
-	&::working("Converting Windows Codepage 1252\ncharacters to Unicode");
-	&::cp1252toUni();
+	::working("Converting Windows Codepage 1252\ncharacters to Unicode");
+	::cp1252toUni();
 	return;
 }
 
@@ -124,7 +124,7 @@ sub html_convert_utf {
 		}
 	}
 	unless ($leave_utf) {
-		&::working("Converting UTF-8...");
+		::working("Converting UTF-8...");
 		while (
 				$blockstart =
 				$textwindow->search(
@@ -139,10 +139,10 @@ sub html_convert_utf {
 			$textwindow->ntinsert( $blockstart, "&#$xchar;" );
 		}
 	}
-	&::working("Converting Named\n and Numeric Characters");
-	&::named( ' >', ' &gt;' )
+	::working("Converting Named\n and Numeric Characters");
+	::named( ' >', ' &gt;' )
 	  ;    # see html_convert_ampersands -- probably no effect
-	&::named( '< ', '&lt; ' );
+	::named( '< ', '&lt; ' );
 	if ( !$keep_latin1 ) { html_convert_latin1(); }
 	return;
 }
@@ -153,7 +153,7 @@ sub html_cleanup_markers {
 	my $thisblockstart = '1.0';
 	my $thisend        = q{};
 	my ( $ler, $lec );
-	&::working("Cleaning up\nblock Markers");
+	::working("Cleaning up\nblock Markers");
 	while ( $::blockstart =
 		   $textwindow->search( '-regexp', '--', '^\/[\*\$\#]', '1.0', 'end' ) )
 	{
@@ -180,9 +180,9 @@ sub html_convert_footnotes {
 	my ( $textwindow, $fnarray ) = @_;
 	my $thisblank = q{};
 	my $step      = 0;
-	&::working('Converting Footnotes');
-	&::footnotefixup();
-	&::getlz();
+	::working('Converting Footnotes');
+	::footnotefixup();
+	::getlz();
 	$textwindow->tagRemove( 'footnote',  '1.0', 'end' );
 	$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 	$textwindow->see('1.0');
@@ -296,7 +296,7 @@ sub html_convert_body {
 #open with para if blank line then two nonblank lines
 #open with para if blank line then three nonblank lines
 #
-	&::working('Converting Body');
+	::working('Converting Body');
 	my @contents = ("\n");
 	my $aname    = q{};
 	my $author;
@@ -855,7 +855,7 @@ sub html_convert_body {
 
 			# make an anchor for autogenerate TOC
 			$aname =~ s/<\/?[hscalup].*?>//g;
-			$aname = makeanchor( &::deaccent($selection) );
+			$aname = makeanchor( ::deaccent($selection) );
 			my $completeheader = $selection;
 
 			# insert chapter heading unless already a para or heading open
@@ -946,7 +946,7 @@ sub html_convert_body {
 sub html_convert_underscoresmallcaps {
 	my ($textwindow) = @_;
 	my $thisblockstart = '1.0';
-	&::working("Converting underscore and small caps markup");
+	::working("Converting underscore and small caps markup");
 	while ( $thisblockstart =
 			$textwindow->search( '-exact', '--', '<u>', '1.0', 'end' ) )
 	{
@@ -1003,7 +1003,7 @@ sub html_convert_underscoresmallcaps {
 
 sub html_convert_sidenotes {
 	my ($textwindow) = @_;
-	&::working("Converting\nSidenotes");
+	::working("Converting\nSidenotes");
 	my $thisnoteend;
 	my $length;
 	my $thisblockstart = '1.0';
@@ -1040,7 +1040,7 @@ sub html_convert_sidenotes {
 
 sub html_convert_pageanchors {
 	my $textwindow = $::textwindow;
-	&::working("Inserting Page Number Markup");
+	::working("Inserting Page Number Markup");
 	$|++;
 	my $markindex;
 	my @pagerefs;   # keep track of first/last page markers at the same position
@@ -1225,7 +1225,7 @@ sub html_parse_header {
 	my $step;
 	my $title;
 	my $author;
-	&::working('Parsing Header');
+	::working('Parsing Header');
 	$selection = $textwindow->get( '1.0', '1.end' );
 	if ( $selection =~ /DOCTYPE/ ) {
 		$step = 1;
@@ -1240,7 +1240,7 @@ sub html_parse_header {
 		$textwindow->ntdelete( '1.0', "$step.0 +1c" );
 	} else {
 		unless ( -e 'header.txt' ) {
-			&::copy( 'headerdefault.txt', 'header.txt' );
+			::copy( 'headerdefault.txt', 'header.txt' );
 		}
 		open my $infile, '<', 'header.txt'
 		  or warn "Could not open header file. $!\n";
@@ -1334,7 +1334,7 @@ sub html_parse_header {
 sub html_wrapup {
 	my ( $textwindow, $headertext, $leave_utf, $autofraction, $classhash ) = @_;
 	my $thisblockstart;
-	&::fracconv( $textwindow, '1.0', 'end' ) if $autofraction;
+	::fracconv( $textwindow, '1.0', 'end' ) if $autofraction;
 	$textwindow->ntinsert( '1.0', $headertext );
 	if ($leave_utf) {
 		$thisblockstart =
@@ -1359,7 +1359,7 @@ sub html_wrapup {
 		  if keys %{$classhash};
 	}
 	%{$classhash} = ();
-	&::working();
+	::working();
 	$textwindow->Unbusy;
 	$textwindow->see('1.0');
 	return;
@@ -1429,7 +1429,7 @@ sub htmlimage {
 	} else {
 		$::lglobal{htmlimpop} = $top->Toplevel;
 		$::lglobal{htmlimpop}->title('Image');
-		&::initialize_popup_without_deletebinding('htmlimpop');
+		::initialize_popup_without_deletebinding('htmlimpop');
 		my $f1 =
 		  $::lglobal{htmlimpop}->LabFrame( -label => 'File Name' )
 		  ->pack( -side => 'top', -anchor => 'n', -padx => 2 );
@@ -1536,8 +1536,8 @@ sub htmlimage {
 					my $width = $::lglobal{widthent}->get;
 					return unless $name;
 					( $fname, $::globalimagepath, $extension ) =
-					  &::fileparse($name);
-					$::globalimagepath = &::os_normal($::globalimagepath);
+					  ::fileparse($name);
+					$::globalimagepath = ::os_normal($::globalimagepath);
 					$name =~ s/[\/\\]/\;/g;
 					my $tempname = $::globallastpath;
 					$tempname =~ s/[\/\\]/\;/g;
@@ -1661,13 +1661,13 @@ sub htmlimages {
 	return unless $end;
 	$textwindow->tagAdd( 'highlight', $start, $end );
 	$textwindow->markSet( 'insert', $start );
-	&::update_indicators();
+	::update_indicators();
 	htmlimage( $textwindow, $top, $start, $end );
 }
 
 sub htmlautoconvert {
 	my ( $textwindow, $top ) = @_;
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my $headertext;
 	if ( $::lglobal{global_filename} =~ /No File Loaded/ ) {
 		$top->messageBox(
@@ -1683,10 +1683,10 @@ sub htmlautoconvert {
 	my $savefn = $::lglobal{global_filename};
 	$::lglobal{global_filename} =~ s/\.[^\.]*?$//;
 	my $newfn = $::lglobal{global_filename} . '-htmlbak.txt';
-	&::working("Saving backup of file\nto $newfn");
+	::working("Saving backup of file\nto $newfn");
 	$textwindow->SaveUTF($newfn);
 	$::lglobal{global_filename} = $newfn;
-	&::_bin_save( $textwindow, $top );
+	::_bin_save( $textwindow, $top );
 	$::lglobal{global_filename} = $savefn;
 	$textwindow->FileName($savefn);
 	html_convert_codepage();
@@ -1769,7 +1769,7 @@ sub thumbnailbrowse {
 sub htmlpopup {
 	my ( $textwindow, $top ) = @_;
 	push @::operations, ( localtime() . ' - HTML Markup' );
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	if ( defined( $::lglobal{markpop} ) ) {
 		$::lglobal{markpop}->deiconify;
 		$::lglobal{markpop}->raise;
@@ -1800,7 +1800,7 @@ sub htmlpopup {
 		$f0->Button(    #hkm added
 			-activebackground => $::activecolor,
 			-command          => sub {
-				&::runner( &::cmdinterp("$::extops[0]{command}") );
+				::runner( ::cmdinterp("$::extops[0]{command}") );
 			},
 			-text  => 'View in Browser',
 			-width => 16,
@@ -1975,10 +1975,10 @@ sub htmlpopup {
 								 'h6',  'p',   'span'
 				  )
 				{
-					&::working( 'Checking <' . $orphan . '>' );
+					::working( 'Checking <' . $orphan . '>' );
 					last if orphans($orphan);
 				}
-				&::working();
+				::working();
 			},
 			-text  => 'Find orphaned markup',
 			-width => 28
@@ -2127,7 +2127,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up( $textwindow, $top, 'Link Check' );
+					::errorcheckpop_up( $textwindow, $top, 'Link Check' );
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Link Check',
@@ -2136,7 +2136,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up( $textwindow, $top, 'HTML Tidy' );
+					::errorcheckpop_up( $textwindow, $top, 'HTML Tidy' );
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'HTML Tidy',
@@ -2146,10 +2146,10 @@ sub htmlpopup {
 				-activebackground => $::activecolor,
 				-command          => sub {
 					if ($::w3cremote) {
-						&::errorcheckpop_up( $textwindow, $top,
+						::errorcheckpop_up( $textwindow, $top,
 											 'W3C Validate Remote' );
 					} else {
-						&::errorcheckpop_up( $textwindow, $top,
+						::errorcheckpop_up( $textwindow, $top,
 											 'W3C Validate' );
 					}
 					unlink 'null' if ( -e 'null' );
@@ -2160,7 +2160,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up( $textwindow, $top,
+					::errorcheckpop_up( $textwindow, $top,
 									  'W3C Validate CSS' ); #validatecssrun('');
 					unlink 'null' if ( -e 'null' );
 				},
@@ -2170,7 +2170,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up( $textwindow, $top, 'pphtml' );
+					::errorcheckpop_up( $textwindow, $top, 'pphtml' );
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'pphtml',
@@ -2179,7 +2179,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up( $textwindow, $top, 'Image Check' );
+					::errorcheckpop_up( $textwindow, $top, 'Image Check' );
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Image Check',
@@ -2188,7 +2188,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up( $textwindow, $top, 'Epub Friendly' );
+					::errorcheckpop_up( $textwindow, $top, 'Epub Friendly' );
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Epub Friendly',
@@ -2197,7 +2197,7 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					&::errorcheckpop_up( $textwindow, $top, 'Check All' );
+					::errorcheckpop_up( $textwindow, $top, 'Check All' );
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'Check All',
@@ -2223,8 +2223,8 @@ sub markup {
 	my $mark       = shift;
 	my $mark1;
 	$mark1 = shift if @_;
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
-	&::savesettings();
+	::viewpagenums() if ( $::lglobal{seepagenums} );
+	::savesettings();
 	my @ranges = $textwindow->tagRanges('sel');
 
 	unless (@ranges) {
@@ -2500,7 +2500,7 @@ sub markup {
 					}
 				);
 				$::lglobal{linkpop}->Icon( -image => $::icon );
-				&::BindMouseWheel($linklistbox);
+				::BindMouseWheel($linklistbox);
 				$linklistbox->eventAdd( '<<trans>>' => '<Double-Button-1>' );
 				$linklistbox->bind(
 					'<<trans>>',
@@ -2515,7 +2515,7 @@ sub markup {
 						undef $::lglobal{linkpop};
 					}
 				);
-				my $tempvar   = lc( makeanchor( &::deaccent($selection) ) );
+				my $tempvar   = lc( makeanchor( ::deaccent($selection) ) );
 				my $flag      = 0;
 				my @entrarray = split( /_/, $tempvar );
 				$entrarray[1] = '@' unless $entrarray[1];
@@ -2565,7 +2565,7 @@ sub markup {
 			my $linkname;
 			$selection = $textwindow->get( $thisblockstart, $thisblockend )
 			  || '';
-			$linkname = makeanchor( &::deaccent($selection) );
+			$linkname = makeanchor( ::deaccent($selection) );
 			$done     = "<a id=\"" . $linkname . "\"></a>";
 			$textwindow->insert( $thisblockstart, $done );
 		} elsif ( $mark =~ /h\d/ ) {
@@ -2608,8 +2608,8 @@ sub markup {
 }
 
 sub hyperlinkpagenums {
-	&::searchpopup();
-	&::searchoptset(qw/0 x x 1/);
+	::searchpopup();
+	::searchoptset(qw/0 x x 1/);
 	$::lglobal{searchentry}->insert( 'end', "(?<!\\d)(\\d{1,3})" );
 	$::lglobal{replaceentry}->insert( 'end', "<a href=\"#Page_\$1\">\$1</a>" );
 }
@@ -2649,7 +2649,7 @@ sub makeanchor {
 
 sub autoindex {
 	my $textwindow = shift;
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my @ranges = $textwindow->tagRanges('sel');
 	unless (@ranges) {
 		push @ranges, $textwindow->index('insert');
@@ -2676,7 +2676,7 @@ sub autoindex {
 		while ( $step <= $ler ) {
 			my $selection = $textwindow->get( "$step.0", "$step.end" );
 			unless ($selection) { $step++; $blanks++; next }
-			$selection = &::addpagelinks($selection);
+			$selection = ::addpagelinks($selection);
 			if ( $first == 1 ) { $blanks = 2; $first = 0 }
 			if ( $blanks == 2 ) {
 				$selection = '<li class="ifrst">' . $selection . '</li>';
@@ -2705,7 +2705,7 @@ sub autoindex {
 
 sub autolist {
 	my $textwindow = shift;
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my @ranges = $textwindow->tagRanges('sel');
 	unless (@ranges) {
 		push @ranges, $textwindow->index('insert');
@@ -2769,7 +2769,7 @@ sub autolist {
 
 sub autotable {
 	my ( $textwindow, $format ) = @_;
-	&::viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my @cformat;
 	if ($format) {
 		@cformat = split( //, $format );
@@ -3275,16 +3275,16 @@ sub fromnamed {
 			my $start = pop @ranges;
 			$textwindow->markSet( 'srchend', $end );
 			my ( $thisblockstart, $length );
-			&::named( '&amp;',   '&',  $start, 'srchend' );
-			&::named( '&quot;',  '"',  $start, 'srchend' );
-			&::named( '&mdash;', '--', $start, 'srchend' );
-			&::named( ' &gt;',   ' >', $start, 'srchend' );
-			&::named( '&lt; ',   '< ', $start, 'srchend' );
+			::named( '&amp;',   '&',  $start, 'srchend' );
+			::named( '&quot;',  '"',  $start, 'srchend' );
+			::named( '&mdash;', '--', $start, 'srchend' );
+			::named( ' &gt;',   ' >', $start, 'srchend' );
+			::named( '&lt; ',   '< ', $start, 'srchend' );
 			my $from;
 
 			for ( 160 .. 255 ) {
 				$from = lc sprintf( "%x", $_ );
-				&::named( &::entity( '\x' . $from ),
+				::named( ::entity( '\x' . $from ),
 						  chr($_), $start, 'srchend' );
 			}
 			while (
@@ -3321,22 +3321,22 @@ sub tonamed {
 			my $start = pop @ranges;
 			$textwindow->markSet( 'srchend', $end );
 			my $thisblockstart;
-			&::named( '&(?![\w#])',           '&amp;',   $start, 'srchend' );
-			&::named( '&$',                   '&amp;',   $start, 'srchend' );
-			&::named( '"',                    '&quot;',  $start, 'srchend' );
-			&::named( '(?<=[^-!])--(?=[^>])', '&mdash;', $start, 'srchend' );
-			&::named( '(?<=[^-])--$',         '&mdash;', $start, 'srchend' );
-			&::named( '^--(?=[^-])',          '&mdash;', $start, 'srchend' );
-			&::named( '& ',                   '&amp; ',  $start, 'srchend' );
-			&::named( '&c\.',                 '&amp;c.', $start, 'srchend' );
-			&::named( ' >',                   ' &gt;',   $start, 'srchend' );
-			&::named( '< ',                   '&lt; ',   $start, 'srchend' );
+			::named( '&(?![\w#])',           '&amp;',   $start, 'srchend' );
+			::named( '&$',                   '&amp;',   $start, 'srchend' );
+			::named( '"',                    '&quot;',  $start, 'srchend' );
+			::named( '(?<=[^-!])--(?=[^>])', '&mdash;', $start, 'srchend' );
+			::named( '(?<=[^-])--$',         '&mdash;', $start, 'srchend' );
+			::named( '^--(?=[^-])',          '&mdash;', $start, 'srchend' );
+			::named( '& ',                   '&amp; ',  $start, 'srchend' );
+			::named( '&c\.',                 '&amp;c.', $start, 'srchend' );
+			::named( ' >',                   ' &gt;',   $start, 'srchend' );
+			::named( '< ',                   '&lt; ',   $start, 'srchend' );
 			my $from;
 
 			for ( 128 .. 255 ) {
 				$from = lc sprintf( "%x", $_ );
-				&::named( '\x' . $from,
-						  &::entity( '\x' . $from ),
+				::named( '\x' . $from,
+						  ::entity( '\x' . $from ),
 						  $start, 'srchend' );
 			}
 			while (
