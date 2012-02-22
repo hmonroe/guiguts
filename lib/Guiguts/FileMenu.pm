@@ -726,9 +726,7 @@ sub openfile {    # and open it
 	$name                       = ::os_normal($name);
 	$::lglobal{global_filename} = $name;
 	
-	
 	my $binname = getbinname();
-	print "$binname\n";
 
 	unless ( -e $binname ) {    #for backward compatibility
 		$binname = $::lglobal{global_filename};
@@ -900,29 +898,54 @@ sub file_export_markup {
 	$name = $textwindow->getSaveFile( -title      => 'Export As',
 									  -initialdir => $::globallastpath );
 	if ( defined($name) and length($name) ) {
+		# read the bin file excluding pagenumbers into bin contents
+		my $bincontents ='';
+		open my $fh, '<', getbinname() or die "Could not read $name";
+			my $inpagenumbers = 0;
+			my $pastpagenumbers = 0;
+		while ( my $line = <$fh> ) {
+			if ($pastpagenumbers) {
+				$bincontents .= $line;
+			}
+			if ($line =~ 'pagenumbers') {
+				$inpagenumbers = 1;
+			}
+			if ($line =~ ';') {
+				$inpagenumbers = 0;
+				$pastpagenumbers = 1;
+				next;
+			}
+			if ($inpagenumbers) {
+				next;
+			}	
+			$bincontents .= $line;
+		}
+		close $fh;
+		# write the file with page markup
+		open my $fh2, '>', "$name" or die "Could not read $name";
 		my $unicode =
 		  $textwindow->search( '-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0',
 						   'end' );
 		my $filecontents = $textwindow->get( '1.0', 'end -1c' );
-		open my $fh, '>', "$name";
+
 		if ($unicode) {
 
 			#$file = "\x{FEFF}" . $file;    # Add the BOM to beginning of file.
 			utf8::encode($filecontents);
 		}
-		print $fh $filecontents;
-		close $fh;
-		
+		print $fh2 $filecontents;
+		# write the bin contents without page numbers
+		print $fh2 "\n";
+		print $fh2 "##### Do not edit below ####\n";
+		print $fh2 $bincontents;
+		close $fh2;
 	}
 	#$textwindow->undo;
-
-	# save
-	# reload the orig	inal file
+	# OR reload the original file
 }
 
 sub getbinname {
 	my $binname = "$::lglobal{global_filename}.bin";
-
 	unless ( -e $binname ) {    #for backward compatibility
 		$binname = $::lglobal{global_filename};
 		$binname =~ s/\.[^\.]*$/\.bin/;
