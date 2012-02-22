@@ -377,7 +377,7 @@ sub savefile {    # Determine which save routine to use and then use it
 		}
 		$textwindow->SaveUTF;
 	}
-	$textwindow->ResetUndo;
+	#$textwindow->ResetUndo; #serves no purpose to reset undo
 	::_bin_save( $textwindow, $top );
 	::set_autosave() if $::autosave;
 	::update_indicators();
@@ -725,7 +725,10 @@ sub openfile {    # and open it
 	$::globallastpath           = ::os_normal($::globallastpath);
 	$name                       = ::os_normal($name);
 	$::lglobal{global_filename} = $name;
-	my $binname = "$::lglobal{global_filename}.bin";
+	
+	
+	my $binname = getbinname();
+	print "$binname\n";
 
 	unless ( -e $binname ) {    #for backward compatibility
 		$binname = $::lglobal{global_filename};
@@ -887,19 +890,45 @@ EOM
 }
 
 sub file_export_markup {
-	my $textwindow = shift;
+	my $textwindow = $::textwindow;
 	my ($name);
-	$name = $textwindow->getSaveFile( -title      => 'Save As',
-									  -initialdir => $::globallastpath );
-	::savefile() if ( $textwindow->numberChanges );
+	#::savefile() if ( $textwindow->numberChanges );
 
-	# save it to the exported name
 	$::lglobal{exportwithmarkup} = 1;
 	::html_convert_pageanchors();
 	$::lglobal{exportwithmarkup} = 0;
+	$name = $textwindow->getSaveFile( -title      => 'Export As',
+									  -initialdir => $::globallastpath );
+	if ( defined($name) and length($name) ) {
+		my $unicode =
+		  $textwindow->search( '-regexp', '--', '[\x{100}-\x{FFFE}]', '1.0',
+						   'end' );
+		my $filecontents = $textwindow->get( '1.0', 'end -1c' );
+		open my $fh, '>', "$name";
+		if ($unicode) {
 
-	# Add bin file to end
+			#$file = "\x{FEFF}" . $file;    # Add the BOM to beginning of file.
+			utf8::encode($filecontents);
+		}
+		print $fh $filecontents;
+		close $fh;
+		
+	}
+	#$textwindow->undo;
+
 	# save
-	# reload the original file
+	# reload the orig	inal file
 }
+
+sub getbinname {
+	my $binname = "$::lglobal{global_filename}.bin";
+
+	unless ( -e $binname ) {    #for backward compatibility
+		$binname = $::lglobal{global_filename};
+		$binname =~ s/\.[^\.]*$/\.bin/;
+		if ( $binname eq $::lglobal{global_filename} ) { $binname .= '.bin' }
+	}
+	return $binname;
+}
+
 1;

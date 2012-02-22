@@ -530,7 +530,7 @@ sub menubuildold {
 			],
 			[ 'separator', '' ],
 			[
-			   Cascade    => 'Export',
+			   Cascade    => '~Export',
 			   -tearoff   => 0,
 			   -menuitems => [
 							   [
@@ -1231,7 +1231,7 @@ sub menubuild {
 			   -command => sub { ::file_include($textwindow) }
 			],
 			[
-			   Cascade    => 'Export',
+			   Cascade    => '~Export',
 			   -tearoff   => 0,
 			   -menuitems => [
 							   [
@@ -2053,12 +2053,7 @@ sub menubuildtwo {
 			   -command => sub { ::file_include($textwindow) }
 			],
 			[
-			   Cascade    => 'Export',
-			   -tearoff   => 0,
-			   -menuitems => []
-			],
-			[
-			   Cascade    => 'Export',
+			   Cascade    => '~Export',
 			   -tearoff   => 0,
 			   -menuitems => [
 							   [

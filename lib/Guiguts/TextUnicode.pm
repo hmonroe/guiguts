@@ -104,7 +104,7 @@ sub SaveUTF {
 		unlink $filename;
 	}
 	if ( rename( $tempfilename, $filename ) ) {
-		$w->ResetUndo;
+		#$w->ResetUndo; #serves no purpose to reset undo
 		$w->FileName($filename);
 		return 1;
 	} else {
