@@ -86,28 +86,20 @@ sub file_saveas {
 			my $answer = $warning->Show;
 			return unless ( $answer eq 'Continue' );
 		}
-		savenewfile($name);
+		$textwindow->SaveUTF($name);
+		my ( $fname, $extension, $filevar );
+		( $fname, $::globallastpath, $extension ) = ::fileparse($name);
+		$::globallastpath = ::os_normal($::globallastpath);
+		$name             = ::os_normal($name);
+		$textwindow->FileName($name);
+		$::lglobal{global_filename} = $name;
+		_bin_save( $textwindow, $::top );
+		::_recentupdate($name);
 	} else {
 		return;
 	}
 	::update_indicators();
 	return;
-}
-
-# Save this file with filename $name. Factored from file_saveas
-sub savenewfile {
-	my $name = shift;
-	my $top        = $::top;
-	my $textwindow = $::textwindow;
-	$textwindow->SaveUTF($name);
-	my ( $fname, $extension, $filevar );
-	( $fname, $::globallastpath, $extension ) = ::fileparse($name);
-	$::globallastpath = ::os_normal($::globallastpath);
-	$name             = ::os_normal($name);
-	$textwindow->FileName($name);
-	$::lglobal{global_filename} = $name;
-	_bin_save( $textwindow, $::top );
-	::_recentupdate($name);
 }
 
 sub file_close {
