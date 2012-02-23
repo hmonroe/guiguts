@@ -305,7 +305,12 @@ unless ( -e 'header.txt' ) {
 
 sub dofile {
 	my $filename = shift;
-	do $filename;
+	return do $filename;
+}
+
+sub evalstring {
+	my $string = shift;
+	return eval($string);
 }
 
 if ( $lglobal{runtests} ) {
