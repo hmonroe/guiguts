@@ -546,9 +546,20 @@ sub menubuildold {
 			   ]
 			],
 			[
+			   Cascade    => 'Im~port',
+			   -tearoff   => 0,
+			   -menuitems => [
+			[
 			   'command',
 			   'Import Prep Text Files',
 			   -command => sub { ::file_import( $textwindow, $top ) }
+			],
+							   [
+								  'command',
+								  'Import with Markup',
+								  -command => sub { ::file_import_markup(); }
+							   ],
+			   ]
 			],
 			[ 'separator', '' ],
 			[
@@ -1247,11 +1258,20 @@ sub menubuild {
 			   ]
 			],
 			[
+			   Cascade    => 'Im~port',
+			   -tearoff   => 0,
+			   -menuitems => [
+			[
 			   'command',
 			   'Import Prep Text Files',
-			   -command => sub {
-				   ::file_import( $textwindow, $top );
-				 }
+			   -command => sub { ::file_import( $textwindow, $top ) }
+			],
+							   [
+								  'command',
+								  'Import with Markup',
+								  -command => sub { ::file_import_markup(); }
+							   ],
+			   ]
 			],
 			[ 'separator', '' ],
 			[
@@ -2069,11 +2089,20 @@ sub menubuildtwo {
 			   ]
 			],
 			[
+			   Cascade    => 'Im~port',
+			   -tearoff   => 0,
+			   -menuitems => [
+			[
 			   'command',
 			   'Import Prep Text Files',
-			   -command => sub {
-				   ::file_import( $textwindow, $top );
-				 }
+			   -command => sub { ::file_import( $textwindow, $top ) }
+			],
+							   [
+								  'command',
+								  'Import with Markup',
+								  -command => sub { ::file_import_markup(); }
+							   ],
+			   ]
 			],
 			[ 'separator', '' ],
 

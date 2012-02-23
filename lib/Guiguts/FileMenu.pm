@@ -9,7 +9,8 @@ BEGIN {
 	@EXPORT =
 	  qw(&file_open &file_saveas &file_include &file_export_preptext &file_import &_bin_save &file_close
 	  &_flash_save &clearvars &savefile &_exit &file_mark_pages &_recentupdate &file_guess_page_marks
-	  &oppopupdate &opspop_up &confirmempty &openfile &readsettings &savesettings &file_export_markup);
+	  &oppopupdate &opspop_up &confirmempty &openfile &readsettings &savesettings &file_export_markup
+	  &file_import_markup);
 }
 
 sub file_open {    # Find a text file to open
@@ -734,31 +735,8 @@ sub openfile {    # and open it
 		if ( $binname eq $::lglobal{global_filename} ) { $binname .= '.bin' }
 	}
 	if ( -e $binname ) {
-		my $markindex;
 		::dofile($binname);     #do $binname;
-		foreach my $mark ( keys %::pagenumbers ) {
-			$markindex = $::pagenumbers{$mark}{offset};
-			if ( $markindex eq '' ) {
-				delete $::pagenumbers{$mark};
-				next;
-			}
-			$textwindow->markSet( $mark, $markindex );
-			$textwindow->markGravity( $mark, 'left' );
-		}
-		for ( 1 .. 5 ) {
-			if ( $::bookmarks[$_] ) {
-				$textwindow->markSet( 'insert', $::bookmarks[$_] );
-				$textwindow->markSet( "bkmk$_", $::bookmarks[$_] );
-				::setbookmark($_);
-			}
-		}
-		$::bookmarks[0] ||= '1.0';
-		$textwindow->markSet( 'insert',    $::bookmarks[0] );
-		$textwindow->markSet( 'spellbkmk', $::spellindexbkmrk )
-		  if $::spellindexbkmrk;
-		$textwindow->see( $::bookmarks[0] );
-		$textwindow->focus;
-	}
+		interpretbinfile ();	}
 	::getprojectid() unless $::projectid;
 	_recentupdate($name);
 	::update_indicators();
@@ -887,6 +865,15 @@ EOM
 	}
 }
 
+sub getbinname {
+	my $binname = "$::lglobal{global_filename}.bin";
+	unless ( -e $binname ) {    #for backward compatibility
+		$binname = $::lglobal{global_filename};
+		$binname =~ s/\.[^\.]*$/\.bin/;
+		if ( $binname eq $::lglobal{global_filename} ) { $binname .= '.bin' }
+	}
+	return $binname;
+}
 sub file_export_markup {
 	my $textwindow = $::textwindow;
 	my ($name);
@@ -898,7 +885,7 @@ sub file_export_markup {
 	$name = $textwindow->getSaveFile( -title      => 'Export As',
 									  -initialdir => $::globallastpath );
 	if ( defined($name) and length($name) ) {
-
+		$name .= '.gut';
 		my $bincontents = '';
 		open my $fh, '<', getbinname() or die "Could not read $name";
 		my $inpagenumbers   = 0;
@@ -920,11 +907,12 @@ sub file_export_markup {
 		if ($unicode) {
 			utf8::encode($filecontents);
 		}
+		print $fh2 "##### Do not edit this line. File exported from guiguts #####\n";
 		print $fh2 $filecontents;
 
 		# write the bin contents
 		print $fh2 "\n";
-		print $fh2 "##### Do not edit below. ####\n";
+		print $fh2 "##### Do not edit below. #####\n";
 		print $fh2 $bincontents;
 		close $fh2;
 	}
@@ -933,13 +921,68 @@ sub file_export_markup {
 	# OR reload the original file
 }
 
-sub getbinname {
-	my $binname = "$::lglobal{global_filename}.bin";
-	unless ( -e $binname ) {    #for backward compatibility
-		$binname = $::lglobal{global_filename};
-		$binname =~ s/\.[^\.]*$/\.bin/;
-		if ( $binname eq $::lglobal{global_filename} ) { $binname .= '.bin' }
+sub file_import_markup {
+	my $textwindow = $::textwindow;
+	return if ( ::confirmempty() =~ /cancel/i );
+	my ($name);
+	my $types = [
+				  [
+					'.gut Files',
+					[qw/.gut/]
+				  ],
+				  [ 'All Files', ['*'] ],
+	];
+	$name = $textwindow->getOpenFile(
+									  -filetypes  => $types,
+									  -title      => 'Open File',
+									  -initialdir => $::globallastpath
+	);
+	if ( defined($name) and length($name) ) {
+		::openfile($name);
 	}
-	return $binname;
+	$::lglobal{global_filename} = 'No File Loaded';
+	$textwindow->FileName($::lglobal{global_filename});
+	my $firstline = $textwindow->get('1.0','1.end');
+	if ($firstline =~ '##### Do not edit this line.') {
+		$textwindow->delete('1.0','2.0');
+	}
+	my $binstart = $textwindow->search( '-exact', '--', '###### Do not edit below.', '1.0', 'end' );
+	my ( $row, $col ) = split( /\./, $binstart );
+	$textwindow->delete("$row.0","$row.end");
+	my $binfile = $textwindow->get("$row.0","end");
+	$textwindow->delete("$row.0","end");
+	::evalstring($binfile);
+	interpretbinfile ();
 }
+
 1;
+
+sub interpretbinfile {
+	my $textwindow = $::textwindow;
+	my $markindex;
+	foreach my $mark ( keys %::pagenumbers ) {
+		$markindex = $::pagenumbers{$mark}{offset};
+		if (
+			$markindex eq '' ) {
+				delete $::pagenumbers{$mark};
+				next;
+			}
+			$textwindow->markSet( $mark, $markindex );
+			$textwindow->markGravity( $mark, 'left' );
+		}
+		for ( 1 .. 5 ) {
+			if ( $::bookmarks[$_] ) {
+				$textwindow->markSet( 'insert', $::bookmarks[$_] );
+				$textwindow->markSet( bkmk$_, $::bookmarks[$_] );
+				::setbookmark($_);
+			}
+		}
+		$::bookmarks[0] ||= '1.0';
+		$textwindow->markSet( 'insert',    $::bookmarks[0] );
+		$textwindow->markSet( 'spellbkmk', $::spellindexbkmrk )
+		  if $::spellindexbkmrk;
+		$textwindow->see( $::bookmarks[0] );
+		$textwindow->focus;
+
+    return ();
+}
