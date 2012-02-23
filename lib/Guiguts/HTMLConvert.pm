@@ -72,11 +72,10 @@ sub html_convert_ampersands {
 	::named( '&c\.',       '&amp;c.' );
 	::named( '&c,',        '&amp;c.,' );
 	::named( '&c ',        '&amp;c. ' );
-	$textwindow->FindAndReplaceAll( '-regexp',                 '-nocase',
-									"(?<![a-zA-Z0-9/\\-\"])>", "&gt;" );
 	$textwindow->FindAndReplaceAll( '-regexp', '-nocase',
-									"(?![\\n0-9])<(?![a-zA-Z0-9/\\-\\n])",
-									'&lt;' );
+		"(?<![a-zA-Z0-9/\\-\"])>", "&gt;" );
+	$textwindow->FindAndReplaceAll( '-regexp', '-nocase',
+		"(?![\\n0-9])<(?![a-zA-Z0-9/\\-\\n])", '&lt;' );
 	return;
 }
 
@@ -113,11 +112,8 @@ sub html_convert_utf {
 	my $blockstart;
 	if ($leave_utf) {
 		$blockstart =
-		  $textwindow->search(
-							   '-exact',             '--',
-							   'charset=iso-8859-1', '1.0',
-							   'end'
-		  );
+		  $textwindow->search( '-exact', '--', 'charset=iso-8859-1', '1.0',
+			'end' );
 		if ($blockstart) {
 			$textwindow->ntdelete( $blockstart, "$blockstart+18c" );
 			$textwindow->ntinsert( $blockstart, 'charset=UTF-8' );
@@ -126,12 +122,9 @@ sub html_convert_utf {
 	unless ($leave_utf) {
 		::working("Converting UTF-8...");
 		while (
-				$blockstart =
-				$textwindow->search(
-									 '-regexp',             '--',
-									 '[\x{100}-\x{65535}]', '1.0',
-									 'end'
-				)
+			$blockstart = $textwindow->search(
+				'-regexp', '--', '[\x{100}-\x{65535}]', '1.0', 'end'
+			)
 		  )
 		{
 			my $xchar = ord( $textwindow->get($blockstart) );
@@ -155,21 +148,21 @@ sub html_cleanup_markers {
 	my ( $ler, $lec );
 	::working("Cleaning up\nblock Markers");
 	while ( $::blockstart =
-		   $textwindow->search( '-regexp', '--', '^\/[\*\$\#]', '1.0', 'end' ) )
+		$textwindow->search( '-regexp', '--', '^\/[\*\$\#]', '1.0', 'end' ) )
 	{
 		( $::xler, $::xlec ) = split /\./, $::blockstart;
 		$::blockend = "$::xler.end";
 		$textwindow->ntdelete( "$::blockstart-1c", $::blockend );
 	}
 	while ( $::blockstart =
-		   $textwindow->search( '-regexp', '--', '^[\*\$\#]\/', '1.0', 'end' ) )
+		$textwindow->search( '-regexp', '--', '^[\*\$\#]\/', '1.0', 'end' ) )
 	{
 		( $::xler, $::xlec ) = split /\./, $::blockstart;
 		$::blockend = "$::xler.end";
 		$textwindow->ntdelete( "$::blockstart-1c", $::blockend );
 	}
 	while ( $::blockstart =
-		 $textwindow->search( '-regexp', '--', '<\/h\d><br />', '1.0', 'end' ) )
+		$textwindow->search( '-regexp', '--', '<\/h\d><br />', '1.0', 'end' ) )
 	{
 		$textwindow->ntdelete( "$::blockstart+5c", "$::blockstart+9c" );
 	}
@@ -196,57 +189,54 @@ sub html_convert_footnotes {
 		$textwindow->ntdelete( 'fne' . "$step" . '-1c', 'fne' . "$step" );
 		$textwindow->ntinsert( 'fne' . "$step", '</p></div>' );
 		$textwindow->ntinsert(
-							   (
-								      'fns' . "$step" . '+'
-									. ( length( $fnarray->[$step][4] ) + 11 )
-									. "c"
-							   ),
-							   ']</span></a>'
+			(
+				'fns' . "$step" . '+'
+				  . ( length( $fnarray->[$step][4] ) + 11 ) . "c"
+			),
+			']</span></a>'
 		);
 		$textwindow->ntdelete(
-							   'fns' . "$step" . '+'
-								 . ( length( $fnarray->[$step][4] ) + 10 )
-								 . 'c',
-							   "fns" . "$step" . '+'
-								 . ( length( $fnarray->[$step][4] ) + 11 ) . 'c'
+			'fns' . "$step" . '+'
+			  . ( length( $fnarray->[$step][4] ) + 10 ) . 'c',
+			"fns" . "$step" . '+'
+			  . ( length( $fnarray->[$step][4] ) + 11 ) . 'c'
 		);
 		$textwindow->ntinsert(
-							   'fns' . "$step" . '+10c',
-							   "<div class=\"footnote\"><p><a name=\"Footnote_"
-								 . $fnarray->[$step][4] . '_'
-								 . $step
-								 . "\" id=\"Footnote_"
-								 . $fnarray->[$step][4] . '_'
-								 . $step
-								 . "\"></a><a href=\"#FNanchor_"
-								 . $fnarray->[$step][4] . '_'
-								 . $step
-								 . "\"><span class=\"label\">["
+			'fns' . "$step" . '+10c',
+			"<div class=\"footnote\"><p><a name=\"Footnote_"
+			  . $fnarray->[$step][4] . '_'
+			  . $step
+			  . "\" id=\"Footnote_"
+			  . $fnarray->[$step][4] . '_'
+			  . $step
+			  . "\"></a><a href=\"#FNanchor_"
+			  . $fnarray->[$step][4] . '_'
+			  . $step
+			  . "\"><span class=\"label\">["
 		);
 		$textwindow->ntdelete( 'fns' . "$step", 'fns' . "$step" . '+10c' );
 		$textwindow->ntinsert( 'fnb' . "$step", '</a>' )
 		  if ( $fnarray->[$step][3] );
 		$textwindow->ntinsert(
-							   'fna' . "$step",
-							   "<a name=\"FNanchor_"
-								 . $fnarray->[$step][4] . '_'
-								 . $step
-								 . "\" id=\"FNanchor_"
-								 . $fnarray->[$step][4] . '_'
-								 . $step
-								 . "\"></a><a href=\"#Footnote_"
-								 . $fnarray->[$step][4] . '_'
-								 . $step
-								 . "\" class=\"fnanchor\">"
+			'fna' . "$step",
+			"<a name=\"FNanchor_"
+			  . $fnarray->[$step][4] . '_'
+			  . $step
+			  . "\" id=\"FNanchor_"
+			  . $fnarray->[$step][4] . '_'
+			  . $step
+			  . "\"></a><a href=\"#Footnote_"
+			  . $fnarray->[$step][4] . '_'
+			  . $step
+			  . "\" class=\"fnanchor\">"
 		) if ( $fnarray->[$step][3] );
 
 		while (
-				$thisblank =
-				$textwindow->search(
-									 '-regexp', '--',
-									 '^$',      'fns' . "$step",
-									 "fne" . "$step"
-				)
+			$thisblank = $textwindow->search(
+				'-regexp', '--', '^$',
+				'fns' . "$step",
+				"fne" . "$step"
+			)
 		  )
 		{
 			$textwindow->ntinsert( $thisblank, "</p>\n<p>" );
@@ -348,9 +338,9 @@ sub html_convert_body {
 
 		#flag--in table of contents
 		$incontents = "$step.end"
-		  if (    ( $step < 100 )
-			   && ( $selection =~ /contents/i )
-			   && ( $incontents eq '1.0' ) );
+		  if ( ( $step < 100 )
+			&& ( $selection =~ /contents/i )
+			&& ( $incontents eq '1.0' ) );
 		html_convert_subscripts( $textwindow, $selection, $step );
 		html_convert_superscripts( $textwindow, $selection, $step );
 		html_convert_tb( $textwindow, $selection, $step );
@@ -367,13 +357,13 @@ sub html_convert_body {
 
 			# added this--was not getting close para before <pre>
 			insert_paragraph_close( $textwindow, ( $step - 1 ) . '.end' )
-			  if (    ( $last5[3] )
-				   && ( $last5[3] !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ ) );
+			  if ( ( $last5[3] )
+				&& ( $last5[3] !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ ) );
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
 				insert_paragraph_close( $textwindow, ( $step - 2 ) . ".end" )
 				  unless (
-						   $textwindow->get( ( $step - 2 ) . '.0',
-											 ( $step - 2 ) . '.end' ) =~ /<\/p>/
+					$textwindow->get( ( $step - 2 ) . '.0',
+						( $step - 2 ) . '.end' ) =~ /<\/p>/
 				  );
 			}
 			$step++;
@@ -403,8 +393,8 @@ sub html_convert_body {
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
 				insert_paragraph_close( $textwindow, ( $step - 2 ) . ".end" )
 				  unless (
-						   $textwindow->get( ( $step - 2 ) . '.0',
-											 ( $step - 2 ) . '.end' ) =~ /<\/p>/
+					$textwindow->get( ( $step - 2 ) . '.0',
+						( $step - 2 ) . '.end' ) =~ /<\/p>/
 				  );
 			}
 			next;
@@ -450,13 +440,13 @@ sub html_convert_body {
 # <p class="center"> if selection does not have /h, /d, <br>, </p>, or </div> (or last line closed markup)
 #   print "int:$intitle:las:$last5[3]:sel:$selection\n";
 			if (
-				 (
-				   length($selection) 
-				   && (    ( !$last5[3] )
+				(
+					length($selection) 
+					&& (   ( !$last5[3] )
 						or ( $last5[3] =~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ ) )
-				   && ( $selection !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ )
-				   && ( not $intitle )
-				 )
+					&& ( $selection !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ )
+					&& ( not $intitle )
+				)
 			  )
 			{
 				$textwindow->ntinsert( "$step.0", '<p class="center">' );
@@ -464,9 +454,9 @@ sub html_convert_body {
 
 # close para end of the last line before if the previous line does not already close
 			insert_paragraph_close( $textwindow, ( $step - 1 ) . '.end' )
-			  if (   !( length($selection) )
-				   && ( $last5[3] )
-				   && ( $last5[3] !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ ) );
+			  if (!( length($selection) )
+				&& ( $last5[3] )
+				&& ( $last5[3] !~ /<\/?h\d?|<br.*?>|<\/p>|<\/div>/ ) );
 			push @last5, $selection;
 			shift @last5 while ( scalar(@last5) > 4 );
 			$step++;
@@ -499,7 +489,7 @@ sub html_convert_body {
 			# end of stanza
 			if ( $selection =~ /^$/ ) {
 				$textwindow->ntinsert( "$step.0",
-									   '</div><div class="stanza">' );
+					'</div><div class="stanza">' );
 				while (1) {
 					$step++;
 					$selection = $textwindow->get( "$step.0", "$step.end" );
@@ -512,7 +502,7 @@ sub html_convert_body {
 
 			# if line ends spaces plus digits insert line number
 			if ( $selection =~
-				 s/\s{2,}(\d+)\s*$/<span class="linenum">$1<\/span>/ )
+				s/\s{2,}(\d+)\s*$/<span class="linenum">$1<\/span>/ )
 			{
 				$textwindow->ntdelete( "$step.0", "$step.end" );
 				$textwindow->ntinsert( "$step.0", $selection );
@@ -580,8 +570,8 @@ sub html_convert_body {
 				# close para
 				insert_paragraph_close( $textwindow, ( $step - 2 ) . ".end" )
 				  unless (
-						   $textwindow->get( ( $step - 2 ) . '.0',
-											 ( $step - 2 ) . '.end' ) =~ /<\/p>/
+					$textwindow->get( ( $step - 2 ) . '.0',
+						( $step - 2 ) . '.end' ) =~ /<\/p>/
 				  );
 			}
 			$textwindow->ntdelete( $step . '.end -2c', $step . '.end' );
@@ -608,18 +598,18 @@ sub html_convert_body {
 			if ( ( $last5[1] ) && ( !$last5[2] ) ) {
 				insert_paragraph_close( $textwindow, ( $step - 3 ) . ".end" )
 				  unless (
-						   $textwindow->get( ( $step - 3 ) . '.0',
-											 ( $step - 2 ) . '.end' ) =~
-						   /<\/?h\d?|<br.*?>|<\/p>|<\/div>/
+					$textwindow->get( ( $step - 3 ) . '.0',
+						( $step - 2 ) . '.end' ) =~
+					/<\/?h\d?|<br.*?>|<\/p>|<\/div>/
 				  );
 			}
 
 			# close para
 			$textwindow->ntinsert( ($step) . ".end", '</p>' )
 			  unless (
-					   length $textwindow->get(
-									( $step + 1 ) . '.0', ( $step + 1 ) . '.end'
-					   )
+				length $textwindow->get(
+					( $step + 1 ) . '.0', ( $step + 1 ) . '.end'
+				)
 			  );
 			push @last5, $selection;
 			shift @last5 while ( scalar(@last5) > 4 );
@@ -633,8 +623,8 @@ sub html_convert_body {
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
 				insert_paragraph_close( $textwindow, ( $step - 2 ) . ".end" )
 				  unless (
-						   $textwindow->get( ( $step - 2 ) . '.0',
-											 ( $step - 2 ) . '.end' ) =~ /<\/p>/
+					$textwindow->get( ( $step - 2 ) . '.0',
+						( $step - 2 ) . '.end' ) =~ /<\/p>/
 				  );
 			}
 			$textwindow->ntdelete( "$step.0", "$step.end" );
@@ -731,11 +721,11 @@ sub html_convert_body {
 			if ( ( $last5[2] ) && ( !$last5[3] ) ) {
 				insert_paragraph_close( $textwindow, ( $step - 2 ) . '.end' )
 				  unless (
-						   (
-							 $textwindow->get( ( $step - 2 ) . '.0',
-											   ( $step - 2 ) . '.end' ) =~
-							 /<\/?[hd]\d?|<br.*?>|<\/p>/
-						   )
+					(
+						$textwindow->get( ( $step - 2 ) . '.0',
+							( $step - 2 ) . '.end' ) =~
+						/<\/?[hd]\d?|<br.*?>|<\/p>/
+					)
 				  );
 			}
 
@@ -750,12 +740,12 @@ sub html_convert_body {
 		if ( ( $last5[2] ) && ( !$last5[3] ) && ( not $intitle ) ) {
 			insert_paragraph_close( $textwindow, ( $step - 2 ) . '.end' )
 			  unless (
-					   (
-						 $textwindow->get( ( $step - 2 ) . '.0',
-										   ( $step - 2 ) . '.end' ) =~
-						 /<\/?[hd]\d?|<br.*?>|<\/p>|<\/[uo]l>/
-					   )
-					   || ($inblock)
+				(
+					$textwindow->get( ( $step - 2 ) . '.0',
+						( $step - 2 ) . '.end' ) =~
+					/<\/?[hd]\d?|<br.*?>|<\/p>|<\/[uo]l>/
+				)
+				|| ($inblock)
 			  );
 		}
 
@@ -765,7 +755,7 @@ sub html_convert_body {
 				if ( $last5[3] =~ /^\S/ ) {
 					$last5[3] .= '<br />';
 					$textwindow->ntdelete( ( $step - 1 ) . '.0',
-										   ( $step - 1 ) . '.end' );
+						( $step - 1 ) . '.end' );
 					$textwindow->ntinsert( ( $step - 1 ) . '.0', $last5[3] );
 				}
 			}
@@ -814,8 +804,8 @@ sub html_convert_body {
 			if ( ( $last5[2] ) && ( !$last5[3] ) && ( $selection =~ /\/\*/ ) ) {
 				insert_paragraph_close( $textwindow, ( $step - 2 ) . ".end" )
 				  unless (
-						   $textwindow->get( ( $step - 2 ) . '.0',
-										( $step - 2 ) . '.end' ) =~ /<\/[hd]\d?/
+					$textwindow->get( ( $step - 2 ) . '.0',
+						( $step - 2 ) . '.end' ) =~ /<\/[hd]\d?/
 				  );
 			}
 			push @last5, $selection;
@@ -826,11 +816,11 @@ sub html_convert_body {
 
 		# four blank lines--start of chapter
 		no warnings qw/uninitialized/;
-		if (    ( !$last5[0] )
-			 && ( !$last5[1] )
-			 && ( !$last5[2] )
-			 && ( !$last5[3] )
-			 && ($selection) )
+		if (   ( !$last5[0] )
+			&& ( !$last5[1] )
+			&& ( !$last5[2] )
+			&& ( !$last5[3] )
+			&& ($selection) )
 		{
 
 			#Find the previous page marker
@@ -861,7 +851,7 @@ sub html_convert_body {
 			# insert chapter heading unless already a para or heading open
 			if ( not $selection =~ /<[ph]/ ) {
 				$textwindow->ntinsert( "$step.0",
-					  "<h2><a name=\"" . $aname . "\" id=\"" . $aname . "\">" );
+					"<h2><a name=\"" . $aname . "\" id=\"" . $aname . "\">" );
 				$step++;
 				$selection = $textwindow->get( "$step.0", "$step.end" );
 				my $restofheader = $selection;
@@ -893,39 +883,39 @@ sub html_convert_body {
 			#open subheading with <p>
 		} elsif ( ( $last5[2] =~ /<h2>/ ) && ($selection) ) {
 			$textwindow->ntinsert( "$step.0", '<p>' )
-			  unless (    ( $selection =~ /<[pd]/ )
-					   || ( $selection =~ /<[hb]r>/ )
-					   || ($inblock) );
+			  unless ( ( $selection =~ /<[pd]/ )
+				|| ( $selection =~ /<[hb]r>/ )
+				|| ($inblock) );
 
 			#open with para if blank line then nonblank line
 		} elsif ( ( $last5[2] ) && ( !$last5[3] ) && ($selection) ) {
 			$textwindow->ntinsert( "$step.0", '<p>' )
-			  unless (    ( $selection =~ /<[phd]/ )
-					   || ( $selection =~ /<[hb]r>/ )
-					   || ($inblock) );
+			  unless ( ( $selection =~ /<[phd]/ )
+				|| ( $selection =~ /<[hb]r>/ )
+				|| ($inblock) );
 
 			#open with para if blank line then two nonblank lines
-		} elsif (    ( $last5[1] )
-				  && ( !$last5[2] )
-				  && ( !$last5[3] )
-				  && ($selection) )
+		} elsif ( ( $last5[1] )
+			&& ( !$last5[2] )
+			&& ( !$last5[3] )
+			&& ($selection) )
 		{
 			$textwindow->ntinsert( "$step.0", '<p>' )
-			  unless (    ( $selection =~ /<[phd]/ )
-					   || ( $selection =~ /<[hb]r>/ )
-					   || ($inblock) );
+			  unless ( ( $selection =~ /<[phd]/ )
+				|| ( $selection =~ /<[hb]r>/ )
+				|| ($inblock) );
 
 			#open with para if blank line then three nonblank lines
-		} elsif (    ( $last5[0] )
-				  && ( !$last5[1] )
-				  && ( !$last5[2] )
-				  && ( !$last5[3] )
-				  && ($selection) )
+		} elsif ( ( $last5[0] )
+			&& ( !$last5[1] )
+			&& ( !$last5[2] )
+			&& ( !$last5[3] )
+			&& ($selection) )
 		{   #start of new paragraph unless line contains <p, <h, <d, <hr, or <br
 			$textwindow->ntinsert( "$step.0", '<p>' )
-			  unless (    ( $selection =~ /<[phd]/ )
-					   || ( $selection =~ /<[hb]r>/ )
-					   || ($inblock) );
+			  unless ( ( $selection =~ /<[phd]/ )
+				|| ( $selection =~ /<[hb]r>/ )
+				|| ($inblock) );
 		}
 		push @last5, $selection;
 		shift @last5 while ( scalar(@last5) > 4 );
@@ -948,47 +938,44 @@ sub html_convert_underscoresmallcaps {
 	my $thisblockstart = '1.0';
 	::working("Converting underscore and small caps markup");
 	while ( $thisblockstart =
-			$textwindow->search( '-exact', '--', '<u>', '1.0', 'end' ) )
+		$textwindow->search( '-exact', '--', '<u>', '1.0', 'end' ) )
 	{
 		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+3c" );
 		$textwindow->ntinsert( $thisblockstart, '<span class="u">' );
 	}
 	while ( $thisblockstart =
-			$textwindow->search( '-exact', '--', '</u>', '1.0', 'end' ) )
+		$textwindow->search( '-exact', '--', '</u>', '1.0', 'end' ) )
 	{
 		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+4c" );
 		$textwindow->ntinsert( $thisblockstart, '</span>' );
 	}
 	while ( $thisblockstart =
-			$textwindow->search( '-exact', '--', '<sc>', '1.0', 'end' ) )
+		$textwindow->search( '-exact', '--', '<sc>', '1.0', 'end' ) )
 	{
 		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+4c" );
 		$textwindow->ntinsert( $thisblockstart, '<span class="smcap">' );
 	}
 	while ( $thisblockstart =
-			$textwindow->search( '-exact', '--', '</sc>', '1.0', 'end' ) )
+		$textwindow->search( '-exact', '--', '</sc>', '1.0', 'end' ) )
 	{
 		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+5c" );
 		$textwindow->ntinsert( $thisblockstart, '</span>' );
 	}
 	while ( $thisblockstart =
-			$textwindow->search( '-exact', '--', '</pre></p>', '1.0', 'end' ) )
+		$textwindow->search( '-exact', '--', '</pre></p>', '1.0', 'end' ) )
 	{
 		$textwindow->ntdelete( "$thisblockstart+6c", "$thisblockstart+10c" );
 	}
 	$thisblockstart = '1.0';
 	while (
-			$thisblockstart =
-			$textwindow->search(
-								 '-exact',        '--',
-								 '<p>FOOTNOTES:', $thisblockstart,
-								 'end'
-			)
+		$thisblockstart = $textwindow->search(
+			'-exact', '--', '<p>FOOTNOTES:', $thisblockstart, 'end'
+		)
 	  )
 	{
 		$textwindow->ntdelete( $thisblockstart, "$thisblockstart+17c" );
 		$textwindow->insert( $thisblockstart,
-							 '<div class="footnotes"><h3>FOOTNOTES:</h3>' );
+			'<div class="footnotes"><h3>FOOTNOTES:</h3>' );
 		$thisblockstart =
 		  $textwindow->search( '-exact', '--', '<hr', $thisblockstart, 'end' );
 		if ($thisblockstart) {
@@ -1008,16 +995,15 @@ sub html_convert_sidenotes {
 	my $length;
 	my $thisblockstart = '1.0';
 	while (
-			$thisblockstart =
-			$textwindow->search(
-								 '-regexp',
-								 '-count' => \$length,
-								 '--', '(<p>)?\[Sidenote:\s*', '1.0', 'end'
-			)
+		$thisblockstart = $textwindow->search(
+			'-regexp',
+			'-count' => \$length,
+			'--', '(<p>)?\[Sidenote:\s*', '1.0', 'end'
+		)
 	  )
 	{
 		$textwindow->ntdelete( $thisblockstart,
-							   $thisblockstart . '+' . $length . 'c' );
+			$thisblockstart . '+' . $length . 'c' );
 		$textwindow->ntinsert( $thisblockstart, '<div class="sidenote">' );
 		$thisnoteend = $textwindow->search( '--', ']', $thisblockstart, 'end' );
 		while ( $textwindow->get( "$thisblockstart+1c", $thisnoteend ) =~ /\[/ )
@@ -1031,7 +1017,7 @@ sub html_convert_sidenotes {
 		$textwindow->ntinsert( $thisnoteend, '</div>' ) if $thisnoteend;
 	}
 	while ( $thisblockstart =
-			$textwindow->search( '--', '</div></div></p>', '1.0', 'end' ) )
+		$textwindow->search( '--', '</div></div></p>', '1.0', 'end' ) )
 	{
 		$textwindow->ntdelete( "$thisblockstart+12c", "$thisblockstart+16c" );
 	}
@@ -1050,8 +1036,6 @@ sub html_convert_pageanchors {
 		$mark = $textwindow->markPrevious($mark);
 	}
 	while ( $mark = $textwindow->markNext($mark) ) {
-
-		#print "mark:$mark\n";
 		if ( $mark =~ m{Pg(\S+)} ) {
 			my $num = $::pagenumbers{$mark}{label};
 			$num =~ s/Pg // if defined $num;
@@ -1059,16 +1043,12 @@ sub html_convert_pageanchors {
 			next unless length $num;
 			$num =~ s/^0+(\d)/$1/;
 			$markindex = $textwindow->index($mark);
-			my $check =
-			  $textwindow->get( $markindex . 'linestart',
-								$markindex . 'linestart +4c' );
-			if ( $check =~ /<h[12]>/ ) {
-
-				#$markindex = $textwindow->index("$mark-1l lineend");
-			}
+			my $check = $textwindow->get( $markindex . 'linestart',
+				$markindex . 'linestart +4c' );
 			my $pagereference;
 			my $marknext = $textwindow->markNext($mark);
 			my $marknextindex;
+
 			while ($marknext) {
 				if ( not $marknext =~ m{Pg(\S+)} ) {
 					$marknext = $textwindow->markNext($marknext);
@@ -1083,19 +1063,27 @@ sub html_convert_pageanchors {
 			}
 			if ( $markindex == $marknextindex ) {
 				$pagereference = "";
-				push @pagerefs, $num;
+				if ( $::lglobal{exportwithmarkup} ) {
+					push @pagerefs, $mark; # do not drop leading zeroes
+				} else {
+					push @pagerefs, $num;
+				}
 			} else {
 
 				#multiple page reference in one spot
-				push @pagerefs, $num;
+				if ( $::lglobal{exportwithmarkup} ) {
+					push @pagerefs, $mark; # do not drop leading zeroes
+				} else {
+					push @pagerefs, $num;
+				}
 				if (@pagerefs) {
 					my $br = "";
 					$pagereference = "";
 					no warnings;    # roman numerals are nonnumeric
 					for ( sort { $a <=> $b } @pagerefs ) {
 						if ( $::lglobal{exportwithmarkup} ) {
-							$pagereference .= "$br" . "<$mark=\"$::pagenumbers{$mark}{label}\">";
-							$br = "<br />";
+							$pagereference .= "$br" . "<$_>";
+							$br = '';    # No page break for exportwithmarkup
 						} else {
 							$pagereference .= "$br"
 							  . "<a name=\"Page_$_\" id=\"Page_$_\">[Pg $_]</a>";
@@ -1106,8 +1094,7 @@ sub html_convert_pageanchors {
 				} else {
 					# just one page reference
 					if ( $::lglobal{exportwithmarkup} ) {
-						$pagereference =
-						  "<$mark=\"$::pagenumbers{$mark}{label}\">";
+						$pagereference = "<$mark>";
 					} else {
 						$pagereference =
 "<a name=\"Page_$num\" id=\"Page_$num\">[Pg $num]</a>";
@@ -1145,46 +1132,46 @@ sub html_convert_pageanchors {
 				}
 				my $pstart =
 				  $textwindow->search( '-backwards', '-exact', '--', '<p',
-									   $markindex, '1.0' )
+					$markindex, '1.0' )
 				  || '1.0';
 				my $pend =
 				  $textwindow->search( '-backwards', '-exact', '--', '</p>',
-									   $markindex, '1.0' )
+					$markindex, '1.0' )
 				  || '1.0';
 				my $sstart =
 				  $textwindow->search( '-backwards', '-exact', '--', '<div ',
-									   $markindex, '1.0' )
+					$markindex, '1.0' )
 				  || '1.0';
 				my $send =
 				  $textwindow->search( '-backwards', '-exact', '--', '</div>',
-									   $markindex, '1.0' )    #$pend
-				  || '1.0';                                   #$pend
+					$markindex, '1.0' )    #$pend
+				  || '1.0';                #$pend
 				   # if the previous <p> or <div>is not closed, then wrap in <p>
 				if (
-					 not( $textwindow->compare( $pend, '<', $pstart )
-						  or ( $textwindow->compare( $send, '<', $sstart ) ) )
+					not( $textwindow->compare( $pend, '<', $pstart )
+						or ( $textwindow->compare( $send, '<', $sstart ) ) )
 				  )
 				{
 					$inserttext = '<p>' . $inserttext . '</p>';
 				}
 				my $hstart =
 				  $textwindow->search( '-backwards', '-exact', '--', '<h',
-									   $markindex, '1.0' )
+					$markindex, '1.0' )
 				  || '1.0';
 				my $hend =
 				  $textwindow->search( '-backwards', '-exact', '--', '</h',
-									   $markindex, '1.0' )
+					$markindex, '1.0' )
 				  || '1.0';
 				if ( $textwindow->compare( $hend, '<', $hstart ) ) {
 					$insertpoint = $textwindow->index("$hstart-1l lineend");
 				}
 				my $spanstart =
 				  $textwindow->search( '-backwards', '-exact', '--', '<span',
-									   $markindex, '1.0' )
+					$markindex, '1.0' )
 				  || '1.0';
 				my $spanend =
 				  $textwindow->search( '-backwards', '-exact', '--', '</span',
-									   $markindex, '1.0' )
+					$markindex, '1.0' )
 				  || '1.0';
 				if ( $textwindow->compare( $spanend, '<', $spanstart ) ) {
 					$insertpoint = $spanend . '+7c';
@@ -1198,19 +1185,19 @@ sub html_convert_pageanchors {
 				my $hrulemarkindex = $textwindow->index($mark);
 				my $pgstart =
 				  $textwindow->search( '-backwards', '--', '<p><span',
-									   $hrulemarkindex . '+10c', '1.0' )
+					$hrulemarkindex . '+10c', '1.0' )
 				  || '1.0';
 				if (
-					 $textwindow->compare(
-										   $hrulemarkindex . '+50c',
-										   '>', $pgstart
-					 )
+					$textwindow->compare(
+						$hrulemarkindex . '+50c',
+						'>', $pgstart
+					)
 				  )
 				{
 					$textwindow->ntinsert( $pgstart, '<hr class="chap" />' );
 				} else {
 					$textwindow->ntinsert( $hrulemarkindex,
-										   '<hr class="chap" />' );
+						'<hr class="chap" />' );
 				}
 			}
 		}
@@ -1261,8 +1248,8 @@ sub html_parse_header {
 		$selection = $textwindow->get( "$step.0", "$step.end" );
 		next if ( $selection =~ /^\[Illustr/i );    # Skip Illustrations
 		next if ( $selection =~ /^\/[\$fx]/i );     # Skip /$|/F tags
-		if (     ($intitle)
-			 and ( ( not length($selection) or ( $selection =~ /^f\//i ) ) ) )
+		if (    ($intitle)
+			and ( ( not length($selection) or ( $selection =~ /^f\//i ) ) ) )
 		{
 			$step--;
 			$textwindow->ntinsert( "$step.end", '</h1>' );
@@ -1338,11 +1325,8 @@ sub html_wrapup {
 	$textwindow->ntinsert( '1.0', $headertext );
 	if ($leave_utf) {
 		$thisblockstart =
-		  $textwindow->search(
-							   '-exact',             '--',
-							   'charset=iso-8859-1', '1.0',
-							   'end'
-		  );
+		  $textwindow->search( '-exact', '--', 'charset=iso-8859-1', '1.0',
+			'end' );
 		if ($thisblockstart) {
 			$textwindow->ntdelete( $thisblockstart, "$thisblockstart+18c" );
 			$textwindow->ntinsert( $thisblockstart, 'charset=utf-8' );
@@ -1379,7 +1363,7 @@ sub is_paragraph_open {
 	my ( $textwindow, $index ) = @_;
 	my $pstart =
 	  $textwindow->search( '-backwards', '-regexp', '--', '<p(>| )', $index,
-						   '1.0' )
+		'1.0' )
 	  || '1.0';
 	my $pend = $textwindow->search( '-backwards', '--', '</p>', $index, '1.0' )
 	  || '1.0';
@@ -1489,10 +1473,10 @@ sub htmlimage {
 			}
 		)->pack( -side => 'left' );
 		my $ar = $f51->Checkbutton(
-									-text     => 'Maintain AR',
-									-variable => \$::lglobal{htmlimgar},
-									-onvalue  => 1,
-									-offvalue => 0
+			-text     => 'Maintain AR',
+			-variable => \$::lglobal{htmlimgar},
+			-onvalue  => 1,
+			-offvalue => 0
 		)->pack( -side => 'left' );
 		$ar->select;
 		my $f52 = $f5->Frame->pack( -side => 'top', -anchor => 'n' );
@@ -1502,22 +1486,22 @@ sub htmlimage {
 		  $::lglobal{htmlimpop}->LabFrame( -label => 'Alignment' )
 		  ->pack( -side => 'top', -anchor => 'n' );
 		$f2->Radiobutton(
-						  -variable    => \$alignment,
-						  -text        => 'Left',
-						  -selectcolor => $::lglobal{checkcolor},
-						  -value       => 'left',
+			-variable    => \$alignment,
+			-text        => 'Left',
+			-selectcolor => $::lglobal{checkcolor},
+			-value       => 'left',
 		)->grid( -row => 1, -column => 1 );
 		my $censel = $f2->Radiobutton(
-									   -variable    => \$alignment,
-									   -text        => 'Center',
-									   -selectcolor => $::lglobal{checkcolor},
-									   -value       => 'center',
+			-variable    => \$alignment,
+			-text        => 'Center',
+			-selectcolor => $::lglobal{checkcolor},
+			-value       => 'center',
 		)->grid( -row => 1, -column => 2 );
 		$f2->Radiobutton(
-						  -variable    => \$alignment,
-						  -text        => 'Right',
-						  -selectcolor => $::lglobal{checkcolor},
-						  -value       => 'right',
+			-variable    => \$alignment,
+			-text        => 'Right',
+			-selectcolor => $::lglobal{checkcolor},
+			-value       => 'right',
 		)->grid( -row => 1, -column => 3 );
 		$censel->select;
 		my $f8 =
@@ -1564,21 +1548,21 @@ sub htmlimage {
 					if ( $alignment eq 'center' ) {
 						$textwindow->delete( 'thisblockstart', 'thisblockend' );
 						$textwindow->insert( 'thisblockstart',
-									 "<div class=\"figcenter\" style=\"width: " 
-									   . $width
-									   . $closeimg );
+							    "<div class=\"figcenter\" style=\"width: " 
+							  . $width
+							  . $closeimg );
 					} elsif ( $alignment eq 'left' ) {
 						$textwindow->delete( 'thisblockstart', 'thisblockend' );
 						$textwindow->insert( 'thisblockstart',
-									   "<div class=\"figleft\" style=\"width: " 
-										 . $width
-										 . $closeimg );
+							    "<div class=\"figleft\" style=\"width: " 
+							  . $width
+							  . $closeimg );
 					} elsif ( $alignment eq 'right' ) {
 						$textwindow->delete( 'thisblockstart', 'thisblockend' );
 						$textwindow->insert( 'thisblockstart',
-									  "<div class=\"figright\" style=\"width: " 
-										. $width
-										. $closeimg );
+							    "<div class=\"figright\" style=\"width: " 
+							  . $width
+							  . $closeimg );
 					}
 					$textwindow->addGlobEnd;
 					$::lglobal{htmlthumb}->delete
@@ -1590,9 +1574,9 @@ sub htmlimage {
 					$::lglobal{htmlorig}->destroy
 					  if $::lglobal{htmlorig};
 					for (
-						  $::lglobal{alttext},  $::lglobal{titltext},
-						  $::lglobal{widthent}, $::lglobal{heightent},
-						  $::lglobal{imagelbl}, $::lglobal{imgname}
+						$::lglobal{alttext},  $::lglobal{titltext},
+						$::lglobal{widthent}, $::lglobal{heightent},
+						$::lglobal{imagelbl}, $::lglobal{imgname}
 					  )
 					{
 						$_->destroy;
@@ -1606,12 +1590,11 @@ sub htmlimage {
 			}
 		)->pack;
 		my $f = $::lglobal{htmlimpop}->Frame->pack;
-		$::lglobal{imagelbl} =
-		  $f->Label(
-					 -text       => 'Thumbnail',
-					 -justify    => 'center',
-					 -background => $::bkgcolor,
-		  )->grid( -row => 1, -column => 1 );
+		$::lglobal{imagelbl} = $f->Label(
+			-text       => 'Thumbnail',
+			-justify    => 'center',
+			-background => $::bkgcolor,
+		)->grid( -row => 1, -column => 1 );
 		$::lglobal{imagelbl}
 		  ->bind( $::lglobal{imagelbl}, '<1>', \&thumbnailbrowse );
 		$::lglobal{htmlimpop}->protocol(
@@ -1621,9 +1604,9 @@ sub htmlimage {
 				$::lglobal{htmlorig}->delete   if $::lglobal{htmlorig};
 				$::lglobal{htmlorig}->destroy  if $::lglobal{htmlorig};
 				for (
-					  $::lglobal{alttext},  $::lglobal{titltext},
-					  $::lglobal{widthent}, $::lglobal{heightent},
-					  $::lglobal{imagelbl}, $::lglobal{imgname}
+					$::lglobal{alttext},  $::lglobal{titltext},
+					$::lglobal{widthent}, $::lglobal{heightent},
+					$::lglobal{imagelbl}, $::lglobal{imgname}
 				  )
 				{
 					$_->destroy;
@@ -1645,17 +1628,14 @@ sub htmlimages {
 	my ( $textwindow, $top ) = @_;
 	my $length;
 	my $start =
-	  $textwindow->search(
-						   '-regexp',              '--',
-						   '(<p>)?\[Illustration', '1.0',
-						   'end'
-	  );
+	  $textwindow->search( '-regexp', '--', '(<p>)?\[Illustration', '1.0',
+		'end' );
 	return unless $start;
 	$textwindow->see($start);
 	my $end = $textwindow->search(
-								   '-regexp',
-								   '-count' => \$length,
-								   '--', '\](<\/p>)?', $start, 'end'
+		'-regexp',
+		'-count' => \$length,
+		'--', '\](<\/p>)?', $start, 'end'
 	);
 	$end = $textwindow->index( $end . ' +' . $length . 'c' );
 	return unless $end;
@@ -1671,9 +1651,9 @@ sub htmlautoconvert {
 	my $headertext;
 	if ( $::lglobal{global_filename} =~ /No File Loaded/ ) {
 		$top->messageBox(
-						  -icon    => 'warning',
-						  -type    => 'OK',
-						  -message => 'File must be saved first.'
+			-icon    => 'warning',
+			-type    => 'OK',
+			-message => 'File must be saved first.'
 		);
 		return;
 	}
@@ -1696,19 +1676,21 @@ sub htmlautoconvert {
 	$::lglobal{fnsecondpass}  = 0;
 	$::lglobal{fnsearchlimit} = 1;
 	html_convert_footnotes( $textwindow, $::lglobal{fnarray} );
-	html_convert_body( $textwindow, $headertext,
-					   $::lglobal{cssblockmarkup},
-					   $::lglobal{poetrynumbers},
-					   $::lglobal{classhash} );
+	html_convert_body(
+		$textwindow, $headertext,
+		$::lglobal{cssblockmarkup},
+		$::lglobal{poetrynumbers},
+		$::lglobal{classhash}
+	);
 	html_cleanup_markers($textwindow);
 	html_convert_underscoresmallcaps($textwindow);
 	html_convert_sidenotes($textwindow);
 	html_convert_pageanchors();
 	html_convert_utf( $textwindow, $::lglobal{leave_utf},
-					  $::lglobal{keep_latin1} );
+		$::lglobal{keep_latin1} );
 	html_wrapup( $textwindow, $headertext, $::lglobal{leave_utf},
-				 $::lglobal{autofraction},
-				 $::lglobal{classhash} );
+		$::lglobal{autofraction},
+		$::lglobal{classhash} );
 	$textwindow->ResetUndo;
 }
 
@@ -1716,12 +1698,11 @@ sub thumbnailbrowse {
 	my $types =
 	  [ [ 'Image Files', [ '.gif', '.jpg', '.png' ] ], [ 'All Files', ['*'] ],
 	  ];
-	my $name =
-	  $::lglobal{htmlimpop}->getOpenFile(
-										  -filetypes  => $types,
-										  -title      => 'File Load',
-										  -initialdir => $::globalimagepath
-	  );
+	my $name = $::lglobal{htmlimpop}->getOpenFile(
+		-filetypes  => $types,
+		-title      => 'File Load',
+		-initialdir => $::globalimagepath
+	);
 	return unless ($name);
 	my $xythumb = 200;
 	if ( $::lglobal{ImageSize} ) {
@@ -1760,9 +1741,9 @@ sub thumbnailbrowse {
 	  ->copy( $::lglobal{htmlorig}, -subsample => ($sw), -shrink )
 	  ;    #hkm changed textcopy to copy
 	$::lglobal{imagelbl}->configure(
-									 -image   => $::lglobal{htmlthumb},
-									 -text    => 'Thumbnail',
-									 -justify => 'center',
+		-image   => $::lglobal{htmlthumb},
+		-text    => 'Thumbnail',
+		-justify => 'center',
 	);
 }
 
@@ -1782,20 +1763,20 @@ sub htmlpopup {
 		my $f0 =
 		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f0->Button(
-					 -activebackground => $::activecolor,
-					 -command => sub { htmlautoconvert( $textwindow, $top ) },
-					 -text    => 'Autogenerate HTML',
-					 -width   => 16
+			-activebackground => $::activecolor,
+			-command          => sub { htmlautoconvert( $textwindow, $top ) },
+			-text             => 'Autogenerate HTML',
+			-width            => 16
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 1 );
 		$f0->Button(
-					 -text    => 'Custom Page Labels',
-					 -command => sub { pageadjust() },
+			-text    => 'Custom Page Labels',
+			-command => sub { pageadjust() },
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 1 );
 		$f0->Button(
-					 -activebackground => $::activecolor,
-					 -command => sub { htmlimages( $textwindow, $top ); },
-					 -text    => 'Auto Illus Search',
-					 -width   => 16,
+			-activebackground => $::activecolor,
+			-command          => sub { htmlimages( $textwindow, $top ); },
+			-text             => 'Auto Illus Search',
+			-width            => 16,
 		)->grid( -row => 1, -column => 3, -padx => 1, -pady => 1 );
 		$f0->Button(    #hkm added
 			-activebackground => $::activecolor,
@@ -1805,71 +1786,66 @@ sub htmlpopup {
 			-text  => 'View in Browser',
 			-width => 16,
 		)->grid( -row => 1, -column => 4, -padx => 1, -pady => 1 );
-		my $pagecomments =
-		  $f0->Checkbutton(
-							-variable    => \$::lglobal{pagecmt},
-							-selectcolor => $::lglobal{checkcolor},
-							-text        => 'Pg #s as comments',
-							-anchor      => 'w',
+		my $pagecomments = $f0->Checkbutton(
+			-variable    => \$::lglobal{pagecmt},
+			-selectcolor => $::lglobal{checkcolor},
+			-text        => 'Pg #s as comments',
+			-anchor      => 'w',
 		  )->grid(
-				   -row    => 2,
-				   -column => 1,
-				   -padx   => 1,
-				   -pady   => 2,
-				   -sticky => 'w'
+			-row    => 2,
+			-column => 1,
+			-padx   => 1,
+			-pady   => 2,
+			-sticky => 'w'
 		  );
-		my $pageanchors =
-		  $f0->Checkbutton(
-							-variable    => \$::lglobal{pageanch},
-							-selectcolor => $::lglobal{checkcolor},
-							-text        => 'Insert Anchors at Pg #s',
-							-anchor      => 'w',
+		my $pageanchors = $f0->Checkbutton(
+			-variable    => \$::lglobal{pageanch},
+			-selectcolor => $::lglobal{checkcolor},
+			-text        => 'Insert Anchors at Pg #s',
+			-anchor      => 'w',
 		  )->grid(
-				   -row    => 2,
-				   -column => 2,
-				   -padx   => 1,
-				   -pady   => 2,
-				   -sticky => 'w'
+			-row    => 2,
+			-column => 2,
+			-padx   => 1,
+			-pady   => 2,
+			-sticky => 'w'
 		  );
 		$pageanchors->select;
-		my $fractions =
-		  $f0->Checkbutton(
-							-variable    => \$::lglobal{autofraction},
-							-selectcolor => $::lglobal{checkcolor},
-							-text        => 'Convert Fractions',
-							-anchor      => 'w',
+		my $fractions = $f0->Checkbutton(
+			-variable    => \$::lglobal{autofraction},
+			-selectcolor => $::lglobal{checkcolor},
+			-text        => 'Convert Fractions',
+			-anchor      => 'w',
 		  )->grid(
-				   -row    => 2,
-				   -column => 3,
-				   -padx   => 1,
-				   -pady   => 2,
-				   -sticky => 'w'
+			-row    => 2,
+			-column => 3,
+			-padx   => 1,
+			-pady   => 2,
+			-sticky => 'w'
 		  );
-		my $utfconvert =
-		  $f0->Checkbutton(
-							-variable    => \$::lglobal{leave_utf},
-							-selectcolor => $::lglobal{checkcolor},
-							-text        => 'Keep UTF-8 Chars',
-							-anchor      => 'w',
+		my $utfconvert = $f0->Checkbutton(
+			-variable    => \$::lglobal{leave_utf},
+			-selectcolor => $::lglobal{checkcolor},
+			-text        => 'Keep UTF-8 Chars',
+			-anchor      => 'w',
 		  )->grid(
-				   -row    => 3,
-				   -column => 1,
-				   -padx   => 1,
-				   -pady   => 2,
-				   -sticky => 'w'
+			-row    => 3,
+			-column => 1,
+			-padx   => 1,
+			-pady   => 2,
+			-sticky => 'w'
 		  );
-		my $latin1_convert =
-		  $f0->Checkbutton(
-							-variable    => \$::lglobal{keep_latin1},
-							-selectcolor => $::lglobal{checkcolor},
-							-text        => 'Keep Latin-1 Chars',
-							-anchor      => 'w',
+		my $latin1_convert = $f0->Checkbutton(
+			-variable    => \$::lglobal{keep_latin1},
+			-selectcolor => $::lglobal{checkcolor},
+			-text        => 'Keep Latin-1 Chars',
+			-anchor      => 'w',
 		  )->grid(
-				   -row    => 3,
-				   -column => 2,
-				   -padx   => 1,
-				   -pady   => 2,
-				   -sticky => 'w'
+			-row    => 3,
+			-column => 2,
+			-padx   => 1,
+			-pady   => 2,
+			-sticky => 'w'
 		  );
 		$blockmarkup = $f0->Checkbutton(
 			-variable    => \$::lglobal{cssblockmarkup},
@@ -1884,11 +1860,11 @@ sub htmlpopup {
 			-text   => 'CSS blockquote',
 			-anchor => 'w',
 		  )->grid(
-				   -row    => 3,
-				   -column => 3,
-				   -padx   => 1,
-				   -pady   => 2,
-				   -sticky => 'w'
+			-row    => 3,
+			-column => 3,
+			-padx   => 1,
+			-pady   => 2,
+			-sticky => 'w'
 		  );
 		my $f1 =
 		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
@@ -1912,30 +1888,30 @@ sub htmlpopup {
 				-text  => "<$_>",
 				-width => 10
 			  )->grid(
-					   -row    => $row,
-					   -column => $col,
-					   -padx   => 1,
-					   -pady   => 2
+				-row    => $row,
+				-column => $col,
+				-padx   => 1,
+				-pady   => 2
 			  );
 			++$inc;
 		}
 		$f1->Button(
-					 -activebackground => $::activecolor,
-					 -command => sub { markup( $textwindow, $top, '&nbsp;' ) },
-					 -text    => 'nb space',
-					 -width   => 10
+			-activebackground => $::activecolor,
+			-command          => sub { markup( $textwindow, $top, '&nbsp;' ) },
+			-text             => 'nb space',
+			-width            => 10
 		)->grid( -row => 4, -column => 3, -padx => 1, -pady => 2 );
 		$f1->Button(
-					 -activebackground => $::activecolor,
-					 -command          => \&poetryhtml,
-					 -text             => 'Poetry',
-					 -width            => 10
+			-activebackground => $::activecolor,
+			-command          => \&poetryhtml,
+			-text             => 'Poetry',
+			-width            => 10
 		)->grid( -row => 4, -column => 4, -padx => 1, -pady => 2 );
 		my $f2 =
 		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my %hbuttons = (
-						 'anchor', 'Named anchor',  'img',   'Image',
-						 'elink',  'External Link', 'ilink', 'Internal Link'
+			'anchor', 'Named anchor',  'img',   'Image',
+			'elink',  'External Link', 'ilink', 'Internal Link'
 		);
 		( $row, $col ) = ( 0, 0 );
 		for ( keys %hbuttons ) {
@@ -1950,29 +1926,28 @@ sub htmlpopup {
 				-text  => "$hbuttons{$_}",
 				-width => 13
 			  )->grid(
-					   -row    => $row,
-					   -column => $col,
-					   -padx   => 1,
-					   -pady   => 2
+				-row    => $row,
+				-column => $col,
+				-padx   => 1,
+				-pady   => 2
 			  );
 			++$col;
 		}
 		my $f3 =
 		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f3->Button(
-					 -activebackground => $::activecolor,
-					 -command => sub { markup( $textwindow, $top, 'del' ) },
-					 -text    => 'Remove markup from selection',
-					 -width   => 28
+			-activebackground => $::activecolor,
+			-command          => sub { markup( $textwindow, $top, 'del' ) },
+			-text             => 'Remove markup from selection',
+			-width            => 28
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
 		$f3->Button(
 			-activebackground => $::activecolor,
 			-command          => sub {
 				for my $orphan (
-								 'b',   'i',   'center', 'u',
-								 'sub', 'sup', 'sc',     'h1',
-								 'h2',  'h3',  'h4',     'h5',
-								 'h6',  'p',   'span'
+					'b',  'i',  'center', 'u',  'sub', 'sup',
+					'sc', 'h1', 'h2',     'h3', 'h4',  'h5',
+					'h6', 'p',  'span'
 				  )
 				{
 					::working( 'Checking <' . $orphan . '>' );
@@ -1985,54 +1960,48 @@ sub htmlpopup {
 		)->grid( -row => 1, -column => 2, -padx => 1, -pady => 2 );
 		my $f4 =
 		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
-		my $unorderselect =
-		  $f4->Radiobutton(
-							-text        => 'unordered',
-							-selectcolor => $::lglobal{checkcolor},
-							-variable    => \$::lglobal{liststyle},
-							-value       => 'ul',
-		  )->grid( -row => 1, -column => 1 );
-		my $orderselect =
-		  $f4->Radiobutton(
-							-text        => 'ordered',
-							-selectcolor => $::lglobal{checkcolor},
-							-variable    => \$::lglobal{liststyle},
-							-value       => 'ol',
-		  )->grid( -row => 1, -column => 2 );
-		my $autolbutton =
-		  $f4->Button(
-				  -activebackground => $::activecolor,
-				  -command => sub { autolist($textwindow); $textwindow->focus },
-				  -text    => 'Auto List',
-				  -width   => 16
-		  )->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
+		my $unorderselect = $f4->Radiobutton(
+			-text        => 'unordered',
+			-selectcolor => $::lglobal{checkcolor},
+			-variable    => \$::lglobal{liststyle},
+			-value       => 'ul',
+		)->grid( -row => 1, -column => 1 );
+		my $orderselect = $f4->Radiobutton(
+			-text        => 'ordered',
+			-selectcolor => $::lglobal{checkcolor},
+			-variable    => \$::lglobal{liststyle},
+			-value       => 'ol',
+		)->grid( -row => 1, -column => 2 );
+		my $autolbutton = $f4->Button(
+			-activebackground => $::activecolor,
+			-command => sub { autolist($textwindow); $textwindow->focus },
+			-text    => 'Auto List',
+			-width   => 16
+		)->grid( -row => 1, -column => 4, -padx => 1, -pady => 2 );
 		$f4->Checkbutton(
-						  -text     => 'ML',
-						  -variable => \$::lglobal{list_multiline},
-						  -onvalue  => 1,
-						  -offvalue => 0
+			-text     => 'ML',
+			-variable => \$::lglobal{list_multiline},
+			-onvalue  => 1,
+			-offvalue => 0
 		)->grid( -row => 1, -column => 5 );
-		my $leftselect =
-		  $f4->Radiobutton(
-							-text        => 'left',
-							-selectcolor => $::lglobal{checkcolor},
-							-variable    => \$::lglobal{tablecellalign},
-							-value       => ' align="left"',
-		  )->grid( -row => 2, -column => 1 );
-		my $censelect =
-		  $f4->Radiobutton(
-							-text        => 'center',
-							-selectcolor => $::lglobal{checkcolor},
-							-variable    => \$::lglobal{tablecellalign},
-							-value       => ' align="center"',
-		  )->grid( -row => 2, -column => 2 );
-		my $rghtselect =
-		  $f4->Radiobutton(
-							-text        => 'right',
-							-selectcolor => $::lglobal{checkcolor},
-							-variable    => \$::lglobal{tablecellalign},
-							-value       => ' align="right"',
-		  )->grid( -row => 2, -column => 3 );
+		my $leftselect = $f4->Radiobutton(
+			-text        => 'left',
+			-selectcolor => $::lglobal{checkcolor},
+			-variable    => \$::lglobal{tablecellalign},
+			-value       => ' align="left"',
+		)->grid( -row => 2, -column => 1 );
+		my $censelect = $f4->Radiobutton(
+			-text        => 'center',
+			-selectcolor => $::lglobal{checkcolor},
+			-variable    => \$::lglobal{tablecellalign},
+			-value       => ' align="center"',
+		)->grid( -row => 2, -column => 2 );
+		my $rghtselect = $f4->Radiobutton(
+			-text        => 'right',
+			-selectcolor => $::lglobal{checkcolor},
+			-variable    => \$::lglobal{tablecellalign},
+			-value       => ' align="right"',
+		)->grid( -row => 2, -column => 3 );
 		$leftselect->select;
 		$unorderselect->select;
 		$f4->Button(
@@ -2045,24 +2014,24 @@ sub htmlpopup {
 			-width => 16
 		)->grid( -row => 2, -column => 4, -padx => 1, -pady => 2 );
 		$f4->Checkbutton(
-						  -text     => 'ML',
-						  -variable => \$::lglobal{tbl_multiline},
-						  -onvalue  => 1,
-						  -offvalue => 0
+			-text     => 'ML',
+			-variable => \$::lglobal{tbl_multiline},
+			-onvalue  => 1,
+			-offvalue => 0
 		)->grid( -row => 2, -column => 5 );
 		my $f5 =
 		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$tableformat = $f5->Entry(
-								   -width      => 40,
-								   -background => $::bkgcolor,
-								   -relief     => 'sunken',
+			-width      => 40,
+			-background => $::bkgcolor,
+			-relief     => 'sunken',
 		)->grid( -row => 0, -column => 1, -pady => 2 );
 		$f5->Label( -text => 'Column Fmt', )
 		  ->grid( -row => 0, -column => 2, -padx => 2, -pady => 2 );
 		my $diventry = $f5->Entry(
-								   -width      => 40,
-								   -background => $::bkgcolor,
-								   -relief     => 'sunken',
+			-width      => 40,
+			-background => $::bkgcolor,
+			-relief     => 'sunken',
 		)->grid( -row => 1, -column => 1, -pady => 2 );
 		$f5->Button(
 			-activebackground => $::activecolor,
@@ -2076,9 +2045,9 @@ sub htmlpopup {
 		my $f6 =
 		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		my $spanentry = $f6->Entry(
-									-width      => 40,
-									-background => $::bkgcolor,
-									-relief     => 'sunken',
+			-width      => 40,
+			-background => $::bkgcolor,
+			-relief     => 'sunken',
 		)->grid( -row => 1, -column => 1, -pady => 2 );
 		$f6->Button(
 			-activebackground => $::activecolor,
@@ -2092,9 +2061,9 @@ sub htmlpopup {
 		my $f7 =
 		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f7->Checkbutton(
-						  -variable    => \$::lglobal{poetrynumbers},
-						  -selectcolor => $::lglobal{checkcolor},
-						  -text        => 'Find and Format Poetry Line Numbers'
+			-variable    => \$::lglobal{poetrynumbers},
+			-selectcolor => $::lglobal{checkcolor},
+			-text        => 'Find and Format Poetry Line Numbers'
 		)->grid( -row => 1, -column => 1, -pady => 2 );
 		$f7->Button(
 			-activebackground => $::activecolor,
@@ -2118,10 +2087,10 @@ sub htmlpopup {
 		my $f8 =
 		  $::lglobal{markpop}->Frame->pack( -side => 'top', -anchor => 'n' );
 		$f8->Button(
-					 -activebackground => $::activecolor,
-					 -command          => \&::hyperlinkpagenums,
-					 -text             => 'Hyperlink Page Nums',
-					 -width            => 16
+			-activebackground => $::activecolor,
+			-command          => \&::hyperlinkpagenums,
+			-text             => 'Hyperlink Page Nums',
+			-width            => 16
 		)->grid( -row => 1, -column => 1, -padx => 1, -pady => 2 );
 		unless ( $::useppwizardmenus and not $::usemenutwo ) {
 			$f8->Button(
@@ -2147,10 +2116,9 @@ sub htmlpopup {
 				-command          => sub {
 					if ($::w3cremote) {
 						::errorcheckpop_up( $textwindow, $top,
-											 'W3C Validate Remote' );
+							'W3C Validate Remote' );
 					} else {
-						::errorcheckpop_up( $textwindow, $top,
-											 'W3C Validate' );
+						::errorcheckpop_up( $textwindow, $top, 'W3C Validate' );
 					}
 					unlink 'null' if ( -e 'null' );
 				},
@@ -2160,8 +2128,8 @@ sub htmlpopup {
 			$f8->Button(
 				-activebackground => $::activecolor,
 				-command          => sub {
-					::errorcheckpop_up( $textwindow, $top,
-									  'W3C Validate CSS' ); #validatecssrun('');
+					::errorcheckpop_up( $textwindow, $top, 'W3C Validate CSS' )
+					  ;    #validatecssrun('');
 					unlink 'null' if ( -e 'null' );
 				},
 				-text  => 'W3C Validate CSS',
@@ -2257,7 +2225,7 @@ sub markup {
 				$edited++ if ( $selection =~ s/<\/?div[^>]*?>//g );
 				$edited++
 				  if ( $selection =~
-					 s/<span.*?margin-left: (\d+\.?\d?)em.*?>/' ' x ($1 *2)/e );
+					s/<span.*?margin-left: (\d+\.?\d?)em.*?>/' ' x ($1 *2)/e );
 				$edited++ if ( $selection =~ s/<\/?span[^>]*?>//g );
 				$edited++ if ( $selection =~ s/<\/?[hscalupt].*?>//g );
 				$edited++ if ( $selection =~ s/&nbsp;/ /g );
@@ -2377,21 +2345,21 @@ sub markup {
 			$done = '';
 		} elsif ( $mark eq 'ilink' ) {
 			my ( $anchorname, $anchorstartindex, $anchorendindex, $length,
-				 $srow, $scol, $string, $link, $match, $match2 );
+				$srow, $scol, $string, $link, $match, $match2 );
 			$length     = 0;
 			@intanchors = ();
 			my %inthash = ();
 			$anchorstartindex = $anchorendindex = '1.0';
 			while (
-					$anchorstartindex =
-					$textwindow->search(
-								  '-regexp', '--', '<a (name|id)=[\'"].+?[\'"]',
-								  $anchorendindex, 'end' )
+				$anchorstartindex = $textwindow->search(
+					'-regexp', '--', '<a (name|id)=[\'"].+?[\'"]',
+					$anchorendindex, 'end'
+				)
 			  )
 			{
 				$anchorendindex =
 				  $textwindow->search( '-regexp', '--', '>', $anchorstartindex,
-									   'end' );
+					'end' );
 				$string =
 				  $textwindow->get( $anchorstartindex, $anchorendindex );
 				$string =~ s/\n/ /g;
@@ -2403,7 +2371,7 @@ sub markup {
 
 				if ( exists $inthash{ '#' . ( lc($match) ) } ) {
 					$textwindow->tagAdd( 'highlight', $anchorstartindex,
-										 $anchorendindex );
+						$anchorendindex );
 					$textwindow->see($anchorstartindex);
 					$textwindow->bell unless $::nobell;
 					$top->messageBox(
@@ -2441,10 +2409,10 @@ sub markup {
 						linkpopulate( $linklistbox, \@intanchors );
 					},
 				  )->pack(
-						   -side   => 'left',
-						   -pady   => 2,
-						   -padx   => 2,
-						   -anchor => 'n'
+					-side   => 'left',
+					-pady   => 2,
+					-padx   => 2,
+					-anchor => 'n'
 				  );
 				$tframe->Checkbutton(
 					-variable    => \$::lglobal{fnlinks},
@@ -2455,10 +2423,10 @@ sub markup {
 						linkpopulate( $linklistbox, \@intanchors );
 					},
 				  )->pack(
-						   -side   => 'left',
-						   -pady   => 2,
-						   -padx   => 2,
-						   -anchor => 'n'
+					-side   => 'left',
+					-pady   => 2,
+					-padx   => 2,
+					-anchor => 'n'
 				  );
 				$tframe->Checkbutton(
 					-variable    => \$::lglobal{pglinks},
@@ -2469,28 +2437,27 @@ sub markup {
 						linkpopulate( $linklistbox, \@intanchors );
 					},
 				  )->pack(
-						   -side   => 'left',
-						   -pady   => 2,
-						   -padx   => 2,
-						   -anchor => 'n'
+					-side   => 'left',
+					-pady   => 2,
+					-padx   => 2,
+					-anchor => 'n'
 				  );
 				my $pframe =
 				  $::lglobal{linkpop}
 				  ->Frame->pack( -fill => 'both', -expand => 'both' );
-				$linklistbox =
-				  $pframe->Scrolled(
-									 'Listbox',
-									 -scrollbars  => 'se',
-									 -background  => $::bkgcolor,
-									 -selectmode  => 'single',
-									 -activestyle => 'none',
+				$linklistbox = $pframe->Scrolled(
+					'Listbox',
+					-scrollbars  => 'se',
+					-background  => $::bkgcolor,
+					-selectmode  => 'single',
+					-activestyle => 'none',
 				  )->pack(
-						   -side   => 'top',
-						   -anchor => 'nw',
-						   -fill   => 'both',
-						   -expand => 'both',
-						   -padx   => 2,
-						   -pady   => 2
+					-side   => 'top',
+					-anchor => 'nw',
+					-fill   => 'both',
+					-expand => 'both',
+					-padx   => 2,
+					-pady   => 2
 				  );
 				::drag($linklistbox);
 				$::lglobal{linkpop}->protocol(
@@ -2524,7 +2491,7 @@ sub markup {
 					last unless $tempvar;
 					next
 					  if ( ( ( $_ =~ /#Footnote/ ) || ( $_ =~ /#FNanchor/ ) )
-						   && $::lglobal{fnlinks} );
+						&& $::lglobal{fnlinks} );
 					next
 					  if ( ( $_ =~ /#Page_/ ) && $::lglobal{pglinks} );
 					next unless ( lc($_) eq '#' . $tempvar );
@@ -2545,13 +2512,13 @@ sub markup {
 				for ( sort (@intanchors) ) {
 					next
 					  if ( ( ( $_ =~ /#Footnote/ ) || ( $_ =~ /#FNanchor/ ) )
-						   && $::lglobal{fnlinks} );
+						&& $::lglobal{fnlinks} );
 					next
 					  if ( ( $_ =~ /#Page_/ ) && $::lglobal{pglinks} );
 					next
 					  unless (
-						 lc($_) =~
-						 /\Q$entrarray[0]\E|\Q$entrarray[1]\E|\Q$entrarray[2]\E/
+						lc($_) =~
+						/\Q$entrarray[0]\E|\Q$entrarray[1]\E|\Q$entrarray[2]\E/
 					  );
 					$linklistbox->insert( 'end', $_ );
 					$flag++;
@@ -2575,9 +2542,9 @@ sub markup {
 				$textwindow->tagRemove( 'sel', '1.0', 'end' );
 				$textwindow->markSet( 'blkend', $thisblockstart );
 				$textwindow->insert( $thisblockstart,
-									 "<$mark>$selection<\/$mark>" );
+					"<$mark>$selection<\/$mark>" );
 				$textwindow->tagAdd( 'sel', $thisblockstart,
-									 $textwindow->index('blkend') );
+					$textwindow->index('blkend') );
 			} else {
 				$textwindow->insert( $thisblockend,   "<\/$mark>" );
 				$textwindow->insert( $thisblockstart, "<$mark>" );
@@ -2846,9 +2813,9 @@ sub autotable {
 		$textwindow->delete( $start, $end );
 		$textwindow->insert( $start, $selection );
 		$textwindow->insert( $start,
-			     "\n<div class=\"center\">\n"
-			   . '<table border="0" cellpadding="4" cellspacing="0" summary="">'
-			   . "\n" )
+			    "\n<div class=\"center\">\n"
+			  . '<table border="0" cellpadding="4" cellspacing="0" summary="">'
+			  . "\n" )
 		  if $table;
 		$table = 1;
 	}
@@ -2866,24 +2833,24 @@ sub orphans {
 	$thisindex = '1.0';
 	my ( $lengtho, $lengthc );
 	my $opindex = $textwindow->search(
-									   '-regexp',
-									   '-count' => \$lengtho,
-									   '--', $open, $thisindex, 'end'
+		'-regexp',
+		'-count' => \$lengtho,
+		'--', $open, $thisindex, 'end'
 	);
 	push @op, $opindex;
 	my $clindex = $textwindow->search(
-									   '-regexp',
-									   '-count' => \$lengthc,
-									   '--', $close, $thisindex, 'end'
+		'-regexp',
+		'-count' => \$lengthc,
+		'--', $close, $thisindex, 'end'
 	);
 	return unless ( $clindex || $opindex );
 	push @op, ( $clindex || $end );
 
 	while ($opindex) {
 		$opindex = $textwindow->search(
-										'-regexp',
-										'-count' => \$lengtho,
-										'--', $open, $op[0] . '+1c', 'end'
+			'-regexp',
+			'-count' => \$lengtho,
+			'--', $open, $op[0] . '+1c', 'end'
 		);
 		if ($opindex) {
 			push @op, $opindex;
@@ -2893,9 +2860,9 @@ sub orphans {
 		my $begin = $op[1];
 		$begin = 'end' unless $begin;
 		$clindex = $textwindow->search(
-										'-regexp',
-										'-count' => \$lengthc,
-										'--', $close, "$begin+1c", 'end'
+			'-regexp',
+			'-count' => \$lengthc,
+			'--', $close, "$begin+1c", 'end'
 		);
 		if ($clindex) {
 			push @op, $clindex;
@@ -2906,78 +2873,78 @@ sub orphans {
 			$textwindow->markSet( 'insert', $op[0] ) if $op[0];
 			$textwindow->see( $op[0] ) if $op[0];
 			$textwindow->tagAdd( 'highlight', $op[0],
-								 $op[0] . '+' . length($open) . 'c' );
+				$op[0] . '+' . length($open) . 'c' );
 			return 1;
 		}
-		if (    ( $textwindow->compare( $op[0], '<', $op[1] ) )
-			 && ( $textwindow->compare( $op[1], '<', $op[2] ) )
-			 && ( $textwindow->compare( $op[2], '<', $op[3] ) )
-			 && ( $op[2] ne $end )
-			 && ( $op[3] ne $end ) )
+		if (   ( $textwindow->compare( $op[0], '<', $op[1] ) )
+			&& ( $textwindow->compare( $op[1], '<', $op[2] ) )
+			&& ( $textwindow->compare( $op[2], '<', $op[3] ) )
+			&& ( $op[2] ne $end )
+			&& ( $op[3] ne $end ) )
 		{
 			$textwindow->update;
 			$textwindow->focus;
 			shift @op;
 			shift @op;
 			next;
-		} elsif (    ( $textwindow->compare( $op[0], '<', $op[1] ) )
-				  && ( $textwindow->compare( $op[1], '>', $op[2] ) ) )
+		} elsif ( ( $textwindow->compare( $op[0], '<', $op[1] ) )
+			&& ( $textwindow->compare( $op[1], '>', $op[2] ) ) )
 		{
 			$textwindow->markSet( 'insert', $op[2] ) if $op[2];
 			$textwindow->see( $op[2] ) if $op[2];
 			$textwindow->tagAdd( 'highlight', $op[2],
-								 $op[2] . ' +' . $lengtho . 'c' );
+				$op[2] . ' +' . $lengtho . 'c' );
 			$textwindow->tagAdd( 'highlight', $op[0],
-								 $op[0] . ' +' . $lengtho . 'c' );
+				$op[0] . ' +' . $lengtho . 'c' );
 			$textwindow->update;
 			$textwindow->focus;
 			return 1;
-		} elsif (    ( $textwindow->compare( $op[0], '<', $op[1] ) )
-				  && ( $textwindow->compare( $op[2], '>', $op[3] ) ) )
+		} elsif ( ( $textwindow->compare( $op[0], '<', $op[1] ) )
+			&& ( $textwindow->compare( $op[2], '>', $op[3] ) ) )
 		{
 			$textwindow->markSet( 'insert', $op[3] ) if $op[3];
 			$textwindow->see( $op[3] ) if $op[3];
 			$textwindow->tagAdd( 'highlight', $op[3],
-								 $op[3] . '+' . $lengthc . 'c' );
+				$op[3] . '+' . $lengthc . 'c' );
 			$textwindow->tagAdd( 'highlight', $op[1],
-								 $op[1] . '+' . $lengthc . 'c' );
+				$op[1] . '+' . $lengthc . 'c' );
 			$textwindow->update;
 			$textwindow->focus;
 			return 1;
-		} elsif (    ( $textwindow->compare( $op[0], '>', $op[1] ) )
-				  && ( $op[0] ne $end ) )
+		} elsif ( ( $textwindow->compare( $op[0], '>', $op[1] ) )
+			&& ( $op[0] ne $end ) )
 		{
 			$textwindow->markSet( 'insert', $op[1] ) if $op[1];
 			$textwindow->see( $op[1] ) if $op[1];
 			$textwindow->tagAdd( 'highlight', $op[1],
-								 $op[1] . '+' . $lengthc . 'c' );
+				$op[1] . '+' . $lengthc . 'c' );
 			$textwindow->tagAdd( 'highlight', $op[3],
-								 $op[3] . '+' . $lengtho . 'c' );
+				$op[3] . '+' . $lengtho . 'c' );
 			$textwindow->update;
 			$textwindow->focus;
 			return 1;
 		} else {
-			if (    ( $op[3] eq $end )
-				 && ( $textwindow->compare( $op[2], '>', $op[0] ) ) )
+			if (   ( $op[3] eq $end )
+				&& ( $textwindow->compare( $op[2], '>', $op[0] ) ) )
 			{
 				$textwindow->markSet( 'insert', $op[2] ) if $op[2];
 				$textwindow->see( $op[2] ) if $op[2];
 				$textwindow->tagAdd( 'highlight', $op[2],
-									 $op[2] . '+' . $lengthc . 'c' );
+					$op[2] . '+' . $lengthc . 'c' );
 			}
-			if (    ( $op[2] eq $end )
-				 && ( $textwindow->compare( $op[3], '>', $op[1] ) ) )
+			if (   ( $op[2] eq $end )
+				&& ( $textwindow->compare( $op[3], '>', $op[1] ) ) )
 			{
 				$textwindow->markSet( 'insert', $op[3] ) if $op[3];
 				$textwindow->see( $op[3] ) if $op[3];
 				$textwindow->tagAdd( 'highlight', $op[3],
-									 $op[3] . '+' . $lengthc . 'c' );
+					$op[3] . '+' . $lengthc . 'c' );
 			}
 			if ( ( $op[1] eq $end ) && ( $op[2] eq $end ) ) {
 				$textwindow->markSet( 'insert', $op[0] ) if $op[0];
 				$textwindow->see( $op[0] ) if $op[0];
 				$textwindow->tagAdd( 'highlight', $op[0],
-									 $op[0] . '+' . $lengthc . 'c' );
+					$op[0] . '+' . $lengthc . 'c' );
 			}
 			::update_indicators();
 			return 0;
@@ -3070,7 +3037,7 @@ sub poetryhtml {
 		$selection = "\n</div></div>";
 		$textwindow->insert( "$ler.end", $selection );
 		$textwindow->insert( "$lsr.0",
-							 "<div class=\"poem\"><div class=\"stanza\">\n" );
+			"<div class=\"poem\"><div class=\"stanza\">\n" );
 	}
 }
 
@@ -3081,7 +3048,7 @@ sub linkpopulate {
 		for ( ::natural_sort_alpha( @{$anchorsref} ) ) {
 			next
 			  if ( ( ( $_ =~ /#Footnote/ ) || ( $_ =~ /#FNanchor/ ) )
-				   && $::lglobal{fnlinks} );
+				&& $::lglobal{fnlinks} );
 			next if ( ( $_ =~ /#Page_/ ) && $::lglobal{pglinks} );
 			$linklistbox->insert( 'end', $_ );
 		}
@@ -3089,7 +3056,7 @@ sub linkpopulate {
 		foreach ( @{$anchorsref} ) {
 			next
 			  if ( ( ( $_ =~ /#Footnote/ ) || ( $_ =~ /#FNanchor/ ) )
-				   && $::lglobal{fnlinks} );
+				&& $::lglobal{fnlinks} );
 			next if ( ( $_ =~ /#Page_/ ) && $::lglobal{pglinks} );
 			$linklistbox->insert( 'end', $_ );
 		}
@@ -3100,136 +3067,136 @@ sub linkpopulate {
 }
 
 sub entity {
-	my $char = shift;
+	my $char       = shift;
 	my %markuphash = (
-					   '\x80' => '&#8364;',
-					   '\x81' => '&#129;',
-					   '\x82' => '&#8218;',
-					   '\x83' => '&#402;',
-					   '\x84' => '&#8222;',
-					   '\x85' => '&#8230;',
-					   '\x86' => '&#8224;',
-					   '\x87' => '&#8225;',
-					   '\x88' => '&#710;',
-					   '\x89' => '&#8240;',
-					   '\x8a' => '&#352;',
-					   '\x8b' => '&#8249;',
-					   '\x8c' => '&#338;',
-					   '\x8d' => '&#141;',
-					   '\x8e' => '&#381;',
-					   '\x8f' => '&#143;',
-					   '\x90' => '&#144;',
-					   '\x91' => '&#8216;',
-					   '\x92' => '&#8217;',
-					   '\x93' => '&#8220;',
-					   '\x94' => '&#8221;',
-					   '\x95' => '&#8226;',
-					   '\x96' => '&#8211;',
-					   '\x97' => '&#8212;',
-					   '\x98' => '&#732;',
-					   '\x99' => '&#8482;',
-					   '\x9a' => '&#353;',
-					   '\x9b' => '&#8250;',
-					   '\x9c' => '&#339;',
-					   '\x9d' => '&#157;',
-					   '\x9e' => '&#382;',
-					   '\x9f' => '&#376;',
-					   '\xa0' => '&nbsp;',
-					   '\xa1' => '&iexcl;',
-					   '\xa2' => '&cent;',
-					   '\xa3' => '&pound;',
-					   '\xa4' => '&curren;',
-					   '\xa5' => '&yen;',
-					   '\xa6' => '&brvbar;',
-					   '\xa7' => '&sect;',
-					   '\xa8' => '&uml;',
-					   '\xa9' => '&textcopy;',
-					   '\xaa' => '&ordf;',
-					   '\xab' => '&laquo;',
-					   '\xac' => '&not;',
-					   '\xad' => '&shy;',
-					   '\xae' => '&reg;',
-					   '\xaf' => '&macr;',
-					   '\xb0' => '&deg;',
-					   '\xb1' => '&plusmn;',
-					   '\xb2' => '&sup2;',
-					   '\xb3' => '&sup3;',
-					   '\xb4' => '&acute;',
-					   '\xb5' => '&micro;',
-					   '\xb6' => '&para;',
-					   '\xb7' => '&middot;',
-					   '\xb8' => '&cedil;',
-					   '\xb9' => '&sup1;',
-					   '\xba' => '&ordm;',
-					   '\xbb' => '&raquo;',
-					   '\xbc' => '&frac14;',
-					   '\xbd' => '&frac12;',
-					   '\xbe' => '&frac34;',
-					   '\xbf' => '&iquest;',
-					   '\xc0' => '&Agrave;',
-					   '\xc1' => '&Aacute;',
-					   '\xc2' => '&Acirc;',
-					   '\xc3' => '&Atilde;',
-					   '\xc4' => '&Auml;',
-					   '\xc5' => '&Aring;',
-					   '\xc6' => '&AElig;',
-					   '\xc7' => '&Ccedil;',
-					   '\xc8' => '&Egrave;',
-					   '\xc9' => '&Eacute;',
-					   '\xca' => '&Ecirc;',
-					   '\xcb' => '&Euml;',
-					   '\xcc' => '&Igrave;',
-					   '\xcd' => '&Iacute;',
-					   '\xce' => '&Icirc;',
-					   '\xcf' => '&Iuml;',
-					   '\xd0' => '&ETH;',
-					   '\xd1' => '&Ntilde;',
-					   '\xd2' => '&Ograve;',
-					   '\xd3' => '&Oacute;',
-					   '\xd4' => '&Ocirc;',
-					   '\xd5' => '&Otilde;',
-					   '\xd6' => '&Ouml;',
-					   '\xd7' => '&times;',
-					   '\xd8' => '&Oslash;',
-					   '\xd9' => '&Ugrave;',
-					   '\xda' => '&Uacute;',
-					   '\xdb' => '&Ucirc;',
-					   '\xdc' => '&Uuml;',
-					   '\xdd' => '&Yacute;',
-					   '\xde' => '&THORN;',
-					   '\xdf' => '&szlig;',
-					   '\xe0' => '&agrave;',
-					   '\xe1' => '&aacute;',
-					   '\xe2' => '&acirc;',
-					   '\xe3' => '&atilde;',
-					   '\xe4' => '&auml;',
-					   '\xe5' => '&aring;',
-					   '\xe6' => '&aelig;',
-					   '\xe7' => '&ccedil;',
-					   '\xe8' => '&egrave;',
-					   '\xe9' => '&eacute;',
-					   '\xea' => '&ecirc;',
-					   '\xeb' => '&euml;',
-					   '\xec' => '&igrave;',
-					   '\xed' => '&iacute;',
-					   '\xee' => '&icirc;',
-					   '\xef' => '&iuml;',
-					   '\xf0' => '&eth;',
-					   '\xf1' => '&ntilde;',
-					   '\xf2' => '&ograve;',
-					   '\xf3' => '&oacute;',
-					   '\xf4' => '&ocirc;',
-					   '\xf5' => '&otilde;',
-					   '\xf6' => '&ouml;',
-					   '\xf7' => '&divide;',
-					   '\xf8' => '&oslash;',
-					   '\xf9' => '&ugrave;',
-					   '\xfa' => '&uacute;',
-					   '\xfb' => '&ucirc;',
-					   '\xfc' => '&uuml;',
-					   '\xfd' => '&yacute;',
-					   '\xfe' => '&thorn;',
-					   '\xff' => '&yuml;',
+		'\x80' => '&#8364;',
+		'\x81' => '&#129;',
+		'\x82' => '&#8218;',
+		'\x83' => '&#402;',
+		'\x84' => '&#8222;',
+		'\x85' => '&#8230;',
+		'\x86' => '&#8224;',
+		'\x87' => '&#8225;',
+		'\x88' => '&#710;',
+		'\x89' => '&#8240;',
+		'\x8a' => '&#352;',
+		'\x8b' => '&#8249;',
+		'\x8c' => '&#338;',
+		'\x8d' => '&#141;',
+		'\x8e' => '&#381;',
+		'\x8f' => '&#143;',
+		'\x90' => '&#144;',
+		'\x91' => '&#8216;',
+		'\x92' => '&#8217;',
+		'\x93' => '&#8220;',
+		'\x94' => '&#8221;',
+		'\x95' => '&#8226;',
+		'\x96' => '&#8211;',
+		'\x97' => '&#8212;',
+		'\x98' => '&#732;',
+		'\x99' => '&#8482;',
+		'\x9a' => '&#353;',
+		'\x9b' => '&#8250;',
+		'\x9c' => '&#339;',
+		'\x9d' => '&#157;',
+		'\x9e' => '&#382;',
+		'\x9f' => '&#376;',
+		'\xa0' => '&nbsp;',
+		'\xa1' => '&iexcl;',
+		'\xa2' => '&cent;',
+		'\xa3' => '&pound;',
+		'\xa4' => '&curren;',
+		'\xa5' => '&yen;',
+		'\xa6' => '&brvbar;',
+		'\xa7' => '&sect;',
+		'\xa8' => '&uml;',
+		'\xa9' => '&textcopy;',
+		'\xaa' => '&ordf;',
+		'\xab' => '&laquo;',
+		'\xac' => '&not;',
+		'\xad' => '&shy;',
+		'\xae' => '&reg;',
+		'\xaf' => '&macr;',
+		'\xb0' => '&deg;',
+		'\xb1' => '&plusmn;',
+		'\xb2' => '&sup2;',
+		'\xb3' => '&sup3;',
+		'\xb4' => '&acute;',
+		'\xb5' => '&micro;',
+		'\xb6' => '&para;',
+		'\xb7' => '&middot;',
+		'\xb8' => '&cedil;',
+		'\xb9' => '&sup1;',
+		'\xba' => '&ordm;',
+		'\xbb' => '&raquo;',
+		'\xbc' => '&frac14;',
+		'\xbd' => '&frac12;',
+		'\xbe' => '&frac34;',
+		'\xbf' => '&iquest;',
+		'\xc0' => '&Agrave;',
+		'\xc1' => '&Aacute;',
+		'\xc2' => '&Acirc;',
+		'\xc3' => '&Atilde;',
+		'\xc4' => '&Auml;',
+		'\xc5' => '&Aring;',
+		'\xc6' => '&AElig;',
+		'\xc7' => '&Ccedil;',
+		'\xc8' => '&Egrave;',
+		'\xc9' => '&Eacute;',
+		'\xca' => '&Ecirc;',
+		'\xcb' => '&Euml;',
+		'\xcc' => '&Igrave;',
+		'\xcd' => '&Iacute;',
+		'\xce' => '&Icirc;',
+		'\xcf' => '&Iuml;',
+		'\xd0' => '&ETH;',
+		'\xd1' => '&Ntilde;',
+		'\xd2' => '&Ograve;',
+		'\xd3' => '&Oacute;',
+		'\xd4' => '&Ocirc;',
+		'\xd5' => '&Otilde;',
+		'\xd6' => '&Ouml;',
+		'\xd7' => '&times;',
+		'\xd8' => '&Oslash;',
+		'\xd9' => '&Ugrave;',
+		'\xda' => '&Uacute;',
+		'\xdb' => '&Ucirc;',
+		'\xdc' => '&Uuml;',
+		'\xdd' => '&Yacute;',
+		'\xde' => '&THORN;',
+		'\xdf' => '&szlig;',
+		'\xe0' => '&agrave;',
+		'\xe1' => '&aacute;',
+		'\xe2' => '&acirc;',
+		'\xe3' => '&atilde;',
+		'\xe4' => '&auml;',
+		'\xe5' => '&aring;',
+		'\xe6' => '&aelig;',
+		'\xe7' => '&ccedil;',
+		'\xe8' => '&egrave;',
+		'\xe9' => '&eacute;',
+		'\xea' => '&ecirc;',
+		'\xeb' => '&euml;',
+		'\xec' => '&igrave;',
+		'\xed' => '&iacute;',
+		'\xee' => '&icirc;',
+		'\xef' => '&iuml;',
+		'\xf0' => '&eth;',
+		'\xf1' => '&ntilde;',
+		'\xf2' => '&ograve;',
+		'\xf3' => '&oacute;',
+		'\xf4' => '&ocirc;',
+		'\xf5' => '&otilde;',
+		'\xf6' => '&ouml;',
+		'\xf7' => '&divide;',
+		'\xf8' => '&oslash;',
+		'\xf9' => '&ugrave;',
+		'\xfa' => '&uacute;',
+		'\xfb' => '&ucirc;',
+		'\xfc' => '&uuml;',
+		'\xfd' => '&yacute;',
+		'\xfe' => '&thorn;',
+		'\xff' => '&yuml;',
 	);
 	my %pukramhash = reverse %markuphash;
 	return $markuphash{$char} if $markuphash{$char};
@@ -3248,16 +3215,15 @@ sub named {
 	$end              = 'end' unless $end;
 	$textwindow->markSet( 'srchend', $end );
 	while (
-			$searchstartindex =
-			$textwindow->search(
-								 '-regexp',
-								 '-count' => \$length,
-								 '--', $from, $searchstartindex, 'srchend'
-			)
+		$searchstartindex = $textwindow->search(
+			'-regexp',
+			'-count' => \$length,
+			'--', $from, $searchstartindex, 'srchend'
+		)
 	  )
 	{
 		$textwindow->ntdelete( $searchstartindex,
-							   $searchstartindex . '+' . $length . 'c' );
+			$searchstartindex . '+' . $length . 'c' );
 		$textwindow->ntinsert( $searchstartindex, $to );
 		$searchstartindex = $textwindow->index("$searchstartindex+1c");
 	}
@@ -3284,23 +3250,21 @@ sub fromnamed {
 
 			for ( 160 .. 255 ) {
 				$from = lc sprintf( "%x", $_ );
-				::named( ::entity( '\x' . $from ),
-						  chr($_), $start, 'srchend' );
+				::named( ::entity( '\x' . $from ), chr($_), $start, 'srchend' );
 			}
 			while (
-					$thisblockstart =
-					$textwindow->search(
-										 '-regexp',
-										 '-count' => \$length,
-										 '--', '&#\d+;', $start, $end
-					)
+				$thisblockstart = $textwindow->search(
+					'-regexp',
+					'-count' => \$length,
+					'--', '&#\d+;', $start, $end
+				)
 			  )
 			{
 				my $xchar =
 				  $textwindow->get( $thisblockstart,
-									$thisblockstart . '+' . $length . 'c' );
+					$thisblockstart . '+' . $length . 'c' );
 				$textwindow->ntdelete( $thisblockstart,
-									   $thisblockstart . '+' . $length . 'c' );
+					$thisblockstart . '+' . $length . 'c' );
 				$xchar =~ s/&#(\d+);/$1/;
 				$textwindow->ntinsert( $thisblockstart, chr($xchar) );
 			}
@@ -3335,17 +3299,18 @@ sub tonamed {
 
 			for ( 128 .. 255 ) {
 				$from = lc sprintf( "%x", $_ );
-				::named( '\x' . $from,
-						  ::entity( '\x' . $from ),
-						  $start, 'srchend' );
+				::named(
+					'\x' . $from,
+					::entity( '\x' . $from ),
+					$start, 'srchend'
+				);
 			}
 			while (
-					$thisblockstart =
-					$textwindow->search(
-										 '-regexp',             '--',
-										 '[\x{100}-\x{65535}]', $start,
-										 'srchend'
-					)
+				$thisblockstart = $textwindow->search(
+					'-regexp',             '--',
+					'[\x{100}-\x{65535}]', $start,
+					'srchend'
+				)
 			  )
 			{
 				my $xchar = ord( $textwindow->get($thisblockstart) );
@@ -3360,24 +3325,23 @@ sub tonamed {
 sub fracconv {
 	my ( $textwindow, $start, $end ) = @_;
 	my %frachash = (
-					 '\b1\/2\b' => '&frac12;',
-					 '\b1\/4\b' => '&frac14;',
-					 '\b3\/4\b' => '&frac34;',
+		'\b1\/2\b' => '&frac12;',
+		'\b1\/4\b' => '&frac14;',
+		'\b3\/4\b' => '&frac34;',
 	);
 	my ( $ascii, $html, $length );
 	my $thisblockstart = 1;
 	while ( ( $ascii, $html ) = each(%frachash) ) {
 		while (
-				$thisblockstart =
-				$textwindow->search(
-									 '-regexp',
-									 '-count' => \$length,
-									 '--', "-?$ascii", $start, $end
-				)
+			$thisblockstart = $textwindow->search(
+				'-regexp',
+				'-count' => \$length,
+				'--', "-?$ascii", $start, $end
+			)
 		  )
 		{
 			$textwindow->replacewith( $thisblockstart,
-									  $thisblockstart . "+$length c", $html );
+				$thisblockstart . "+$length c", $html );
 		}
 	}
 }
@@ -3402,8 +3366,8 @@ sub pageadjust {
 
 		unless (@pages) {
 			$frame0->Label(
-							-text       => 'No Page Markers Found',
-							-background => $::bkgcolor,
+				-text       => 'No Page Markers Found',
+				-background => $::bkgcolor,
 			)->pack;
 			return;
 		}
@@ -3460,16 +3424,15 @@ sub pageadjust {
 				undef $::lglobal{padjpop};
 			}
 		)->grid( -row => 1, -column => 2, -padx => 5 );
-		my $frame1 =
-		  $::lglobal{padjpop}->Scrolled(
-										 'Pane',
-										 -scrollbars => 'se',
-										 -background => $::bkgcolor,
+		my $frame1 = $::lglobal{padjpop}->Scrolled(
+			'Pane',
+			-scrollbars => 'se',
+			-background => $::bkgcolor,
 		  )->pack(
-				   -expand => 1,
-				   -fill   => 'both',
-				   -side   => 'top',
-				   -anchor => 'n'
+			-expand => 1,
+			-fill   => 'both',
+			-side   => 'top',
+			-anchor => 'n'
 		  );
 		::drag($frame1);
 		$top->update;
@@ -3489,18 +3452,16 @@ sub pageadjust {
 					},
 				],
 			)->grid( -row => $row, -column => 0, -padx => 2 );
-			$pagetrack{$num}[1] =
-			  $frame1->Label(
-							  -text       => "Label -->",
-							  -background => $::bkgcolor,
-			  )->grid( -row => $row, -column => 1 );
+			$pagetrack{$num}[1] = $frame1->Label(
+				-text       => "Label -->",
+				-background => $::bkgcolor,
+			)->grid( -row => $row, -column => 1 );
 			my $temp = $num;
 			$temp =~ s/^0+//;
-			$pagetrack{$num}[2] =
-			  $frame1->Label(
-							  -text       => "Pg $temp",
-							  -background => 'yellow',
-			  )->grid( -row => $row, -column => 2 );
+			$pagetrack{$num}[2] = $frame1->Label(
+				-text       => "Pg $temp",
+				-background => 'yellow',
+			)->grid( -row => $row, -column => 2 );
 			$pagetrack{$num}[3] = $frame1->Button(
 				-text => ( $page eq $pages[0] ) ? 'Arabic' : '"',
 				-width   => 8,
@@ -3511,7 +3472,7 @@ sub pageadjust {
 							$pagetrack{ $_[0] }[3]
 							  ->configure( -text => 'Roman' );
 						} elsif (
-							  $pagetrack{ $_[0] }[3]->cget( -text ) eq 'Roman' )
+							$pagetrack{ $_[0] }[3]->cget( -text ) eq 'Roman' )
 						{
 							$pagetrack{ $_[0] }[3]->configure( -text => '"' );
 						} elsif ( $pagetrack{ $_[0] }[3]->cget( -text ) eq '"' )
@@ -3535,12 +3496,12 @@ sub pageadjust {
 						{
 							$pagetrack{ $_[0] }[4]->configure( -text => '+1' );
 						} elsif (
-								 $pagetrack{ $_[0] }[4]->cget( -text ) eq '+1' )
+							$pagetrack{ $_[0] }[4]->cget( -text ) eq '+1' )
 						{
 							$pagetrack{ $_[0] }[4]
 							  ->configure( -text => 'No Count' );
 						} elsif ( $pagetrack{ $_[0] }[4]->cget( -text ) eq
-								  'No Count' )
+							'No Count' )
 						{
 							$pagetrack{ $_[0] }[4]
 							  ->configure( -text => 'Start @' );
@@ -3566,16 +3527,16 @@ sub pageadjust {
 		}
 		$top->Unbusy( -recurse => 1 );
 		if ( defined $::pagenumbers{ $pages[0] }{action}
-			 and length $::pagenumbers{ $pages[0] }{action} )
+			and length $::pagenumbers{ $pages[0] }{action} )
 		{
 			for my $page (@pages) {
 				my ($num) = $page =~ /Pg(\S+)/;
 				$pagetrack{$num}[2]
 				  ->configure( -text => $::pagenumbers{$page}{label} );
 				$pagetrack{$num}[3]->configure(
-						-text => ( $::pagenumbers{$page}{style} or 'Arabic' ) );
+					-text => ( $::pagenumbers{$page}{style} or 'Arabic' ) );
 				$pagetrack{$num}[4]->configure(
-						   -text => ( $::pagenumbers{$page}{action} or '+1' ) );
+					-text => ( $::pagenumbers{$page}{action} or '+1' ) );
 				$pagetrack{$num}[5]->delete( '0', 'end' );
 				$pagetrack{$num}[5]
 				  ->insert( 'end', $::pagenumbers{$page}{base} );

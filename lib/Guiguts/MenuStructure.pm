@@ -540,8 +540,8 @@ sub menubuildold {
 							   ],
 							   [
 								  'command',
-								  'Export with Markup',
-								  -command => sub { ::file_export_markup(); }
+								  'Export with Page Markers',
+								  -command => sub { ::file_export_pagemarkers(); }
 							   ],
 			   ]
 			],
@@ -552,7 +552,7 @@ sub menubuildold {
 			[
 			   'command',
 			   'Import Prep Text Files',
-			   -command => sub { ::file_import( $textwindow, $top ) }
+			   -command => sub { ::file_import_preptext( $textwindow, $top ) }
 			],
 							   [
 								  'command',
@@ -1252,8 +1252,8 @@ sub menubuild {
 							   ],
 							   [
 								  'command',
-								  'Export with Markup',
-								  -command => sub { ::file_export_markup(); }
+								  'Export with Page Markers',
+								  -command => sub { ::file_export_pagemarkers(); }
 							   ],
 			   ]
 			],
@@ -1264,7 +1264,7 @@ sub menubuild {
 			[
 			   'command',
 			   'Import Prep Text Files',
-			   -command => sub { ::file_import( $textwindow, $top ) }
+			   -command => sub { ::file_import_preptext( $textwindow, $top ) }
 			],
 							   [
 								  'command',
@@ -2083,8 +2083,8 @@ sub menubuildtwo {
 							   ],
 							   [
 								  'command',
-								  'Export with Markup',
-								  -command => sub { ::file_export_markup(); }
+								  'Export with Page Markers',
+								  -command => sub { ::file_export_pagemarkers(); }
 							   ],
 			   ]
 			],
@@ -2095,7 +2095,7 @@ sub menubuildtwo {
 			[
 			   'command',
 			   'Import Prep Text Files',
-			   -command => sub { ::file_import( $textwindow, $top ) }
+			   -command => sub { ::file_import_preptext( $textwindow, $top ) }
 			],
 							   [
 								  'command',

@@ -225,7 +225,7 @@ sub hilite {
 sub hilitepopup {
 	my $textwindow = $::textwindow;
 	my $top        = $::top;
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	if ( defined( $::lglobal{hilitepop} ) ) {
 		$::lglobal{hilitepop}->deiconify;
 		$::lglobal{hilitepop}->raise;

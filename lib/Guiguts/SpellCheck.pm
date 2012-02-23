@@ -544,7 +544,7 @@ sub spellchecker {    # Set up spell check window
 	my $top        = $::top;
 	push @::operations, ( localtime() . ' - Spellcheck' );
 	::viewpagenums() if ( $::lglobal{seepagenums} );
-	oppopupdate() if $::lglobal{oppop};
+	::oppopupdate() if $::lglobal{oppop};
 	if ( defined( $::lglobal{spellpopup} ) ) {    # If window already exists
 		$::lglobal{spellpopup}->deiconify;        # pop it up off the task bar
 		$::lglobal{spellpopup}->raise;            # put it on top

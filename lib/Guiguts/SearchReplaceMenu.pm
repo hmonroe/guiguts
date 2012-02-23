@@ -634,7 +634,7 @@ sub updatesearchlabels {
 # calls the replacewith command after calling replaceeval
 # to allow arbitrary perl code to be included in the replace entry
 sub replace {
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	my $replaceterm = shift;
 	$replaceterm = '' unless length $replaceterm;
 	return unless $::searchstartindex;
@@ -1046,12 +1046,12 @@ sub searchoptset {
 sub searchpopup {
 	my $textwindow = $::textwindow;
 	my $top        = $::top;
-	viewpagenums() if ( $::lglobal{seepagenums} );
+	::viewpagenums() if ( $::lglobal{seepagenums} );
 	push @::operations, ( localtime() . ' - Search & Replace' )
 	  unless $::lglobal{doscannos};
 	push @::operations, ( localtime() . ' - Stealth Scannos' )
 	  if $::lglobal{doscannos};
-	oppopupdate() if $::lglobal{oppop};
+	::oppopupdate() if $::lglobal{oppop};
 	my $aacheck;
 	my $searchterm = '';
 	my @ranges     = $textwindow->tagRanges('sel');
@@ -1946,7 +1946,7 @@ sub orphanedbrackets {
 
 	sub brsearch {
 		my $textwindow = $::textwindow;
-		viewpagenums() if ( $::lglobal{seepagenums} );
+		::viewpagenums() if ( $::lglobal{seepagenums} );
 		@{ $::lglobal{brbrackets} } = ();
 		@{ $::lglobal{brindices} }  = ();
 		$::lglobal{brindex} = '1.0';
@@ -1972,7 +1972,7 @@ sub orphanedbrackets {
 
 	sub brnext {
 		my $textwindow = $::textwindow;
-		viewpagenums() if ( $::lglobal{seepagenums} );
+		::viewpagenums() if ( $::lglobal{seepagenums} );
 		$textwindow->tagRemove( 'highlight', '1.0', 'end' );
 		while (1) {
 			last
